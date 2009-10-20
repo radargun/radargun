@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:4.0">
+    <default>
+        <locking concurrencyLevel="10000" isolationLevel="REPEATABLE_READ" writeSkewCheck="false"/>
+    </default>
+</infinispan>

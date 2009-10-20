@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE cache-config SYSTEM "cache-config.dtd">
+
+<cache-config>
+   <caching-scheme-mapping>
+      <cache-mapping>
+         <cache-name>repl-*</cache-name>
+         <scheme-name>default-replicated</scheme-name>
+      </cache-mapping>
+
+      <cache-mapping>
+        <cache-name>dist-*</cache-name>
+        <scheme-name>default-distributed</scheme-name>
+      </cache-mapping>
+
+	 <cache-mapping>
+	      <cache-name>near-*</cache-name>
+	      <scheme-name>default-near</scheme-name>
+	    </cache-mapping>
+
+	 <cache-mapping>
+	      <cache-name>opt-*</cache-name>
+	      <scheme-name>default-optimistic</scheme-name>
+	    </cache-mapping>
+
+	    <cache-mapping>
+	      <cache-name>local-*</cache-name>
+	      <scheme-name>default-backing-map</scheme-name>
+	    </cache-mapping>
+   </caching-scheme-mapping>
+
+   <caching-schemes>
+      <!--
+      Default Replicated caching scheme.
+      -->
+      <replicated-scheme>
+         <scheme-name>default-replicated</scheme-name>
+         <service-name>ReplicatedCache</service-name>
+         <backing-map-scheme>
+            <class-scheme>
+               <scheme-ref>default-backing-map</scheme-ref>
+            </class-scheme>
+         </backing-map-scheme>
+      </replicated-scheme>
+
+      <distributed-scheme>
+         <scheme-name>default-distributed</scheme-name>
+         <service-name>DistributedCache</service-name>
+
+         <backing-map-scheme>
+            <class-scheme>
+               <scheme-ref>default-backing-map</scheme-ref>
+            </class-scheme>
+         </backing-map-scheme>
+      </distributed-scheme>
+
+	<near-scheme>
+	      <scheme-name>default-near</scheme-name>
+
+	      <front-scheme>
+	        <local-scheme>
+	          <eviction-policy>HYBRID</eviction-policy>
+	          <high-units>100</high-units>
+	          <expiry-delay>1m</expiry-delay>
+	        </local-scheme>
+	      </front-scheme>
+
+	      <back-scheme>
+	        <distributed-scheme>
+	          <scheme-ref>default-distributed</scheme-ref>
+	        </distributed-scheme>
+	      </back-scheme>
+
+	      <invalidation-strategy>present</invalidation-strategy>
+	      <autostart>true</autostart>
+	    </near-scheme>
+	
+	 <optimistic-scheme>
+	      <scheme-name>default-optimistic</scheme-name>
+	      <service-name>OptimisticCache</service-name>
+
+	      <backing-map-scheme>
+	        <local-scheme>
+	          <scheme-ref>default-backing-map</scheme-ref>
+	        </local-scheme>
+	      </backing-map-scheme>
+
+	      <autostart>true</autostart>
+	    </optimistic-scheme>
+
+      <!--
+      Default backing map scheme definition used by all
+      The caches that do not require any eviction policies
+      -->
+      <class-scheme>
+         <scheme-name>default-backing-map</scheme-name>
+         <class-name>com.tangosol.util.SafeHashMap</class-name>
+      </class-scheme>
+
+   </caching-schemes>
+</cache-config>

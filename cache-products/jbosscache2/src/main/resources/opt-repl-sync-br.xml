@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ===================================================================== -->
+<!--                                                                       -->
+<!--  Sample TreeCache Service Configuration                               -->
+<!--                                                                       -->
+<!-- ===================================================================== -->
+
+<server>
+
+   <classpath codebase="./lib" archives="jboss-cache.jar, jgroups.jar"/>
+
+
+   <!-- ==================================================================== -->
+   <!-- Defines TreeCache configuration                                      -->
+   <!-- ==================================================================== -->
+
+   <mbean code="org.jboss.cache.jmx.CacheJmxWrapper"
+          name="jboss.cache:service=testTreeCache">
+
+      <depends>jboss:service=Naming</depends>
+      <depends>jboss:service=TransactionManager</depends>
+
+      <!--
+          Configure the TransactionManager
+      -->
+      <attribute name="TransactionManagerLookupClass">org.jboss.cache.transaction.GenericTransactionManagerLookup
+      </attribute>
+
+
+      <attribute name="NodeLockingScheme">Optimistic</attribute>
+      <!--
+           Valid modes are LOCAL
+                           REPL_ASYNC
+                           REPL_SYNC
+                           INVALIDATION_ASYNC
+                           INVALIDATION_SYNC
+      -->
+      <attribute name="CacheMode">REPL_SYNC</attribute>
+
+      <!-- Name of cluster. Needs to be the same for all TreeCache nodes in a
+           cluster in order to find each other.
+      -->
+      <attribute name="ClusterName">JBossCache-Cluster</attribute>
+
+      <!--Uncomment next three statements to enable JGroups multiplexer.
+This configuration is dependent on the JGroups multiplexer being
+registered in an MBean server such as JBossAS.  -->
+      <!--
+      <depends>jgroups.mux:name=Multiplexer</depends>
+      <attribute name="MultiplexerService">jgroups.mux:name=Multiplexer</attribute>
+      <attribute name="MultiplexerStack">fc-fast-minimalthreads</attribute>
+      -->
+
+      <!-- JGroups protocol stack properties.
+         ClusterConfig isn't used if the multiplexer is enabled and successfully initialized.
+      -->
+      <attribute name="ClusterConfig">
+         <config>
+            <TCP recv_buf_size="20000000" use_send_queues="false"
+                 loopback="false"
+                 discard_incompatible_packets="true"
+                 max_bundle_size="64000"
+                 max_bundle_timeout="30"
+                 use_incoming_packet_handler="true"
+                 enable_bundling="false"
+                 enable_unicast_bundling="false"
+                 enable_diagnostics="false"
+
+                 use_concurrent_stack="true"
+
+                 thread_naming_pattern="pl"
+
+                 thread_pool.enabled="true"
+                 thread_pool.min_threads="1"
+                 thread_pool.max_threads="4"
+                 thread_pool.keep_alive_time="30000"
+                 thread_pool.queue_enabled="true"
+                 thread_pool.queue_max_size="50000"
+                 thread_pool.rejection_policy="discard"
+
+                 oob_thread_pool.enabled="true"
+                 oob_thread_pool.min_threads="2"
+                 oob_thread_pool.max_threads="4"
+                 oob_thread_pool.keep_alive_time="10000"
+                 oob_thread_pool.queue_enabled="false"
+                 oob_thread_pool.queue_max_size="10"
+                 oob_thread_pool.rejection_policy="Run"/>
+
+            <!--<PING timeout="2000" num_initial_members="3"/>-->
+            <MPING mcast_addr="232.1.2.3" timeout="2000" num_initial_members="3"/>
+            <MERGE2 max_interval="30000" min_interval="10000"/>
+            <FD_SOCK/>
+            <FD timeout="10000" max_tries="5" shun="true"/>
+            <VERIFY_SUSPECT timeout="1500"/>
+            <pbcast.NAKACK use_mcast_xmit="false" gc_lag="0"
+                           retransmit_timeout="300,600,1200,2400,4800"
+                           discard_delivered_msgs="true"/>
+            <!--<UNICAST timeout="30,60,120,300,600,1200,2400,3600"/>-->
+            <pbcast.STABLE stability_delay="1000" desired_avg_gossip="50000"
+                           max_bytes="400000"/>
+            <pbcast.GMS print_local_addr="true" join_timeout="5000"
+                        join_retry_timeout="2000" shun="false"
+                        view_bundling="true" view_ack_collection_timeout="5000"/>
+            <FC max_credits="5000000"
+                min_threshold="0.20"/>
+            <FRAG2 frag_size="60000"/>
+            <pbcast.STREAMING_STATE_TRANSFER use_reading_thread="true"/>
+            <!-- <pbcast.STATE_TRANSFER/> -->
+            <pbcast.FLUSH timeout="0"/>
+         </config>
+      </attribute>
+
+
+      <!--
+          The max amount of time (in milliseconds) we wait until the
+          state (ie. the contents of the cache) are retrieved from
+          existing members in a clustered environment
+      -->
+      <attribute name="StateRetrievalTimeout">20000</attribute>
+
+      <!--
+          Number of milliseconds to wait until all responses for a
+          synchronous call have been received.
+      -->
+      <attribute name="SyncReplTimeout">15000</attribute>
+
+      <!-- Max number of milliseconds to wait for a lock acquisition -->
+      <attribute name="LockAcquisitionTimeout">10000</attribute>
+
+
+      <!-- Buddy Replication config -->
+      <attribute name="BuddyReplicationConfig">
+         <config>
+            <buddyReplicationEnabled>true</buddyReplicationEnabled>
+            <!-- these are the default values anyway -->
+            <buddyLocatorClass>org.jboss.cache.buddyreplication.NextMemberBuddyLocator</buddyLocatorClass>
+            <!-- numBuddies is the number of backup nodes each node maintains.  ignoreColocatedBuddies means that
+     each node will *try* to select a buddy on a different physical host.  If not able to do so though,
+     it will fall back to colocated nodes. -->
+            <buddyLocatorProperties>
+               numBuddies = 1
+               ignoreColocatedBuddies = true
+            </buddyLocatorProperties>
+
+            <!-- A way to specify a preferred replication group.  If specified, we try and pick a buddy why shares
+    the same pool name (falling back to other buddies if not available).  This allows the sysdmin to hint at
+    backup buddies are picked, so for example, nodes may be hinted topick buddies on a different physical rack
+    or power supply for added fault tolerance.  -->
+            <buddyPoolName>myBuddyPoolReplicationGroup</buddyPoolName>
+            <!-- communication timeout for inter-buddy group organisation messages (such as assigning to and removing
+          from groups -->
+            <buddyCommunicationTimeout>2000</buddyCommunicationTimeout>
+
+            <!-- the following three elements, all relating to data gravitation, default to false -->
+            <!-- Should data gravitation be attempted whenever there is a cache miss on finding a node?
+If false, data will only be gravitated if an Option is set enabling it -->
+            <autoDataGravitation>false</autoDataGravitation>
+            <!-- removes data on remote caches' trees and backup subtrees when gravitated to a new data owner -->
+            <dataGravitationRemoveOnFind>true</dataGravitationRemoveOnFind>
+            <!-- search backup subtrees as well for data when gravitating.  Results in backup nodes being able to
+        answer data gravitation requests. -->
+            <dataGravitationSearchBackupTrees>true</dataGravitationSearchBackupTrees>
+
+         </config>
+      </attribute>
+   </mbean>
+
+
+</server>

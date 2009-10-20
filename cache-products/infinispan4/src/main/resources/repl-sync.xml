@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:4.0">
+
+   <global>
+
+      <transport clusterName="infinispan-cluster">
+         <property name="configurationFile" value="ispn-udp-sync.xml"/>
+<!--
+         <property name="configurationFile" value="ispn-tcp-sync.xml"/>
+-->
+      </transport>
+
+   </global>
+
+   <default>
+
+      <locking
+            lockAcquisitionTimeout="20000"
+            concurrencyLevel="10000"/>
+
+      <transaction
+            transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"
+            syncRollbackPhase="false"
+            syncCommitPhase="false"/>
+
+      <clustering mode="r">
+
+         <stateRetrieval fetchInMemoryState="false"/>
+         <sync replTimeout="20000"/>
+      </clustering>
+   </default>
+
+</infinispan>

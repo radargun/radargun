@@ -1,0 +1,115 @@
+<!--
+   This package will build a ZIP containing the following:
+
+   + modules
+      + framework
+      + cache provider plugins
+
+      .. etc ...
+
+   + bin (any scripts, etc)
+   + conf (sample configs, resources, etc from src/main/resources)
+   + doc (release notes, etc from src/main/release)
+-->
+<assembly
+      xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+   <id>bin</id>
+
+   <formats>
+      <format>zip</format>
+      <format>dir</format>
+   </formats>
+
+   <moduleSets>
+      <moduleSet>
+         <includes>
+            <include>org.cachebench:cache-benchmark-framework</include>
+         </includes>
+         <includeSubModules>false</includeSubModules>
+         <sources>
+            <includeModuleDirectory>false</includeModuleDirectory>
+
+            <fileSets>
+
+               <!-- resources -->
+               <fileSet>
+                  <directory>src/main/resources</directory>
+                  <outputDirectory>conf</outputDirectory>
+                  <excludes>
+                     <exclude>**/*.sh</exclude>
+                     <exclude>**/*.bat</exclude>
+                     <exclude>**/*.cmd</exclude>
+                     <exclude>**/*.py</exclude>
+                  </excludes>
+               </fileSet>
+
+               <!-- Executable resources -->
+               <fileSet>
+                  <directory>src/main/resources</directory>
+                  <outputDirectory>bin</outputDirectory>
+                  <includes>
+                     <include>**/*.sh</include>
+                     <include>**/*.bat</include>
+                     <include>**/*.cmd</include>
+                     <include>**/*.py</include>
+                  </includes>
+                  <fileMode>0777</fileMode>
+               </fileSet>
+            </fileSets>
+         </sources>
+
+         <binaries>
+            <outputDirectory>${module.basedir.name}</outputDirectory>
+            <unpack>false</unpack>
+            <outputFileNameMapping>
+               ${module.artifactId}.${module.extension}
+            </outputFileNameMapping>
+            <dependencySets>
+               <dependencySet>
+                  <useTransitiveDependencies>false</useTransitiveDependencies>
+                  <outputDirectory>${module.basedir.name}/lib</outputDirectory>
+               </dependencySet>
+            </dependencySets>
+         </binaries>
+      </moduleSet>
+
+      <moduleSet>
+         <includeSubModules>false</includeSubModules>
+         <excludes>
+            <exclude>org.cachebench:cache-benchmark-framework</exclude>
+         </excludes>
+         <sources>
+            <includeModuleDirectory>false</includeModuleDirectory>
+
+            <fileSets>
+               <!-- resources -->
+               <fileSet>
+                  <directory>src/main/resources</directory>
+                  <outputDirectory>cache-providers/${module.basedir.name}/conf</outputDirectory>
+               </fileSet>
+            </fileSets>
+         </sources>
+
+         <binaries>
+            <outputDirectory>cache-providers/${module.basedir.name}</outputDirectory>
+            <unpack>false</unpack>
+            <outputFileNameMapping>
+               ${module.artifactId}.${module.extension}
+            </outputFileNameMapping>
+            <dependencySets>
+               <dependencySet>
+                  <excludes>
+                     <exclude>cache-benchmark-framework*</exclude>
+                  </excludes>
+                  <useTransitiveDependencies>true</useTransitiveDependencies>
+                  <useTransitiveFiltering>true</useTransitiveFiltering>
+                  <outputDirectory>cache-providers/${module.basedir.name}/lib</outputDirectory>
+               </dependencySet>
+            </dependencySets>
+
+         </binaries>
+      </moduleSet>
+   </moduleSets>
+</assembly>

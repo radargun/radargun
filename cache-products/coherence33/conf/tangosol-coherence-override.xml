@@ -1,0 +1,7 @@
+<coherence>
+   <cluster-config>
+      <unicast-listener>
+         <address system-property="tangosol.coherence.localhost">localhost</address>         
+      </unicast-listener>
+   </cluster-config>
+</coherence>

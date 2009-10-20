@@ -1,0 +1,4 @@
+1.  Replace cluster.sh, runNode.sh, killNode.sh and cache-product/product-x.y.z/config.sh with Ant scripts to make them cross-platform.
+2. status email notifications - will allow one not to tail logs all the time/from time to time to look for issues
+3. move scripts to an bin dir, as there are too many of them arround
+4. warmup should only be performed if session replication passes

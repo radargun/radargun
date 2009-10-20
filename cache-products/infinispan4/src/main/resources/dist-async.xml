@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:4.0">
+   <global>
+
+      <transport clusterName="infinispan-cluster">
+         <property name="configurationFile" value="tcp.xml"/>
+      </transport>
+
+   </global>
+
+
+   <default>
+      <locking
+            lockAcquisitionTimeout="20000"
+            concurrencyLevel="10000"/>
+
+      <transaction
+            transactionManagerLookupClass="org.infinispan.transaction.GenericTransactionManagerLookup"
+            syncRollbackPhase="false"
+            syncCommitPhase="false"/>
+
+      <clustering mode="d">
+         <async />
+      </clustering>
+   </default>
+</infinispan>

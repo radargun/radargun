@@ -1,0 +1,239 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <artifactId>cache-benchmark-parent</artifactId>
+   <version>1.0.0-SNAPSHOT</version>
+   <groupId>org.cachebench</groupId>
+   <name>Cache Benchmark Framework - Parent POM</name>
+   <description>The parent POM for the cache benchmark framework</description>
+   <packaging>pom</packaging>
+   <url>http://cachebenchfwk.sourceforge.net</url>
+
+   <licenses>
+      <license>
+         <name>GNU Lesser General Public License</name>
+         <url>http://www.gnu.org/copyleft/lesser.html</url>
+         <distribution>repo</distribution>
+      </license>
+   </licenses>
+
+   <scm>
+      <connection>scm:git://cachetester.git.sourceforge.net/gitroot/cachetester/cachetester</connection>
+      <developerConnection>scm:ssh://USER@cachetester.git.sourceforge.net/gitroot/cachetester</developerConnection>
+      <url>http://cachetester.git.sourceforge.net/git/gitweb-index.cgi</url>
+   </scm>
+
+   <issueManagement>
+      <system>TRAC</system>
+      <url>https://sourceforge.net/apps/trac/cachetester/</url>
+   </issueManagement>
+
+   <developers>
+      <developer>
+         <name>Manik Surtani</name>
+         <roles>
+            <role>Project founder</role>
+         </roles>
+         <timezone>GMT</timezone>
+      </developer>
+
+      <developer>
+         <name>Mircea Markus</name>
+         <roles>
+            <role>Lead developer</role>
+         </roles>
+         <timezone>GMT</timezone>
+      </developer>
+   </developers>
+
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.4.3</version>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-eclipse-plugin</artifactId>
+            <configuration>
+               <downloadSources>true</downloadSources>
+               <buildOutputDirectory>${basedir}/eclipse-output</buildOutputDirectory>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-idea-plugin</artifactId>
+            <configuration>
+               <downloadSources>true</downloadSources>
+            </configuration>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>enforce-java</id>
+                  <goals>
+                     <goal>enforce</goal>
+                  </goals>
+                  <configuration>
+                     <rules>
+                        <requireJavaVersion>
+                           <version>[1.6,)</version>
+                        </requireJavaVersion>
+                        <requireMavenVersion>
+                           <version>[2.1.0,)</version>
+                        </requireMavenVersion>
+                     </rules>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <!-- by default, compile to JDK 1.6 compatibility (individual modules and/or user can override) -->
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+               <source>1.6</source>
+               <target>1.6</target>
+               <encoding>UTF-8</encoding>
+            </configuration>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <configuration>
+               <encoding>UTF-8</encoding>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.scala-tools</groupId>
+            <artifactId>maven-scala-plugin</artifactId>
+            <executions>
+               <execution>
+                  <id>compile</id>
+                  <goals>
+                     <goal>compile</goal>
+                  </goals>
+                  <phase>compile</phase>
+               </execution>
+               <execution>
+                  <id>test-compile</id>
+                  <goals>
+                     <goal>testCompile</goal>
+                  </goals>
+                  <phase>test-compile</phase>
+               </execution>
+               <execution>
+                  <phase>process-resources</phase>
+                  <goals>
+                     <goal>compile</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+               <archive>
+                  <manifest>
+                     <mainClass>org.cachebench.Version</mainClass>
+                  </manifest>
+               </archive>
+               <excludes>
+                  <exclude>**/*.xml</exclude>
+                  <exclude>**/*.sh</exclude>
+                  <exclude>**/*.py</exclude>
+                  <exclude>**/*.bat</exclude>
+                  <exclude>**/*.txt</exclude>
+               </excludes>
+            </configuration>
+         </plugin>
+      </plugins>
+   </build>
+
+   <dependencies>
+      <dependency>
+         <groupId>org.scala-lang</groupId>
+         <artifactId>scala-library</artifactId>
+         <version>2.7.5</version>
+      </dependency>
+      <dependency>
+         <groupId>org.scala-tools</groupId>
+         <artifactId>javautils</artifactId>
+         <version>2.7.4-0.1</version>
+      </dependency>
+      <dependency>
+         <groupId>org.testng</groupId>
+         <artifactId>testng</artifactId>
+         <version>5.8</version>
+         <scope>test</scope>
+         <classifier>jdk15</classifier>
+      </dependency>
+   </dependencies>
+
+   <repositories>
+      <!-- basic JBoss repository -->
+      <repository>
+         <id>repository.jboss.org</id>
+         <url>http://repository.jboss.org/maven2</url>
+      </repository>
+      <repository>
+         <id>snapshots.jboss.org</id>
+         <url>http://snapshots.jboss.org/maven2</url>
+      </repository>
+      <repository>
+         <id>scala-tools.org</id>
+         <name>Scala-tools Maven2 Repository</name>
+         <url>http://scala-tools.org/repo-releases</url>
+      </repository>
+   </repositories>
+
+   <pluginRepositories>
+      <pluginRepository>
+         <id>Main Maven Repo</id>
+         <url>http://repo1.maven.org/maven2/</url>
+      </pluginRepository>
+      <pluginRepository>
+         <id>snapshots.repository.codehaus.org</id>
+         <url>http://snapshots.repository.codehaus.org</url>
+      </pluginRepository>
+      <pluginRepository>
+         <id>repository.jboss.org</id>
+         <url>http://repository.jboss.org/maven2</url>
+      </pluginRepository>
+      <pluginRepository>
+         <id>snapshots.jboss.org</id>
+         <url>http://snapshots.jboss.org/maven2</url>
+      </pluginRepository>
+      <pluginRepository>
+         <id>scala-tools.org</id>
+         <name>Scala-tools Maven2 Repository</name>
+         <url>http://scala-tools.org/repo-releases</url>
+      </pluginRepository>
+   </pluginRepositories>
+
+   <distributionManagement>
+      <repository>
+         <id>repository.jboss.org</id>
+         <url>http://repository.jboss.org/maven2</url>
+      </repository>
+      <snapshotRepository>
+         <id>snapshots.jboss.org</id>
+         <name>JBoss Snapshot Repository</name>
+         <url>dav:https://snapshots.jboss.org/maven2</url>
+      </snapshotRepository>
+   </distributionManagement>
+
+   <properties>
+      <!-- By default don't run unit tests for the fwk! -->
+      <maven.test.skip>true</maven.test.skip>
+   </properties>
+</project>
