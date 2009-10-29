@@ -1,0 +1,51 @@
+<assembly
+      xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+   <id>bin</id>
+   <formats>
+      <format>dir</format>
+   </formats>
+
+   <fileSets>
+      <fileSet>
+         <directory>target</directory>
+         <outputDirectory>lib</outputDirectory>
+         <includes>
+            <include>*.jar</include>
+         </includes>
+         <fileMode>0644</fileMode>
+         <directoryMode>0755</directoryMode>
+      </fileSet>
+
+      <fileSet>
+         <directory>src/main/resources</directory>
+         <outputDirectory>conf</outputDirectory>
+         <excludes>
+            <exclude>*assembly*</exclude>
+            <exclude>**/*.sh</exclude>
+            <exclude>**/*.bat</exclude>
+            <exclude>**/*.cmd</exclude>
+            <exclude>**/*.py</exclude>
+         </excludes>
+      </fileSet>
+
+      <!-- Executable resources -->
+      <fileSet>
+         <directory>src/main/resources</directory>
+         <outputDirectory>bin</outputDirectory>
+         <includes>
+            <include>**/*.sh</include>
+            <include>**/*.bat</include>
+            <include>**/*.cmd</include>
+            <include>**/*.py</include>
+         </includes>
+         <fileMode>0777</fileMode>
+      </fileSet>
+   </fileSets>
+   <dependencySets>
+      <dependencySet>
+         <outputDirectory>lib</outputDirectory>
+      </dependencySet>
+   </dependencySets>
+</assembly>

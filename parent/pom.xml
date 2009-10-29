@@ -156,6 +156,28 @@
                </excludes>
             </configuration>
          </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>2.2-beta-3</version>
+            <executions>
+               <execution>
+                  <id>assemble</id>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>single</goal>
+                  </goals>
+               </execution>
+            </executions>
+            <configuration>
+               <descriptors>
+                  <descriptor>src/main/resources/assembly/bin.xml</descriptor>
+               </descriptors>
+               <finalName>${artifact.id}</finalName>
+               <outputDirectory>target/distribution</outputDirectory>
+               <workDirectory>target/assembly/work</workDirectory>
+            </configuration>
+         </plugin>
       </plugins>
    </build>
 
