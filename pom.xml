@@ -12,7 +12,6 @@
    <packaging>pom</packaging>
 
    <modules>
-      <module>parent</module>
       <module>framework</module>
       <module>plugins/infinispan4</module>
       <module>plugins/jbosscache2</module>
@@ -43,37 +42,37 @@
                         <mkdir dir="${out}" />
 
                         <copy todir="${out}">
-                           <fileset dir="framework/target/distribution/cache-benchmark-framework-1.0.0-SNAPSHOT-bin/cache-benchmark-framework-1.0.0-SNAPSHOT">
+                           <fileset dir="framework/target/distribution/cache-benchmark-framework-bin/cache-benchmark-framework">
                               <include name="**/*" />
                            </fileset>
                         </copy>
 
                         <copy todir="${out}/plugins/infinispan4">
-                           <fileset dir="plugins/infinispan4/target/distribution/plugin-infinispan4-1.0.0-SNAPSHOT-bin/plugin-infinispan4-1.0.0-SNAPSHOT">
+                           <fileset dir="plugins/infinispan4/target/distribution/plugin-infinispan4-bin/plugin-infinispan4">
                               <include name="**/*" />
                            </fileset>
                         </copy>
 
                         <copy todir="${out}/plugins/jbosscache3">
-                           <fileset dir="plugins/jbosscache3/target/distribution/plugin-jbosscache3-1.0.0-SNAPSHOT-bin/plugin-jbosscache3-1.0.0-SNAPSHOT">
+                           <fileset dir="plugins/jbosscache3/target/distribution/plugin-jbosscache3-bin/plugin-jbosscache3">
                               <include name="**/*" />
                            </fileset>
                         </copy>
 
                         <copy todir="${out}/plugins/jbosscache2">
-                           <fileset dir="plugins/jbosscache2/target/distribution/plugin-jbosscache2-1.0.0-SNAPSHOT-bin/plugin-jbosscache2-1.0.0-SNAPSHOT">
+                           <fileset dir="plugins/jbosscache2/target/distribution/plugin-jbosscache2-bin/plugin-jbosscache2">
                               <include name="**/*" />
                            </fileset>
                         </copy>
 
                         <copy todir="${out}/plugins/ehcache15">
-                           <fileset dir="plugins/ehcache15/target/distribution/plugin-ehcache15-1.0.0-SNAPSHOT-bin/plugin-ehcache15-1.0.0-SNAPSHOT">
+                           <fileset dir="plugins/ehcache15/target/distribution/plugin-ehcache15-bin/plugin-ehcache15">
                               <include name="**/*" />
                            </fileset>
                         </copy>
 
                         <copy todir="${out}/plugins/ehcache16">
-                           <fileset dir="plugins/ehcache16/target/distribution/plugin-ehcache16-1.0.0-SNAPSHOT-bin/plugin-ehcache16-1.0.0-SNAPSHOT">
+                           <fileset dir="plugins/ehcache16/target/distribution/plugin-ehcache16-bin/plugin-ehcache16">
                               <include name="**/*" />
                            </fileset>
                         </copy>

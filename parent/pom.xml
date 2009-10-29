@@ -147,7 +147,7 @@
                <descriptors>
                   <descriptor>src/main/resources/assembly/bin.xml</descriptor>
                </descriptors>
-               <finalName>${artifact.id}</finalName>
+               <finalName>${artifactId}</finalName>
                <outputDirectory>target/distribution</outputDirectory>
                <workDirectory>target/assembly/work</workDirectory>
             </configuration>
