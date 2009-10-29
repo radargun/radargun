@@ -76,6 +76,12 @@
                               <include name="**/*" />
                            </fileset>
                         </copy>
+			
+                        <copy todir="${out}/bin">
+                           <fileset dir="bin">
+                              <include name="**/*" />
+                           <fileset>
+                        </copy>
 
                         <zip destfile="${zipfile}" basedir="${out}" />
                      </tasks>
