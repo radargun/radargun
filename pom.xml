@@ -14,11 +14,11 @@
    <modules>
       <module>parent</module>
       <module>framework</module>
-      <module>cache-products/infinispan4</module>
-      <module>cache-products/jbosscache2</module>
-      <module>cache-products/jbosscache3</module>
-      <module>cache-products/ehcache15</module>
-      <module>cache-products/ehcache16</module>
+      <module>plugins/infinispan4</module>
+      <module>plugins/jbosscache2</module>
+      <module>plugins/jbosscache3</module>
+      <module>plugins/ehcache15</module>
+      <module>plugins/ehcache16</module>
    </modules>
 
    <build>
@@ -49,31 +49,31 @@
                         </copy>
 
                         <copy todir="${out}/plugins/infinispan4">
-                           <fileset dir="cache-products/infinispan4/target/distribution/plugin-infinispan4-1.0.0-SNAPSHOT-bin/plugin-infinispan4-1.0.0-SNAPSHOT">
+                           <fileset dir="plugins/infinispan4/target/distribution/plugin-infinispan4-1.0.0-SNAPSHOT-bin/plugin-infinispan4-1.0.0-SNAPSHOT">
                               <include name="**/*" />
                            </fileset>
                         </copy>
 
                         <copy todir="${out}/plugins/jbosscache3">
-                           <fileset dir="cache-products/jbosscache3/target/distribution/plugin-jbosscache3-1.0.0-SNAPSHOT-bin/plugin-jbosscache3-1.0.0-SNAPSHOT">
+                           <fileset dir="plugins/jbosscache3/target/distribution/plugin-jbosscache3-1.0.0-SNAPSHOT-bin/plugin-jbosscache3-1.0.0-SNAPSHOT">
                               <include name="**/*" />
                            </fileset>
                         </copy>
 
                         <copy todir="${out}/plugins/jbosscache2">
-                           <fileset dir="cache-products/jbosscache2/target/distribution/plugin-jbosscache2-1.0.0-SNAPSHOT-bin/plugin-jbosscache2-1.0.0-SNAPSHOT">
+                           <fileset dir="plugins/jbosscache2/target/distribution/plugin-jbosscache2-1.0.0-SNAPSHOT-bin/plugin-jbosscache2-1.0.0-SNAPSHOT">
                               <include name="**/*" />
                            </fileset>
                         </copy>
 
                         <copy todir="${out}/plugins/ehcache15">
-                           <fileset dir="cache-products/ehcache15/target/distribution/plugin-ehcache15-1.0.0-SNAPSHOT-bin/plugin-ehcache15-1.0.0-SNAPSHOT">
+                           <fileset dir="plugins/ehcache15/target/distribution/plugin-ehcache15-1.0.0-SNAPSHOT-bin/plugin-ehcache15-1.0.0-SNAPSHOT">
                               <include name="**/*" />
                            </fileset>
                         </copy>
 
                         <copy todir="${out}/plugins/ehcache16">
-                           <fileset dir="cache-products/ehcache16/target/distribution/plugin-ehcache16-1.0.0-SNAPSHOT-bin/plugin-ehcache16-1.0.0-SNAPSHOT">
+                           <fileset dir="plugins/ehcache16/target/distribution/plugin-ehcache16-1.0.0-SNAPSHOT-bin/plugin-ehcache16-1.0.0-SNAPSHOT">
                               <include name="**/*" />
                            </fileset>
                         </copy>
