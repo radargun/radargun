@@ -82,7 +82,12 @@
                               <include name="**/*" />
                            </fileset>
                         </copy>
-
+                        <chmod perm="ugo+rwx" type="file">
+                           <fileset dir="${out}/bin">
+                              <include name="**/*.sh"/>
+                              <include name="**/*.py"/>
+                           </fileset>
+                        </chmod>
                         <zip destfile="${zipfile}" basedir="${out}" />
                      </tasks>
                   </configuration>
