@@ -6,10 +6,10 @@ import org.cachebench.fwk.state.NodeState;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -117,7 +117,18 @@ public class BenchmarkNode {
       int serverPort = BenchmarkServer.DEFAULT_PORT;
       for (int i = 0; i < args.length - 1; i++) {
          if (args[i].equals("-serverHost")) {
-            serverHost = args[i+1];
+            String param = args[i+1];
+            if (param.contains(":")) {
+               serverHost = param.substring(0, param.indexOf(":"));
+               try {
+                  serverPort = Integer.parseInt(param.substring(param.indexOf(":")+1));
+               } catch (NumberFormatException nfe) {
+                  log.warn("Unable to parse port part of the master server!  Failing!");
+                  System.exit(10);
+               }
+            } else {
+               serverHost = param;
+            }
          } else if (args[i].equals("-serverPort")) {
             try {
                serverPort = Integer.parseInt(args[i+1]);
