@@ -17,32 +17,34 @@ SKIP_BUILD=false
 
 help_and_exit() {
   echo "Usage: "
-  echo '  $ start_remote_slaves.sh [-v] [-p SLAVE_PREFIX] [-u ssh_user] [-nc] [-async] [-sb] [-sc] [-w WORKING DIRECTORY] -n num_slaves -m MASTER_IP:PORT -g GIT_URL'
+  echo '  $ start_remote_slaves.sh [-v] [-p SLAVE_PREFIX] [-u ssh_user] [-nc] [-async] [-sb] [-sc] [-w WORKING DIRECTORY] [-g GIT_URL] -plugin plugin_name -n num_slaves -m MASTER_IP:PORT '
   echo ""
-  echo "   -v     Be verbose"
+  echo "   -v       Be verbose"
   echo ""
-  echo "   -p     Provides a prefix to all slave names entered in /etc/hosts"
-  echo "          Defaults to '$SLAVE_PREFIX'"
+  echo "   -p       Provides a prefix to all slave names entered in /etc/hosts"
+  echo "            Defaults to '$SLAVE_PREFIX'"
   echo ""
-  echo "   -u     SSH user to use when SSH'ing across to the slaves.  Defaults to current user."
+  echo "   -u       SSH user to use when SSH'ing across to the slaves.  Defaults to current user."
   echo ""
-  echo "   -nc    If this flag is passed in, then the working directory on the slave is not cleaned."
+  echo "   -nc      If this flag is passed in, then the working directory on the slave is not cleaned."
   echo ""
-  echo "   -async If provided, then each SSH connection will be forked as a separate process"
+  echo "   -async   If provided, then each SSH connection will be forked as a separate process"
   echo ""
-  echo "   -sb    If provided, the framework and tests will NOT be rebuilt on slaves prior to running."
+  echo "   -sb      If provided, the framework and tests will NOT be rebuilt on slaves prior to running."
   echo ""
-  echo "   -sc    If provided, the framework will NOT be checked out of source control prior to building."
+  echo "   -sc      If provided, the framework will NOT be checked out of source control prior to building."
   echo ""
-  echo "   -w     Working directory on the slave.  Defaults to '$WORKING_DIR'."
+  echo "   -w       Working directory on the slave.  Defaults to '$WORKING_DIR'."
   echo ""
-  echo "   -n     Number of slaves.  This is REQUIRED."
+  echo "   -g       URL from which to perform a git clone to pull sources.  Only needed if -sc is NOT specified."
   echo ""
-  echo "   -m     Connection to MASTER server.  IP address and port is needed.  This is REQUIRED."
+  echo "   -plugin  Name of the cache plugin to load onto the slave's classpath.  This is REQUIRED."  
   echo ""
-  echo "   -g     URL from which to perform a git clone to pull sources."
+  echo "   -n       Number of slaves.  This is REQUIRED."
   echo ""
-  echo "   -h     Displays this help screen"
+  echo "   -m       Connection to MASTER server.  IP address and port is needed.  This is REQUIRED."
+  echo ""
+  echo "   -h       Displays this help screen"
   echo ""
   exit 0
 }
@@ -89,7 +91,11 @@ do
       ;;
     "-sc")
       SKIP_CHECKOUT=true
-      ;; 
+      ;;
+    "-plugin")
+      PLUGIN=$2
+      shift
+      ;;
     *)
       help_and_exit
       ;;
@@ -98,18 +104,26 @@ do
 done
 
 if [ -z $NUM_SLAVES ] ; then
-  echo "FATAL: required information missing!"
+  echo "FATAL: required information (-n) missing!"
   help_and_exit
 fi
 
 if [ -z $MASTER ] ; then
-  echo "FATAL: required information missing!"
+  echo "FATAL: required information (-m) missing!"
   help_and_exit
 fi
 
-if [ -z $GIT_URL ] ; then
-  echo "FATAL: required information missing!"
+if [ -z $PLUGIN ] ; then
+  echo "FATAL: required information (-plugin) missing!"
   help_and_exit
+fi
+
+
+if [ -z $GIT_URL ] ; then
+  if [ $SKIP_BUILD = "false" ] ; then
+    echo "FATAL: required information (-g) missing!"
+    help_and_exit
+  fi
 fi
 
 if [ "$VERBOSE" = "true" ]
@@ -121,12 +135,13 @@ then
   echo "Async: $ASYNC"
   echo "Master: $MASTER"
   echo "Git URL: $GIT_URL"
+  echo "Plugin: $PLUGIN"
   echo "Working directory: $WORKING_DIR"
   echo "Skip checkout? $SKIP_CHECKOUT  Skip build? $SKIP_BUILD"
 fi
 
 loop=1
-CMD="cd $WORKING_DIR"
+CMD="source ~/.bash_profile ; cd $WORKING_DIR"
 if [ "$CLEAN" = "true" ] ; then
   CMD="rm -rf $WORKING_DIR ; mkdir $WORKING_DIR ; cd $WORKING_DIR"
 fi
@@ -139,7 +154,7 @@ if ! [ "$SKIP_BUILD" = "true" ] ; then
   CMD="$CMD ; mvn clean install -Dmaven.test.skip.exec=true"
 fi
 
-CMD="$CMD ; bin/launch_local_slave.sh -m $MASTER"
+CMD="$CMD ; bin/start_local_slave.sh -m $MASTER -plugin $PLUGIN"
 
 while [ $loop -le $NUM_SLAVES ]
 do
