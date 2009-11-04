@@ -6,6 +6,15 @@ echo " This script is used to launch slaves on remote nodes, via SSH.  Relies on
 echo " commands may be executed via SSH."
 echo ""
 
+DIRNAME=`dirname $0`
+
+# Setup CBF_HOME
+if [ "x$CBF_HOME" = "x" ]; then
+    # get the full path (without any relative bits)
+    CBF_HOME=`cd $DIRNAME/..; pwd`
+fi
+export CBF_HOME
+
 SLAVE_PREFIX=slave
 SSH_USER=$USER
 CLEAN=true
@@ -118,6 +127,10 @@ if [ -z $PLUGIN ] ; then
   help_and_exit
 fi
 
+if ! [ -d ${CBF_HOME}/plugins/$PLUGIN ] ; then
+  echo "FATAL: unknown plugin ${PLUGIN}! Directory doesn't exist in ${CBF_HOME}/plugins!"
+  exit 2
+fi
 
 if [ -z $GIT_URL ] ; then
   if [ $SKIP_BUILD = "false" ] ; then

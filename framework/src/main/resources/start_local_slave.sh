@@ -1,5 +1,14 @@
 #!/bin/bash
 
+DIRNAME=`dirname $0`
+
+# Setup CBF_HOME
+if [ "x$CBF_HOME" = "x" ]; then
+    # get the full path (without any relative bits)
+    CBF_HOME=`cd $DIRNAME/..; pwd`
+fi
+export CBF_HOME
+
 echo ""
 echo "=== Cache Benchmark Framework ==="
 echo " This script is used to launch the local slave process."
@@ -45,21 +54,25 @@ if [ -z $PLUGIN ] ; then
   help_and_exit
 fi
 
+if ! [ -d ${CBF_HOME}/plugins/$PLUGIN ] ; then
+  echo "FATAL: unknown plugin ${PLUGIN}! Directory doesn't exist in ${CBF_HOME}/plugins!"
+  exit 2
+fi
+
 
 echo "Master: $MASTER Plugin: $PLUGIN"
 
 cp="conf"
-for jar in lib/*.jar ; do
+for jar in ${CBF_HOME}/lib/*.jar ; do
   cp=$cp:$jar
 done
-for jar in plugins/${PLUGIN}/lib/*.jar ; do
+for jar in ${CBF_HOME}/plugins/${PLUGIN}/lib/*.jar ; do
   cp=$cp:$jar
 done
-cp=$cp:plugins/${PLUGIN}/conf
+cp=$cp:${CBF_HOME}/plugins/${PLUGIN}/conf
 
 nohup java -cp $cp -Xms1G -Xmx1G -Djava.net.preferIPv4Stack=true -Dbind.address=${MYTESTIP_2} -cp $cp org.cachebench.fwk.BenchmarkNode -serverHost $MASTER > out_slave_`hostname`.txt 2>&1 &
 
-echo ""
 echo "... done! Slave process started!"
 echo ""
 
