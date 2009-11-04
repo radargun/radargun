@@ -25,9 +25,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * // TODO: Mircea - Document this!
- * todo - handle node crashes and server crashes
- * todo -consider using MC for keeping state between stages on client and server
+ * // TODO: Mircea - Document this! todo - handle node crashes and server crashes todo -consider using MC for keeping
+ * state between stages on client and server
  *
  * @author Mircea.Markus@jboss.com
  */
@@ -87,7 +86,7 @@ public class BenchmarkServer {
       currentStage = remainingStages.remove(0);
       while (currentStage instanceof ServerStage) {
          runServerStage((ServerStage) currentStage);
-         if(remainingStages.isEmpty()) {
+         if (remainingStages.isEmpty()) {
             log.info("No more stages to run, exiting...");
             releaseResourcesAndExit();
          }
@@ -114,7 +113,7 @@ public class BenchmarkServer {
             node.configureBlocking(false);
             SelectionKey prevKey = node.register(communicationSelector, SelectionKey.OP_WRITE);
             if (prevKey != null && prevKey.interestOps() != SelectionKey.OP_READ) {
-               log.warn("I was suposed to be interested only in reads at this stage!");
+               log.warn("I was supposed to be interested only in reads at this stage!");
             }
             toSerialize = currentStage.clone();
          } catch (CloneNotSupportedException e) {
@@ -144,7 +143,7 @@ public class BenchmarkServer {
             log.warn(e);
          }
       }
-      
+
       try {
          if (serverSocketChannel != null) serverSocketChannel.socket().close();
       } catch (Throwable e) {
@@ -156,8 +155,7 @@ public class BenchmarkServer {
       discoverySelector = Selector.open();
       serverSocketChannel.register(discoverySelector, SelectionKey.OP_ACCEPT);
       while (nodes.size() < serverConfig.getNodeCount()) {
-         if (log.isTraceEnabled())
-            log.trace("Waitig for " + (serverConfig.getNodeCount() - nodes.size()) + " nodes to register to the server.");
+         log.info("Waiting for " + (serverConfig.getNodeCount() - nodes.size()) + " nodes to register to the server.");
          discoverySelector.select();
          Set<SelectionKey> keySet = discoverySelector.selectedKeys();
          Iterator<SelectionKey> it = keySet.iterator();
@@ -172,7 +170,7 @@ public class BenchmarkServer {
             nodes.add(socketChannel);
             node2Index.put(socketChannel, (nodes.size() - 1));
             if (log.isTraceEnabled())
-               log.trace("Added new node connection from: " + srvSocketChannel.socket().getInetAddress());
+               log.trace("Added new node connection from: " + socketChannel.socket().getInetAddress());
          }
       }
       log.info("Connection established from " + nodes.size() + " nodes.");
@@ -191,7 +189,7 @@ public class BenchmarkServer {
                   log.trace("Processing key: " + key);
                keysIt.remove();
                if (!key.isValid()) {
-                  log.trace("Key not valid, skiping!");
+                  log.trace("Key not valid, skipping!");
                   continue;
                }
                if (key.isWritable()) {
@@ -221,13 +219,13 @@ public class BenchmarkServer {
       if (byteBuffer.limit() >= 4) {
          int expectedSize = byteBuffer.getInt(0);
          if (byteBuffer.position() == expectedSize + 4) {
-            log.trace("Received ack from " + socketChannel);
+            log.trace("Received ACK from " + socketChannel);
             DistStageAck ack = (DistStageAck) SerializationHelper.deserialize(byteBuffer.array(), 4, expectedSize);
             responses.add(ack);
          }
          if (responses.size() == nodes.size()) {
-            if (!((DistStage)currentStage).processAckOnServer(responses)) {
-               log.warn("Current stage determined failures while iterating through server responses. Exiting the benchmark.");
+            if (!((DistStage) currentStage).processAckOnServer(responses)) {
+               log.warn("Current stage determined failures while iterating through server responses. Exiting the framework.");
                releaseResourcesAndExit();
             }
             log.info("Successfully finished stage " + currentStage);
@@ -250,13 +248,13 @@ public class BenchmarkServer {
       ByteBuffer buf = bufferMap.get(socketChannel);
       log.trace("Writing buffer '" + buf + " to channel '" + socketChannel + "' ");
       socketChannel.write(buf);
-      log.trace("Bufer after write: '" + buf + "'");
+      log.trace("Buffer after write: '" + buf + "'");
       if (buf.remaining() == 0) {
          log.trace("Finished writing entire buffer");
          key.interestOps(SelectionKey.OP_READ);
          int nodes = processedNodes.incrementAndGet();
          if (log.isTraceEnabled())
-            log.trace(currentStage + " successfully transmited to " + nodes + " node(s).");
+            log.trace(currentStage + " successfully transmitted to " + nodes + " node(s).");
       }
       if (processedNodes.get() == nodes.size()) {
          log.info("Successfully completed broadcasting stage: " + currentStage);
@@ -283,9 +281,9 @@ public class BenchmarkServer {
 
       String config = null;
 
-      for (int i = 0; i <  args.length - 1; i++) {
+      for (int i = 0; i < args.length - 1; i++) {
          if (args[i].equals("-config")) {
-            config = args[i+1];
+            config = args[i + 1];
          } else {
             System.out.println("Unknown param name: " + args[i]);
          }
@@ -345,7 +343,7 @@ public class BenchmarkServer {
    }
 
    private static void printUsageAndExit() {
-      System.out.println("Usage: ./benchmarkServer.sh  -config <config-file.xml>");
+      System.out.println("Usage: start_master.sh  -config <config-file.xml>");
       System.out.println("       -config : xml file containing benchmark's configuration");
       System.exit(1);
    }

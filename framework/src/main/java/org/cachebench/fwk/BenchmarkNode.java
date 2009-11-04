@@ -13,8 +13,8 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
 
-/**                           /Users/mmarkus/code/benchmarkFwk/cachebenchfwk/framework/src/main/java
- * // TODO: Mircea - Document this!
+/**
+ * /Users/mmarkus/code/benchmarkFwk/cachebenchfwk/framework/src/main/java // TODO: Mircea - Document this!
  *
  * @author Mircea.Markus@jboss.com
  */
@@ -60,7 +60,7 @@ public class BenchmarkNode {
                   try {
                      keyChannel.finishConnect();
                   } catch (IOException e) {
-                     key.cancel();  
+                     key.cancel();
                      log.warn("Could not finish connecting. Is the server started?", e);
                      throw e;
                   }
@@ -107,6 +107,7 @@ public class BenchmarkNode {
 
    private void connectToServer() throws IOException {
       InetSocketAddress socketAddress = new InetSocketAddress(serverHost, serverPort);
+      log.info("Attempting to connect to master server " + serverHost + ":" + serverPort);
       socketChannel = SocketChannel.open();
       socketChannel.configureBlocking(false);
       socketChannel.connect(socketAddress);
@@ -117,11 +118,11 @@ public class BenchmarkNode {
       int serverPort = BenchmarkServer.DEFAULT_PORT;
       for (int i = 0; i < args.length - 1; i++) {
          if (args[i].equals("-serverHost")) {
-            String param = args[i+1];
+            String param = args[i + 1];
             if (param.contains(":")) {
                serverHost = param.substring(0, param.indexOf(":"));
                try {
-                  serverPort = Integer.parseInt(param.substring(param.indexOf(":")+1));
+                  serverPort = Integer.parseInt(param.substring(param.indexOf(":") + 1));
                } catch (NumberFormatException nfe) {
                   log.warn("Unable to parse port part of the master server!  Failing!");
                   System.exit(10);
@@ -131,9 +132,9 @@ public class BenchmarkNode {
             }
          } else if (args[i].equals("-serverPort")) {
             try {
-               serverPort = Integer.parseInt(args[i+1]);
+               serverPort = Integer.parseInt(args[i + 1]);
             } catch (NumberFormatException e) {
-               System.err.println("Incorrect server port: " + args[i+1]);
+               System.err.println("Incorrect server port: " + args[i + 1]);
                printUsageAndExit();
             }
          } else {
@@ -148,7 +149,7 @@ public class BenchmarkNode {
    }
 
    private static void printUsageAndExit() {
-      System.out.println("Usage: ./benchmarkNode.sh [-serverHost <host>] [-serverPort <port>]");
+      System.out.println("Usage: start_local_slave.sh [-serverHost <host>] [-serverPort <port>]");
       System.out.println("       -serverHost: The host on which the server resides. Optional.");
       System.out.println("       -serverPort: The port on which the server is listening for connections. Optional, defaults to " + BenchmarkServer.DEFAULT_PORT);
       System.exit(1);
