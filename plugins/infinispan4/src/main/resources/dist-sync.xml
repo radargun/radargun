@@ -5,7 +5,9 @@
    <global>
 
       <transport clusterName="infinispan-cluster">
-         <property name="configurationFile" value="tcp.xml"/>
+         <properties>
+            <property name="configurationFile" value="tcp.xml"/>
+         </properties>
       </transport>
 
    </global>
@@ -15,7 +17,7 @@
             lockAcquisitionTimeout="20000"
             concurrencyLevel="10000"/>
       <transaction
-            transactionManagerLookupClass="org.infinispan.transaction.GenericTransactionManagerLookup"
+            transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"
             syncRollbackPhase="false"
             syncCommitPhase="false"/>
 

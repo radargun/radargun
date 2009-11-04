@@ -5,7 +5,9 @@
    <global>
 
       <transport clusterName="infinispan-cluster">
-         <property name="configurationFile" value="ispn-udp-sync.xml"/>
+         <properties>
+            <property name="configurationFile" value="ispn-tcp-sync.xml"/>
+         </properties>
 <!--
          <property name="configurationFile" value="ispn-tcp-sync.xml"/>
 -->

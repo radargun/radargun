@@ -1,0 +1,19 @@
+<bench-config>
+   <server bind="localhost" port="1234" nodes="2"/>
+   <stages>
+      <stage name="StartClusterStage" enabled="true">
+         <property name="chacheWrapperClass" value="org.cachebench.cachewrappers.InfinispanWrapper"/>
+         <property name="config" value="repl-sync.xml" mapAggregator="wrapperStartupParams"/>
+      </stage>
+      <stage name="ClusterValidationStage">
+         <property name="PartialReplication" value="true"/>
+      </stage>
+      <stage name="WarmupStage"/>
+      <stage name="WebSessionBenchmarkStage">
+         <property name="numberOfRequests" value="100000"/>
+      </stage>
+      <stage name="CsvReportGenerationStage"/>
+      <stage name="BenchmarkFinishedStage"/>
+   </stages>
+
+</bench-config>

@@ -32,13 +32,7 @@
 		oob_thread_pool.queue_enabled="false"
 		oob_thread_pool.queue_max_size="100"
 		oob_thread_pool.rejection_policy="run"/>
-    <MPING timeout="2000"
-           bind_to_all_interfaces="true"
-           mcast_addr="228.8.8.8"
-           mcast_port="7500"
-           ip_ttl="2"
-           num_initial_members="3"
-           num_ping_requests="1"/>
+    <FILE_PING />
     <MERGE2 max_interval="30000" min_interval="10000"/>
     <FD_SOCK/>
     <FD max_tries="5" shun="true" timeout="10000"/>

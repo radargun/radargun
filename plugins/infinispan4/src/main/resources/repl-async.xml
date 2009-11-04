@@ -5,33 +5,24 @@
    <global>
 
       <transport clusterName="infinispan-cluster">
-         <property name="configurationFile" value="ispn-udp-async.xml"/>
+         <properties>
+            <property name="configurationFile" value="tcp.xml"/>
+         </properties>
       </transport>
-
-      <asyncTransportExecutor>
-         <property name="maxThreads" value="1000" />
-         <property name="queueSize" value="500000" />
-      </asyncTransportExecutor> 
 
    </global>
 
    <default>
-
       <locking
-            lockAcquisitionTimeout="10000"
-            concurrencyLevel="3000"/>
-
+            lockAcquisitionTimeout="20000"
+            concurrencyLevel="10000"/>
       <transaction
             transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"
             syncRollbackPhase="false"
             syncCommitPhase="false"/>
 
       <clustering mode="r">
-         <stateRetrieval fetchInMemoryState="false"/>
-         <async />
-<!--
-         <async asyncMarshalling="false" />
--->
+         <async/>
       </clustering>
    </default>
 

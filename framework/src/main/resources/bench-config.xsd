@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+           jaxb:extensionBindingPrefixes="xjc"
+           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="1.0"
+           elementFormDefault="qualified">
+
+   <xs:annotation>
+      <xs:appinfo>
+         <jaxb:globalBindings>
+
+            <xjc:serializable uid="12343"/>
+            <jaxb:javaType name="int"
+                           xmlType="xs:integer"
+                           parseMethod="org.cachebench.fwk.config.ConfigHelper.parseInt"/>
+            <jaxb:javaType name="java.lang.String"
+                           xmlType="xs:string"
+                           parseMethod="org.cachebench.fwk.config.ConfigHelper.parseString"/>
+            <jaxb:javaType name="boolean"
+                           xmlType="xs:boolean"
+                           parseMethod="org.cachebench.fwk.config.ConfigHelper.parseBoolean"/>
+         </jaxb:globalBindings>
+      </xs:appinfo>
+   </xs:annotation>
+
+
+   <xs:element name="bench-config">
+      <xs:complexType>
+         <xs:sequence>
+            <xs:element ref="server"/>
+            <xs:element ref="stages"/>
+         </xs:sequence>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="server">
+      <xs:complexType>
+         <xs:attribute name="bind" use="required" type="xs:string"/>
+         <xs:attribute name="nodes" use="required" type="xs:integer"/>
+         <xs:attribute name="port" use="optional" type="xs:integer"/>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="stages">
+      <xs:complexType>
+         <xs:sequence>
+            <xs:element maxOccurs="unbounded" ref="stage"/>
+         </xs:sequence>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="stage">
+      <xs:complexType>
+         <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" ref="property"/>
+         </xs:sequence>
+         <xs:attribute name="enabled" type="xs:boolean"/>
+         <xs:attribute name="name" use="required" type="xs:string"/>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="property">
+      <xs:complexType>
+         <xs:attribute name="mapAggregator" type="xs:string"/>
+         <xs:attribute name="name" use="required" type="xs:string"/>
+         <xs:attribute name="value" use="required" type="xs:string"/>
+      </xs:complexType>
+   </xs:element>
+</xs:schema>
