@@ -2,7 +2,8 @@
 
 echo ""
 echo "=== Cache Benchmark Framework ==="
-echo " This script is used to launch slaves on remote nodes, via SSH."
+echo " This script is used to launch slaves on remote nodes, via SSH.  Relies on SSH keys set up such that remote "
+echo " commands may be executed via SSH."
 echo ""
 
 SLAVE_PREFIX=slave
@@ -16,7 +17,7 @@ SKIP_BUILD=false
 
 help_and_exit() {
   echo "Usage: "
-  echo '  $ launch_slaves.sh [-v] [-p SLAVE_PREFIX] [-u ssh user] [-nc] [-async] [-sb] [-sc] [-w WORKING DIRECTORY] -n num_slaves -m MASTER_IP:PORT -g GIT_URL'
+  echo '  $ start_remote_slaves.sh [-v] [-p SLAVE_PREFIX] [-u ssh_user] [-nc] [-async] [-sb] [-sc] [-w WORKING DIRECTORY] -n num_slaves -m MASTER_IP:PORT -g GIT_URL'
   echo ""
   echo "   -v     Be verbose"
   echo ""
@@ -131,24 +132,23 @@ if [ "$CLEAN" = "true" ] ; then
 fi
 
 if ! [ "$SKIP_CHECKOUT" = "true" ] ; then
-  CMD="$CMD ; git pull $GIT_URL"
+  CMD="$CMD ; git pull $GIT_URL ; cd cachebenchfwk "
 fi
-
-CMD="$CMD ; cd cachetester"
 
 if ! [ "$SKIP_BUILD" = "true" ] ; then
   CMD="$CMD ; mvn clean install -Dmaven.test.skip.exec=true"
 fi
 
-CMD="$CMD ; bin/launch_local_slave.sh $MASTER"
+CMD="$CMD ; bin/launch_local_slave.sh -m $MASTER"
 
-while [ loop -le $NUM_SLAVES ]
+while [ $loop -le $NUM_SLAVES ]
 do
   if [ "$ASYNC" = "true" ] ; then
     ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD" &
   else
     ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD"    
-  fi 
+  fi
+  let "loop+=1"
 done
 
 echo ""
