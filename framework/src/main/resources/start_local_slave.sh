@@ -42,7 +42,7 @@ cp="target/classes"
 for jar in target/lib/*.jar ; do 
   cp=$cp:$jar
 done
-nohup java -Djava.net.preferIPv4Stack=true -Dbind.address=${MYTESTIP_2} -cp $cp org.cachebench.fwk.BenchmarkNode -serverHost $MASTER > out_slave_`hostname`.txt 2>&1 &
+nohup java -Xms1G -Xmx1G -Djava.net.preferIPv4Stack=true -Dbind.address=${MYTESTIP_2} -cp $cp org.cachebench.fwk.BenchmarkNode -serverHost $MASTER > out_slave_`hostname`.txt 2>&1 &
 
 echo ""
 echo "... done! Slave process started!"
