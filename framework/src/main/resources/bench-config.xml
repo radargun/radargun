@@ -1,5 +1,5 @@
 <bench-config>
-   <server bind="localhost" port="1234" nodes="2"/>
+   <server bind="${bind.address}" port="1234" nodes="2"/>
    <stages>
       <stage name="StartClusterStage" enabled="true">
          <property name="chacheWrapperClass" value="org.cachebench.cachewrappers.InfinispanWrapper"/>
