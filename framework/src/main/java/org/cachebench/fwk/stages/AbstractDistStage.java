@@ -10,7 +10,7 @@ import org.cachebench.fwk.state.ServerState;
  *
  * @author
  */
-public abstract class AbstractDistStage implements DistStage {
+public abstract class AbstractDistStage extends AbstractStage implements DistStage {
 
    protected transient NodeState nodeState;
 

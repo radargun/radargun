@@ -53,6 +53,9 @@ public class BenchmarkServer {
    private Map<SocketChannel, Integer> node2Index = new HashMap<SocketChannel, Integer>();
    private ServerState state;
 
+   private List<SocketChannel> failedNodes = new ArrayList<SocketChannel>();
+   private List<Stage> failedStages = new ArrayList<Stage>();
+
    public BenchmarkServer(ServerConfig serverConfig) {
       this.serverConfig = serverConfig;
       state = new ServerState(serverConfig);
@@ -84,7 +87,15 @@ public class BenchmarkServer {
       if (remainingStages.size() == 0) {
          releaseResourcesAndExit();
       }
-      currentStage = remainingStages.remove(0);
+      while (true) {
+         currentStage = remainingStages.remove(0);
+         if (shouldProcessStage(currentStage)) {
+            break;
+         }
+         if (remainingStages.size() == 0) {
+            releaseResourcesAndExit();
+         }
+      }
       while (currentStage instanceof ServerStage) {
          runServerStage((ServerStage) currentStage);
          if(remainingStages.isEmpty()) {
@@ -112,10 +123,7 @@ public class BenchmarkServer {
       for (SocketChannel node : nodes) {
          try {
             node.configureBlocking(false);
-            SelectionKey prevKey = node.register(communicationSelector, SelectionKey.OP_WRITE);
-            if (prevKey != null && prevKey.interestOps() != SelectionKey.OP_READ) {
-               log.warn("I was suposed to be interested only in reads at this stage!");
-            }
+            node.register(communicationSelector, SelectionKey.OP_WRITE);
             toSerialize = currentStage.clone();
          } catch (CloneNotSupportedException e) {
             throw new IllegalStateException(e);
@@ -187,16 +195,16 @@ public class BenchmarkServer {
             Iterator<SelectionKey> keysIt = keys.iterator();
             while (keysIt.hasNext()) {
                SelectionKey key = keysIt.next();
-               if (log.isTraceEnabled())
-                  log.trace("Processing key: " + key);
                keysIt.remove();
                if (!key.isValid()) {
                   log.trace("Key not valid, skiping!");
                   continue;
                }
                if (key.isWritable()) {
+                  if (log.isTraceEnabled()) log.trace("Received writable key:" + key);
                   sendStage(key);
                } else if (key.isReadable()) {
+                  if (log.isTraceEnabled()) log.trace("Received readable key:" + key);
                   readStageAck(key);
                } else {
                   log.warn("Unknown selection on key " + key);
@@ -211,33 +219,48 @@ public class BenchmarkServer {
 
       ByteBuffer byteBuffer = bufferMap.get(socketChannel);
 
+      //todo - this enforces a max size on the sent message. Not good!
       if (byteBuffer == null) {
          byteBuffer = ByteBuffer.allocate(8192);
          bufferMap.put(socketChannel, byteBuffer);
       }
 
-      socketChannel.read(byteBuffer);
+      int value = socketChannel.read(byteBuffer);
+      if (log.isTraceEnabled()) {
+         log.trace("We've read into the buffer: " + byteBuffer + ". Number of read bytes is " + value);
+      }
 
-      if (byteBuffer.limit() >= 4) {
+      if (value == -1) {
+         log.warn("Node stopped! Index: " + node2Index.get(socketChannel) + ". Remote socket is: " + socketChannel);
+         key.cancel();
+         failedNodes.add(socketChannel);
+         if (!nodes.remove(socketChannel)) {
+            throw new IllegalStateException("Socket " + socketChannel + " should have been there!");
+         }
+      } else if (byteBuffer.limit() >= 4) {
          int expectedSize = byteBuffer.getInt(0);
          if (byteBuffer.position() == expectedSize + 4) {
             log.trace("Received ack from " + socketChannel);
             DistStageAck ack = (DistStageAck) SerializationHelper.deserialize(byteBuffer.array(), 4, expectedSize);
             responses.add(ack);
          }
-         if (responses.size() == nodes.size()) {
-            if (!((DistStage)currentStage).processAckOnServer(responses)) {
-               log.warn("Current stage determined failures while iterating through server responses. Exiting the benchmark.");
-               releaseResourcesAndExit();
-            }
-            log.info("Successfully finished stage " + currentStage);
-            if (remainingStages.size() == 0) {
-               log.info("Finished all stages, exiting!");
-               releaseResourcesAndExit();
-            }
-            prepareNextStage();
-         }
       }
+
+      if (responses.size() == nodes.size()) {
+         Stage s = currentStage;
+         if (!shouldProcessStage(s)) {
+            log.info("Not processing ack on current stage " + currentStage +" as it is marked to skipOnFailure");
+         } else if (!((DistStage)currentStage).processAckOnServer(responses)) {
+            log.warn("Current stage determined failures while iterating through server responses.");
+            failedStages.add(currentStage);
+         }
+         prepareNextStage();
+      }
+   }
+
+   private boolean shouldProcessStage(Stage s) {
+      boolean wereFailures = !failedStages.isEmpty() || !failedNodes.isEmpty();
+      return !wereFailures || !s.skipOnFailure();
    }
 
    private void releaseResourcesAndExit() {

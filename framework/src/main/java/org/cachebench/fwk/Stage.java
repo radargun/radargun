@@ -6,4 +6,5 @@ package org.cachebench.fwk;
  * @author
  */
 public interface Stage {
+   boolean skipOnFailure();
 }

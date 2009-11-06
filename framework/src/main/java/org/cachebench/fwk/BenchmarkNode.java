@@ -36,6 +36,7 @@ public class BenchmarkNode {
    private void start() throws IOException {
       connectToServer();
       startCommunicationWithServer();
+      log.info("Exiting!");
    }
 
    private void startCommunicationWithServer() throws IOException {
@@ -73,8 +74,7 @@ public class BenchmarkNode {
             } else if (key.isReadable()) {
                int numRead = keyChannel.read(byteBuffer);
                if (numRead == -1) {
-                  // Remote entity shut the socket down cleanly. Do the
-                  // same from our end and cancel the channel.
+                  log.info("Server shutdown!");
                   key.channel().close();
                   key.cancel();
                   return;
@@ -92,7 +92,14 @@ public class BenchmarkNode {
                   key.interestOps(SelectionKey.OP_WRITE);
                }
             } else if (key.isWritable()) {
-               keyChannel.write(byteBuffer);
+               if (log.isTraceEnabled()) {
+                  log.trace("Buffer before writing is: " + byteBuffer);
+               }
+               int val = keyChannel.write(byteBuffer);
+               if (log.isTraceEnabled()) {
+                  log.trace("Successfully written: " + val + " bytes to the server from buffer: " + byteBuffer);
+               }
+
                if (byteBuffer.remaining() == 0) {
                   log.info("Ack successfully sent to the server");
                   byteBuffer.clear();

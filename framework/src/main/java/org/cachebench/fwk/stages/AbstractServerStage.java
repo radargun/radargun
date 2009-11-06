@@ -8,7 +8,7 @@ import org.cachebench.fwk.ServerStage;
  *
  * @author
  */
-public abstract class AbstractServerStage implements ServerStage {
+public abstract class AbstractServerStage extends AbstractStage implements ServerStage {
 
    protected ServerState serverState;
 
