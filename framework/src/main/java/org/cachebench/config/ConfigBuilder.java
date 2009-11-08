@@ -2,32 +2,27 @@ package org.cachebench.config;
 
 import org.apache.commons.digester.Digester;
 
-import java.net.URL;
-import java.net.MalformedURLException;
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * Helper class for loading configurations.
  *
  * @author Mircea.Markus@jboss.com
  */
-public class ConfigBuilder
-{
+public class ConfigBuilder {
    /**
     * Util method to locate a resource on the filesystem as a URL
     *
     * @param filename
     * @return The URL object of the file
     */
-   private static URL findOnFS(String filename)
-   {
+   private static URL findOnFS(String filename) {
       File f = new File(filename);
-      try
-      {
-         if (f.exists()) return f.toURL();
-      }
-      catch (MalformedURLException mue)
-      {
+      try {
+         if (f.exists()) return f.toURI().toURL();
+      } catch (MalformedURLException mue) {
          // bad URL
       }
       return null;
@@ -35,20 +30,18 @@ public class ConfigBuilder
 
    /**
     * Looks for config file on disk then on class path.
+    *
     * @return null if the file cannot be found
     */
-   public static URL findConfigFile(String s)
-   {
+   public static URL findConfigFile(String s) {
       URL confFile = findOnFS(s);
-      if (confFile == null)
-      {
+      if (confFile == null) {
          confFile = findInClasspath(s);
       }
       return confFile;
    }
 
-   public static Configuration parseConfiguration(URL url) throws Exception
-   {
+   public static Configuration parseConfiguration(URL url) throws Exception {
       Digester digester = new Digester();
       // set up the digester rules.
       digester.setValidating(false);
@@ -99,12 +92,11 @@ public class ConfigBuilder
    }
 
    /**
-     * Util method to locate a resource in your classpath
-     */
-    private static URL findInClasspath(String filename)
-    {
-       return ConfigBuilder.class.getClassLoader().getResource(filename);
-    }
+    * Util method to locate a resource in your classpath
+    */
+   private static URL findInClasspath(String filename) {
+      return ConfigBuilder.class.getClassLoader().getResource(filename);
+   }
 
 
 }
