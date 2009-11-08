@@ -6,40 +6,23 @@ if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; 
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ start_master.sh [-m MASTER_IP] [-p PORT] -pc PLUGIN_CONFIG_FILE -c BENCHMARK_CONFIG_FILE -n NUM_SLAVES'
-  wrappedecho ""
-  wrappedecho "   -m     IP address to bind to.  Defaults to 127.0.0.1."
-  wrappedecho ""
-  wrappedecho "   -p     Port to bind to.  Defaults to 1234"
+  wrappedecho '  $ start_local_mode.sh -pc PLUGIN_CONFIG_FILE -c BENCHMARK_CONFIG_FILE'
   wrappedecho ""
   wrappedecho "   -pc    Plugin configuration file, relative to its location in plugins/<PLUGIN>/conf. E.g., repl-sync.xml. This is REQUIRED."
   wrappedecho ""
   wrappedecho "   -c     Benchmark configuration file. This is REQUIRED."
-  wrappedecho ""
-  wrappedecho "   -n     Number of slave nodes to wait for. This is REQUIRED."
   wrappedecho ""
   wrappedecho "   -h     Displays this help screen"
   wrappedecho ""
   exit 0
 }
 
-welcome "This script is used to launch the master (controller) process."
-
-MASTER_IP="127.0.0.1"
-MASTER_PORT="1234"
+welcome "This script is used to launch a LOCAL mode test."
 
 ### read in any command-line params
 while ! [ -z $1 ]
 do
   case "$1" in
-    "-m")
-      MASTER_IP=$2
-      shift
-      ;;
-    "-p")
-      MASTER_PORT=$2
-      shift
-      ;;
     "-pc")
       PLUGIN_CONF=$2
       shift
@@ -66,4 +49,6 @@ if [ -z $CONF ] ; then
 fi
 
 add_fwk_to_classpath
-java -classpath $CP -Djava.net.preferIPv4Stack=true -Dcbf.numslaves=${NUM_SLAVES} -Dcbf.bind.address=${MASTER_IP} -Dcbf.bind.port=${MASTER_PORT} -Dcbf.plugin.configfile=${PLUGIN_CONF} org.cachebench.fwk.BenchmarkServer ${CONF}
+add_plugin_to_classpath $PLUGIN
+
+java -classpath $CP -Djava.net.preferIPv4Stack=true -Dcbf.plugin.configfile=${PLUGIN_CONF} org.cachebench.LocalModeRunner ${CONF}

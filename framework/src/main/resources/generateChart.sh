@@ -1,10 +1,10 @@
 #!/bin/bash
 
-CP=.:classes/production/Framework:./conf
+## Load includes
+if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; pwd` ; fi; export CBF_HOME
+. ${CBF_HOME}/bin/includes.sh
 
-for i in lib/*.jar
-do
-   CP=$CP:$i
-done
+welcome "This script generates charts from the output CSV files, generated after running thr benchmark framework."
 
+add_fwk_to_classpath
 java -cp $CP org.cachebench.reportgenerators.ChartGenerator ${*}
