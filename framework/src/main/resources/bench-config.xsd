@@ -2,8 +2,9 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
            jaxb:extensionBindingPrefixes="xjc"
-           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="1.0"
-           elementFormDefault="qualified">
+           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" version="1.0" jaxb:version="1.0"
+           elementFormDefault="qualified" attributeFormDefault="unqualified"
+           targetNamespace="urn:cachebenchfwk:config:1.0" xmlns:tns="urn:cachebenchfwk:config:1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
    <xs:annotation>
       <xs:appinfo>
@@ -26,12 +27,24 @@
 
    <xs:element name="bench-config">
       <xs:complexType>
-         <xs:sequence>
-            <xs:element ref="server"/>
-            <xs:element ref="stages"/>
-         </xs:sequence>
+         <xs:choice>
+            <xs:sequence>
+               <xs:element ref="server"/>
+               <xs:element ref="stages"/>
+            </xs:sequence>
+            <xs:element ref="local" />
+         </xs:choice>
       </xs:complexType>
    </xs:element>
+
+   <xs:element name="local">
+      <xs:complexType>
+         <xs:attribute name="threads" use="required" type="xs:integer"/>
+         <xs:attribute name="writeratio" use="required" type="xs:float"/>
+         <xs:attribute name="operations" use="optional" type="xs:integer"/>
+      </xs:complexType>
+   </xs:element>
+
    <xs:element name="server">
       <xs:complexType>
          <xs:attribute name="bind" use="required" type="xs:string"/>

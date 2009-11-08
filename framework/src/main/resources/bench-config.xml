@@ -1,4 +1,6 @@
-<bench-config>
+<?xml version="1.0" encoding="UTF-8"?>
+
+<bench-config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:cachebenchfwk:config:1.0">
    <server bind="${cbf.bind.address}" port="${cbf.bind.port}" nodes="${cbf.numslaves}"/>
    <stages>
       <stage name="StartClusterStage" enabled="true">
