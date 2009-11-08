@@ -15,6 +15,10 @@ public class BenchmarkFinishedStage extends AbstractDistStage {
 
    private static Log log = LogFactory.getLog(BenchmarkFinishedStage.class);
 
+   public BenchmarkFinishedStage() {
+      setSkipOnFailure(false);
+   }
+
    public DistStageAck executeOnNode() {
       log.info("Received shutdown request from server...");
       DefaultDistStageAck ack = newDefaultStageAck();
@@ -26,7 +30,7 @@ public class BenchmarkFinishedStage extends AbstractDistStage {
          ack.setRemoteException(e);
          return ack;
       }
-      log.info("Node shut down successfully.");
+      log.info("Cache wrapper successfully tearDown.");
       return ack;
    }
 

@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * // TODO: Mircea - Document this!
  *
- * @author
+ * @author Mircea.Markus@jboss.com
  */
 public class StartClusterStage extends AbstractDistStage {
 
@@ -72,7 +72,6 @@ public class StartClusterStage extends AbstractDistStage {
    public StartClusterStage clone() throws CloneNotSupportedException {
       return (StartClusterStage) super.clone();
    }
-
 
    public void setChacheWrapperClass(String chacheWrapperClass) {
       this.chacheWrapperClass = chacheWrapperClass;
