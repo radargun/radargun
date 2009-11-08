@@ -8,9 +8,6 @@
 
 package org.cachebench.fwk.config;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -18,6 +15,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -53,11 +53,11 @@ public class Stage
     private final static long serialVersionUID = 12343L;
     protected List<Property> property;
     @XmlAttribute
-    @XmlJavaTypeAdapter(Adapter2 .class)
+    @XmlJavaTypeAdapter(SystemPropertyAwareBooleanUnmarshaller.class)
     @XmlSchemaType(name = "boolean")
     protected Boolean enabled;
     @XmlAttribute(required = true)
-    @XmlJavaTypeAdapter(Adapter3 .class)
+    @XmlJavaTypeAdapter(SystemPropertyAwareStringUnmarshaller.class)
     protected String name;
 
     /**

@@ -8,7 +8,6 @@
 
 package org.cachebench.fwk.config;
 
-import java.io.Serializable;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -16,6 +15,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.io.Serializable;
 
 
 /**
@@ -46,14 +46,14 @@ public class Server
 
     private final static long serialVersionUID = 12343L;
     @XmlAttribute(required = true)
-    @XmlJavaTypeAdapter(Adapter3 .class)
+    @XmlJavaTypeAdapter(SystemPropertyAwareStringUnmarshaller.class)
     protected String bind;
     @XmlAttribute(required = true)
-    @XmlJavaTypeAdapter(Adapter1 .class)
+    @XmlJavaTypeAdapter(SystemPropertyAwareIntegerUnmarshaller.class)
     @XmlSchemaType(name = "integer")
     protected Integer nodes;
     @XmlAttribute
-    @XmlJavaTypeAdapter(Adapter1 .class)
+    @XmlJavaTypeAdapter(SystemPropertyAwareIntegerUnmarshaller.class)
     @XmlSchemaType(name = "integer")
     protected Integer port;
 

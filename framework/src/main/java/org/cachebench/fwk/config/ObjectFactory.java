@@ -12,68 +12,59 @@ import javax.xml.bind.annotation.XmlRegistry;
 
 
 /**
- * This object contains factory methods for each 
- * Java content interface and Java element interface 
- * generated in the org.cachebench.fwk.config package. 
- * <p>An ObjectFactory allows you to programatically 
- * construct new instances of the Java representation 
- * for XML content. The Java representation of XML 
- * content can consist of schema derived interfaces 
- * and classes representing the binding of schema 
- * type definitions, element declarations and model 
- * groups.  Factory methods for each of these are 
- * provided in this class.
- * 
+ * This object contains factory methods for each Java content interface and Java element interface generated in the
+ * org.cachebench.fwk.config package. <p>An ObjectFactory allows you to programatically construct new instances of the
+ * Java representation for XML content. The Java representation of XML content can consist of schema derived interfaces
+ * and classes representing the binding of schema type definitions, element declarations and model groups.  Factory
+ * methods for each of these are provided in this class.
  */
 @XmlRegistry
 public class ObjectFactory {
 
 
-    /**
-     * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: org.cachebench.fwk.config
-     * 
-     */
-    public ObjectFactory() {
-    }
+   /**
+    * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package:
+    * org.cachebench.fwk.config
+    */
+   public ObjectFactory() {
+   }
 
-    /**
-     * Create an instance of {@link Server }
-     * 
-     */
-    public Server createServer() {
-        return new Server();
-    }
+   /**
+    * Create an instance of {@link Server }
+    */
+   public Server createServer() {
+      return new Server();
+   }
 
-    /**
-     * Create an instance of {@link Stage }
-     * 
-     */
-    public Stage createStage() {
-        return new Stage();
-    }
+   /**
+    * Create an instance of {@link Stage }
+    */
+   public Stage createStage() {
+      return new Stage();
+   }
 
-    /**
-     * Create an instance of {@link Stages }
-     * 
-     */
-    public Stages createStages() {
-        return new Stages();
-    }
+   /**
+    * Create an instance of {@link Stages }
+    */
+   public Stages createStages() {
+      return new Stages();
+   }
 
-    /**
-     * Create an instance of {@link Property }
-     * 
-     */
-    public Property createProperty() {
-        return new Property();
-    }
+   /**
+    * Create an instance of {@link Property }
+    */
+   public Property createProperty() {
+      return new Property();
+   }
 
-    /**
-     * Create an instance of {@link BenchConfig }
-     * 
-     */
-    public BenchConfig createBenchConfig() {
-        return new BenchConfig();
-    }
+   /**
+    * Create an instance of {@link BenchConfig }
+    */
+   public BenchConfig createBenchConfig() {
+      return new BenchConfig();
+   }
 
+   public LocalModeConfig createLocalModeConfig() {
+      return new LocalModeConfig();
+   }
 }

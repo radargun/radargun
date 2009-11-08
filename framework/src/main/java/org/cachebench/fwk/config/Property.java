@@ -45,13 +45,13 @@ public class Property
 
     private final static long serialVersionUID = 12343L;
     @XmlAttribute
-    @XmlJavaTypeAdapter(Adapter3 .class)
+    @XmlJavaTypeAdapter(SystemPropertyAwareStringUnmarshaller.class)
     protected String mapAggregator;
     @XmlAttribute(required = true)
-    @XmlJavaTypeAdapter(Adapter3 .class)
+    @XmlJavaTypeAdapter(SystemPropertyAwareStringUnmarshaller.class)
     protected String name;
     @XmlAttribute(required = true)
-    @XmlJavaTypeAdapter(Adapter3 .class)
+    @XmlJavaTypeAdapter(SystemPropertyAwareStringUnmarshaller.class)
     protected String value;
 
     /**

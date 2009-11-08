@@ -28,6 +28,11 @@ public class ConfigHelper {
       return Integer.valueOf(val);
    }
 
+   public static float parseFloat(String val) {
+      val = checkForProps(val);
+      return Float.valueOf(val);
+   }
+
    public static String parseString(String value) {
       return checkForProps(value);
    }
