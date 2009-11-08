@@ -1,9 +1,9 @@
 <bench-config>
-   <server bind="${bind.address}" port="1234" nodes="2"/>
+   <server bind="${cbf.bind.address}" port="${cbf.bind.port}" nodes="${cbf.numslaves}"/>
    <stages>
       <stage name="StartClusterStage" enabled="true">
          <property name="chacheWrapperClass" value="org.cachebench.cachewrappers.InfinispanWrapper"/>
-         <property name="config" value="repl-sync.xml" mapAggregator="wrapperStartupParams"/>
+         <property name="config" value="${cbf.plugin.configfile}" mapAggregator="wrapperStartupParams"/>
       </stage>
       <stage name="ClusterValidationStage">
          <property name="PartialReplication" value="true"/>
