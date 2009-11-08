@@ -40,8 +40,9 @@
    <xs:element name="local">
       <xs:complexType>
          <xs:attribute name="threads" use="required" type="xs:integer"/>
-         <xs:attribute name="writeratio" use="required" type="xs:float"/>
-         <xs:attribute name="operations" use="optional" type="xs:integer"/>
+         <xs:attribute name="write-ratio" use="required" type="xs:float"/>
+         <xs:attribute name="operations" use="required" type="xs:integer"/>
+         <xs:attribute name="plugin-config" use="required" type="xs:string" />
       </xs:complexType>
    </xs:element>
 

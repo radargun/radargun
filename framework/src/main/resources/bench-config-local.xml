@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<bench-config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:cachebenchfwk:config:1.0">
+   <local threads="25" write-ratio="0.2" operations="100000" plugin-config="${cbf.plugin.configfile}" />
+</bench-config>
