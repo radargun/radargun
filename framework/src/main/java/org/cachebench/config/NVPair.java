@@ -10,6 +10,14 @@ public class NVPair
    private String name;
    private String value;
 
+   public NVPair(String name, String value) {
+      this.name = name;
+      this.value = value;
+   }
+
+   public NVPair() {
+   }
+
    public String getName()
    {
       return name;
