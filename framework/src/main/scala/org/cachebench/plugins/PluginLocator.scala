@@ -1,10 +1,13 @@
 package org.cachebench.plugins
 
 
+import apache.commons.logging.LogFactory
 import java.net.URL
 import java.util.Properties
 
 object PluginLocator {
+   val log = LogFactory.getLog(PluginLocator.getClass())
+   
    def locatePlugin(): String = {
       // first see if there is an override provided by system properties.
       var wrapperName = System getProperty "cacheBenchFwk.cacheWrapperClassName"
@@ -18,6 +21,8 @@ object PluginLocator {
             wrapperName = props.getProperty("org.cachebenchfwk.wrapper")
          }
       }
+
+      log trace "Picked up wrapper type as " + wrapperName
 
       return wrapperName
    }
