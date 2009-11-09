@@ -9,10 +9,20 @@ import java.util.Date;
  */
 public class CustomType
 {
-   protected String subString = "subclass string";
-   protected int subInt = 5;
-   protected float subFloat = 5.0f;
-   protected long subLong = 5l;
+   protected String subString;
+   protected int subInt;
+   protected float subFloat;
+   protected long subLong;
    protected Date subDate = new Date();
 
+   public CustomType() {
+   }
+
+   public CustomType(int seed) {
+      subInt = seed;
+      subFloat = seed;
+      subLong = seed;
+      subDate.setTime(System.currentTimeMillis() + seed * 100);
+      subString = getClass().getSimpleName() + "-" + seed;
+   }
 }

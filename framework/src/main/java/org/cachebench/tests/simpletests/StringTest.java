@@ -1,8 +1,6 @@
 package org.cachebench.tests.simpletests;
 
-import org.cachebench.CacheWrapper;
-import org.cachebench.tests.results.StatisticTestResult;
-
+import java.util.Random;
 
 /**
  * This is a simple test of adding and getting java.lang.String objects in and out of the cache.
@@ -12,14 +10,15 @@ import org.cachebench.tests.results.StatisticTestResult;
  */
 public class StringTest extends SimpleTest
 {
+   @Override
+   protected Object generateValue(int iteration) {
+      // how big a string do we want?!?
+      // each char is 2 bytes.
+      StringBuilder sb = new StringBuilder("");
+      Random r = new Random();
+      for (int i=0; i<testConfig.getPayloadSizeInBytes() / 2; i++)
+         sb.append(Integer.toString(r.nextInt(36), 36));
 
-   /* (non-Javadoc)
-   * @see org.cachebench.tests.CacheTest#doTest(org.cachebench.config.TestConfig)
-   */
-   public StatisticTestResult doTest(String testName, CacheWrapper cache, String testCaseName, int sampleSize, int numThreads) throws Exception
-   {
-      return performTestWithObjectType(testName, cache, String.class, testCaseName, sampleSize, numThreads);
-
+      return sb.toString();
    }
-
 }

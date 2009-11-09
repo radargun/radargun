@@ -191,6 +191,10 @@ public class LocalModeConfig {
       @XmlJavaTypeAdapter(SystemPropertyAwareIntegerUnmarshaller.class)
       Integer repeatSleep = 1000;
 
+      @XmlAttribute(name = "payload-size")
+      @XmlJavaTypeAdapter(SystemPropertyAwareIntegerUnmarshaller.class)
+      Integer payloadSize = 32;
+
       public String getPluginConfig() {
          return pluginConfig;
       }
@@ -271,6 +275,14 @@ public class LocalModeConfig {
          this.repeatSleep = repeatSleep;
       }
 
+      public Integer getPayloadSize() {
+         return payloadSize;
+      }
+
+      public void setPayloadSize(Integer payloadSize) {
+         this.payloadSize = payloadSize;
+      }
+
       @Override
       public String toString() {
          return "TestConfig{" +
@@ -284,6 +296,7 @@ public class LocalModeConfig {
                ", gcBeforeRepeat=" + gcBeforeRepeat +
                ", repeat=" + repeat +
                ", repeatSleep=" + repeatSleep +
+               ", payloadSize=" + payloadSize +
                '}';
       }
    }

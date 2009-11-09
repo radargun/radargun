@@ -21,48 +21,26 @@ class PutGetChartGenerator extends AbstractChartGen {
    var putData: DefaultCategoryDataset = null
    var getData: DefaultCategoryDataset = null
    var memData: DefaultCategoryDataset = null
-   val chartExtension = ".png"
-   var putChartName = "PutChart"
-   var getChartName = "GetChart"
-   var memChartName = "MemoryFootprintChart"
+   var putChartName = "PutChart.png"
+   var getChartName = "GetChart.png"
+   var memChartName = "MemoryFootprintChart.png"
    val log = LogFactory.getLog(this.getClass())
    var nPuts = 0
    var nGets = 0
    var numFilesScanned = 0
 
-   def generateChart() {
-      readData();
+   def createCharts() {
 
-      def chartNameToUse(s: String) = {
-         if (filenamePrefix == null) s
-         else filenamePrefix + "_" + s
-      }
+      var pcFile = getChartFile(putChartName)
+      ChartUtilities.saveChartAsPNG(pcFile, createChart("Report: Comparing Cache PUT (WRITE) performance", putData, nPuts / numFilesScanned, "Average time (µ-seconds)", false), 800, 800)
 
-      var chartFile = new File(chartNameToUse(putChartName) + chartExtension)
-      if (chartFile.exists()) {
-         chartFile renameTo new File(chartNameToUse(putChartName) + "." + System.currentTimeMillis() + chartExtension)
-         chartFile = new File(chartNameToUse(putChartName) + chartExtension)
-      }
+      var gcFile = getChartFile(getChartName)
+      ChartUtilities.saveChartAsPNG(gcFile, createChart("Report: Comparing Cache GET (READ) performance", getData, nGets / numFilesScanned, "Average time (µ-seconds)", false), 800, 800)
 
-      ChartUtilities.saveChartAsPNG(chartFile, createChart("Report: Comparing Cache PUT (WRITE) performance", putData, nPuts / numFilesScanned, "Average time (µ-seconds)", false), 800, 800)
+      var mcFile = getChartFile(memChartName)
+      ChartUtilities.saveChartAsPNG(mcFile, createChart("Report: Comparing Cache memory footprint", memData, nGets + nPuts / numFilesScanned, "Final memory footprint (MiB)", true), 800, 800)
 
-      chartFile = new File(chartNameToUse(getChartName) + chartExtension)
-      if (chartFile.exists()) {
-         chartFile renameTo new File(chartNameToUse(getChartName) + "." + System.currentTimeMillis() + chartExtension)
-         chartFile = new File(chartNameToUse(getChartName) + chartExtension)
-      }
-
-      ChartUtilities.saveChartAsPNG(chartFile, createChart("Report: Comparing Cache GET (READ) performance", getData, nGets / numFilesScanned, "Average time (µ-seconds)", false), 800, 800)
-
-      chartFile = new File(chartNameToUse(memChartName) + chartExtension)
-      if (chartFile.exists()) {
-         chartFile renameTo new File(chartNameToUse(memChartName) + "." + System.currentTimeMillis() + chartExtension)
-         chartFile = new File(chartNameToUse(memChartName) + chartExtension)
-      }
-
-      ChartUtilities.saveChartAsPNG(chartFile, createChart("Report: Comparing Cache memory footprint", memData, nGets + nPuts / numFilesScanned, "Final memory footprint (MiB)", true), 800, 800)
-
-      log info "Charts saved as " + chartNameToUse(putChartName) + ", " + chartNameToUse(getChartName) + " and " + chartNameToUse(memChartName)
+      log info "Charts saved as " + pcFile + ", " + gcFile + " and " + mcFile
    }
 
    def createChart(title: String, data: DefaultCategoryDataset, numOperations: Int, yAxisLabel: String, isMemory: Boolean): JFreeChart = {

@@ -2,6 +2,7 @@ package org.cachebench.tests;
 
 import org.cachebench.CacheWrapper;
 import org.cachebench.config.Configuration;
+import org.cachebench.config.TestConfig;
 import org.cachebench.tests.results.TestResult;
 
 
@@ -18,7 +19,7 @@ public interface CacheTest
     * Called before {@link #doTest(String, org.cachebench.CacheWrapper, String, int, int)}.
     * Implemetations may cache this and further use on doTest method.
     */
-   void setConfiguration(Configuration configuration);
+   void setConfiguration(Configuration configuration, TestConfig testConfig);
 
    /**
     * Performs the benchmarking on the given tese.

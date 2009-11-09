@@ -17,4 +17,15 @@ public class CustomTypeWithTransient
 
    protected transient String trString = "transient";
    protected transient Date trDate = new Date();
+
+   public CustomTypeWithTransient() {
+   }
+
+   public CustomTypeWithTransient(int seed) {
+      subInt = seed;
+      subFloat = seed;
+      subLong = seed;
+      subDate.setTime(System.currentTimeMillis() + seed * 100);
+      subString = getClass().getSimpleName() + "-" + seed;
+   }
 }

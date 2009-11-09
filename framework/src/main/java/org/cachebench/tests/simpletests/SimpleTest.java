@@ -36,6 +36,7 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
    protected ExecutorService executor;
    private static final int EXECUTOR_SHUTDOWN_TIMEOUT_POLL_SECS = 60;
    protected Configuration configuration;
+   protected TestConfig testConfig;
    protected final int LOG_FREQUENCY = 5000;
    private StatisticTestResult results;
 
@@ -60,7 +61,7 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
       doTest(testName, cache, testCaseName, sampleSize, numThreads);
    }
 
-   protected StatisticTestResult performTestWithObjectType(String testCaseName, CacheWrapper cache, Class valueClass, String testName, int sampleSize, int numThreads) throws Exception
+   public StatisticTestResult doTest(String testName, CacheWrapper cache, String testCaseName, int sampleSize, int numThreads) throws Exception
    {
       writePercentage = getWritePercentageFromConfig(testCaseName, testName);
       log.info("Using write percentage " + writePercentage);
@@ -73,7 +74,7 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
       result.setTestType(testName);
 
       log.info("Performing test");
-      doGetsAndPuts(cache, valueClass, sampleSize, result.getGetData(), result.getPutData());
+      doGetsAndPuts(cache, sampleSize, result.getGetData(), result.getPutData());
 
       result.setTestPassed(true); // The test is passed. The report would make use of this attribute.
 
@@ -115,14 +116,16 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
       return result;
    }
 
+   protected abstract Object generateValue(int iteration);
+
    /**
     * @param cache      The Cachewrapper on which the bechmark is conducted.
     * @param sampleSize The size of the cache.
     * @return The Descriptive statistics of the cache benchmarking.
     */
-   private void doGetsAndPuts(final CacheWrapper cache, final Class valueClass, int sampleSize, final DescriptiveStatistics getStats, final DescriptiveStatistics putStats) throws Exception
+   private void doGetsAndPuts(final CacheWrapper cache, int sampleSize, final DescriptiveStatistics getStats, final DescriptiveStatistics putStats) throws Exception
    {
-      log.debug("Inside doGets for : " + cache);
+      log.debug("Inside doGets for : " + cache.getClass().getSimpleName());
       final String key = "baseKey";
       final Random rand = new Random();
       int modDivisor = 100 / writePercentage;
@@ -145,15 +148,7 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
                   try
                   {
                      // generate some value
-                     Object value;
-                     if (valueClass == null) value = null;
-                     else if (valueClass.getName().equals(String.class.getName())) value = "value" + cycleNumber;
-                     else if (valueClass.getName().equals(Integer.class.getName())) value = cycleNumber;
-                     else value = valueClass.newInstance();
-
-                     // even though some impls may use special marshalling to reduce the amount of data transmitted (such as JBoss Cache's
-                     // CacheMarshaller) we still want to measure the serialized size of objects for this metric.
-
+                     Object value = generateValue(cycleNumber);
                      numberOfBytesPut.getAndAdd(calculateSerializedSize(value));
 
                      List<String> path = generatePath(key, cycleNumber);
@@ -289,8 +284,9 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
       }
    }
 
-   public void setConfiguration(Configuration configuration)
+   public void setConfiguration(Configuration configuration, TestConfig testConfig)
    {
       this.configuration = configuration;
+      this.testConfig = testConfig;
    }
 }

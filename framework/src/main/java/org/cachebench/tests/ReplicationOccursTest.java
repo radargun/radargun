@@ -25,13 +25,15 @@ public class ReplicationOccursTest implements ClusteredCacheTest
    public static final Log log = LogFactory.getLog(ReplicationOccursTest.class);
 
    private Configuration conf;
+   private TestConfig testConfig;
    private static final String PREFIX = "_ReplicationOccursTest_";
    private static final int REPLICATION_TRY_COUNT = 17;
    private static final int REPLICATION_TRY_SLEEP = 2000;
 
-   public void setConfiguration(Configuration configuration)
+   public void setConfiguration(Configuration configuration, TestConfig tc)
    {
       this.conf = configuration;
+      this.testConfig = tc;
    }
 
    public StatisticTestResult doTest(String testName, CacheWrapper cache, String testCaseName, int sampleSize, int numThreads) throws Exception

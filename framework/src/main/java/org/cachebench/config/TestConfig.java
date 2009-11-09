@@ -1,69 +1,69 @@
 package org.cachebench.config;
 
 
-public class TestConfig extends GenericParamsConfig
-{
+public class TestConfig extends GenericParamsConfig {
    private String name;
    private String testClass;
    private float weight;
    private int repeat = 1;
+   private int payloadSizeInBytes = 20;
 
 
    /**
     * @return Returns the name.
     */
-   public String getName()
-   {
+   public String getName() {
       return name;
    }
 
    /**
     * @param name The name to set.
     */
-   public void setName(String name)
-   {
+   public void setName(String name) {
       this.name = name;
    }
 
    /**
     * @return Returns the testClass.
     */
-   public String getTestClass()
-   {
+   public String getTestClass() {
       return testClass;
    }
 
    /**
     * @param testClass The testClass to set.
     */
-   public void setTestClass(String testClass)
-   {
+   public void setTestClass(String testClass) {
       this.testClass = testClass;
    }
 
    /**
     * @return Returns the weight.
     */
-   public float getWeight()
-   {
+   public float getWeight() {
       return weight;
    }
 
    /**
     * @param weight The weight to set.
     */
-   public void setWeight(float weight)
-   {
+   public void setWeight(float weight) {
       this.weight = weight;
    }
 
-   public int getRepeat()
-   {
+   public int getRepeat() {
       return repeat;
    }
 
-   public void setRepeat(int repeat)
-   {
+   public void setRepeat(int repeat) {
       this.repeat = repeat;
+   }
+
+   public int getPayloadSizeInBytes() {
+      return payloadSizeInBytes;
+   }
+
+   public void setPayloadSizeInBytes(int payloadSizeInBytes) {
+      this.payloadSizeInBytes = payloadSizeInBytes;
    }
 }

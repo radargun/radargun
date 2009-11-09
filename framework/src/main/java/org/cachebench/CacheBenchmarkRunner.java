@@ -356,7 +356,7 @@ public class CacheBenchmarkRunner {
       try {
          cacheTestClass = (CacheTest) Instantiator.getInstance().createClass(testConfig.getTestClass());
          conf.setLocalOnly(localOnly);
-         cacheTestClass.setConfiguration(conf);
+         cacheTestClass.setConfiguration(conf, testConfig);
       }
       catch (Exception e) {
          log.warn("Unable to instantiate CacheTest class: " + testConfig.getTestClass() + " - Not Running any tests");

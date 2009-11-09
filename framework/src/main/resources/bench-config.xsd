@@ -48,6 +48,7 @@
       <xs:attribute name="repeat" type="xs:integer" use="optional"/>
       <xs:attribute name="repeat-sleep" type="xs:integer" use="optional"/>
       <xs:attribute name="gc-before-repeat" type="xs:boolean" use="optional"/>
+      <xs:attribute name="payload-size" type="xs:integer" use="optional"/>
    </xs:complexType>
 
    <xs:complexType name="warmup">

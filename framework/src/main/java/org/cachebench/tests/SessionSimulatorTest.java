@@ -4,7 +4,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.config.Configuration;
-import org.cachebench.config.TestCase;
 import org.cachebench.config.TestConfig;
 import org.cachebench.tests.results.TestResult;
 
@@ -61,17 +60,16 @@ public class SessionSimulatorTest extends AbstractCacheTest
    private int writePercentage;
    private ExecutorService ex;
 
-   public void setConfiguration(Configuration configuration)
+   public void setConfiguration(Configuration configuration, TestConfig tc)
    {
       this.configuration = configuration;
+      this.thisTestConfig = tc;
    }
 
    public TestResult doTest(String testName, CacheWrapper cache, String testCaseName, int sampleSize, int numThreads) throws Exception
    {
       ex = Executors.newFixedThreadPool(configuration.getNumThreads());
       this.cacheWrapper = cache;
-      TestCase testCase = configuration.getTestCase(testCaseName);
-      thisTestConfig = testCase.getTest(testName);
       readParams();
       initSession();
       return stressSession(testName, testCaseName);
