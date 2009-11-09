@@ -49,7 +49,8 @@ public abstract class AbstractChartGen implements ChartGen
          cf = getChartFile(defaultName);
       } else {
          // make any parent dirs if necessary
-         cf.getParentFile().mkdirs();
+         File parent = cf.getParentFile();
+         if (parent != null) parent.mkdirs();
       }
       return cf;
    }
