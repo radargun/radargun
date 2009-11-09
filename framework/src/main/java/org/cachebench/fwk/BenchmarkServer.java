@@ -3,12 +3,10 @@ package org.cachebench.fwk;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cachebench.fwk.config.BenchConfig;
+import org.cachebench.fwk.config.ConfigFactory;
 import org.cachebench.fwk.config.ConfigHelper;
 import org.cachebench.fwk.state.ServerState;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -315,18 +313,16 @@ public class BenchmarkServer {
       if (config == null) {
          printUsageAndExit();
       }
-      File configFile = new File(config);
-      if (!configFile.exists()) {
-         System.err.println("No such file: " + configFile.getAbsolutePath());
-         printUsageAndExit();
+
+      BenchConfig bc = null;
+      try {
+         bc = new ConfigFactory().createConfig(config);
+      } catch (Exception e) {
+         System.err.println("Problems dealing wioth config file");
+         e.printStackTrace();
       }
 
-      JAXBContext jc = JAXBContext.newInstance("org.cachebench.fwk.config");
-      Unmarshaller unmarshaller = jc.createUnmarshaller();
-
-
-      BenchConfig benchConfig = (BenchConfig) unmarshaller.unmarshal(configFile);
-      BenchmarkServer server = ConfigHelper.getServer(benchConfig);
+      BenchmarkServer server = ConfigHelper.getServer(bc);
       server.start();
 
 
