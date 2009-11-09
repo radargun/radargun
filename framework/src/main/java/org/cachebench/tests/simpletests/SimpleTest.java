@@ -124,7 +124,7 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
    {
       log.debug("Inside doGets for : " + cache);
       final String key = "baseKey";
-      Random rand = new Random();
+      final Random rand = new Random();
       int modDivisor = 100 / writePercentage;
       numberOfBytesPut.set(0);
 
@@ -157,7 +157,7 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
                      numberOfBytesPut.getAndAdd(calculateSerializedSize(value));
 
                      List<String> path = generatePath(key, cycleNumber);
-                     String attributeKey = path.toString() + key + cycleNumber;
+                     String attributeKey = Integer.toHexString(rand.nextInt());
 
                      // start your timer...
                      boolean transactional = configuration.isUseTransactions();
