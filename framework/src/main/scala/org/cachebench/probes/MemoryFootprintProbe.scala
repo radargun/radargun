@@ -11,8 +11,8 @@ object MemoryFootprintProbe {
       var m0 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
 
       // ensure we see some GC!
-      for (i <- 0 to 100) {
-         Thread.sleep(50)
+      for (i <- 0 to 10) {
+         Thread.sleep(100)
          System.gc()
       }
 
