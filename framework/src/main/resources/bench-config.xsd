@@ -59,6 +59,7 @@
 
    <xs:complexType name="report">
       <xs:attribute name="dir" type="xs:string" use="optional"/>
+      <xs:attribute name="mem-footprint-chart" type="xs:boolean" use="optional"/>
    </xs:complexType>
 
    <xs:complexType name="bench-config">

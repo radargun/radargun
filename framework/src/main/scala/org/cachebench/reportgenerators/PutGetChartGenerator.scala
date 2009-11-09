@@ -37,10 +37,13 @@ class PutGetChartGenerator extends AbstractChartGen {
       var gcFile = getChartFile(getChartName)
       ChartUtilities.saveChartAsPNG(gcFile, createChart("Report: Comparing Cache GET (READ) performance", getData, nGets / numFilesScanned, "Average time (µ-seconds)", false), 800, 800)
 
-      var mcFile = getChartFile(memChartName)
-      ChartUtilities.saveChartAsPNG(mcFile, createChart("Report: Comparing Cache memory footprint", memData, nGets + nPuts / numFilesScanned, "Final memory footprint (MiB)", true), 800, 800)
-
-      log info "Charts saved as " + pcFile + ", " + gcFile + " and " + mcFile
+      if (memData != null) {
+         var mcFile = getChartFile(memChartName)
+         ChartUtilities.saveChartAsPNG(mcFile, createChart("Report: Comparing Cache memory footprint", memData, nGets + nPuts / numFilesScanned, "Final memory footprint (MiB)", true), 800, 800)
+         log info "Charts saved as " + pcFile + ", " + gcFile + " and " + mcFile
+      } else {
+         log info "Charts saved as " + pcFile + " and " + gcFile
+      }
    }
 
    def createChart(title: String, data: DefaultCategoryDataset, numOperations: Int, yAxisLabel: String, isMemory: Boolean): JFreeChart = {
@@ -81,7 +84,7 @@ class PutGetChartGenerator extends AbstractChartGen {
 
       var avgPut: Double = -1
       var avgGet: Double = -1
-      var mem: Double = 0
+      var mem: Double = -1
       var s: Stats = null
 
       while (line != null && s == null)
@@ -94,7 +97,7 @@ class PutGetChartGenerator extends AbstractChartGen {
                   avgGet = s.getAvgGet
                   nGets += s.getNumGets
                   nPuts += s.getNumPuts
-                  mem = s.getMem
+                  if (s.getMem > 0) mem = s.getMem
                }
             line = br.readLine()
          }
@@ -103,7 +106,10 @@ class PutGetChartGenerator extends AbstractChartGen {
 
       putData addValue (avgPut, productName, "PUT")
       getData addValue (avgGet, productName, "GET")
-      memData addValue (mem, productName, "MemoryFootprint")
+      if (mem > 0)
+         memData addValue (mem, productName, "MemoryFootprint")
+      else
+         memData = null
       numFilesScanned += 1
    }
 
@@ -126,12 +132,13 @@ class PutGetChartGenerator extends AbstractChartGen {
       var nPutStr = strTokenizer.nextToken()
       var nGetStr = strTokenizer.nextToken()
       var mem = strTokenizer.nextToken()
+      var memToUse: Double = -1
+      if (mem.toLong > 0) memToUse = mem.toDouble / (1024 * 1024)
       try {
          return new Stats(
             putStr.toDouble / 1000,
             getStr.toDouble / 1000,
-            nPutStr.toInt, nGetStr.toInt,
-            mem.toDouble / (1024 * 1024))
+            nPutStr.toInt, nGetStr.toInt, memToUse)
       } catch {
          case _: NumberFormatException => return null
       }

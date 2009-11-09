@@ -83,6 +83,10 @@ public class LocalModeConfig {
       @XmlJavaTypeAdapter(SystemPropertyAwareStringUnmarshaller.class)
       String dir = "out";
 
+      @XmlAttribute (name="mem-footprint-chart")
+      @XmlJavaTypeAdapter(SystemPropertyAwareBooleanUnmarshaller.class)
+      Boolean memFootprintChart = false;
+
       public String getDir() {
          return dir;
       }
@@ -91,10 +95,19 @@ public class LocalModeConfig {
          this.dir = dir;
       }
 
+      public Boolean isMemFootprintChart() {
+         return memFootprintChart;
+      }
+
+      public void setMemFootprintChart(Boolean memFootprintChart) {
+         this.memFootprintChart = memFootprintChart;
+      }
+
       @Override
       public String toString() {
          return "ReportConfig{" +
                "dir='" + dir + '\'' +
+               ", memFootprintChart=" + memFootprintChart +
                '}';
       }
    }

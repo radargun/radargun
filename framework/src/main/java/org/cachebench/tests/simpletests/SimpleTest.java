@@ -111,8 +111,13 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
       // set the number of members in the cluster
       result.setNumMembers(cache.getNumMembers());
       result.setNumThreads(numThreads);
-      System.gc();
-      result.addFinalMemoryUsed(MemoryFootprintProbe.calculateMemoryFootprint());
+
+      if (testConfig.isMeasureMemFootprint()) {
+         System.gc();
+         result.addFinalMemoryUsed(MemoryFootprintProbe.calculateMemoryFootprint());
+      } else {
+         result.addFinalMemoryUsed(-1);
+      }
       return result;
    }
 

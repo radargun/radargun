@@ -17,5 +17,5 @@
          plugin-config="${cbf.plugin.configfile}" transactional="false" repeat="25"
          repeat-sleep="1000" gc-before-repeat="true" payload-size="1024"/>
 
-   <report dir="out" />
+   <report dir="out" mem-footprint-chart="false" />
 </local-bench-config>

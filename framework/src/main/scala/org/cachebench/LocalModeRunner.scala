@@ -63,6 +63,7 @@ object LocalModeRunner {
       legacyTestConfig setRepeat (cfg.getTestConfig.getRepeat.intValue)
       legacyTestConfig setName cfg.getTestConfig.getTestName
       legacyTestConfig setPayloadSizeInBytes cfg.getTestConfig.getPayloadSize.intValue
+      legacyTestConfig setMeasureMemFootprint cfg.getReport.isMemFootprintChart.booleanValue
       legacyTestConfig addParam nvpairCreator("writePercentage", toPercentStr(cfg.getTestConfig.getWriteRatio.floatValue))
 
       val legacyTestCase = new TestCase()

@@ -7,6 +7,7 @@ public class TestConfig extends GenericParamsConfig {
    private float weight;
    private int repeat = 1;
    private int payloadSizeInBytes = 20;
+   private boolean measureMemFootprint = false;
 
 
    /**
@@ -65,5 +66,13 @@ public class TestConfig extends GenericParamsConfig {
 
    public void setPayloadSizeInBytes(int payloadSizeInBytes) {
       this.payloadSizeInBytes = payloadSizeInBytes;
+   }
+
+   public boolean isMeasureMemFootprint() {
+      return measureMemFootprint;
+   }
+
+   public void setMeasureMemFootprint(boolean measureMemFootprint) {
+      this.measureMemFootprint = measureMemFootprint;
    }
 }
