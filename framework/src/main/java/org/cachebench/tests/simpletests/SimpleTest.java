@@ -219,7 +219,7 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
       blockTillTasksComplete();
 
       // return the raw data
-      log.debug("Leaving doTasks for : " + cache);
+      log.debug("Leaving doTasks for : " + cache.getClass().getSimpleName());
    }
 
    private void logOperation(int i, String s, long statvalue)
