@@ -7,6 +7,7 @@ import org.cachebench.CacheWrapper;
 import org.cachebench.config.Configuration;
 import org.cachebench.config.TestCase;
 import org.cachebench.config.TestConfig;
+import org.cachebench.probes.MemoryFootprintProbe;
 import org.cachebench.tests.AbstractCacheTest;
 import org.cachebench.tests.StatisticTest;
 import org.cachebench.tests.results.StatisticTestResult;
@@ -109,18 +110,9 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
       // set the number of members in the cluster
       result.setNumMembers(cache.getNumMembers());
       result.setNumThreads(numThreads);
-
       System.gc();
-      Thread.sleep(2000); // let GC kick in
-
-      result.addFinalMemoryUsed(calculateMemoryFootprint());
-
+      result.addFinalMemoryUsed(MemoryFootprintProbe.calculateMemoryFootprint());
       return result;
-   }
-
-   private long calculateMemoryFootprint() {
-      Runtime r = Runtime.getRuntime();
-      return r.totalMemory() - r.freeMemory();
    }
 
    /**
