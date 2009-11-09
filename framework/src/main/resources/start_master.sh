@@ -66,4 +66,6 @@ if [ -z $CONF ] ; then
 fi
 
 add_fwk_to_classpath
-java -classpath $CP -Djava.net.preferIPv4Stack=true -Dcbf.numslaves=${NUM_SLAVES} -Dcbf.bind.address=${MASTER_IP} -Dcbf.bind.port=${MASTER_PORT} -Dcbf.plugin.configfile=${PLUGIN_CONF} org.cachebench.fwk.BenchmarkServer ${CONF}
+set_env
+
+java -classpath $CP ${JVM_OPTS} -Djava.net.preferIPv4Stack=true -Dcbf.numslaves=${NUM_SLAVES} -Dcbf.bind.address=${MASTER_IP} -Dcbf.bind.port=${MASTER_PORT} -Dcbf.plugin.configfile=${PLUGIN_CONF} org.cachebench.fwk.BenchmarkServer ${CONF}

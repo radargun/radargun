@@ -71,5 +71,6 @@ fi
 
 add_fwk_to_classpath
 add_plugin_to_classpath $PLUGIN
+set_env
 
-java -classpath $CP -Djava.net.preferIPv4Stack=true -Dcbf.plugin.configfile=${PLUGIN_CONF} -Dcbf.benchmarkname=${BENCHNAME} org.cachebench.LocalModeRunner -c ${CONF}
+java -classpath $CP ${JVM_OPTS} -Djava.net.preferIPv4Stack=true -Dcbf.plugin.configfile=${PLUGIN_CONF} -Dcbf.benchmarkname=${BENCHNAME} org.cachebench.LocalModeRunner -c ${CONF}

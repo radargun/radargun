@@ -50,3 +50,7 @@ add_fwk_to_classpath() {
   done
   add_to_classpath ${CBF_HOME}/conf
 }
+
+set_env() {
+   . ${CBF_HOME}/bin/environment.sh
+}

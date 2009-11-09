@@ -48,8 +48,9 @@ fi
 
 add_fwk_to_classpath
 add_plugin_to_classpath $PLUGIN
+set_env
 
-nohup java -cp $CP -Xms1G -Xmx1G -Djava.net.preferIPv4Stack=true -Dbind.address=${MYTESTIP_2} -cp $cp org.cachebench.fwk.BenchmarkNode -serverHost $MASTER > out_slave_`hostname`.txt 2>&1 &
+nohup java -classpath $CP ${JVM_OPTS} -Djava.net.preferIPv4Stack=true -Dbind.address=${BIND_ADDRESS} -Djgroups.bind_addr=${BIND_ADDRESS} org.cachebench.fwk.BenchmarkNode -serverHost $MASTER > out_slave_`hostname`.txt 2>&1 &
 
 echo "... done! Slave process started!"
 echo ""
