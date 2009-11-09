@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
            jaxb:extensionBindingPrefixes="xjc"
-           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" version="1.0" jaxb:version="1.0"
+           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" version="1.0"
            elementFormDefault="qualified" attributeFormDefault="unqualified"
-           targetNamespace="urn:cachebenchfwk:config:1.0" xmlns:tns="urn:cachebenchfwk:config:1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+           targetNamespace="urn:cachebenchfwk:config:1.0" xmlns:tns="urn:cachebenchfwk:config:1.0">
 
    <xs:annotation>
       <xs:appinfo>
@@ -20,60 +20,77 @@
             <jaxb:javaType name="boolean"
                            xmlType="xs:boolean"
                            parseMethod="org.cachebench.fwk.config.ConfigHelper.parseBoolean"/>
+            <jaxb:javaType name="float"
+                           xmlType="xs:float"
+                           parseMethod="org.cachebench.fwk.config.ConfigHelper.parseFloat"/>
          </jaxb:globalBindings>
       </xs:appinfo>
    </xs:annotation>
 
+   <xs:element name="bench-config" type="tns:bench-config" />
+   <xs:element name="local-bench-config" type="tns:local-bench-config" />
 
-   <xs:element name="bench-config">
-      <xs:complexType>
-         <xs:choice>
-            <xs:sequence>
-               <xs:element ref="server"/>
-               <xs:element ref="stages"/>
-            </xs:sequence>
-            <xs:element ref="local" />
-         </xs:choice>
-      </xs:complexType>
-   </xs:element>
+   <xs:complexType name="local-bench-config">
+      <xs:element name="warmup" type="tns:warmup" />
+      <xs:element name="test" type="tns:test" />
+      <xs:element name="report" type="tns:report" />
+      <xs:attribute name="benchmark-name" type="xs:string" use="required"/>
+   </xs:complexType>
 
-   <xs:element name="local">
-      <xs:complexType>
-         <xs:attribute name="threads" use="required" type="xs:integer"/>
-         <xs:attribute name="write-ratio" use="required" type="xs:float"/>
-         <xs:attribute name="operations" use="required" type="xs:integer"/>
-         <xs:attribute name="plugin-config" use="required" type="xs:string" />
-      </xs:complexType>
-   </xs:element>
+   <xs:complexType name="test">
+      <xs:attribute name="threads" type="xs:integer" use="required"/>
+      <xs:attribute name="write-ratio" type="xs:float" use="required"/>
+      <xs:attribute name="iterations" type="xs:integer" use="required"/>
+      <xs:attribute name="plugin-config" type="xs:string" use="required"/>
+      <xs:attribute name="class" type="xs:string" use="optional"/>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="transactional" type="xs:boolean" use="optional"/>
+      <xs:attribute name="repeat" type="xs:integer" use="optional"/>
+      <xs:attribute name="repeat-sleep" type="xs:integer" use="optional"/>
+      <xs:attribute name="gc-before-repeat" type="xs:boolean" use="optional"/>
+   </xs:complexType>
 
-   <xs:element name="server">
-      <xs:complexType>
-         <xs:attribute name="bind" use="required" type="xs:string"/>
-         <xs:attribute name="nodes" use="required" type="xs:integer"/>
-         <xs:attribute name="port" use="optional" type="xs:integer"/>
-      </xs:complexType>
-   </xs:element>
-   <xs:element name="stages">
-      <xs:complexType>
-         <xs:sequence>
-            <xs:element maxOccurs="unbounded" ref="stage"/>
-         </xs:sequence>
-      </xs:complexType>
-   </xs:element>
-   <xs:element name="stage">
-      <xs:complexType>
-         <xs:sequence>
-            <xs:element minOccurs="0" maxOccurs="unbounded" ref="property"/>
-         </xs:sequence>
-         <xs:attribute name="enabled" type="xs:boolean"/>
-         <xs:attribute name="name" use="required" type="xs:string"/>
-      </xs:complexType>
-   </xs:element>
-   <xs:element name="property">
-      <xs:complexType>
-         <xs:attribute name="mapAggregator" type="xs:string"/>
-         <xs:attribute name="name" use="required" type="xs:string"/>
-         <xs:attribute name="value" use="required" type="xs:string"/>
-      </xs:complexType>
-   </xs:element>
+   <xs:complexType name="warmup">
+      <xs:attribute name="enabled" type="xs:boolean" use="optional"/>
+      <xs:attribute name="class" type="xs:string" use="optional"/>
+      <xs:attribute name="iterations" type="xs:integer" use="optional"/>
+   </xs:complexType>
+
+   <xs:complexType name="report">
+      <xs:attribute name="dir" type="xs:string" use="optional"/>
+   </xs:complexType>
+
+   <xs:complexType name="bench-config">
+      <xs:sequence>
+         <xs:element name="server" type="tns:server"/>
+         <xs:element name="stages" type="tns:stages"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="server">
+      <xs:attribute name="bind" use="required" type="xs:string"/>
+      <xs:attribute name="nodes" use="required" type="xs:integer"/>
+      <xs:attribute name="port" use="optional" type="xs:integer"/>
+   </xs:complexType>
+
+   <xs:complexType name="stages">
+      <xs:sequence>
+         <xs:element name="stage" maxOccurs="unbounded" type="tns:stage"/>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="stage">
+      <xs:sequence>
+         <xs:element name="property" minOccurs="0" maxOccurs="unbounded" type="tns:property"/>
+      </xs:sequence>
+      <xs:attribute name="enabled" type="xs:boolean"/>
+      <xs:attribute name="name" use="required" type="xs:string"/>
+   </xs:complexType>
+
+   <xs:complexType name="property">
+      <xs:attribute name="mapAggregator" type="xs:string"/>
+      <xs:attribute name="name" use="required" type="xs:string"/>
+      <xs:attribute name="value" use="required" type="xs:string"/>
+   </xs:complexType>
+
 </xs:schema>

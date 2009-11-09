@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<bench-config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:cachebenchfwk:config:1.0">
-   <local threads="25" write-ratio="0.2" operations="100000" plugin-config="${cbf.plugin.configfile}" />
-</bench-config>
+<local-bench-config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:cachebenchfwk:config:1.0"
+                    benchmark-name="${cbf.benchmarkname}">
+
+   <!-- Warmups are typically used to enable the Hotspot compiler to spin up to speed -->
+   <warmup enabled="true" iterations="100000" />
+
+   <!--
+      the number of actual operations performed are iterations X repeat.  After every test run, the cache is shut down
+      and started again, hence every repeat cycle ensures a fresh, clear cache.  This helps give us a better statistic
+      sample and iron out anomalies.
+   -->   
+   <test name="Strings" threads="25" write-ratio="0.2" iterations="100000"
+         plugin-config="${cbf.plugin.configfile}" transactional="false" repeat="30"
+         repeat-sleep="2000" gc-before-repeat="true" />
+
+   <report dir="out" />
+</local-bench-config>
