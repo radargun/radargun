@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class InfinispanWrapper implements CacheWrapper {
    CacheManager cacheManager;
-   Cache cache;
+   Cache<Object, Object> cache;
    TransactionManager tm;
    boolean started = false;
    String config;
