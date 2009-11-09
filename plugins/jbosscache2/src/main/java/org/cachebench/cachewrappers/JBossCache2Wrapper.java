@@ -64,7 +64,7 @@ public class JBossCache2Wrapper implements CacheWrapper
 
    public int getNumMembers()
    {
-      return inLocalMode ? 0 : cache.getMembers().size();
+      return cache.getMembers() == null ? 0 : cache.getMembers().size();
    }
 
    public String getInfo()
