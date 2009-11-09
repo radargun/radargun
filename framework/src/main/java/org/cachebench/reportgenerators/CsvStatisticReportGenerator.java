@@ -80,6 +80,7 @@ public class CsvStatisticReportGenerator extends CsvBaseReportGenerator
          buf.append(putData.getN());
          buf.append(",");
          buf.append(getData.getN());
+         buf.append(",").append(stResults.getFinalMemoryUsed());
       }
       else
       {
@@ -101,7 +102,7 @@ public class CsvStatisticReportGenerator extends CsvBaseReportGenerator
    protected void writeHeaderLine(BufferedWriter writer) throws IOException
    {
       log.debug("Write the Report Header");
-      writer.write("TEST NAME, TEST DATE, TEST TYPE, NUM MEMBERS, NUM THREADS, TOTAL PUT TIME (secs), TOTAL GET TIME (secs), MEAN PUT TIME, MEAN GET TIME, MEDIAN PUT TIME, MEDIAN GET TIME, STANDARD DEVIATION PUT TIME, STANDARD DEVIATION GET TIME, MAX PUT TIME, MAX GET TIME, MIN PUT TIME, MIN GET TIME, THROUGHPUT TRANSACTIONS PER SEC, THROUGHPUT BYTES PER SEC, NUM_PUTS, NUM_GETS");
+      writer.write("TEST NAME, TEST DATE, TEST TYPE, NUM MEMBERS, NUM THREADS, TOTAL PUT TIME (secs), TOTAL GET TIME (secs), MEAN PUT TIME, MEAN GET TIME, MEDIAN PUT TIME, MEDIAN GET TIME, STANDARD DEVIATION PUT TIME, STANDARD DEVIATION GET TIME, MAX PUT TIME, MAX GET TIME, MIN PUT TIME, MIN GET TIME, THROUGHPUT TRANSACTIONS PER SEC, THROUGHPUT BYTES PER SEC, NUM_PUTS, NUM_GETS, FINAL_MEMORY_FOOTPRINT");
       writer.newLine();
       log.debug("Completed the Report Header");
    }

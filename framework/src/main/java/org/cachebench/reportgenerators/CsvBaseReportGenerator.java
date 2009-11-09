@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -75,15 +74,17 @@ public abstract class CsvBaseReportGenerator extends AbstractReportGenerator
 
    private void prepareReportFile() throws IOException
    {
-      String fileName = output.getAbsolutePath() + ".old." + System.currentTimeMillis();
       if (output.exists())
       {
+         String fileName = output.getAbsolutePath() + ".old." + System.currentTimeMillis();
          log.info("A file named: '" + output.getAbsolutePath() + "' already exist. Renaming to '" + fileName + "'");
          if (output.renameTo(new File(fileName))) {
             log.warn("Could not rename!!!");
          }
-      } else
-      {
+      } else {
+         // mk parent dirs
+         output.getParentFile().mkdirs();
+         
          if (output.createNewFile()) {
             log.info("Successfully created report file:" + output.getAbsolutePath());
          } else {

@@ -110,7 +110,17 @@ public abstract class SimpleTest extends AbstractCacheTest implements StatisticT
       result.setNumMembers(cache.getNumMembers());
       result.setNumThreads(numThreads);
 
+      System.gc();
+      Thread.sleep(2000); // let GC kick in
+
+      result.addFinalMemoryUsed(calculateMemoryFootprint());
+
       return result;
+   }
+
+   private long calculateMemoryFootprint() {
+      Runtime r = Runtime.getRuntime();
+      return r.totalMemory() - r.freeMemory();
    }
 
    /**

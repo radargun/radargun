@@ -1,5 +1,6 @@
 package org.cachebench.reportgenerators;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -51,6 +52,7 @@ public class ChartGenerator
          if (args[i].equals("-o"))
          {
             fnPrefix = args[++i];
+            if (!fnPrefix.endsWith(File.separator)) fnPrefix += File.separator;
             continue;
          }
 

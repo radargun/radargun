@@ -3,6 +3,7 @@ package org.cachebench.reportgenerators;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.math.stat.descriptive.SynchronizedDescriptiveStatistics;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -133,7 +134,7 @@ public class ThroughputChartGenerator extends AbstractChartGen
       log.info("Parsing file " + f.getAbsoluteFile());
       // chop up the file name to get productAndConfiguration and clusterSize.
       Integer clusterSize = 0;
-      DescriptiveStatistics stats = DescriptiveStatistics.newInstance();
+      DescriptiveStatistics stats = new SynchronizedDescriptiveStatistics();
       // file name is in the format data_<cache-product>_<cache-cfg.xml>_<cluster-size>.csv
 
       StringTokenizer strtok = new StringTokenizer(f.getName(), "_");
