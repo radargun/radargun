@@ -33,8 +33,7 @@ import java.util.Map;
  * @author Manik Surtani (manik@surtani.org)
  * @version $Id: CacheBenchmarkRunner.java,v 1.1 2007/05/17 07:37:44 msurtani Exp $
  */
-public class CacheBenchmarkRunner
-{
+public class CacheBenchmarkRunner {
 
    private Configuration conf;
    private Log log = LogFactory.getLog(CacheBenchmarkRunner.class);
@@ -48,19 +47,14 @@ public class CacheBenchmarkRunner
    Map<String, String> systemParams = new HashMap<String, String>();
    boolean localOnly;
 
-   public static void main(String[] args)
-   {
+   public static void main(String[] args) {
       String conf = null;
-      if (args.length == 1)
-      {
+      if (args.length == 1) {
          conf = args[0];
       }
-      if (conf != null && conf.toLowerCase().endsWith(".xml"))
-      {
+      if (conf != null && conf.toLowerCase().endsWith(".xml")) {
          new CacheBenchmarkRunner(conf);
-      }
-      else
-      {
+      } else {
          new CacheBenchmarkRunner();
       }
    }
@@ -68,8 +62,7 @@ public class CacheBenchmarkRunner
    /**
     * Initialise some params that may be passed in via JVM params
     */
-   private void initJVMParams(String defaultCfgFile)
-   {
+   private void initJVMParams(String defaultCfgFile) {
       boolean useFlatCache = Boolean.getBoolean("cacheBenchFwk.useFlatCache");
       String overallCfg = System.getProperty("cacheBenchFwk.fwkCfgFile", defaultCfgFile);
       String configuraton = System.getProperty("cacheBenchFwk.cacheConfigFile");
@@ -87,53 +80,57 @@ public class CacheBenchmarkRunner
       if (useFlatCache) systemParams.put("cacheBenchFwk.useFlatCache", "TRUE");
    }
 
-   private CacheBenchmarkRunner()
-   {
+   public CacheBenchmarkRunner(Configuration conf, String cacheProductName, String configuraton, boolean localOnly, boolean start) throws Exception {
+      if (!localOnly)
+         throw new UnsupportedOperationException("Not implemented!  This constructor is only for local mode.");
+      this.conf = conf;
+      this.cacheProductName = cacheProductName;
+      if (cacheProductName != null) systemParams.put("cacheProductName", cacheProductName);
+      this.configuraton = configuraton;
+      if (configuraton != null) systemParams.put("config", configuraton);
+      this.localOnly = localOnly;
+      if (start) start();
+   }
+
+   private CacheBenchmarkRunner() {
       this("cachebench.xml");
    }
 
-   private CacheBenchmarkRunner(String s)
-   {
+   private CacheBenchmarkRunner(String s) {
       initJVMParams(s);
       // first, try and find the configuration on the filesystem.
       s = systemParams.get("fwk.config");
       URL confFile = ConfigBuilder.findConfigFile(s);
-      if (confFile == null)
-      {
+      if (confFile == null) {
          log.warn("Unable to locate a configuration file " + s + "; Application terminated");
-      }
-      else
-      {
+      } else {
          if (log.isDebugEnabled()) log.debug("Using configuration " + confFile);
          log.debug("Parsing configuration");
-         try
-         {
+         try {
             conf = ConfigBuilder.parseConfiguration(confFile);
-            log.info("Starting Benchmarking....");
-            List<TestResult> results = runTests(); // Run the tests from this point.
-            if (results != null && results.size() != 0)
-            {
-               generateReports(results); // Run the reports...
-            }
-            else
-            {
-               log.warn("No Results to be reported");
-            }
-            log.info("Benchmarking Completed.  Hope you enjoyed using this! \n");
+            start();
          }
-         catch (Throwable e)
-         {
+         catch (Throwable e) {
             log.warn("Unable to parse configuration file " + confFile + ". Application terminated", e);
             errorLogger.fatal("Unable to parse configuration file " + confFile, e);
          }
       }
    }
 
-   CacheWrapper newCache(TestCase test) throws Exception
-   {
+   public void start() throws Exception {
+      log.info("Starting Benchmarking....");
+      List<TestResult> results = runTests(); // Run the tests from this point.
+      if (results != null && results.size() != 0) {
+         generateReports(results); // Run the reports...
+      } else {
+         log.warn("No Results to be reported");
+      }
+      log.info("Benchmarking Completed.  Hope you enjoyed using this! \n");
+   }
+
+   CacheWrapper newCache(TestCase test) throws Exception {
       CacheWrapper cache = getCacheWrapperInstance(test);
-      if (cache != null)
-      {
+      if (cache != null) {
          Map<String, String> params = test.getParams();
          // now add the config file, if any is passed in:
          params.putAll(systemParams);
@@ -149,17 +146,13 @@ public class CacheBenchmarkRunner
     *
     * @return The Array of TestResult objects with the results of the tests.
     */
-   private List<TestResult> runTests() throws Exception
-   {
+   private List<TestResult> runTests() throws Exception {
       List<TestResult> results = new ArrayList<TestResult>();
-      for (TestCase test : conf.getTestCases())
-      {
+      for (TestCase test : conf.getTestCases()) {
          CacheWrapper cache = null;
-         try
-         {
+         try {
             cache = newCache(test);
-            if (cache != null)
-            {
+            if (cache != null) {
                //now start testing
                cache.setUp();
                warmupCache(test, cache);
@@ -169,14 +162,11 @@ public class CacheBenchmarkRunner
                results.addAll(resultsForCache);
             }
          }
-         catch (Exception e)
-         {
-            try
-            {
+         catch (Exception e) {
+            try {
                shutdownCache(cache);
             }
-            catch (Exception e1)
-            {
+            catch (Exception e1) {
                //ignore
             }
             log.warn("Unable to Initialize or Setup the Cache - Not performing any tests", e);
@@ -187,8 +177,7 @@ public class CacheBenchmarkRunner
       return results;
    }
 
-   private void barrier(String messageName) throws Exception
-   {
+   private void barrier(String messageName) throws Exception {
       ClusterBarrier barrier = new ClusterBarrier();
       log.trace("Using following cluster config: " + conf.getClusterConfig());
       barrier.setConfig(conf.getClusterConfig());
@@ -198,8 +187,7 @@ public class CacheBenchmarkRunner
 
    }
 
-   private void warmupCache(TestCase test, CacheWrapper cache) throws Exception
-   {
+   private void warmupCache(TestCase test, CacheWrapper cache) throws Exception {
       if (!localOnly) barrier("BEFORE_WARMUP");
       log.info("Warming up..");
       CacheWarmupConfig warmupConfig = test.getCacheWarmupConfig();
@@ -212,33 +200,26 @@ public class CacheBenchmarkRunner
    }
 
    /**
-    * Peforms the necessary external tasks for cache benchmarking.
-    * These external tasks are defined in the cachebench.xml and would
-    * be executed against the cache under test.
+    * Peforms the necessary external tasks for cache benchmarking. These external tasks are defined in the
+    * cachebench.xml and would be executed against the cache under test.
     *
     * @param cache      The CacheWrapper for the cache in test.
     * @param testResult The TestResult of the test to which the tasks are executed.
     */
-   private TestResult executeTestTasks(CacheWrapper cache, TestResult testResult)
-   {
-      try
-      {
-         if (conf.isEmptyCacheBetweenTests())
-         {
+   private TestResult executeTestTasks(CacheWrapper cache, TestResult testResult) {
+      try {
+         if (conf.isEmptyCacheBetweenTests()) {
             cache.empty();
          }
-         if (conf.isGcBetweenTestsEnabled())
-         {
+         if (conf.isGcBetweenTestsEnabled()) {
             System.gc();
             Thread.sleep(conf.getSleepBetweenTests());
          }
       }
-      catch (InterruptedException e)
-      {
+      catch (InterruptedException e) {
          // Nothing doing here...
       }
-      catch (Exception e)
-      {
+      catch (Exception e) {
          // The Empty barrier of the cache failed. Add a foot note for the TestResult here.
 //         testResult.setFootNote("The Cache Empty barrier failed after test case: " + testResult.getTestName() + " : " + testResult.getTestType());
 //         errorLogger.error("The Cache Empty barrier failed after test case : " + testResult.getTestName() + ", " + testResult.getTestType(), e);
@@ -247,60 +228,46 @@ public class CacheBenchmarkRunner
       return testResult;
    }
 
-   private List<TestResult> runTestsOnCache(CacheWrapper cache, TestCase testCase)
-   {
+   private List<TestResult> runTestsOnCache(CacheWrapper cache, TestCase testCase) {
       List<TestResult> results = new ArrayList<TestResult>();
-      for (TestConfig testConfig : testCase.getTests())
-      {
+      for (TestConfig testConfig : testCase.getTests()) {
          CacheTest testInstance = getCacheTest(testConfig);
-         if (testInstance instanceof ClusteredCacheTest && localOnly)
-         {
+         if (testInstance instanceof ClusteredCacheTest && localOnly) {
             log.warn("Skipping replicated tests since this is in local mode!");
             continue;
          }
 
-         if (testInstance != null)
-         {
+         if (testInstance != null) {
             TestResult result;
             String testName = testConfig.getName();
             String testCaseName = testCase.getName();
-            try
-            {
-               if (testInstance instanceof StatisticTest)
-               {
+            try {
+               if (testInstance instanceof StatisticTest) {
                   // create new DescriptiveStatistics and pass it to the test
                   int repeat = testConfig.getRepeat();
                   if (log.isInfoEnabled()) log.info("Running test " + repeat + " times");
                   StatisticTestResult str = new StatisticTestResult();
-                  for (int i = 0; i < repeat; i++)
-                  {
+                  for (int i = 0; i < repeat; i++) {
                      ((StatisticTest) testInstance).doCumulativeTest(testName, cache, testCaseName, conf.getSampleSize(), conf.getNumThreads(), str);
-                     if (conf.isEmptyCacheBetweenTests())
-                     {
-                        if (conf.isLocalOnly())
-                        {
+                     if (conf.isEmptyCacheBetweenTests()) {
+                        if (conf.isLocalOnly()) {
                            // destroy and restart the cache
                            shutdownCache(cache);
                            if (i != repeat - 1) cache = newCache(testCase);
-                        }
-                        else
+                        } else
                            cache.empty();
                      }
-                     if (conf.isGcBetweenTestsEnabled())
-                     {
+                     if (conf.isGcBetweenTestsEnabled()) {
                         System.gc();
                         Thread.sleep(conf.getSleepBetweenTests());
                      }
                   }
                   result = str;
-               }
-               else
-               {
+               } else {
                   result = testInstance.doTest(testName, cache, testCaseName, conf.getSampleSize(), conf.getNumThreads());
                }
             }
-            catch (Exception e)
-            {
+            catch (Exception e) {
                // The test failed. We should add a test result object with a error message and indicate that it failed.
                result = new BaseTestResult();
                result.setTestName(testCaseName);
@@ -312,14 +279,12 @@ public class CacheBenchmarkRunner
                log.warn("Test case : " + testCaseName + ", Test : " + testName + " - Failed due to", e);
                errorLogger.error("Test case : " + testCaseName + ", Test : " + testName + " - Failed : " + e.getMessage(), e);
             }
-            if (!result.isTestPassed() && testCase.isStopOnFailure())
-            {
+            if (!result.isTestPassed() && testCase.isStopOnFailure()) {
                log.warn("The test '" + testCase + "/" + testName + "' failed, exiting...");
                System.exit(1);
             }
             executeTestTasks(cache, result);
-            if (!result.isSkipReport())
-            {
+            if (!result.isSkipReport()) {
                results.add(result);
             }
          }
@@ -327,17 +292,13 @@ public class CacheBenchmarkRunner
       return results;
    }
 
-   private void generateReports(List<TestResult> results)
-   {
+   private void generateReports(List<TestResult> results) {
       log.info("Generating Reports...");
-      for (Report report : conf.getReports())
-      {
+      for (Report report : conf.getReports()) {
          ReportGenerator generator;
-         try
-         {
+         try {
             generator = getReportGenerator(report);
-            if (generator != null)
-            {
+            if (generator != null) {
                if (generator instanceof ClusterAwareReportGenerator && localOnly)
                   throw new IllegalArgumentException("Configured to run in local mode only, cannot use a clustered report generator!");
                Map<String, String> params = report.getParams();
@@ -348,14 +309,11 @@ public class CacheBenchmarkRunner
                generator.setOutputFile(report.getOutputFile());
                generator.generate();
                log.info("Report Generation Completed");
-            }
-            else
-            {
+            } else {
                log.info("Report not generated - See logs for reasons!!");
             }
          }
-         catch (Exception e)
-         {
+         catch (Exception e) {
             log.warn("Unable to generate Report : " + report.getGenerator() + " - See logs for reasons");
             log.warn("Skipping this report");
             errorLogger.error("Unable to generate Report : " + report.getGenerator(), e);
@@ -364,16 +322,13 @@ public class CacheBenchmarkRunner
       }
    }
 
-   private CacheWrapper getCacheWrapperInstance(TestCase testCaseClass)
-   {
+   private CacheWrapper getCacheWrapperInstance(TestCase testCaseClass) {
       CacheWrapper cache = null;
-      try
-      {
+      try {
          cache = (CacheWrapper) Instantiator.getInstance().createClass(testCaseClass.getCacheWrapper());
 
       }
-      catch (Exception e)
-      {
+      catch (Exception e) {
          log.warn("Unable to instantiate CacheWrapper class: " + testCaseClass.getCacheWrapper() + " - Not Running any tests");
          errorLogger.error("Unable to instantiate CacheWrapper class: " + testCaseClass.getCacheWrapper(), e);
          errorLogger.error("Skipping this test");
@@ -381,16 +336,13 @@ public class CacheBenchmarkRunner
       return cache;
    }
 
-   private ReportGenerator getReportGenerator(Report reportClass)
-   {
+   private ReportGenerator getReportGenerator(Report reportClass) {
       ReportGenerator report = null;
-      try
-      {
+      try {
          report = (ReportGenerator) Instantiator.getInstance().createClass(reportClass.getGenerator());
 
       }
-      catch (Exception e)
-      {
+      catch (Exception e) {
          log.warn("Unable to instantiate ReportGenerator class: " + reportClass.getGenerator() + " - Not generating the report");
          errorLogger.error("Unable to instantiate ReportGenerator class: " + reportClass.getGenerator(), e);
          errorLogger.error("Skipping this report");
@@ -399,17 +351,14 @@ public class CacheBenchmarkRunner
 
    }
 
-   private CacheTest getCacheTest(TestConfig testConfig)
-   {
+   private CacheTest getCacheTest(TestConfig testConfig) {
       CacheTest cacheTestClass = null;
-      try
-      {
+      try {
          cacheTestClass = (CacheTest) Instantiator.getInstance().createClass(testConfig.getTestClass());
          conf.setLocalOnly(localOnly);
          cacheTestClass.setConfiguration(conf);
       }
-      catch (Exception e)
-      {
+      catch (Exception e) {
          log.warn("Unable to instantiate CacheTest class: " + testConfig.getTestClass() + " - Not Running any tests");
          errorLogger.error("Unable to instantiate CacheTest class: " + testConfig.getTestClass(), e);
          errorLogger.error("Skipping this Test");
@@ -418,14 +367,11 @@ public class CacheBenchmarkRunner
 
    }
 
-   private void shutdownCache(CacheWrapper cache)
-   {
-      try
-      {
+   private void shutdownCache(CacheWrapper cache) {
+      try {
          cache.tearDown();
       }
-      catch (Exception e)
-      {
+      catch (Exception e) {
          log.warn("Cache Shutdown - Failed.");
          errorLogger.error("Cache Shutdown failed : ", e);
       }
