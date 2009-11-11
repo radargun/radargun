@@ -16,21 +16,35 @@ echo ""
 
 help_and_exit() {
   echo "Usage: "
-  echo '  $ start_local_slave.sh -m MASTER_IP:PORT -plugin plugin_name'
+  echo '  $ start_local_slave.sh -m MASTER_IP -plugin plugin_name'
   echo ""
-  echo "   -m     Connection to MASTER server.  IP address and port is needed.  This is REQUIRED."
+  echo "   -mh       MASTER host. This is REQUIRED."
   echo ""
-  echo "   -h     Displays this help screen"
+  echo "   -mp       MASTER's port. Optional, if not present defauls to 2103."
+  echo ""
+  echo "   -i        Node's index. This will be prepended to the log file."
+  echo ""
+  echo "   -plugin   The plugin to be benchmarked. Shoule be a dir in ../plugins/<plugin_dir>"
+  echo ""
+  echo "   -h        Displays this help screen"
   echo ""
   exit 0
 }
 
 ### read in any command-line params
-while ! [ -z $1 ] 
+while ! [ -z $1 ]
 do
   case "$1" in
-    "-m")
-      MASTER=$2
+    "-mh")
+      MASTER_HOST=$2
+      shift
+      ;;
+    "-mp")
+      MASTER_PORT=$2
+      shift
+      ;;
+    "-i")
+      NODE_INDEX=$2
       shift
       ;;
     "-plugin")
@@ -44,9 +58,19 @@ do
   shift
 done
 
-if [ -z $MASTER ] ; then
+if [ -z $MASTER_HOST ] ; then
   echo "FATAL: required information (-m) missing!"
   help_and_exit
+fi
+
+CONF=""
+if [ "$MASTER_PORTx" != "x" ] ; then
+  CONF="$CONF -masterPort $MASTER_PORT"
+fi
+
+DJAVA=""
+if [ "$NODE_INDEXx" != "x" ] ; then
+  DJAVA="$DJAVA -Dlog4j.file.prefix=$NODE_INDEX"
 fi
 
 if [ -z $PLUGIN ] ; then
@@ -60,9 +84,9 @@ if ! [ -d ${CBF_HOME}/plugins/$PLUGIN ] ; then
 fi
 
 
-echo "Master: $MASTER Plugin: $PLUGIN"
+echo "MASTER_HOST: $MASTER_HOST Plugin: $PLUGIN Master port: $MASTER_PORT nodeIndex: $NODE_INDEX"
 
-cp="conf"
+cp=${CBF_HOME}/conf
 for jar in ${CBF_HOME}/lib/*.jar ; do
   cp=$cp:$jar
 done
@@ -71,7 +95,7 @@ for jar in ${CBF_HOME}/plugins/${PLUGIN}/lib/*.jar ; do
 done
 cp=$cp:${CBF_HOME}/plugins/${PLUGIN}/conf
 
-nohup java -cp $cp -Xms1G -Xmx1G -Djava.net.preferIPv4Stack=true -Dbind.address=${MYTESTIP_2} -cp $cp org.cachebench.fwk.BenchmarkNode -serverHost $MASTER > out_slave_`hostname`.txt 2>&1 &
+nohup java -cp $cp -Xms1G -Xmx1G $DJAVA -Djava.net.preferIPv4Stack=true -Dbind.address=${MYTESTIP_2} -cp $cp org.cachebench.fwk.Slave -masterHost $MASTER_HOST $CONF > out_slave_`hostname`.txt 2>&1 &
 
 echo "... done! Slave process started!"
 echo ""

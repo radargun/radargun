@@ -2,14 +2,20 @@ package org.cachebench.cachewrappers;
 
 import org.cachebench.CacheWrapper;
 import org.infinispan.Cache;
+import org.infinispan.factories.ComponentRegistry;
+import org.infinispan.context.Flag;
 import org.infinispan.manager.CacheManager;
 import org.infinispan.manager.DefaultCacheManager;
+import org.jgroups.logging.Log;
+import org.jgroups.logging.LogFactory;
 
 import javax.transaction.TransactionManager;
 import java.util.List;
 import java.util.Map;
 
 public class InfinispanWrapper implements CacheWrapper {
+
+   private static Log log = LogFactory.getLog(InfinispanWrapper.class);
    CacheManager cacheManager;
    Cache cache;
    TransactionManager tm;
@@ -46,10 +52,16 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public void empty() throws Exception {
-      cache.clear();
+      log.info("Cache size before clear: " + cache.size());
+      cache.getAdvancedCache().withFlags(Flag.FORCE_SYNCHRONOUS).clear();
+      log.info("Cache size after clear: " + cache.size());
    }
 
    public int getNumMembers() {
+      ComponentRegistry componentRegistry = cache.getAdvancedCache().getComponentRegistry();
+      if (componentRegistry.getStatus().startingUp()) {
+         log.info("We're in the process of starting up.");
+      }
       return cacheManager.getMembers() == null ? 0 : cacheManager.getMembers().size();
    }
 

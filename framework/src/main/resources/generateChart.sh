@@ -7,4 +7,4 @@ do
    CP=$CP:$i
 done
 
-java -cp $CP org.cachebench.reportgenerators.ChartGenerator ${*}
+java -cp $CP org.cachebench.reporting.ChartGenerator ${*}

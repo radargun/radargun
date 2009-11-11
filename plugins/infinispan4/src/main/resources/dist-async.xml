@@ -10,7 +10,7 @@
    </global>
 
    <default>
-      <locking lockAcquisitionTimeout="120000" concurrencyLevel="10000" useLockStriping="false"/>
+      <locking lockAcquisitionTimeout="10000" concurrencyLevel="10000" useLockStriping="false"/>
       <transaction
             transactionManagerLookupClass="org.infinispan.transaction.GenericTransactionManagerLookup"
             syncRollbackPhase="false"

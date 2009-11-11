@@ -10,7 +10,7 @@
    </global>
 
    <default>
-      <locking lockAcquisitionTimeout="120000" concurrencyLevel="10000" useLockStriping="false"/>
+      <locking lockAcquisitionTimeout="10000" concurrencyLevel="10000" useLockStriping="false"/>
 
       <transaction
             transactionManagerLookupClass="org.infinispan.transaction.GenericTransactionManagerLookup"
@@ -19,7 +19,7 @@
 
       <clustering mode="d">
          <async asyncMarshalling="false"/>
-         <l1 enabled="true" lifespan="120000" onRehash="false"/>
+         <l1 enabled="true" lifespan="10000" onRehash="false"/>
          <hash rehashEnabled="false" numOwners="2"/>
       </clustering>
    </default>

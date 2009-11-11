@@ -1,19 +1,78 @@
 <bench-config>
-   <server bind="${bind.address}" port="1234" nodes="2"/>
-   <stages>
+
+   <master bind="${bind.address}" port="1234" slavesCount="4"/>
+
+   <scaling-benchmark initSize="2" maxSize="4" increment="1" name="infinispan_async-repl">
+      <before>
+         <stage name="BenchmarkCleanupStage"/>
+      </before>
+      <benchmark-stages>
+         <stage name="StartClusterStage" enabled="true">
+            <property name="chacheWrapperClass" value="org.cachebench.cachewrappers.InfinispanWrapper"/>
+            <property name="config" value="repl-async.xml" mapAggregator="wrapperStartupParams"/>
+         </stage>
+         <stage name="ClusterValidationStage">
+            <property name="PartialReplication" value="true"/>
+         </stage>
+         <stage name="WarmupStage">
+            <property name="OperationCount" value="20"/>
+         </stage>
+         <stage name="WebSessionBenchmarkStage">
+            <property name="numberOfRequests" value="1000"/>
+         </stage>
+         <stage name="CsvReportGenerationStage"/>
+      </benchmark-stages>
+      <after>
+         <stage name="GenerateChartStage">
+            <property name="fnPrefix" value="infinispan_async-repl"/>
+         </stage>
+      </after>
+   </scaling-benchmark>
+
+   <scaling-benchmark initSize="2" maxSize="4" increment="1" name="infinispan_sync-repl">
+      <before>
+         <stage name="BenchmarkCleanupStage"/>
+      </before>
+      <benchmark-stages>
+         <stage name="StartClusterStage" enabled="true">
+            <property name="chacheWrapperClass" value="org.cachebench.cachewrappers.InfinispanWrapper"/>
+            <property name="config" value="repl-sync.xml" mapAggregator="wrapperStartupParams"/>
+         </stage>
+         <stage name="ClusterValidationStage">
+            <property name="PartialReplication" value="true"/>
+         </stage>
+         <stage name="WarmupStage">
+            <property name="OperationCount" value="20"/>
+         </stage>
+
+         <stage name="WebSessionBenchmarkStage">
+            <property name="numberOfRequests" value="1000"/>
+         </stage>
+         <stage name="CsvReportGenerationStage"/>
+         <stage name="ClearClusterStage"/>
+      </benchmark-stages>
+      <after>
+         <stage name="GenerateChartStage">
+            <property name="fnPrefix" value="infinispan_sync-repl"/>
+         </stage>
+      </after>
+   </scaling-benchmark>
+
+   <fixed-size-benchmark size="2" name="infinispan_dist-async">
       <stage name="StartClusterStage" enabled="true">
          <property name="chacheWrapperClass" value="org.cachebench.cachewrappers.InfinispanWrapper"/>
-         <property name="config" value="repl-sync.xml" mapAggregator="wrapperStartupParams"/>
+         <property name="config" value="dist-async.xml" mapAggregator="wrapperStartupParams"/>
       </stage>
       <stage name="ClusterValidationStage">
          <property name="PartialReplication" value="true"/>
       </stage>
-      <stage name="WarmupStage"/>
+      <stage name="WarmupStage">
+         <property name="OperationCount" value="20"/>
+      </stage>
       <stage name="WebSessionBenchmarkStage">
-         <property name="numberOfRequests" value="100000"/>
+         <property name="numberOfRequests" value="1000"/>
       </stage>
       <stage name="CsvReportGenerationStage"/>
-      <stage name="BenchmarkFinishedStage"/>
-   </stages>
+   </fixed-size-benchmark>
 
 </bench-config>

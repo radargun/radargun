@@ -1,11 +1,9 @@
 package org.cachebench.fwk;
 
-import org.cachebench.fwk.config.ConfigHelper;
+import org.cachebench.config.ConfigHelper;
 import org.testng.annotations.Test;
 
 /**
- * // TODO: Mircea - Document this!
- *
  * @author Mircea.Markus@jboss.com
  */
 @Test

@@ -22,16 +22,15 @@
 package org.cachebench.utils;
 
 import org.apache.log4j.RollingFileAppender;
-import org.cachebench.config.ClusterConfig;
 
 /**
  * Apends an node instance identifier at the end of the filename.
  *
  * @author Mircea.Markus@jboss.com
  */
-public class PerNodeRollingFileAppender extends RollingFileAppender
-{
-   ClusterConfig conf = new ClusterConfig();
+public class PerNodeRollingFileAppender extends RollingFileAppender {
+
+   public static final String PROP_NAME = "log4j.file.prefix";
 
    @Override
    public void setFile(String s) {
@@ -39,15 +38,14 @@ public class PerNodeRollingFileAppender extends RollingFileAppender
    }
 
    private String appendNodeIndex(String s) {
-      try
-      {
-         return conf.getCurrentNodeIndex() + "_" + s;
-      } catch (Throwable e)//ignore here, we're just a logger
-      {
-         System.out.println("exception occued while trying to index the file name: " + e.getMessage());
+      String prop = System.getProperty(PROP_NAME);
+      if (prop != null) {
+         System.out.println("PerNodeRollingFileAppender::Using file prefix:" + prop);
+         return prop + "_" + s;
+      } else {
+         System.out.println("PerNodeRollingFileAppender::Not using file prefix.");
          return s;
       }
    }
-
 
 }

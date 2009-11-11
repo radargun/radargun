@@ -10,13 +10,13 @@
    </global>
 
    <default>
-      <locking lockAcquisitionTimeout="120000" concurrencyLevel="10000" useLockStriping="false"/>
+      <locking lockAcquisitionTimeout="10000" concurrencyLevel="10000" useLockStriping="false"/>
       <transaction
             transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"
             syncRollbackPhase="false"
             syncCommitPhase="false"/>
 
-      <clustering mode="r">
+      <clustering mode="d">
          <async asyncMarshalling="false"/>
       </clustering>
    </default>
