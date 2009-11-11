@@ -1,19 +1,8 @@
 #!/bin/bash
 
-echo ""
-echo "=== Cache Benchmark Framework ==="
-echo " This script is used to launch slaves on remote nodes, via SSH.  Relies on SSH keys set up such that remote "
-echo " commands may be executed via SSH."
-echo ""
-
-DIRNAME=`dirname $0`
-
-# Setup CBF_HOME
-if [ "x$CBF_HOME" = "x" ]; then
-    # get the full path (without any relative bits)
-    CBF_HOME=`cd $DIRNAME/..; pwd`
-fi
-export CBF_HOME
+## Load includes
+if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; pwd` ; fi; export CBF_HOME
+. ${CBF_HOME}/bin/includes.sh
 
 SLAVE_PREFIX=slave
 SSH_USER=$USER
@@ -25,38 +14,40 @@ SKIP_CHECKOUT=false
 SKIP_BUILD=false
 
 help_and_exit() {
-  echo "Usage: "
-  echo '  $ start_remote_slaves.sh [-v] [-p SLAVE_PREFIX] [-u ssh_user] [-nc] [-async] [-sb] [-sc] [-w WORKING DIRECTORY] [-g GIT_URL] -plugin plugin_name -n num_slaves -m MASTER_IP:PORT '
-  echo ""
-  echo "   -v       Be verbose"
-  echo ""
-  echo "   -p       Provides a prefix to all slave names entered in /etc/hosts"
-  echo "            Defaults to '$SLAVE_PREFIX'"
-  echo ""
-  echo "   -u       SSH user to use when SSH'ing across to the slaves.  Defaults to current user."
-  echo ""
-  echo "   -nc      If this flag is passed in, then the working directory on the slave is not cleaned."
-  echo ""
-  echo "   -async   If provided, then each SSH connection will be forked as a separate process"
-  echo ""
-  echo "   -sb      If provided, the framework and tests will NOT be rebuilt on slaves prior to running."
-  echo ""
-  echo "   -sc      If provided, the framework will NOT be checked out of source control prior to building."
-  echo ""
-  echo "   -w       Working directory on the slave.  Defaults to '$WORKING_DIR'."
-  echo ""
-  echo "   -g       URL from which to perform a git clone to pull sources.  Only needed if -sc is NOT specified."
-  echo ""
-  echo "   -plugin  Name of the cache plugin to load onto the slave's classpath.  This is REQUIRED."  
-  echo ""
-  echo "   -n       Number of slaves.  This is REQUIRED."
-  echo ""
-  echo "   -m       Connection to MASTER server.  IP address and port is needed.  This is REQUIRED."
-  echo ""
-  echo "   -h       Displays this help screen"
-  echo ""
+  wrappedecho "Usage: "
+  wrappedecho '  $ start_remote_slaves.sh [-v] [-p SLAVE_PREFIX] [-u ssh_user] [-nc] [-async] [-sb] [-sc] [-w WORKING DIRECTORY] [-g GIT_URL] -plugin plugin_name -n num_slaves -m MASTER_IP:PORT '
+  wrappedecho ""
+  wrappedecho "   -v       Be verbose"
+  wrappedecho ""
+  wrappedecho "   -p       Provides a prefix to all slave names entered in /etc/hosts"
+  wrappedecho "            Defaults to '$SLAVE_PREFIX'"
+  wrappedecho ""
+  wrappedecho "   -u       SSH user to use when SSH'ing across to the slaves.  Defaults to current user."
+  wrappedecho ""
+  wrappedecho "   -nc      If this flag is passed in, then the working directory on the slave is not cleaned."
+  wrappedecho ""
+  wrappedecho "   -async   If provided, then each SSH connection will be forked as a separate process"
+  wrappedecho ""
+  wrappedecho "   -sb      If provided, the framework and tests will NOT be rebuilt on slaves prior to running."
+  wrappedecho ""
+  wrappedecho "   -sc      If provided, the framework will NOT be checked out of source control prior to building."
+  wrappedecho ""
+  wrappedecho "   -w       Working directory on the slave.  Defaults to '$WORKING_DIR'."
+  wrappedecho ""
+  wrappedecho "   -g       URL from which to perform a git clone to pull sources.  Only needed if -sc is NOT specified."
+  wrappedecho ""
+  wrappedecho "   -plugin  Name of the cache plugin to load onto the slave's classpath.  This is REQUIRED."  
+  wrappedecho ""
+  wrappedecho "   -n       Number of slaves.  This is REQUIRED."
+  wrappedecho ""
+  wrappedecho "   -m       Connection to MASTER server.  IP address and port is needed.  This is REQUIRED."
+  wrappedecho ""
+  wrappedecho "   -h       Displays this help screen"
+  wrappedecho ""
   exit 0
 }
+
+welcome "This script is used to launch slaves on remote nodes, via SSH.  Relies on SSH keys set up such that remote commands may be executed via SSH."
 
 ### read in any command-line params
 while ! [ -z $1 ] 

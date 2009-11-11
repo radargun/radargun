@@ -17,6 +17,7 @@ import java.util.Map;
 /**
  * @author Mircea.Markus@jboss.com
  */
+@SuppressWarnings("unchecked")
 public class JBossCache3Wrapper implements CacheWrapper
 {
    private Cache cache;

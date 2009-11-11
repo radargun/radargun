@@ -20,6 +20,7 @@ import java.util.Map;
  * @author Mircea.Markus@jboss.com
  * @since 2.2
  */
+@SuppressWarnings("unchecked")
 public class JBossCache2Wrapper implements CacheWrapper
 {
    private Cache cache;
@@ -29,7 +30,7 @@ public class JBossCache2Wrapper implements CacheWrapper
    public void init(Map parameters) throws Exception
    {
       log.info("Creating cache with the following configuration: " + parameters);
-      cache = DefaultCacheFactory.getInstance().createCache((String) parameters.get("config"));
+      cache = new DefaultCacheFactory().createCache((String) parameters.get("config"));
       log.info("Running cache with following config: " + cache.getConfiguration());
       log.info("Running follwing JBossCacheVersion: " + org.jboss.cache.Version.version);
       log.info("Running follwing JBossCacheCodeName: " + org.jboss.cache.Version.codename);
@@ -58,12 +59,12 @@ public class JBossCache2Wrapper implements CacheWrapper
    public void empty() throws Exception
    {
       //not removing root because there it fails with buddy replication: http://jira.jboss.com/jira/browse/JBCACHE-1241
-      cache.removeNode(new Fqn("test"));
+      cache.removeNode(Fqn.fromElements("test"));
    }
 
    public int getNumMembers()
    {
-      return inLocalMode ? 0 : cache.getMembers().size();
+      return cache.getMembers() == null ? 0 : cache.getMembers().size();
    }
 
    public String getInfo()

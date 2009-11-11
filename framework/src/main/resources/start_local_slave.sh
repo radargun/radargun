@@ -1,20 +1,11 @@
 #!/bin/bash
 
-DIRNAME=`dirname $0`
-
-# Setup CBF_HOME
-if [ "x$CBF_HOME" = "x" ]; then
-    # get the full path (without any relative bits)
-    CBF_HOME=`cd $DIRNAME/..; pwd`
-fi
-export CBF_HOME
-
-echo ""
-echo "=== Cache Benchmark Framework ==="
-echo " This script is used to launch the local slave process."
-echo ""
+## Load includes
+if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; pwd` ; fi; export CBF_HOME
+. ${CBF_HOME}/bin/includes.sh
 
 help_and_exit() {
+<<<<<<< HEAD
   echo "Usage: "
   echo '  $ start_local_slave.sh -m MASTER_IP -plugin plugin_name'
   echo ""
@@ -28,8 +19,19 @@ help_and_exit() {
   echo ""
   echo "   -h        Displays this help screen"
   echo ""
+=======
+  wrappedecho "Usage: "
+  wrappedecho '  $ start_local_slave.sh -m MASTER_IP:PORT -plugin plugin_name'
+  wrappedecho ""
+  wrappedecho "   -m     Connection to MASTER server.  IP address and port is needed.  This is REQUIRED."
+  wrappedecho ""
+  wrappedecho "   -h     Displays this help screen"
+  wrappedecho ""
+>>>>>>> 332864b8b4621622ab21ca5d1a614001314d6c59
   exit 0
 }
+
+welcome "This script is used to launch the local slave process."
 
 ### read in any command-line params
 while ! [ -z $1 ]
@@ -78,6 +80,7 @@ if [ -z $PLUGIN ] ; then
   help_and_exit
 fi
 
+<<<<<<< HEAD
 if ! [ -d ${CBF_HOME}/plugins/$PLUGIN ] ; then
   echo "FATAL: unknown plugin ${PLUGIN}! Directory doesn't exist in ${CBF_HOME}/plugins!"
   exit 2
@@ -96,6 +99,13 @@ done
 cp=$cp:${CBF_HOME}/plugins/${PLUGIN}/conf
 
 nohup java -cp $cp -Xms1G -Xmx1G $DJAVA -Djava.net.preferIPv4Stack=true -Dbind.address=${MYTESTIP_2} -cp $cp org.cachebench.fwk.Slave -masterHost $MASTER_HOST $CONF > out_slave_`hostname`.txt 2>&1 &
+=======
+add_fwk_to_classpath
+add_plugin_to_classpath $PLUGIN
+set_env
+
+nohup java -classpath $CP ${JVM_OPTS} -Djava.net.preferIPv4Stack=true -Dbind.address=${BIND_ADDRESS} -Djgroups.bind_addr=${BIND_ADDRESS} org.cachebench.fwk.BenchmarkNode -serverHost $MASTER > out_slave_`hostname`.txt 2>&1 &
+>>>>>>> 332864b8b4621622ab21ca5d1a614001314d6c59
 
 echo "... done! Slave process started!"
 echo ""

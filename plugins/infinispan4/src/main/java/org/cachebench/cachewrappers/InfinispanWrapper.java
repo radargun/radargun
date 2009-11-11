@@ -17,7 +17,7 @@ public class InfinispanWrapper implements CacheWrapper {
 
    private static Log log = LogFactory.getLog(InfinispanWrapper.class);
    CacheManager cacheManager;
-   Cache cache;
+   Cache<Object, Object> cache;
    TransactionManager tm;
    boolean started = false;
    String config;
