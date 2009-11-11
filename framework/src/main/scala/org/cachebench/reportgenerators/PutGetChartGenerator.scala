@@ -17,7 +17,8 @@ import jfree.chart.renderer.category.BarRenderer3D
  *
  * @author Manik Surtani (<a href="mailto:manik@jboss.org">manik@jboss.org</a>)
  */
-class PutGetChartGenerator extends AbstractChartGen {
+class PutGetChartGenerator /* extends AbstractChartGen */ {
+/**
    var putData: DefaultCategoryDataset = null
    var getData: DefaultCategoryDataset = null
    var memData: DefaultCategoryDataset = null
@@ -61,14 +62,14 @@ class PutGetChartGenerator extends AbstractChartGen {
    }
 
    def readData() {
-      val file = new File(reportDirectory)
-      if (!file.exists() || !file.isDirectory())
-         throw new IllegalArgumentException("Report directory " + reportDirectory + " does not exist or is not a directory!")
-      putData = new DefaultCategoryDataset()
-      getData = new DefaultCategoryDataset()
-      memData = new DefaultCategoryDataset()
+//      val file = new File(reportDirectory)
+//      if (!file.exists() || !file.isDirectory())
+//         throw new IllegalArgumentException("Report directory " + reportDirectory + " does not exist or is not a directory!")
+//      putData = new DefaultCategoryDataset()
+//      getData = new DefaultCategoryDataset()
+//      memData = new DefaultCategoryDataset()
 
-      for (f <- file.listFiles() if f.getName.toUpperCase().endsWith(".CSV")) readData(f)
+//      for (f <- file.listFiles() if f.getName.toUpperCase().endsWith(".CSV")) readData(f)
    }
 
    def readData(f: File) {
@@ -176,4 +177,6 @@ class CustomLabelGen(isMemory: Boolean) extends CategoryItemLabelGenerator {
       else
          return fmt.format(categoryDataset.getValue(product, operation)) + " µs"
    }
+
+   */
 }

@@ -1,6 +1,6 @@
 package org.cachebench
 
-
+/*
 import apache.commons.logging.LogFactory
 import java.io.File
 import org.cachebench.config._
@@ -8,13 +8,14 @@ import org.cachebench.fwk.config.{ConfigFactory, LocalModeConfig}
 import org.cachebench.plugins.PluginLocator
 import org.cachebench.reportgenerators.CsvStatisticReportGenerator
 import warmup.NoCacheWarmup
-
+*/
 /**
  * Runs the benchmark in LOCAL mode
  * @author Manik Surtani
  */
 
 object LocalModeRunner {
+   /*
    val log = LogFactory.getLog(LocalModeRunner.getClass())
 
    def main(args: Array[String]) {
@@ -90,4 +91,5 @@ object LocalModeRunner {
 
       return new CacheBenchmarkRunner(legacyCfg, cfg.getBenchmarkName, cfg.getTestConfig.getPluginConfig, true, false)
    }
+   */
 }
