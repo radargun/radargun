@@ -14,4 +14,4 @@ for i in ${CBF_HOME}/lib/*.jar ; do
   CP=$CP:$i
 done
 
-java -classpath $CP -Djava.net.preferIPv4Stack=true -Dbind.address=${MYTESTIP_2} org.cachebench.fwk.Master ${*}
+java -classpath $CP -Djava.net.preferIPv4Stack=true org.cachebench.Master ${*}

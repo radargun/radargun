@@ -5,7 +5,6 @@ if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; 
 . ${CBF_HOME}/bin/includes.sh
 
 help_and_exit() {
-<<<<<<< HEAD
   echo "Usage: "
   echo '  $ start_local_slave.sh -m MASTER_IP -plugin plugin_name'
   echo ""
@@ -17,17 +16,10 @@ help_and_exit() {
   echo ""
   echo "   -plugin   The plugin to be benchmarked. Shoule be a dir in ../plugins/<plugin_dir>"
   echo ""
+  echo "   -ba    Bind address to be used."
+  echo ""
   echo "   -h        Displays this help screen"
   echo ""
-=======
-  wrappedecho "Usage: "
-  wrappedecho '  $ start_local_slave.sh -m MASTER_IP:PORT -plugin plugin_name'
-  wrappedecho ""
-  wrappedecho "   -m     Connection to MASTER server.  IP address and port is needed.  This is REQUIRED."
-  wrappedecho ""
-  wrappedecho "   -h     Displays this help screen"
-  wrappedecho ""
->>>>>>> 332864b8b4621622ab21ca5d1a614001314d6c59
   exit 0
 }
 
@@ -53,6 +45,10 @@ do
       PLUGIN=$2
       shift
       ;;
+    "-ba")
+      BIND_ADDRESS=$2
+      shift
+      ;;
     *)
       help_and_exit
       ;;
@@ -65,7 +61,7 @@ if [ -z $MASTER_HOST ] ; then
   help_and_exit
 fi
 
-CONF=""
+CONF="-masterHost $MASTER_HOST"
 if [ "$MASTER_PORTx" != "x" ] ; then
   CONF="$CONF -masterPort $MASTER_PORT"
 fi
@@ -80,32 +76,22 @@ if [ -z $PLUGIN ] ; then
   help_and_exit
 fi
 
-<<<<<<< HEAD
 if ! [ -d ${CBF_HOME}/plugins/$PLUGIN ] ; then
   echo "FATAL: unknown plugin ${PLUGIN}! Directory doesn't exist in ${CBF_HOME}/plugins!"
   exit 2
 fi
 
-
-echo "MASTER_HOST: $MASTER_HOST Plugin: $PLUGIN Master port: $MASTER_PORT nodeIndex: $NODE_INDEX"
-
-cp=${CBF_HOME}/conf
+CP=${CBF_HOME}/conf
 for jar in ${CBF_HOME}/lib/*.jar ; do
-  cp=$cp:$jar
+  CP=$CP:$jar
 done
 for jar in ${CBF_HOME}/plugins/${PLUGIN}/lib/*.jar ; do
-  cp=$cp:$jar
+  CP=$CP:$jar
 done
-cp=$cp:${CBF_HOME}/plugins/${PLUGIN}/conf
+CP=$CP:${CBF_HOME}/plugins/${PLUGIN}/conf
 
-nohup java -cp $cp -Xms1G -Xmx1G $DJAVA -Djava.net.preferIPv4Stack=true -Dbind.address=${MYTESTIP_2} -cp $cp org.cachebench.fwk.Slave -masterHost $MASTER_HOST $CONF > out_slave_`hostname`.txt 2>&1 &
-=======
-add_fwk_to_classpath
-add_plugin_to_classpath $PLUGIN
-set_env
-
-nohup java -classpath $CP ${JVM_OPTS} -Djava.net.preferIPv4Stack=true -Dbind.address=${BIND_ADDRESS} -Djgroups.bind_addr=${BIND_ADDRESS} org.cachebench.fwk.BenchmarkNode -serverHost $MASTER > out_slave_`hostname`.txt 2>&1 &
->>>>>>> 332864b8b4621622ab21ca5d1a614001314d6c59
+echo "java -classpath $CP ${JVM_OPTS} -Djava.net.preferIPv4Stack=true -Djgroups.bind_addr=${BIND_ADDRESS} org.cachebench.Slave $CONF > out_slave_`hostname`.txt 2>&1 &"
+nohup java -classpath $CP ${JVM_OPTS} -Djava.net.preferIPv4Stack=true -Dbind.address=${BIND_ADDRESS} org.cachebench.Slave $CONF > out_slave_`hostname`.txt 2>&1 &
 
 echo "... done! Slave process started!"
 echo ""
