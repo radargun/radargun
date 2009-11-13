@@ -24,13 +24,13 @@ help_and_exit() {
   wrappedecho ""
   wrappedecho "   -u       SSH user to use when SSH'ing across to the slaves.  Defaults to current user."
   wrappedecho ""
-  wrappedecho "   -nc      If this flag is passed in, then the working directory on the slave is not cleaned."
+  wrappedecho "   -nc      If this flag is passed in, then the working directory on the slave is not cleaned. Defaults to $CLEAN"
   wrappedecho ""
-  wrappedecho "   -async   If provided, then each SSH connection will be forked as a separate process"
+  wrappedecho "   -async   If provided, then each SSH connection will be forked as a separate process. Defaults to $ASYNC"
   wrappedecho ""
-  wrappedecho "   -sb      If provided, the framework and tests will NOT be rebuilt on slaves prior to running."
+  wrappedecho "   -sb      If provided, the framework and tests will NOT be rebuilt on slaves prior to running. Defaults to $SKIP_BUILD"
   wrappedecho ""
-  wrappedecho "   -sc      If provided, the framework will NOT be checked out of source control prior to building."
+  wrappedecho "   -sc      If provided, the framework will NOT be checked out of source control prior to building. Defaults to $SKIP_CHECKOUT"
   wrappedecho ""
   wrappedecho "   -w       Working directory on the slave.  Defaults to '$WORKING_DIR'."
   wrappedecho ""
@@ -40,7 +40,7 @@ help_and_exit() {
   wrappedecho ""
   wrappedecho "   -n       Number of slaves.  This is REQUIRED."
   wrappedecho ""
-  wrappedecho "   -m       Connection to MASTER server.  IP address and port is needed.  This is REQUIRED."
+  wrappedecho "   -m       Connection to MASTER server.  IP address:port is needed.  This is REQUIRED."
   wrappedecho ""
   wrappedecho "   -h       Displays this help screen"
   wrappedecho ""
@@ -163,9 +163,9 @@ CMD="$CMD ; bin/start_local_slave.sh -m $MASTER -plugin $PLUGIN"
 while [ $loop -le $NUM_SLAVES ]
 do
   if [ "$ASYNC" = "true" ] ; then
-    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD" &
+    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD -i $loop" &
   else
-    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD"    
+    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD -i $loop"
   fi
   let "loop+=1"
 done

@@ -8,15 +8,13 @@ help_and_exit() {
   echo "Usage: "
   echo '  $ start_local_slave.sh -m MASTER_IP -plugin plugin_name'
   echo ""
-  echo "   -mh       MASTER host. This is REQUIRED."
+  echo "   -m        MASTER host[:port]. Master host is required, the port is optional and defaults to 2103."
   echo ""
-  echo "   -mp       MASTER's port. Optional, if not present defauls to 2103."
-  echo ""
-  echo "   -i        Node's index. This will be prepended to the log file."
+  echo "   -i        Node's index. Optional, if present will be prepended to the log file."
   echo ""
   echo "   -plugin   The plugin to be benchmarked. Shoule be a dir in ../plugins/<plugin_dir>"
   echo ""
-  echo "   -ba    Bind address to be used."
+  echo "   -ba       Bind address to be used."
   echo ""
   echo "   -h        Displays this help screen"
   echo ""
@@ -29,12 +27,8 @@ welcome "This script is used to launch the local slave process."
 while ! [ -z $1 ]
 do
   case "$1" in
-    "-mh")
-      MASTER_HOST=$2
-      shift
-      ;;
-    "-mp")
-      MASTER_PORT=$2
+    "-m")
+      MASTER=$2
       shift
       ;;
     "-i")
@@ -56,20 +50,21 @@ do
   shift
 done
 
-if [ -z $MASTER_HOST ] ; then
+DJAVA="-Djava.net.preferIPv4Stack=true"
+if ! [ "$NODE_INDEXx" = "x" ] ; then
+  DJAVA="$DJAVA -Dlog4j.file.prefix=$NODE_INDEX"
+fi
+
+if ! [ "x$BIND_ADDRESS" = "x" ] ; then
+  DJAVA="$DJAVA -Djgroups.bind_addr=${BIND_ADDRESS}"
+fi
+
+if [ -z $MASTER ] ; then
   echo "FATAL: required information (-m) missing!"
   help_and_exit
 fi
 
-CONF="-masterHost $MASTER_HOST"
-if [ "$MASTER_PORTx" != "x" ] ; then
-  CONF="$CONF -masterPort $MASTER_PORT"
-fi
-
-DJAVA=""
-if [ "$NODE_INDEXx" != "x" ] ; then
-  DJAVA="$DJAVA -Dlog4j.file.prefix=$NODE_INDEX"
-fi
+CONF="-master $MASTER"
 
 if [ -z $PLUGIN ] ; then
   echo "FATAL: required information (-plugin) missing!"
@@ -90,8 +85,8 @@ for jar in ${CBF_HOME}/plugins/${PLUGIN}/lib/*.jar ; do
 done
 CP=$CP:${CBF_HOME}/plugins/${PLUGIN}/conf
 
-echo "java -classpath $CP ${JVM_OPTS} -Djava.net.preferIPv4Stack=true -Djgroups.bind_addr=${BIND_ADDRESS} org.cachebench.Slave $CONF > out_slave_`hostname`.txt 2>&1 &"
-nohup java -classpath $CP ${JVM_OPTS} -Djava.net.preferIPv4Stack=true -Dbind.address=${BIND_ADDRESS} org.cachebench.Slave $CONF > out_slave_`hostname`.txt 2>&1 &
+echo "java $DJAVA -classpath $CP org.cachebench.Slave $CONF > out_slave_${NODE_INDEX}.txt 2>&1 &"
+nohup java $DJAVA -classpath $CP org.cachebench.Slave $CONF > out_slave_${NODE_INDEX}.txt 2>&1 &
 
 echo "... done! Slave process started!"
 echo ""

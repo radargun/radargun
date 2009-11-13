@@ -53,7 +53,7 @@ public class InfinispanWrapper implements CacheWrapper {
 
    public void empty() throws Exception {
       log.info("Cache size before clear: " + cache.size());
-      cache.getAdvancedCache().withFlags(Flag.FORCE_SYNCHRONOUS).clear();
+      cache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).clear();
       log.info("Cache size after clear: " + cache.size());
    }
 

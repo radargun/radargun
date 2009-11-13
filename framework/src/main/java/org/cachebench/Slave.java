@@ -184,7 +184,7 @@ public class Slave {
       String masterHost = null;
       int masterPort = Master.DEFAULT_PORT;
       for (int i = 0; i < args.length - 1; i++) {
-         if (args[i].equals("-masterHost")) {
+         if (args[i].equals("-master")) {
             String param = args[i + 1];
             if (param.contains(":")) {
                masterHost = param.substring(0, param.indexOf(":"));
@@ -197,13 +197,6 @@ public class Slave {
             } else {
                masterHost = param;
             }
-         } else if (args[i].equals("-masterPort")) {
-            try {
-               masterPort = Integer.parseInt(args[i + 1]);
-            } catch (NumberFormatException e) {
-               System.err.println("Incorrect master port: " + args[i + 1]);
-               printUsageAndExit();
-            }
          }
       }
       if (masterHost == null) {
@@ -214,9 +207,8 @@ public class Slave {
    }
 
    private static void printUsageAndExit() {
-      System.out.println("Usage: start_local_slave.sh [-masterHost <host>] [-masterPort <port>]");
-      System.out.println("       -masterHost: The host on which the master resides. Optional.");
-      System.out.println("       -masterPort: The port on which the master is listening for connections. Optional, defaults to " + Master.DEFAULT_PORT);
+      System.out.println("Usage: start_local_slave.sh -master <host>:port");
+      System.out.println("       -master: The host(and optional port) on which the master resides. If port is missing it defaults to " + Master.DEFAULT_PORT);
       System.exit(1);
    }
 }

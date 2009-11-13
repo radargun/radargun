@@ -36,6 +36,8 @@ import java.util.Set;
  * This is the master that will coordonate the {@link Slave}s in order to run the benchmark.
  * TODO - in discovery, the number of slaves can be determined from max scale
  * TODO - by default lookupt the config file in classpath
+ * TODO - use mcast discovery
+ *    - on each network interface broadcast on a certain multicast address and receive the nio IP and port
  *
  * @author Mircea.Markus@jboss.com
  */
