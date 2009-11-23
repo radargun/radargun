@@ -3,9 +3,6 @@
    <master bind="${bind.address}" port="1234" slavesCount="4"/>
 
    <scaling-benchmark initSize="2" maxSize="4" increment="1" name="infinispan_async-repl">
-      <before>
-         <stage name="BenchmarkCleanupStage"/>
-      </before>
       <benchmark-stages>
          <stage name="StartClusterStage" enabled="true">
             <property name="chacheWrapperClass" value="org.cachebench.cachewrappers.InfinispanWrapper"/>
@@ -21,6 +18,7 @@
             <property name="numberOfRequests" value="1000"/>
          </stage>
          <stage name="CsvReportGenerationStage"/>
+         <stage name="BenchmarkCleanupStage"/>
       </benchmark-stages>
       <after>
          <stage name="GenerateChartStage">
@@ -30,9 +28,6 @@
    </scaling-benchmark>
 
    <scaling-benchmark initSize="2" maxSize="4" increment="1" name="infinispan_sync-repl">
-      <before>
-         <stage name="BenchmarkCleanupStage"/>
-      </before>
       <benchmark-stages>
          <stage name="StartClusterStage" enabled="true">
             <property name="chacheWrapperClass" value="org.cachebench.cachewrappers.InfinispanWrapper"/>
@@ -49,7 +44,7 @@
             <property name="numberOfRequests" value="1000"/>
          </stage>
          <stage name="CsvReportGenerationStage"/>
-         <stage name="ClearClusterStage"/>
+         <stage name="BenchmarkCleanupStage"/>
       </benchmark-stages>
       <after>
          <stage name="GenerateChartStage">
@@ -73,6 +68,7 @@
          <property name="numberOfRequests" value="1000"/>
       </stage>
       <stage name="CsvReportGenerationStage"/>
+      <stage name="BenchmarkCleanupStage"/>
    </fixed-size-benchmark>
 
 </bench-config>
