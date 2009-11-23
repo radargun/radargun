@@ -11,11 +11,12 @@
 
    <default>
       <transaction transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"/>
+      <locking concurrencyLevel="1000" useLockStriping="false" lockAcquisitionTimeout="120000" />
 
       <clustering mode="d">
-         <sync/>
-         <l1 enabled="false"/>
-         <hash numOwners="2"/>
+         <sync replTimeout="240000"/>
+         <l1 enabled="false" />
+         <hash numOwners="2" rehashEnabled="false"/>
       </clustering>
    </default>
 

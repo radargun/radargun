@@ -12,8 +12,10 @@
    <default>
       <transaction
             transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"/>
+
+      <locking concurrencyLevel="1000" useLockStriping="false" lockAcquisitionTimeout="120000" />
       <clustering mode="r">
-         <sync/>
+         <sync replTimeout="240000"/>
       </clustering>
    </default>
 </infinispan>
