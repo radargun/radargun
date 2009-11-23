@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:4.0">
-    <default>
-        <locking isolationLevel="READ_COMMITTED"/>
-        <eviction wakeUpInterval="1000" maxEntries="10000" strategy="FIFO"/>
-    </default>
-</infinispan>

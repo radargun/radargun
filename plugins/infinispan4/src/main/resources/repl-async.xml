@@ -4,20 +4,16 @@
    <global>
       <transport clusterName="infinispan-cluster">
          <properties>
-            <property name="configurationFile" value="jgroups-udp.xml"/>
+            <property name="configurationFile" value="jgroups/jgroups-udp.xml"/>
          </properties>
       </transport>
    </global>
 
    <default>
-      <locking lockAcquisitionTimeout="10000" concurrencyLevel="10000" useLockStriping="false"/>
       <transaction
-            transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"
-            syncRollbackPhase="false"
-            syncCommitPhase="false"/>
-
-      <clustering mode="d">
-         <async asyncMarshalling="false"/>
+            transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"/>
+      <clustering mode="r">
+         <async/>
       </clustering>
    </default>
 </infinispan>
