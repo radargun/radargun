@@ -20,7 +20,7 @@
          <stage name="CsvReportGenerationStage"/>
          <stage name="BenchmarkCleanupStage"/>
       </benchmark-stages>
-      <after>
+      <after>   
          <stage name="GenerateChartStage">
             <property name="fnPrefix" value="JBC_async-repl"/>
          </stage>
