@@ -39,6 +39,8 @@ import java.util.Set;
  * TODO - by default lookupt the config file in classpath
  * TODO - use mcast discovery
  *    - on each network interface broadcast on a certain multicast address and receive the nio IP and port
+ * TODO - on config, split the test name config in "product" and "config" and generate report based on that.
+ * TODO - make benchmark run multiple products at once
  *
  * @author Mircea.Markus@jboss.com
  */

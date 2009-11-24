@@ -23,37 +23,33 @@ import java.util.Collections;
  *      slaves replicated here.
  * </pre>
  *
- * TODO - as per Bela, the merge happens between 10 and 30 seconds. configure by default to wait 10 times more, with
- * longer delays between sleeps 
- *
  * @author Mircea.Markus@jboss.com
  */
 public class ClusterValidationStage extends AbstractDistStage {
 
    private static Log log = LogFactory.getLog(ClusterValidationStage.class);
 
-
-   private static final int REPLICATION_TRY_COUNT = 17;
-   private static final int REPLICATION_TRY_SLEEP = 2000;
-
    private static final String PREFIX = "_InstallBenchmarkStage_";
 
 
    private boolean isPartialReplication = false;
+   private int replicationTryCount = 60;
+   private int replicationTimeSleep = 2000;
+
+
    private CacheWrapper wrapper;
 
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck response = newDefaultStageAck();
       try {
          wrapper = slaveState.getCacheWrapper();
-         tryToPut();
          int replResult = checkReplicationSeveralTimes();
          if (!isPartialReplication) {
             if (replResult > 0) {//only executes this on the slaves on which replication happened.
                int index = confirmReplication();
                if (index >= 0) {
                   response.setError(true);
-                  response.setErrorMessage("Slave with index" + index + " hasn't confirmed the replication");
+                  response.setErrorMessage("Slave with index " + index + " hasn't confirmed the replication");
                   return response;
                }
             }
@@ -135,16 +131,19 @@ public class ClusterValidationStage extends AbstractDistStage {
 
 
    private int checkReplicationSeveralTimes() throws Exception {
+      tryToPut();
       int replCount = 0;
-      for (int i = 0; i < REPLICATION_TRY_COUNT; i++) {
+      for (int i = 0; i < replicationTryCount; i++) {
          replCount = replicationCount();
          if ((isPartialReplication && replCount >= 1) || (!isPartialReplication && (replCount == getActiveSlaveCount() - 1))) {
             log.info("Replication test successfully passed. isPartialReplication? " + isPartialReplication + ", replicationCount = " + replCount);
             return replCount;
          }
-         log.info("Replication test failed, " + (i + 1) + " tries so far. Sleeping for  " + REPLICATION_TRY_SLEEP
+         //adding our stuff one more time
+         tryToPut();
+         log.info("Replication test failed, " + (i + 1) + " tries so far. Sleeping for  " + replicationTimeSleep
                + " millis then try again");
-         Thread.sleep(REPLICATION_TRY_SLEEP);
+         Thread.sleep(replicationTimeSleep);
       }
       log.info("Replication test failed. Last replication count is " + replCount);
       return -1;
@@ -188,11 +187,20 @@ public class ClusterValidationStage extends AbstractDistStage {
       isPartialReplication = partialReplication;
    }
 
+   public void setReplicationTryCount(int replicationTryCount) {
+      this.replicationTryCount = replicationTryCount;
+   }
+
+   public void setReplicationTimeSleep(int replicationTimeSleep) {
+      this.replicationTimeSleep = replicationTimeSleep;
+   }
 
    @Override
    public String toString() {
       return "ClusterValidationStage{" +
             "isPartialReplication=" + isPartialReplication +
+            ", replicationTryCount=" + replicationTryCount +
+            ", replicationTimeSleep=" + replicationTimeSleep +
             ", wrapper=" + wrapper +
             "} " + super.toString();
    }

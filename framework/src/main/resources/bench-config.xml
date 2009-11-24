@@ -1,6 +1,6 @@
 <bench-config>
 
-   <master bind="${bind.address}" slavesCount="4"/>
+   <master bind="${bind.address}" slavesCount="8"/>
 
    <scaling-benchmark initSize="2" maxSize="8" increment="2" name="JBC_async-repl">
       <benchmark-stages>

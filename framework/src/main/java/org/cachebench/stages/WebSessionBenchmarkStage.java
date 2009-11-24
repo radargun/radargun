@@ -18,6 +18,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Simulates the work with a distributed web sessions.
+ * //TODO fix so that multiple threads do not colead per key
+ * //TODO add accurate operation count and estimated remaining time to be logged 
  *
  * @author Mircea.Markus@jboss.com
  */

@@ -45,7 +45,7 @@ public class StartClusterStage extends AbstractDistStage {
                   return ack;
                }
             } else {
-               log.info("Number of members is the one expected.");
+               log.info("Number of members is the one expected: " + wrapper.getNumMembers());
                break;
             }
          }
