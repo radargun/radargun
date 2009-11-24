@@ -32,7 +32,7 @@
          oob_thread_pool.rejection_policy="discard"
          />
 
-   <FILE_PING location="file_ping_dir"/>
+   <FILE_PING location="file_ping_dir" timeout="5000" num_initial_members="1000"/>
    <MERGE2 max_interval="30000" min_interval="10000"/>
    <FD_SOCK/>
    <FD_ALL/>
@@ -47,7 +47,7 @@
    <pbcast.STABLE stability_delay="1000" desired_avg_gossip="50000"
                   max_bytes="1000000"/>
    <pbcast.GMS print_local_addr="true" join_timeout="3000"
-
+               max_bundling_time="500"
                view_bundling="true"/>
    <FC max_credits="500000"
        min_threshold="0.20"/>
