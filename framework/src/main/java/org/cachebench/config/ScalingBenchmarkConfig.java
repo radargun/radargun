@@ -75,7 +75,7 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
          }
          allStages.add(st);
       }
-      for (int i = initSize; i <= maxSize; i++) {
+      for (int i = initSize; i <= maxSize; i+=increment) {
          for (Stage st : getStages()) {
             if (st instanceof DistStage) {
                st = ((DistStage) st).clone();

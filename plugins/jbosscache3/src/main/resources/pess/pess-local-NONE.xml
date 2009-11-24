@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jbosscache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:jboss:jbosscache-core:config:3.0">
+    <locking isolationLevel="NONE" lockAcquisitionTimeout="10000" nodeLockingScheme="pessimistic"/>
+    <transaction transactionManagerLookupClass="org.jboss.cache.transaction.GenericTransactionManagerLookup"/>
+    <clustering>
+        <stateRetrieval timeout="20000" fetchInMemoryState="false"/>
+    </clustering>
+</jbosscache>

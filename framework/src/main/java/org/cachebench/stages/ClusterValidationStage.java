@@ -23,6 +23,9 @@ import java.util.Collections;
  *      slaves replicated here.
  * </pre>
  *
+ * TODO - as per Bela, the merge happens between 10 and 30 seconds. configure by default to wait 10 times more, with
+ * longer delays between sleeps 
+ *
  * @author Mircea.Markus@jboss.com
  */
 public class ClusterValidationStage extends AbstractDistStage {

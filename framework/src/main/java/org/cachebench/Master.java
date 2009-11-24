@@ -34,6 +34,7 @@ import java.util.Set;
 
 /**
  * This is the master that will coordonate the {@link Slave}s in order to run the benchmark.
+ * TODO - increment does not work :( fix it
  * TODO - in discovery, the number of slaves can be determined from max scale
  * TODO - by default lookupt the config file in classpath
  * TODO - use mcast discovery

@@ -163,9 +163,9 @@ CMD="$CMD ; bin/start_local_slave.sh -m $MASTER -plugin $PLUGIN"
 while [ $loop -le $NUM_SLAVES ]
 do
   if [ "$ASYNC" = "true" ] ; then
-    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD -i $loop" &
+    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD -i $SLAVE_PREFIX$loop" &
   else
-    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD -i $loop"
+    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD -i $SLAVE_PREFIX$loop"
   fi
   let "loop+=1"
 done

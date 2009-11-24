@@ -8,6 +8,8 @@ import org.cachebench.config.jaxb.FixedSizeBenchmark;
 import org.cachebench.config.jaxb.Property;
 import org.cachebench.config.jaxb.ScalingBenchmark;
 import org.cachebench.config.jaxb.Stage;
+import org.cachebench.config.jaxb.Before;
+import org.cachebench.config.jaxb.After;
 import org.w3c.dom.Element;
 
 import java.beans.PropertyEditor;
@@ -23,6 +25,8 @@ import java.util.Map;
  * Helper class for assembling JAXB configs. 
  *
  * @author Mircea.Markus@jboss.com
+ * //TODO - add support for System.getEnv
+ * //TODO - make sure that if a benchmark has more nodes than the root an exception is thrown  
  */
 public class ConfigHelper {
 
@@ -171,21 +175,29 @@ public class ConfigHelper {
 
    public static Master getMaster(BenchConfig benchConfig) {
       org.cachebench.config.jaxb.Master master = benchConfig.getMaster();
-      MasterConfig masterConfig = new MasterConfig(toInt(master.getPort()), master.getBind(), toInt(master.getSlavesCount()));
+      int port = master.getPort() != null ? toInt(master.getPort()) : Master.DEFAULT_PORT;
+      MasterConfig masterConfig = new MasterConfig(port, master.getBind(), toInt(master.getSlavesCount()));
       for (ScalingBenchmark sb : benchConfig.getScalingBenchmark()) {
          ScalingBenchmarkConfig sbc = new ScalingBenchmarkConfig();
          sbc.setName(sb.getName());
          sbc.setInitSize(toInt(sb.getInitSize()));
          sbc.setMaxSize(toInt(sb.getMaxSize()));
          sbc.setIncrement(toInt(sb.getIncrement()));
-         List<Stage> beforeStagesFromXml = sb.getBefore().getStage();
-         sbc.setBeforeStages(processStages(beforeStagesFromXml));
+         Before before = sb.getBefore();
+         //before and after are optional
+         if (before != null) {
+            List<Stage> beforeStagesFromXml = before.getStage();
+            sbc.setBeforeStages(processStages(beforeStagesFromXml));
+         }
 
          List<Stage> benchmarkStagesFromXml = sb.getBenchmarkStages().getStage();
          sbc.setStages(processStages(benchmarkStagesFromXml));
 
-         List<Stage> afterStagesFromXml = sb.getAfter().getStage();
-         sbc.setAfterStages(processStages(afterStagesFromXml));
+         After after = sb.getAfter();
+         if (after != null) {
+            List<Stage> afterStagesFromXml = after.getStage();
+            sbc.setAfterStages(processStages(afterStagesFromXml));
+         }
 
          sbc.validate();
          masterConfig.addBenchmark(sbc);

@@ -90,7 +90,7 @@ public class MasterState extends StateBase {
 
    private boolean moveToNextBenchmark() {
       if (benchmarks.isEmpty()) {
-         log.info("No more benchmarks to execute.");
+         log.info("Successfully executed all benchmarks, exiting.");
          return false;
       }
       currentBenchmark = benchmarks.remove(0);
