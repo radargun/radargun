@@ -32,3 +32,7 @@ for plugin in $PLUGINS ; do
     wait_for_process $PID_OF_MASTER_PROCESS
   done
 done
+
+### Now generate charts
+${CBF_HOME}/bin/generateChart.sh -reportDir reports
+
