@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
+import org.cachebench.plugins.PluginLocator;
 
 import java.util.Map;
 
@@ -15,8 +16,7 @@ import java.util.Map;
 public class StartClusterStage extends AbstractDistStage {
 
    private static Log log = LogFactory.getLog(StartClusterStage.class);
-
-   private String chacheWrapperClass;
+                                                                   
    private Map<String, String> wrapperStartupParams;
    private final int TRY_COUNT = 10;
 
@@ -29,7 +29,7 @@ public class StartClusterStage extends AbstractDistStage {
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress() + ". This slave's index is: " + getSlaveIndex());
       CacheWrapper wrapper;
       try {
-         wrapper = (CacheWrapper) createInstance(chacheWrapperClass);
+         wrapper = (CacheWrapper) createInstance(PluginLocator.locatePlugin());
          wrapper.init(wrapperStartupParams);
          wrapper.setUp();
          slaveState.setCacheWrapper(wrapper);
@@ -63,10 +63,6 @@ public class StartClusterStage extends AbstractDistStage {
       return Class.forName(classFqn).newInstance();
    }
 
-   public void setChacheWrapperClass(String chacheWrapperClass) {
-      this.chacheWrapperClass = chacheWrapperClass;
-   }
-
    public void setWrapperStartupParams(Map<String, String> wrapperStartupParams) {
       this.wrapperStartupParams = wrapperStartupParams;
    }
@@ -74,7 +70,6 @@ public class StartClusterStage extends AbstractDistStage {
    @Override
    public String toString() {
       return "StartClusterStage{" +
-            "chacheWrapperClass='" + chacheWrapperClass + '\'' +
             ", wrapperStartupParams=" + wrapperStartupParams +
             "} " + super.toString();
    }

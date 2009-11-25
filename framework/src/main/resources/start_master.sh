@@ -92,5 +92,5 @@ fi
 add_fwk_to_classpath
 set_env
 D_VARS="-Djava.net.preferIPv4Stack=true -Dbind.address=${BIND_ADDRESS} -Dcbf.nodes.count=${NUM_SLAVES} -Dcbf.nodes.initsize=${INIT_NODES} -Dcbf.nodes.increment=${STEP_COUNT} -Dcbf.test.name=${TEST_NAME} -Dcbf.test.config=${PLUGIN_CONFIG}"
-java ${JVM_OPTS} -classpath $CP ${D_VARS} org.cachebench.Master ${*} > stdout_master.out 2>&1
+java ${JVM_OPTS} -classpath $CP ${D_VARS} org.cachebench.Master -config ${CONFIG} > stdout_master.out 2>&1 &
 
