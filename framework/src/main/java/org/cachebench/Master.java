@@ -330,7 +330,7 @@ public class Master {
    private static void createStages(FixedSizeBenchmarkConfig sc) {
       List<Stage> stages = new ArrayList<Stage>();
       StartClusterStage scs = new StartClusterStage();
-      scs.setChacheWrapperClass("org.cachebench.cachewrappers.InfinispanWrapper");
+//      scs.setChacheWrapperClass("org.cachebench.cachewrappers.InfinispanWrapper");
       Map<String, String> props = Collections.singletonMap("config", "dist-sync.xml");
       scs.setWrapperStartupParams(props);
       stages.add(scs);
