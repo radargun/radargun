@@ -8,14 +8,14 @@ SLAVE_PREFIX=slave
 SSH_USER=$USER
 CLEAN=true
 WORKING_DIR=work
-ASYNC=false
+ASYNC=true
 VERBOSE=false
-SKIP_CHECKOUT=false
-SKIP_BUILD=false
+SKIP_CHECKOUT=true
+SKIP_BUILD=true
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ start_remote_slaves.sh [-v] [-p SLAVE_PREFIX] [-u ssh_user] [-nc] [-async] [-sb] [-sc] [-w WORKING DIRECTORY] [-g GIT_URL] -plugin plugin_name -n num_slaves -m MASTER_IP:PORT '
+  wrappedecho '  $ start_remote_slaves.sh [-v] [-p SLAVE_PREFIX] [-u ssh_user] [-c] [-sync] [-b] [-co] [-w WORKING DIRECTORY] [-g GIT_URL] -plugin plugin_name -n num_slaves -m MASTER_IP:PORT '
   wrappedecho ""
   wrappedecho "   -v       Be verbose"
   wrappedecho ""
@@ -24,17 +24,17 @@ help_and_exit() {
   wrappedecho ""
   wrappedecho "   -u       SSH user to use when SSH'ing across to the slaves.  Defaults to current user."
   wrappedecho ""
-  wrappedecho "   -nc      If this flag is passed in, then the working directory on the slave is not cleaned. Defaults to $CLEAN"
+  wrappedecho "   -c       If this flag is passed in, then the working directory on the slave is cleaned. Does not clean by default."
   wrappedecho ""
-  wrappedecho "   -async   If provided, then each SSH connection will be forked as a separate process. Defaults to $ASYNC"
+  wrappedecho "   -sync    If provided, then each SSH connection will NOT be forked as a separate process. Forks by default."
   wrappedecho ""
-  wrappedecho "   -sb      If provided, the framework and tests will NOT be rebuilt on slaves prior to running. Defaults to $SKIP_BUILD"
+  wrappedecho "   -b       If provided, the framework and tests will be rebuilt on slaves prior to running."
   wrappedecho ""
-  wrappedecho "   -sc      If provided, the framework will NOT be checked out of source control prior to building. Defaults to $SKIP_CHECKOUT"
+  wrappedecho "   -co     If provided, the framework will be checked out of source control prior to building."
   wrappedecho ""
   wrappedecho "   -w       Working directory on the slave.  Defaults to '$WORKING_DIR'."
   wrappedecho ""
-  wrappedecho "   -g       URL from which to perform a git clone to pull sources.  Only needed if -sc is NOT specified."
+  wrappedecho "   -g       URL from which to perform a git clone to pull sources.  Only needed if -co is specified."
   wrappedecho ""
   wrappedecho "   -plugin  Name of the cache plugin to load onto the slave's classpath.  This is REQUIRED."  
   wrappedecho ""
@@ -61,15 +61,15 @@ do
       SSH_USER=$2
       shift
       ;;
-    "-nc")
-      CLEAN=false
+    "-c")
+      CLEAN=true
       ;;
     "-n")
       NUM_SLAVES=$2
       shift
       ;;
-    "-async")
-      ASYNC=true
+    "-sync")
+      ASYNC=false
       ;;
     "-m")
       MASTER=$2
@@ -86,11 +86,11 @@ do
     "-v")
       VERBOSE=true
       ;;
-    "-sb")
-      SKIP_BUILD=true
+    "-b")
+      SKIP_BUILD=false
       ;;
-    "-sc")
-      SKIP_CHECKOUT=true
+    "-co")
+      SKIP_CHECKOUT=false
       ;;
     "-plugin")
       PLUGIN=$2

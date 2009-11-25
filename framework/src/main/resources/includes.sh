@@ -11,7 +11,7 @@
 welcome() {
   SCRIPTNAME=`basename ${0}`
   echo "=== Cache Benchmark Framework: ${SCRIPTNAME} ==="
-  wrappedecho ${1}
+  wrappedecho "${1}"
   echo ""
 }
 
@@ -53,4 +53,13 @@ add_fwk_to_classpath() {
 
 set_env() {
    . ${CBF_HOME}/bin/environment.sh
+}
+
+wait_for_process() {
+  PID=$1
+  echo "Waiting for process $PID to complete"
+  while ! [ "`ps ax | grep $PID | grep -v grep`" = "" ] ; do 
+    echo "Waiting for process completion."
+    sleep 5
+  done  
 }

@@ -10,11 +10,7 @@ help_and_exit() {
   echo ""
   echo "   -m        MASTER host[:port]. Master host is required, the port is optional and defaults to 2103."
   echo ""
-  echo "   -i        Node's index. Optional, if present will be prepended to the log file."
-  echo ""
   echo "   -plugin   The plugin to be benchmarked. Shoule be a dir in ../plugins/<plugin_dir>"
-  echo ""
-  echo "   -ba       Bind address to be used."
   echo ""
   echo "   -h        Displays this help screen"
   echo ""
@@ -31,16 +27,8 @@ do
       MASTER=$2
       shift
       ;;
-    "-i")
-      NODE_INDEX=$2
-      shift
-      ;;
     "-plugin")
       PLUGIN=$2
-      shift
-      ;;
-    "-ba")
-      BIND_ADDRESS=$2
       shift
       ;;
     *)
@@ -49,15 +37,6 @@ do
   esac
   shift
 done
-
-DJAVA="-Djava.net.preferIPv4Stack=true"
-if ! [ "$NODE_INDEXx" = "x" ] ; then
-  DJAVA="$DJAVA -Dlog4j.file.prefix=$NODE_INDEX"
-fi
-
-if ! [ "x$BIND_ADDRESS" = "x" ] ; then
-  DJAVA="$DJAVA -Djgroups.bind_addr=${BIND_ADDRESS}"
-fi
 
 if [ -z $MASTER ] ; then
   echo "FATAL: required information (-m) missing!"
@@ -76,18 +55,14 @@ if ! [ -d ${CBF_HOME}/plugins/$PLUGIN ] ; then
   exit 2
 fi
 
-CP=${CBF_HOME}/conf
-for jar in ${CBF_HOME}/lib/*.jar ; do
-  CP=$CP:$jar
-done
-for jar in ${CBF_HOME}/plugins/${PLUGIN}/lib/*.jar ; do
-  CP=$CP:$jar
-done
-CP=$CP:${CBF_HOME}/plugins/${PLUGIN}/conf
+add_fwk_to_classpath
+add_plugin_to_classpath ${PLUGIN}
 
-echo "java $DJAVA -classpath $CP org.cachebench.Slave $CONF > out_slave_${NODE_INDEX}.txt 2>&1 &"
-nohup java $DJAVA -classpath $CP org.cachebench.Slave $CONF > out_slave_${NODE_INDEX}.txt 2>&1 &
+HOST_NAME=`hostname`
 
-echo "... done! Slave process started!"
+set_env
+nohup java ${JVM_OPTS} -classpath $CP -Dlog4j.file.prefix=${HOST_NAME} -Dbind.address=${BIND_ADDRESS} -Djava.net.preferIPv4Stack=true org.cachebench.Slave $CONF > stdout_slave_${HOST_NAME}.out 2>&1 &
+
+echo "... done! Slave process started on host ${HOST_NAME}!"
 echo ""
 
