@@ -6,8 +6,8 @@ if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; 
 
 SLAVE_PREFIX=slave
 SSH_USER=$USER
-CLEAN=true
-WORKING_DIR=work
+CLEAN=false
+WORKING_DIR=`pwd`
 ASYNC=true
 VERBOSE=false
 SKIP_CHECKOUT=true
@@ -163,9 +163,10 @@ CMD="$CMD ; bin/start_local_slave.sh -m $MASTER -plugin $PLUGIN"
 while [ $loop -le $NUM_SLAVES ]
 do
   if [ "$ASYNC" = "true" ] ; then
-    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD -i $SLAVE_PREFIX$loop" &
+    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD" &
   else
-    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD -i $SLAVE_PREFIX$loop"
+    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD "
+    echo executing ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD "
   fi
   let "loop+=1"
 done

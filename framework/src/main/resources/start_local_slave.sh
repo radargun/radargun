@@ -32,6 +32,7 @@ do
       shift
       ;;
     *)
+      echo "Warn: unknown param ${1}" 
       help_and_exit
       ;;
   esac
