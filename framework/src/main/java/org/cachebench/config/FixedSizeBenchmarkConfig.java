@@ -1,10 +1,11 @@
 package org.cachebench.config;
 
-import org.cachebench.Stage;
 import org.cachebench.DistStage;
+import org.cachebench.Stage;
 
-import java.util.List;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A fixed size benchmark is a benchmark that executes over a fixed number of slaves. This defines the configuration of
@@ -50,6 +51,14 @@ public class FixedSizeBenchmarkConfig {
    }
 
    public void setConfigName(String configName) {
+      int index = configName.indexOf('.');
+      if (index > 0) {
+         configName = configName.substring(0, index);
+         index = configName.indexOf(File.separator);
+         if (index > 0) {
+            configName = configName.substring(configName.lastIndexOf(File.separator) + 1);
+         }
+      }
       assertNo_(configName);
       this.configName = configName;
    }
