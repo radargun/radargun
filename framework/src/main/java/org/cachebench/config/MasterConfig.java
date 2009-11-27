@@ -46,8 +46,8 @@ public class MasterConfig {
    public void validate() {
       Set<String> allBenchmarkNames = new HashSet<String>();
       for (FixedSizeBenchmarkConfig f: benchmarks) {
-         if (!allBenchmarkNames.add(f.getName())) {
-            throw new RuntimeException("There are two benchmarks having same name:" + f.getName() + ". Benchmark name should be unique!");
+         if (!allBenchmarkNames.add(f.getProductName())) {
+            throw new RuntimeException("There are two benchmarks having same name:" + f.getProductName() + ". Benchmark name should be unique!");
          }
       }
    }

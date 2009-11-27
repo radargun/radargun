@@ -20,7 +20,6 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
 
    private static Log log = LogFactory.getLog(CsvReportGenerationStage.class);
 
-   private String fileNamePrefix = "data_";
    private String targetDir = "reports";
    private String sepparator = ",";
 
@@ -115,7 +114,7 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       assert parentDir.exists() && parentDir.isDirectory();
 
       // file name is in the format data_<cache-product>_<cache-cfg.xml>_<cluster-size>.csv
-      String actualFileName = fileNamePrefix + masterState.nameOfTheCurrentBenchmark() + "_" + clusterSize +".csv";
+      String actualFileName =  masterState.nameOfTheCurrentBenchmark() + "_" + masterState.configNameOfTheCurrentBenchmark() + "_" + clusterSize +".csv";
 
       outputFile = new File(parentDir, actualFileName);
 
@@ -132,10 +131,6 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
             log.warn("Failed to create the report file!");
          }
       }
-   }
-
-   public void setFileNamePrefix(String fileNamePrefix) {
-      this.fileNamePrefix = fileNamePrefix;
    }
 
    public void setTargetDir(String targetDir) {

@@ -15,7 +15,6 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.StringTokenizer;
@@ -115,11 +114,7 @@ public class PutGetChartGenerator extends AbstractChartGen {
       if (!file.exists() || !file.isDirectory())
          throw new IllegalArgumentException("Report directory " + reportDirectory + " does not exist or is not a directory!");
 
-      File[] files = file.listFiles(new FilenameFilter() {
-         public boolean accept(File dir, String name) {
-            return name.toUpperCase().endsWith(".CSV");
-         }
-      });
+      File[] files = getFilteredFiles(file);
 
       putData = new DefaultCategoryDataset();
       getData = new DefaultCategoryDataset();
@@ -133,10 +128,9 @@ public class PutGetChartGenerator extends AbstractChartGen {
 
    private void readData(File f) throws IOException {
       log.debug("Processing file " + f);
-      String productName = f.getName();
-      if (productName.startsWith("data_")) {
-         productName = productName.substring(5);
-      }
+      //expected file format is: <product>_<config>_<size>.csv
+      StringTokenizer tokenizer = new StringTokenizer(f.getName() + "_");
+      String productName = tokenizer.nextToken() + "_" + tokenizer.nextToken();
 
       if (productName.indexOf(".xml") > 0) {
          productName = productName.substring(0, productName.indexOf(".xml"));

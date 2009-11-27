@@ -66,11 +66,16 @@ public class ScalingBenchmark {
     @XmlAttribute(required = true)
     @XmlJavaTypeAdapter(Adapter1 .class)
     protected String maxSize;
+
     @XmlAttribute(required = true)
     @XmlJavaTypeAdapter(Adapter1 .class)
-    protected String name;
+    protected String productName;
 
-    /**
+    @XmlAttribute(required = true)
+    @XmlJavaTypeAdapter(Adapter1 .class)
+    protected String configName;
+
+   /**
      * Gets the value of the before property.
      * 
      * @return
@@ -222,8 +227,8 @@ public class ScalingBenchmark {
      *     {@link String }
      *     
      */
-    public String getName() {
-        return name;
+    public String getProductName() {
+        return productName;
     }
 
     /**
@@ -234,8 +239,15 @@ public class ScalingBenchmark {
      *     {@link String }
      *     
      */
-    public void setName(String value) {
-        this.name = value;
+    public void setProductName(String value) {
+        this.productName = value;
     }
 
+   public String getConfigName() {
+      return configName;
+   }
+
+   public void setConfigName(String configName) {
+      this.configName = configName;
+   }
 }

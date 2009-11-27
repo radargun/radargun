@@ -14,7 +14,6 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Map;
 import java.util.SortedMap;
@@ -83,14 +82,9 @@ public class ThroughputChartGenerator extends AbstractChartGen {
    private void readData() throws IOException {
       File file = new File(reportDirectory);
       if (!file.exists() || !file.isDirectory())
-         throw new IllegalArgumentException("Report directory " + reportDirectory + " does not exist or is not a directory!");
+         throw new IllegalArgumentException("Report directory '" + file.getAbsolutePath() + "' does not exist or is not a directory!");
 
-      File[] files = file.listFiles(new FilenameFilter() {
-         public boolean accept(File dir, String name) {
-            return name.toUpperCase().endsWith(".CSV");
-         }
-      });
-
+      File[] files = getFilteredFiles(file);
       averageThroughput = new DefaultCategoryDataset();
       totalThroughput = new DefaultCategoryDataset();
       for (File f : files) {
@@ -131,14 +125,13 @@ public class ThroughputChartGenerator extends AbstractChartGen {
 
 
    private void readData(File f) throws IOException {
-      log.info("Parsing file " + f.getAbsoluteFile());
+      log.trace("Parsing file " + f.getAbsoluteFile());
       // chop up the file name to get productAndConfiguration and clusterSize.
       Integer clusterSize = 0;
       DescriptiveStatistics stats = DescriptiveStatistics.newInstance();
       // file name is in the format data_<cache-product>_<cache-cfg.xml>_<cluster-size>.csv
 
       StringTokenizer strtok = new StringTokenizer(f.getName(), "_");
-      strtok.nextToken(); // this is the "data-" bit
       String productNameAndConfiguration = strtok.nextToken() + "(" + strtok.nextToken();
       // chop off the trailing ".xml"
       if (productNameAndConfiguration.toUpperCase().endsWith(".XML"))

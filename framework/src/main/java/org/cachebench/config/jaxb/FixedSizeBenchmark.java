@@ -8,8 +8,6 @@
 
 package org.cachebench.config.jaxb;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -17,6 +15,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -49,9 +49,16 @@ public class FixedSizeBenchmark {
 
     @XmlElement(required = true)
     protected List<Stage> stage;
-    @XmlAttribute(required = true)
-    @XmlJavaTypeAdapter(Adapter1 .class)
-    protected String name;
+
+   @XmlAttribute(required = true)
+   @XmlJavaTypeAdapter(Adapter1 .class)
+   protected String productName;
+
+   @XmlAttribute(required = true)
+   @XmlJavaTypeAdapter(Adapter1 .class)
+   protected String configName;
+
+
     @XmlAttribute(required = true)
     @XmlJavaTypeAdapter(Adapter1 .class)
     protected String size;
@@ -85,31 +92,23 @@ public class FixedSizeBenchmark {
         return this.stage;
     }
 
-    /**
-     * Gets the value of the name property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getName() {
-        return name;
-    }
+   public String getProductName() {
+      return productName;
+   }
 
-    /**
-     * Sets the value of the name property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setName(String value) {
-        this.name = value;
-    }
+   public void setProductName(String productName) {
+      this.productName = productName;
+   }
 
-    /**
+   public String getConfigName() {
+      return configName;
+   }
+
+   public void setConfigName(String configName) {
+      this.configName = configName;
+   }
+
+   /**
      * Gets the value of the size property.
      * 
      * @return

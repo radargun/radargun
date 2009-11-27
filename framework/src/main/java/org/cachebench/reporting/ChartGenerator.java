@@ -1,6 +1,7 @@
 package org.cachebench.reporting;
 
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 /**
  * Manual chart generator.  Grabs CSVs generated and spits out line graphs.
@@ -17,14 +18,16 @@ import java.io.IOException;
 public class ChartGenerator {
    private static void help() {
       System.out.println("Usage:");
-      System.out.println("   ChartGenerator [-reportDir <directory containing CSV files>] [-o <outputFileNamePrefix>] [-singleChart <true | false> if true, generates a single chart for all config files.] [-chartType <putget | throughput> defaults to throughput if not specified.]");
+      System.out.println("   ChartGenerator [-reportDir <directory containing CSV files>] [-o <outputFileNamePrefix>]  [-chartType <putget | throughput> defaults to throughput if not specified.] [-filter <productName>(config1,confi2);<productName2>(config1,config2,config3)] ]");
    }
 
    public static void main(String[] args) throws IOException {
       String reportDirectory = null;
-      boolean singleChart = true;
+
+
       String fnPrefix = null;
       String chartType = "throughput";
+      String filter = null;
 
       long startTime = System.currentTimeMillis();
       System.out.println("Welcome to the ChartGenerator.");
@@ -32,11 +35,6 @@ public class ChartGenerator {
       for (int i = 0; i < args.length; i++) {
          if (args[i].equals("-reportDir")) {
             reportDirectory = args[++i];
-            continue;
-         }
-
-         if (args[i].equals("-singleChart")) {
-            singleChart = Boolean.valueOf(args[++i]);
             continue;
          }
 
@@ -50,6 +48,11 @@ public class ChartGenerator {
             continue;
          }
 
+         if (args[i].equals("-filter")) {
+            filter = args[++i];
+            continue;
+         }
+
          help();
          return;
       }
@@ -58,7 +61,6 @@ public class ChartGenerator {
          help();
          return;
       }
-      if (!singleChart) throw new RuntimeException("Multiple charts not yet implemented");
 
       ChartGen gen;
 
@@ -69,6 +71,20 @@ public class ChartGenerator {
       }
 
       gen.setReportDirectory(reportDirectory);
+      if (filter != null) {
+         StringTokenizer products = new StringTokenizer(filter, ";");
+         while (products.hasMoreTokens()) {
+            String product = products.nextToken();
+            int configsStart = product.indexOf('(');
+            String productName = product.substring(0, configsStart);
+            String productConfigs = product.substring(configsStart + 1, product.length() - 1);
+            StringTokenizer configTokenizer = new StringTokenizer(productConfigs, ",");
+            while (configTokenizer.hasMoreTokens()) {
+               String config = configTokenizer.nextToken();
+               gen.addToReportFilter(productName, config);
+            }
+         }
+      }
       gen.setFileNamePrefix(fnPrefix);
       gen.generateChart();
       System.out.println("Finished in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds!");

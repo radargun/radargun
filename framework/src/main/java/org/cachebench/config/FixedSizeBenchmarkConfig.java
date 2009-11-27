@@ -17,7 +17,8 @@ public class FixedSizeBenchmarkConfig {
 
    private List<Stage> stages = new ArrayList<Stage>();
 
-   private String name;
+   private String productName;
+   private String configName;
    private int size;
 
 
@@ -29,16 +30,32 @@ public class FixedSizeBenchmarkConfig {
       return new ArrayList<Stage>(stages);
    }
 
-   public String getName() {
-      return name;
+   public String getProductName() {
+      return productName;
    }
 
-   public void setName(String name) {
-      this.name = name;
+   public void setProductName(String productName) {
+      assertNo_(productName);
+      this.productName = productName;
+   }
+
+   private void assertNo_(String name) {
+      if (name.indexOf("_") >=0) {
+         throw new RuntimeException("'_' not allowed in productName (reporting relies on that)");
+      }
+   }
+
+   public String getConfigName() {
+      return configName;
+   }
+
+   public void setConfigName(String configName) {
+      assertNo_(configName);
+      this.configName = configName;
    }
 
    public void validate() {
-      if (name == null) throw new RuntimeException("Name must be set!");
+      if (productName == null) throw new RuntimeException("Name must be set!");
    }
 
    public List<Stage> getAssmbledStages() {

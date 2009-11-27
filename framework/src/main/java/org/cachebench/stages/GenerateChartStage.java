@@ -38,8 +38,8 @@ public class GenerateChartStage extends AbstractMasterStage {
       }
 
       gen.setReportDirectory(reportDirectory);
-      gen.setFileNamePrefix(fnPrefix);
       gen.setOutputDir(outputDir);
+      gen.setFileNamePrefix(fnPrefix);
       try {
          gen.generateChart();
          return true;

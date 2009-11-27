@@ -29,6 +29,7 @@ public class MasterState extends StateBase {
    private List<FixedSizeBenchmarkConfig> benchmarks;
    private FixedSizeBenchmarkConfig currentBenchmark;
    private DistStage currentDistStage;
+   private long startTime = System.currentTimeMillis();
 
    public MasterState(MasterConfig config) {
       this.config = config;
@@ -90,14 +91,16 @@ public class MasterState extends StateBase {
 
    private boolean moveToNextBenchmark() {
       if (benchmarks.isEmpty()) {
-         log.info("Successfully executed all benchmarks, exiting.");
+         long secs = (System.currentTimeMillis() - startTime) / 1000;
+         String duartionStr = (secs / 60) + " mins " + (secs % 60) + " secs ";
+         log.info("Successfully executed all benchmarks in " + duartionStr + ", exiting.");
          return false;
       }
       currentBenchmark = benchmarks.remove(0);
       if (currentBenchmark instanceof ScalingBenchmarkConfig) {
-         log.info("Started scaling benchmark '" + currentBenchmark.getName() + '\'');
+         log.info("Started scaling benchmark '" + currentBenchmark.getProductName() + '\'');
       } else {
-         log.info("Starting fixed size benchmark '" + currentBenchmark.getName() + '\'');
+         log.info("Starting fixed size benchmark '" + currentBenchmark.getProductName() + '\'');
       }
       stages = currentBenchmark.getAssmbledStages();
       if (stages.isEmpty())
@@ -116,6 +119,10 @@ public class MasterState extends StateBase {
    }
 
    public String nameOfTheCurrentBenchmark() {
-      return currentBenchmark.getName();
+      return currentBenchmark.getProductName();
+   }
+
+   public String configNameOfTheCurrentBenchmark() {
+      return currentBenchmark.getConfigName();
    }
 }

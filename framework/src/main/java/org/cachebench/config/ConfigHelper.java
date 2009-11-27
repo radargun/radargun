@@ -179,7 +179,8 @@ public class ConfigHelper {
       MasterConfig masterConfig = new MasterConfig(port, master.getBind(), toInt(master.getSlavesCount()));
       for (ScalingBenchmark sb : benchConfig.getScalingBenchmark()) {
          ScalingBenchmarkConfig sbc = new ScalingBenchmarkConfig();
-         sbc.setName(sb.getName());
+         sbc.setProductName(sb.getProductName());
+         sbc.setConfigName(sb.getConfigName());
          sbc.setInitSize(toInt(sb.getInitSize()));
          sbc.setMaxSize(toInt(sb.getMaxSize()));
          sbc.setIncrement(toInt(sb.getIncrement()));
@@ -204,7 +205,8 @@ public class ConfigHelper {
       }
       for (FixedSizeBenchmark fb : benchConfig.getFixedSizeBenchmark()) {
          FixedSizeBenchmarkConfig fbc = new FixedSizeBenchmarkConfig();
-         fbc.setName(fb.getName());
+         fbc.setProductName(fb.getProductName());
+         fbc.setConfigName(fb.getConfigName());
          fbc.setSize(toInt(fb.getSize()));
          List<Stage> stagesFromXml = fb.getStage();
          fbc.setStages(processStages(stagesFromXml));

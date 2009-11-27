@@ -61,9 +61,9 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
    public void validate() {
       super.validate();
       if (initSize < 2)
-         throw new RuntimeException("For scaling benchmarks(" + getName() + ") the initial size must be at least 2");
+         throw new RuntimeException("For scaling benchmarks(" + getProductName() + ") the initial size must be at least 2");
       if (maxSize < initSize)
-         throw new RuntimeException("Config problems for benchmark: " + getName() + " - maxSize must be >= initSize");
+         throw new RuntimeException("Config problems for benchmark: " + getProductName() + " - maxSize must be >= initSize");
       if (increment <= 0) throw new RuntimeException("Increment must be positive!");
    }
 

@@ -12,9 +12,11 @@ public interface ChartGen
 
    void setReportDirectory(String reportDirectory);
 
-   void setFileNamePrefix(String fnPrefix);
+   public void addToReportFilter(String productName, String productConfig);
 
    void generateChart() throws IOException;
 
    void setOutputDir(String outDir);
+
+   public void setFileNamePrefix(String fileNamePrefix);
 }
