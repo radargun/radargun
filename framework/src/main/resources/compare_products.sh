@@ -23,11 +23,11 @@ for plugin in $PLUGINS ; do
   
   for config in $CFGS ; do
     ### Start the master process    
-    ${CBF_HOME}/bin/start_master.sh -m $HOST_IP -n $MAX_NODES -x $config
-    PID_OF_MASTER_PROCESS=$!
+    . ${CBF_HOME}/bin/start_master.sh -m $HOST_IP -n $MAX_NODES -x $config -c $CBF_HOME/conf/bench-config.xml -t $plugin
+    PID_OF_MASTER_PROCESS=$CBF_MASTER_PID
     
     ## Now start slaves
-    ${CBF_HOME}/bin/start_remote_slaves.sh -n $MAX_NODES -m $HOST_IP -plugin $plugin
+    ${CBF_HOME}/bin/start_remote_slaves.sh -n $MAX_NODES -m $HOST_IP -plugin $plugin -p cluster0
     
     wait_for_process $PID_OF_MASTER_PROCESS
   done
