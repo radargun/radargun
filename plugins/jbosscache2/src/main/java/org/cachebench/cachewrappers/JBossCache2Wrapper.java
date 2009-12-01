@@ -47,12 +47,12 @@ public class JBossCache2Wrapper implements CacheWrapper
 
    public void put(String path, Object key, Object value) throws Exception
    {
-      cache.put(Fqn.fromList(path), key, value);
+      cache.put(Fqn.fromString(path), key, value);
    }
 
    public Object get(String bucket, Object key) throws Exception
    {
-      return cache.get(Fqn.fromList(bucket), key);
+      return cache.get(Fqn.fromString(bucket), key);
    }
 
    public void empty() throws Exception
@@ -74,7 +74,7 @@ public class JBossCache2Wrapper implements CacheWrapper
    public Object getReplicatedData(String path, String key) throws Exception
    {
       CacheSPI cacheSpi = (CacheSPI) cache;
-      GravitateResult result = cacheSpi.gravitateData(Fqn.fromList(path), true, new InvocationContext());
+      GravitateResult result = cacheSpi.gravitateData(Fqn.fromString(path), true, new InvocationContext());
       if (!result.isDataFound())
       {
          //totall replication?
