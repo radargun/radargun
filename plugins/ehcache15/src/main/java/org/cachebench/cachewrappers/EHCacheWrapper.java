@@ -11,7 +11,6 @@ import org.cachebench.CacheWrapper;
 
 import java.io.Serializable;
 import java.net.URL;
-import java.util.List;
 import java.util.Map;
 
 
@@ -98,7 +97,7 @@ public class EHCacheWrapper implements CacheWrapper
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#put(java.lang.Object, java.lang.Object)
    */
-   public void put(List<String> path, Object key, Object value) throws Exception
+   public void put(String path, Object key, Object value) throws Exception
    {
       putSerializable((Serializable) key, (Serializable) value);
    }
@@ -106,7 +105,7 @@ public class EHCacheWrapper implements CacheWrapper
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#get(java.lang.Object)
    */
-   public Object get(List<String> path, Object key) throws Exception
+   public Object get(String bucket, Object key) throws Exception
    {
       Object s = getSerializable((Serializable) key);
       if (s instanceof Element)
@@ -127,7 +126,7 @@ public class EHCacheWrapper implements CacheWrapper
       return cache.getKeys().toString() + (localmode ? "" : (" remote peers: " + manager.getCachePeerListener().getBoundCachePeers()));
    }
 
-   public Object getReplicatedData(List<String> path, String key) throws Exception
+   public Object getReplicatedData(String path, String key) throws Exception
    {
       Object o = get(path, key);
       if (log.isTraceEnabled())

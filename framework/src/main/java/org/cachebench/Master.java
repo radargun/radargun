@@ -41,6 +41,7 @@ import java.util.Set;
  *    - on each network interface broadcast on a certain multicast address and receive the nio IP and port
  * TODO - on config, split the test name config in "product" and "config" and generate report based on that.
  * TODO - make benchmark run multiple products at once
+ * TODO - if master receives a kill request it wonn't exit IMMEDIATELLY as it has a main thread running. Fix this (phps by making it a deamon)
  *
  * @author Mircea.Markus@jboss.com
  */
@@ -346,7 +347,7 @@ public class Master {
       stages.add(ws);
 
       WebSessionBenchmarkStage wsbs = new WebSessionBenchmarkStage();
-      wsbs.setNumberOfRequests(1000);
+      wsbs.setNumberOfRequestsPerThread(1000);
       stages.add(wsbs);
 
       CsvReportGenerationStage csvrg = new CsvReportGenerationStage();

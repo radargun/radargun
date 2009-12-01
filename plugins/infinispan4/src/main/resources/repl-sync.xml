@@ -13,7 +13,7 @@
       <transaction
             transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"/>
 
-      <locking concurrencyLevel="1000" useLockStriping="false" lockAcquisitionTimeout="120000" />
+      <locking concurrencyLevel="1000" useLockStriping="false" />
       <clustering mode="r">
          <sync replTimeout="240000"/>
       </clustering>

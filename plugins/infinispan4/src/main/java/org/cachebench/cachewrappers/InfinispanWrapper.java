@@ -10,7 +10,6 @@ import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 
 import javax.transaction.TransactionManager;
-import java.util.List;
 import java.util.Map;
 
 public class InfinispanWrapper implements CacheWrapper {
@@ -43,12 +42,12 @@ public class InfinispanWrapper implements CacheWrapper {
       }
    }
 
-   public void put(List<String> path, Object key, Object value) throws Exception {
-      cache.put(key, value);
+   public void put(String bucket, Object key, Object value) throws Exception {
+      cache.put(bucket + key, value);
    }
 
-   public Object get(List<String> path, Object key) throws Exception {
-      return cache.get(key);
+   public Object get(String bucket, Object key) throws Exception {
+      return cache.get(bucket + key);
    }
 
    public void empty() throws Exception {
@@ -69,8 +68,8 @@ public class InfinispanWrapper implements CacheWrapper {
       return cache.getVersion();
    }
 
-   public Object getReplicatedData(List<String> path, String key) throws Exception {
-      return get(null, key);
+   public Object getReplicatedData(String bucket, String key) throws Exception {
+      return get(bucket, key);
    }
 
    public Object startTransaction() {

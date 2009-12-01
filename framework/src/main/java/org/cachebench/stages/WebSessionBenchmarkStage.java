@@ -4,22 +4,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
+import org.cachebench.utils.Utils;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Simulates the work with a distributed web sessions.
- * //TODO fix so that multiple threads do not colead per key
- * //TODO add accurate operation count and estimated remaining time to be logged 
+ * Simulates the work with a distributed web sessions. 
  *
  * @author Mircea.Markus@jboss.com
  */
@@ -27,14 +22,16 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    private static Log log = LogFactory.getLog(WebSessionBenchmarkStage.class);
 
+   private int opsCountStatusLog = 5000;
+
    public static final String SESSION_PREFIX = "SESSION_";
-   private static int LOG_AFTER_OPERATION_COUNT = 5000;
+   public static final String ATTRIBUTE_PREFIX = "SESSION_";
 
 
    /**
     * total number of request to be made against this session: reads + writes
     */
-   private int numberOfRequests = 500000;
+   private int numberOfRequestsPerThread = 50000;
 
    /**
     * for each session there will be created fixed number of attributes. On those attributes all the GETs and PUTs are
@@ -61,29 +58,27 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
    private boolean reportNanos = false;
 
 
-   /*
-    * Needed for running the test.
-    */
-   private ExecutorService ex;
    private CacheWrapper cacheWrapper;
-   private String sessionId;
    private static Random r = new Random();
+   private long startTime = System.currentTimeMillis();
 
 
    public DistStageAck executeOnSlave() {
+
       DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
       this.cacheWrapper = slaveState.getCacheWrapper();
       if (cacheWrapper == null) {
          log.info("Not running test on this slave as the wrapper hasn't been configured.");
          return result;
       }
-      ex = Executors.newFixedThreadPool(numOfThreads);
-      sessionId = SESSION_PREFIX + getSlaveIndex();
-      log.info("SessionID is " + sessionId);
+
+      log.info("Starting WebSessionBenchmarkStage: " + this.toString());
+
+      initSessions();
 
       try {
-         initSession();
-         stressSession(result);
+         List<SessionStresser> sessionStressers = executeOpsOnSession();
+         processResults(sessionStressers, result);
       } catch (Exception e) {
          log.warn("Exception while initializing the test", e);
          result.setError(true);
@@ -92,11 +87,48 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       return result;
    }
 
+   private void processResults(List<SessionStresser> sessionStressers, DefaultDistStageAck ack) {
+      long duration = 0;
+      int reads = 0;
+      int writes = 0;
+      int failures = 0;
+      for (SessionStresser sessionStresser : sessionStressers) {
+         duration += reportNanos ? sessionStresser.durationNanos : sessionStresser.durationNanos / 1000000;
+         reads += sessionStresser.reads;
+         writes += sessionStresser.writes;
+         failures += sessionStresser.nrFailures;
+      }
+
+      Map<String, String> results = new LinkedHashMap<String, String>();
+      results.put("DURATION", str(duration));
+      double requestPerSec = (reads + writes) / (duration / 1000.0);
+      results.put("REQ PER SEC", str(requestPerSec));
+      results.put("READ_COUNT", str(reads));
+      results.put("WRITE_COUNT", str(writes));
+      ack.setPayload(results);
+      log.info("Finsihed generating report. Nr of failed operations on this node is: " + failures +
+            ". Test duration is: " + Utils.getDurationString(System.currentTimeMillis() - startTime));
+   }
+
+   private List<SessionStresser> executeOpsOnSession() throws Exception {
+      List<SessionStresser> sessionStressers;
+      sessionStressers = new ArrayList<SessionStresser>();
+      for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
+         SessionStresser sessionStresser = new SessionStresser(threadIndex);
+         sessionStressers.add(sessionStresser);
+         sessionStresser.start();
+      }
+      for (SessionStresser sessionStresser : sessionStressers) {
+         sessionStresser.join();
+      }
+      return sessionStressers;
+   }
+
 
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       logDurationInfo(acks);
       boolean success = true;
-      Map<Integer,Map<String, Object>> results = new HashMap<Integer, Map<String, Object>>();
+      Map<Integer, Map<String, Object>> results = new HashMap<Integer, Map<String, Object>>();
       masterState.put("results", results);
       for (DistStageAck ack : acks) {
          DefaultDistStageAck wAck = (DefaultDistStageAck) ack;
@@ -117,70 +149,99 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       return success;
    }
 
-   private void initSession() throws Exception {
-      for (int i = 0; i < numberOfAttributes; i++) {
-         try {
-            cacheWrapper.put(generatePath(sessionId, i), getSessionEntry(i), new byte[sizeOfAnAttribute]);
-         }
-         catch (Throwable e) {
-            log.warn("Error while initializing the session: ", e);
+   private void initSessions() {
+      for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
+         for (int attrIndex = 0; attrIndex < numberOfAttributes; attrIndex++) {
+            try {
+               cacheWrapper.put(getSessionId(threadIndex), getAttributeName(attrIndex), new byte[sizeOfAnAttribute]);
+            }
+            catch (Throwable e) {
+               log.warn("Error while initializing the session: ", e);
+            }
          }
       }
    }
 
-   private void stressSession(DefaultDistStageAck ack) throws Exception {
-      long reads = 0;
-      long writes = 0;
-      int readPercentage = 100 - writePercentage;
-      Random r = new Random();
-      int randomAction;
-      int randomAttribute;
-      AtomicLong durationNanos = new AtomicLong(0);
-      for (int i = 0; i < numberOfRequests; i++) {
-         logRunCount(i);
-         randomAction = r.nextInt(100);
-         randomAttribute = r.nextInt(numberOfAttributes - 1);
+   private String getAttributeName(int attrIndex) {
+      return ATTRIBUTE_PREFIX + '_' + attrIndex;
+   }
 
-         String sessionEntry = getSessionEntry(randomAttribute);
-         List<String> path = generatePath(sessionId, randomAttribute);
 
-         if (randomAction < readPercentage) {
-            // read
-            ex.execute(new ReadTask(path, durationNanos, sessionEntry));
-            reads++;
-         } else {
-            // write
-            ex.execute(new WriteTask(path, durationNanos, sessionEntry));
-            writes++;
+   public class SessionStresser extends Thread {
+
+      private int threadIndex;
+      private String sessionId;
+      private int nrFailures;
+      private long durationNanos = 0;
+      private long reads;
+      private long writes;
+      private long startTime;
+
+      public SessionStresser(int threadIndex) {
+         super("SessionStresser-" + threadIndex);
+         this.threadIndex = threadIndex;
+         sessionId = getSessionId(threadIndex);
+      }
+
+      @Override
+      public void run() {
+         startTime = System.currentTimeMillis();
+         int readPercentage = 100 - writePercentage;
+         Random r = new Random();
+         int randomAction;
+         int randomAttributeInt;
+         for (int i = 0; i < numberOfRequestsPerThread; i++) {
+            logProgress(i);
+            randomAction = r.nextInt(100);
+            randomAttributeInt = r.nextInt(numberOfAttributes - 1);
+            String attribute = getAttributeName(randomAttributeInt);
+
+            if (randomAction < readPercentage) {
+               long start = System.nanoTime();
+               try {
+                  cacheWrapper.get(sessionId, attribute);
+               } catch (Exception e) {
+                  log.warn(e);
+                  nrFailures++;
+               }
+               durationNanos += System.nanoTime() - start;
+               reads++;
+            } else {
+               String payload = generateRandomString(sizeOfAnAttribute);
+               long start = System.nanoTime();
+               try {
+                  cacheWrapper.put(sessionId, attribute, payload);
+               } catch (Exception e) {
+                  log.warn(e);
+                  nrFailures++;
+               }
+               durationNanos += System.nanoTime() - start;
+               writes++;
+            }
          }
       }
 
-      ex.shutdown();
-      ex.awaitTermination(60 * 10, TimeUnit.SECONDS);
-
-
-      long duration = this.reportNanos ? durationNanos.get() : durationNanos.get() / 1000000;
-      Map<String, String> results = new LinkedHashMap<String, String>();
-      results.put("DURATION", str(duration));
-      double requestPerSec = (reads + writes) / (duration / 1000.0);
-      results.put("REQ PER SEC", str(requestPerSec));
-      results.put("READ_COUNT", str(reads));
-      results.put("WRITE_COUNT", str(writes));
-      ack.setPayload(results);
+      private void logProgress(int i) {
+         if ((i + 1) % opsCountStatusLog == 0) {
+            double elapsedTime = System.currentTimeMillis() - startTime;
+            double estimatedTotal = ((double)numberOfRequestsPerThread / (double)i) * elapsedTime;
+            double estimatedRemaining = estimatedTotal - elapsedTime;
+            if (log.isTraceEnabled()) {
+               log.trace("i="+i+", elapsedTime="+ elapsedTime);
+            }
+            log.info("Thread index '" + threadIndex + "' executed " + (i+1) + " operations. Elapsed time: " +
+                  Utils.getDurationString((long)elapsedTime) + ". Estimated remaining: " + Utils.getDurationString((long)estimatedRemaining) +
+                  ". Estimated total: " + Utils.getDurationString((long)estimatedTotal));
+         }
+      }
    }
 
    private String str(Object o) {
       return String.valueOf(o);
    }
 
-   private void logRunCount(int i) {
-      if (((i + 1) % LOG_AFTER_OPERATION_COUNT == 0) || (i == 0)) {
-         log.info("SessionSimulatorTest performed " + (i == 0 ? 0 : (i + 1)) + " operations");
-      }
-   }
-
-   public void setNumberOfRequests(int numberOfRequests) {
-      this.numberOfRequests = numberOfRequests;
+   public void setNumberOfRequestsPerThread(int numberOfRequestsPerThread) {
+      this.numberOfRequestsPerThread = numberOfRequestsPerThread;
    }
 
    public void setNumberOfAttributes(int numberOfAttributes) {
@@ -203,62 +264,16 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       this.writePercentage = writePercentage;
    }
 
-   private abstract static class Task implements Runnable {
-      List<String> path;
-      AtomicLong durationNanos;
-      Object sessionEntry;
-
-      protected Task(List<String> path, AtomicLong durationNanos, Object sessionEntry) {
-         this.path = path;
-         this.durationNanos = durationNanos;
-         this.sessionEntry = sessionEntry;
-      }
+   public void setOpsCountStatusLog(int opsCountStatusLog) {
+      this.opsCountStatusLog = opsCountStatusLog;
    }
-
-
-   private class WriteTask extends Task {
-      protected WriteTask(List<String> path, AtomicLong durationNanos, Object sessionEntry) {
-         super(path, durationNanos, sessionEntry);
-      }
-
-      public void run() {
-         try {
-            String payload = generateRandomString(sizeOfAnAttribute);
-            long start = System.nanoTime();
-            cacheWrapper.put(path, sessionEntry, payload);
-            durationNanos.getAndAdd(System.nanoTime() - start);
-         }
-         catch (Throwable e) {
-            log.warn("Error appeared whilst writing to cache:" + e.getMessage(), e);
-         }
-      }
-   }
-
-   private class ReadTask extends Task {
-      protected ReadTask(List<String> path, AtomicLong durationNanos, Object sessionEntry) {
-         super(path, durationNanos, sessionEntry);
-      }
-
-      public void run() {
-         try {
-            long start = System.nanoTime();
-            cacheWrapper.get(path, sessionEntry);
-            durationNanos.getAndAdd(System.nanoTime() - start);
-         }
-         catch (Throwable e) {
-            log.warn("Error appeared whilst reading from cache:" + e.getMessage(), e);
-         }
-      }
-   }
-
 
    /**
-    * @return a well-spaced path for a key-value pair
+    * This will make sure that each session runs in its own thread and no collisition will take place. See
+    * https://sourceforge.net/apps/trac/cachebenchfwk/ticket/14
     */
-   private List<String> generatePath(String base, int sequence) {
-      // use bucket sizes of 100 and a depth of 3.
-      int intermediate = sequence % 100;
-      return Arrays.asList(base, "Intermediate-" + intermediate, "Slave " + sequence);
+   private String getSessionId(int threadIndex) {
+      return SESSION_PREFIX + "_" + getSlaveIndex() + "_" + threadIndex;
    }
 
    private static String generateRandomString(int size) {
@@ -268,23 +283,17 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       return sb.toString();
    }
 
-
-   private String getSessionEntry(int i) {
-      return sessionId + i;
-   }
-
    @Override
    public String toString() {
       return "WebSessionBenchmarkStage{" +
-            "numberOfRequests=" + numberOfRequests +
+            "opsCountStatusLog=" + opsCountStatusLog +
+            ", numberOfRequestsPerThread=" + numberOfRequestsPerThread +
             ", numberOfAttributes=" + numberOfAttributes +
             ", sizeOfAnAttribute=" + sizeOfAnAttribute +
             ", writePercentage=" + writePercentage +
             ", numOfThreads=" + numOfThreads +
             ", reportNanos=" + reportNanos +
-            ", ex=" + ex +
             ", cacheWrapper=" + cacheWrapper +
-            ", sessionId='" + sessionId + '\'' +
             "} " + super.toString();
    }
 }

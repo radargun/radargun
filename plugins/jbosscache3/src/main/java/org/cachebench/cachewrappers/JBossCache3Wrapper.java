@@ -11,7 +11,6 @@ import org.jboss.cache.transaction.DummyTransactionManager;
 import org.jboss.cache.util.Caches;
 
 import javax.transaction.Transaction;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,20 +52,20 @@ public class JBossCache3Wrapper implements CacheWrapper
       cache.stop();
    }
 
-   public void put(List<String> path, Object key, Object value) throws Exception
+   public void put(String path, Object key, Object value) throws Exception
    {
       if (FLAT)
          flatCache.put(key, value);
       else
-         cache.put(Fqn.fromList((List) path, true), key, value);
+         cache.put(path, key, value);
    }
 
-   public Object get(List<String> path, Object key) throws Exception
+   public Object get(String bucket, Object key) throws Exception
    {
       if (FLAT)
          return flatCache.get(key);
       else
-         return cache.get(Fqn.fromList((List) path, true), key);
+         return cache.get(Fqn.fromString(bucket), key);
    }
 
    public void empty() throws Exception
@@ -92,7 +91,7 @@ public class JBossCache3Wrapper implements CacheWrapper
       return "Num direct children: " + cache.getRoot().getChildren().size();
    }
 
-   public Object getReplicatedData(List<String> path, String key) throws Exception
+   public Object getReplicatedData(String path, String key) throws Exception
    {
       if (!cache.getConfiguration().getCacheMode().isSynchronous())
       {

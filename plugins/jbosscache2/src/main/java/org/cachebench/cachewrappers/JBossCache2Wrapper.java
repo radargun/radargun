@@ -13,7 +13,6 @@ import org.jboss.cache.marshall.NodeData;
 import org.jboss.cache.transaction.DummyTransactionManager;
 
 import javax.transaction.Transaction;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,14 +45,14 @@ public class JBossCache2Wrapper implements CacheWrapper
       cache.stop();
    }
 
-   public void put(List<String> path, Object key, Object value) throws Exception
+   public void put(String path, Object key, Object value) throws Exception
    {
       cache.put(Fqn.fromList(path), key, value);
    }
 
-   public Object get(List<String> path, Object key) throws Exception
+   public Object get(String bucket, Object key) throws Exception
    {
-      return cache.get(Fqn.fromList(path), key);
+      return cache.get(Fqn.fromList(bucket), key);
    }
 
    public void empty() throws Exception
@@ -72,7 +71,7 @@ public class JBossCache2Wrapper implements CacheWrapper
       return "Num direct children: " + cache.getRoot().getChildren().size();
    }
 
-   public Object getReplicatedData(List<String> path, String key) throws Exception
+   public Object getReplicatedData(String path, String key) throws Exception
    {
       CacheSPI cacheSpi = (CacheSPI) cache;
       GravitateResult result = cacheSpi.gravitateData(Fqn.fromList(path), true, new InvocationContext());

@@ -7,8 +7,9 @@ import org.cachebench.DistStageAck;
 import org.cachebench.MasterStage;
 import org.cachebench.Stage;
 import org.cachebench.config.FixedSizeBenchmarkConfig;
-import org.cachebench.config.ScalingBenchmarkConfig;
 import org.cachebench.config.MasterConfig;
+import org.cachebench.config.ScalingBenchmarkConfig;
+import org.cachebench.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,8 +92,8 @@ public class MasterState extends StateBase {
 
    private boolean moveToNextBenchmark() {
       if (benchmarks.isEmpty()) {
-         long secs = (System.currentTimeMillis() - startTime) / 1000;
-         String duartionStr = (secs / 60) + " mins " + (secs % 60) + " secs ";
+         long duration = System.currentTimeMillis() - startTime;
+         String duartionStr = Utils.getDurationString(duration);
          log.info("Successfully executed all benchmarks in " + duartionStr + ", exiting.");
          return false;
       }

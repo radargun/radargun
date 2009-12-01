@@ -5,9 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Collections;
 
 /**
  * Distributed stage that would validate that cluster is correctly formed.
@@ -29,7 +27,8 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    private static Log log = LogFactory.getLog(ClusterValidationStage.class);
 
-   private static final String PREFIX = "_InstallBenchmarkStage_";
+   private static final String KEY = "_InstallBenchmarkStage_";
+   private static final String CONFIRMATION_KEY = "_confirmation_";
 
 
    private boolean isPartialReplication = false;
@@ -38,6 +37,7 @@ public class ClusterValidationStage extends AbstractDistStage {
 
 
    private CacheWrapper wrapper;
+   private static final String BUCKET = "clusterValidation";
 
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck response = newDefaultStageAck();
@@ -66,20 +66,24 @@ public class ClusterValidationStage extends AbstractDistStage {
    }
 
    private int confirmReplication() throws Exception {
-      wrapper.put(Collections.EMPTY_LIST, PREFIX + "_confirms_" + getSlaveIndex(), "true");
+      wrapper.put(nodeBucket(getSlaveIndex()), CONFIRMATION_KEY, "true");
       for (int i = 0; i < getActiveSlaveCount(); i++) {
-         for (int j = 0; j < 10 && (wrapper.get(Collections.EMPTY_LIST, PREFIX + "_confirms_" + i) == null); j++) {
+         for (int j = 0; j < 10 && (wrapper.get(nodeBucket(i), CONFIRMATION_KEY) == null); j++) {
             tryToPut();
-            wrapper.put(Collections.EMPTY_LIST, PREFIX + "_confirms_" + getSlaveIndex(), "true");
+            wrapper.put(nodeBucket(getSlaveIndex()), CONFIRMATION_KEY, "true");
             Thread.sleep(1000);
          }
-         if (wrapper.get(Collections.EMPTY_LIST, PREFIX + "_confirms_" + i) == null) {
+         if (wrapper.get(nodeBucket(i), CONFIRMATION_KEY) == null) {
             log.warn("Confirm phase unsuccessful. Slave " + i + " hasn't acknowleged the test");
             return i;
          }
       }
       log.info("Confirm phase successful.");
       return -1;
+   }
+
+   private String nodeBucket(int nodeIndex) {
+      return BUCKET + nodeIndex;
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks) {
@@ -118,7 +122,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCount = 0;
       while (tryCount < 5) {
          try {
-            wrapper.put(Arrays.asList(PREFIX, "" + getSlaveIndex()), PREFIX + getSlaveIndex(), "true");
+            wrapper.put(nodeBucket(getSlaveIndex()), KEY, "true");
             return;
          }
          catch (Throwable e) {
@@ -174,7 +178,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCont = 0;
       while (tryCont < 5) {
          try {
-            return wrapper.getReplicatedData(Arrays.asList(PREFIX, "" + i), PREFIX + i);
+            return wrapper.getReplicatedData(nodeBucket(i), KEY);
          }
          catch (Throwable e) {
             tryCont++;

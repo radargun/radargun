@@ -2,11 +2,10 @@ package org.cachebench.stages;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.cachebench.DistStageAck;
 import org.cachebench.CacheWrapper;
+import org.cachebench.DistStageAck;
 
 import java.util.List;
-import java.util.Arrays;
 
 /**
  * This stage shuld be run before the actual test, in order to activate JIT compiler. It will perform
@@ -58,7 +57,7 @@ public class WarmupStage extends AbstractDistStage {
 
    public void performWarmupOperations(CacheWrapper wrapper) throws Exception {
       log.info("Cache launched, performing " + (Integer) operationCount + " put and get operations ");
-      List<String> path = Arrays.asList("a", "b", "c");
+      String path = "a_b_c" + slaveIndex;
       for (int i = 0; i < operationCount; i++) {
          try {
             wrapper.put(path, getSlaveIndex() + String.valueOf((Integer) operationCount), String.valueOf(i));

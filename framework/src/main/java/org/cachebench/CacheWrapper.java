@@ -1,6 +1,5 @@
 package org.cachebench;
 
-import java.util.List;
 import java.util.Map;
 
 
@@ -41,21 +40,21 @@ public interface CacheWrapper
     * as a black box, and is what is timed, so it should be implemented in the most efficient (or most
     * realistic) way possible.
     *
-    * @param path
+    * @param bucket
     * @param key
     * @param value
     */
-   void put(List<String> path, Object key, Object value) throws Exception;
+   void put(String bucket, Object key, Object value) throws Exception;
 
    /**
     * Similar to put, get wraps up an operation related to retrieving an object from the cache.  As in the
     * case of put, this too is treated as a black box and is timed, and should be implemented in the most
     * efficient/realistic way possible.
     *
-    * @param path
+    * @param bucket
     * @param key  @return The value pertaining to the key in cache
     */
-   Object get(List<String> path, Object key) throws Exception;
+   Object get(String bucket, Object key) throws Exception;
 
    /**
     * This is called after each test type (if emptyCacheBetweenTests is set to true in cachebench.xml) and is
@@ -78,7 +77,7 @@ public interface CacheWrapper
     * structure, but use some additional structure to do this (replication tree, in the case of buddy replication).
     * This method is a hook for handling this situations.
     */
-   Object getReplicatedData(List<String> path, String key) throws Exception;
+   Object getReplicatedData(String bucket, String key) throws Exception;
 
    Object startTransaction();
 

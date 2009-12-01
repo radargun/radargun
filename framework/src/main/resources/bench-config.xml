@@ -2,10 +2,10 @@
 
    <master bind="${127.0.0.1:bind.address}" slavesCount="${4:cbf.nodes.count}"/>
 
-   <scaling-benchmark initSize="${2:cbf.nodes.initsize}" maxSize="${4:cbf.nodes.count}" increment="${1:cbf.nodes.increment}" productName="${infinispan4:cbf.test.name}" configName="${dist-async:cbf.test.config}">
+   <scaling-benchmark initSize="${2:cbf.nodes.initsize}" maxSize="${4:cbf.nodes.count}" increment="${1:cbf.nodes.increment}" productName="${jbosscache3:cbf.test.name}" configName="${mvcc/mvcc-repl-sync.xml:cbf.test.config}">
       <benchmark-stages>
          <stage name="StartClusterStage">
-            <property name="config" value="${dist-async.xml:cbf.test.config}" mapAggregator="wrapperStartupParams"/>
+            <property name="config" value="${mvcc/mvcc-repl-async.xml:cbf.test.config}" mapAggregator="wrapperStartupParams"/>
          </stage>
          <stage name="ClusterValidationStage">
             <property name="PartialReplication" value="false"/>
@@ -14,7 +14,8 @@
             <property name="OperationCount" value="1000"/>
          </stage>
          <stage name="WebSessionBenchmarkStage">
-            <property name="numberOfRequests" value="5000"/>
+            <property name="numberOfRequestsPerThread" value="5000"/>
+            <property name="opsCountStatusLog" value="1000"/>      …
          </stage>
          <stage name="CsvReportGenerationStage"/>
          <stage name="BenchmarkCleanupStage"/>
