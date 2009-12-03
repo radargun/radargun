@@ -24,8 +24,13 @@ public class DestroyWrapperStage extends AbstractDistStage {
          CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
          if (cacheWrapper != null) {
             cacheWrapper.tearDown();
-            log.info("Cache wrapper successfully destroyed!");
+            for (int i = 0; i < 120; i++) {
+               if (cacheWrapper.getNumMembers() == 0) break;
+               log.info("There are still: " + cacheWrapper.getNumMembers() + " members in the cluster. Waiting for them to turn off.");
+               Thread.sleep(1000);
+            }
             slaveState.setCacheWrapper(null);
+            log.info("Cache wrapper successfully tearDown. Number of members is the cluster is: " + cacheWrapper.getNumMembers());
          } else {
             log.info("No cache wrapper deployed on this slave, nothing to do.");
             return ack;
@@ -36,7 +41,6 @@ public class DestroyWrapperStage extends AbstractDistStage {
          ack.setRemoteException(e);
          return ack;
       }
-      log.info("Cache wrapper successfully tearDown.");
       return ack;
    }
 }

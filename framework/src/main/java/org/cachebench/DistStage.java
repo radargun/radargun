@@ -47,4 +47,6 @@ public interface DistStage extends Stage, Serializable {
    boolean processAckOnMaster(List<DistStageAck> acks);
 
    public DistStage clone();
+
+   public boolean isRunOnAllSlaves();
 }

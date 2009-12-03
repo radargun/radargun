@@ -28,6 +28,7 @@ public abstract class AbstractDistStage implements DistStage {
    protected int slaveIndex;
    private int activeSlavesCount;
    private int totalSlavesCount;
+   private boolean runOnAllSlaves;
 
    public void initOnSlave(SlaveState slaveState) {
       this.slaveState = slaveState;
@@ -38,7 +39,18 @@ public abstract class AbstractDistStage implements DistStage {
       this.masterConfig = masterState.getConfig();
       assert masterConfig != null;
       this.totalSlavesCount = totalSlavesCount;
+      if (isRunOnAllSlaves()) {
+         setActiveSlavesCount(totalSlavesCount);
+      }
 
+   }
+
+   public void setRunOnAllSlaves(boolean runOnAllSlaves) {
+      this.runOnAllSlaves = runOnAllSlaves;
+   }
+
+   public boolean isRunOnAllSlaves() {
+      return runOnAllSlaves;
    }
 
    public void setSlaveIndex(int index) {

@@ -40,7 +40,7 @@ public interface CacheWrapper
     * as a black box, and is what is timed, so it should be implemented in the most efficient (or most
     * realistic) way possible.
     *
-    * @param bucket
+    * @param bucket a bucket is a group of keys.  
     * @param key
     * @param value
     */

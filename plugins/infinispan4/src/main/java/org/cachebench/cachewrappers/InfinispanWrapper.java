@@ -2,6 +2,7 @@ package org.cachebench.cachewrappers;
 
 import org.cachebench.CacheWrapper;
 import org.infinispan.Cache;
+import org.infinispan.remoting.transport.Address;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.context.Flag;
 import org.infinispan.manager.CacheManager;
@@ -11,6 +12,7 @@ import org.jgroups.logging.LogFactory;
 
 import javax.transaction.TransactionManager;
 import java.util.Map;
+import java.util.List;
 
 public class InfinispanWrapper implements CacheWrapper {
 
@@ -37,8 +39,10 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public void tearDown() throws Exception {
+      List<Address> addressList = cacheManager.getMembers();
       if (started) {
          cacheManager.stop();
+         log.info("Stopped, previous view is " + addressList);
          started = false;
       }
    }
@@ -61,6 +65,9 @@ public class InfinispanWrapper implements CacheWrapper {
       ComponentRegistry componentRegistry = cache.getAdvancedCache().getComponentRegistry();
       if (componentRegistry.getStatus().startingUp()) {
          log.info("We're in the process of starting up.");
+      }
+      if (cacheManager.getMembers() != null) {
+         log.info("Members are: " + cacheManager.getMembers());
       }
       return cacheManager.getMembers() == null ? 0 : cacheManager.getMembers().size();
    }

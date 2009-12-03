@@ -94,7 +94,10 @@ public class FixedSizeBenchmarkConfig implements Cloneable {
       Stage stage = stages.get(stIterator);
       stIterator++;
       if (stage instanceof DistStage) {
-         ((DistStage)stage).setActiveSlavesCount(size);
+         DistStage distStage = (DistStage) stage;
+         if (!distStage.isRunOnAllSlaves()) {
+            distStage.setActiveSlavesCount(size);
+         }
       }
       return stage;
    }

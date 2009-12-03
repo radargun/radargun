@@ -76,7 +76,6 @@ public class Master {
       DistStage toExecute = state.getNextDistStageToProcess();
       if (toExecute == null) {
          releaseResourcesAndExit();
-         return;
       }
       runDistStage(toExecute, toExecute.getActiveSlaveCount());
    }
