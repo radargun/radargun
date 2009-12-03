@@ -1,9 +1,11 @@
 package org.cachebench.config;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.cachebench.DistStage;
 import org.cachebench.Stage;
+import org.cachebench.utils.Utils;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,20 +13,28 @@ import java.util.List;
  * A fixed size benchmark is a benchmark that executes over a fixed number of slaves. This defines the configuration of
  * such a benchmark.
  *
- * @see org.cachebench.config.ScalingBenchmarkConfig
  * @author Mircea.Markus@jboss.com
+ * @see org.cachebench.config.ScalingBenchmarkConfig
  */
-public class FixedSizeBenchmarkConfig {
+public class FixedSizeBenchmarkConfig implements Cloneable {
 
-   private List<Stage> stages = new ArrayList<Stage>();
+   private static Log log = LogFactory.getLog(FixedSizeBenchmarkConfig.class);
 
-   private String productName;
-   private String configName;
-   private int size;
+   protected List<Stage> stages = new ArrayList<Stage>();
+
+   protected String productName;
+   protected String configName;
+   protected int size;
+
+   protected int stIterator = 0;
 
 
    public void setStages(List<Stage> stages) {
-      this.stages = stages;
+      this.stages = new ArrayList<Stage>(stages);
+   }
+
+   public void addStage(Stage stage) {
+      stages.add(stage);
    }
 
    public List<Stage> getStages() {
@@ -41,7 +51,7 @@ public class FixedSizeBenchmarkConfig {
    }
 
    private void assertNo_(String name) {
-      if (name.indexOf("_") >=0) {
+      if (name.indexOf("_") >= 0) {
          throw new RuntimeException("'_' not allowed in productName (reporting relies on that)");
       }
    }
@@ -51,14 +61,7 @@ public class FixedSizeBenchmarkConfig {
    }
 
    public void setConfigName(String configName) {
-      int index = configName.indexOf('.');
-      if (index > 0) {
-         configName = configName.substring(0, index);
-         index = configName.indexOf(File.separator);
-         if (index > 0) {
-            configName = configName.substring(configName.lastIndexOf(File.separator) + 1);
-         }
-      }
+      configName = Utils.fileName2Config(configName);
       assertNo_(configName);
       this.configName = configName;
    }
@@ -67,16 +70,45 @@ public class FixedSizeBenchmarkConfig {
       if (productName == null) throw new RuntimeException("Name must be set!");
    }
 
-   public List<Stage> getAssmbledStages() {
-      for (Stage st: stages) {
-         if (st instanceof DistStage) {
-            ((DistStage)st).setActiveSlavesCount(size);
-         }
-      }
-      return stages;
-   }
-
    public void setSize(int size) {
       this.size = size;
+   }
+
+   @Override
+   public FixedSizeBenchmarkConfig clone() {
+      FixedSizeBenchmarkConfig clone;
+      try {
+         clone = (FixedSizeBenchmarkConfig) super.clone();
+      } catch (CloneNotSupportedException e) {
+         throw new RuntimeException("Impossible!!!");
+      }
+      clone.stages = cloneStages(this.stages);
+      return clone;
+   }
+
+   public boolean hasNextStage() {
+      return stIterator < stages.size();
+   }
+
+   public Stage nextStage() {
+      Stage stage = stages.get(stIterator);
+      stIterator++;
+      if (stage instanceof DistStage) {
+         ((DistStage)stage).setActiveSlavesCount(size);
+      }
+      return stage;
+   }
+
+   public void errorOnCurentBenchmark() {
+      log.trace("Issues in curent benchmark, skipping remaining stages");
+      stIterator = stages.size();
+   }
+
+   protected List<Stage> cloneStages(List<Stage> stages) {
+      List<Stage> clone = new ArrayList<Stage>();
+      for (Stage st : stages) {
+         clone.add(st.clone());
+      }
+      return clone;
    }
 }

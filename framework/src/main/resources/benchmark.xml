@@ -1,0 +1,57 @@
+<bench-config>
+
+   <master bindAddress="127.0.0.1" port="2103"/>
+
+   <benchmark initSize="2" maxSize="4" increment="1">
+      <ClearCluster/>
+      <StartCluster/>
+      <ClusterValidation partialReplication="false"/>
+      <Warmup operationCount="100"/>
+      <WebSessionBenchmark numberOfRequestsPerThread="100" opsCountStatusLog="10" numOfThreads="2"/>
+      <CsvReportGeneration/>
+   </benchmark>
+
+   <products>
+      <infinispan4>
+         <config name="repl-async.xml"/>
+         <config name="repl-sync.xml"/>
+         <config name="dist-sync.xml"/>
+         <config name="dist-async.xml"/>
+         <config name="dist-sync-l1.xml"/>
+         <config name="dist-async-l1.xml"/>
+      </infinispan4>
+      <jbosscache3>
+         <config name="mvcc/mvcc-repl-sync.xml"/>
+         <config name="mvcc/mvcc-repl-async.xml"/>
+      </jbosscache3>
+   </products>
+
+   <reports>
+      <report name="sync-repl">
+         <infinispan4>
+            <config name="repl-sync.xml"/>
+         </infinispan4>
+         <jbosscache3 name="jbosscache3">
+            <config name="mvcc/mvcc-repl-sync.xml"/>
+         </jbosscache3>
+      </report>
+      <report name="async-repl">
+         <infinispan4>
+            <config name="repl-async.xml"/>
+         </infinispan4>
+         <jbosscache3 name="jbosscache3">
+            <config name="mvcc/mvcc-repl-async.xml"/>
+         </jbosscache3>
+      </report>
+      <report name="dist">
+         <infinispan4>
+            <config name="dist-sync.xml"/>
+            <config name="dist-async.xml"/>
+            <config name="dist-sync-l1.xml"/>
+            <config name="dist-async-l1.xml"/>
+         </infinispan4>
+      </report>
+      <report name="all_included" includeAll="true"/>
+   </reports>
+
+</bench-config>

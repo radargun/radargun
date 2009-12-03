@@ -4,12 +4,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
-import org.cachebench.plugins.PluginLocator;
 import org.cachebench.state.MasterState;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -22,9 +26,11 @@ public class StartClusterStage extends AbstractDistStage {
 
    private static Log log = LogFactory.getLog(StartClusterStage.class);
    private String productName;
+   private boolean useSmartClassLoading = true;
 
    private Map<String, String> wrapperStartupParams;
    private final int TRY_COUNT = 10;
+   private static final String PLUGINS_DIR = "plugins";
 
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
@@ -35,10 +41,7 @@ public class StartClusterStage extends AbstractDistStage {
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress() + ". This slave's index is: " + getSlaveIndex());
       CacheWrapper wrapper;
       try {
-         String plugin = PluginLocator.locatePlugin();
-         if (plugin == null) {
-            plugin = tryLoadFromFixedLocation();
-         }
+         String plugin = tryLoadFromFixedLocation();
          wrapper = (CacheWrapper) createInstance(plugin);
          wrapper.init(wrapperStartupParams);
          wrapper.setUp();
@@ -70,7 +73,7 @@ public class StartClusterStage extends AbstractDistStage {
    }
 
    private String tryLoadFromFixedLocation() {
-      File file = new File("plugins" + File.separator + productName + File.separator + "conf" + File.separator + "cacheprovider.properties");
+      File file = new File(PLUGINS_DIR + File.separator + productName + File.separator + "conf" + File.separator + "cacheprovider.properties");
       if (!file.exists()) {
          log.warn("Could not find a plugin descriptor : " + file);
          return null;
@@ -94,13 +97,54 @@ public class StartClusterStage extends AbstractDistStage {
    }
 
    private Object createInstance(String classFqn) throws Exception {
-      return Class.forName(classFqn).newInstance();
+      if (!useSmartClassLoading) {
+         return Class.forName(classFqn).newInstance();
+      }
+      log.trace("Using smart class laoding");
+      File libFolder = new File(PLUGINS_DIR + File.separator + productName + File.separator + "lib");
+      if (!libFolder.isDirectory()) {
+         String message = "Could not find lib directory: " + libFolder.getAbsolutePath();
+         log.error(message);
+         throw new IllegalStateException(message);
+      }
+      String[] jarsSrt = libFolder.list(new FilenameFilter() {
+         public boolean accept(File dir, String name) {
+            String fileName = name.toUpperCase();
+            if (fileName.endsWith("JAR") || fileName.toUpperCase().endsWith("ZIP")) {
+               if (log.isTraceEnabled()) {
+                  log.trace("Accepting file: " + fileName);
+               }
+               return true;
+            } else {
+               if (log.isTraceEnabled()) {
+                  log.trace("Rejecting file: " + fileName);
+               }
+               return false;
+            }
+         }
+      });
+      List<URL> jars = new ArrayList<URL>();
+      for (String file : jarsSrt) {
+         File aJar = new File(libFolder, file);
+         if (!aJar.exists() || !aJar.isFile()) {
+            throw new IllegalStateException();
+         }
+         jars.add(aJar.toURI().toURL());
+      }
+      File confDir = new File(PLUGINS_DIR + File.separator + productName + File.separator + "conf/");
+      jars.add(confDir.toURI().toURL());
+      URLClassLoader classLoader = new URLClassLoader(jars.toArray(new URL[jars.size()]), this.getClass().getClassLoader());
+      Thread.currentThread().setContextClassLoader(classLoader);
+      return classLoader.loadClass(classFqn).newInstance();
    }
 
    public void setWrapperStartupParams(Map<String, String> wrapperStartupParams) {
       this.wrapperStartupParams = wrapperStartupParams;
    }
 
+   public void setUseSmartClassLoading(boolean useSmartClassLoading) {
+      this.useSmartClassLoading = useSmartClassLoading;
+   }
 
    @Override
    public void initOnMaster(MasterState masterState, int totalSlavesCount) {

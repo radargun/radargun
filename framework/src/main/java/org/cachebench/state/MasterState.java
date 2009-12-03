@@ -8,7 +8,6 @@ import org.cachebench.MasterStage;
 import org.cachebench.Stage;
 import org.cachebench.config.FixedSizeBenchmarkConfig;
 import org.cachebench.config.MasterConfig;
-import org.cachebench.config.ScalingBenchmarkConfig;
 import org.cachebench.utils.Utils;
 
 import java.util.ArrayList;
@@ -26,18 +25,20 @@ public class MasterState extends StateBase {
    private static Log log = LogFactory.getLog(MasterState.class);
 
    private MasterConfig config;
-   private List<Stage> stages;
    private List<FixedSizeBenchmarkConfig> benchmarks;
    private FixedSizeBenchmarkConfig currentBenchmark;
-   private DistStage currentDistStage;
    private long startTime = System.currentTimeMillis();
+   private DistStage currentDistStage;
+
+   private boolean stopOnError = false;
 
    public MasterState(MasterConfig config) {
       this.config = config;
       benchmarks = new ArrayList<FixedSizeBenchmarkConfig>(config.getBenchmarks());
       if (benchmarks.isEmpty())
          throw new IllegalStateException("there must be at least one benchmark");
-      moveToNextBenchmark();
+      currentBenchmark = benchmarks.remove(0);
+      logBenchmarkStarted();
    }
 
    public MasterConfig getConfig() {
@@ -45,28 +46,27 @@ public class MasterState extends StateBase {
    }
 
    public DistStage getNextDistStageToProcess() {
-      if (stages.isEmpty()) {
-         if (!moveToNextBenchmark()) {
-            return null;
+      while (currentBenchmark.hasNextStage()) {
+         Stage stage = currentBenchmark.nextStage();
+         if (stage instanceof DistStage) {
+            currentDistStage = (DistStage) stage;
+            currentDistStage.initOnMaster(this, config.getSlaveCount());
+            log.info("Starting dist stage '" + currentDistStage.getClass().getSimpleName() + "' on " + currentDistStage.getActiveSlaveCount() + " Slaves: " + currentDistStage);
+            return currentDistStage;
+         } else {
+            executeServerStage((MasterStage) stage);
          }
       }
-
-      Stage toProcess;
-      while ((toProcess = stages.remove(0)) instanceof MasterStage) {
-         MasterStage servStage = (MasterStage) toProcess;
-         executeServerStage(servStage);
-         if (stages.isEmpty()) {
-            if (!moveToNextBenchmark()) {
-               return null;
-            }
-         }
+      //if we are here it means we finished executed the current benchmark and we should move to next one
+      if (benchmarks.size() == 0) {
+         long duration = System.currentTimeMillis() - startTime;
+         String duartionStr = Utils.getDurationString(duration);
+         log.info("Successfully executed all benchmarks in " + duartionStr + ", exiting.");
+         return null;
       }
-
-      //toProcess is a non null DistStage
-      currentDistStage = (DistStage) toProcess;
-      currentDistStage.initOnMaster(this, config.getSlaveCount());
-      log.info("Starting dist stage '" + currentDistStage.getClass().getSimpleName() + "' on " + currentDistStage.getActiveSlaveCount() + " Slaves: " + currentDistStage);
-      return currentDistStage;
+      currentBenchmark = benchmarks.remove(0);
+      logBenchmarkStarted();
+      return getNextDistStageToProcess();
    }
 
 
@@ -87,26 +87,15 @@ public class MasterState extends StateBase {
    }
 
    public boolean distStageFinished(List<DistStageAck> acks) {
-      return currentDistStage.processAckOnMaster(acks);
-   }
-
-   private boolean moveToNextBenchmark() {
-      if (benchmarks.isEmpty()) {
-         long duration = System.currentTimeMillis() - startTime;
-         String duartionStr = Utils.getDurationString(duration);
-         log.info("Successfully executed all benchmarks in " + duartionStr + ", exiting.");
+      boolean stageOk = currentDistStage.processAckOnMaster(acks);
+      if (stageOk) return true;
+      if (!stopOnError) {
+         log.warn("Execution error for current benchmark, skiping rest of the stages");
+         currentBenchmark.errorOnCurentBenchmark();
+         return true;
+      } else {
          return false;
       }
-      currentBenchmark = benchmarks.remove(0);
-      if (currentBenchmark instanceof ScalingBenchmarkConfig) {
-         log.info("Started scaling benchmark '" + currentBenchmark.getProductName() + '\'');
-      } else {
-         log.info("Starting fixed size benchmark '" + currentBenchmark.getProductName() + '\'');
-      }
-      stages = currentBenchmark.getAssmbledStages();
-      if (stages.isEmpty())
-         throw new IllegalStateException("each benchmark must contain at least one stage");
-      return true;
    }
 
    private void executeServerStage(MasterStage servStage) {
@@ -120,10 +109,18 @@ public class MasterState extends StateBase {
    }
 
    public String nameOfTheCurrentBenchmark() {
-      return currentBenchmark.getProductName();
+      String prodName = currentBenchmark.getProductName();
+      if (prodName == null) {
+         throw new IllegalStateException("Null prod name not allowed!");
+      }
+      return prodName;
    }
 
    public String configNameOfTheCurrentBenchmark() {
       return currentBenchmark.getConfigName();
+   }
+
+   private void logBenchmarkStarted() {
+      log.info("Started benchmark '" + currentBenchmark.getProductName() + '\'');
    }
 }

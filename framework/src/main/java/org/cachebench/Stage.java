@@ -5,5 +5,6 @@ package org.cachebench;
  *
  * @author Mircea.Markus@jboss.com
  */
-public interface Stage {
+public interface Stage extends Cloneable{
+   public Stage clone();
 }

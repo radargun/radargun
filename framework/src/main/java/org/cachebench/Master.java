@@ -2,21 +2,9 @@ package org.cachebench;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.cachebench.config.FixedSizeBenchmarkConfig;
 import org.cachebench.config.MasterConfig;
-import org.cachebench.config.ConfigHelper;
-import org.cachebench.config.jaxb.BenchConfig;
-import org.cachebench.stages.ClearClusterStage;
-import org.cachebench.stages.ClusterValidationStage;
-import org.cachebench.stages.CsvReportGenerationStage;
-import org.cachebench.stages.StartClusterStage;
-import org.cachebench.stages.WarmupStage;
-import org.cachebench.stages.WebSessionBenchmarkStage;
 import org.cachebench.state.MasterState;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -25,7 +13,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -33,15 +20,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This is the master that will coordonate the {@link Slave}s in order to run the benchmark.
- * TODO - increment does not work :( fix it
- * TODO - in discovery, the number of slaves can be determined from max scale
- * TODO - by default lookupt the config file in classpath
- * TODO - use mcast discovery
- *    - on each network interface broadcast on a certain multicast address and receive the nio IP and port
- * TODO - on config, split the test name config in "product" and "config" and generate report based on that.
- * TODO - make benchmark run multiple products at once
- * TODO - if master receives a kill request it wonn't exit IMMEDIATELLY as it has a main thread running. Fix this (phps by making it a deamon)
+ * This is the master that will coordonate the {@link Slave}s in order to run the benchmark. TODO - in discovery, the
+ * number of slaves can be determined from max scale TODO - by default lookupt the config file in classpath TODO - use
+ * mcast discovery - on each network interface broadcast on a certain multicast address and receive the nio IP and port
+ * TODO - on config, split the test name config in "product" and "config" and generate report based on that. TODO - make
+ * benchmark run multiple products at once TODO - if master receives a kill request it wonn't exit IMMEDIATELLY as it
+ * has a main thread running. Fix this (phps by making it a deamon)
  *
  * @author Mircea.Markus@jboss.com
  */
@@ -92,20 +76,20 @@ public class Master {
       DistStage toExecute = state.getNextDistStageToProcess();
       if (toExecute == null) {
          releaseResourcesAndExit();
+         return;
       }
-      Set<Integer> slaves = state.getSlaveIndexesForCurrentStage();
-      runDistStage(toExecute, slaves);
+      runDistStage(toExecute, toExecute.getActiveSlaveCount());
    }
 
-   private void runDistStage(DistStage currentStage, Set<Integer> slaveIndexes) throws Exception {
+   private void runDistStage(DistStage currentStage, int noSlaves) throws Exception {
       writeBufferMap.clear();
       DistStage toSerialize;
-      for (Integer index : slaveIndexes) {
-         SocketChannel slave = slaves.get(index);
+      for (int i = 0; i < noSlaves; i++) {
+         SocketChannel slave = slaves.get(i);
          slave.configureBlocking(false);
          slave.register(communicationSelector, SelectionKey.OP_WRITE);
          toSerialize = currentStage.clone();
-         toSerialize.setSlaveIndex(index);
+         toSerialize.setSlaveIndex(i);
          byte[] bytes = SerializationHelper.prepareForSerialization(toSerialize);
          writeBufferMap.put(slave, ByteBuffer.wrap(bytes));
       }
@@ -275,93 +259,5 @@ public class Master {
       }
       serverSocketChannel.socket().bind(address);
       log.info("Master started and listening for connection on: " + address);
-   }
-
-   public static void main(String[] args) throws Exception {
-
-      String config = null;
-
-      for (int i = 0; i < args.length - 1; i++) {
-         if (args[i].equals("-config")) {
-            config = args[i + 1];
-         }
-      }
-
-      if (config == null) {
-         printUsageAndExit();
-      }
-      File configFile = new File(config);
-      if (!configFile.exists()) {
-         System.err.println("No such file: " + configFile.getAbsolutePath());
-         printUsageAndExit();
-      }
-//      ScalingBenchmarkConfig sc = new ScalingBenchmarkConfig();
-//      createStages(sc);
-//      sc.setInitSize(2);
-//      sc.setMaxSize(4);
-//      sc.setName("scaling");
-//
-//      FixedSizeBenchmarkConfig fixedBenchConfig = new FixedSizeBenchmarkConfig();
-//      createStages(fixedBenchConfig);
-//      fixedBenchConfig.setName("fixed");
-//
-//      MasterConfig masterConfig = new MasterConfig(1234, "127.0.0.1",4);
-//      masterConfig.addBenchmark(sc);
-//      masterConfig.addBenchmark(fixedBenchConfig);
-//      new Master(masterConfig).start();
-
-
-      JAXBContext jc = JAXBContext.newInstance("org.cachebench.config.jaxb");
-      Unmarshaller unmarshaller = jc.createUnmarshaller();
-      BenchConfig benchConfig = (BenchConfig) unmarshaller.unmarshal(configFile);
-      Master server = ConfigHelper.getMaster(benchConfig);
-      server.start();
-
-//      MasterConfig masterConfig = new MasterConfig(1234, "127.0.0.1", 2);
-//      for (int i=0; i < 100; i++) {
-//         masterConfig.addStage(new DummyStage("NAME" + i + i + i + i));
-//      }
-//      masterConfig.addStage(new DummyStage("SECOND"));
-//
-//
-//      Master server2 = new Master(masterConfig);
-//      server2.start();
-   }
-
-   private static void createStages(FixedSizeBenchmarkConfig sc) {
-      List<Stage> stages = new ArrayList<Stage>();
-      StartClusterStage scs = new StartClusterStage();
-//      scs.setChacheWrapperClass("org.cachebench.cachewrappers.InfinispanWrapper");
-      Map<String, String> props = Collections.singletonMap("config", "dist-sync.xml");
-      scs.setWrapperStartupParams(props);
-      stages.add(scs);
-
-
-      ClusterValidationStage cvs = new ClusterValidationStage();
-      cvs.setPartialReplication(false);
-      stages.add(cvs);
-
-
-      WarmupStage ws = new WarmupStage();
-      ws.setOperationCount(200);
-      stages.add(ws);
-
-      WebSessionBenchmarkStage wsbs = new WebSessionBenchmarkStage();
-      wsbs.setNumberOfRequestsPerThread(1000);
-      stages.add(wsbs);
-
-      CsvReportGenerationStage csvrg = new CsvReportGenerationStage();
-      stages.add(csvrg);
-
-      ClearClusterStage ccs = new ClearClusterStage();
-      stages.add(ccs);
-
-      sc.setStages(stages);
-   }
-
-   private static void printUsageAndExit() {
-      System.out.println("Usage: start_master.sh  -config <config-file.xml>");
-      System.out.println("       -config : xml file containing benchmark's configuration");
-      System.exit(1);
    }
 }

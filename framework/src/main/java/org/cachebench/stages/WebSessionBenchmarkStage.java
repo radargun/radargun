@@ -60,11 +60,11 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    private CacheWrapper cacheWrapper;
    private static Random r = new Random();
-   private long startTime = System.currentTimeMillis();
+   private long startTime;
 
 
    public DistStageAck executeOnSlave() {
-
+      startTime = System.currentTimeMillis();
       DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
       this.cacheWrapper = slaveState.getCacheWrapper();
       if (cacheWrapper == null) {

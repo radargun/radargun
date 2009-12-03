@@ -15,4 +15,12 @@ public abstract class AbstractMasterStage implements MasterStage {
    public void init(MasterState masterState) {
       this.masterState = masterState;
    }
+
+   public AbstractMasterStage clone() {
+      try {
+         return (AbstractMasterStage) super.clone();
+      } catch (CloneNotSupportedException e) {
+         throw new IllegalStateException(e);
+      }
+   }
 }

@@ -11,7 +11,7 @@ import java.util.List;
  *
  * @author Mircea.Markus@jboss.com
  */
-public interface DistStage extends Stage, Serializable, Cloneable {
+public interface DistStage extends Stage, Serializable {
 
    /**
     * Called on master. master state should not be passed to the slaves.

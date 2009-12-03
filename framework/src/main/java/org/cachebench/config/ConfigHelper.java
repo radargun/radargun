@@ -8,8 +8,6 @@ import org.cachebench.config.jaxb.FixedSizeBenchmark;
 import org.cachebench.config.jaxb.Property;
 import org.cachebench.config.jaxb.ScalingBenchmark;
 import org.cachebench.config.jaxb.Stage;
-import org.cachebench.config.jaxb.Before;
-import org.cachebench.config.jaxb.After;
 import org.w3c.dom.Element;
 
 import java.beans.PropertyEditor;
@@ -184,21 +182,10 @@ public class ConfigHelper {
          sbc.setInitSize(toInt(sb.getInitSize()));
          sbc.setMaxSize(toInt(sb.getMaxSize()));
          sbc.setIncrement(toInt(sb.getIncrement()));
-         Before before = sb.getBefore();
-         //before and after are optional
-         if (before != null) {
-            List<Stage> beforeStagesFromXml = before.getStage();
-            sbc.setBeforeStages(processStages(beforeStagesFromXml));
-         }
 
          List<Stage> benchmarkStagesFromXml = sb.getBenchmarkStages().getStage();
          sbc.setStages(processStages(benchmarkStagesFromXml));
 
-         After after = sb.getAfter();
-         if (after != null) {
-            List<Stage> afterStagesFromXml = after.getStage();
-            sbc.setAfterStages(processStages(afterStagesFromXml));
-         }
 
          sbc.validate();
          masterConfig.addBenchmark(sbc);

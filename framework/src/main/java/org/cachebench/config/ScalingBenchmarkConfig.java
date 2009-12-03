@@ -1,22 +1,23 @@
 package org.cachebench.config;
 
 import org.cachebench.Stage;
-import org.cachebench.DistStage;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * A scaling benchmark is one that executes on an increasing number of slaves. E.g. consdering the {@link
  * org.cachebench.stages.WebSessionBenchmarkStage}, one might want to execute it over multiple clusteres of
- * different sizes: e.g 2,3,4,5..10 etc in order to check how a product scales etc. tailf 2  
+ * different sizes: e.g 2,3,4,5..10 etc in order to check how a product scales etc.
  *
  * @author Mircea.Markus@jboss.com
  */
 public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
 
-   private List<Stage> beforeStages = new ArrayList<Stage>();
-   private List<Stage> afterStages = new ArrayList<Stage>();
+   private boolean initialized = false;
+
+   List<FixedSizeBenchmarkConfig> fixedBenchmarks = new ArrayList<FixedSizeBenchmarkConfig>();
+   private int fixedBenchmarkIt = 0;
 
    //mandatory
    private int initSize = -1;
@@ -50,14 +51,6 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
       this.increment = increment;
    }
 
-   public void setBeforeStages(List<Stage> beforeStages) {
-      this.beforeStages = beforeStages;
-   }
-
-   public void setAfterStages(List<Stage> afterStages) {
-      this.afterStages = afterStages;
-   }
-
    public void validate() {
       super.validate();
       if (initSize < 2)
@@ -67,29 +60,53 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
       if (increment <= 0) throw new RuntimeException("Increment must be positive!");
    }
 
-   public List<Stage> getAssmbledStages() {
-      List<Stage> allStages = new ArrayList<Stage>();
-      for (Stage st : beforeStages) {
-         if (st instanceof DistStage) {
-            ((DistStage) st).setActiveSlavesCount(maxSize);
+   @Override
+   public boolean hasNextStage() {
+      initialize();
+      if (fixedBenchmarkIt < fixedBenchmarks.size() - 1) return true;
+      return currentFixedBenchmark().hasNextStage();
+   }
+
+   private void initialize() {
+      if (!initialized) {
+         for (int i = initSize; i <= maxSize; i+=increment) {
+            FixedSizeBenchmarkConfig conf = new FixedSizeBenchmarkConfig();
+            conf.stages = cloneStages(this.stages);
+            conf.setSize(i);
+            conf.setConfigName(super.configName);
+            conf.setProductName(super.productName);
+            fixedBenchmarks.add(conf);
          }
-         allStages.add(st);
+         initialized = true;
       }
-      for (int i = initSize; i <= maxSize; i+=increment) {
-         for (Stage st : getStages()) {
-            if (st instanceof DistStage) {
-               st = ((DistStage) st).clone();
-               ((DistStage) st).setActiveSlavesCount(i);
-            }
-            allStages.add(st);
-         }
+   }
+
+   @Override
+   public Stage nextStage() {
+      initialize();
+     if (currentFixedBenchmark().hasNextStage()) {
+        return currentFixedBenchmark().nextStage();
+     } else {
+        fixedBenchmarkIt++;
+        return currentFixedBenchmark().nextStage();
+     }
+   }
+
+   private FixedSizeBenchmarkConfig currentFixedBenchmark() {
+      return fixedBenchmarks.get(fixedBenchmarkIt);
+   }
+
+   public void errorOnCurentBenchmark() {
+      currentFixedBenchmark().errorOnCurentBenchmark();
+   }
+
+   @Override
+   public ScalingBenchmarkConfig clone() {
+      ScalingBenchmarkConfig clone = (ScalingBenchmarkConfig) super.clone();
+      clone.fixedBenchmarks = new ArrayList<FixedSizeBenchmarkConfig>();
+      for (FixedSizeBenchmarkConfig fbc : fixedBenchmarks) {
+         clone.fixedBenchmarks.add(fbc.clone());
       }
-      for (Stage st : afterStages) {
-         if (st instanceof DistStage) {
-            ((DistStage) st).setActiveSlavesCount(maxSize);
-         }
-         allStages.add(st);
-      }
-      return allStages;
+      return clone;
    }
 }

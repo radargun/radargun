@@ -36,6 +36,7 @@ public class JBossCache3Wrapper implements CacheWrapper
       log.info("Running cache with following config: " + cache.getConfiguration());
       log.info("Running following JBossCacheVersion: " + org.jboss.cache.Version.version);
       log.info("Running following JBossCacheCodeName: " + org.jboss.cache.Version.codename);
+      log.info("JGroups version: " + org.jgroups.Version.description);
       if (FLAT)
       {
          log.info("Using FLAT MAP wrapper");
