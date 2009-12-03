@@ -29,7 +29,7 @@ public class StartClusterStage extends AbstractDistStage {
    private boolean useSmartClassLoading = true;
 
    private Map<String, String> wrapperStartupParams;
-   private final int TRY_COUNT = 10;
+   private final int TRY_COUNT = 180;
    private static final String PLUGINS_DIR = "plugins";
 
    public DistStageAck executeOnSlave() {
