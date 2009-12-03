@@ -8,10 +8,13 @@ CONFIG=./conf/benchmark.xml
 
 help_and_exit() {
   echo "Usage: "
-  echo '  $ start_master.sh -[c]'
+  echo '  $ start_master.sh -[cm]'
   echo ""
   echo "   -c        Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark.xml"
   echo ""
+  echo "   -m        MASTER host[:port]. Master host is required, the port is optional and defaults to 2103.  This is REQUIRED."
+  echo ""
+
   exit 0
 }
 
@@ -35,6 +38,6 @@ done
 add_fwk_to_classpath
 set_env
 D_VARS="-Djava.net.preferIPv4Stack=true"
-java ${JVM_OPTS} -classpath $CP ${D_VARS} org.cachebench.LaunchMaster -config ${CONFIG} > stdout_master.out 2>&1 &
+java ${JVM_OPTS} -classpath $CP ${D_VARS} -Dbind.address=${BIND_ADDRESS} org.cachebench.LaunchMaster -config ${CONFIG} > stdout_master.out 2>&1 &
 export CBF_MASTER_PID=$!
 echo "Master's PID is $CBF_MASTER_PID"

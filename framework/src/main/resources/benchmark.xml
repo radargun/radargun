@@ -1,6 +1,6 @@
 <bench-config>
 
-   <master bindAddress="127.0.0.1" port="2103"/>
+   <master bindAddress="${127.0.0.1:bind.address}" port="2103"/>
 
    <benchmark initSize="2" maxSize="4" increment="1">
       <ClearCluster/>
