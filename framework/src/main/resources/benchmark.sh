@@ -6,7 +6,7 @@ if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; 
 
 
 #### parse plugins we want to test
-MAX_NODES=8
+NUM_SLAVES=""
 SLAVE_PREFIX=slave
 SSH_USER=$USER
 WORKING_DIR=`pwd`
@@ -15,9 +15,7 @@ VERBOSE=false
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ benchmark.sh [-v] [-p SLAVE_PREFIX] [-u ssh_user] [-sync] [-w WORKING DIRECTORY] [-g GIT_URL] -plugin plugin_name -n num_slaves -m MASTER_IP:PORT '
-  wrappedecho ""
-  wrappedecho "   -v       Be verbose"
+  wrappedecho '  $ benchmark.sh [-p SLAVE_PREFIX] [-u ssh_user] [-sync] [-w WORKING DIRECTORY] -n num_slaves -m MASTER_IP:PORT '
   wrappedecho ""
   wrappedecho "   -p       Provides a prefix to all slave names entered in /etc/hosts"
   wrappedecho "            Defaults to '$SLAVE_PREFIX'"
@@ -36,6 +34,53 @@ help_and_exit() {
   wrappedecho ""
   exit 0
 }
+
+### read in any command-line params
+while ! [ -z $1 ]
+do
+  case "$1" in
+    "-p")
+      SLAVE_PREFIX=$2
+      shift
+      ;;
+    "-u")
+      SSH_USER=$2
+      shift
+      ;;
+    "-sync")
+      ASYNC=$false
+      shift
+      ;;
+    "-w")
+      WORKING_DIR=$2
+      shift
+      ;;
+    "-n")
+      NUM_SLAVES=$2
+      shift
+      ;;
+    "-m")
+      MASTER=$2
+      shift
+      ;;
+    *)
+      echo "Warn: unknown param ${1}" 
+      help_and_exit
+      ;;
+  esac
+  shift
+done
+
+### Make sure the vars are properly set
+if [ -z $NUM_SLAVES ] ; then
+  echo "FATAL: required information (-n) missing!"
+  help_and_exit
+fi
+
+if [ -z $MASTER ] ; then
+  echo "FATAL: required information (-m) missing!"
+  help_and_exit
+fi
 
 
 ####### first start the master
