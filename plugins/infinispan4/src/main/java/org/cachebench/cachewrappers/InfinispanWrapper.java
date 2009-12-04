@@ -42,7 +42,7 @@ public class InfinispanWrapper implements CacheWrapper {
       List<Address> addressList = cacheManager.getMembers();
       if (started) {
          cacheManager.stop();
-         log.info("Stopped, previous view is " + addressList);
+         log.trace("Stopped, previous view is " + addressList);
          started = false;
       }
    }
@@ -64,10 +64,10 @@ public class InfinispanWrapper implements CacheWrapper {
    public int getNumMembers() {
       ComponentRegistry componentRegistry = cache.getAdvancedCache().getComponentRegistry();
       if (componentRegistry.getStatus().startingUp()) {
-         log.info("We're in the process of starting up.");
+         log.trace("We're in the process of starting up.");
       }
       if (cacheManager.getMembers() != null) {
-         log.info("Members are: " + cacheManager.getMembers());
+         log.trace("Members are: " + cacheManager.getMembers());
       }
       return cacheManager.getMembers() == null ? 0 : cacheManager.getMembers().size();
    }
