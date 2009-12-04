@@ -42,7 +42,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
    /**
     * Each attribute will be a byte[] of this size
     */
-   private int sizeOfAnAttribute = 10000;
+   private int sizeOfAnAttribute = 1000;
 
    /**
     * Out of the total number of request, this define the frequency of writes (percentage)
