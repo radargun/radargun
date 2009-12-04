@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
+import org.cachebench.utils.Utils;
 
 /**
  * Distributed stage that will clear the content of the cache wrapper on each slave.
@@ -19,33 +20,23 @@ public class ClearClusterStage extends AbstractDistStage {
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
       for (int i = 0; i < 5; i++) {
          try {
-            printMemoryFootprint(true);
+            log.info(Utils.printMemoryFootprint(true));
             cacheWrapper.empty();
             return defaultDistStageAck;
          } catch (Exception e) {
             log.warn(e);
          } finally {
-           System.gc();
-           printMemoryFootprint(false);
+            System.gc();
+            log.info(Utils.printMemoryFootprint(false));
          }
       }
       defaultDistStageAck.setPayload("WARN!! Issues while clearing the cache!!!");
       return defaultDistStageAck;
    }
 
-   private void printMemoryFootprint(boolean before) {
-      Runtime run = Runtime.getRuntime();
-      String memoryInfo = "Memory(KB) - free: " + kb(run.freeMemory()) + " - max:" + kb(run.maxMemory()) + "- total:" + kb(run.totalMemory());
-      if (before) {
-         log.info("Before executing clear, memory looks like this: " + memoryInfo);
-      } else {
-         log.info("After executing cleanup, memory looks like this: " + memoryInfo);
-      }
+
+   @Override
+   public String toString() {
+      return "ClearClusterStage{" + super.toString();
    }
-
-   private long kb(long memBytes) {
-      return memBytes/1024;
-   }
-
-
 }

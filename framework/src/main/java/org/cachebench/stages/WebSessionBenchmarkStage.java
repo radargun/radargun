@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Simulates the work with a distributed web sessions. 
+ * Simulates the work with a distributed web sessions.
  *
  * @author Mircea.Markus@jboss.com
  */
@@ -224,14 +224,14 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       private void logProgress(int i) {
          if ((i + 1) % opsCountStatusLog == 0) {
             double elapsedTime = System.currentTimeMillis() - startTime;
-            double estimatedTotal = ((double)numberOfRequestsPerThread / (double)i) * elapsedTime;
+            double estimatedTotal = ((double) numberOfRequestsPerThread / (double) i) * elapsedTime;
             double estimatedRemaining = estimatedTotal - elapsedTime;
             if (log.isTraceEnabled()) {
-               log.trace("i="+i+", elapsedTime="+ elapsedTime);
+               log.trace("i=" + i + ", elapsedTime=" + elapsedTime);
             }
-            log.info("Thread index '" + threadIndex + "' executed " + (i+1) + " operations. Elapsed time: " +
-                  Utils.getDurationString((long)elapsedTime) + ". Estimated remaining: " + Utils.getDurationString((long)estimatedRemaining) +
-                  ". Estimated total: " + Utils.getDurationString((long)estimatedTotal));
+            log.info("Thread index '" + threadIndex + "' executed " + (i + 1) + " operations. Elapsed time: " +
+                  Utils.getDurationString((long) elapsedTime) + ". Estimated remaining: " + Utils.getDurationString((long) estimatedRemaining) +
+                  ". Estimated total: " + Utils.getDurationString((long) estimatedTotal));
          }
       }
    }
@@ -294,6 +294,6 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
             ", numOfThreads=" + numOfThreads +
             ", reportNanos=" + reportNanos +
             ", cacheWrapper=" + cacheWrapper +
-            "} " + super.toString();
+            super.toString();
    }
 }

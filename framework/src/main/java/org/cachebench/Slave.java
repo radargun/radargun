@@ -59,8 +59,6 @@ public class Slave {
          selector.select();
          // Get set of ready objects
          Set<SelectionKey> readyKeys = selector.selectedKeys();
-//         if (log.isTraceEnabled())
-//            log.trace("Received " + readyKeys.size() + " key(s). ");
 
          Iterator<SelectionKey> readyItor = readyKeys.iterator();
          // Walk through set
@@ -99,11 +97,12 @@ public class Slave {
                         try {
                            DistStage stage = (DistStage) SerializationHelper.deserialize(byteBuffer.array(), 4, expectedSize);
                            stage.initOnSlave(state);
-                           log.trace("Received stage from master: " + stage);
+                           log.info("Executing stage: " + stage);
                            long start =System.currentTimeMillis();
                            DistStageAck ack = stage.executeOnSlave();
                            ack.setDuration(System.currentTimeMillis() - start);
                            byte[] bytes = SerializationHelper.prepareForSerialization(ack);
+                           log.info("Finished stage: " + stage);
                            byteBuffer.clear();
                            byteBuffer.put(bytes);
                            byteBuffer.flip();

@@ -3,7 +3,6 @@ package org.cachebench.utils;
 import java.io.File;
 
 /**
- *
  * @author Mircea.Markus@jboss.com
  */
 public class Utils {
@@ -30,5 +29,19 @@ public class Utils {
          }
       }
       return fileName;
+   }
+
+   public static String printMemoryFootprint(boolean before) {
+      Runtime run = Runtime.getRuntime();
+      String memoryInfo = "Memory(KB) - free: " + kb(run.freeMemory()) + " - max:" + kb(run.maxMemory()) + "- total:" + kb(run.totalMemory());
+      if (before) {
+         return "Before executing clear, memory looks like this: " + memoryInfo;
+      } else {
+         return "After executing cleanup, memory looks like this: " + memoryInfo;
+      }
+   }
+
+   public static long kb(long memBytes) {
+      return memBytes / 1024;
    }
 }

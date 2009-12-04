@@ -1,6 +1,6 @@
 package org.cachebench;
 
-import com.sun.org.apache.xerces.internal.parsers.DOMParser;
+
 import org.cachebench.config.ConfigHelper;
 import org.cachebench.config.FixedSizeBenchmarkConfig;
 import org.cachebench.config.MasterConfig;
@@ -14,12 +14,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,23 +44,17 @@ public class LaunchMaster {
 
       //the content in the new file is too dynamic, let's just use DOM for now
 
-      DOMParser parser = new DOMParser();
+       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+
+      Document document;
       try {
-         parser.parse(config);
+         document = builder.parse(config);
          System.out.println(config + " is well-formed.");
       }
-      catch (SAXException e) {
-         System.out.println(config + " is not well-formed.");
-      }
-      catch (IOException e) {
-         e.printStackTrace();
-         System.out.println(
-               "Due to an IOException, the parser could not check "
-                     + config
-         );
+      catch (Exception e) {
+         throw new IllegalStateException(e);
       }
 
-      Document document = parser.getDocument();
       Element configRoot = (Element) document.getElementsByTagName("bench-config").item(0);
 
       ScalingBenchmarkConfig prototype = buildBenchmarkPrototype(configRoot);

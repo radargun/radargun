@@ -205,7 +205,6 @@ public class ClusterValidationStage extends AbstractDistStage {
             "isPartialReplication=" + isPartialReplication +
             ", replicationTryCount=" + replicationTryCount +
             ", replicationTimeSleep=" + replicationTimeSleep +
-            ", wrapper=" + wrapper +
-            "} " + super.toString();
+            ", wrapper=" + wrapper + super.toString();
    }
 }

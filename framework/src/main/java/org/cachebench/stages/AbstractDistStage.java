@@ -118,10 +118,9 @@ public abstract class AbstractDistStage implements DistStage {
 
    @Override
    public String toString() {
-      return "AbstractDistStage{" +
-            "slaveIndex=" + slaveIndex +
+      return ", slaveIndex=" + slaveIndex +
             ", activeSlavesCount=" + activeSlavesCount +
             ", totalSlavesCount=" + totalSlavesCount +
-            "} " + super.toString();
+            "} ";
    }
 }

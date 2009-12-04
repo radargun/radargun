@@ -144,7 +144,7 @@ public class StartClusterStage extends AbstractDistStage {
 
    public void setUseSmartClassLoading(boolean useSmartClassLoading) {
       this.useSmartClassLoading = useSmartClassLoading;
-   }
+   }                                               
 
    @Override
    public void initOnMaster(MasterState masterState, int totalSlavesCount) {
@@ -155,7 +155,9 @@ public class StartClusterStage extends AbstractDistStage {
    @Override
    public String toString() {
       return "StartClusterStage{" +
+            "productName='" + productName + '\'' +
+            ", useSmartClassLoading=" + useSmartClassLoading +
             ", wrapperStartupParams=" + wrapperStartupParams +
-            "} " + super.toString();
+             super.toString();
    }
 }

@@ -2,8 +2,9 @@ package org.cachebench.stages;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.cachebench.DistStageAck;
 import org.cachebench.CacheWrapper;
+import org.cachebench.DistStageAck;
+import org.cachebench.utils.Utils;
 
 /**
  * Distributed stage that will stop the cache wrapper on each slave.
@@ -40,7 +41,17 @@ public class DestroyWrapperStage extends AbstractDistStage {
          ack.setError(true);
          ack.setRemoteException(e);
          return ack;
+      } finally {
+         log.info(Utils.printMemoryFootprint(true));
+         System.gc();
+         log.info(Utils.printMemoryFootprint(false));
       }
       return ack;
+   }
+
+
+   @Override
+   public String toString() {
+      return "DestroyWrapperStage {" + super.toString();
    }
 }
