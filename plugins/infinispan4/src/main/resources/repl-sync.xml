@@ -15,7 +15,7 @@
 
       <locking concurrencyLevel="1000" useLockStriping="false" />
       <clustering mode="r">
-         <sync replTimeout="240000"/>
+         <sync replTimeout="10000"/>
       </clustering>
    </default>
 </infinispan>

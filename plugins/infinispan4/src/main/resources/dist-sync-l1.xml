@@ -15,7 +15,7 @@
       <locking concurrencyLevel="1000" useLockStriping="false" />
 
       <clustering mode="d">
-         <sync replTimeout="240000"/>
+         <sync replTimeout="10000"/>
          <l1 enabled="true" lifespan="480000"/>
          <hash numOwners="2" rehashEnabled="false"/>
       </clustering>
