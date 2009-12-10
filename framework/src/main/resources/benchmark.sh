@@ -10,19 +10,16 @@ NUM_SLAVES=""
 SLAVE_PREFIX=slave
 SSH_USER=$USER
 WORKING_DIR=`pwd`
-ASYNC=true
 VERBOSE=false
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ benchmark.sh [-p SLAVE_PREFIX] [-u ssh_user] [-sync] [-w WORKING DIRECTORY] -n num_slaves -m MASTER_IP:PORT '
+  wrappedecho '  $ benchmark.sh [-p SLAVE_PREFIX] [-u ssh_user] [-w WORKING DIRECTORY] -n num_slaves -m MASTER_IP:PORT '
   wrappedecho ""
   wrappedecho "   -p       Provides a prefix to all slave names entered in /etc/hosts"
   wrappedecho "            Defaults to '$SLAVE_PREFIX'"
   wrappedecho ""
   wrappedecho "   -u       SSH user to use when SSH'ing across to the slaves.  Defaults to current user."
-  wrappedecho ""
-  wrappedecho "   -sync    If provided, then each SSH connection will NOT be forked as a separate process. Forks by default."
   wrappedecho ""
   wrappedecho "   -w       Working directory on the slave.  Defaults to '$WORKING_DIR'."
   wrappedecho ""
@@ -45,10 +42,6 @@ do
       ;;
     "-u")
       SSH_USER=$2
-      shift
-      ;;
-    "-sync")
-      ASYNC=$false
       shift
       ;;
     "-w")
@@ -95,10 +88,6 @@ CMD="$CMD ; bin/slave.sh -m $MASTER"
 loop=1
 while [ $loop -le $NUM_SLAVES ]
 do
-  if [ "$ASYNC" = "true" ] ; then
-    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD" &
-  else
-    ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD "
-  fi
+  ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD "
   let "loop+=1"
 done
