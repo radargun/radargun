@@ -71,7 +71,7 @@ public class StartClusterStage extends AbstractDistStage {
       }
       URLClassLoader classLoader;
       String prevProduct = (String) slaveState.get(PREV_PRODUCT);
-      if (prevProduct == null || !prevProduct.equals(prevProduct)) {
+      if (prevProduct == null || !prevProduct.equals(productName)) {
          classLoader = createLoader();
          slaveState.put(CLASS_LOADER, classLoader);
          slaveState.put(PREV_PRODUCT, productName);
