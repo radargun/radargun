@@ -22,6 +22,8 @@ public class StartClusterStage extends AbstractDistStage {
 
    private String config;
    private final int TRY_COUNT = 180;
+   private static final String PREV_PRODUCT = "StartClusterStage.previousProduct";
+   private static final String CLASS_LOADER = "StartClusterStage.classLoader";
 
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
@@ -67,9 +69,21 @@ public class StartClusterStage extends AbstractDistStage {
       if (!useSmartClassLoading) {
          return Class.forName(classFqn).newInstance();
       }
-      URLClassLoader classLoader = Utils.buildProductSpecificClassLoader(productName, this.getClass().getClassLoader());
+      URLClassLoader classLoader;
+      String prevProduct = (String) slaveState.get(PREV_PRODUCT);
+      if (prevProduct == null || !prevProduct.equals(prevProduct)) {
+         classLoader = createLoader();
+         slaveState.put(CLASS_LOADER, classLoader);
+         slaveState.put(PREV_PRODUCT, productName);
+      } else {//same product and there is a class loader
+         classLoader = (URLClassLoader) slaveState.get(CLASS_LOADER);
+      }
       Thread.currentThread().setContextClassLoader(classLoader);
       return classLoader.loadClass(classFqn).newInstance();
+   }
+
+   private URLClassLoader createLoader() throws Exception {
+      return Utils.buildProductSpecificClassLoader(productName, this.getClass().getClassLoader());
    }
 
    public void setConfig(String config) {
@@ -78,7 +92,7 @@ public class StartClusterStage extends AbstractDistStage {
 
    public void setUseSmartClassLoading(boolean useSmartClassLoading) {
       this.useSmartClassLoading = useSmartClassLoading;
-   }                                               
+   }
 
    @Override
    public void initOnMaster(MasterState masterState, int totalSlavesCount) {
@@ -92,6 +106,6 @@ public class StartClusterStage extends AbstractDistStage {
             "productName='" + productName + '\'' +
             ", useSmartClassLoading=" + useSmartClassLoading +
             ", config=" + config +
-             super.toString();
+            super.toString();
    }
 }
