@@ -41,7 +41,6 @@ public class InfinispanWrapper implements CacheWrapper {
       List<Address> addressList = cacheManager.getMembers();
       if (started) {
          cacheManager.stop();
-         cacheManager = null;
          log.trace("Stopped, previous view is " + addressList);
          started = false;
       }
