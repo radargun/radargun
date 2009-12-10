@@ -9,7 +9,7 @@
          <jaxb:globalBindings>
             <jaxb:javaType name="java.lang.String"
                            xmlType="xs:string"
-                           parseMethod="org.cachebench.config.ConfigHelper.parseString"/>
+                           parseMethod="org.cachebench.config.JaxbConfigParser.parseString"/>
          </jaxb:globalBindings>
       </xs:appinfo>
    </xs:annotation>

@@ -8,7 +8,7 @@ CONFIG=./conf/benchmark.xml
 
 help_and_exit() {
   echo "Usage: "
-  echo '  $ start_master.sh -[cm]'
+  echo '  $ master.sh -[cm]'
   echo ""
   echo "   -c        Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark.xml"
   echo ""

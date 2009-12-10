@@ -18,6 +18,7 @@ import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -37,7 +38,13 @@ public class Slave {
    private ByteBuffer byteBuffer = ByteBuffer.allocate(8192);
    private SlaveState state = new SlaveState();
 
-   ExecutorService es = Executors.newSingleThreadExecutor();
+   ExecutorService es = Executors.newSingleThreadExecutor(new ThreadFactory() {
+      public Thread newThread(Runnable r) {
+         Thread th = new Thread(r);
+         th.setDaemon(true);
+         return th;
+      }
+   });
    private Future<?> future;
 
    public Slave(String masterHost, int masterPort) {

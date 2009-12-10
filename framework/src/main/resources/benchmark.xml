@@ -15,10 +15,10 @@
       <infinispan4>
          <config name="repl-async.xml"/>
          <config name="repl-sync.xml"/>
-         <config name="dist-sync.xml"/>
-         <config name="dist-async.xml"/>
-         <config name="dist-sync-l1.xml"/>
-         <config name="dist-async-l1.xml"/>
+         <!--<config name="dist-sync.xml"/>-->
+         <!--<config name="dist-async.xml"/>-->
+         <!--<config name="dist-sync-l1.xml"/>-->
+         <!--<config name="dist-async-l1.xml"/>-->
       </infinispan4>
       <jbosscache3>
          <config name="mvcc/mvcc-repl-sync.xml"/>
@@ -28,28 +28,15 @@
 
    <reports>
       <report name="sync-repl">
-         <infinispan4>
-            <config name="repl-sync.xml"/>
-         </infinispan4>
-         <jbosscache3 name="jbosscache3">
-            <config name="mvcc/mvcc-repl-sync.xml"/>
-         </jbosscache3>
+         <item product="infinispan4" config="repl-sync.xml"/>
+         <item product="jbosscache3" config="mvcc/mvcc-repl-sync.xml"/>
       </report>
       <report name="async-repl">
-         <infinispan4>
-            <config name="repl-async.xml"/>
-         </infinispan4>
-         <jbosscache3 name="jbosscache3">
-            <config name="mvcc/mvcc-repl-async.xml"/>
-         </jbosscache3>
+         <item product="infinispan4" config="repl-async.xml"/>
+         <item product="jbosscache3" config="mvcc/mvcc-repl-async.xml"/>
       </report>
       <report name="dist">
-         <infinispan4>
-            <config name="dist-sync.xml"/>
-            <config name="dist-async.xml"/>
-            <config name="dist-sync-l1.xml"/>
-            <config name="dist-async-l1.xml"/>
-         </infinispan4>
+         <item product="infinispan4" config="dist-*"/>
       </report>
       <report name="all_included" includeAll="true"/>
    </reports>

@@ -2,6 +2,7 @@ package org.cachebench.stages;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.cachebench.utils.Utils;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -116,21 +117,7 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       // file name is in the format data_<cache-product>_<cache-cfg.xml>_<cluster-size>.csv
       String actualFileName =  masterState.nameOfTheCurrentBenchmark() + "_" + masterState.configNameOfTheCurrentBenchmark() + "_" + clusterSize +".csv";
 
-      outputFile = new File(parentDir, actualFileName);
-
-      if (outputFile.exists()) {
-         String fileName = outputFile.getAbsolutePath() + ".old." + System.currentTimeMillis();
-         log.info("A file named: '" + outputFile.getAbsolutePath() + "' already exist. Renaming to '" + fileName + "'");
-         if (!outputFile.renameTo(new File(fileName))) {
-            log.warn("Could not rename!!!");
-         }
-      } else {
-         if (outputFile.createNewFile()) {
-            log.info("Successfully created report file:" + outputFile.getAbsolutePath());
-         } else {
-            log.warn("Failed to create the report file!");
-         }
-      }
+      outputFile = Utils.createOrReplaceFile(parentDir, actualFileName);
    }
 
    public void setTargetDir(String targetDir) {

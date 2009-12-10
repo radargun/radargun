@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
+import org.cachebench.Slave;
 import org.cachebench.utils.Utils;
 
 /**
@@ -31,6 +32,8 @@ public class DestroyWrapperStage extends AbstractDistStage {
                Thread.sleep(1000);
             }
             slaveState.setCacheWrapper(null);
+            //reset the class loader to SystemClassLoader
+            Thread.currentThread().setContextClassLoader(Slave.class.getClassLoader());
             log.info("Cache wrapper successfully tearDown. Number of members is the cluster is: " + cacheWrapper.getNumMembers());
          } else {
             log.info("No cache wrapper deployed on this slave, nothing to do.");

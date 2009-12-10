@@ -11,7 +11,6 @@ import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 
 import javax.transaction.TransactionManager;
-import java.util.Map;
 import java.util.List;
 
 public class InfinispanWrapper implements CacheWrapper {
@@ -23,8 +22,8 @@ public class InfinispanWrapper implements CacheWrapper {
    boolean started = false;
    String config;
 
-   public void init(Map parameters) throws Exception {
-      config = (String) parameters.get("config");
+   public void init(String config) throws Exception {
+      this.config = config;
       setUp();
    }
 
@@ -42,6 +41,7 @@ public class InfinispanWrapper implements CacheWrapper {
       List<Address> addressList = cacheManager.getMembers();
       if (started) {
          cacheManager.stop();
+         cacheManager = null;
          log.trace("Stopped, previous view is " + addressList);
          started = false;
       }

@@ -11,7 +11,6 @@ import org.cachebench.CacheWrapper;
 
 import java.io.Serializable;
 import java.net.URL;
-import java.util.Map;
 
 
 /**
@@ -33,12 +32,12 @@ public class EHCacheWrapper implements CacheWrapper
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#init(java.util.Properties)
    */
-   public void init(Map parameters) throws Exception
+   public void init(String config) throws Exception
    {
       if (log.isTraceEnabled()) log.trace("Entering EHCacheWrapper.init()");
-      localmode = (Boolean.parseBoolean((String) parameters.get("localOnly")));
-      log.debug("Initializing the cache with props " + parameters);
-      URL url = getClass().getClassLoader().getResource((String) parameters.get("config"));
+//      localmode = (Boolean.parseBoolean((String) config.get("localOnly")));
+      log.debug("Initializing the cache with props " + config);
+      URL url = getClass().getClassLoader().getResource(config);
       log.debug("Config URL = " + url);
       Configuration c = ConfigurationFactory.parseConfiguration(url);
       c.setSource("URL of " + url);

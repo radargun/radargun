@@ -189,6 +189,7 @@ public class Master {
          if (!slaves.remove(socketChannel)) {
             throw new IllegalStateException("Socket " + socketChannel + " should have been there!");
          }
+         releaseResourcesAndExit();
       } else if (byteBuffer.limit() >= 4) {
          int expectedSize = byteBuffer.getInt(0);
          if ((expectedSize + 4) > byteBuffer.capacity()) {

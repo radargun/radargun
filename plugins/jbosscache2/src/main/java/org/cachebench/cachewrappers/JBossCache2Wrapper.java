@@ -13,7 +13,6 @@ import org.jboss.cache.marshall.NodeData;
 import org.jboss.cache.transaction.DummyTransactionManager;
 
 import javax.transaction.Transaction;
-import java.util.Map;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -26,14 +25,14 @@ public class JBossCache2Wrapper implements CacheWrapper
    private Log log = LogFactory.getLog(JBossCache2Wrapper.class);
    private boolean inLocalMode;
 
-   public void init(Map parameters) throws Exception
+   public void init(String config) throws Exception
    {
-      log.info("Creating cache with the following configuration: " + parameters);
-      cache = new DefaultCacheFactory().createCache((String) parameters.get("config"));
+      log.info("Creating cache with the following configuration: " + config);
+      cache = new DefaultCacheFactory().createCache(config);
       log.info("Running cache with following config: " + cache.getConfiguration());
       log.info("Running follwing JBossCacheVersion: " + org.jboss.cache.Version.version);
       log.info("Running follwing JBossCacheCodeName: " + org.jboss.cache.Version.codename);
-      inLocalMode = parameters.containsKey("localOnly");
+//      inLocalMode = config.containsKey("localOnly");       TODO fix this
    }
 
    public void setUp() throws Exception

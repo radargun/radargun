@@ -8,6 +8,8 @@
 
 package org.cachebench.config.jaxb;
 
+import org.cachebench.config.ConfigHelper;
+
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 public class Adapter1
@@ -16,7 +18,7 @@ public class Adapter1
 
 
     public String unmarshal(String value) {
-        return (org.cachebench.config.ConfigHelper.parseString(value));
+        return (ConfigHelper.parseString(value));
     }
 
     public String marshal(String value) {

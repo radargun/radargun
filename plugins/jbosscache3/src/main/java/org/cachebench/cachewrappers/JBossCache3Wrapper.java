@@ -29,10 +29,10 @@ public class JBossCache3Wrapper implements CacheWrapper
       FLAT = Boolean.getBoolean("cacheBenchFwk.useFlatCache");
    }
 
-   public void init(Map parameters) throws Exception
+   public void init(String config) throws Exception
    {
-      log.info("Creating cache with the following configuration: " + parameters);
-      cache = new DefaultCacheFactory().createCache((String) parameters.get("config"));
+      log.info("Creating cache with the following configuration: " + config);
+      cache = new DefaultCacheFactory().createCache(config);
       log.info("Running cache with following config: " + cache.getConfiguration());
       log.info("Running following JBossCacheVersion: " + org.jboss.cache.Version.version);
       log.info("Running following JBossCacheCodeName: " + org.jboss.cache.Version.codename);

@@ -1,7 +1,5 @@
 package org.cachebench;
 
-import java.util.Map;
-
 
 /**
  * CacheWrappers wrap cacheing products tp provide the cachebench framework with a standard way of
@@ -19,9 +17,9 @@ public interface CacheWrapper
     * usually the name or path to a config file specific to the
     * cacheing product being tested.
     *
-    * @param parameters
+    * @param config
     */
-   void init(Map parameters) throws Exception;
+   void init(String config) throws Exception;
 
    /**
     * setUp() is called immediately after init(), and usually involves instantiating

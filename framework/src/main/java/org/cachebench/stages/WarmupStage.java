@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
+import org.cachebench.stressors.WarmupStressor;
 
 import java.util.List;
 
@@ -32,15 +33,19 @@ public class WarmupStage extends AbstractDistStage {
          return ack;
       }
       long startTime = System.currentTimeMillis();
-      try {
-         performWarmupOperations(wrapper);
-      } catch (Exception e) {
-         log.warn("Received exception durring cache warmup" + e.getMessage());
-      }
+      warmup(wrapper);
       long duration = System.currentTimeMillis() - startTime;
       log.info("The warmup took: " + (duration / 1000) + " seconds.");
       ack.setPayload(duration);
       return ack;
+   }
+
+   private void warmup(CacheWrapper wrapper) {
+      WarmupStressor warmupStressor = new WarmupStressor();
+      warmupStressor.setBucket("a_b_c");
+      warmupStressor.setKeyPrefix(String.valueOf(getSlaveIndex()));
+      warmupStressor.setOperationCount(operationCount);
+      warmupStressor.stress(wrapper);
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks) {
@@ -53,26 +58,6 @@ public class WarmupStage extends AbstractDistStage {
       }
       return true;
    }
-
-
-   public void performWarmupOperations(CacheWrapper wrapper) throws Exception {
-      log.info("Cache launched, performing " + (Integer) operationCount + " put and get operations ");
-      String path = "a_b_c" + slaveIndex;
-      for (int i = 0; i < operationCount; i++) {
-         try {
-            wrapper.put(path, getSlaveIndex() + String.valueOf((Integer) operationCount), String.valueOf(i));
-         }
-         catch (Throwable e) {
-            log.trace("Exception on cache warmup", e);
-         }
-      }
-
-      for (int i = 0; i < operationCount; i++) {
-         wrapper.get(path, getSlaveIndex() + String.valueOf((Integer) operationCount));
-      }
-      log.trace("Cache warmup ended!");
-   }
-
 
    public void setOperationCount(int operationCount) {
       this.operationCount = operationCount;
