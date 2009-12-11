@@ -42,8 +42,7 @@ public class WarmupStage extends AbstractDistStage {
 
    private void warmup(CacheWrapper wrapper) {
       WarmupStressor warmupStressor = new WarmupStressor();
-      warmupStressor.setBucket("a_b_c");
-      warmupStressor.setKeyPrefix(String.valueOf(getSlaveIndex()));
+      warmupStressor.setBucket("bucket" + String.valueOf(getSlaveIndex()));
       warmupStressor.setOperationCount(operationCount);
       warmupStressor.stress(wrapper);
    }
