@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * On multiple threads executes put and get opperations against the CacheWrapper, and returns the result as an Map.
@@ -63,6 +64,7 @@ public class PutGetStressor implements CacheWrapperStressor {
    private CacheWrapper cacheWrapper;
    private static Random r = new Random();
    private long startTime;
+   private volatile CountDownLatch startPoint;
 
 
    public Map<String, String> stress(CacheWrapper wrapper) {
@@ -120,11 +122,13 @@ public class PutGetStressor implements CacheWrapperStressor {
 
    private List<Stresser> executeOperations() throws Exception {
       List<Stresser> stressers = new ArrayList<Stresser>();
+      startPoint = new CountDownLatch(1);
       for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
          Stresser stresser = new Stresser(threadIndex);
          stressers.add(stresser);
          stresser.start();
       }
+      startPoint.countDown();
       for (Stresser stresser : stressers) {
          stresser.join();
       }
@@ -173,6 +177,12 @@ public class PutGetStressor implements CacheWrapperStressor {
          Random r = new Random();
          int randomAction;
          int randomKeyInt;
+         try {
+            startPoint.await();
+            log.info("Starting thread: " + getName());
+         } catch (InterruptedException e) {
+            log.warn(e);
+         }
          for (int i = 0; i < numberOfRequestsPerThread; i++) {
             logProgress(i);
             randomAction = r.nextInt(100);
@@ -181,14 +191,16 @@ public class PutGetStressor implements CacheWrapperStressor {
 
             if (randomAction < readPercentage) {
                long start = System.nanoTime();
+               Object result = null;
                try {
-                  cacheWrapper.get(bucketId, key);
+                  result = cacheWrapper.get(bucketId, key);
                } catch (Exception e) {
                   log.warn(e);
                   nrFailures++;
                }
                readDurationNanos += System.nanoTime() - start;
                reads++;
+               makeSureCallIsNotSkipped(result);
             } else {
                String payload = generateRandomString(sizeOfValue);
                long start = System.nanoTime();
@@ -201,6 +213,15 @@ public class PutGetStressor implements CacheWrapperStressor {
                writeDurationNanos += System.nanoTime() - start;
                writes++;
             }
+         }
+      }
+
+      /**
+       * Just to make sure that compiler won't ignore the call to get.
+       */
+      public void makeSureCallIsNotSkipped(Object result) {
+         if (result != null && result.hashCode() < System.currentTimeMillis()) {
+            System.out.println("");
          }
       }
 
