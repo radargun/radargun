@@ -137,12 +137,12 @@ public class Utils {
          int lastIndexOfDot = outputFile.getName().lastIndexOf('.');
          String extension = lastIndexOfDot > 0 ? outputFile.getName().substring(lastIndexOfDot) : "";
          File old = new File (outputFile.getParentFile(), "old");
-         if (old.exists()) {
+         if (!old.exists()) {
             if (old.mkdirs()) {
                log.warn("Issues whilst creating dir: " + old);  
             }
          }
-         String fileName = outputFile.getAbsolutePath() + ".old." + System.currentTimeMillis() + extension;
+         String fileName = outputFile.getName() + ".old." + System.currentTimeMillis() + extension;
          File newFile = new File(old, fileName);
          log.info("A file named: '" + outputFile.getAbsolutePath() + "' already exist. Moving it to '" + newFile + "'");
          if (!outputFile.renameTo(newFile)) {

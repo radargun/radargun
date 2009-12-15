@@ -44,8 +44,6 @@ public class GenerateChartStage extends AbstractMasterStage {
    ClusterReport getReport = new LineClusterReport();
 
    public boolean execute() throws Exception {
-
-
       putReport.setReportFile(reportDirectory, fnPrefix + "_PUT");
       putReport.init(X_LABEL, "PUT ops/sec on each cache instance", "Average PUT per cache instance", getSubtitle());
       getReport.setReportFile(reportDirectory, fnPrefix + "_GET");
