@@ -93,8 +93,7 @@ public class Utils {
       }
       File confDir = new File(PLUGINS_DIR + File.separator + productName + File.separator + "conf/");
       jars.add(confDir.toURI().toURL());
-      URLClassLoader classLoader = new URLClassLoader(jars.toArray(new URL[jars.size()]), parent);
-      return classLoader;
+      return new URLClassLoader(jars.toArray(new URL[jars.size()]), parent);
    }
 
    public static String getCacheWrapperFqnClass(String productName) {
@@ -136,14 +135,14 @@ public class Utils {
    public static void backupFile(File outputFile) {
       if (outputFile.exists()) {
          int lastIndexOfDot = outputFile.getName().lastIndexOf('.');
-         String extenssion = lastIndexOfDot > 0 ? outputFile.getName().substring(lastIndexOfDot) : "";
+         String extension = lastIndexOfDot > 0 ? outputFile.getName().substring(lastIndexOfDot) : "";
          File old = new File (outputFile.getParentFile(), "old");
          if (old.exists()) {
             if (old.mkdirs()) {
                log.warn("Issues whilst creating dir: " + old);  
             }
          }
-         String fileName = outputFile.getAbsolutePath() + ".old." + System.currentTimeMillis() + extenssion;
+         String fileName = outputFile.getAbsolutePath() + ".old." + System.currentTimeMillis() + extension;
          File newFile = new File(old, fileName);
          log.info("A file named: '" + outputFile.getAbsolutePath() + "' already exist. Moving it to '" + newFile + "'");
          if (!outputFile.renameTo(newFile)) {

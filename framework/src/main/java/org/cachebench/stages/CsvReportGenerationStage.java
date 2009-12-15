@@ -22,7 +22,7 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
    private static Log log = LogFactory.getLog(CsvReportGenerationStage.class);
 
    private String targetDir = "reports";
-   private String sepparator = ",";
+   private String separator = ",";
 
    private File outputFile;
    private FileWriter fileWriter;
@@ -94,7 +94,7 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
          if (i == row.size() - 1) {
             fileWriter.write('\n');
          } else {
-            fileWriter.write(sepparator);
+            fileWriter.write(separator);
          }
       }
    }

@@ -1,5 +1,7 @@
 package org.cachebench.reporting;
 
+import org.cachebench.stages.GenerateChartStage;
+
 import java.io.IOException;
 import java.util.StringTokenizer;
 
@@ -18,15 +20,14 @@ import java.util.StringTokenizer;
 public class ChartGenerator {
    private static void help() {
       System.out.println("Usage:");
-      System.out.println("   ChartGenerator [-reportDir <directory containing CSV files>] [-o <outputFileNamePrefix>]  [-chartType <putget | throughput> defaults to throughput if not specified.] [-filter <productName>(config1,confi2);<productName2>(config1,config2,config3)] ]");
+      System.out.println("   ChartGenerator [-reportDir <directory containing CSV files>] [-o <outputFileNamePrefix>] [-filter <productName>(config1,confi2);<productName2>(config1,config2,config3)] ]");
    }
 
-   public static void main(String[] args) throws IOException {
+   public static void main(String[] args) throws Exception {
       String reportDirectory = null;
 
 
       String fnPrefix = null;
-      String chartType = "throughput";
       String filter = null;
 
       long startTime = System.currentTimeMillis();
@@ -40,11 +41,6 @@ public class ChartGenerator {
 
          if (args[i].equals("-o")) {
             fnPrefix = args[++i];
-            continue;
-         }
-
-         if (args[i].equals("-chartType")) {
-            chartType = args[++i];
             continue;
          }
 
@@ -62,15 +58,12 @@ public class ChartGenerator {
          return;
       }
 
-      ChartGen gen;
 
-      if (chartType.equalsIgnoreCase("putget")) {
-         gen = new PutGetChartGenerator();
-      } else {
-         gen = new ThroughputChartGenerator();
-      }
+      GenerateChartStage generateChartStage = new GenerateChartStage();
+      generateChartStage.setCsvFilesDirectory(reportDirectory);
+      generateChartStage.setFnPrefix(fnPrefix);
+      generateChartStage.setReportDirectory(reportDirectory);
 
-      gen.setReportDirectory(reportDirectory);
       if (filter != null) {
          StringTokenizer products = new StringTokenizer(filter, ";");
          while (products.hasMoreTokens()) {
@@ -81,12 +74,11 @@ public class ChartGenerator {
             StringTokenizer configTokenizer = new StringTokenizer(productConfigs, ",");
             while (configTokenizer.hasMoreTokens()) {
                String config = configTokenizer.nextToken();
-               gen.addToReportFilter(productName, config);
+               generateChartStage.addReportFilter(productName, config);
             }
          }
       }
-      gen.setFileNamePrefix(fnPrefix);
-      gen.generateChart();
+      generateChartStage.execute();
       System.out.println("Finished in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds!");
    }
 }

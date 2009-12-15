@@ -113,7 +113,7 @@ public class PutGetStressor implements CacheWrapperStressor {
       results.put("READ_COUNT", str(reads));
       results.put("WRITE_COUNT", str(writes));
       results.put("FAILURES", str(failures));
-      log.info("Finsihed generating report. Nr of failed operations on this node is: " + failures +
+      log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
             ". Test duration is: " + Utils.getDurationString(System.currentTimeMillis() - startTime));
       return results;
    }

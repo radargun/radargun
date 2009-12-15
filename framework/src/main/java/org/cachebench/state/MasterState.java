@@ -101,10 +101,14 @@ public class MasterState extends StateBase {
    private void executeServerStage(MasterStage servStage) {
       log.info("Starting master stage '" + servStage.getClass().getSimpleName() + "' :" + servStage);
       servStage.init(this);
-      if (!servStage.execute()) {
-         log.warn("Issues while executing master stage: " + servStage);
-      } else {
-         log.trace("Master stage executed successfully " + servStage);
+      try {
+         if (!servStage.execute()) {
+            log.warn("Issues while executing master stage: " + servStage);
+         } else {
+            log.trace("Master stage executed successfully " + servStage);
+         }
+      } catch (Exception e) {
+         log.warn(e);
       }
    }
 
