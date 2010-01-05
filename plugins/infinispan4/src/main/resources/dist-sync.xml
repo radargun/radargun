@@ -13,6 +13,8 @@
       <transaction transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"/>
       <locking concurrencyLevel="1000" useLockStriping="false"/>
 
+      <unsafe unreliableReturnValues="true" />
+
       <clustering mode="d">
          <sync replTimeout="10000"/>
          <l1 enabled="false" />
