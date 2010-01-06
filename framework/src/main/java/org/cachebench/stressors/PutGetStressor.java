@@ -54,8 +54,6 @@ public class PutGetStressor implements CacheWrapperStressor {
     */
    private int numOfThreads = 10;
 
-   private boolean reportNanos = false;
-
    private String keyPrefix = DEFAULT_KEY_PREFIX;
 
    private String bucketPrefix = DEFAULT_BUCKET_PREFIX;
@@ -97,9 +95,9 @@ public class PutGetStressor implements CacheWrapperStressor {
       long writesDurations = 0;
 
       for (Stresser stresser : stressers) {
-         duration += reportNanos ? stresser.totalDurationNanaos() : stresser.totalDurationNanaos() / 1000000;
-         readsDurations += reportNanos ? stresser.readDurationNanos : stresser.readDurationNanos / 1000000;
-         writesDurations += reportNanos ? stresser.writeDurationNanos : stresser.writeDurationNanos / 1000000;
+         duration += stresser.totalDuration();
+         readsDurations += stresser.readDuration;
+         writesDurations += stresser.writeDuration;
 
          reads += stresser.reads;
          writes += stresser.writes;
@@ -158,8 +156,8 @@ public class PutGetStressor implements CacheWrapperStressor {
       private int threadIndex;
       private String bucketId;
       private int nrFailures;
-      private long readDurationNanos = 0;
-      private long writeDurationNanos = 0;
+      private long readDuration = 0;
+      private long writeDuration = 0;
       private long reads;
       private long writes;
       private long startTime;
@@ -190,7 +188,7 @@ public class PutGetStressor implements CacheWrapperStressor {
             String key = getKey(randomKeyInt);
 
             if (randomAction < readPercentage) {
-               long start = System.nanoTime();
+               long start = System.currentTimeMillis();
                Object result = null;
                try {
                   result = cacheWrapper.get(bucketId, key);
@@ -198,19 +196,19 @@ public class PutGetStressor implements CacheWrapperStressor {
                   log.warn(e);
                   nrFailures++;
                }
-               readDurationNanos += System.nanoTime() - start;
+               readDuration += System.currentTimeMillis() - start;
                reads++;
                makeSureCallIsNotSkipped(result);
             } else {
                String payload = generateRandomString(sizeOfValue);
-               long start = System.nanoTime();
+               long start = System.currentTimeMillis();
                try {
                   cacheWrapper.put(bucketId, key, payload);
                } catch (Exception e) {
                   log.warn(e);
                   nrFailures++;
                }
-               writeDurationNanos += System.nanoTime() - start;
+               writeDuration += System.currentTimeMillis() - start;
                writes++;
             }
          }
@@ -239,8 +237,8 @@ public class PutGetStressor implements CacheWrapperStressor {
          }
       }
 
-      public long totalDurationNanaos() {
-         return readDurationNanos + writeDurationNanos;
+      public long totalDuration() {
+         return readDuration + writeDuration;
       }
    }
 
@@ -262,10 +260,6 @@ public class PutGetStressor implements CacheWrapperStressor {
 
    public void setNumOfThreads(int numOfThreads) {
       this.numOfThreads = numOfThreads;
-   }
-
-   public void setReportNanos(boolean reportNanos) {
-      this.reportNanos = reportNanos;
    }
 
    public void setWritePercentage(int writePercentage) {
@@ -316,7 +310,6 @@ public class PutGetStressor implements CacheWrapperStressor {
             ", sizeOfValue=" + sizeOfValue +
             ", writePercentage=" + writePercentage +
             ", numOfThreads=" + numOfThreads +
-            ", reportNanos=" + reportNanos +
             ", bucketPrefix=" + bucketPrefix +
             ", keyPrefix=" + keyPrefix +
             ", cacheWrapper=" + cacheWrapper +
