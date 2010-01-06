@@ -18,7 +18,7 @@
         thread_pool.min_threads="30"
         thread_pool.max_threads="30"
         thread_pool.keep_alive_time="5000"
-        thread_pool.queue_enabled="false"
+        thread_pool.queue_enabled="true"
         thread_pool.queue_max_size="100"
         thread_pool.rejection_policy="discard"
 
@@ -34,8 +34,8 @@
    <FILE_PING location="file_ping_dir" timeout="5000" num_initial_members="1000"/>
    <MERGE2 max_interval="30000" min_interval="10000"/>
    <FD_SOCK/>
-   <FD_ALL/>
-   <VERIFY_SUSPECT timeout="3000"/>
+   <FD_ALL timeout="15000" interval="5000"/>
+   <VERIFY_SUSPECT timeout="15000"/>
    <BARRIER/>
    <pbcast.NAKACK use_stats_for_retransmission="false"
                   exponential_backoff="0"
