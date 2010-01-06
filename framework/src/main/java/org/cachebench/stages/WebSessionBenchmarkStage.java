@@ -74,7 +74,6 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       putGetStressor.setNumberOfRequestsPerThread(numberOfRequestsPerThread);
       putGetStressor.setNumOfThreads(numOfThreads);
       putGetStressor.setOpsCountStatusLog(opsCountStatusLog);
-      putGetStressor.setReportNanos(reportNanos);
       putGetStressor.setSizeOfAnAttribute(sizeOfAnAttribute);
       putGetStressor.setWritePercentage(writePercentage);
 
