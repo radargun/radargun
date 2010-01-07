@@ -23,7 +23,7 @@ public class InfinispanWrapper implements CacheWrapper {
    String config;
 
    public void init(String config) throws Exception {
-      this.config = config;
+      this.config = config;                                                                                                         
       setUp();
    }
 
@@ -35,7 +35,7 @@ public class InfinispanWrapper implements CacheWrapper {
          started = true;
       }
       log.info("Loading jgroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
-      log.info("JGroups /descriptio////version: " + org.jgroups.Version.description);
+      log.info("JGroups version: " + org.jgroups.Version.printDescription());
    }
 
    public void tearDown() throws Exception {
@@ -102,5 +102,11 @@ public class InfinispanWrapper implements CacheWrapper {
       catch (Exception e) {
          throw new RuntimeException(e);
       }
+   }
+
+   public static void main(String[] args) throws Exception {
+      InfinispanWrapper wrapper = new InfinispanWrapper();
+      wrapper.init("dist-async.xml");
+      wrapper.setUp();
    }
 }
