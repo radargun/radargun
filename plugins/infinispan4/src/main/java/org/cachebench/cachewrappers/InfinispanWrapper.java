@@ -34,7 +34,8 @@ public class InfinispanWrapper implements CacheWrapper {
          cache = cacheManager.getCache();
          started = true;
       }
-      log.info("JGroups version: " + org.jgroups.Version.description);
+      log.info("Loading jgroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
+      log.info("JGroups /descriptio////version: " + org.jgroups.Version.description);
    }
 
    public void tearDown() throws Exception {
