@@ -35,6 +35,10 @@ public class InfinispanWrapper implements CacheWrapper {
          started = true;
       }
       log.info("Loading jgroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
+      log.info("JGroups version: " + org.jgroups.Version.description);//2.8.
+      log.info("JGroups version: " + org.jgroups.Version.major); //2
+      log.info("JGroups version: " + org.jgroups.Version.minor);//8
+      log.info("JGroups version: " + org.jgroups.Version.micro);//0
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
    }
 
@@ -61,7 +65,7 @@ public class InfinispanWrapper implements CacheWrapper {
       log.info("Cache size after clear: " + cache.size());
    }
 
-   public int getNumMembers() {
+   public int getNumMembers()  {
       ComponentRegistry componentRegistry = cache.getAdvancedCache().getComponentRegistry();
       if (componentRegistry.getStatus().startingUp()) {
          log.trace("We're in the process of starting up.");
@@ -73,7 +77,7 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public String getInfo() {
-      return cache.getVersion();
+      return cache.getVersion() + ", " + config + ", Size of the cache is: " + cache.size();
    }
 
    public Object getReplicatedData(String bucket, String key) throws Exception {

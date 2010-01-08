@@ -86,6 +86,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
          result.setError(true);
          result.setRemoteException(e);
       }
+      log.info("WebSessionBenchmark(nodes= " + getActiveSlaveCount() + ")" + cacheWrapper.getInfo());
       return result;
    }
 
