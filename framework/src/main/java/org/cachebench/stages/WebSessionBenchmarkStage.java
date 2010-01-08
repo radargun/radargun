@@ -79,15 +79,15 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
       try {
          Map<String, String> results = putGetStressor.stress(cacheWrapper);
+         log.info("WebSessionBenchmark(nodes= " + getActiveSlaveCount() + ")" + cacheWrapper.getInfo());
          result.setPayload(results);
          return result;
       } catch (Exception e) {
          log.warn("Exception while initializing the test", e);
          result.setError(true);
          result.setRemoteException(e);
+         return result;
       }
-      log.info("WebSessionBenchmark(nodes= " + getActiveSlaveCount() + ")" + cacheWrapper.getInfo());
-      return result;
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks) {
