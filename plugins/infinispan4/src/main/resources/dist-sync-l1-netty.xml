@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:4.0">
+   <global>
+      <transport clusterName="infinispan-cluster" transportClass="org.infinispan.remoting.transport.netty.NettyTransport">
+         <properties>
+            <property name="configurationFile" value="jgroups/jgroups-tcp-disc.xml"/>
+            <property name="server.address" value="${bind.address}" />
+         </properties>
+      </transport>
+   </global>
+
+   <default>
+      <transaction
+            transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"/>
+      <locking concurrencyLevel="1000" useLockStriping="false" />
+
+      <unsafe unreliableReturnValues="true" />
+
+      <clustering mode="d">
+         <sync replTimeout="10000"/>
+         <l1 enabled="true" lifespan="480000"/>
+         <hash numOwners="2" rehashEnabled="false"/>
+      </clustering>
+   </default>
+
+</infinispan>
