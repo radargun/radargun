@@ -25,6 +25,10 @@ public class InfinispanWrapper implements CacheWrapper {
    public void init(String config) throws Exception {
       this.config = config;                                                                                                         
       setUp();
+      // should we be blocking until all rehashing, etc. has finished?
+      if (cache.getConfiguration().getCacheMode().isDistributed()) {
+         while (!cache.getAdvancedCache().getDistributionManager().isJoinComplete()) Thread.sleep(200);
+      }
    }
 
    public void setUp() throws Exception {
@@ -34,11 +38,7 @@ public class InfinispanWrapper implements CacheWrapper {
          cache = cacheManager.getCache();
          started = true;
       }
-      log.info("Loading jgroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
-      log.info("JGroups version: " + org.jgroups.Version.description);//2.8.
-      log.info("JGroups version: " + org.jgroups.Version.major); //2
-      log.info("JGroups version: " + org.jgroups.Version.minor);//8
-      log.info("JGroups version: " + org.jgroups.Version.micro);//0
+      log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
    }
 
