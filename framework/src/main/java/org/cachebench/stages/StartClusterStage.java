@@ -101,10 +101,10 @@ public class StartClusterStage extends AbstractDistStage {
 
    @Override
    public String toString() {
-      return "StartClusterStage{" +
+      return "StartClusterStage {" +
             "productName='" + productName + '\'' +
             ", useSmartClassLoading=" + useSmartClassLoading +
             ", config=" + config +
-            super.toString();
+            ", " + super.toString();
    }
 }

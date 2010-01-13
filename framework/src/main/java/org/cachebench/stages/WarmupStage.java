@@ -62,7 +62,7 @@ public class WarmupStage extends AbstractDistStage {
 
    @Override
    public String toString() {
-      return "WarmupStage{" +
-            "operationCount=" + operationCount + super.toString();
+      return "WarmupStage {" +
+            "operationCount=" + operationCount + ", " + super.toString();
    }
 }

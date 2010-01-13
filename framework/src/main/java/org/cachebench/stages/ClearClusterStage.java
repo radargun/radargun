@@ -35,6 +35,6 @@ public class ClearClusterStage extends AbstractDistStage {
 
    @Override
    public String toString() {
-      return "ClearClusterStage{" + super.toString();
+      return "ClearClusterStage {" + super.toString();
    }
 }

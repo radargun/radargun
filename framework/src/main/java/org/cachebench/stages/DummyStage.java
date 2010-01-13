@@ -32,8 +32,8 @@ public class DummyStage extends AbstractDistStage{
 
    @Override
    public String toString() {
-      return "DummyStage{" +
+      return "DummyStage {" +
             "name='" + name + '\'' +
-            "} " + super.toString();
+            ", " + super.toString();
    }
 }

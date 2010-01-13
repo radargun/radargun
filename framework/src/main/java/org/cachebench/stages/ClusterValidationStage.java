@@ -200,10 +200,10 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    @Override
    public String toString() {
-      return "ClusterValidationStage{" +
+      return "ClusterValidationStage {" +
             "isPartialReplication=" + isPartialReplication +
             ", replicationTryCount=" + replicationTryCount +
             ", replicationTimeSleep=" + replicationTimeSleep +
-            ", wrapper=" + wrapper + super.toString();
+            ", wrapper=" + wrapper + ", " + super.toString();
    }
 }

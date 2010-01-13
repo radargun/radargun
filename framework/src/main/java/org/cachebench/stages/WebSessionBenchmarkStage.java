@@ -142,7 +142,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    @Override
    public String toString() {
-      return "WebSessionBenchmarkStage{" +
+      return "WebSessionBenchmarkStage {" +
             "opsCountStatusLog=" + opsCountStatusLog +
             ", numberOfRequestsPerThread=" + numberOfRequestsPerThread +
             ", numberOfAttributes=" + numberOfAttributes +
@@ -151,6 +151,6 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
             ", numOfThreads=" + numOfThreads +
             ", reportNanos=" + reportNanos +
             ", cacheWrapper=" + cacheWrapper +
-            super.toString();
+            ", " + super.toString();
    }
 }
