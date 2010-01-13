@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
+import org.cachebench.utils.Utils;
 
 import java.util.List;
 
@@ -24,8 +25,6 @@ import java.util.List;
  * @author Mircea.Markus@jboss.com
  */
 public class ClusterValidationStage extends AbstractDistStage {
-
-   private static Log log = LogFactory.getLog(ClusterValidationStage.class);
 
    private static final String KEY = "_InstallBenchmarkStage_";
    private static final String CONFIRMATION_KEY = "_confirmation_";
@@ -54,7 +53,7 @@ public class ClusterValidationStage extends AbstractDistStage {
                }
             }
          } else {
-            log.info("Using partial replication, skiping conirm phase");
+            log.info("Using partial replication, skipping confirm phase");
          }
          response.setPayload(replResult);
       } catch (Exception e) {
@@ -74,7 +73,7 @@ public class ClusterValidationStage extends AbstractDistStage {
             Thread.sleep(1000);
          }
          if (wrapper.get(nodeBucket(i), CONFIRMATION_KEY) == null) {
-            log.warn("Confirm phase unsuccessful. Slave " + i + " hasn't acknowleged the test");
+            log.warn("Confirm phase unsuccessful. Slave " + i + " hasn't acknowledged the test");
             return i;
          }
       }
@@ -98,13 +97,13 @@ public class ClusterValidationStage extends AbstractDistStage {
          int replCount = (Integer) defaultStageAck.getPayload();
          if (isPartialReplication) {
             if (!(replCount > 0)) {
-               log.warn("Replication hasn't occured on slave: " + defaultStageAck);
+               log.warn("Replication hasn't occurred on slave: " + defaultStageAck);
                success = false;
             }
          } else { //total replication expected
             int expectedRepl = getActiveSlaveCount() - 1;
             if (!(replCount == expectedRepl)) {
-               log.warn("On slave " + ack + " total repl hasn't occured. Expected " + expectedRepl + " and received " + replCount);
+               log.warn("On slave " + ack + " total replication hasn't occurred. Expected " + expectedRepl + " and received " + replCount);
                success = false;
             }
          }
@@ -130,7 +129,7 @@ public class ClusterValidationStage extends AbstractDistStage {
             tryCount++;
          }
       }
-      throw new Exception("Couldn't accomplish additiona before replication!");
+      throw new Exception("Couldn't accomplish addition before replication!");
    }
 
 
@@ -145,8 +144,8 @@ public class ClusterValidationStage extends AbstractDistStage {
          }
          //adding our stuff one more time
          tryToPut();
-         log.info("Replication test failed, " + (i + 1) + " tries so far. Sleeping for  " + replicationTimeSleep
-               + " millis then try again");
+         log.info("Replication test failed, " + (i + 1) + " tries so far. Sleeping for " + Utils.prettyPrintTime(replicationTimeSleep)
+               + " and trying again.");
          Thread.sleep(replicationTimeSleep);
       }
       log.info("Replication test failed. Last replication count is " + replCount);

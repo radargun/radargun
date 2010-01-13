@@ -13,8 +13,6 @@ import org.cachebench.utils.Utils;
  */
 public class ClearClusterStage extends AbstractDistStage {
 
-   private static Log log = LogFactory.getLog(ClearClusterStage.class);
-
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck defaultDistStageAck = newDefaultStageAck();
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();

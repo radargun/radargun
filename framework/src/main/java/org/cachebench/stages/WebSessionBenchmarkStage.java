@@ -17,8 +17,6 @@ import java.util.Map;
  */
 public class WebSessionBenchmarkStage extends AbstractDistStage {
 
-   private static Log log = LogFactory.getLog(WebSessionBenchmarkStage.class);
-
    private int opsCountStatusLog = 5000;
 
    public static final String SESSION_PREFIX = "SESSION";

@@ -9,9 +9,11 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -136,10 +138,10 @@ public class Utils {
       if (outputFile.exists()) {
          int lastIndexOfDot = outputFile.getName().lastIndexOf('.');
          String extension = lastIndexOfDot > 0 ? outputFile.getName().substring(lastIndexOfDot) : "";
-         File old = new File (outputFile.getParentFile(), "old");
+         File old = new File(outputFile.getParentFile(), "old");
          if (!old.exists()) {
             if (old.mkdirs()) {
-               log.warn("Issues whilst creating dir: " + old);  
+               log.warn("Issues whilst creating dir: " + old);
             }
          }
          String fileName = outputFile.getName() + ".old." + System.currentTimeMillis() + extension;
@@ -149,5 +151,35 @@ public class Utils {
             log.warn("Could not rename!!!");
          }
       }
+   }
+
+   public static String prettyPrintTime(long time, TimeUnit unit) {
+      return prettyPrintTime(unit.toMillis(time));
+   }
+
+   /**
+    * Prints a time for display
+    *
+    * @param millis time in millis
+    * @return the time, represented as millis, seconds, minutes or hours as appropriate, with suffix
+    */
+   public static String prettyPrintTime(long millis) {
+      if (millis < 1000) return millis + " milliseconds";
+      NumberFormat nf = NumberFormat.getNumberInstance();
+      nf.setMaximumFractionDigits(2);
+      double toPrint = ((double) millis) / 1000;
+      if (toPrint < 300) {
+         return nf.format(toPrint) + " seconds";
+      }
+
+      toPrint = toPrint / 60;
+
+      if (toPrint < 120) {
+         return nf.format(toPrint) + " minutes";
+      }
+
+      toPrint = toPrint / 60;
+
+      return nf.format(toPrint) + " hours";
    }
 }

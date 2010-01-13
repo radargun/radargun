@@ -16,7 +16,6 @@ import java.net.URLClassLoader;
  */
 public class StartClusterStage extends AbstractDistStage {
 
-   private static Log log = LogFactory.getLog(StartClusterStage.class);
    private String productName;
    private boolean useSmartClassLoading = true;
 

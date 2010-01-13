@@ -21,8 +21,6 @@ import java.util.List;
  */
 public class WarmupStage extends AbstractDistStage {
 
-   private static Log log = LogFactory.getLog(WarmupStage.class);
-
    private int operationCount = 10000;
 
    public DistStageAck executeOnSlave() {

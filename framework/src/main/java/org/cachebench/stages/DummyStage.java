@@ -13,8 +13,6 @@ import java.util.List;
  */
 public class DummyStage extends AbstractDistStage{
 
-   private static Log log = LogFactory.getLog(DummyStage.class);
-
    private String name;
 
    public DummyStage(String name) {

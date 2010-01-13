@@ -7,8 +7,11 @@ import org.cachebench.DistStageAck;
 import org.cachebench.config.MasterConfig;
 import org.cachebench.state.SlaveState;
 import org.cachebench.state.MasterState;
+import org.cachebench.utils.Utils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Support class for distributed stages.
@@ -17,7 +20,7 @@ import java.util.List;
  */
 public abstract class AbstractDistStage implements DistStage {
 
-   private static Log log = LogFactory.getLog(AbstractDistStage.class);
+   protected Log log = LogFactory.getLog(getClass());
 
    protected transient SlaveState slaveState;
 
@@ -83,19 +86,22 @@ public abstract class AbstractDistStage implements DistStage {
          }
       }
       if (log.isTraceEnabled())
-         log.trace("All ack meessagess were successful");
+         log.trace("All ack messages were successful");
       return success;
    }
 
    protected void logDurationInfo(List<DistStageAck> acks) {
       if (!log.isInfoEnabled()) return;
+
+      Map<Integer, String> data = new TreeMap<Integer, String>();  // make sure this is sorted
+      for (DistStageAck dsa: acks) data.put(dsa.getSlaveIndex(), Utils.prettyPrintTime(dsa.getDuration()));
+
       String processingDuration = "Durations [";
-      for (int i = 0; i< acks.size(); i++) {
-         DistStageAck stageAck = acks.get(i);
-         processingDuration += stageAck.getSlaveIndex() + ":" + stageAck.getDuration() / 1000 + "s";
-         if (! (i == acks.size() - 1)) {
-            processingDuration += ", ";
-         }
+      boolean first = true;
+      for (Map.Entry<Integer, String> e: data.entrySet()) {
+         if (first) first = false;
+         else processingDuration += ", ";
+         processingDuration += e.getKey() + ":" + e.getValue();
       }
       log.info(getClass().getSimpleName() + " received ack from all (" + acks.size() + ") slaves. " + processingDuration + "]");
    }

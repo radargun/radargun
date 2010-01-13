@@ -14,8 +14,6 @@ import org.cachebench.utils.Utils;
  */
 public class DestroyWrapperStage extends AbstractDistStage {
 
-   private static Log log = LogFactory.getLog(DestroyWrapperStage.class);
-
    public DestroyWrapperStage() {
    }
 
