@@ -52,11 +52,11 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public void put(String bucket, Object key, Object value) throws Exception {
-      cache.put(bucket + key, value);
+      cache.put(key, value);
    }
 
    public Object get(String bucket, Object key) throws Exception {
-      return cache.get(bucket + key);
+      return cache.get(key);
    }
 
    public void empty() throws Exception {
