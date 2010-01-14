@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
+import static java.lang.Integer.MAX_VALUE;
+
 /**
  * On multiple threads executes put and get opperations against the CacheWrapper, and returns the result as an Map.
  *
@@ -147,7 +149,7 @@ public class PutGetStressor implements CacheWrapperStressor {
    }
 
    private String getKey(int keyIndex) {
-      return keyPrefix + '_' + keyIndex;
+      return Integer.toString(r.nextInt(MAX_VALUE), 36) + "_" + keyPrefix + '_' + keyIndex;
    }
 
 
