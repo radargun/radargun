@@ -67,7 +67,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
       PutGetStressor putGetStressor = new PutGetStressor();
       putGetStressor.setBucketPrefix(SESSION_PREFIX + "_" + getSlaveIndex());
-      putGetStressor.setKeyPrefix(ATTRIBUTE_PREFIX);
+      putGetStressor.setKeyPrefix(SESSION_PREFIX + "_" + getSlaveIndex());
       putGetStressor.setNumberOfAttributes(numberOfAttributes);
       putGetStressor.setNumberOfRequestsPerThread(numberOfRequestsPerThread);
       putGetStressor.setNumOfThreads(numOfThreads);
