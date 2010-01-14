@@ -11,10 +11,11 @@ SLAVE_PREFIX=slave
 SSH_USER=$USER
 WORKING_DIR=`pwd`
 VERBOSE=false
+PROFILE=false
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ benchmark.sh [-p SLAVE_PREFIX] [-u ssh_user] [-w WORKING DIRECTORY] -n num_slaves -m MASTER_IP:PORT '
+  wrappedecho '  $ benchmark.sh [-p SLAVE_PREFIX] [-u ssh_user] [-w WORKING DIRECTORY] [-profile] -n num_slaves -m MASTER_IP:PORT '
   wrappedecho ""
   wrappedecho "   -p       Provides a prefix to all slave names entered in /etc/hosts"
   wrappedecho "            Defaults to '$SLAVE_PREFIX'"
@@ -22,6 +23,8 @@ help_and_exit() {
   wrappedecho "   -u       SSH user to use when SSH'ing across to the slaves.  Defaults to current user."
   wrappedecho ""
   wrappedecho "   -w       Working directory on the slave.  Defaults to '$WORKING_DIR'."
+  wrappedecho ""
+  wrappedecho "   -profile If specified, a JProfiler session is attached to Slave 1."
   wrappedecho ""
   wrappedecho "   -n       Number of slaves.  This is REQUIRED."
   wrappedecho ""
@@ -56,6 +59,9 @@ do
       MASTER=$2
       shift
       ;;
+    "-profile")
+      PROFILE=true
+      ;; 
     *)
       echo "Warn: unknown param ${1}" 
       help_and_exit
@@ -83,9 +89,15 @@ PID_OF_MASTER_PROCESS=$CBF_MASTER_PID
 
 ####### then start the rest of the nodes
 CMD="source ~/.bash_profile ; cd $WORKING_DIR"
+PROFILE_CMD="$CMD ; bin/jprofiler_slave.sh -m $MASTER"
 CMD="$CMD ; bin/slave.sh -m $MASTER"
 
 loop=1
+if [ $PROFILE = "true" ] ; then 
+  ssh -q -o "StrictHostKeyChecking false" $SSH_USER@${SLAVE_PREFIX}1 "$PROFILE_CMD"
+  loop=2
+fi
+
 while [ $loop -le $NUM_SLAVES ]
 do
   ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD "
