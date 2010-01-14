@@ -11,20 +11,23 @@ SLAVE_PREFIX=slave
 SSH_USER=$USER
 WORKING_DIR=`pwd`
 VERBOSE=false
-PROFILE=false
+SLAVE_START_INDEX=1
+REMOTE_COMMAND='ssh -q -o "StrictHostKeyChecking false"'
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ benchmark.sh [-p SLAVE_PREFIX] [-u ssh_user] [-w WORKING DIRECTORY] [-profile] -n num_slaves -m MASTER_IP:PORT '
+  wrappedecho '  $ benchmark.sh [-p SLAVE_PREFIX] [-s SLAVE_START_INDEX] [-u ssh_user] [-w WORKING DIRECTORY] [-r REMOTE_COMMAND] -n num_slaves -m MASTER_IP:PORT '
   wrappedecho ""
   wrappedecho "   -p       Provides a prefix to all slave names entered in /etc/hosts"
   wrappedecho "            Defaults to '$SLAVE_PREFIX'"
+  wrappedecho ""
+  wrappedecho "   -s       Starting index for slaves.  Defaults to $SLAVE_START_INDEX."
   wrappedecho ""
   wrappedecho "   -u       SSH user to use when SSH'ing across to the slaves.  Defaults to current user."
   wrappedecho ""
   wrappedecho "   -w       Working directory on the slave.  Defaults to '$WORKING_DIR'."
   wrappedecho ""
-  wrappedecho "   -profile If specified, a JProfiler session is attached to Slave 1."
+  wrappedecho "   -r       Command for remote command execution.  Defaults to '$REMOTE_COMMAND'."
   wrappedecho ""
   wrappedecho "   -n       Number of slaves.  This is REQUIRED."
   wrappedecho ""
@@ -43,12 +46,20 @@ do
       SLAVE_PREFIX=$2
       shift
       ;;
+    "-s")
+      SLAVE_START_INDEX=$2
+      shift
+      ;;
     "-u")
       SSH_USER=$2
       shift
       ;;
     "-w")
       WORKING_DIR=$2
+      shift
+      ;;
+    "-r")
+      REMOTE_COMMAND=$2
       shift
       ;;
     "-n")
@@ -59,11 +70,8 @@ do
       MASTER=$2
       shift
       ;;
-    "-profile")
-      PROFILE=true
-      ;; 
     *)
-      echo "Warn: unknown param ${1}" 
+      echo "Warn: unknown param ${1}"
       help_and_exit
       ;;
   esac
@@ -89,17 +97,11 @@ PID_OF_MASTER_PROCESS=$CBF_MASTER_PID
 
 ####### then start the rest of the nodes
 CMD="source ~/.bash_profile ; cd $WORKING_DIR"
-PROFILE_CMD="$CMD ; bin/jprofiler_slave.sh -m $MASTER"
 CMD="$CMD ; bin/slave.sh -m $MASTER"
 
-loop=1
-if [ $PROFILE = "true" ] ; then 
-  ssh -q -o "StrictHostKeyChecking false" $SSH_USER@${SLAVE_PREFIX}1 "$PROFILE_CMD"
-  loop=2
-fi
-
-while [ $loop -le $NUM_SLAVES ]
+loop=0
+while [ $loop -lt $NUM_SLAVES ]
 do
-  ssh -q -o "StrictHostKeyChecking false" $SSH_USER@$SLAVE_PREFIX$loop "$CMD "
+  $REMOTE_COMMAND -l $SSH_USER $SLAVE_PREFIX`expr $SLAVE_START_INDEX + $loop` "$CMD"
   let "loop+=1"
 done
