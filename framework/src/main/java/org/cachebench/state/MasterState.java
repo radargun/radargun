@@ -90,7 +90,7 @@ public class MasterState extends StateBase {
       boolean stageOk = currentDistStage.processAckOnMaster(acks);
       if (stageOk) return true;
       if (!stopOnError) {
-         log.warn("Execution error for current benchmark, skiping rest of the stages");
+         log.warn("Execution error for current benchmark, skipping rest of the stages");
          currentBenchmark.errorOnCurentBenchmark();
          return true;
       } else {
@@ -108,7 +108,7 @@ public class MasterState extends StateBase {
             log.trace("Master stage executed successfully " + servStage);
          }
       } catch (Exception e) {
-         log.warn(e);
+         log.warn("Caught exception", e);
       }
    }
 
