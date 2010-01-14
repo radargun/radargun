@@ -6,8 +6,8 @@
       <DestroyWrapper runOnAllSlaves="true"/>
       <StartCluster/>
       <ClusterValidation partialReplication="false"/>
-      <Warmup operationCount="100"/>
-      <WebSessionBenchmark numberOfRequestsPerThread="100" opsCountStatusLog="10" numOfThreads="2"/>
+      <Warmup operationCount="100000"/>
+      <WebSessionBenchmark numberOfRequestsPerThread="50000" opsCountStatusLog="10000" numOfThreads="5"/>
       <CsvReportGeneration/>
    </benchmark>
 
@@ -15,10 +15,10 @@
       <infinispan4>
          <config name="repl-async.xml"/>
          <config name="repl-sync.xml"/>
-         <!--<config name="dist-sync.xml"/>-->
-         <!--<config name="dist-async.xml"/>-->
-         <!--<config name="dist-sync-l1.xml"/>-->
-         <!--<config name="dist-async-l1.xml"/>-->
+         <config name="dist-sync.xml"/>
+         <config name="dist-async.xml"/>
+         <config name="dist-sync-l1.xml"/>
+         <config name="dist-async-l1.xml"/>
       </infinispan4>
       <jbosscache3>
          <config name="mvcc/mvcc-repl-sync.xml"/>
