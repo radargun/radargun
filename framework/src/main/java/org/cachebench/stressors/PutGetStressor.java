@@ -139,7 +139,8 @@ public class PutGetStressor implements CacheWrapperStressor {
       for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
          for (int keyIndex = 0; keyIndex < numberOfKeys; keyIndex++) {
             try {
-               cacheWrapper.put(getBucketId(threadIndex), getKey(keyIndex), generateRandomString(sizeOfValue));
+               String bucketId = getBucketId(threadIndex);
+               cacheWrapper.put(bucketId, getKey(keyIndex, bucketId), generateRandomString(sizeOfValue));
             }
             catch (Throwable e) {
                log.warn("Error while initializing the session: ", e);
@@ -148,8 +149,8 @@ public class PutGetStressor implements CacheWrapperStressor {
       }
    }
 
-   private String getKey(int keyIndex) {
-      return Integer.toString(r.nextInt(MAX_VALUE), 36) + "_" + keyPrefix + '_' + keyIndex;
+   private String getKey(int keyIndex, String bucketId) {
+      return bucketId + "_" + Integer.toString(r.nextInt(MAX_VALUE), 36) + "_" + keyPrefix + '_' + keyIndex;
    }
 
 
@@ -187,7 +188,7 @@ public class PutGetStressor implements CacheWrapperStressor {
             logProgress(i);
             randomAction = r.nextInt(100);
             randomKeyInt = r.nextInt(numberOfKeys - 1);
-            String key = getKey(randomKeyInt);
+            String key = getKey(randomKeyInt, bucketId);
 
             if (randomAction < readPercentage) {
                long start = System.currentTimeMillis();
