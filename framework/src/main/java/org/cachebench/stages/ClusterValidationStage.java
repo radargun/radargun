@@ -65,20 +65,24 @@ public class ClusterValidationStage extends AbstractDistStage {
    }
 
    private int confirmReplication() throws Exception {
-      wrapper.put(nodeBucket(getSlaveIndex()), CONFIRMATION_KEY, "true");
+      wrapper.put(nodeBucket(getSlaveIndex()), confirmationKey(getSlaveIndex()), "true");
       for (int i = 0; i < getActiveSlaveCount(); i++) {
-         for (int j = 0; j < 10 && (wrapper.get(nodeBucket(i), CONFIRMATION_KEY) == null); j++) {
+         for (int j = 0; j < 10 && (wrapper.get(nodeBucket(i), confirmationKey(i)) == null); j++) {
             tryToPut();
-            wrapper.put(nodeBucket(getSlaveIndex()), CONFIRMATION_KEY, "true");
+            wrapper.put(nodeBucket(getSlaveIndex()), confirmationKey(getSlaveIndex()), "true");
             Thread.sleep(1000);
          }
-         if (wrapper.get(nodeBucket(i), CONFIRMATION_KEY) == null) {
+         if (wrapper.get(nodeBucket(i), confirmationKey(i)) == null) {
             log.warn("Confirm phase unsuccessful. Slave " + i + " hasn't acknowledged the test");
             return i;
          }
       }
       log.info("Confirm phase successful.");
       return -1;
+   }
+
+   private Object confirmationKey(int slaveIndex) {
+      return CONFIRMATION_KEY + slaveIndex;
    }
 
    private String nodeBucket(int nodeIndex) {
@@ -121,7 +125,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCount = 0;
       while (tryCount < 5) {
          try {
-            wrapper.put(nodeBucket(getSlaveIndex()), KEY, "true");
+            wrapper.put(nodeBucket(getSlaveIndex()), key(getSlaveIndex()), "true");
             return;
          }
          catch (Throwable e) {
@@ -177,7 +181,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCont = 0;
       while (tryCont < 5) {
          try {
-            return wrapper.getReplicatedData(nodeBucket(i), KEY);
+            return wrapper.getReplicatedData(nodeBucket(i), key(i));
          }
          catch (Throwable e) {
             tryCont++;
@@ -197,6 +201,11 @@ public class ClusterValidationStage extends AbstractDistStage {
    public void setReplicationTimeSleep(int replicationTimeSleep) {
       this.replicationTimeSleep = replicationTimeSleep;
    }
+
+   private String key(int slaveIndex) {
+      return KEY + slaveIndex;
+   }
+   
 
    @Override
    public String toString() {
