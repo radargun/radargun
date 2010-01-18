@@ -52,11 +52,11 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public void put(String bucket, Object key, Object value) throws Exception {
-      cache.put(key, value);
+      cache.put(bucket + key, value);
    }
 
    public Object get(String bucket, Object key) throws Exception {
-      return cache.get(key);
+      return cache.get(bucket + key);
    }
 
    public void empty() throws Exception {
@@ -65,7 +65,7 @@ public class InfinispanWrapper implements CacheWrapper {
       log.info("Cache size after clear: " + cache.size());
    }
 
-   public int getNumMembers()  {
+   public int getNumMembers() {
       ComponentRegistry componentRegistry = cache.getAdvancedCache().getComponentRegistry();
       if (componentRegistry.getStatus().startingUp()) {
          log.trace("We're in the process of starting up.");
