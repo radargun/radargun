@@ -102,6 +102,8 @@ CMD="$CMD ; bin/slave.sh -m $MASTER"
 loop=0
 while [ $loop -lt $NUM_SLAVES ]
 do
-  $REMOTE_COMMAND -l $SSH_USER $SLAVE_PREFIX`expr $SLAVE_START_INDEX + $loop` "$CMD"
+  TOEXEC="$REMOTE_COMMAND  $SSH_USER@$SLAVE_PREFIX`expr $SLAVE_START_INDEX + $loop` \"$CMD\""
+  eval $TOEXEC
+  echo "$TOEXEC"
   let "loop+=1"
 done
