@@ -81,12 +81,12 @@ public class ClusterValidationStage extends AbstractDistStage {
       return -1;
    }
 
-   private Object confirmationKey(int slaveIndex) {
+   private String confirmationKey(int slaveIndex) {
       return CONFIRMATION_KEY + slaveIndex;
    }
 
-   private String nodeBucket(int nodeIndex) {
-      return BUCKET + nodeIndex;
+   private String nodeBucket(int slaveIndex) {
+      return BUCKET + slaveIndex;
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks) {
