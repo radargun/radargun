@@ -20,6 +20,25 @@
       <module>plugins/ehcache16</module>
    </modules>
 
+   <properties>
+      <package.coherence>false</package.coherence>
+   </properties>
+   
+   <profiles>
+      <profile>
+         <id>coherence</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+         </activation>
+         <modules>
+            <module>plugins/coherence3</module>
+         </modules>
+         <properties>
+            <package.coherence>true</package.coherence>
+         </properties>
+      </profile>
+   </profiles>
+
    <build>
       <plugins>
          <plugin>
@@ -73,6 +92,14 @@
 
                         <copy todir="${out}/plugins/ehcache16">
                            <fileset dir="plugins/ehcache16/target/distribution/plugin-ehcache16-bin/plugin-ehcache16">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <!-- TODO this next step needs to be optional, only if ${package.coherence} is true -->
+
+                        <copy todir="${out}/plugins/coherence3">
+                           <fileset dir="plugins/coherence3/target/distribution/plugin-coherence3-bin/plugin-coherence3">
                               <include name="**/*" />
                            </fileset>
                         </copy>
