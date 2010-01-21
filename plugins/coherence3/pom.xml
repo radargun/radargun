@@ -13,4 +13,24 @@
 
    <artifactId>plugin-coherence3</artifactId>
    <name>Coherence 3.x plugin for benchmark framework</name>
+
+   <dependencies>
+      <dependency>
+         <groupId>com.oracle.coherence</groupId>
+         <artifactId>coherence</artifactId>
+         <version>3.5</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.oracle.coherence</groupId>
+         <artifactId>coherence-common</artifactId>
+         <version>3.5</version>
+      </dependency>
+
+      <dependency>
+         <groupId>com.oracle.coherence</groupId>
+         <artifactId>tangosol</artifactId>
+         <version>3.5</version>
+      </dependency>
+   </dependencies>
 </project>
