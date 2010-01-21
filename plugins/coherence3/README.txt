@@ -1,0 +1,2 @@
+Due to licensing restrictions, Coherence JARs cannot be distributed with this benchmark framework.  To enable benchmarking
+For installing coherence follow the instructions here: https://sourceforge.net/apps/trac/cachebenchfwk/wiki/CoherencePluginSetup
