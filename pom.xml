@@ -21,9 +21,10 @@
    </modules>
 
    <properties>
-      <package.coherence>false</package.coherence>
+      <distribution.artifact>target/distribution/CacheBenchFwk-1.0.0-SNAPSHOT</distribution.artifact>
+      <distribution.zipfile>target/distribution/CacheBenchFwk-1.0.0-SNAPSHOT.zip</distribution.zipfile>
    </properties>
-   
+
    <profiles>
       <profile>
          <id>coherence</id>
@@ -33,9 +34,35 @@
          <modules>
             <module>plugins/coherence3</module>
          </modules>
-         <properties>
-            <package.coherence>true</package.coherence>
-         </properties>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-antrun-plugin</artifactId>
+                  <version>1.3</version>
+                  <executions>
+                     <execution>
+                        <id>prepare_coherence_plugin</id>
+                        <phase>verify</phase>
+                        <goals>
+                           <goal>run</goal>
+                        </goals>
+                        <configuration>
+                           <tasks>
+                              <echo message="Packaging the coherence3 plugin"/>
+                              <copy todir="${distribution.artifact}/plugins/coherence3">
+                                 <fileset
+                                       dir="plugins/coherence3/target/distribution/plugin-coherence3-bin/plugin-coherence3">
+                                    <include name="**/*"/>
+                                 </fileset>
+                              </copy>
+                           </tasks>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+            </plugins>
+         </build>
       </profile>
    </profiles>
 
@@ -47,6 +74,67 @@
             <version>1.3</version>
             <executions>
                <execution>
+                  <id>prepare_distribution</id>
+                  <phase>post-integration-test</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <tasks>
+                        <delete dir="target/distribution"/>
+                        <mkdir dir="target/distribution"/>
+                        <mkdir dir="${distribution.artifact}"/>
+                     </tasks>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <id>prepare_plugins</id>
+                  <phase>verify</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <tasks>
+                        <echo message="Packaging the framework, and the following plugins: infinispan4, jbosscache2, jbosscache3, ehcache15 and ehcache16"/>
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan4">
+                           <fileset
+                                 dir="plugins/infinispan4/target/distribution/plugin-infinispan4-bin/plugin-infinispan4">
+                              <include name="**/*"/>
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/jbosscache3">
+                           <fileset
+                                 dir="plugins/jbosscache3/target/distribution/plugin-jbosscache3-bin/plugin-jbosscache3">
+                              <include name="**/*"/>
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/jbosscache2">
+                           <fileset
+                                 dir="plugins/jbosscache2/target/distribution/plugin-jbosscache2-bin/plugin-jbosscache2">
+                              <include name="**/*"/>
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/ehcache15">
+                           <fileset dir="plugins/ehcache15/target/distribution/plugin-ehcache15-bin/plugin-ehcache15">
+                              <include name="**/*"/>
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/ehcache16">
+                           <fileset dir="plugins/ehcache16/target/distribution/plugin-ehcache16-bin/plugin-ehcache16">
+                              <include name="**/*"/>
+                           </fileset>
+                        </copy>
+                     </tasks>
+                  </configuration>
+               </execution>
+
+               <execution>
                   <id>build_distro</id>
                   <phase>install</phase>
                   <goals>
@@ -54,72 +142,29 @@
                   </goals>
                   <configuration>
                      <tasks>
-                        <property name="out" value="target/distribution/CacheBenchFwk-1.0.0-SNAPSHOT" />
-                        <property name="zipfile" value="target/distribution/CacheBenchFwk-1.0.0-SNAPSHOT.zip" />
-                        <delete dir="target/distribution" />
-                        <mkdir dir="target/distribution" />
-                        <mkdir dir="${out}" />
-
-                        <copy todir="${out}">
-                           <fileset dir="framework/target/distribution/cache-benchmark-framework-bin/cache-benchmark-framework">
-                              <include name="**/*" />
+                        <echo message="Packaging the framework, common scripts and building archive"/>
+                        <copy todir="${distribution.artifact}">
+                           <fileset
+                                 dir="framework/target/distribution/cache-benchmark-framework-bin/cache-benchmark-framework">
+                              <include name="**/*"/>
                            </fileset>
                         </copy>
-
-                        <copy todir="${out}/plugins/infinispan4">
-                           <fileset dir="plugins/infinispan4/target/distribution/plugin-infinispan4-bin/plugin-infinispan4">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${out}/plugins/jbosscache3">
-                           <fileset dir="plugins/jbosscache3/target/distribution/plugin-jbosscache3-bin/plugin-jbosscache3">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${out}/plugins/jbosscache2">
-                           <fileset dir="plugins/jbosscache2/target/distribution/plugin-jbosscache2-bin/plugin-jbosscache2">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${out}/plugins/ehcache15">
-                           <fileset dir="plugins/ehcache15/target/distribution/plugin-ehcache15-bin/plugin-ehcache15">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${out}/plugins/ehcache16">
-                           <fileset dir="plugins/ehcache16/target/distribution/plugin-ehcache16-bin/plugin-ehcache16">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <!-- TODO this next step needs to be optional, only if ${package.coherence} is true -->
-
-                        <copy todir="${out}/plugins/coherence3">
-                           <fileset dir="plugins/coherence3/target/distribution/plugin-coherence3-bin/plugin-coherence3">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-			
-                        <copy todir="${out}/bin">
+                        <copy todir="${distribution.artifact}/bin">
                            <fileset dir="bin">
-                              <include name="**/*" />
+                              <include name="**/*"/>
                            </fileset>
                         </copy>
                         <chmod perm="ugo+rwx" type="file">
-                           <fileset dir="${out}/bin">
+                           <fileset dir="${distribution.artifact}/bin">
                               <include name="**/*.sh"/>
                               <include name="**/*.py"/>
                            </fileset>
                         </chmod>
-                        <zip destfile="${zipfile}" basedir="${out}" />
+                        <zip destfile="${distribution.zipfile}" basedir="${distribution.artifact}"/>
                      </tasks>
                   </configuration>
                </execution>
-            </executions>            
+            </executions>
          </plugin>
       </plugins>
    </build>
