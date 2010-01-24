@@ -29,7 +29,7 @@ public class JBossCache3Wrapper implements CacheWrapper
       FLAT = Boolean.getBoolean("cacheBenchFwk.useFlatCache");
    }
 
-   public void init(String config) throws Exception
+   public void setUp(String config) throws Exception
    {
       log.info("Creating cache with the following configuration: " + config);
       cache = new DefaultCacheFactory().createCache(config);
@@ -42,10 +42,6 @@ public class JBossCache3Wrapper implements CacheWrapper
          log.info("Using FLAT MAP wrapper");
          flatCache = Caches.asMap(cache);
       }
-   }
-
-   public void setUp() throws Exception
-   {
    }
 
    public void tearDown() throws Exception

@@ -16,25 +16,24 @@ import java.net.URL;
 /**
  * An implementation of SerializableCacheWrapper that uses EHCache as an underlying implementation.
  * <p/>
- * Pass in a -Dbind.address=IP_ADDRESS
- * ehcache propery files allows referencing system properties through syntax ${bind.address}.
+ * Pass in a -Dbind.address=IP_ADDRESS ehcache propery files allows referencing system properties through syntax
+ * ${bind.address}.
  *
  * @author Manik Surtani (manik@surtani.org)
  * @version $Id: EHCacheWrapper.java,v 1.6 2007/05/21 16:17:56 msurtani Exp $
  */
-public class EHCacheWrapper implements CacheWrapper
-{
+public class EHCacheWrapper implements CacheWrapper {
    private CacheManager manager;
    private Ehcache cache;
    private Log log = LogFactory.getLog("org.cachebench.cachewrappers.EHCacheWrapper");
    boolean localmode;
 
    /* (non-Javadoc)
-   * @see org.cachebench.CacheWrapper#init(java.util.Properties)
+   * @see org.cachebench.CacheWrapper#setUp(java.util.Properties)
    */
-   public void init(String config) throws Exception
-   {
-      if (log.isTraceEnabled()) log.trace("Entering EHCacheWrapper.init()");
+
+   public void setUp(String config) throws Exception {
+      if (log.isTraceEnabled()) log.trace("Entering EHCacheWrapper.setUp()");
 //      localmode = (Boolean.parseBoolean((String) config.get("localOnly")));
       log.debug("Initializing the cache with props " + config);
       URL url = getClass().getClassLoader().getResource(config);
@@ -43,39 +42,34 @@ public class EHCacheWrapper implements CacheWrapper
       c.setSource("URL of " + url);
 
       manager = new CacheManager(c);
-      setUp();
+      log.info("Caches avbl:");
+      for (String s : manager.getCacheNames()) log.info("    * " + s);
+      cache = manager.getCache("cache");
+      log.info("Using named cache " + cache);
+      if (!localmode) {
+         log.info("Bounded peers: " + manager.getCachePeerListener("RMI").getBoundCachePeers());
+         log.info("Remote peers: " + manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(cache));
+      }
       log.debug("Finish Initializing the cache");
    }
 
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#setUp()
    */
-   public void setUp() throws Exception
-   {
-      log.info("Caches avbl:");
-      for (String s : manager.getCacheNames()) log.info("    * " + s);
-      cache = manager.getCache("cache");
-      log.info("Using named cache " + cache);
-      if (!localmode)
-      {
-         log.info("Bounded peers: " + manager.getCachePeerListener("RMI").getBoundCachePeers());
-         log.info("Remote peers: " + manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(cache));
-      }
-   }
 
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#tearDown()
    */
-   public void tearDown() throws Exception
-   {
+
+   public void tearDown() throws Exception {
       manager.shutdown();
    }
 
    /* (non-Javadoc)
    * @see org.cachebench.SerializableCacheWrapper#putSerializable(java.io.Serializable, java.io.Serializable)
    */
-   public void putSerializable(Serializable key, Serializable value) throws Exception
-   {
+
+   public void putSerializable(Serializable key, Serializable value) throws Exception {
       Element element = new Element(key, value);
       cache.put(element);
    }
@@ -83,65 +77,56 @@ public class EHCacheWrapper implements CacheWrapper
    /* (non-Javadoc)
    * @see org.cachebench.SerializableCacheWrapper#getSerializable(java.io.Serializable)
    */
-   public Object getSerializable(Serializable key) throws Exception
-   {
+
+   public Object getSerializable(Serializable key) throws Exception {
       return cache.get(key);
    }
 
-   public void empty() throws Exception
-   {
+   public void empty() throws Exception {
       cache.removeAll();
    }
 
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#put(java.lang.Object, java.lang.Object)
    */
-   public void put(String path, Object key, Object value) throws Exception
-   {
+
+   public void put(String path, Object key, Object value) throws Exception {
       putSerializable((Serializable) key, (Serializable) value);
    }
 
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#get(java.lang.Object)
    */
-   public Object get(String bucket, Object key) throws Exception
-   {
+
+   public Object get(String bucket, Object key) throws Exception {
       Object s = getSerializable((Serializable) key);
-      if (s instanceof Element)
-      {
+      if (s instanceof Element) {
          return ((Element) s).getValue();
-      }
-      else return s;
+      } else return s;
    }
 
-   public int getNumMembers()
-   {
+   public int getNumMembers() {
 
       return localmode ? 0 : manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(cache).size();
    }
 
-   public String getInfo()
-   {
+   public String getInfo() {
       return cache.getKeys().toString() + (localmode ? "" : (" remote peers: " + manager.getCachePeerListener("RMI").getBoundCachePeers()));
    }
 
-   public Object getReplicatedData(String path, String key) throws Exception
-   {
+   public Object getReplicatedData(String path, String key) throws Exception {
       Object o = get(path, key);
-      if (log.isTraceEnabled())
-      {
+      if (log.isTraceEnabled()) {
          log.trace("Result for the key: '" + key + "' is value '" + o + "'");
       }
       return o;
    }
 
-   public Object startTransaction()
-   {
+   public Object startTransaction() {
       throw new UnsupportedOperationException("Does not support JTA!");
    }
 
-   public void endTransaction(boolean successful)
-   {
+   public void endTransaction(boolean successful) {
       throw new UnsupportedOperationException("Does not support JTA!");
    }
 }

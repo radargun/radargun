@@ -30,11 +30,11 @@ public class EHCacheWrapper implements CacheWrapper
    boolean localmode;
 
    /* (non-Javadoc)
-   * @see org.cachebench.CacheWrapper#init(java.util.Properties)
+   * @see org.cachebench.CacheWrapper#setUp(java.util.Properties)
    */
-   public void init(String config) throws Exception
+   public void setUp(String config) throws Exception
    {
-      if (log.isTraceEnabled()) log.trace("Entering EHCacheWrapper.init()");
+      if (log.isTraceEnabled()) log.trace("Entering EHCacheWrapper.setUp()");
 //      localmode = (Boolean.parseBoolean((String) config.get("localOnly")));
       log.debug("Initializing the cache with props " + config);
       URL url = getClass().getClassLoader().getResource(config);
@@ -43,25 +43,22 @@ public class EHCacheWrapper implements CacheWrapper
       c.setSource("URL of " + url);
 
       manager = new CacheManager(c);
-      setUp();
+       log.info("Caches avbl:");
+       for (String s : manager.getCacheNames()) log.info("    * " + s);
+       cache = manager.getCache("cache");
+       log.info("Using named cache " + cache);
+       if (!localmode)
+       {
+          log.info("Bounded peers: " + manager.getCachePeerListener().getBoundCachePeers());
+          log.info("Remote peers: " + manager.getCacheManagerPeerProvider().listRemoteCachePeers(cache));
+       }
+      
       log.debug("Finish Initializing the cache");
    }
 
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#setUp()
    */
-   public void setUp() throws Exception
-   {
-      log.info("Caches avbl:");
-      for (String s : manager.getCacheNames()) log.info("    * " + s);
-      cache = manager.getCache("cache");
-      log.info("Using named cache " + cache);
-      if (!localmode)
-      {
-         log.info("Bounded peers: " + manager.getCachePeerListener().getBoundCachePeers());
-         log.info("Remote peers: " + manager.getCacheManagerPeerProvider().listRemoteCachePeers(cache));
-      }
-   }
 
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#tearDown()

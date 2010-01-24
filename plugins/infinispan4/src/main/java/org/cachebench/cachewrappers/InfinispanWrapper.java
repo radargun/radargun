@@ -22,24 +22,21 @@ public class InfinispanWrapper implements CacheWrapper {
    boolean started = false;
    String config;
 
-   public void init(String config) throws Exception {
-      this.config = config;                                                                                                         
-      setUp();
+   public void setUp(String config) throws Exception {
+      this.config = config;
+       if (!started) {
+          cacheManager = new DefaultCacheManager(config);
+          // use the default cache
+          cache = cacheManager.getCache();
+          started = true;
+       }
+       log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
+       log.info("JGroups version: " + org.jgroups.Version.printDescription());
+      
       // should we be blocking until all rehashing, etc. has finished?
       if (cache.getConfiguration().getCacheMode().isDistributed()) {
          while (!cache.getAdvancedCache().getDistributionManager().isJoinComplete()) Thread.sleep(200);
       }
-   }
-
-   public void setUp() throws Exception {
-      if (!started) {
-         cacheManager = new DefaultCacheManager(config);
-         // use the default cache
-         cache = cacheManager.getCache();
-         started = true;
-      }
-      log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
-      log.info("JGroups version: " + org.jgroups.Version.printDescription());
    }
 
    public void tearDown() throws Exception {
@@ -106,11 +103,5 @@ public class InfinispanWrapper implements CacheWrapper {
       catch (Exception e) {
          throw new RuntimeException(e);
       }
-   }
-
-   public static void main(String[] args) throws Exception {
-      InfinispanWrapper wrapper = new InfinispanWrapper();
-      wrapper.init("dist-async.xml");
-      wrapper.setUp();
    }
 }

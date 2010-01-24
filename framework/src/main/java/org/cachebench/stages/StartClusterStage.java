@@ -1,7 +1,5 @@
 package org.cachebench.stages;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
 import org.cachebench.utils.Utils;
@@ -35,8 +33,7 @@ public class StartClusterStage extends AbstractDistStage {
       try {
          String plugin = Utils.getCacheWrapperFqnClass(productName);
          wrapper = (CacheWrapper) createInstance(plugin);
-         wrapper.init(config);
-         wrapper.setUp();
+         wrapper.setUp(config);
          slaveState.setCacheWrapper(wrapper);
          for (int i = 0; i < TRY_COUNT; i++) {
             int numMembers = wrapper.getNumMembers();

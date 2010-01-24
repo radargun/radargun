@@ -24,7 +24,7 @@ public interface DistStage extends Stage, Serializable {
    public void setSlaveIndex(int slaveIndex);
 
    /**
-    * Aftert unmarshalling on the slave, this method will be called to init the stage with slave's state.
+    * Aftert unmarshalling on the slave, this method will be called to setUp the stage with slave's state.
     */
    public void initOnSlave(SlaveState slaveState);
 

@@ -25,7 +25,7 @@ public class JBossCache2Wrapper implements CacheWrapper
    private Log log = LogFactory.getLog(JBossCache2Wrapper.class);
    private boolean inLocalMode;
 
-   public void init(String config) throws Exception
+   public void setUp(String config) throws Exception
    {
       log.info("Creating cache with the following configuration: " + config);
       cache = new DefaultCacheFactory().createCache(config);
@@ -33,10 +33,6 @@ public class JBossCache2Wrapper implements CacheWrapper
       log.info("Running follwing JBossCacheVersion: " + org.jboss.cache.Version.version);
       log.info("Running follwing JBossCacheCodeName: " + org.jboss.cache.Version.codename);
 //      inLocalMode = config.containsKey("localOnly");       TODO fix this
-   }
-
-   public void setUp() throws Exception
-   {
    }
 
    public void tearDown() throws Exception

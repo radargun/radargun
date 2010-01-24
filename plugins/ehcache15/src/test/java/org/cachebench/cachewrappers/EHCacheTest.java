@@ -25,7 +25,7 @@ public class EHCacheTest
 
       CacheWrapper w = new EHCacheWrapper();
       Properties p = new Properties();
-      w.init("ehcache-repl-sync.xml");
+      w.setUp("ehcache-repl-sync.xml");
 
       Ehcache cache;
       URL url = new URL("file:///Users/manik/Code/CacheBenchFwk/cache-products/ehcache-1.2.4/conf/ehcache-repl-sync.xml");

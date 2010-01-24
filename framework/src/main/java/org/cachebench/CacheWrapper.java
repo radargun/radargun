@@ -19,13 +19,7 @@ public interface CacheWrapper
     *
     * @param config
     */
-   void init(String config) throws Exception;
-
-   /**
-    * setUp() is called immediately after init(), and usually involves instantiating
-    * a cache.
-    */
-   void setUp() throws Exception;
+   void setUp(String config) throws Exception;
 
    /**
     * This is called at the very end of all tests on this cache, and is used for clean-up
