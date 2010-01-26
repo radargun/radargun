@@ -14,17 +14,7 @@ import java.util.List;
 public interface DistStage extends Stage, Serializable {
 
    /**
-    * Called on master. master state should not be passed to the slaves.
-    */
-   public void initOnMaster(MasterState masterState, int totalSlavesCount);
-
-   /**
-    * Before sending the state to the slave, this will be called to set salve's index.
-    */
-   public void setSlaveIndex(int slaveIndex);
-
-   /**
-    * Aftert unmarshalling on the slave, this method will be called to setUp the stage with slave's state.
+    * After un-marshalling on the slave, this method will be called to setUp the stage with slave's state.
     */
    public void initOnSlave(SlaveState slaveState);
 
@@ -41,10 +31,15 @@ public interface DistStage extends Stage, Serializable {
    DistStageAck executeOnSlave();
 
    /**
+    * Called on master. Master state should not be passed to the slaves.
+    */
+   public void initOnMaster(MasterState masterState, int slaveIndex);
+
+   /**
     * After all slaves replied through {@link #executeOnSlave()}, this method will be called on the master.
     * @return returning false will cause the benchmark to stop.
     */
-   boolean processAckOnMaster(List<DistStageAck> acks);
+   boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState);
 
    public DistStage clone();
 

@@ -1,8 +1,7 @@
 package org.cachebench.stages;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.cachebench.DistStageAck;
+import org.cachebench.state.MasterState;
 
 import java.util.List;
 
@@ -24,7 +23,7 @@ public class DummyStage extends AbstractDistStage{
       return newDefaultStageAck();
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
+   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
       log.trace("Stage " + name + "was acknowledged: " + acks);
       return true;
    }

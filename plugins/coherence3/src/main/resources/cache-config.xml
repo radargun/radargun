@@ -1,102 +1,119 @@
 <?xml version="1.0"?>
 
+<!--
+This configuration was inspired from: http://coherence.oracle.com/display/COH35UG/Sample+Cache+Configurations#SampleCacheConfigurations-Replicatedcache
+and from
+coherence-3.5.jar!/coherence-cache-config.xml
+-->
+
 <!DOCTYPE cache-config SYSTEM "cache-config.dtd">
 
 <cache-config>
-   <caching-scheme-mapping>
-      <cache-mapping>
-         <cache-name>repl-*</cache-name>
-         <scheme-name>default-replicated</scheme-name>
-      </cache-mapping>
+  <caching-scheme-mapping>
 
-      <cache-mapping>
-        <cache-name>dist-*</cache-name>
-        <scheme-name>default-distributed</scheme-name>
-      </cache-mapping>
+     <cache-mapping>
+      <cache-name>cbf-dist</cache-name>
+      <scheme-name>example-distributed</scheme-name>
+    </cache-mapping>
 
-	 <cache-mapping>
-	      <cache-name>near-*</cache-name>
-	      <scheme-name>default-near</scheme-name>
-	    </cache-mapping>
+    <cache-mapping>
+      <cache-name>cbf-near</cache-name>
+      <scheme-name>example-near</scheme-name>
+    </cache-mapping>
 
-	 <cache-mapping>
-	      <cache-name>opt-*</cache-name>
-	      <scheme-name>default-optimistic</scheme-name>
-	    </cache-mapping>
+    <cache-mapping>
+      <cache-name>cbf-repl</cache-name>
+      <scheme-name>example-replicated</scheme-name>
+    </cache-mapping>
 
-	    <cache-mapping>
-	      <cache-name>local-*</cache-name>
-	      <scheme-name>default-backing-map</scheme-name>
-	    </cache-mapping>
-   </caching-scheme-mapping>
+  </caching-scheme-mapping>
 
-   <caching-schemes>
-      <!--
-      Default Replicated caching scheme.
-      -->
-      <replicated-scheme>
-         <scheme-name>default-replicated</scheme-name>
-         <service-name>ReplicatedCache</service-name>
-         <backing-map-scheme>
-            <class-scheme>
-               <scheme-ref>default-backing-map</scheme-ref>
-            </class-scheme>
-         </backing-map-scheme>
-      </replicated-scheme>
+  <caching-schemes>
 
-      <distributed-scheme>
-         <scheme-name>default-distributed</scheme-name>
-         <service-name>DistributedCache</service-name>
+    <distributed-scheme>
+      <scheme-name>example-distributed</scheme-name>
+      <service-name>DistributedCache</service-name>
+      <backing-map-scheme>
+        <local-scheme>
+          <scheme-ref>SampleMemoryScheme</scheme-ref>
+        </local-scheme>
+      </backing-map-scheme>
 
-         <backing-map-scheme>
-            <class-scheme>
-               <scheme-ref>default-backing-map</scheme-ref>
-            </class-scheme>
-         </backing-map-scheme>
-      </distributed-scheme>
+      <autostart>true</autostart>
+    </distributed-scheme>
 
-	<near-scheme>
-	      <scheme-name>default-near</scheme-name>
+    <!--
+    Near caching (two-tier) scheme with size limited local cache
+    in the front-tier and a distributed cache in the back-tier.
+    -->
+    <near-scheme>
+      <scheme-name>example-near</scheme-name>
 
-	      <front-scheme>
-	        <local-scheme>
-	          <eviction-policy>HYBRID</eviction-policy>
-	          <high-units>100</high-units>
-	          <expiry-delay>1m</expiry-delay>
-	        </local-scheme>
-	      </front-scheme>
+      <front-scheme>
+        <local-scheme>
+          <eviction-policy>HYBRID</eviction-policy>
+          <high-units>100</high-units>
+          <expiry-delay>1m</expiry-delay>
+        </local-scheme>
+      </front-scheme>
 
-	      <back-scheme>
-	        <distributed-scheme>
-	          <scheme-ref>default-distributed</scheme-ref>
-	        </distributed-scheme>
-	      </back-scheme>
+      <back-scheme>
+        <distributed-scheme>
+          <scheme-ref>example-distributed</scheme-ref>
+        </distributed-scheme>
+      </back-scheme>
 
-	      <invalidation-strategy>present</invalidation-strategy>
-	      <autostart>true</autostart>
-	    </near-scheme>
-	
-	 <optimistic-scheme>
-	      <scheme-name>default-optimistic</scheme-name>
-	      <service-name>OptimisticCache</service-name>
+      <invalidation-strategy>present</invalidation-strategy>
+      <autostart>true</autostart>
+    </near-scheme>
 
-	      <backing-map-scheme>
-	        <local-scheme>
-	          <scheme-ref>default-backing-map</scheme-ref>
-	        </local-scheme>
-	      </backing-map-scheme>
+    <replicated-scheme>
+      <scheme-name>example-replicated</scheme-name>
+      <service-name>ReplicatedCache</service-name>
 
-	      <autostart>true</autostart>
-	    </optimistic-scheme>
+      <backing-map-scheme>
+        <local-scheme>
+          <scheme-ref>SampleMemoryScheme</scheme-ref>
+        </local-scheme>
+      </backing-map-scheme>
 
-      <!--
-      Default backing map scheme definition used by all
-      The caches that do not require any eviction policies
-      -->
-      <class-scheme>
-         <scheme-name>default-backing-map</scheme-name>
-         <class-name>com.tangosol.util.SafeHashMap</class-name>
-      </class-scheme>
+      <autostart>true</autostart>
+    </replicated-scheme>
 
-   </caching-schemes>
+     <local-scheme>
+        <scheme-name>SampleMemoryScheme</scheme-name>
+     </local-scheme>
+
+
+    <!--
+    Invocation Service scheme.
+    -->
+    <invocation-scheme>
+      <scheme-name>example-invocation</scheme-name>
+      <service-name>InvocationService</service-name>
+
+      <autostart system-property="tangosol.coherence.invocation.autostart">true</autostart>
+    </invocation-scheme>
+
+    <!--
+    Proxy Service scheme that allows remote clients to connect to the
+    cluster over TCP/IP.
+    -->
+    <proxy-scheme>
+      <scheme-name>example-proxy</scheme-name>
+      <service-name>TcpProxyService</service-name>
+
+      <acceptor-config>
+        <tcp-acceptor>
+          <local-address>
+            <address system-property="tangosol.coherence.extend.address">localhost</address>
+            <port system-property="tangosol.coherence.extend.port">9099</port>
+          </local-address>
+        </tcp-acceptor>
+      </acceptor-config>
+
+      <autostart system-property="tangosol.coherence.extend.enabled">false</autostart>
+    </proxy-scheme>
+
+  </caching-schemes>
 </cache-config>

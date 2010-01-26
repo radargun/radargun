@@ -19,76 +19,77 @@ import java.util.Map;
  */
 public class Coherence3Wrapper implements CacheWrapper {
 
-    private TransactionMap cache;
-    private NamedCache nc;
-    private Log log = LogFactory.getLog(Coherence3Wrapper.class);
+   private NamedCache nc;
+   private Log log = LogFactory.getLog(Coherence3Wrapper.class);
 
-    @Override
-    public void setUp(String configuration) throws Exception {
-        if (configuration.indexOf("repl") == 0) {
-            nc = CacheFactory.getCache("repl-CacheBenchmarkFramework");
-        } else if (configuration.indexOf("dist") == 0) {
-            nc = CacheFactory.getCache("dist-CacheBenchmarkFramework");
-        } else if (configuration.indexOf("local") == 0) {
-            nc = CacheFactory.getCache("local-CacheBenchmarkFramework");
-        } else if (configuration.indexOf("opt") == 0) {
-            nc = CacheFactory.getCache("opt-CacheBenchmarkFramework");
-        } else if (configuration.indexOf("near") == 0) {
-            nc = CacheFactory.getCache("near-CacheBenchmarkFramework");
-        } else
-            throw new RuntimeException("Invalid configuration ('" + configuration + "'). Configuration name should start with: 'dist', 'repl', 'local', 'opt' or 'near'");
+   @Override
+   public void setUp(String configuration) throws Exception {
+      String config;
+      if (configuration.indexOf("repl") == 0) {
+         config = "cbf-repl";
+      } else if (configuration.indexOf("dist") == 0) {
+         config = "cbf-dist";
+      } else if (configuration.indexOf("near") == 0) {
+         config = "cbf-near";
+      } else {
+         throw new RuntimeException("Invalid configuration ('" + configuration + "'). Configuration name should start with: 'dist', 'repl', 'local', 'opt' or 'near'");
+      }
+      nc = CacheFactory.getCache(config);
 
-        cache = CacheFactory.getLocalTransaction(nc);
-        log.info("Starting Coherence cache " + nc.getCacheName());
-    }
+      log.info("Starting Coherence cache " + nc.getCacheName());
+   }
 
-    public void tearDown() throws Exception {
-        if (cache != null) nc.release();
-    }
+   public void tearDown() throws Exception {
+      try {
+         CacheFactory.destroyCache(nc);
+      } catch (IllegalStateException e) {
+         if (e.getMessage() != null && e.getMessage().indexOf("Cache is already released") >= 0) {
+            log.info("This cache was already destroyed by another instance");
+         }
+      }
+      CacheFactory.shutdown();
+   }
 
-    @Override
-    public void put(String bucket, Object key, Object value) throws Exception {
-        cache.lock(key);
-        try {
-            cache.put(key, value);
-        }
-        finally {
-            cache.unlock(key);
-        }
-    }
+   @Override
+   public void put(String bucket, Object key, Object value) throws Exception {
+      nc.put(key, value);
+   }
 
-    @Override
-    public Object get(String bucket, Object key) throws Exception {
-        try {
-            return cache.get(key);
-        }
-        finally {
-            cache.unlock(key);
-        }
-    }
+   @Override
+   public Object get(String bucket, Object key) throws Exception {
+      return nc.get(key);
+   }
 
-    public void empty() throws Exception {
-        cache.clear();
-    }
+   public void empty() throws Exception {
+      nc.clear();
+   }
 
-    public int getNumMembers() {
-        return nc.getCacheService().getCluster().getMemberSet().size();
-    }
+   public int getNumMembers() {
+      try {
+         return nc.getCacheService().getCluster().getMemberSet().size();
+      } catch (IllegalStateException ise) {
+         if (ise.getMessage().indexOf("SafeCluster has been explicitly stopped") >= 0) {
+            log.info("The cluster is stopped.");
+            return 0;
+         }
+         throw ise;
+      }
+   }
 
-    public String getInfo() {
-        return nc.getCacheName();
-    }
+   public String getInfo() {
+      return nc.getCacheName();
+   }
 
-    @Override
-    public Object getReplicatedData(String bucket, String key) throws Exception {
-         return get(bucket, key);
-    }
+   @Override
+   public Object getReplicatedData(String bucket, String key) throws Exception {
+      return get(bucket, key);
+   }
 
-    public Transaction startTransaction() {
-        throw new UnsupportedOperationException("Does not support JTA!");
-    }
+   public Transaction startTransaction() {
+      throw new UnsupportedOperationException("Does not support JTA!");
+   }
 
-    public void endTransaction(boolean successful) {
-        throw new UnsupportedOperationException("Does not support JTA!");
-    }
+   public void endTransaction(boolean successful) {
+      throw new UnsupportedOperationException("Does not support JTA!");
+   }
 }

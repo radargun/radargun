@@ -1,9 +1,8 @@
 package org.cachebench.stages;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
+import org.cachebench.state.MasterState;
 import org.cachebench.stressors.WarmupStressor;
 
 import java.util.List;
@@ -46,7 +45,7 @@ public class WarmupStage extends AbstractDistStage {
       warmupStressor.stress(wrapper);
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
+   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
       logDurationInfo(acks);
       for (DistStageAck ack : acks) {
          DefaultDistStageAck dAck = (DefaultDistStageAck) ack;

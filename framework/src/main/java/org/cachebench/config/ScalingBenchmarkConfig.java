@@ -21,7 +21,6 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
 
    //mandatory
    private int initSize = -1;
-   private int maxSize = -1;
 
 
    //optional
@@ -33,14 +32,6 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
 
    public void setInitSize(int initSize) {
       this.initSize = initSize;
-   }
-
-   public int getMaxSize() {
-      return maxSize;
-   }
-
-   public void setMaxSize(int maxSize) {
-      this.maxSize = maxSize;
    }
 
    public int getIncrement() {
@@ -55,7 +46,7 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
       super.validate();
       if (initSize < 2)
          throw new RuntimeException("For scaling benchmarks(" + getProductName() + ") the initial size must be at least 2");
-      if (maxSize < initSize)
+      if (getMaxSize() < initSize)
          throw new RuntimeException("Config problems for benchmark: " + getProductName() + " - maxSize must be >= initSize");
       if (increment <= 0) throw new RuntimeException("Increment must be positive!");
    }
@@ -69,8 +60,9 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
 
    private void initialize() {
       if (!initialized) {
-         for (int i = initSize; i <= maxSize; i+=increment) {
+         for (int i = initSize; i <= getMaxSize(); i+=increment) {
             FixedSizeBenchmarkConfig conf = new FixedSizeBenchmarkConfig();
+            conf.setMaxSize(getMaxSize());
             conf.stages = cloneStages(this.stages);
             conf.setSize(i);
             conf.setConfigName(super.configName);
@@ -84,12 +76,10 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
    @Override
    public Stage nextStage() {
       initialize();
-     if (currentFixedBenchmark().hasNextStage()) {
-        return currentFixedBenchmark().nextStage();
-     } else {
-        fixedBenchmarkIt++;
-        return currentFixedBenchmark().nextStage();
-     }
+      if (!currentFixedBenchmark().hasNextStage()) {
+         fixedBenchmarkIt++;
+      }
+      return currentFixedBenchmark().nextStage();
    }
 
    private FixedSizeBenchmarkConfig currentFixedBenchmark() {

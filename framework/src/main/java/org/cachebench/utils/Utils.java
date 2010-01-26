@@ -57,6 +57,10 @@ public class Utils {
       }
    }
 
+   public static long getFreeMemoryKb() {
+      return kb(Runtime.getRuntime().freeMemory());
+   }
+
    public static long kb(long memBytes) {
       return memBytes / 1024;
    }
@@ -181,5 +185,13 @@ public class Utils {
       toPrint = toPrint / 60;
 
       return nf.format(toPrint) + " hours";
+   }
+
+   public static void seep(long duration) {
+      try {
+         Thread.sleep(duration);
+      } catch (InterruptedException e) {
+         throw new IllegalStateException(e);
+      }
    }
 }

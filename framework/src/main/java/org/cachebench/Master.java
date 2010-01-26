@@ -88,7 +88,7 @@ public class Master {
          slave.configureBlocking(false);
          slave.register(communicationSelector, SelectionKey.OP_WRITE);
          toSerialize = currentStage.clone();
-         toSerialize.setSlaveIndex(i);
+         toSerialize.initOnMaster(state, i);
          byte[] bytes = SerializationHelper.prepareForSerialization(toSerialize);
          writeBufferMap.put(slave, ByteBuffer.wrap(bytes));
       }

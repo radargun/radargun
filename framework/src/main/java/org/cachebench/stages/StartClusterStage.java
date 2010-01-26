@@ -91,8 +91,8 @@ public class StartClusterStage extends AbstractDistStage {
    }
 
    @Override
-   public void initOnMaster(MasterState masterState, int totalSlavesCount) {
-      super.initOnMaster(masterState, totalSlavesCount);
+   public void initOnMaster(MasterState masterState, int slaveIndex) {
+      super.initOnMaster(masterState, slaveIndex);
       this.productName = masterState.nameOfTheCurrentBenchmark();
    }
 

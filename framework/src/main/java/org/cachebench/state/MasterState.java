@@ -50,7 +50,6 @@ public class MasterState extends StateBase {
          Stage stage = currentBenchmark.nextStage();
          if (stage instanceof DistStage) {
             currentDistStage = (DistStage) stage;
-            currentDistStage.initOnMaster(this, config.getSlaveCount());
             log.info("Starting dist stage '" + currentDistStage.getClass().getSimpleName() + "' on " + currentDistStage.getActiveSlaveCount() + " Slaves: " + currentDistStage);
             return currentDistStage;
          } else {
@@ -87,7 +86,7 @@ public class MasterState extends StateBase {
    }
 
    public boolean distStageFinished(List<DistStageAck> acks) {
-      boolean stageOk = currentDistStage.processAckOnMaster(acks);
+      boolean stageOk = currentDistStage.processAckOnMaster(acks, this);
       if (stageOk) return true;
       if (!stopOnError) {
          log.warn("Execution error for current benchmark, skipping rest of the stages");

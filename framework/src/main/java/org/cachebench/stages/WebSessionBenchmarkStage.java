@@ -1,9 +1,8 @@
 package org.cachebench.stages;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
+import org.cachebench.state.MasterState;
 import org.cachebench.stressors.PutGetStressor;
 
 import java.util.HashMap;
@@ -88,7 +87,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       }
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
+   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
       logDurationInfo(acks);
       boolean success = true;
       Map<Integer, Map<String, Object>> results = new HashMap<Integer, Map<String, Object>>();

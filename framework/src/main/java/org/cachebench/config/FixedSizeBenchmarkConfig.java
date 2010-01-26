@@ -27,7 +27,18 @@ public class FixedSizeBenchmarkConfig implements Cloneable {
    protected int size;
 
    protected int stIterator = 0;
+   private int maxSize = -1;
 
+   public int getMaxSize() {
+      return maxSize;
+   }
+
+   public void setMaxSize(int maxSize) {
+      this.maxSize = maxSize;
+   }
+
+   public FixedSizeBenchmarkConfig() {
+   }
 
    public void setStages(List<Stage> stages) {
       this.stages = new ArrayList<Stage>(stages);
@@ -97,6 +108,9 @@ public class FixedSizeBenchmarkConfig implements Cloneable {
          DistStage distStage = (DistStage) stage;
          if (!distStage.isRunOnAllSlaves()) {
             distStage.setActiveSlavesCount(size);
+         } else {
+            if (maxSize <= 0) throw new IllegalStateException("Make sure you set the maxSize first!");
+            distStage.setActiveSlavesCount(maxSize);
          }
       }
       return stage;

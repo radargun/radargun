@@ -2,7 +2,7 @@
 
    <master bindAddress="${127.0.0.1:bind.address}" port="2103"/>
 
-   <benchmark initSize="2" maxSize="4" increment="1">
+   <benchmark initSize="2" maxSize="8" increment="1">
       <DestroyWrapper runOnAllSlaves="true"/>
       <StartCluster/>
       <ClusterValidation partialReplication="false"/>
@@ -12,31 +12,24 @@
    </benchmark>
 
    <products>
+      <coherence3>
+         <config name="replicated"/>
+         <config name="distributed"/>
+      </coherence3>
       <infinispan4>
-         <config name="repl-async.xml"/>
          <config name="repl-sync.xml"/>
          <config name="dist-sync.xml"/>
-         <config name="dist-async.xml"/>
-         <config name="dist-sync-l1.xml"/>
-         <config name="dist-async-l1.xml"/>
       </infinispan4>
-      <jbosscache3>
-         <config name="mvcc/mvcc-repl-sync.xml"/>
-         <config name="mvcc/mvcc-repl-async.xml"/>
-      </jbosscache3>
    </products>
 
    <reports>
       <report name="sync-repl">
          <item product="infinispan4" config="repl-sync.xml"/>
-         <item product="jbosscache3" config="mvcc/mvcc-repl-sync.xml"/>
+         <item product="coherence3" config="replicated"/>
       </report>
-      <report name="async-repl">
-         <item product="infinispan4" config="repl-async.xml"/>
-         <item product="jbosscache3" config="mvcc/mvcc-repl-async.xml"/>
-      </report>
-      <report name="dist">
-         <item product="infinispan4" config="dist-*"/>
+      <report name="sync-dist">
+         <item product="infinispan4" config="dist-sync.xml"/>
+         <item product="coherence3" config="distributed"/>
       </report>
       <report name="all_included" includeAll="true"/>
    </reports>

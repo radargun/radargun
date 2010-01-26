@@ -26,8 +26,6 @@ public abstract class AbstractDistStage implements DistStage {
 
    protected transient MasterConfig masterConfig;
 
-   protected transient MasterState masterState;
-
    protected int slaveIndex;
    private int activeSlavesCount;
    private int totalSlavesCount;
@@ -37,11 +35,11 @@ public abstract class AbstractDistStage implements DistStage {
       this.slaveState = slaveState;
    }
 
-   public void initOnMaster(MasterState masterState, int totalSlavesCount) {
-      this.masterState = masterState;
+   public void initOnMaster(MasterState masterState, int slaveIndex) {
       this.masterConfig = masterState.getConfig();
+      this.slaveIndex = slaveIndex;
       assert masterConfig != null;
-      this.totalSlavesCount = totalSlavesCount;
+      this.totalSlavesCount = masterState.getConfig().getSlaveCount();
       if (isRunOnAllSlaves()) {
          setActiveSlavesCount(totalSlavesCount);
       }
@@ -56,10 +54,6 @@ public abstract class AbstractDistStage implements DistStage {
       return runOnAllSlaves;
    }
 
-   public void setSlaveIndex(int index) {
-      this.slaveIndex = index;
-   }
-
    protected DefaultDistStageAck newDefaultStageAck() {
       return new DefaultDistStageAck(getSlaveIndex(), slaveState.getLocalAddress());
    }
@@ -72,7 +66,7 @@ public abstract class AbstractDistStage implements DistStage {
       }
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
+   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
       boolean success = true;
       logDurationInfo(acks);
       for (DistStageAck stageAck : acks) {
