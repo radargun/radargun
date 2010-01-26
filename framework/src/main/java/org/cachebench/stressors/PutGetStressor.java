@@ -72,8 +72,6 @@ public class PutGetStressor implements CacheWrapperStressor {
       startTime = System.currentTimeMillis();
       log.info("Executing: " + this.toString());
 
-      initBuckets();
-
       List<Stresser> stressers;
       try {
          stressers = executeOperations();
@@ -125,6 +123,7 @@ public class PutGetStressor implements CacheWrapperStressor {
       startPoint = new CountDownLatch(1);
       for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
          Stresser stresser = new Stresser(threadIndex);
+         stresser.initializeKeys();
          stressers.add(stresser);
          stresser.start();
       }
@@ -135,26 +134,9 @@ public class PutGetStressor implements CacheWrapperStressor {
       return stressers;
    }
 
-   private void initBuckets() {
-      for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
-         for (int keyIndex = 0; keyIndex < numberOfKeys; keyIndex++) {
-            try {
-               String bucketId = getBucketId(threadIndex);
-               cacheWrapper.put(bucketId, getKey(keyIndex, bucketId), generateRandomString(sizeOfValue));
-            }
-            catch (Throwable e) {
-               log.warn("Error while initializing the session: ", e);
-            }
-         }
-      }
-   }
-
-   private String getKey(int keyIndex, String bucketId) {
-      return bucketId + "_" + Integer.toString(r.nextInt(MAX_VALUE), 36) + "_" + keyPrefix + '_' + keyIndex;
-   }
-
-
    public class Stresser extends Thread {
+
+      private ArrayList<String> pooledKeys = new ArrayList<String>(numberOfKeys);
 
       private int threadIndex;
       private String bucketId;
@@ -188,7 +170,7 @@ public class PutGetStressor implements CacheWrapperStressor {
             logProgress(i);
             randomAction = r.nextInt(100);
             randomKeyInt = r.nextInt(numberOfKeys - 1);
-            String key = getKey(randomKeyInt, bucketId);
+            String key = getKey(randomKeyInt);
 
             if (randomAction < readPercentage) {
                long start = System.currentTimeMillis();
@@ -242,6 +224,23 @@ public class PutGetStressor implements CacheWrapperStressor {
 
       public long totalDuration() {
          return readDuration + writeDuration;
+      }
+
+      public void initializeKeys() {
+         for (int keyIndex = 0; keyIndex < numberOfKeys; keyIndex++) {
+            try {
+               String key = this.bucketId + "_" + Integer.toString(r.nextInt(MAX_VALUE), 36) + "_" + keyPrefix + '_' + keyIndex;
+               pooledKeys.add(key);
+               cacheWrapper.put(this.bucketId, key, generateRandomString(sizeOfValue));
+            }
+            catch (Throwable e) {
+               log.warn("Error while initializing the session: ", e);
+            }
+         }
+      }
+
+      public String getKey(int keyIndex) {
+         return pooledKeys.get(keyIndex);
       }
    }
 
