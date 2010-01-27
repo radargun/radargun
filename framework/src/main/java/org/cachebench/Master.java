@@ -89,6 +89,9 @@ public class Master {
          slave.register(communicationSelector, SelectionKey.OP_WRITE);
          toSerialize = currentStage.clone();
          toSerialize.initOnMaster(state, i);
+         if (i == 0) {//only log this once
+            log.info("Starting dist stage '" + toSerialize.getClass().getSimpleName() + "' on " + toSerialize.getActiveSlaveCount() + " Slaves: " + toSerialize);
+         }
          byte[] bytes = SerializationHelper.prepareForSerialization(toSerialize);
          writeBufferMap.put(slave, ByteBuffer.wrap(bytes));
       }
