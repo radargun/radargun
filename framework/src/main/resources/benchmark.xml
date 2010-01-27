@@ -2,7 +2,7 @@
 
    <master bindAddress="${127.0.0.1:bind.address}" port="2103"/>
 
-   <benchmark initSize="2" maxSize="8" increment="1">
+   <benchmark initSize="2" maxSize="${8:slaves}" increment="1">
       <DestroyWrapper runOnAllSlaves="true"/>
       <StartCluster/>
       <ClusterValidation partialReplication="false"/>
