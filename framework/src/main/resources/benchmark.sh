@@ -39,10 +39,6 @@ help_and_exit() {
 while ! [ -z $1 ]
 do
   case "$1" in
-    "-s")
-      SLAVE_START_INDEX=$2
-      shift
-      ;;
     "-u")
       SSH_USER=$2
       shift
