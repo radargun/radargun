@@ -104,6 +104,11 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
          Map<String, Object> benchResult = (Map<String, Object>) wAck.getPayload();
          if (benchResult != null) {
             results.put(ack.getSlaveIndex(), benchResult);
+            Object reqPerSes = benchResult.get("REQ_PER_SEC");
+            if (reqPerSes == null) {
+               throw new IllegalStateException("This should be there!");
+            }
+            log.info("On slave " + ack.getSlaveIndex() + " we had " + reqPerSes + "requests per second");
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }

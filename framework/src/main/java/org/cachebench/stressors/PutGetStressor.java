@@ -106,10 +106,10 @@ public class PutGetStressor implements CacheWrapperStressor {
 
       Map<String, String> results = new LinkedHashMap<String, String>();
       results.put("DURATION", str(duration));
-      double requestPerSec = (reads + writes) / (duration / 1000.0);
+      double requestPerSec = (reads + writes) / ((duration/numOfThreads) / 1000.0);
       results.put("REQ_PER_SEC", str(requestPerSec));
-      results.put("READS_PER_SEC", str(reads / (readsDurations / 1000.0)));
-      results.put("WRITES_PER_SEC", str(writes / (writesDurations / 1000.0)));
+      results.put("READS_PER_SEC", str(reads / ((readsDurations/numOfThreads) / 1000.0)));
+      results.put("WRITES_PER_SEC", str(writes / ((writesDurations/numOfThreads) / 1000.0)));
       results.put("READ_COUNT", str(reads));
       results.put("WRITE_COUNT", str(writes));
       results.put("FAILURES", str(failures));
@@ -318,3 +318,5 @@ public class PutGetStressor implements CacheWrapperStressor {
             "}";
    }
 }
+
+//home/bela/spn_test
