@@ -48,7 +48,7 @@ do
       shift
       ;;
     "-r")
-      REMOTE_COMMAND=$2
+      REMOTE_CMD=$2
       shift
       ;;
     "-m")
