@@ -2,8 +2,8 @@ package org.cachebench.stages;
 
 import org.cachebench.CacheWrapper;
 import org.cachebench.DistStageAck;
-import org.cachebench.utils.Utils;
 import org.cachebench.state.MasterState;
+import org.cachebench.utils.Utils;
 
 import java.net.URLClassLoader;
 
@@ -33,7 +33,7 @@ public class StartClusterStage extends AbstractDistStage {
       try {
          String plugin = Utils.getCacheWrapperFqnClass(productName);
          wrapper = (CacheWrapper) createInstance(plugin);
-         wrapper.setUp(config);
+         wrapper.setUp(config, false);
          slaveState.setCacheWrapper(wrapper);
          for (int i = 0; i < TRY_COUNT; i++) {
             int numMembers = wrapper.getNumMembers();

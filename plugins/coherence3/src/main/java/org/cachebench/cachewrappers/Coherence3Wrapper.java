@@ -8,8 +8,6 @@ import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 
 import javax.transaction.Transaction;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Pass in a -Dtangosol.coherence.localhost=IP_ADDRESS
@@ -23,7 +21,7 @@ public class Coherence3Wrapper implements CacheWrapper {
    private Log log = LogFactory.getLog(Coherence3Wrapper.class);
 
    @Override
-   public void setUp(String configuration) throws Exception {
+   public void setUp(String configuration, boolean ignored) throws Exception {
       String config;
       if (configuration.indexOf("repl") == 0) {
          config = "cbf-repl";

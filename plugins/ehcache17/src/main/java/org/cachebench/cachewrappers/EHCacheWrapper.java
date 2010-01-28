@@ -32,10 +32,10 @@ public class EHCacheWrapper implements CacheWrapper
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#setUp(java.util.Properties)
    */
-   public void setUp(String config) throws Exception
+   public void setUp(String config, boolean isLocal) throws Exception
    {
       if (log.isTraceEnabled()) log.trace("Entering EHCacheWrapper.setUp()");
-//      localmode = (Boolean.parseBoolean((String) config.get("localOnly")));
+      localmode = isLocal;
       log.debug("Initializing the cache with props " + config);
       URL url = getClass().getClassLoader().getResource(config);
       log.debug("Config URL = " + url);
@@ -49,8 +49,8 @@ public class EHCacheWrapper implements CacheWrapper
        log.info("Using named cache " + cache);
        if (!localmode)
        {
-          log.info("Bounded peers: " + manager.getCachePeerListener().getBoundCachePeers());
-          log.info("Remote peers: " + manager.getCacheManagerPeerProvider().listRemoteCachePeers(cache));
+          log.info("Bounded peers: " + manager.getCachePeerListener("RMI").getBoundCachePeers());
+          log.info("Remote peers: " + manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(cache));
        }
       
       log.debug("Finish Initializing the cache");
@@ -114,12 +114,12 @@ public class EHCacheWrapper implements CacheWrapper
    public int getNumMembers()
    {
 
-      return localmode ? 0 : manager.getCacheManagerPeerProvider().listRemoteCachePeers(cache).size();
+      return localmode ? 0 : manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(cache).size();
    }
 
    public String getInfo()
    {
-      return cache.getKeys().toString() + (localmode ? "" : (" remote peers: " + manager.getCachePeerListener().getBoundCachePeers()));
+      return cache.getKeys().toString() + (localmode ? "" : (" remote peers: " + manager.getCachePeerListener("RMI").getBoundCachePeers()));
    }
 
    public Object getReplicatedData(String path, String key) throws Exception

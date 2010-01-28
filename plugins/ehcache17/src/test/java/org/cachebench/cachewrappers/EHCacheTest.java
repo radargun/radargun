@@ -7,7 +7,6 @@ import org.cachebench.CacheWrapper;
 import org.testng.annotations.Test;
 
 import java.net.URL;
-import java.util.Properties;
 
 /**
  * // TODO: Add Javadocs
@@ -16,16 +15,11 @@ import java.util.Properties;
  * @since 2.0.0
  */
 @Test(enabled = false)
-public class EHCacheTest
-{
+public class EHCacheTest {
 
-   public static void main(String[] args) throws Exception
-   {
-
-
+   public static void main(String[] args) throws Exception {
       CacheWrapper w = new EHCacheWrapper();
-      Properties p = new Properties();
-      w.setUp("ehcache-repl-sync.xml");
+      w.setUp("ehcache-repl-sync.xml", false);
 
       Ehcache cache;
       URL url = new URL("file:///Users/manik/Code/CacheBenchFwk/cache-products/ehcache-1.2.4/conf/ehcache-repl-sync.xml");
@@ -40,11 +34,11 @@ public class EHCacheTest
 
       cache = m.getCache("cache");
 
-      for (int i=0; i<100; i++) cache.put(new Element("key" + i, "value" + i));
+      for (int i = 0; i < 100; i++) cache.put(new Element("key" + i, "value" + i));
 
       System.out.println(cache.getKeys());
 
-      System.out.println("members: " + m.getCachePeerListener().getBoundCachePeers());
+      System.out.println("members: " + m.getCachePeerListener("RMI").getBoundCachePeers());
 
       m.shutdown();
 

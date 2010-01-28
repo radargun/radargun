@@ -21,14 +21,14 @@
    </licenses>
 
    <scm>
-      <connection>scm:git://cachetester.git.sourceforge.net/gitroot/cachetester/cachetester</connection>
-      <developerConnection>scm:ssh://USER@cachetester.git.sourceforge.net/gitroot/cachetester</developerConnection>
-      <url>http://cachetester.git.sourceforge.net/git/gitweb-index.cgi</url>
+      <connection>scm:git://cachebenchfwk.git.sourceforge.net/gitroot/cachebenchfwk/cachebenchfwk</connection>
+      <developerConnection>scm:ssh://USER@cachebenchfwk.git.sourceforge.net/gitroot/cachebenchfwk</developerConnection>
+      <url>http://cachebenchfwk.git.sourceforge.net/git/gitweb-index.cgi</url>
    </scm>
 
    <issueManagement>
       <system>TRAC</system>
-      <url>https://sourceforge.net/apps/trac/cachetester/</url>
+      <url>https://sourceforge.net/apps/trac/cachebenchfwk/</url>
    </issueManagement>
 
    <developers>
@@ -175,11 +175,6 @@
          <id>snapshots.jboss.org</id>
          <url>http://snapshots.jboss.org/maven2</url>
       </repository>
-      <repository>
-         <id>scala-tools.org</id>
-         <name>Scala-tools Maven2 Repository</name>
-         <url>http://scala-tools.org/repo-releases</url>
-      </repository>
    </repositories>
 
    <pluginRepositories>
@@ -198,11 +193,6 @@
       <pluginRepository>
          <id>snapshots.jboss.org</id>
          <url>http://snapshots.jboss.org/maven2</url>
-      </pluginRepository>
-      <pluginRepository>
-         <id>scala-tools.org</id>
-         <name>Scala-tools Maven2 Repository</name>
-         <url>http://scala-tools.org/repo-releases</url>
       </pluginRepository>
    </pluginRepositories>
 
