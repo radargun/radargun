@@ -11,8 +11,8 @@
          <config name="local/read-committed.xml"/>
       </infinispan4>
       <jbosscache3>
-         <config name="local/mvcc-RR.xml"/>
-         <config name="local/mvcc-RC.xml"/>
+         <config name="local/mvcc-local-RR.xml"/>
+         <config name="local/mvcc-local-RC.xml"/>
       </jbosscache3>
       <ehcache17>
          <config name="ehcache-local.xml"/>
@@ -23,12 +23,12 @@
    <reports>
       <report name="repeatable-read">
          <item product="infinispan4" config="local/repeatable-read.xml"/>
-         <item product="jbosscache3" config="local/mvcc-repeatable-read.xml"/>
+         <item product="jbosscache3" config="local/mvcc-RR.xml"/>
          <item product="ehcache17" config="ehcache-local.xml"/>
       </report>
       <report name="read-committed">
          <item product="infinispan4" config="local/read-committed.xml"/>
-         <item product="jbosscache3" config="local/mvcc-read-committed.xml"/>
+         <item product="jbosscache3" config="local/mvcc-RC.xml"/>
          <item product="ehcache17" config="ehcache-local.xml"/>
       </report>
       <report name="all_included" includeAll="true"/>
