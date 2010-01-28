@@ -25,7 +25,7 @@ public class JBossCache2Wrapper implements CacheWrapper
    private Log log = LogFactory.getLog(JBossCache2Wrapper.class);
    private boolean inLocalMode;
 
-   public void setUp(String config) throws Exception
+   public void setUp(String config, boolean ignored) throws Exception
    {
       log.info("Creating cache with the following configuration: " + config);
       cache = new DefaultCacheFactory().createCache(config);

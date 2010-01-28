@@ -29,7 +29,7 @@ public class JBossCache3Wrapper implements CacheWrapper
       FLAT = Boolean.getBoolean("cacheBenchFwk.useFlatCache");
    }
 
-   public void setUp(String config) throws Exception
+   public void setUp(String config, boolean ignored) throws Exception
    {
       log.info("Creating cache with the following configuration: " + config);
       cache = new DefaultCacheFactory().createCache(config);

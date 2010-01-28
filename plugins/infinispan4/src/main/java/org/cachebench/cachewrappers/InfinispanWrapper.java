@@ -2,11 +2,11 @@ package org.cachebench.cachewrappers;
 
 import org.cachebench.CacheWrapper;
 import org.infinispan.Cache;
-import org.infinispan.remoting.transport.Address;
-import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.context.Flag;
+import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.CacheManager;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.remoting.transport.Address;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 
@@ -22,7 +22,7 @@ public class InfinispanWrapper implements CacheWrapper {
    boolean started = false;
    String config;
 
-   public void setUp(String config) throws Exception {
+   public void setUp(String config, boolean ignored) throws Exception {
       this.config = config;
        if (!started) {
           cacheManager = new DefaultCacheManager(config);

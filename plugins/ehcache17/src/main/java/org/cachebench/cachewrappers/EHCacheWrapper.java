@@ -32,10 +32,10 @@ public class EHCacheWrapper implements CacheWrapper
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#setUp(java.util.Properties)
    */
-   public void setUp(String config) throws Exception
+   public void setUp(String config, boolean isLocal) throws Exception
    {
       if (log.isTraceEnabled()) log.trace("Entering EHCacheWrapper.setUp()");
-//      localmode = (Boolean.parseBoolean((String) config.get("localOnly")));
+      localmode = isLocal;
       log.debug("Initializing the cache with props " + config);
       URL url = getClass().getClassLoader().getResource(config);
       log.debug("Config URL = " + url);
