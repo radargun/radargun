@@ -11,14 +11,14 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>plugin-ehcache15</artifactId>
-   <name>EHCache 1.5.x plugin for benchmark framework</name>
+   <artifactId>plugin-ehcache17</artifactId>
+   <name>EHCache 1.7.x plugin for benchmark framework</name>
 
    <dependencies>
       <dependency>
          <groupId>net.sf.ehcache</groupId>
-         <artifactId>ehcache</artifactId>
-         <version>1.5.0</version>
+         <artifactId>ehcache-core</artifactId>
+         <version>1.7.2</version>
       </dependency>
    </dependencies>
 </project>

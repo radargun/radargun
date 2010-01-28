@@ -16,8 +16,8 @@
       <module>plugins/infinispan4</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
-      <module>plugins/ehcache15</module>
       <module>plugins/ehcache16</module>
+      <module>plugins/ehcache17</module>
    </modules>
 
    <properties>
@@ -119,17 +119,17 @@
                            </fileset>
                         </copy>
 
-                        <copy todir="${distribution.artifact}/plugins/ehcache15">
-                           <fileset dir="plugins/ehcache15/target/distribution/plugin-ehcache15-bin/plugin-ehcache15">
-                              <include name="**/*"/>
-                           </fileset>
-                        </copy>
-
                         <copy todir="${distribution.artifact}/plugins/ehcache16">
                            <fileset dir="plugins/ehcache16/target/distribution/plugin-ehcache16-bin/plugin-ehcache16">
                               <include name="**/*"/>
                            </fileset>
                         </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/ehcache17">
+                           <fileset dir="plugins/ehcache17/target/distribution/plugin-ehcache17-bin/plugin-ehcache17">
+                              <include name="**/*"/>
+                           </fileset>
+                        </copy>                        
                      </tasks>
                   </configuration>
                </execution>

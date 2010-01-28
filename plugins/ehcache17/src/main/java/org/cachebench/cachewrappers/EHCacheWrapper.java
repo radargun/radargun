@@ -49,8 +49,8 @@ public class EHCacheWrapper implements CacheWrapper
        log.info("Using named cache " + cache);
        if (!localmode)
        {
-          log.info("Bounded peers: " + manager.getCachePeerListener().getBoundCachePeers());
-          log.info("Remote peers: " + manager.getCacheManagerPeerProvider().listRemoteCachePeers(cache));
+          log.info("Bounded peers: " + manager.getCachePeerListener("RMI").getBoundCachePeers());
+          log.info("Remote peers: " + manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(cache));
        }
       
       log.debug("Finish Initializing the cache");
@@ -114,12 +114,12 @@ public class EHCacheWrapper implements CacheWrapper
    public int getNumMembers()
    {
 
-      return localmode ? 0 : manager.getCacheManagerPeerProvider().listRemoteCachePeers(cache).size();
+      return localmode ? 0 : manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(cache).size();
    }
 
    public String getInfo()
    {
-      return cache.getKeys().toString() + (localmode ? "" : (" remote peers: " + manager.getCachePeerListener().getBoundCachePeers()));
+      return cache.getKeys().toString() + (localmode ? "" : (" remote peers: " + manager.getCachePeerListener("RMI").getBoundCachePeers()));
    }
 
    public Object getReplicatedData(String path, String key) throws Exception
