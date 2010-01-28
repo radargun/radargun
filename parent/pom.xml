@@ -21,14 +21,14 @@
    </licenses>
 
    <scm>
-      <connection>scm:git://cachetester.git.sourceforge.net/gitroot/cachetester/cachetester</connection>
-      <developerConnection>scm:ssh://USER@cachetester.git.sourceforge.net/gitroot/cachetester</developerConnection>
-      <url>http://cachetester.git.sourceforge.net/git/gitweb-index.cgi</url>
+      <connection>scm:git://cachebenchfwk.git.sourceforge.net/gitroot/cachebenchfwk/cachebenchfwk</connection>
+      <developerConnection>scm:ssh://USER@cachebenchfwk.git.sourceforge.net/gitroot/cachebenchfwk</developerConnection>
+      <url>http://cachebenchfwk.git.sourceforge.net/git/gitweb-index.cgi</url>
    </scm>
 
    <issueManagement>
       <system>TRAC</system>
-      <url>https://sourceforge.net/apps/trac/cachetester/</url>
+      <url>https://sourceforge.net/apps/trac/cachebenchfwk/</url>
    </issueManagement>
 
    <developers>
