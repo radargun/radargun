@@ -14,7 +14,6 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 import static java.lang.Integer.MAX_VALUE;
-import static org.cachebench.utils.Utils.numberFormat;
 
 /**
  * On multiple threads executes put and get opperations against the CacheWrapper, and returns the result as an Map.
@@ -106,14 +105,14 @@ public class PutGetStressor implements CacheWrapperStressor {
       }
 
       Map<String, String> results = new LinkedHashMap<String, String>();
-      results.put("DURATION", Utils.prettyPrintTime(duration));
+      results.put("DURATION", str(duration));
       double requestPerSec = (reads + writes) / ((duration/numOfThreads) / 1000.0);
-      results.put("REQ_PER_SEC", numberFormat(requestPerSec));
-      results.put("READS_PER_SEC", numberFormat(reads / ((readsDurations/numOfThreads) / 1000.0)));
-      results.put("WRITES_PER_SEC", numberFormat(writes / ((writesDurations/numOfThreads) / 1000.0)));
-      results.put("READ_COUNT", numberFormat(reads));
-      results.put("WRITE_COUNT", numberFormat(writes));
-      results.put("FAILURES", numberFormat(failures));
+      results.put("REQ_PER_SEC", str(requestPerSec));
+      results.put("READS_PER_SEC", str(reads / ((readsDurations/numOfThreads) / 1000.0)));
+      results.put("WRITES_PER_SEC", str(writes / ((writesDurations/numOfThreads) / 1000.0)));
+      results.put("READ_COUNT", str(reads));
+      results.put("WRITE_COUNT", str(writes));
+      results.put("FAILURES", str(failures));
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
             ". Test duration is: " + Utils.getDurationString(System.currentTimeMillis() - startTime));
       return results;
@@ -243,6 +242,10 @@ public class PutGetStressor implements CacheWrapperStressor {
       public String getKey(int keyIndex) {
          return pooledKeys.get(keyIndex);
       }
+   }
+
+   private String str(Object o) {
+      return String.valueOf(o);
    }
 
    public void setNumberOfRequestsPerThread(int numberOfRequestsPerThread) {
