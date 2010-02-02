@@ -18,6 +18,7 @@
       <module>plugins/jbosscache3</module>
       <module>plugins/ehcache16</module>
       <module>plugins/ehcache17</module>
+      <module>plugins/terracotta3</module>
    </modules>
 
    <properties>
@@ -130,6 +131,12 @@
                               <include name="**/*"/>
                            </fileset>
                         </copy>                        
+
+                        <copy todir="${distribution.artifact}/plugins/terracotta3">
+                           <fileset dir="plugins/terracotta3/target/distribution/plugin-terracotta3-bin/plugin-terracotta3">
+                              <include name="**/*"/>
+                           </fileset>
+                        </copy>
                      </tasks>
                   </configuration>
                </execution>

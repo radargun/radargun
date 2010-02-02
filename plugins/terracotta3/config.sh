@@ -7,7 +7,7 @@ THIS_DIR=./cache-products/terracotta-2.5.0
 #next line should be modified based on the environment
 TC_HOME="${HOME}/java/terracotta-2.5.0"
 
-#addint terracotta wrapper class to classpath
+#add terracotta wrapper class to classpath
 CLASSPATH=$CLASSPATH:./classes/production/terracotta-2.5.0
 
 #other specific JVM options

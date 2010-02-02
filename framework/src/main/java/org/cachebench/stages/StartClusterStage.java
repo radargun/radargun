@@ -16,6 +16,7 @@ public class StartClusterStage extends AbstractDistStage {
 
    private String productName;
    private boolean useSmartClassLoading = true;
+   private boolean performClusterSizeValidation = true;
 
    private String config;
    private final int TRY_COUNT = 180;
@@ -35,20 +36,22 @@ public class StartClusterStage extends AbstractDistStage {
          wrapper = (CacheWrapper) createInstance(plugin);
          wrapper.setUp(config, false);
          slaveState.setCacheWrapper(wrapper);
-         for (int i = 0; i < TRY_COUNT; i++) {
-            int numMembers = wrapper.getNumMembers();
-            if (numMembers != getActiveSlaveCount()) {
-               String msg = "Number of members=" + numMembers + " is not the one expected: " + getActiveSlaveCount();
-               log.info(msg);
-               Thread.sleep(1000);
-               if (i == TRY_COUNT) {
-                  ack.setError(true);
-                  ack.setErrorMessage(msg);
-                  return ack;
+         if (performClusterSizeValidation) {
+            for (int i = 0; i < TRY_COUNT; i++) {
+               int numMembers = wrapper.getNumMembers();
+               if (numMembers != getActiveSlaveCount()) {
+                  String msg = "Number of members=" + numMembers + " is not the one expected: " + getActiveSlaveCount();
+                  log.info(msg);
+                  Thread.sleep(1000);
+                  if (i == TRY_COUNT) {
+                     ack.setError(true);
+                     ack.setErrorMessage(msg);
+                     return ack;
+                  }
+               } else {
+                  log.info("Number of members is the one expected: " + wrapper.getNumMembers());
+                  break;
                }
-            } else {
-               log.info("Number of members is the one expected: " + wrapper.getNumMembers());
-               break;
             }
          }
       } catch (Exception e) {
@@ -88,6 +91,10 @@ public class StartClusterStage extends AbstractDistStage {
 
    public void setUseSmartClassLoading(boolean useSmartClassLoading) {
       this.useSmartClassLoading = useSmartClassLoading;
+   }
+
+   public void setPerformCLusterSizeValidation(boolean performCLusterSizeValidation) {
+      this.performClusterSizeValidation = performCLusterSizeValidation;
    }
 
    @Override

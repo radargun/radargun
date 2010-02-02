@@ -40,7 +40,7 @@ public class DestroyWrapperStage extends AbstractDistStage {
          if (cacheWrapper != null) {
             cacheWrapper.tearDown();
             for (int i = 0; i < 120; i++) {
-               if (cacheWrapper.getNumMembers() == 0) break;
+               if (cacheWrapper.getNumMembers() <= 0) break; //negative value might be returned by impl that do not support this method
                log.info("There are still: " + cacheWrapper.getNumMembers() + " members in the cluster. Waiting for them to turn off.");
                Thread.sleep(1000);
             }

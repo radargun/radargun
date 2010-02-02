@@ -2,7 +2,7 @@
 <tc:tc-config xmlns:tc="http://www.terracotta.org/config">
 
 <servers>
-  <server host="perf03">
+  <server host="localhost">
     <dso-port>9510</dso-port>
     <data>terracotta/server-data</data>
     <logs>terracotta/server-logs</logs>

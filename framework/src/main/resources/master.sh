@@ -6,6 +6,7 @@ if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; 
 
 CONFIG=./conf/benchmark.xml
 SLAVE_COUNT_ARG=""
+TAILF=false
 
 help_and_exit() {
   echo "Usage: "
@@ -14,6 +15,8 @@ help_and_exit() {
   echo "   -c       Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark.xml"
   echo ""
   echo "   -s       Number of slaves.  Defaults to maxSize attribute in framework configuration XML file."
+  echo ""
+  echo "   -t       After starting the bechmark it will run 'tail -f' on the server's log file. By default this is set to ${TUILF}"
   echo ""
   echo "   -h       Displays this help screen"
   echo ""
@@ -35,6 +38,9 @@ do
       CONFIG=$2
       shift
       ;;
+   "-t")
+     TAILF=true
+     ;;
     "-h")
       help_and_exit
       ;;
@@ -53,3 +59,7 @@ java ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG -Dbind.address=${BIND
 export CBF_MASTER_PID=$!
 HOST_NAME=`hostname`
 echo "Master's PID is $CBF_MASTER_PID running on ${HOST_NAME}"
+if [ $TAILF == "true" ]
+then
+  tail -f cachebench.log 
+fi  
