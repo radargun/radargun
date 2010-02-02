@@ -42,7 +42,7 @@ public class WarmupStressor implements CacheWrapperStressor {
 
    public void performWarmupOperations(CacheWrapper wrapper) throws Exception {
       this.wrapper = wrapper;
-      log.info("Cache launched, performing " + (Integer) operationCount + " put and get operations ");
+      log.info("Cache launched, performing " + (Integer) operationCount + " put and get operations. The bucket is '" + bucket + "' and the key prefix is '" + keyPrefix + "'.");
       for (int i = 0; i < operationCount; i++) {
          try {
             wrapper.put(bucket, keyPrefix + String.valueOf((Integer) i), String.valueOf(i));
