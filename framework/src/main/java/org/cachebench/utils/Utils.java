@@ -24,6 +24,7 @@ public class Utils {
    private static Log log = LogFactory.getLog(Utils.class);
    public static final String PLUGINS_DIR = "plugins";
    private static final NumberFormat NF = new DecimalFormat("##,###");
+   private static final NumberFormat MEM_FMT = new DecimalFormat("##,###.####");
 
    public static String getDurationString(long duration) {
       long secs = duration / 1000;
@@ -59,12 +60,12 @@ public class Utils {
       }
    }
 
-   public static long getFreeMemoryKb() {
+   public static String getFreeMemoryKb() {
       return kb(Runtime.getRuntime().freeMemory());
    }
 
-   public static long kb(long memBytes) {
-      return memBytes / 1024;
+   public static String kb(long memBytes) {
+      return MEM_FMT.format(memBytes / 1024) + " kb";
    }
 
    public static URLClassLoader buildProductSpecificClassLoader(String productName, ClassLoader parent) throws Exception {
