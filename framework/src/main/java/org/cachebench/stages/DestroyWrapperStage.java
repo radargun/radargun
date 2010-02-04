@@ -8,6 +8,8 @@ import org.cachebench.utils.Utils;
 
 import java.util.List;
 
+import static org.cachebench.utils.Utils.*;
+
 /**
  * Distributed stage that will stop the cache wrapper on each slave.
  *
@@ -58,13 +60,13 @@ public class DestroyWrapperStage extends AbstractDistStage {
          ack.setRemoteException(e);
          return returnAck(ack);
       } finally {
-         log.info(Utils.printMemoryFootprint(true));
+         log.info(printMemoryFootprint(true));
          if (enforceMemoryThrashHold && notFirstRun()) {
             doEnforceMemoryThrashHold();
          } else {
             System.gc();
          }
-         log.info(Utils.printMemoryFootprint(false));
+         log.info(printMemoryFootprint(false));
       }
       return returnAck(ack);
    }
@@ -98,7 +100,7 @@ public class DestroyWrapperStage extends AbstractDistStage {
    }
 
    private DistStageAck returnAck(DefaultDistStageAck ack) {
-      ack.setPayload(Utils.getFreeMemoryKb());
+      ack.setPayload(getFreeMemoryKb());
       return ack;
    }
 
@@ -107,14 +109,14 @@ public class DestroyWrapperStage extends AbstractDistStage {
       long freeMemory = -1;
       for (int i = 0; i < 30; i++) {
          System.gc();
-         freeMemory = Utils.getFreeMemoryKb();
+         freeMemory = getFreeMemoryKb();
          // initialFreeMemoryKb  ... 100%
          // freeMemory           ... x% (actualPercentage)
          actualPercentage = (freeMemory * 100) / initialFreeMemoryKb;
          if (actualPercentage >= memoryThreshold) break;
          Utils.seep(1000);
       }
-      log.info("Free memory: " + freeMemory + "kb (" + actualPercentage + "% from the initial free memory - " + initialFreeMemoryKb + "kb)");
+      log.info("Free memory: " + memString(freeMemory, "kb") + " (" + actualPercentage + "% from the initial free memory - " + memString(initialFreeMemoryKb, "kb") + ")");
       if (actualPercentage < memoryThreshold) {
          String msg = "Actual percentage of memory smaller than expected!";
          log.error(msg);
