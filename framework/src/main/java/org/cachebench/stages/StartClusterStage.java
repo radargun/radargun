@@ -29,7 +29,7 @@ public class StartClusterStage extends AbstractDistStage {
          return ack;
       }
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress() + ". This slave's index is: " + getSlaveIndex());
-      CacheWrapper wrapper;
+      CacheWrapper wrapper = null;
       try {
          String plugin = Utils.getCacheWrapperFqnClass(productName);
          wrapper = (CacheWrapper) createInstance(plugin);
@@ -55,6 +55,12 @@ public class StartClusterStage extends AbstractDistStage {
          log.error("Issues while instantiating/starting cache wrapper", e);
          ack.setError(true);
          ack.setRemoteException(e);
+         if (wrapper != null) {
+            try {
+               wrapper.tearDown();
+            } catch (Exception ignored) {
+            }
+         }
          return ack;
       }
       log.info("Successfully started cache wrapper on slave " + getSlaveIndex() + ": " + wrapper);
