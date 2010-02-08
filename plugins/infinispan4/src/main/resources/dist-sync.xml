@@ -16,9 +16,9 @@
       <unsafe unreliableReturnValues="true" />
 
       <clustering mode="d">
-         <sync replTimeout="10000"/>
+         <sync replTimeout="60000"/>
          <l1 enabled="false" />
-         <hash numOwners="2" rehashEnabled="false"/>
+         <hash numOwners="2" rehashEnabled="false" rehashRpcTimeout="60000"/>
       </clustering>
    </default>
 
