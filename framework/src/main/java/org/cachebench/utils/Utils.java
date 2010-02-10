@@ -24,6 +24,7 @@ public class Utils {
    private static Log log = LogFactory.getLog(Utils.class);
    public static final String PLUGINS_DIR = "plugins";
    private static final NumberFormat NF = new DecimalFormat("##,###");
+   private static final NumberFormat MEM_FMT = new DecimalFormat("##,###.####");
 
    public static String getDurationString(long duration) {
       long secs = duration / 1000;
@@ -51,7 +52,7 @@ public class Utils {
 
    public static String printMemoryFootprint(boolean before) {
       Runtime run = Runtime.getRuntime();
-      String memoryInfo = "Memory(KB) - free: " + kb(run.freeMemory()) + " - max:" + kb(run.maxMemory()) + "- total:" + kb(run.totalMemory());
+      String memoryInfo = "Memory - free: " + kb(run.freeMemory()) + " - max:" + kbString(run.maxMemory()) + "- total:" + kbString(run.totalMemory());
       if (before) {
          return "Before executing clear, memory looks like this: " + memoryInfo;
       } else {
@@ -63,8 +64,20 @@ public class Utils {
       return kb(Runtime.getRuntime().freeMemory());
    }
 
+   public static String getFreeMemoryKbString() {
+      return kbString(Runtime.getRuntime().freeMemory());
+   }
+
    public static long kb(long memBytes) {
       return memBytes / 1024;
+   }
+
+   public static String kbString(long memBytes) {
+      return MEM_FMT.format(memBytes / 1024) + " kb";
+   }
+
+   public static String memString(long mem, String suffix) {
+      return MEM_FMT.format(mem) + " " + suffix;
    }
 
    public static URLClassLoader buildProductSpecificClassLoader(String productName, ClassLoader parent) throws Exception {

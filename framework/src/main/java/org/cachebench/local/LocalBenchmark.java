@@ -41,22 +41,27 @@ public class LocalBenchmark {
          for (String config : product.getValue()) {
             log.info("Processing " + product.getKey() + "-" + config);
             CacheWrapper wrapper = getCacheWrapper(product.getKey());
-            wrapper.setUp(config, true);
-            Map<String, String> results = null;
-            for (CacheWrapperStressor stressor : stressors) {
-               results = stressor.stress(wrapper);
-               stressor.destroy();
+            try {
+               wrapper.setUp(config, true);
+
+               Map<String, String> results = null;
+               for (CacheWrapperStressor stressor : stressors) {
+                  results = stressor.stress(wrapper);
+                  stressor.destroy();
+               }
+               generateReport(results, product.getKey(), config);
+               wrapper.tearDown();
+               wrapper = null;
+               gc();
+            } catch (Exception e) {
+               wrapper.tearDown();
             }
-            generateReport(results, product.getKey(), config);
-            wrapper.tearDown();
-            wrapper = null;
-            gc();
          }
+
+         createOutputFile();
+
+         generateChart();
       }
-
-      createOutputFile();
-
-      generateChart();
    }
 
    private void generateChart() throws Exception {
@@ -118,9 +123,9 @@ public class LocalBenchmark {
       }
       writeLine(line.toString());
       for (ReportDesc reportDesc : reportDescs) {
-         long readsPerSec = (long)Double.parseDouble(results.get("READS_PER_SEC"));
+         long readsPerSec = (long) Double.parseDouble(results.get("READS_PER_SEC"));
          long noReads = Long.parseLong(results.get("READ_COUNT"));
-         long writesPerSec = (long)Double.parseDouble(results.get("WRITES_PER_SEC"));
+         long writesPerSec = (long) Double.parseDouble(results.get("WRITES_PER_SEC"));
          long noWrites = Long.parseLong(results.get("WRITE_COUNT"));
          reportDesc.updateData(product, config, readsPerSec, noReads, writesPerSec, noWrites);
       }

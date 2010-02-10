@@ -1,6 +1,7 @@
 package org.cachebench.cachewrappers;
 
 import org.cachebench.CacheWrapper;
+import org.cachebench.utils.Utils;
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
 import org.infinispan.factories.ComponentRegistry;
@@ -12,6 +13,8 @@ import org.jgroups.logging.LogFactory;
 
 import javax.transaction.TransactionManager;
 import java.util.List;
+
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class InfinispanWrapper implements CacheWrapper {
 
@@ -34,9 +37,15 @@ public class InfinispanWrapper implements CacheWrapper {
        log.info("JGroups version: " + org.jgroups.Version.printDescription());
       
       // should we be blocking until all rehashing, etc. has finished?
+      long gracePeriod = MINUTES.toMillis(15);
+      long giveup = System.currentTimeMillis() + gracePeriod;
       if (cache.getConfiguration().getCacheMode().isDistributed()) {
-         while (!cache.getAdvancedCache().getDistributionManager().isJoinComplete()) Thread.sleep(200);
+         while (!cache.getAdvancedCache().getDistributionManager().isJoinComplete() && System.currentTimeMillis() < giveup)
+            Thread.sleep(200);
       }
+
+      if (cache.getConfiguration().getCacheMode().isDistributed() && !cache.getAdvancedCache().getDistributionManager().isJoinComplete())
+         throw new RuntimeException("Caches haven't discovered and joined the cluster even after " + Utils.prettyPrintTime(gracePeriod));
    }
 
    public void tearDown() throws Exception {

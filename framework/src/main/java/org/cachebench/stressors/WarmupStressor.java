@@ -7,6 +7,8 @@ import org.cachebench.CacheWrapperStressor;
 import org.cachebench.stages.WarmupStage;
 
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Do <code>operationCount</code> puts and  <code>operationCount</code> gets on the cache wrapper.
@@ -25,6 +27,8 @@ public class WarmupStressor implements CacheWrapperStressor {
 
    private CacheWrapper wrapper;
 
+   private static final int WARMUP_THREADS = 5; // yes, hard coded.
+
    public Map<String, String> stress(CacheWrapper wrapper) {
       if (bucket == null || keyPrefix == null) {
          throw new IllegalStateException("Both bucket and key prefix must be set before starting to stress.");
@@ -40,24 +44,58 @@ public class WarmupStressor implements CacheWrapperStressor {
       return null;
    }
 
-   public void performWarmupOperations(CacheWrapper wrapper) throws Exception {
-      this.wrapper = wrapper;
-      log.info("Cache launched, performing " + (Integer) operationCount + " put and get operations. The bucket is '" + bucket + "' and the key prefix is '" + keyPrefix + "'.");
-      for (int i = 0; i < operationCount; i++) {
-         try {
-            wrapper.put(bucket, keyPrefix + String.valueOf((Integer) i), String.valueOf(i));
-         }
-         catch (Throwable e) {
-            log.warn("Exception on cache warmup", e);
-         }
+   public void performWarmupOperations(CacheWrapper w) throws Exception {
+      this.wrapper = w;
+      log.info("Cache launched, performing " + (Integer) operationCount + " put and get operations ");
+      Thread[] warmupThreads = new Thread[WARMUP_THREADS];
+
+      final AtomicInteger writes = new AtomicInteger(0);
+      final AtomicInteger reads = new AtomicInteger(0);
+      final Random r = new Random();
+
+      for (int i = 0; i < WARMUP_THREADS; i++) {
+         final int threadId = i;
+         warmupThreads[i] = new Thread() {
+            public void run() {
+               while (writes.get() < operationCount && reads.get() < operationCount) {
+
+                  boolean isGet = r.nextInt(2) == 1;
+                  int operationId;
+                  if (isGet) {
+                     if ((operationId = reads.getAndIncrement()) < operationCount) doGet(operationId, threadId);
+                  } else {
+                     if ((operationId = writes.getAndIncrement()) < operationCount) doPut(operationId, threadId);
+                  }
+               }
+            }
+         };
+
+         warmupThreads[i].start();
       }
 
-      for (int i = 0; i < operationCount; i++) {
-         wrapper.get(bucket, keyPrefix + String.valueOf((Integer) i));
-      }
+      for (Thread t: warmupThreads) t.join();
       log.trace("Cache warmup ended!");
    }
 
+   private void doPut(int operationId, int threadId) {
+      String key = new StringBuilder(keyPrefix).append("-").append(operationId).append("-").
+            append(threadId).append("-").append(bucket).toString();
+      try {
+         wrapper.put(bucket, key, key);
+      } catch (Exception e) {
+         log.info("Caught exception doing a PUT on key " + key, e);
+      }
+   }
+
+   private void doGet(int operationId, int threadId) {
+      String key = new StringBuilder(keyPrefix).append("-").append(operationId).append("-").
+            append(threadId).append("-").append(bucket).toString();
+      try {
+         wrapper.get(bucket, key);
+      } catch (Exception e) {
+         log.info("Caught exception doing a GET on key " + key, e);
+      }
+   }
 
    public void setOperationCount(int operationCount) {
       this.operationCount = operationCount;
