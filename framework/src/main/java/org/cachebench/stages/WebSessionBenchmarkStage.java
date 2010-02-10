@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Double.parseDouble;
+import static org.cachebench.utils.Utils.numberFormat;
+
 /**
  * Simulates the work with a distributed web sessions.
  *
@@ -108,7 +111,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
             if (reqPerSes == null) {
                throw new IllegalStateException("This should be there!");
             }
-            log.info("On slave " + ack.getSlaveIndex() + " we had " + reqPerSes + " requests per second");
+            log.info("On slave " + ack.getSlaveIndex() + " we had " + numberFormat(parseDouble(reqPerSes.toString())) + "requests per second");
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }

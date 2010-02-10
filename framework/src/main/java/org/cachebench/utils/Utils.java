@@ -9,6 +9,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ public class Utils {
 
    private static Log log = LogFactory.getLog(Utils.class);
    public static final String PLUGINS_DIR = "plugins";
+   private static final NumberFormat NF = new DecimalFormat("##,###");
 
    public static String getDurationString(long duration) {
       long secs = duration / 1000;
@@ -193,5 +195,13 @@ public class Utils {
       } catch (InterruptedException e) {
          throw new IllegalStateException(e);
       }
+   }
+
+   public static String numberFormat(int i) {
+      return NF.format(i);
+   }
+
+   public static String numberFormat(double d) {
+      return NF.format(d);
    }
 }
