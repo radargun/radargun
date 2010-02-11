@@ -26,6 +26,8 @@ public abstract class AbstractDistStage implements DistStage {
 
    protected transient MasterConfig masterConfig;
 
+   protected boolean exitBenchmarkOnSlaveFailure = false;
+
    protected int slaveIndex;
    private int activeSlavesCount;
    private int totalSlavesCount;
@@ -50,8 +52,17 @@ public abstract class AbstractDistStage implements DistStage {
       this.runOnAllSlaves = runOnAllSlaves;
    }
 
+
    public boolean isRunOnAllSlaves() {
       return runOnAllSlaves;
+   }
+
+   public boolean isExitBenchmarkOnSlaveFailure() {
+      return exitBenchmarkOnSlaveFailure;
+   }
+
+   public void setExitBenchmarkOnSlaveFailure(boolean exitOnFailure) {
+      this.exitBenchmarkOnSlaveFailure = exitOnFailure;
    }
 
    protected DefaultDistStageAck newDefaultStageAck() {
@@ -72,7 +83,6 @@ public abstract class AbstractDistStage implements DistStage {
       for (DistStageAck stageAck : acks) {
          DefaultDistStageAck defaultStageAck = (DefaultDistStageAck) stageAck;
          if (defaultStageAck.isError()) {
-            success = false;
             log.warn("Received error ack " + defaultStageAck, defaultStageAck.getRemoteException());
             return false;
          } else {
@@ -102,10 +112,6 @@ public abstract class AbstractDistStage implements DistStage {
 
    public int getActiveSlaveCount() {
       return activeSlavesCount;
-   }
-
-   public int getTotalSlavesCount() {
-      return totalSlavesCount;
    }
 
    public void setActiveSlavesCount(int activeSlaves) {

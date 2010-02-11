@@ -20,8 +20,6 @@ public interface DistStage extends Stage, Serializable {
 
    public int getActiveSlaveCount();
 
-   public int getTotalSlavesCount();
-
    public void setActiveSlavesCount(int activeSlaves);
 
    /**
@@ -44,4 +42,10 @@ public interface DistStage extends Stage, Serializable {
    public DistStage clone();
 
    public boolean isRunOnAllSlaves();
+
+   public void setRunOnAllSlaves(boolean runOnAllSlaves);
+
+   public boolean isExitBenchmarkOnSlaveFailure();
+
+   public void setExitBenchmarkOnSlaveFailure(boolean exitOnFailure);
 }

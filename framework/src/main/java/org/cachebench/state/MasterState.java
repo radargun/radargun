@@ -12,8 +12,6 @@ import org.cachebench.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * State residing on the server, passed to each stage before execution.
@@ -29,8 +27,6 @@ public class MasterState extends StateBase {
    private FixedSizeBenchmarkConfig currentBenchmark;
    private long startTime = System.currentTimeMillis();
    private DistStage currentDistStage;
-
-   private boolean stopOnError = false;
 
    public MasterState(MasterConfig config) {
       this.config = config;
@@ -50,7 +46,6 @@ public class MasterState extends StateBase {
          Stage stage = currentBenchmark.nextStage();
          if (stage instanceof DistStage) {
             currentDistStage = (DistStage) stage;
-            log.info("Starting dist stage '" + currentDistStage.getClass().getSimpleName() + "' on " + currentDistStage.getActiveSlaveCount() + " Slaves: " + currentDistStage);
             return currentDistStage;
          } else {
             executeServerStage((MasterStage) stage);
@@ -73,14 +68,6 @@ public class MasterState extends StateBase {
       return currentDistStage;
    }
 
-   public Set<Integer> getSlaveIndexesForCurrentStage() {
-      Set<Integer> result = new TreeSet<Integer>();
-      for (int i = 0; i < currentDistStage.getActiveSlaveCount(); i++) {
-         result.add(i);
-      }
-      return result;
-   }
-
    public int getSlavesCountForCurrentStage() {
       return currentDistStage.getActiveSlaveCount();
    }
@@ -88,11 +75,12 @@ public class MasterState extends StateBase {
    public boolean distStageFinished(List<DistStageAck> acks) {
       boolean stageOk = currentDistStage.processAckOnMaster(acks, this);
       if (stageOk) return true;
-      if (!stopOnError) {
+      if (!currentDistStage.isExitBenchmarkOnSlaveFailure()) {
          log.warn("Execution error for current benchmark, skipping rest of the stages");
          currentBenchmark.errorOnCurentBenchmark();
          return true;
       } else {
+         log.info("Exception error on current stage, and exiting (stage's exitBenchmarkOnSlaveFailure is set to true).");
          return false;
       }
    }

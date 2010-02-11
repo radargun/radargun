@@ -23,6 +23,11 @@ public class StartClusterStage extends AbstractDistStage {
    private static final String PREV_PRODUCT = "StartClusterStage.previousProduct";
    private static final String CLASS_LOADER = "StartClusterStage.classLoader";
 
+
+   public StartClusterStage() {
+      super.setExitBenchmarkOnSlaveFailure(true);
+   }
+
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
       if (slaveState.getCacheWrapper() != null) {
