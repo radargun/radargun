@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Integer.MAX_VALUE;
 
@@ -33,7 +34,7 @@ public class PutGetStressor implements CacheWrapperStressor {
    /**
     * total number of operation to be made against cache wrapper: reads + writes
     */
-   private int numberOfRequestsPerThread = 50000;
+   private int numberOfRequests = 50000;
 
    /**
     * for each there will be created fixed number of keys. All the GETs and PUTs are performed on these keys only.
@@ -120,9 +121,10 @@ public class PutGetStressor implements CacheWrapperStressor {
 
    private List<Stresser> executeOperations() throws Exception {
       List<Stresser> stressers = new ArrayList<Stresser>();
+      final AtomicInteger requestsLeft = new AtomicInteger(numberOfRequests);
       startPoint = new CountDownLatch(1);
       for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
-         Stresser stresser = new Stresser(threadIndex);
+         Stresser stresser = new Stresser(threadIndex, requestsLeft);
          stresser.initializeKeys();
          stressers.add(stresser);
          stresser.start();
@@ -134,7 +136,7 @@ public class PutGetStressor implements CacheWrapperStressor {
       return stressers;
    }
 
-   public class Stresser extends Thread {
+   private class Stresser extends Thread {
 
       private ArrayList<String> pooledKeys = new ArrayList<String>(numberOfKeys);
 
@@ -146,11 +148,13 @@ public class PutGetStressor implements CacheWrapperStressor {
       private long reads;
       private long writes;
       private long startTime;
+      private AtomicInteger requestsLeft;
 
-      public Stresser(int threadIndex) {
+      public Stresser(int threadIndex, AtomicInteger requestsLeft) {
          super("Stresser-" + threadIndex);
          this.threadIndex = threadIndex;
          bucketId = getBucketId(threadIndex);
+         this.requestsLeft = requestsLeft;
       }
 
       @Override
@@ -166,7 +170,9 @@ public class PutGetStressor implements CacheWrapperStressor {
          } catch (InterruptedException e) {
             log.warn(e);
          }
-         for (int i = 0; i < numberOfRequestsPerThread; i++) {
+
+         int i = 0;
+         while(requestsLeft.getAndDecrement() > -1) {
             logProgress(i);
             randomAction = r.nextInt(100);
             randomKeyInt = r.nextInt(numberOfKeys - 1);
@@ -196,6 +202,7 @@ public class PutGetStressor implements CacheWrapperStressor {
                writeDuration += System.currentTimeMillis() - start;
                writes++;
             }
+            i++;
          }
       }
 
@@ -211,7 +218,7 @@ public class PutGetStressor implements CacheWrapperStressor {
       private void logProgress(int i) {
          if ((i + 1) % opsCountStatusLog == 0) {
             double elapsedTime = System.currentTimeMillis() - startTime;
-            double estimatedTotal = ((double) numberOfRequestsPerThread / (double) i) * elapsedTime;
+            double estimatedTotal = ((double) (numberOfRequests / numOfThreads) / (double) i) * elapsedTime;
             double estimatedRemaining = estimatedTotal - elapsedTime;
             if (log.isTraceEnabled()) {
                log.trace("i=" + i + ", elapsedTime=" + elapsedTime);
@@ -248,8 +255,8 @@ public class PutGetStressor implements CacheWrapperStressor {
       return String.valueOf(o);
    }
 
-   public void setNumberOfRequestsPerThread(int numberOfRequestsPerThread) {
-      this.numberOfRequestsPerThread = numberOfRequestsPerThread;
+   public void setNumberOfRequests(int numberOfRequests) {
+      this.numberOfRequests = numberOfRequests;
    }
 
    public void setNumberOfAttributes(int numberOfKeys) {
@@ -307,7 +314,7 @@ public class PutGetStressor implements CacheWrapperStressor {
    public String toString() {
       return "PutGetStressor{" +
             "opsCountStatusLog=" + opsCountStatusLog +
-            ", numberOfRequestsPerThread=" + numberOfRequestsPerThread +
+            ", numberOfRequests=" + numberOfRequests +
             ", numberOfKeys=" + numberOfKeys +
             ", sizeOfValue=" + sizeOfValue +
             ", writePercentage=" + writePercentage +

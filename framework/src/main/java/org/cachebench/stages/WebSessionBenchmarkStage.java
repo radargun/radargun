@@ -22,13 +22,11 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
    private int opsCountStatusLog = 5000;
 
    public static final String SESSION_PREFIX = "SESSION";
-   public static final String ATTRIBUTE_PREFIX = "ATTRIBUTE";
-
 
    /**
     * total number of request to be made against this session: reads + writes
     */
-   private int numberOfRequestsPerThread = 50000;
+   private int numberOfRequests = 50000;
 
    /**
     * for each session there will be created fixed number of attributes. On those attributes all the GETs and PUTs are
@@ -71,7 +69,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       putGetStressor.setBucketPrefix(SESSION_PREFIX + "_" + getSlaveIndex());
       putGetStressor.setKeyPrefix(SESSION_PREFIX + "_" + getSlaveIndex());
       putGetStressor.setNumberOfAttributes(numberOfAttributes);
-      putGetStressor.setNumberOfRequestsPerThread(numberOfRequestsPerThread);
+      putGetStressor.setNumberOfRequests(numberOfRequests);
       putGetStressor.setNumOfThreads(numOfThreads);
       putGetStressor.setOpsCountStatusLog(opsCountStatusLog);
       putGetStressor.setSizeOfAnAttribute(sizeOfAnAttribute);
@@ -119,8 +117,8 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       return success;
    }
 
-   public void setNumberOfRequestsPerThread(int numberOfRequestsPerThread) {
-      this.numberOfRequestsPerThread = numberOfRequestsPerThread;
+   public void setNumberOfRequests(int numberOfRequests) {
+      this.numberOfRequests = numberOfRequests;
    }
 
    public void setNumberOfAttributes(int numberOfAttributes) {
@@ -151,7 +149,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
    public String toString() {
       return "WebSessionBenchmarkStage {" +
             "opsCountStatusLog=" + opsCountStatusLog +
-            ", numberOfRequestsPerThread=" + numberOfRequestsPerThread +
+            ", numberOfRequests=" + numberOfRequests +
             ", numberOfAttributes=" + numberOfAttributes +
             ", sizeOfAnAttribute=" + sizeOfAnAttribute +
             ", writePercentage=" + writePercentage +

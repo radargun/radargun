@@ -7,7 +7,11 @@
       <StartCluster/>
       <ClusterValidation partialReplication="false"/>
       <Warmup operationCount="100000"/>
-      <WebSessionBenchmark numberOfRequestsPerThread="50000" opsCountStatusLog="10000" numOfThreads="25"/>
+      <!--
+         This will average to 10000 requests per thread, although a work-stealing pattern is used so some threads may
+         do more work than others.
+       -->
+      <WebSessionBenchmark numberOfRequests="250000" opsCountStatusLog="10000" numOfThreads="25"/>
       <CsvReportGeneration/>
    </benchmark>
 
