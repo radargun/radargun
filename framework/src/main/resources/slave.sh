@@ -51,9 +51,8 @@ add_fwk_to_classpath
 set_env
 
 D_VARS="-Djava.net.preferIPv4Stack=true -Dlog4j.file.prefix=${LOG4J_PREFIX} -Dbind.address=${BIND_ADDRESS}"
-
-nohup java ${JVM_OPTS} ${D_VARS} -classpath $CP org.cachebench.Slave ${CONF} > stdout_slave_${HOST_NAME}.out 2>&1 &
 HOST_NAME=`hostname`
+nohup java ${JVM_OPTS} ${D_VARS} -classpath $CP org.cachebench.Slave ${CONF} > stdout_slave_${HOST_NAME}.out 2>&1 &
 echo "... done! Slave process started on host ${HOST_NAME}!"
 echo ""
 
