@@ -143,15 +143,19 @@ public class GenerateChartStage extends AbstractMasterStage {
             String configName = tokenizer.nextToken();
             if (!filter.containsKey(productName)) return false;
 
-            //first check that this works as compilation issues might have occured during parsing the patterns
+            //first check that this works as compilation issues might have occurred during parsing the patterns
             if (filter.get(productName).contains(configName)) {
                return true;
             } else {
-               List<Pattern> patternList = compiledFilters.get(productName);
-               for (Pattern pattern : patternList) {
-                  if (pattern.matcher(configName).find()) {
-                     log.trace("Pattern '" + pattern + "' matched config: " + configName);
-                     return true;
+               if (configName.equals("*")) {
+                  return true;
+               } else {
+                  List<Pattern> patternList = compiledFilters.get(productName);
+                  for (Pattern pattern : patternList) {
+                     if (pattern.matcher(configName).find()) {
+                        log.trace("Pattern '" + pattern + "' matched config: " + configName);
+                        return true;
+                     }
                   }
                }
             }
