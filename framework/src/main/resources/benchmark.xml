@@ -1,37 +1,40 @@
 <bench-config>
 
-   <master bindAddress="${127.0.0.1:bind.address}" port="2103"/>
+   <master bindAddress="${127.0.0.1:master.address}" port="${2103:master.port}"/>
 
    <benchmark initSize="2" maxSize="${8:slaves}" increment="1">
       <DestroyWrapper runOnAllSlaves="true"/>
       <StartCluster/>
       <ClusterValidation partialReplication="false"/>
       <Warmup operationCount="100000"/>
-      <WebSessionBenchmark numberOfRequestsPerThread="50000" opsCountStatusLog="10000" numOfThreads="5"/>
+      <!--
+         This will average to 10000 requests per thread, although a work-stealing pattern is used so some threads may
+         do more work than others.
+       -->
+      <WebSessionBenchmark numberOfRequests="250000" opsCountStatusLog="10000" numOfThreads="25"/>
       <CsvReportGeneration/>
    </benchmark>
 
    <products>
-      <coherence3>
-         <config name="replicated"/>
-         <config name="distributed"/>
-      </coherence3>
+      <jbosscache3>
+         <config name="mvcc/mvcc-repl-sync.xml"/>
+      </jbosscache3>
       <infinispan4>
          <config name="repl-sync.xml"/>
          <config name="dist-sync.xml"/>
+         <config name="dist-sync-l1.xml"/>
       </infinispan4>
    </products>
 
    <reports>
-      <report name="sync-repl">
+      <report name="Replicated">
          <item product="infinispan4" config="repl-sync.xml"/>
-         <item product="coherence3" config="replicated"/>
+         <item product="jbosscache3" config="*"/>
       </report>
-      <report name="sync-dist">
-         <item product="infinispan4" config="dist-sync.xml"/>
-         <item product="coherence3" config="distributed"/>
+      <report name="Distributed">
+         <item product="infinispan4" config="dist-*"/>
       </report>
-      <report name="all_included" includeAll="true"/>
+      <report name="All" includeAll="true"/>
    </reports>
 
 </bench-config>

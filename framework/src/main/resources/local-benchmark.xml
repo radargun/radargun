@@ -2,7 +2,11 @@
 
    <benchmark>
       <Warmup operationCount="100000"/>
-      <PutGet numberOfRequestsPerThread="100000" opsCountStatusLog="10000" numOfThreads="5"/>
+      <!--
+         This will average to 10000 requests per thread, although a work-stealing pattern is used so some threads may
+         do more work than others.
+       -->
+      <PutGet numberOfRequests="250000" opsCountStatusLog="10000" numOfThreads="25"/>
    </benchmark>
 
    <products>

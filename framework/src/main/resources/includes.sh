@@ -63,3 +63,18 @@ wait_for_process() {
     sleep 5
   done  
 }
+
+get_port() {
+  HOST_PORT=$1
+  if [ "x`echo $HOST_PORT | grep :`" = "x" ]
+  then
+    PORT=""
+  else
+    PORT=`echo $HOST_PORT | sed -e 's/^.*://g'`
+  fi
+}
+
+get_host() {
+  HOST_PORT=$1
+  HOST=`echo $HOST_PORT | sed -e 's/:.*$//g' -e 's/^\s*//g'`
+}

@@ -13,6 +13,7 @@ REMOTE_CMD='ssh -q -o "StrictHostKeyChecking false"'
 MASTER=`hostname`
 SLAVES=""
 SLAVE_COUNT=0
+TAILF=false
 
 help_and_exit() {
   wrappedecho "Usage: "
@@ -29,6 +30,8 @@ help_and_exit() {
   wrappedecho "   -m       Connection to MASTER server.  Specified as host or host:port.  Defaults to '$MASTER'."
   wrappedecho ""
   wrappedecho "   -r       Command for remote command execution.  Defaults to '$REMOTE_CMD'."
+  wrappedecho ""
+  wrappedecho "   -t       After starting the benchmark it will run 'tail -f' on the master node's log file."
   wrappedecho ""
   wrappedecho "   -h       Displays this help screen"
   wrappedecho ""
@@ -55,6 +58,9 @@ do
       MASTER=$2
       shift
       ;;
+    "-t")
+      TAILF=true
+      ;;      
     "-h")
       help_and_exit
       ;;
@@ -79,16 +85,22 @@ fi
 
 
 ####### first start the master
-. ${CBF_HOME}/bin/master.sh -s $SLAVE_COUNT
+. ${CBF_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER}
 PID_OF_MASTER_PROCESS=$CBF_MASTER_PID
 
 
 ####### then start the rest of the nodes
 CMD="source ~/.bash_profile ; cd $WORKING_DIR"
-CMD="$CMD ; bin/slave.sh -m $MASTER"
+CMD="$CMD ; bin/slave.sh -m ${MASTER}"
 
 for slave in $SLAVES; do
   TOEXEC="$REMOTE_CMD -l $SSH_USER $slave '$CMD'"
   echo "$TOEXEC"
   eval $TOEXEC
 done
+
+if [ $TAILF == "true" ]
+then
+  tail -f cachebench.log
+fi
+

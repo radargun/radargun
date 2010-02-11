@@ -9,17 +9,19 @@ SLAVE_COUNT_ARG=""
 TAILF=false
 
 help_and_exit() {
-  echo "Usage: "
-  echo '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT]'
-  echo ""
-  echo "   -c       Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark.xml"
-  echo ""
-  echo "   -s       Number of slaves.  Defaults to maxSize attribute in framework configuration XML file."
-  echo ""
-  echo "   -t       After starting the bechmark it will run 'tail -f' on the server's log file. By default this is set to ${TUILF}"
-  echo ""
-  echo "   -h       Displays this help screen"
-  echo ""
+  wrappedecho "Usage: "
+  wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT]'
+  wrappedecho ""
+  wrappedecho "   -c       Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark.xml"
+  wrappedecho ""
+  wrappedecho "   -s       Number of slaves.  Defaults to maxSize attribute in framework configuration XML file."
+  wrappedecho ""
+  wrappedecho "   -t       After starting the benchmark it will run 'tail -f' on the master node's log file."
+  wrappedecho ""
+  wrappedecho "   -m       MASTER host[:port]. An optional override to override the host/port defaults that the master listens on."
+  wrappedecho ""
+  wrappedecho "   -h       Displays this help screen"
+  wrappedecho ""
 
   exit 0
 }
@@ -38,14 +40,18 @@ do
       CONFIG=$2
       shift
       ;;
-   "-t")
-     TAILF=true
-     ;;
+    "-m")
+      MASTER=$2
+      shift
+      ;;
+    "-t")
+      TAILF=true
+      ;;
     "-h")
       help_and_exit
       ;;
     *)
-      echo "Warning: unknown argument ${1}" 
+      wrappedecho "Warning: unknown argument ${1}" 
       help_and_exit
       ;;
   esac
@@ -54,8 +60,19 @@ done
 
 add_fwk_to_classpath
 set_env
+
 D_VARS="-Djava.net.preferIPv4Stack=true"
-java ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG -Dbind.address=${BIND_ADDRESS} org.cachebench.LaunchMaster -config ${CONFIG} > stdout_master.out 2>&1 &
+
+if ! [ "x${MASTER}" = "x" ] ; then
+  get_port ${MASTER}
+  get_host ${MASTER}
+  D_VARS="${D_VARS} -Dmaster.address=${HOST}"
+  if ! [ "x${PORT}" = "x" ] ; then
+    D_VARS="${D_VARS} -Dmaster.port=${PORT}"
+  fi
+fi
+
+java ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.cachebench.LaunchMaster -config ${CONFIG} > stdout_master.out 2>&1 &
 export CBF_MASTER_PID=$!
 HOST_NAME=`hostname`
 echo "Master's PID is $CBF_MASTER_PID running on ${HOST_NAME}"
