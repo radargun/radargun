@@ -4,7 +4,7 @@
 
    <benchmark initSize="2" maxSize="${8:slaves}" increment="1">
       <DestroyWrapper runOnAllSlaves="true"/>
-      <StartCluster/>
+      <StartCluster staggerSlaveStartup="true" delayAfterFirstSlaveStarts="5000" delayBetweenStartingSlaves = "500"/>
       <ClusterValidation partialReplication="false"/>
       <Warmup operationCount="100000"/>
       <!--

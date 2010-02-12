@@ -4,12 +4,35 @@
 if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; pwd` ; fi; export CBF_HOME
 . ${CBF_HOME}/bin/includes.sh
 
+
+MASTER_HOST=""
+MASTER_PORT=""
 LOG4J_PREFIX=`hostname`
+
+
+default_master() {
+  MASTER_HOST=`sed -n -e '/bindAddress/{
+                           s/.*bindAddress="${//
+                           s/}".*//
+                           s/:.*//
+                           p
+                           }' ${CBF_HOME}/conf/benchmark.xml`
+  MASTER_PORT=`sed -n -e '/port="/{
+                           s/.*port="${//
+                           s/}".*//
+                           s/:.*//
+                           p
+                           }' ${CBF_HOME}/conf/benchmark.xml`
+}
+
+default_master
+MASTER=${MASTER_HOST}:${MASTER_PORT}
+
 help_and_exit() {
   echo "Usage: "
-  echo '  $ start_local_slave.sh -m MASTER_IP -plugin plugin_name'
+  echo '  $ slave.sh [-m host:port] [-p log4j_file_prefix]'
   echo ""
-  echo "   -m        MASTER host[:port]. Master host is required, the port is optional and defaults to 2103."
+  echo "   -m        Master host and port. Optional, defaults to ${MASTER}. (this value is taken from ./conf/benchmark.xml)."
   echo ""
   echo "   -p        Prefix to be appended to the generated log4j file (useful when running multiple nodes on the same machine). Optional."
   echo ""
@@ -32,18 +55,16 @@ do
       LOG4J_PREFIX=$2
       shift
       ;;
+    "-h")
+      help_and_exit
+      ;;
     *)
-      echo "Warn: unknown param ${1}" 
+      echo "Warn: unknown param \"${1}\"" 
       help_and_exit
       ;;
   esac
   shift
 done
-
-if [ -z $MASTER ] ; then
-  echo "FATAL: required information (-m) missing!"
-  help_and_exit
-fi
 
 CONF="-master $MASTER"
 

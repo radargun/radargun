@@ -16,7 +16,7 @@ master_pid() {
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT] [-status] [-kill]'
+  wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT] [-status] [-stop]'
   wrappedecho ""
   wrappedecho "   -c       Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark.xml"
   wrappedecho ""
@@ -47,7 +47,7 @@ do
       fi 
       exit 0
       ;;
-     "-kill")
+     "-stop")
       master_pid;
       if [ -z "${CBF_MASTER_PID}" ] 
       then
@@ -56,9 +56,9 @@ do
         kill -9 ${CBF_MASTER_PID}
         if [ $? ]
         then 
-          echo "Successfully killed master (pid=${CBF_MASTER_PID})" 
+          echo "Successfully stopped master (pid=${CBF_MASTER_PID})"
         else 
-          echo "Problems killing master(pid=${CBF_MASTER_PID})";
+          echo "Problems stopping master(pid=${CBF_MASTER_PID})";
         fi  
       fi 
       exit 0
