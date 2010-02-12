@@ -112,6 +112,9 @@ public class MasterState extends StateBase {
    }
 
    private void logBenchmarkStarted() {
-      log.info("Started benchmark '" + currentBenchmark.getProductName() + '\'');
+      //this might happen in the benchmark that generates the report.GG
+      if (currentBenchmark.getProductName() != null) {
+         log.info("Started benchmarking product '" + currentBenchmark.getProductName() + '\'');
+      }
    }
 }

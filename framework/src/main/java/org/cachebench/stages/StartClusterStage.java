@@ -17,9 +17,15 @@ public class StartClusterStage extends AbstractDistStage {
    private String productName;
    private boolean useSmartClassLoading = true;
    private boolean performClusterSizeValidation = true;
+   private boolean staggerSlaveStartup = true;
+   private long delayAfterFirstSlaveStarts = 5000;
+   private long delayBetweenStartingSlaves = 500;
+   
 
    private String config;
    private final int TRY_COUNT = 180;
+
+
    private static final String PREV_PRODUCT = "StartClusterStage.previousProduct";
    private static final String CLASS_LOADER = "StartClusterStage.classLoader";
 
@@ -34,6 +40,7 @@ public class StartClusterStage extends AbstractDistStage {
          log.info("Wrapper already set on this slave, not starting it again.");
          return ack;
       }
+      staggerStartup(slaveIndex, getActiveSlaveCount());
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress() + ". This slave's index is: " + getSlaveIndex());
       CacheWrapper wrapper = null;
       try {
@@ -121,5 +128,38 @@ public class StartClusterStage extends AbstractDistStage {
             ", useSmartClassLoading=" + useSmartClassLoading +
             ", config=" + config +
             ", " + super.toString();
+   }
+
+
+   public void setStaggerSlaveStartup(boolean staggerSlaveStartup) {
+      this.staggerSlaveStartup = staggerSlaveStartup;
+   }
+
+   public void setDelayAfterFirstSlaveStarts(long delayAfterFirstSlaveStarts) {
+      this.delayAfterFirstSlaveStarts = delayAfterFirstSlaveStarts;
+   }
+
+   public void setDelayBetweenStartingSlaves(long delayBetweenSlavesStarts) {
+      this.delayBetweenStartingSlaves = delayBetweenSlavesStarts;
+   }
+
+   private void staggerStartup(int thisNodeIndex, int activeNodes) {
+      if (!staggerSlaveStartup) {
+         if (log.isTraceEnabled()) {
+            log.trace("Not using slave startup staggering");
+         }
+         return;
+      }
+      if (thisNodeIndex == 0) {
+         log.info("Startup staggering, cluster size is " + activeNodes + " This is the slave with index 0, not sleeping");
+         return;
+      }
+      long toSleep = delayAfterFirstSlaveStarts + thisNodeIndex * delayBetweenStartingSlaves;
+      log.info(" Startup staggering, cluster size is " + activeNodes + ". This is the slave with index " + thisNodeIndex + ". Sleeping for " + toSleep + " millis.");
+      try {
+         Thread.sleep(toSleep);
+      } catch (InterruptedException e) {
+         throw new IllegalStateException("Should never happen");
+      }
    }
 }

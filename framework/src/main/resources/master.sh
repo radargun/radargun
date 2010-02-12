@@ -7,10 +7,16 @@ if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; 
 CONFIG=./conf/benchmark.xml
 SLAVE_COUNT_ARG=""
 TAILF=false
+CBF_MASTER_PID=""
+
+master_pid() {
+   CBF_MASTER_PID=`ps -e | grep "org.cachebench.LaunchMaster" | grep -v "grep" | awk '{print $1}'`
+   return 
+}
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT]'
+  wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT] [-status] [-kill]'
   wrappedecho ""
   wrappedecho "   -c       Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark.xml"
   wrappedecho ""
@@ -26,13 +32,38 @@ help_and_exit() {
   exit 0
 }
 
-welcome "This script is used to launch the master process, which coordinates tests run on slaves."
 
 ### read in any command-line params
 while ! [ -z $1 ]
 do
   case "$1" in
-    "-s")
+    "-status")
+      master_pid;
+      if [ -z "${CBF_MASTER_PID}" ] 
+      then
+        echo "Master not running." 
+      else
+        echo "Master is running, pid is ${CBF_MASTER_PID}." 
+      fi 
+      exit 0
+      ;;
+     "-kill")
+      master_pid;
+      if [ -z "${CBF_MASTER_PID}" ] 
+      then
+        echo "Master not running." 
+      else
+        kill -9 ${CBF_MASTER_PID}
+        if [ $? ]
+        then 
+          echo "Successfully killed master (pid=${CBF_MASTER_PID})" 
+        else 
+          echo "Problems killing master(pid=${CBF_MASTER_PID})";
+        fi  
+      fi 
+      exit 0
+      ;;
+     "-s")
       SLAVE_COUNT_ARG="-Dslaves=$2 "
       shift
       ;;
@@ -57,6 +88,8 @@ do
   esac
   shift
 done
+
+welcome "This script is used to launch the master process, which coordinates tests run on slaves."
 
 add_fwk_to_classpath
 set_env

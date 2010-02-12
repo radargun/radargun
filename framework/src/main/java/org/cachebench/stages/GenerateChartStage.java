@@ -170,11 +170,24 @@ public class GenerateChartStage extends AbstractMasterStage {
          for (String product : filter.keySet()) {
             List<Pattern> compiled = new ArrayList<Pattern>();
             for (String aFilter : filter.get(product)) {
+               if (aFilter.equals("*") || aFilter.equals("?") || aFilter.equals("+")) {
+                  String oldPatter = aFilter;
+                  aFilter = "[" + aFilter + "]";
+                  log.info("Converting the pattern from '" + oldPatter + "' to '" + aFilter +"'. " +
+                        "See: http://arunma.com/2007/08/23/javautilregexpatternsyntaxexception-dangling-meta-character-near-index-0");
+               }
                try {
                   Pattern pattern = Pattern.compile(aFilter);
                   compiled.add(pattern);
                } catch (Exception e) {
-                  log.warn("Exception while compiling the pattern: '" + aFilter + "'", e);
+                  String message = "Exception while compiling the pattern: '" + aFilter + "'";
+                  if (e.getMessage().indexOf("Dangling meta character ") >= 0) {
+                     message += "If your regexp is like '*' or '+' (or other methachars), add square brackets to it, " +
+                           "e.g. '[*]'. See: http://arunma.com/2007/08/23/javautilregexpatternsyntaxexception-dangling-meta-character-near-index-0/";
+                  } else {
+                  }
+                  log.warn(message, e);
+
                }
             }
             compiledFilters.put(product, compiled);
