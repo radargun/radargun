@@ -30,7 +30,7 @@
         oob_thread_pool.queue_max_size="100"
         oob_thread_pool.rejection_policy="discard"/>
 
-   <FILE_PING location="file_ping_dir" timeout="5000" num_initial_members="10"/>
+   <PING timeout="5000" num_initial_members="1000"/>
    <MERGE2 max_interval="30000" min_interval="10000"/>
    <FD_SOCK/>
    <FD_ALL timeout="15000" interval="5000"/>
