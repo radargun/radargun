@@ -10,7 +10,7 @@ TAILF=false
 CBF_MASTER_PID=""
 
 master_pid() {
-   CBF_MASTER_PID=`ps -e | grep "org.cachebench.LaunchMaster" | grep -v "grep" | awk '{print $1}'`
+   CBF_MASTER_PID=`ps -ef | grep "org.cachebench.LaunchMaster" | grep -v "grep" | awk '{print $2}'`
    return 
 }
 
