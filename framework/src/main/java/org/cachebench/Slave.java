@@ -50,13 +50,13 @@ public class Slave {
    public Slave(String masterHost, int masterPort) {
       this.masterHost = masterHost;
       this.masterPort = masterPort;
+      Runtime.getRuntime().addShutdownHook(new ShutDownHook("Slave process"));
    }
 
    private void start() throws Exception {
       connectToMaster();
       startCommunicationWithMaster();
-      log.info("Exiting!");
-      System.exit(0);
+      ShutDownHook.exit(0);
    }
 
    private void startCommunicationWithMaster() throws Exception {
@@ -144,7 +144,7 @@ public class Slave {
                }
 
             } else {
-               log.warn("Received a key that is not connectable, readable or writable: " + key);
+               log.warn("Received a key that is not connectible, readable or writable: " + key);
             }
          }
       }
@@ -198,7 +198,7 @@ public class Slave {
                   masterPort = Integer.parseInt(param.substring(param.indexOf(":") + 1));
                } catch (NumberFormatException nfe) {
                   log.warn("Unable to parse port part of the master!  Failing!");
-                  System.exit(10);
+                  ShutDownHook.exit(10);
                }
             } else {
                masterHost = param;
@@ -215,6 +215,6 @@ public class Slave {
    private static void printUsageAndExit() {
       System.out.println("Usage: start_local_slave.sh -master <host>:port");
       System.out.println("       -master: The host(and optional port) on which the master resides. If port is missing it defaults to " + Master.DEFAULT_PORT);
-      System.exit(1);
+      ShutDownHook.exit(1);
    }
 }

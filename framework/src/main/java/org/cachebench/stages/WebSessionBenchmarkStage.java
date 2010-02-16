@@ -77,7 +77,6 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
       try {
          Map<String, String> results = putGetStressor.stress(cacheWrapper);
-         log.info("WebSessionBenchmark(nodes= " + getActiveSlaveCount() + ")" + cacheWrapper.getInfo());
          result.setPayload(results);
          return result;
       } catch (Exception e) {

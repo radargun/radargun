@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.cachebench.CacheWrapper;
 import org.cachebench.CacheWrapperStressor;
+import org.cachebench.ShutDownHook;
 import org.cachebench.utils.Utils;
 
 import java.io.File;
@@ -34,6 +35,11 @@ public class LocalBenchmark {
    private long initialFreeMemory = freeMememory();
 
    private StringBuilder reportCsvContent = new StringBuilder();
+
+
+   public LocalBenchmark() {
+      Runtime.getRuntime().addShutdownHook(new ShutDownHook("Local benchmark process"));
+   }
 
    public void benchmark() throws Exception {
       log.info("Starting benchmark with " + Utils.kb(initialFreeMemory) + " kb initial free memory.");
@@ -84,7 +90,7 @@ public class LocalBenchmark {
       }
       if (!freeMemoryOkay()) {
          log.error("The amount of free memory is more than 10% smaller than original one, benchmarks might be affected. Exiting... ");
-         System.exit(1);
+         ShutDownHook.exit(1);
       }
       log.info(Utils.printMemoryFootprint(false));
    }

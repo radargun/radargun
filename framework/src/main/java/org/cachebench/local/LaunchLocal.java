@@ -1,5 +1,7 @@
 package org.cachebench.local;
 
+import org.cachebench.ShutDownHook;
+
 /**
  * // TODO: Mircea - Document this!
  *
@@ -30,7 +32,7 @@ public class LaunchLocal {
    private static void printUsageAndExit() {
       System.out.println("Usage: local.sh  -config <config-file.xml>");
       System.out.println("       -config : xml file containing local benchmark's configuration");
-      System.exit(1);
+      ShutDownHook.exit(1);
    }
 
 }

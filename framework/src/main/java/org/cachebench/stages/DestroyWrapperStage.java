@@ -35,7 +35,7 @@ public class DestroyWrapperStage extends AbstractDistStage {
    }
 
    public DistStageAck executeOnSlave() {
-      log.info("Received shutdown request from master...");
+      log.info("Received destroy cache wrapper request from master...");
       DefaultDistStageAck ack = newDefaultStageAck();
       try {
          CacheWrapper cacheWrapper = slaveState.getCacheWrapper();

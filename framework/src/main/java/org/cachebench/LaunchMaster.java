@@ -44,7 +44,7 @@ public class LaunchMaster {
    private static void printUsageAndExit() {
       System.out.println("Usage: master.sh  -config <config-file.xml>");
       System.out.println("       -config : xml file containing benchmark's configuration");
-      System.exit(1);
+      ShutDownHook.exit(1);
    }
 
 

@@ -129,6 +129,7 @@ public class PutGetStressor implements CacheWrapperStressor {
          stressers.add(stresser);
          stresser.start();
       }
+      log.info("Cache wrapper info is: " + cacheWrapper.getInfo());
       startPoint.countDown();
       for (Stresser stresser : stressers) {
          stresser.join();

@@ -20,12 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This is the master that will coordonate the {@link Slave}s in order to run the benchmark. TODO - in discovery, the
- * number of slaves can be determined from max scale TODO - by default lookupt the config file in classpath TODO - use
- * mcast discovery - on each network interface broadcast on a certain multicast address and receive the nio IP and port
- * TODO - on config, split the test name config in "product" and "config" and generate report based on that. TODO - make
- * benchmark run multiple products at once TODO - if master receives a kill request it wonn't exit IMMEDIATELLY as it
- * has a main thread running. Fix this (phps by making it a deamon)
+ * This is the master that will coordonate the {@link Slave}s in order to run the benchmark.
  *
  * @author Mircea.Markus@jboss.com
  */
@@ -59,6 +54,7 @@ public class Master {
       } catch (IOException e) {
          throw new IllegalStateException(e);
       }
+      Runtime.getRuntime().addShutdownHook(new ShutDownHook("Master process"));
    }
 
    public void start() throws Exception {
@@ -225,7 +221,7 @@ public class Master {
 
    private void releaseResourcesAndExit() {
       releseResources();
-      System.exit(0);
+      ShutDownHook.exit(0);
    }
 
    private void sendStage(SelectionKey key) throws IOException {
