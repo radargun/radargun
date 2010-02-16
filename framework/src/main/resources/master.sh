@@ -53,7 +53,7 @@ do
       then
         echo "Master not running." 
       else
-        kill -9 ${CBF_MASTER_PID}
+        kill -15 ${CBF_MASTER_PID}
         if [ $? ]
         then 
           echo "Successfully stopped master (pid=${CBF_MASTER_PID})"
