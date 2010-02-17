@@ -5,7 +5,7 @@
    <modelVersion>4.0.0</modelVersion>
 
    <artifactId>cache-benchmark-aggregator</artifactId>
-   <version>1.0.0-GA</version>
+   <version>1.1.0-SNAPSHOT</version>
    <groupId>org.cachebench</groupId>
    <name>Cache Benchmark Framework - Aggregator</name>
    <description>The aggregator for the cache benchmark framework</description>
