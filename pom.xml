@@ -5,7 +5,7 @@
    <modelVersion>4.0.0</modelVersion>
 
    <artifactId>cache-benchmark-aggregator</artifactId>
-   <version>1.0.0-SNAPSHOT</version>
+   <version>1.0.0-GA</version>
    <groupId>org.cachebench</groupId>
    <name>Cache Benchmark Framework - Aggregator</name>
    <description>The aggregator for the cache benchmark framework</description>
@@ -21,8 +21,9 @@
    </modules>
 
    <properties>
-      <distribution.artifact>target/distribution/CacheBenchFwk-1.0.0-SNAPSHOT</distribution.artifact>
-      <distribution.zipfile>target/distribution/CacheBenchFwk-1.0.0-SNAPSHOT.zip</distribution.zipfile>
+      <distribution.name>CacheBenchFwk-${project.version}</distribution.name>
+      <distribution.artifact>target/distribution/${distribution.name}</distribution.artifact>
+      <distribution.zipfile>target/distribution/${distribution.name}.zip</distribution.zipfile>
    </properties>
 
    <profiles>
@@ -160,7 +161,9 @@
                               <include name="**/*.py"/>
                            </fileset>
                         </chmod>
-                        <zip destfile="${distribution.zipfile}" basedir="${distribution.artifact}"/>
+                        <zip destfile="${distribution.zipfile}" basedir="target/distribution" excludes="**/bin/**">
+                           <zipfileset dir="${distribution.artifact}/bin" filemode="755" prefix="${distribution.name}/bin"/>
+                        </zip>
                      </tasks>
                   </configuration>
                </execution>
