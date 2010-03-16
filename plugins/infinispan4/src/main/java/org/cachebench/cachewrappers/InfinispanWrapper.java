@@ -3,6 +3,7 @@ package org.cachebench.cachewrappers;
 import org.cachebench.CacheWrapper;
 import org.cachebench.utils.Utils;
 import org.infinispan.Cache;
+import org.infinispan.config.Configuration;
 import org.infinispan.context.Flag;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.CacheManager;
@@ -29,8 +30,9 @@ public class InfinispanWrapper implements CacheWrapper {
       this.config = config;
        if (!started) {
           cacheManager = new DefaultCacheManager(config);
-          // use the default cache
-          cache = cacheManager.getCache();
+          // use a named cache, based on the 'default'
+          cacheManager.defineConfiguration("x", new Configuration());
+          cache = cacheManager.getCache("x");
           started = true;
        }
        log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
