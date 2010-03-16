@@ -2,7 +2,7 @@
 
 <infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:4.0">
    <global>
-      <transport clusterName="infinispan-cluster">
+      <transport clusterName="x">
          <properties>
             <property name="configurationFile" value="jgroups/jgroups-udp.xml"/>
          </properties>
