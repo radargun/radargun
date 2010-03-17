@@ -37,7 +37,7 @@ public class InfinispanWrapper implements CacheWrapper {
        }
        log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
        log.info("JGroups version: " + org.jgroups.Version.printDescription());
-      
+
       // should we be blocking until all rehashing, etc. has finished?
       long gracePeriod = MINUTES.toMillis(15);
       long giveup = System.currentTimeMillis() + gracePeriod;
@@ -85,7 +85,8 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public String getInfo() {
-      return cache.getVersion() + ", " + config + ", Size of the cache is: " + cache.size();
+      int clusterSize = cache.getCacheManager().getMembers().size();
+      return cache.getVersion() + ", " + "cluster size = " + clusterSize + ", " + config + ", Size of the cache is: " + cache.size();
    }
 
    public Object getReplicatedData(String bucket, String key) throws Exception {
