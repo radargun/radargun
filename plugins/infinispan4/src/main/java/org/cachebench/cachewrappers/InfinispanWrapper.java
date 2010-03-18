@@ -31,10 +31,10 @@ public class InfinispanWrapper implements CacheWrapper {
       this.config = config;
        if (!started) {
           cacheManager = new DefaultCacheManager(config);
-          if (!isLocal) {
-             GlobalConfiguration configuration = cacheManager.getDefaultConfiguration().getGlobalConfiguration();
-             configuration.setTransportNodeName(String.valueOf(nodeIndex));
-          }
+//          if (!isLocal) {
+//             GlobalConfiguration configuration = cacheManager.getGlobalConfiguration();
+//             configuration.setTransportNodeName(String.valueOf(nodeIndex));
+//          }
           // use a named cache, based on the 'default'
           cacheManager.defineConfiguration("x", new Configuration());
           cache = cacheManager.getCache("x");
