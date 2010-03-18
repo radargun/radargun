@@ -57,8 +57,6 @@ public class PutGetStressor implements CacheWrapperStressor {
     */
    private int numOfThreads = 10;
 
-   private String keyPrefix = DEFAULT_KEY_PREFIX;
-
    private String bucketPrefix = DEFAULT_BUCKET_PREFIX;
 
 
@@ -237,7 +235,7 @@ public class PutGetStressor implements CacheWrapperStressor {
       public void initializeKeys() {
          for (int keyIndex = 0; keyIndex < numberOfKeys; keyIndex++) {
             try {
-               String key = this.bucketId + "_" + Integer.toString(r.nextInt(MAX_VALUE), 36) + "_" + keyPrefix + '_' + keyIndex;
+               String key = this.bucketId + "-" + this.threadIndex +  "::" + keyIndex;
                pooledKeys.add(key);
                cacheWrapper.put(this.bucketId, key, generateRandomString(sizeOfValue));
             }
@@ -295,14 +293,6 @@ public class PutGetStressor implements CacheWrapperStressor {
       return sb.toString();
    }
 
-   public String getKeyPrefix() {
-      return keyPrefix;
-   }
-
-   public void setKeyPrefix(String keyPrefix) {
-      this.keyPrefix = keyPrefix;
-   }
-
    public String getBucketPrefix() {
       return bucketPrefix;
    }
@@ -321,7 +311,6 @@ public class PutGetStressor implements CacheWrapperStressor {
             ", writePercentage=" + writePercentage +
             ", numOfThreads=" + numOfThreads +
             ", bucketPrefix=" + bucketPrefix +
-            ", keyPrefix=" + keyPrefix +
             ", cacheWrapper=" + cacheWrapper +
             "}";
    }

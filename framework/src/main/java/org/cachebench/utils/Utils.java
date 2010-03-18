@@ -217,4 +217,12 @@ public class Utils {
    public static String numberFormat(double d) {
       return NF.format(d);
    }
+
+   public static Object instantiate(String name) {
+      try {
+         return Class.forName(name).newInstance();
+      } catch (Exception e) {
+         throw new IllegalStateException(e);
+      }
+   }
 }

@@ -32,7 +32,7 @@ public class EHCacheWrapper implements CacheWrapper
    /* (non-Javadoc)
    * @see org.cachebench.CacheWrapper#setUp(java.util.Properties)
    */
-   public void setUp(String config, boolean isLocal) throws Exception
+   public void setUp(String config, boolean isLocal, int nodeIndex) throws Exception
    {
       if (log.isTraceEnabled()) log.trace("Entering EHCacheWrapper.setUp()");
       localmode = isLocal;

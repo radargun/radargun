@@ -4,6 +4,7 @@ import org.cachebench.CacheWrapper;
 import org.cachebench.utils.Utils;
 import org.infinispan.Cache;
 import org.infinispan.config.Configuration;
+import org.infinispan.config.GlobalConfiguration;
 import org.infinispan.context.Flag;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.CacheManager;
@@ -26,10 +27,14 @@ public class InfinispanWrapper implements CacheWrapper {
    boolean started = false;
    String config;
 
-   public void setUp(String config, boolean ignored) throws Exception {
+   public void setUp(String config, boolean isLocal, int nodeIndex) throws Exception {
       this.config = config;
        if (!started) {
           cacheManager = new DefaultCacheManager(config);
+          if (!isLocal) {
+             GlobalConfiguration configuration = cacheManager.getDefaultConfiguration().getGlobalConfiguration();
+             configuration.setTransportNodeName(String.valueOf(nodeIndex));
+          }
           // use a named cache, based on the 'default'
           cacheManager.defineConfiguration("x", new Configuration());
           cache = cacheManager.getCache("x");

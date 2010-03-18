@@ -46,7 +46,7 @@ public class StartClusterStage extends AbstractDistStage {
       try {
          String plugin = Utils.getCacheWrapperFqnClass(productName);
          wrapper = (CacheWrapper) createInstance(plugin);
-         wrapper.setUp(config, false);
+         wrapper.setUp(config, false, slaveIndex);
          slaveState.setCacheWrapper(wrapper);
          if (performClusterSizeValidation) {
             for (int i = 0; i < TRY_COUNT; i++) {

@@ -3,7 +3,6 @@ package org.cachebench.cachewrappers;
 import org.cachebench.CacheWrapper;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,7 +18,7 @@ public class TerracottaWrapper implements CacheWrapper {
    private final Map<String, Map> sessionCaches = new HashMap<String, Map>();
 
    @Override
-   public void setUp(String config, boolean isLocal) throws Exception {
+   public void setUp(String config, boolean isLocal, int nodeIndex) throws Exception {
    }
 
    public void tearDown() throws Exception {

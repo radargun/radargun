@@ -18,8 +18,9 @@ public interface CacheWrapper
     * cacheing product being tested.
     *
     * @param config
+    * @param nodeIndex
     */
-   void setUp(String config, boolean isLocal) throws Exception;
+   void setUp(String config, boolean isLocal, int nodeIndex) throws Exception;
 
    /**
     * This is called at the very end of all tests on this cache, and is used for clean-up

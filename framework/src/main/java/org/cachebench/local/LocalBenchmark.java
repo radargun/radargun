@@ -48,7 +48,7 @@ public class LocalBenchmark {
             log.info("Processing " + product.getKey() + "-" + config);
             CacheWrapper wrapper = getCacheWrapper(product.getKey());
             try {
-               wrapper.setUp(config, true);
+               wrapper.setUp(config, true, -1);
 
                Map<String, String> results = null;
                for (CacheWrapperStressor stressor : stressors) {
