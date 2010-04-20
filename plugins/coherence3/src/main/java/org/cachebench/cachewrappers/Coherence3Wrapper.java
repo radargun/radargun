@@ -21,7 +21,7 @@ public class Coherence3Wrapper implements CacheWrapper {
    private Log log = LogFactory.getLog(Coherence3Wrapper.class);
 
    @Override
-   public void setUp(String configuration, boolean ignored) throws Exception {
+   public void setUp(String configuration, boolean isLocal, int nodeIndex) throws Exception {
       String config;
       if (configuration.indexOf("repl") == 0) {
          config = "cbf-repl";
