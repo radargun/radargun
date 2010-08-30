@@ -21,7 +21,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 public class InfinispanWrapper implements CacheWrapper {
 
    private static Log log = LogFactory.getLog(InfinispanWrapper.class);
-   CacheManager cacheManager;
+   DefaultCacheManager cacheManager;
    Cache<Object, Object> cache;
    TransactionManager tm;
    boolean started = false;
@@ -90,7 +90,7 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public String getInfo() {
-      int clusterSize = cache.getCacheManager().getMembers().size();
+      int clusterSize = cacheManager.getMembers().size();
       return cache.getVersion() + ", " + "cluster size = " + clusterSize + ", " + config + ", Size of the cache is: " + cache.size();
    }
 
