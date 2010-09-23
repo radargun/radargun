@@ -1,5 +1,9 @@
 package org.cachebench.config;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+
 import org.cachebench.Stage;
 
 import java.util.List;
@@ -13,6 +17,9 @@ import java.util.ArrayList;
  * @author Mircea.Markus@jboss.com
  */
 public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
+
+   // For Apache/commons/logging Log doesn't need to be static.
+   protected Log log = LogFactory.getLog(ScalingBenchmarkConfig.class);
 
    private boolean initialized = false;
 
@@ -54,13 +61,17 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
    @Override
    public boolean hasNextStage() {
       initialize();
+      log.info("fixedBenchmarkIt="+fixedBenchmarkIt);
+      log.info("fixedBenchmarks size=" + fixedBenchmarks.size());
       if (fixedBenchmarkIt < fixedBenchmarks.size() - 1) return true;
       return currentFixedBenchmark().hasNextStage();
    }
 
    private void initialize() {
       if (!initialized) {
+      log.info("Initializing: " + initSize + ","+ getMaxSize() + "," + increment);
          for (int i = initSize; i <= getMaxSize(); i+=increment) {
+            log.info("Initializing config " + i);
             FixedSizeBenchmarkConfig conf = new FixedSizeBenchmarkConfig();
             conf.setMaxSize(getMaxSize());
             conf.stages = cloneStages(this.stages);

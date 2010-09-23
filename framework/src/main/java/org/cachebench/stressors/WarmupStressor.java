@@ -37,6 +37,7 @@ public class WarmupStressor implements CacheWrapperStressor {
          throw new IllegalStateException("Null wrapper not allowed");
       }
       try {
+         log.info("Performing Warmup Operations");
          performWarmupOperations(wrapper);
       } catch (Exception e) {
          log.warn("Received exception durring cache warmup" + e.getMessage());
@@ -72,9 +73,9 @@ public class WarmupStressor implements CacheWrapperStressor {
 
          warmupThreads[i].start();
       }
-
+      log.info("Joining warmupThreads");
       for (Thread t: warmupThreads) t.join();
-      log.trace("Cache warmup ended!");
+      log.info("Cache warmup ended!");
    }
 
    private void doPut(int operationId, int threadId) {

@@ -188,7 +188,7 @@ public class PutGetStressor implements CacheWrapperStressor {
                }
                readDuration += System.currentTimeMillis() - start;
                reads++;
-               makeSureCallIsNotSkipped(result);
+               //makeSureCallIsNotSkipped(result);
             } else {
                String payload = generateRandomString(sizeOfValue);
                long start = System.currentTimeMillis();
@@ -207,12 +207,12 @@ public class PutGetStressor implements CacheWrapperStressor {
 
       /**
        * Just to make sure that compiler won't ignore the call to get.
-       */
       public void makeSureCallIsNotSkipped(Object result) {
          if (result != null && result.hashCode() < System.currentTimeMillis()) {
             System.out.println("");
          }
       }
+       */
 
       private void logProgress(int i) {
          if ((i + 1) % opsCountStatusLog == 0) {

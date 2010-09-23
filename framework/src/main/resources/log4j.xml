@@ -50,8 +50,10 @@
    </category>
 
    <category name="CacheException">
-      <priority value="INFO"/>
+      <priority value="TRACE"/>
+     <!--
       <appender-ref ref="CONSOLE"/>
+      -->
    </category>
 
    <category name="org.apache">
@@ -86,6 +88,17 @@
       <priority value="WARN"/>
    </category>
 
+  <category name="UDP">
+    <priority value="TRACE"/>
+  </category>
+
+  <category name="FD_SOCK">
+    <priority value="TRACE"/>
+  </category>
+
+   <category name="JoinTask">
+      <priority value="TRACE"/>
+   </category>
    <category name="org.infinispan">
       <priority value="INFO"/>
    </category>
