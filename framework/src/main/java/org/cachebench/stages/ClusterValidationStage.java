@@ -94,7 +94,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       for (DistStageAck ack : acks) {
          DefaultDistStageAck defaultStageAck = (DefaultDistStageAck) ack;
          if (defaultStageAck.isError()) {
-            log.warn("Ack error from remote slave: " + defaultStageAck, defaultStageAck.getRemoteException());
+            log.warn("Ack error from remote slave: " + defaultStageAck);
             return false;
          }
          int replCount = (Integer) defaultStageAck.getPayload();

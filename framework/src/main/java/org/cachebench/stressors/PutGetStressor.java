@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.lang.Integer.MAX_VALUE;
 
 /**
- * On multiple threads executes put and get opperations against the CacheWrapper, and returns the result as an Map.
+ * On multiple threads executes put and get operations against the CacheWrapper, and returns the result as an Map.
  *
  * @author Mircea.Markus@jboss.com
  */
@@ -316,4 +316,3 @@ public class PutGetStressor implements CacheWrapperStressor {
    }
 }
 
-//home/bela/spn_test

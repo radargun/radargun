@@ -4,11 +4,11 @@ import org.cachebench.CacheWrapper;
 import org.cachebench.utils.Utils;
 import org.infinispan.Cache;
 import org.infinispan.config.Configuration;
-import org.infinispan.config.GlobalConfiguration;
 import org.infinispan.context.Flag;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.CacheManager;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
@@ -90,8 +90,12 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public String getInfo() {
-      int clusterSize = cache.getCacheManager().getMembers().size();
-      return cache.getVersion() + ", " + "cluster size = " + clusterSize + ", " + config + ", Size of the cache is: " + cache.size();
+      String clusterSizeStr = "";
+      RpcManager rpcManager = cache.getAdvancedCache().getRpcManager();
+      if (rpcManager != null && rpcManager.getTransport() != null) {
+         clusterSizeStr = "cluster size = " + rpcManager.getTransport().getMembers().size();
+      }
+      return cache.getVersion() + ", " + clusterSizeStr + ", " + config + ", Size of the cache is: " + cache.size();
    }
 
    public Object getReplicatedData(String bucket, String key) throws Exception {

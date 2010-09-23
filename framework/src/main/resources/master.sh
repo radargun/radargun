@@ -26,6 +26,10 @@ help_and_exit() {
   wrappedecho ""
   wrappedecho "   -m       MASTER host[:port]. An optional override to override the host/port defaults that the master listens on."
   wrappedecho ""
+  wrappedecho "   -status  Prints infromation on master's status: running or not."
+  wrappedecho ""
+  wrappedecho "   -stop    Forces the master to stop running."
+  wrappedecho ""
   wrappedecho "   -h       Displays this help screen"
   wrappedecho ""
 

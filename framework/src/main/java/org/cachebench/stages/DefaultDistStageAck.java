@@ -15,11 +15,12 @@ public class DefaultDistStageAck implements DistStageAck {
    private InetAddress slaveAddress;
 
    private boolean isError;
-   private Throwable remoteException;
    private String errorMessage;
    private Object payload;
 
    private long duration;
+
+   private String remoteExceptionString;
 
 
    public DefaultDistStageAck(int slaveIndex, InetAddress slaveAddress) {
@@ -39,12 +40,18 @@ public class DefaultDistStageAck implements DistStageAck {
       isError = error;
    }
 
-   public Throwable getRemoteException() {
-      return remoteException;
+   public String getRemoteExceptionString() {
+      return remoteExceptionString;
    }
 
    public void setRemoteException(Throwable remoteException) {
-      this.remoteException = remoteException;
+      StackTraceElement[] stackTraceElements = remoteException.getStackTrace();
+      if (stackTraceElements != null && stackTraceElements.length > 0) {
+         remoteExceptionString = "\n";
+         for (StackTraceElement ste : stackTraceElements) {
+            remoteExceptionString += ste.toString() + "\n";
+         }
+      }
    }
 
    public String getErrorMessage() {
@@ -69,9 +76,9 @@ public class DefaultDistStageAck implements DistStageAck {
             "slaveIndex=" + slaveIndex +
             ", slaveAddress=" + slaveAddress +
             ", isError=" + isError +
-            ", remoteException=" + remoteException +
             ", errorMessage='" + errorMessage + '\'' +
             ", payload=" + payload +
+            ", remoteExceptionString=" + remoteExceptionString +
             '}';
    }
 

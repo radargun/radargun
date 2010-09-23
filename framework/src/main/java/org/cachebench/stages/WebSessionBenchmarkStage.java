@@ -95,7 +95,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
          DefaultDistStageAck wAck = (DefaultDistStageAck) ack;
          if (wAck.isError()) {
             success = false;
-            log.warn("Received error ack: " + wAck, wAck.getRemoteException());
+            log.warn("Received error ack: " + wAck);
          } else {
             if (log.isTraceEnabled())
                log.trace(wAck);
