@@ -14,8 +14,6 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static java.lang.Integer.MAX_VALUE;
-
 /**
  * On multiple threads executes put and get operations against the CacheWrapper, and returns the result as an Map.
  *
@@ -172,7 +170,6 @@ public class PutGetStressor implements CacheWrapperStressor {
 
          int i = 0;
          while(requestsLeft.getAndDecrement() > -1) {
-            logProgress(i);
             randomAction = r.nextInt(100);
             randomKeyInt = r.nextInt(numberOfKeys - 1);
             String key = getKey(randomKeyInt);
@@ -182,18 +179,19 @@ public class PutGetStressor implements CacheWrapperStressor {
                Object result = null;
                try {
                   result = cacheWrapper.get(bucketId, key);
+                  logProgress(i, result);
                } catch (Exception e) {
                   log.warn(e);
                   nrFailures++;
                }
                readDuration += System.currentTimeMillis() - start;
                reads++;
-               makeSureCallIsNotSkipped(result);
             } else {
                String payload = generateRandomString(sizeOfValue);
                long start = System.currentTimeMillis();
                try {
                   cacheWrapper.put(bucketId, key, payload);
+                  logProgress(i, null);
                } catch (Exception e) {
                   log.warn(e);
                   nrFailures++;
@@ -205,16 +203,7 @@ public class PutGetStressor implements CacheWrapperStressor {
          }
       }
 
-      /**
-       * Just to make sure that compiler won't ignore the call to get.
-       */
-      public void makeSureCallIsNotSkipped(Object result) {
-         if (result != null && result.hashCode() < System.currentTimeMillis()) {
-            System.out.println("");
-         }
-      }
-
-      private void logProgress(int i) {
+      private void logProgress(int i, Object result) {
          if ((i + 1) % opsCountStatusLog == 0) {
             double elapsedTime = System.currentTimeMillis() - startTime;
             double estimatedTotal = ((double) (numberOfRequests / numOfThreads) / (double) i) * elapsedTime;
@@ -225,6 +214,7 @@ public class PutGetStressor implements CacheWrapperStressor {
             log.info("Thread index '" + threadIndex + "' executed " + (i + 1) + " operations. Elapsed time: " +
                   Utils.getDurationString((long) elapsedTime) + ". Estimated remaining: " + Utils.getDurationString((long) estimatedRemaining) +
                   ". Estimated total: " + Utils.getDurationString((long) estimatedTotal));
+            System.out.println("Last result" + result);
          }
       }
 
