@@ -173,13 +173,12 @@ public class PutGetStressor implements CacheWrapperStressor {
             randomAction = r.nextInt(100);
             randomKeyInt = r.nextInt(numberOfKeys - 1);
             String key = getKey(randomKeyInt);
+            Object result = null;
 
             if (randomAction < readPercentage) {
                long start = System.currentTimeMillis();
-               Object result = null;
                try {
                   result = cacheWrapper.get(bucketId, key);
-                  logProgress(i, result);
                } catch (Exception e) {
                   log.warn(e);
                   nrFailures++;
@@ -200,6 +199,7 @@ public class PutGetStressor implements CacheWrapperStressor {
                writes++;
             }
             i++;
+            logProgress(i, result);
          }
       }
 
