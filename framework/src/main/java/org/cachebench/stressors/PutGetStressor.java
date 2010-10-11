@@ -214,7 +214,8 @@ public class PutGetStressor implements CacheWrapperStressor {
             log.info("Thread index '" + threadIndex + "' executed " + (i + 1) + " operations. Elapsed time: " +
                   Utils.getDurationString((long) elapsedTime) + ". Estimated remaining: " + Utils.getDurationString((long) estimatedRemaining) +
                   ". Estimated total: " + Utils.getDurationString((long) estimatedTotal));
-            System.out.println("Last result" + result);
+            System.out.println("Last result" + result);//this is printed here just to make sure JIT doesn't
+            // skip the call to cacheWrapper.get
          }
       }
 
