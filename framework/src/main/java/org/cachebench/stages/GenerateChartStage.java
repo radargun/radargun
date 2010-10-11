@@ -62,10 +62,18 @@ public class GenerateChartStage extends AbstractMasterStage {
    private void readData(File f) throws IOException {
       log.debug("Processing file " + f);
       //expected file format is: <product>_<config>_<size>.csv
-      StringTokenizer tokenizer = new StringTokenizer(Utils.fileName2Config(f.getName()), "_");
-      String productName = tokenizer.nextToken();
-      String configName = tokenizer.nextToken();
-      int clusterSize = Integer.parseInt(tokenizer.nextToken());
+      String productName = null;
+      String configName = null;
+      int clusterSize = 0;
+      try {
+         StringTokenizer tokenizer = new StringTokenizer(Utils.fileName2Config(f.getName()), "_");
+         productName = tokenizer.nextToken();
+         configName = tokenizer.nextToken();
+         clusterSize = Integer.parseInt(tokenizer.nextToken());
+      } catch (Throwable e) {
+         String fileName = f == null ? null : f.getAbsolutePath();
+         log.error("unexpected exception while parsing filename: " + fileName, e);
+      }
 
       //now the contents of this file:
       String line;
