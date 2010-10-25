@@ -1,5 +1,8 @@
 package org.cachebench;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,6 +16,8 @@ import java.io.Serializable;
  * @author Mircea.Markus@jboss.com
  */
 public class SerializationHelper {
+
+   private static Log log = LogFactory.getLog(SerializationHelper.class);
 
    public static byte[] serializeObject(Serializable serializable) throws IOException {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -81,20 +86,12 @@ public class SerializationHelper {
       }
    }
 
-   public static Object deserialize(byte[] serializedData) throws IOException {
-      ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(serializedData));
-      try {
-         return ois.readObject();
-      } catch (ClassNotFoundException e) {
-         throw new IllegalStateException(e);
-      }
-   }
-
    public static Object deserialize(byte[] serializedData, int startPos, int length) throws IOException {
       ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(serializedData, startPos, length));
       try {
          return ois.readObject();
       } catch (ClassNotFoundException e) {
+         log.error("Unmarshalling exceptions: ", e);
          throw new IllegalStateException(e);
       }
    }

@@ -14,10 +14,8 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static java.lang.Integer.MAX_VALUE;
-
 /**
- * On multiple threads executes put and get opperations against the CacheWrapper, and returns the result as an Map.
+ * On multiple threads executes put and get operations against the CacheWrapper, and returns the result as an Map.
  *
  * @author Mircea.Markus@jboss.com
  */
@@ -172,14 +170,13 @@ public class PutGetStressor implements CacheWrapperStressor {
 
          int i = 0;
          while(requestsLeft.getAndDecrement() > -1) {
-            logProgress(i);
             randomAction = r.nextInt(100);
             randomKeyInt = r.nextInt(numberOfKeys - 1);
             String key = getKey(randomKeyInt);
+            Object result = null;
 
             if (randomAction < readPercentage) {
                long start = System.currentTimeMillis();
-               Object result = null;
                try {
                   result = cacheWrapper.get(bucketId, key);
                } catch (Exception e) {
@@ -188,12 +185,12 @@ public class PutGetStressor implements CacheWrapperStressor {
                }
                readDuration += System.currentTimeMillis() - start;
                reads++;
-               //makeSureCallIsNotSkipped(result);
             } else {
                String payload = generateRandomString(sizeOfValue);
                long start = System.currentTimeMillis();
                try {
                   cacheWrapper.put(bucketId, key, payload);
+                  logProgress(i, null);
                } catch (Exception e) {
                   log.warn(e);
                   nrFailures++;
@@ -202,19 +199,12 @@ public class PutGetStressor implements CacheWrapperStressor {
                writes++;
             }
             i++;
+            logProgress(i, result);
          }
       }
 
-      /**
-       * Just to make sure that compiler won't ignore the call to get.
-      public void makeSureCallIsNotSkipped(Object result) {
-         if (result != null && result.hashCode() < System.currentTimeMillis()) {
-            System.out.println("");
-         }
-      }
-       */
 
-      private void logProgress(int i) {
+      private void logProgress(int i, Object result) {
          if ((i + 1) % opsCountStatusLog == 0) {
             double elapsedTime = System.currentTimeMillis() - startTime;
             double estimatedTotal = ((double) (numberOfRequests / numOfThreads) / (double) i) * elapsedTime;
@@ -225,6 +215,8 @@ public class PutGetStressor implements CacheWrapperStressor {
             log.info("Thread index '" + threadIndex + "' executed " + (i + 1) + " operations. Elapsed time: " +
                   Utils.getDurationString((long) elapsedTime) + ". Estimated remaining: " + Utils.getDurationString((long) estimatedRemaining) +
                   ". Estimated total: " + Utils.getDurationString((long) estimatedTotal));
+            System.out.println("Last result" + result);//this is printed here just to make sure JIT doesn't
+            // skip the call to cacheWrapper.get
          }
       }
 
@@ -316,4 +308,3 @@ public class PutGetStressor implements CacheWrapperStressor {
    }
 }
 
-//home/bela/spn_test

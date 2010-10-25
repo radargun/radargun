@@ -83,7 +83,7 @@ public abstract class AbstractDistStage implements DistStage {
       for (DistStageAck stageAck : acks) {
          DefaultDistStageAck defaultStageAck = (DefaultDistStageAck) stageAck;
          if (defaultStageAck.isError()) {
-            log.warn("Received error ack " + defaultStageAck, defaultStageAck.getRemoteException());
+            log.warn("Received error ack " + defaultStageAck);
             return false;
          } else {
             log.trace("Received success ack " + defaultStageAck);

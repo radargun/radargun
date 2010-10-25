@@ -88,9 +88,6 @@ fi
 . ${CBF_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER}
 PID_OF_MASTER_PROCESS=$CBF_MASTER_PID
 #### Sleep for a few seconds so master can open its port
-SLEEP_TIME=7
-echo "Sleeping for ${SLEEP_TIME} so master can open its port"
-sleep 7
 
 ####### then start the rest of the nodes
 CMD="source ~/.bash_profile ; cd $WORKING_DIR"
