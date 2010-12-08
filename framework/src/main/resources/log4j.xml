@@ -5,9 +5,8 @@
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
    <!-- The list of appenders -->
    <!-- The rolling file appender -->
-   <appender name="FILE" class="org.cachebench.utils.PerNodeRollingFileAppender">
-      <!--<appender name="FILE" class="org.cachebench.utils.PerNodeRollingFileAppender">-->
-      <param name="File" value="cachebench.log"/>
+   <appender name="FILE" class="org.radargun.utils.PerNodeRollingFileAppender">
+      <param name="File" value="radargun.log"/>
       <param name="Append" value="false"/>
       <param name="Threshold" value="TRACE"/>
       <param name="MaxFileSize" value="100MB"/>
@@ -29,7 +28,7 @@
 
    <!-- disabled by default.  Useful for long-running clustered benchmarks
    
-   <appender name="EMAIL" class="org.cachebench.utils.SMTPAppender">
+   <appender name="EMAIL" class="org.radargun.utils.SMTPAppender">
       <param name="Threshold" value="WARN"/>
       <param name="BufferSize" value="1"/>
       <param name="From" value="notify.by.email@gmail.com"/>
@@ -60,11 +59,11 @@
       <priority value="WARN"/>
    </category>
 
-   <category name="org.cachebench">
+   <category name="org.radargun">
       <priority value="INFO"/>
    </category>
 
-   <category name="org.cachebench.reporting">
+   <category name="org.radargun.reporting">
       <priority value="WARN"/>
    </category>
 

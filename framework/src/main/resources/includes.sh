@@ -3,10 +3,10 @@
 # NOTE that this *needs* to be loaded via the following snippet:
 #
 #
-#   if [ "x$CBF_HOME" = "x" ]; then CBF_HOME=`cd $DIRNAME/..; pwd` ; fi; export CBF_HOME
-#   . ${CBF_HOME}/bin/includes.sh
+#   if [ "x$RADARGUN_HOME" = "x" ]; then RADARGUN_HOME=`cd $DIRNAME/..; pwd` ; fi; export RADARGUN_HOME
+#   . ${RADARGUN_HOME}/bin/includes.sh
 #
-# as a "side effect", the snippet also sets the CBF_HOME environment variable.
+# as a "side effect", the snippet also sets the RADARGUN_HOME environment variable.
 
 welcome() {
   SCRIPTNAME=`basename ${0}`
@@ -21,8 +21,8 @@ wrappedecho() {
 
 check_plugin_exists() {
   PLUGIN=${1}
-  if ! [ -d ${CBF_HOME}/plugins/$PLUGIN ] ; then
-    echo "FATAL: unknown plugin ${PLUGIN}! Directory doesn't exist in ${CBF_HOME}/plugins!"
+  if ! [ -d ${RADARGUN_HOME}/plugins/$PLUGIN ] ; then
+    echo "FATAL: unknown plugin ${PLUGIN}! Directory doesn't exist in ${RADARGUN_HOME}/plugins!"
     exit 2
   fi
 }
@@ -38,21 +38,21 @@ add_to_classpath() {
 add_plugin_to_classpath() {
   PLUGIN=${1}
   check_plugin_exists $PLUGIN
-  for i in ${CBF_HOME}/plugins/${PLUGIN}/lib/*.jar ; do
+  for i in ${RADARGUN_HOME}/plugins/${PLUGIN}/lib/*.jar ; do
     add_to_classpath $i
   done
-  add_to_classpath ${CBF_HOME}/plugins/${PLUGIN}/conf
+  add_to_classpath ${RADARGUN_HOME}/plugins/${PLUGIN}/conf
 }
 
 add_fwk_to_classpath() {
-  for i in ${CBF_HOME}/lib/*.jar ; do
+  for i in ${RADARGUN_HOME}/lib/*.jar ; do
     add_to_classpath $i
   done
-  add_to_classpath ${CBF_HOME}/conf
+  add_to_classpath ${RADARGUN_HOME}/conf
 }
 
 set_env() {
-   . ${CBF_HOME}/bin/environment.sh
+   . ${RADARGUN_HOME}/bin/environment.sh
 }
 
 wait_for_process() {

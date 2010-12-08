@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ## Load includes
-if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; pwd` ; fi; export CBF_HOME
-. ${CBF_HOME}/bin/includes.sh
+if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DIRNAME/..; pwd` ; fi; export RADARGUN_HOME
+. ${RADARGUN_HOME}/bin/includes.sh
 
 
 MASTER_HOST=""
@@ -16,13 +16,13 @@ default_master() {
                            s/}".*//
                            s/:.*//
                            p
-                           }' ${CBF_HOME}/conf/benchmark.xml`
+                           }' ${RADARGUN_HOME}/conf/benchmark.xml`
   MASTER_PORT=`sed -n -e '/port="/{
                            s/.*port="${//
                            s/}".*//
                            s/:.*//
                            p
-                           }' ${CBF_HOME}/conf/benchmark.xml`
+                           }' ${RADARGUN_HOME}/conf/benchmark.xml`
 }
 
 default_master
@@ -73,9 +73,9 @@ set_env
 
 D_VARS="-Djava.net.preferIPv4Stack=true -Dlog4j.file.prefix=${LOG4J_PREFIX} -Dbind.address=${BIND_ADDRESS}"
 HOST_NAME=`hostname`
-echo "java ${JVM_OPTS} ${D_VARS} -classpath $CP org.cachebench.Slave ${CONF}" > stdout_slave_${HOST_NAME}.out
+echo "java ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF}" > stdout_slave_${HOST_NAME}.out
 echo "--------------------------------------------------------------------------------" >> stdout_slave_${HOST_NAME}.out
-nohup java ${JVM_OPTS} ${D_VARS} -classpath $CP org.cachebench.Slave ${CONF} >> stdout_slave_${HOST_NAME}.out 2>&1 &
+nohup java ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} >> stdout_slave_${HOST_NAME}.out 2>&1 &
 echo "... done! Slave process started on host ${HOST_NAME}!"
 echo ""
 

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ## Load includes
-if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; pwd` ; fi; export CBF_HOME
-. ${CBF_HOME}/bin/includes.sh
+if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DIRNAME/..; pwd` ; fi; export RADARGUN_HOME
+. ${RADARGUN_HOME}/bin/includes.sh
 
 CONFIG=./conf/benchmark.xml
 SLAVE_COUNT_ARG=""
@@ -10,7 +10,7 @@ TAILF=false
 CBF_MASTER_PID=""
 
 master_pid() {
-   CBF_MASTER_PID=`ps -ef | grep "org.cachebench.LaunchMaster" | grep -v "grep" | awk '{print $2}'`
+   CBF_MASTER_PID=`ps -ef | grep "org.radargun.LaunchMaster" | grep -v "grep" | awk '{print $2}'`
    return 
 }
 
@@ -109,11 +109,11 @@ if ! [ "x${MASTER}" = "x" ] ; then
   fi
 fi
 
-java ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.cachebench.LaunchMaster -config ${CONFIG} > stdout_master.out 2>&1 &
+java ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.radargun.LaunchMaster -config ${CONFIG} > stdout_master.out 2>&1 &
 export CBF_MASTER_PID=$!
 HOST_NAME=`hostname`
 echo "Master's PID is $CBF_MASTER_PID running on ${HOST_NAME}"
 if [ $TAILF == "true" ]
 then
-  tail -f cachebench.log 
+  tail -f radargun.log
 fi  

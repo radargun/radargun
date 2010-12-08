@@ -15,5 +15,5 @@ JVM_OPTIONS="$JVM_OPTIONS -DpreferIPv4Stack=true -Dtc.config=$THIS_DIR/tc-client
 
 #next line should be modified based on the environment
 JVM_OPTIONS="$JVM_OPTIONS -Xbootclasspath/p:${TC_HOME}/lib/dso-boot/dso-boot-hotspot_linux_150_11.jar"
-JVM_OPTIONS="$JVM_OPTIONS -DcacheBenchFwk.cacheWrapperClassName=org.cachebench.cachewrappers.TerracottaWrapper"
+JVM_OPTIONS="$JVM_OPTIONS -Dradargun.cacheWrapperClassName=org.radargun.cachewrappers.TerracottaWrapper"
 

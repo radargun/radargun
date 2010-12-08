@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ## Load includes
-if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; pwd` ; fi; export CBF_HOME
-. ${CBF_HOME}/bin/includes.sh
+if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DIRNAME/..; pwd` ; fi; export RADARGUN_HOME
+. ${RADARGUN_HOME}/bin/includes.sh
 
 CONFIG=./conf/local-benchmark.xml
 
@@ -36,4 +36,4 @@ done
 
 add_fwk_to_classpath
 set_env
-java ${JVM_OPTS} -classpath $CP -Dbind.address=${BIND_ADDRESS} org.cachebench.local.LaunchLocal -config ${CONFIG}
+java ${JVM_OPTS} -classpath $CP -Dbind.address=${BIND_ADDRESS} org.radargun.local.LaunchLocal -config ${CONFIG}

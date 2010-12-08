@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ## Load includes
-if [ "x$CBF_HOME" = "x" ]; then DIRNAME=`dirname $0`; CBF_HOME=`cd $DIRNAME/..; pwd` ; fi; export CBF_HOME
-. ${CBF_HOME}/bin/includes.sh
+if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DIRNAME/..; pwd` ; fi; export RADARGUN_HOME
+. ${RADARGUN_HOME}/bin/includes.sh
 
 
 #### parse plugins we want to test
@@ -85,7 +85,7 @@ fi
 
 
 ####### first start the master
-. ${CBF_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER}
+. ${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER}
 PID_OF_MASTER_PROCESS=$CBF_MASTER_PID
 #### Sleep for a few seconds so master can open its port
 
@@ -101,6 +101,6 @@ done
 
 if [ $TAILF == "true" ]
 then
-  tail -f cachebench.log
+  tail -f radargun.log
 fi
 

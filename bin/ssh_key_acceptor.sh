@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo ""
-echo "=== Cache Benchmark Framework ==="
+echo "=== RadarGun ==="
 echo " This script is to be used on environments where slave nodes are provisioned via PXE boot"
 echo " and a master provides this PXE image and also acts as a DHCP server.  This script should"
 echo " *only* be run on the master, to SSH into each slave and 'accept' its SSH key."
