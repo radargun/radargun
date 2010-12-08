@@ -4,11 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
-   <artifactId>cache-benchmark-aggregator</artifactId>
+   <artifactId>radargun-aggregator</artifactId>
    <version>1.1.0-SNAPSHOT</version>
-   <groupId>org.cachebench</groupId>
-   <name>Cache Benchmark Framework - Aggregator</name>
-   <description>The aggregator for the cache benchmark framework</description>
+   <groupId>org.radargun</groupId>
+   <name>RadarGun - Aggregator</name>
+   <description>The aggregator for RadarGun</description>
    <packaging>pom</packaging>
 
    <modules>
@@ -21,7 +21,7 @@
    </modules>
 
    <properties>
-      <distribution.name>CacheBenchFwk-${project.version}</distribution.name>
+      <distribution.name>RadarGun-${project.version}</distribution.name>
       <distribution.artifact>target/distribution/${distribution.name}</distribution.artifact>
       <distribution.zipfile>target/distribution/${distribution.name}.zip</distribution.zipfile>
    </properties>
@@ -146,7 +146,7 @@
                         <echo message="Packaging the framework, common scripts and building archive"/>
                         <copy todir="${distribution.artifact}">
                            <fileset
-                                 dir="framework/target/distribution/cache-benchmark-framework-bin/cache-benchmark-framework">
+                                 dir="framework/target/distribution/radargun-bin/radargun">
                               <include name="**/*"/>
                            </fileset>
                         </copy>

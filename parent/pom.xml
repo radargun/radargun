@@ -4,13 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
-   <artifactId>cache-benchmark-parent</artifactId>
+   <artifactId>radargun-parent</artifactId>
    <version>1.1.0-SNAPSHOT</version>
-   <groupId>org.cachebench</groupId>
-   <name>Cache Benchmark Framework - Parent POM</name>
-   <description>The parent POM for the cache benchmark framework</description>
+   <groupId>org.radargun</groupId>
+   <name>RadarGun - Parent POM</name>
+   <description>The parent POM for RadarGun</description>
    <packaging>pom</packaging>
-   <url>http://cachebenchfwk.sourceforge.net</url>
+   <url>http://github.com/infinispan/radargun</url>
 
    <licenses>
       <license>
@@ -21,14 +21,14 @@
    </licenses>
 
    <scm>
-      <connection>scm:git://cachebenchfwk.git.sourceforge.net/gitroot/cachebenchfwk/cachebenchfwk</connection>
-      <developerConnection>scm:ssh://USER@cachebenchfwk.git.sourceforge.net/gitroot/cachebenchfwk</developerConnection>
-      <url>http://cachebenchfwk.git.sourceforge.net/git/gitweb-index.cgi</url>
+      <connection>scm:git:git://github.com/infinispan/radargun.git</connection>
+      <developerConnection>scm:git:git@github.com:infinispan/radargun.git</developerConnection>
+      <url>scm:git:https://github.com/infinispan/radargun</url>
    </scm>
 
    <issueManagement>
-      <system>TRAC</system>
-      <url>https://sourceforge.net/apps/trac/cachebenchfwk/</url>
+      <system>GitHub</system>
+      <url>https://github.com/infinispan/radargun/issues</url>
    </issueManagement>
 
    <developers>
@@ -118,7 +118,7 @@
             <configuration>
                <archive>
                   <manifest>
-                     <mainClass>org.cachebench.Version</mainClass>
+                     <mainClass>org.radargun.Version</mainClass>
                   </manifest>
                </archive>
                <excludes>
