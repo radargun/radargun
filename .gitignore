@@ -1,0 +1,28 @@
+# ignore .svn metadata files
+.svn
+# ignore Maven generated target folders
+target
+# ignore eclipse files
+.project
+.classpath
+.settings
+.scala_dependencies
+# ignore IDEA files
+*.iml
+*.ipr
+*.iws
+.idea
+atlassian-ide-plugin.xml
+maven-ant-tasks.jar
+test-output
+# log files
+*.log
+# vim files
+*.swp
+# generated rhq plugin xml
+rhq-plugin.xml
+# generated schema
+core/src/main/resources/schema
+# Compiled python files
+*.pyc
+
