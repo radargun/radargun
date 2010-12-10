@@ -145,8 +145,7 @@
                      <tasks>
                         <echo message="Packaging the framework, common scripts and building archive"/>
                         <copy todir="${distribution.artifact}">
-                           <fileset
-                                 dir="framework/target/distribution/radargun-bin/radargun">
+                           <fileset dir="framework/target/distribution/radargun-framework-bin/radargun-framework">
                               <include name="**/*"/>
                            </fileset>
                         </copy>
