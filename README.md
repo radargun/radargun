@@ -5,11 +5,7 @@ RadarGun is a data grid and distributed cache benchmarking framework built to te
 All information on this framework, including usage, is maintained online, on [the project's wiki system](https://github.com/infinispan/radargun/wiki).
 
 ## Quick start:
-To build, run:
-
-    $ mvn clean install
-
-and the distribution will be built in ``target/distribution`` which can then be used to perform benchmarks.
+The best way to get started with Radargun is [The five minutes tutorial](https://github.com/radargun/radargun/wiki/Five-Minute-Tutorial)
 
 # CacheBenchFwk
 This project is essentially a migration of the earlier - and far more poorly named - CacheBenchFwk on SourceForge.  
