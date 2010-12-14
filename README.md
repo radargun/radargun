@@ -8,7 +8,7 @@ All information on this framework, including usage, is maintained online, on [th
 The best way to get started with Radargun is [The five minutes tutorial](https://github.com/radargun/radargun/wiki/Five-Minute-Tutorial)
 
 # CacheBenchFwk
-This project is essentially a migration of the earlier - and far more poorly named - CacheBenchFwk on SourceForge.  
+This project is essentially a migration of the earlier - and far more poorly named - [CacheBenchFwk on SourceForge](http://cachebenchfwk.sourceforge.net).  
 
 ## TODOs
 As a part of the migration, as you may imagine, there are a fair few outstanding tasks still pending.  Any help here is always much appreciated.
@@ -20,4 +20,7 @@ As a part of the migration, as you may imagine, there are a fair few outstanding
   * Would also need to rename _cachebench_ -> _radargun_ on the wiki.
 * Cut a release once this is done!
 * Move any outstanding TRAC issues to GitHub's issues?  There should only be a very small handful.
+* Wind down SourceForge project
+  * Add a note on the SF wiki with links to the wiki, sources, download and issues on GitHub
+  * Disable downloads and git repo on SF
 
