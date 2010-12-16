@@ -16,7 +16,7 @@
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
-         <version>4.2.0.CR3</version>
+         <version>4.2.0.CR4</version>
       </dependency>
    </dependencies>
 </project>
