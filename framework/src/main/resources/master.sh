@@ -7,10 +7,10 @@ if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DI
 CONFIG=./conf/benchmark.xml
 SLAVE_COUNT_ARG=""
 TAILF=false
-CBF_MASTER_PID=""
+RADARGUN_MASTER_PID=""
 
 master_pid() {
-   CBF_MASTER_PID=`ps -ef | grep "org.radargun.LaunchMaster" | grep -v "grep" | awk '{print $2}'`
+   RADARGUN_MASTER_PID=`ps -ef | grep "org.radargun.LaunchMaster" | grep -v "grep" | awk '{print $2}'`
    return 
 }
 
@@ -43,26 +43,26 @@ do
   case "$1" in
     "-status")
       master_pid;
-      if [ -z "${CBF_MASTER_PID}" ] 
+      if [ -z "${RADARGUN_MASTER_PID}" ]
       then
         echo "Master not running." 
       else
-        echo "Master is running, pid is ${CBF_MASTER_PID}." 
+        echo "Master is running, pid is ${RADARGUN_MASTER_PID}."
       fi 
       exit 0
       ;;
      "-stop")
       master_pid;
-      if [ -z "${CBF_MASTER_PID}" ] 
+      if [ -z "${RADARGUN_MASTER_PID}" ]
       then
         echo "Master not running." 
       else
-        kill -15 ${CBF_MASTER_PID}
+        kill -15 ${RADARGUN_MASTER_PID}
         if [ $? ]
         then 
-          echo "Successfully stopped master (pid=${CBF_MASTER_PID})"
+          echo "Successfully stopped master (pid=${RADARGUN_MASTER_PID})"
         else 
-          echo "Problems stopping master(pid=${CBF_MASTER_PID})";
+          echo "Problems stopping master(pid=${RADARGUN_MASTER_PID})";
         fi  
       fi 
       exit 0
@@ -110,9 +110,9 @@ if ! [ "x${MASTER}" = "x" ] ; then
 fi
 
 java ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.radargun.LaunchMaster -config ${CONFIG} > stdout_master.out 2>&1 &
-export CBF_MASTER_PID=$!
+export RADARGUN_MASTER_PID=$!
 HOST_NAME=`hostname`
-echo "Master's PID is $CBF_MASTER_PID running on ${HOST_NAME}"
+echo "Master's PID is $RADARGUN_MASTER_PID running on ${HOST_NAME}"
 if [ $TAILF == "true" ]
 then
   tail -f radargun.log

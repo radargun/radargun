@@ -12,17 +12,17 @@ coherence-3.5.jar!/coherence-cache-config.xml
   <caching-scheme-mapping>
 
      <cache-mapping>
-      <cache-name>cbf-dist</cache-name>
+      <cache-name>radargun-dist</cache-name>
       <scheme-name>example-distributed</scheme-name>
     </cache-mapping>
 
     <cache-mapping>
-      <cache-name>cbf-near</cache-name>
+      <cache-name>radargun-near</cache-name>
       <scheme-name>example-near</scheme-name>
     </cache-mapping>
 
     <cache-mapping>
-      <cache-name>cbf-repl</cache-name>
+      <cache-name>radargun-repl</cache-name>
       <scheme-name>example-replicated</scheme-name>
     </cache-mapping>
 

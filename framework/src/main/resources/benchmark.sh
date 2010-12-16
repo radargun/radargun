@@ -86,7 +86,7 @@ fi
 
 ####### first start the master
 . ${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER}
-PID_OF_MASTER_PROCESS=$CBF_MASTER_PID
+PID_OF_MASTER_PROCESS=$RADARGUN_MASTER_PID
 #### Sleep for a few seconds so master can open its port
 
 ####### then start the rest of the nodes

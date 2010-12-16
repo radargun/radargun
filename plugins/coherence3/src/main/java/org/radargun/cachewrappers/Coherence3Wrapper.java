@@ -23,11 +23,11 @@ public class Coherence3Wrapper implements CacheWrapper {
    public void setUp(String configuration, boolean isLocal, int nodeIndex) throws Exception {
       String config;
       if (configuration.indexOf("repl") == 0) {
-         config = "cbf-repl";
+         config = "radargun-repl";
       } else if (configuration.indexOf("dist") == 0) {
-         config = "cbf-dist";
+         config = "radargun-dist";
       } else if (configuration.indexOf("near") == 0) {
-         config = "cbf-near";
+         config = "radargun-near";
       } else {
          throw new RuntimeException("Invalid configuration ('" + configuration + "'). Configuration name should start with: 'dist', 'repl', 'local', 'opt' or 'near'");
       }
