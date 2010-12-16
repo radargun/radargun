@@ -10,6 +10,7 @@
    </parent>
 
    <artifactId>plugin-infinispan4</artifactId>
+  <version>1.1.1-SNAPSHOT</version>
    <name>Infinispan 4.x plugin for RadarGun</name>
 
    <dependencies>
