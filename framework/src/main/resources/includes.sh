@@ -10,7 +10,7 @@
 
 welcome() {
   SCRIPTNAME=`basename ${0}`
-  echo "=== Cache Benchmark Framework: ${SCRIPTNAME} ==="
+  echo "=== Radargun: ${SCRIPTNAME} ==="
   wrappedecho "${1}"
   echo ""
 }
