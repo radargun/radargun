@@ -4,7 +4,7 @@
    <parent>
       <groupId>org.radargun</groupId>
       <artifactId>radargun-parent</artifactId>
-      <version>1.0.0-FINAL</version>
+      <version>1.1.0-SNAPSHOT</version>
       <relativePath>../parent/pom.xml</relativePath>
    </parent>
 
