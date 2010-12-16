@@ -10,6 +10,7 @@
 
    <groupId>org.radargun</groupId>
    <artifactId>radargun-framework</artifactId>
+  <version>1.1.1-SNAPSHOT</version>
    <name>The RadarGun framework</name>
    <packaging>jar</packaging>
 
