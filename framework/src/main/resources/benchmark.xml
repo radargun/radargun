@@ -22,7 +22,6 @@
       <infinispan4>
          <config name="repl-sync.xml"/>
          <config name="dist-sync.xml"/>
-         <config name="dist-sync-l1.xml"/>
       </infinispan4>
    </products>
 
@@ -31,8 +30,9 @@
          <item product="infinispan4" config="repl-sync.xml"/>
          <item product="jbosscache3" config="*"/>
       </report>
-      <report name="Distributed">
-         <item product="infinispan4" config="dist-*"/>
+      <report name="DistVsRepl">
+         <item product="infinispan4" config="repl-sync.xml"/>
+         <item product="infinispan4" config="dist-sync.xml"/>
       </report>
       <report name="All" includeAll="true"/>
    </reports>
