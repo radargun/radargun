@@ -12,6 +12,7 @@
    <modules>
       <module>framework</module>
       <module>plugins/infinispan4</module>
+       <module>plugins/jgroups</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
       <module>plugins/ehcache17</module>
@@ -112,6 +113,12 @@
 
                         <copy todir="${distribution.artifact}/plugins/infinispan4">
                            <fileset dir="plugins/infinispan4/target/distribution/plugin-infinispan4-bin/plugin-infinispan4">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                         <copy todir="${distribution.artifact}/plugins/jgroups">
+                           <fileset dir="plugins/jgroups/target/distribution/plugin-jgroups-bin/plugin-jgroups">
                               <include name="**/*" />
                            </fileset>
                         </copy>
