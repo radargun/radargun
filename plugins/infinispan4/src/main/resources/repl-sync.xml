@@ -4,7 +4,7 @@
    <global>
       <transport clusterName="x">
          <properties>
-            <property name="configurationFile" value="jgroups/jgroups-udp.xml"/>
+            <property name="configurationFile" value="jgroups/fast.xml"/>
          </properties>
       </transport>
    </global>
