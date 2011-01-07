@@ -1,31 +1,60 @@
 package org.radargun.cachewrappers;
 
-import org.jgroups.JChannel;
-import org.jgroups.Version;
-import org.jgroups.View;
+import org.jgroups.*;
+import org.jgroups.blocks.*;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 import org.jgroups.util.Util;
 import org.radargun.CacheWrapper;
 
 import javax.transaction.TransactionManager;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
-public class JGroupsWrapper implements CacheWrapper {
+public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
     private static Log log=LogFactory.getLog(JGroupsWrapper.class);
-    JChannel ch;
-    TransactionManager tm;
-    boolean started=false;
-    String config;
+    protected JChannel ch;
+    protected Address local_addr;
+    protected RpcDispatcher disp;
+    protected TransactionManager tm;
+    protected boolean started=false;
+    protected final List<Address> members=new ArrayList<Address>();
+
+    private byte[] GET_RSP=new byte[1000]; // hard coded
+
+    private static final Method[] METHODS=new Method[5];
+
+    protected static final short GET = 1;
+    protected static final short PUT = 2;
+
+    static {
+        try {
+            METHODS[GET] = JGroupsWrapper.class.getMethod("_get", Object.class);
+            METHODS[PUT] = JGroupsWrapper.class.getMethod("_put", Object.class, Object.class);
+        }
+        catch(NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 
     public void setUp(String config, boolean isLocal, int nodeIndex) throws Exception {
-        this.config=config;
         if(!started) {
+            log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
+            log.info("JGroups version: " + org.jgroups.Version.printDescription());
             ch=new JChannel(config);
-            ch.connect("radargun-cluster");
+            disp=new RpcDispatcher(ch, null, this, this);
+            disp.setMethodLookup(new MethodLookup() {
+                public Method findMethod(short id) {
+                    return METHODS[id];
+                }
+            });
+            ch.connect("x");
+            local_addr=ch.getAddress();
             started=true;
         }
-        log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
-        log.info("JGroups version: " + org.jgroups.Version.printDescription());
     }
 
     public void tearDown() throws Exception {
@@ -33,16 +62,60 @@ public class JGroupsWrapper implements CacheWrapper {
         started=false;
     }
 
+    public static void _put(Object key, Object value) throws Exception {
+        ;
+    }
+
+    public Object _get(Object key) throws Exception {
+        return GET_RSP;
+    }
+
     public void put(String bucket, Object key, Object value) throws Exception {
-        throw new UnsupportedOperationException();
+        Object[] put_args=new Object[]{key, value};
+        MethodCall put_call=new MethodCall(PUT, put_args);
+        RequestOptions put_options=new RequestOptions(Request.GET_ALL, 5000);
+
+        byte flags=0;
+        flags=Util.setFlag(flags, Message.DONT_BUNDLE);
+        flags=Util.setFlag(flags, Message.NO_FC);
+        put_options.setFlags(flags);
+
+        Address target=pickTarget();
+        try {
+            disp.callRemoteMethod(target, put_call, put_options);
+        }
+        catch(Throwable t) {
+            throw new Exception(t);
+        }
     }
 
     public Object get(String bucket, Object key) throws Exception {
-        throw new UnsupportedOperationException();
+        Object[] get_args=new Object[]{key};
+        MethodCall get_call=new MethodCall(GET, get_args);
+        RequestOptions get_options=new RequestOptions(Request.GET_ALL, 5000);
+
+        byte flags=0;
+        flags=Util.setFlag(flags, Message.DONT_BUNDLE);
+        flags=Util.setFlag(flags, Message.NO_FC);
+        get_options.setFlags(flags);
+
+        Address target=pickTarget();
+        try {
+            return disp.callRemoteMethod(target, get_call, get_options);
+        }
+        catch(Throwable t) {
+            throw new Exception(t);
+        }
     }
 
     public void empty() throws Exception {
         ; // no-op
+    }
+
+
+    public void viewAccepted(View new_view) {
+        members.clear();
+        members.addAll(new_view.getMembers());
     }
 
     public int getNumMembers() {
@@ -82,5 +155,11 @@ public class JGroupsWrapper implements CacheWrapper {
         catch(Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private Address pickTarget() {
+        int index=members.indexOf(local_addr);
+        int new_index=(index +1) % members.size();
+        return members.get(new_index);
     }
 }
