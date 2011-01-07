@@ -16,7 +16,7 @@ urn:org:jgroups ">
          max_bundle_timeout="30"
          ip_ttl="${jgroups.udp.ip_ttl:2}"
          enable_bundling="true"
-         enable_diagnostics="false"
+         enable_diagnostics="true"
          thread_naming_pattern="cl"
 
          thread_pool.enabled="true"
