@@ -33,17 +33,17 @@
 
    <developers>
       <developer>
-         <name>Manik Surtani</name>
+         <name>Mircea Markus</name>
          <roles>
             <role>Project founder</role>
          </roles>
          <timezone>GMT</timezone>
       </developer>
-
+      
       <developer>
-         <name>Mircea Markus</name>
+         <name>Manik Surtani</name>
          <roles>
-            <role>Lead developer</role>
+            <role>Project founder</role>
          </roles>
          <timezone>GMT</timezone>
       </developer>
