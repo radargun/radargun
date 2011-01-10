@@ -271,7 +271,7 @@ public class PutGetStressor implements CacheWrapperStressor {
    }
 
    /**
-    * This will make sure that each session runs in its own thread and no collisition will take place. See
+    * This will make sure that each session runs in its own thread and no collision will take place. See
     * https://sourceforge.net/apps/trac/cachebenchfwk/ticket/14
     */
    private String getBucketId(int threadIndex) {
