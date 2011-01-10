@@ -166,6 +166,7 @@ public class PutGetStressor implements CacheWrapperStressor {
          startTime = System.currentTimeMillis();
          int readPercentage = 100 - writePercentage;
          Random r = new Random();
+         String payload = generateRandomString(sizeOfValue);
          int randomAction;
          int randomKeyInt;
          try {
@@ -193,7 +194,6 @@ public class PutGetStressor implements CacheWrapperStressor {
                readDuration += System.currentTimeMillis() - start;
                reads++;
             } else {
-               String payload = generateRandomString(sizeOfValue);
                long start = System.currentTimeMillis();
                try {
                   cacheWrapper.put(bucketId, key, payload);
