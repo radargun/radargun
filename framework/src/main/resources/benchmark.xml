@@ -1,7 +1,16 @@
 <bench-config>
 
+   <!-- 
+      Define where the master process listens for connections from slaves.
+      The master process coordinates the slaves for running the distributed benchmark
+    -->
    <master bindAddress="${127.0.0.1:master.address}" port="${2103:master.port}"/>
 
+   <!--
+      Configure the stages of the benchmark.
+      The master will coordinate all the slaves, so that each stage starts on all the slaves at the same time.
+      The attributes "initSize", "maxSize" and "increment" defines the rage of slaves the benchmark will be run on.
+    -->
    <benchmark initSize="2" maxSize="${4:slaves}" increment="1">
       <DestroyWrapper runOnAllSlaves="true"/>
       <StartCluster staggerSlaveStartup="true" delayAfterFirstSlaveStarts="5000" delayBetweenStartingSlaves = "500"/>
@@ -15,6 +24,10 @@
       <CsvReportGeneration/>
    </benchmark>
 
+   <!--
+      Specify which product/configs are benchmarked. 
+      For each such (product, config) combination, the benchmark (described by benchmark element) is run.
+   -->
    <products>
       <jbosscache3>
          <config name="mvcc/mvcc-repl-sync.xml"/>
@@ -25,6 +38,9 @@
       </infinispan4>
    </products>
 
+   <!--
+      Configures the reports to be generated.
+   -->
    <reports>
       <report name="Replicated">
          <item product="infinispan4" config="repl-sync.xml"/>
