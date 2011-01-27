@@ -97,6 +97,10 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
         get_options.setFlags(flags);
 
         Address target=pickTarget();
+
+        // we're simulating picking ourself, which returns the data directly from the local cache - no RPC involved
+        if(local_addr.equals(target))
+            return GET_RSP;
         try {
             return disp.callRemoteMethod(target, get_call, get_options);
         }
@@ -155,9 +159,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
     }
 
     private Address pickTarget() {
-        int index=members.indexOf(local_addr);
-        int new_index=(index +1) % members.size();
-        return members.get(new_index);
+        return (Address)Util.pickRandomElement(members);
     }
 
     private Collection<Address> pickAnycastTargets() {
