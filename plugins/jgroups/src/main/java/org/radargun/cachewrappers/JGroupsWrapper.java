@@ -8,10 +8,13 @@ import org.jgroups.util.Util;
 import org.radargun.CacheWrapper;
 
 import javax.transaction.TransactionManager;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 
 public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
     private static Log log=LogFactory.getLog(JGroupsWrapper.class);
@@ -22,15 +25,35 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
     protected boolean started=false;
     protected final List<Address> members=new ArrayList<Address>();
 
-    private byte[] GET_RSP=new byte[1000]; // hard coded
-    private static final int anycast_count=2; // hard-coded
+    private static byte[] GET_RSP;
+    private static int    num_owners;
+    private static boolean exclude_self_for_gets=false;
 
     private static final Method[] METHODS=new Method[5];
+    private static final String   PROP_FILE="jgroups.properties";
+    private static final String   NUM_OWNERS="num_owners";
+    private static final String   ATTR_SIZE="attr_size";
+    private static final String   EXCLUDE_SELF_FOR_GETS="exclude_self_for_gets";
 
     protected static final short GET = 1;
     protected static final short PUT = 2;
 
     static {
+        try {
+            InputStream in=new FileInputStream(PROP_FILE);
+            Properties props=new Properties();
+            props.load(in);
+            num_owners=Integer.parseInt(props.getProperty(NUM_OWNERS, "2"));
+            int size=Integer.parseInt(props.getProperty(ATTR_SIZE, "1000"));
+            GET_RSP=new byte[size];
+            exclude_self_for_gets=Boolean.parseBoolean(props.getProperty(EXCLUDE_SELF_FOR_GETS, "false"));
+            System.out.println("numOwners=" + num_owners + ", attrSize=" + size + ", exclude_self_for_gets=" + exclude_self_for_gets);
+        }
+        catch(Exception e) {
+            throw new RuntimeException(e);
+        }
+
+
         try {
             METHODS[GET] = JGroupsWrapper.class.getMethod("_get", Object.class);
             METHODS[PUT] = JGroupsWrapper.class.getMethod("_put", Object.class, Object.class);
@@ -159,13 +182,21 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
     }
 
     private Address pickTarget() {
-        return (Address)Util.pickRandomElement(members);
+        if(exclude_self_for_gets)
+            return (Address)Util.pickRandomElement(members);
+        else {
+            int index=members.indexOf(local_addr);
+            int new_index=(index +1) % members.size();
+            return members.get(new_index);
+        }
     }
 
+
+
     private Collection<Address> pickAnycastTargets() {
-        Collection<Address> anycast_targets=new ArrayList<Address>(anycast_count);
+        Collection<Address> anycast_targets=new ArrayList<Address>(num_owners);
         int index=members.indexOf(local_addr);
-        for(int i=index + 1; i < index + 1 + anycast_count; i++) {
+        for(int i=index + 1; i < index + 1 + num_owners; i++) {
             int new_index=i % members.size();
             anycast_targets.add(members.get(new_index));
         }
