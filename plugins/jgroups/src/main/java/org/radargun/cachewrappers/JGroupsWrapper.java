@@ -182,7 +182,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
     }
 
     private Address pickTarget() {
-        if(exclude_self_for_gets)
+        if(!exclude_self_for_gets)
             return (Address)Util.pickRandomElement(members);
         else {
             int index=members.indexOf(local_addr);
