@@ -40,7 +40,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
 
     static {
         try {
-            InputStream in=new FileInputStream(PROP_FILE);
+            InputStream in=Util.getResourceAsStream(PROP_FILE, JGroupsWrapper.class);
             Properties props=new Properties();
             props.load(in);
             num_owners=Integer.parseInt(props.getProperty(NUM_OWNERS, "2"));
