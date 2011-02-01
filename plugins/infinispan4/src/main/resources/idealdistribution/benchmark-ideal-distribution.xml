@@ -19,7 +19,7 @@
 
    <products>
       <infinispan4>
-         <config name="dist-sync.xml" useEvenHashing="true" threadsPerNode="2" keysPerThread="10"/>
+         <config name="dist-sync.xml" useEvenHashing="true"/>
          <config name="idealdistribution/dist-sync-ideal-distribution.xml" useEvenHashing="true" threadsPerNode="2" keysPerThread="10"/>
       </infinispan4>
    </products>
