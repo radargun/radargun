@@ -3,7 +3,7 @@
 ###### for cache products, as well as any JVM options.
 
 ### Set your bind address for the tests to use. Could be an IP, host name or a reference to an environment variable.
-#BIND_ADDRESS=${MY_BIND_ADDRESS}
+BIND_ADDRESS=${MY_BIND_ADDRESS}
 JG_FLAGS="-Dresolve.dns=false -Djgroups.timer.num_threads=4"
 JVM_OPTS="-server -Xmx1024M -Xms1024M"
 JVM_OPTS="$JVM_OPTS $JG_FLAGS"
