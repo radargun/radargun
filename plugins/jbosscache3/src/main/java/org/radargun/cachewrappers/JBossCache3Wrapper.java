@@ -9,6 +9,7 @@ import org.jboss.cache.config.Option;
 import org.jboss.cache.transaction.DummyTransactionManager;
 import org.jboss.cache.util.Caches;
 import org.radargun.CacheWrapper;
+import org.radargun.utils.TypedProperties;
 
 import javax.transaction.Transaction;
 import java.util.Map;
@@ -29,7 +30,7 @@ public class JBossCache3Wrapper implements CacheWrapper
       FLAT = Boolean.getBoolean("radargun.useFlatCache");
    }
 
-   public void setUp(String config, boolean ignored, int nodeIndex) throws Exception
+   public void setUp(String config, boolean ignored, int nodeIndex, TypedProperties confAttributes) throws Exception
    {
       log.info("Creating cache with the following configuration: " + config);
       cache = new DefaultCacheFactory().createCache(config);
@@ -127,5 +128,10 @@ public class JBossCache3Wrapper implements CacheWrapper
       {
          throw new RuntimeException(e);
       }
+   }
+
+   @Override
+   public int size() {
+      return 0;  // TODO: Customise this generated block
    }
 }

@@ -8,6 +8,7 @@ import net.sf.ehcache.config.ConfigurationFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.utils.TypedProperties;
 
 import java.io.Serializable;
 import java.net.URL;
@@ -29,7 +30,7 @@ public class EHCacheWrapper implements CacheWrapper
    private Log log = LogFactory.getLog("org.radargun.cachewrappers.EHCacheWrapper");
    boolean localmode;
 
-   public void setUp(String config, boolean isLocal, int nodeIndex) throws Exception
+   public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception
    {
       if (log.isTraceEnabled()) log.trace("Entering EHCacheWrapper.setUp()");
       localmode = isLocal;
@@ -118,5 +119,10 @@ public class EHCacheWrapper implements CacheWrapper
    public void endTransaction(boolean successful)
    {
       throw new UnsupportedOperationException("Does not support JTA!");
+   }
+
+   @Override
+   public int size() {
+      return 0;  // TODO: Customise this generated block
    }
 }

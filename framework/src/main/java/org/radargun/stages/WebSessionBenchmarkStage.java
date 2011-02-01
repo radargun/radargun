@@ -4,6 +4,7 @@ import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.PutGetStressor;
+import org.radargun.stressors.StringKeyGenerator;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ import static org.radargun.utils.Utils.numberFormat;
  */
 public class WebSessionBenchmarkStage extends AbstractDistStage {
 
+   private static final String SIZE_INFO = "SIZE_INFO";
    private int opsCountStatusLog = 5000;
 
    public static final String SESSION_PREFIX = "SESSION";
@@ -52,6 +54,8 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    private boolean reportNanos = false;
 
+   private String keyGeneratorClass = StringKeyGenerator.class.getName();;
+
 
    private CacheWrapper cacheWrapper;
 
@@ -66,16 +70,20 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       log.info("Starting WebSessionBenchmarkStage: " + this.toString());
 
       PutGetStressor putGetStressor = new PutGetStressor();
-      putGetStressor.setBucketPrefix(getSlaveIndex() + "");
+      putGetStressor.setNodeIndex(getSlaveIndex());
       putGetStressor.setNumberOfAttributes(numberOfAttributes);
       putGetStressor.setNumberOfRequests(numberOfRequests);
       putGetStressor.setNumOfThreads(numOfThreads);
       putGetStressor.setOpsCountStatusLog(opsCountStatusLog);
       putGetStressor.setSizeOfAnAttribute(sizeOfAnAttribute);
       putGetStressor.setWritePercentage(writePercentage);
+      putGetStressor.setKeyGeneratorClass(keyGeneratorClass);
 
       try {
          Map<String, String> results = putGetStressor.stress(cacheWrapper);
+         String sizeInfo = "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + super.getActiveSlaveCount() + ", nodeIndex:" + super.getSlaveIndex() + ", cacheSize: " + cacheWrapper.size();
+         log.info(sizeInfo);
+         results.put(SIZE_INFO, sizeInfo);
          result.setPayload(results);
          return result;
       } catch (Exception e) {
@@ -108,6 +116,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
                throw new IllegalStateException("This should be there!");
             }
             log.info("On slave " + ack.getSlaveIndex() + " we had " + numberFormat(parseDouble(reqPerSes.toString())) + " requests per second");
+            log.info("Received " +  benchResult.remove(SIZE_INFO));
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }
@@ -141,6 +150,14 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    public void setOpsCountStatusLog(int opsCountStatusLog) {
       this.opsCountStatusLog = opsCountStatusLog;
+   }
+
+   public String getKeyGeneratorClass() {
+      return keyGeneratorClass;
+   }
+
+   public void setKeyGeneratorClass(String keyGeneratorClass) {
+      this.keyGeneratorClass = keyGeneratorClass;
    }
 
    @Override

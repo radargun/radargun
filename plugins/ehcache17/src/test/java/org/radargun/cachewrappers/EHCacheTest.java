@@ -19,7 +19,7 @@ public class EHCacheTest {
 
    public static void main(String[] args) throws Exception {
       CacheWrapper w = new EHCacheWrapper();
-      w.setUp("ehcache-repl-sync.xml", false, 0);
+      w.setUp("ehcache-repl-sync.xml", false, 0, null);
       String cfgFile = "/path/to/file.xml";
       Ehcache cache;
       URL url = new URL(cfgFile);

@@ -5,6 +5,8 @@ import com.tangosol.net.NamedCache;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.utils.TypedProperties;
+
 
 import javax.transaction.Transaction;
 
@@ -20,7 +22,7 @@ public class Coherence3Wrapper implements CacheWrapper {
    private Log log = LogFactory.getLog(Coherence3Wrapper.class);
 
    @Override
-   public void setUp(String configuration, boolean isLocal, int nodeIndex) throws Exception {
+   public void setUp(String configuration, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
       String config;
       if (configuration.indexOf("repl") == 0) {
          config = "radargun-repl";
@@ -88,5 +90,10 @@ public class Coherence3Wrapper implements CacheWrapper {
 
    public void endTransaction(boolean successful) {
       throw new UnsupportedOperationException("Does not support JTA!");
+   }
+
+   @Override
+   public int size() {
+      return 0;  // TODO: Customise this generated block
    }
 }

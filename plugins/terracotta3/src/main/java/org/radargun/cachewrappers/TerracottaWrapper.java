@@ -1,6 +1,7 @@
 package org.radargun.cachewrappers;
 
 import org.radargun.CacheWrapper;
+import org.radargun.utils.TypedProperties;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +19,7 @@ public class TerracottaWrapper implements CacheWrapper {
    private final Map<String, Map> sessionCaches = new HashMap<String, Map>();
 
    @Override
-   public void setUp(String config, boolean isLocal, int nodeIndex) throws Exception {
+   public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
    }
 
    public void tearDown() throws Exception {
@@ -85,6 +86,11 @@ public class TerracottaWrapper implements CacheWrapper {
 
    public void endTransaction(boolean successful) {
       throw new UnsupportedOperationException("Does not support JTA!");
+   }
+
+   @Override
+   public int size() {
+      return 0;  // TODO: Customise this generated block
    }
 
    /**
