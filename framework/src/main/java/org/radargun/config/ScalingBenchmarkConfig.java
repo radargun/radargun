@@ -61,8 +61,8 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
    @Override
    public boolean hasNextStage() {
       initialize();
-      log.info("fixedBenchmarkIt="+fixedBenchmarkIt);
-      log.info("fixedBenchmarks size=" + fixedBenchmarks.size());
+      log.trace("fixedBenchmarkIt="+fixedBenchmarkIt);
+      log.info("Number of cluster topologies on which benchmark is executed=" + fixedBenchmarks.size());
       if (fixedBenchmarkIt < fixedBenchmarks.size() - 1) return true;
       return currentFixedBenchmark().hasNextStage();
    }
