@@ -141,9 +141,9 @@ public class InfinispanWrapper implements CacheWrapper {
          ConsistentHash ch = cache.getAdvancedCache().getDistributionManager().getConsistentHash();
          if (ch instanceof EvenSpreadingConsistentHash) {
             int threadsPerNode = confAttributes.getIntProperty("threadsPerNode", -1);
-            if (threadsPerNode < 0) throw new IllegalStateException("When useEvenHashing=true  threadsPerNode must also be set.");
+            if (threadsPerNode < 0) throw new IllegalStateException("When EvenSpreadingConsistentHash is used threadsPerNode must also be set.");
             int keysPerThread = confAttributes.getIntProperty("keysPerThread", -1);
-            if (keysPerThread < 0) throw new IllegalStateException("When keysPerThread=true keysPerThread must also be set.");
+            if (keysPerThread < 0) throw new IllegalStateException("When EvenSpreadingConsistentHash is used must also be set.");
             ((EvenSpreadingConsistentHash)ch).init(threadsPerNode, keysPerThread);
             log.info("Using an even consistent hash!");
          }
