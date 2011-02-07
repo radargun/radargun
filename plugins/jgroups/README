@@ -1,0 +1,20 @@
+
+
+JGroups plugin for RadarGun
+===========================
+
+Plugin measuring the costs of remote gets and puts with JGroups, with regular arguments passed by RadarGun.
+However, a GET returns a *prefabricated* value (no cache handling) and a PUT simply invokes the remote call,
+but doesn't add anything to a hashmap.
+
+The point of this plugin is to measure the overhead of Infinispan's cache handling; it is a base line to the
+Infinispan plugin. The Infinispan plugin should be slower than the JGroups plugin, but the difference should always
+be constant, regardless of the cluster size.
+
+Properties, such as the size of the layload for gets, and the number of owners of a key, can be
+defined in jgroups.properties.
+
+************************************************************************************************************************
+IMPORTANT: note that the ClusterValidation stage in benchmark.xml has to be commented for the JGroups plugin to work;
+since the JGroups plugin does *not* maintain a cache (a hashmap), validation by putting and getting of keys won't work !
+************************************************************************************************************************
