@@ -11,6 +11,7 @@ import org.jboss.cache.buddyreplication.GravitateResult;
 import org.jboss.cache.marshall.NodeData;
 import org.jboss.cache.transaction.DummyTransactionManager;
 import org.radargun.CacheWrapper;
+import org.radargun.utils.TypedProperties;
 
 import javax.transaction.Transaction;
 
@@ -25,7 +26,7 @@ public class JBossCache2Wrapper implements CacheWrapper
    private Log log = LogFactory.getLog(JBossCache2Wrapper.class);
    private boolean inLocalMode;
 
-   public void setUp(String config, boolean ignored, int nodeIndex) throws Exception
+   public void setUp(String config, boolean ignored, int nodeIndex, TypedProperties confAttributes) throws Exception
    {
       log.info("Creating cache with the following configuration: " + config);
       cache = new DefaultCacheFactory().createCache(config);
@@ -106,5 +107,10 @@ public class JBossCache2Wrapper implements CacheWrapper
       {
          throw new RuntimeException(e);
       }
+   }
+
+   @Override
+   public int size() {
+      return 0;  // TODO: Customise this generated block
    }
 }

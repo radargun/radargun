@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * A scaling benchmark is one that executes on an increasing number of slaves. E.g. consdering the {@link
- * org.radargun.stages.WebSessionBenchmarkStage}, one might want to execute it over multiple clusteres of
+ * A scaling benchmark is one that executes on an increasing number of slaves. E.g. considering the {@link
+ * org.radargun.stages.WebSessionBenchmarkStage}, one might want to execute it over multiple clusters of
  * different sizes: e.g 2,3,4,5..10 etc in order to check how a product scales etc.
  *
  * @author Mircea.Markus@jboss.com
@@ -61,8 +61,8 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
    @Override
    public boolean hasNextStage() {
       initialize();
-      log.info("fixedBenchmarkIt="+fixedBenchmarkIt);
-      log.info("fixedBenchmarks size=" + fixedBenchmarks.size());
+      log.trace("fixedBenchmarkIt="+fixedBenchmarkIt);
+      log.info("Number of cluster topologies on which benchmark is executed=" + fixedBenchmarks.size());
       if (fixedBenchmarkIt < fixedBenchmarks.size() - 1) return true;
       return currentFixedBenchmark().hasNextStage();
    }
@@ -97,8 +97,8 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
       return fixedBenchmarks.get(fixedBenchmarkIt);
    }
 
-   public void errorOnCurentBenchmark() {
-      currentFixedBenchmark().errorOnCurentBenchmark();
+   public void errorOnCurrentBenchmark() {
+      currentFixedBenchmark().errorOnCurrentBenchmark();
    }
 
    @Override
@@ -110,4 +110,5 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
       }
       return clone;
    }
+
 }

@@ -2,27 +2,23 @@
 
    <master bindAddress="${127.0.0.1:master.address}" port="${2103:master.port}"/>
 
-   <benchmark initSize="2" maxSize="${4:slaves}" increment="1">
+   <benchmark initSize="1" maxSize="2" increment="1">
       <DestroyWrapper runOnAllSlaves="true"/>
       <StartCluster staggerSlaveStartup="true" delayAfterFirstSlaveStarts="5000" delayBetweenStartingSlaves = "500"/>
       <ClusterValidation partialReplication="false"/>
       <Warmup operationCount="1000"/>
-      <ClearCluster/>
       <!--
          This will average to 10000 requests per thread, although a work-stealing pattern is used so some threads may
          do more work than others.
        -->
       <WebSessionBenchmark numberOfRequests="2500" opsCountStatusLog="500" numOfThreads="2"/>
+      <ClearCluster/>
       <CsvReportGeneration/>
    </benchmark>
 
    <products>
-      <jbosscache3>
-         <config name="mvcc/mvcc-repl-sync.xml"/>
-      </jbosscache3>
       <infinispan4>
-         <config name="repl-sync.xml"/>
-         <config name="dist-sync.xml"/>
+         <config name="repl-sync.xml" a="va" i="1"/>
       </infinispan4>
    </products>
 

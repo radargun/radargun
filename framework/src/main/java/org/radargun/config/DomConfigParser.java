@@ -1,5 +1,6 @@
 package org.radargun.config;
 
+import org.radargun.utils.TypedProperties;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -15,6 +16,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Properties;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -89,12 +91,20 @@ public class DomConfigParser extends ConfigParser {
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
                Element configEl = (Element) configs.item(configIndex);
                String configName = configEl.getAttribute("name");
+               Properties configAttributes = new Properties();
+               NamedNodeMap attributes = configEl.getAttributes();
+               for (int j = 0; j < attributes.getLength(); j++) {
+                  String name = attributes.item(j).getNodeName();
+                  String value = attributes.item(j).getNodeValue();
+                  configAttributes.put(name, value);
+               }
 
                ScalingBenchmarkConfig clone = prototype.clone();
-               updateStartupStage(configName, clone);
                clone.setProductName(productName);
                masterConfig.addBenchmark(clone);
                clone.setConfigName(configName);
+               clone.setConfigAttributes(new TypedProperties(configAttributes));
+               updateStartupStage(configName, clone);
             }
 
          }
@@ -115,6 +125,7 @@ public class DomConfigParser extends ConfigParser {
          if (st instanceof StartClusterStage) {
             StartClusterStage scs = (StartClusterStage) st;
             scs.setConfig(configName);
+            scs.setConfAttributes(clone.getConfigAttributes());
          }
       }
    }

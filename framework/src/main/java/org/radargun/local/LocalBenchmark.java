@@ -6,7 +6,6 @@ import org.radargun.CacheWrapper;
 import org.radargun.CacheWrapperStressor;
 import org.radargun.ShutDownHook;
 import org.radargun.utils.Utils;
-import org.radargun.CacheWrapperStressor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,7 +48,7 @@ public class LocalBenchmark {
             log.info("Processing " + product.getKey() + "-" + config);
             CacheWrapper wrapper = getCacheWrapper(product.getKey());
             try {
-               wrapper.setUp(config, true, -1);
+               wrapper.setUp(config, true, -1, null);
 
                Map<String, String> results = null;
                for (CacheWrapperStressor stressor : stressors) {

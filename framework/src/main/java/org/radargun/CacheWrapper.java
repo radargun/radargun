@@ -1,6 +1,8 @@
 package org.radargun;
 
 
+import org.radargun.utils.TypedProperties;
+
 /**
  * CacheWrappers wrap caching products tp provide RadarGun with a standard way of
  * accessing and manipulating a cache.
@@ -11,15 +13,16 @@ public interface CacheWrapper
 {
    /**
     * Initialises the cache.  Typically this step will configure the
-    * cacheing product with various params passed in, described in
-    * benchmark.xml for a particular cacheing product, which is
+    * caching product with various params passed in, described in
+    * benchmark.xml for a particular caching product, which is
     * usually the name or path to a config file specific to the
-    * cacheing product being tested.
+    * caching product being tested.
     *
     * @param config
     * @param nodeIndex
+    * @param confAttributes
     */
-   void setUp(String config, boolean isLocal, int nodeIndex) throws Exception;
+   void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception;
 
    /**
     * This is called at the very end of all tests on this cache, and is used for clean-up
@@ -32,7 +35,7 @@ public interface CacheWrapper
     * as a black box, and is what is timed, so it should be implemented in the most efficient (or most
     * realistic) way possible.
     *
-    * @param bucket a bucket is a group of keys. Some implementations might ignore the bucket (e.g. {@link org.radargun.cachewrappers.InfinispanWrapper}}
+    * @param bucket a bucket is a group of keys. Some implementations might ignore the bucket (e.g. InfinispanWrapper}}
     * so in order to avoid key collisions, one should make sure that the keys are unique even between different buckets. 
     * @param key
     * @param value
@@ -70,5 +73,7 @@ public interface CacheWrapper
    Object startTransaction();
 
    void endTransaction(boolean successful);
+
+   public int size();
 
 }

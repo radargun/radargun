@@ -2,8 +2,10 @@ package org.radargun.config;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.radargun.DistStage;
 import org.radargun.Stage;
+import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
 import java.util.ArrayList;
@@ -25,6 +27,9 @@ public class FixedSizeBenchmarkConfig implements Cloneable {
    protected String productName;
    protected String configName;
    protected int size;
+
+   private TypedProperties configAttributes;
+
 
    protected int stIterator = 0;
    private int maxSize = -1;
@@ -77,6 +82,15 @@ public class FixedSizeBenchmarkConfig implements Cloneable {
       this.configName = configName;
    }
 
+   public void setConfigAttributes(TypedProperties typedProperties) {
+      this.configAttributes = typedProperties;
+   }
+
+   public TypedProperties getConfigAttributes() {
+      return configAttributes;
+   }
+
+
    public void validate() {
       if (productName == null) throw new RuntimeException("Name must be set!");
    }
@@ -116,7 +130,7 @@ public class FixedSizeBenchmarkConfig implements Cloneable {
       return stage;
    }
 
-   public void errorOnCurentBenchmark() {
+   public void errorOnCurrentBenchmark() {
       log.trace("Issues in curent benchmark, skipping remaining stages");
       stIterator = stages.size();
    }

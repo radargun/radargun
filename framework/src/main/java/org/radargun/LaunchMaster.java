@@ -7,8 +7,6 @@ import org.radargun.config.MasterConfig;
 import java.io.File;
 
 /**
- * // TODO: Mircea - Document this!
- *
  * @author Mircea.Markus@jboss.com
  */
 public class LaunchMaster {
@@ -16,7 +14,7 @@ public class LaunchMaster {
    public static void main(String[] args) throws Exception {
 
       File currentDir = new File(".");
-      System.out.println("Runnign in directory: " + currentDir.getAbsolutePath());
+      System.out.println("Running in directory: " + currentDir.getAbsolutePath());
 
       String config = getConfigOrExit(args);
 

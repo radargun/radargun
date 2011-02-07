@@ -77,7 +77,7 @@ public class MasterState extends StateBase {
       if (stageOk) return true;
       if (!currentDistStage.isExitBenchmarkOnSlaveFailure()) {
          log.warn("Execution error for current benchmark, skipping rest of the stages");
-         currentBenchmark.errorOnCurentBenchmark();
+         currentBenchmark.errorOnCurrentBenchmark();
          return true;
       } else {
          log.info("Exception error on current stage, and exiting (stage's exitBenchmarkOnSlaveFailure is set to true).");

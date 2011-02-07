@@ -3,6 +3,7 @@ package org.radargun.stages;
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.state.MasterState;
+import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
 import java.net.URLClassLoader;
@@ -28,6 +29,7 @@ public class StartClusterStage extends AbstractDistStage {
 
    private static final String PREV_PRODUCT = "StartClusterStage.previousProduct";
    private static final String CLASS_LOADER = "StartClusterStage.classLoader";
+   private TypedProperties confAttributes;
 
 
    public StartClusterStage() {
@@ -46,7 +48,7 @@ public class StartClusterStage extends AbstractDistStage {
       try {
          String plugin = Utils.getCacheWrapperFqnClass(productName);
          wrapper = (CacheWrapper) createInstance(plugin);
-         wrapper.setUp(config, false, slaveIndex);
+         wrapper.setUp(config, false, slaveIndex, confAttributes);
          slaveState.setCacheWrapper(wrapper);
          if (performClusterSizeValidation) {
             for (int i = 0; i < TRY_COUNT; i++) {
@@ -162,5 +164,9 @@ public class StartClusterStage extends AbstractDistStage {
       } catch (InterruptedException e) {
          throw new IllegalStateException("Should never happen");
       }
+   }
+
+   public void setConfAttributes(TypedProperties confAttributes) {
+      this.confAttributes = confAttributes;
    }
 }

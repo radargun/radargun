@@ -25,10 +25,6 @@ public class PutGetStressor implements CacheWrapperStressor {
 
    private int opsCountStatusLog = 5000;
 
-   public static final String DEFAULT_BUCKET_PREFIX = "BUCKET_";
-   public static final String DEFAULT_KEY_PREFIX = "KEY_";
-
-
    /**
     * total number of operation to be made against cache wrapper: reads + writes
     */
@@ -55,7 +51,14 @@ public class PutGetStressor implements CacheWrapperStressor {
     */
    private int numOfThreads = 10;
 
-   private String bucketPrefix = DEFAULT_BUCKET_PREFIX;
+   /**
+    * This node's index in the Radargun cluster.  -1 is used for local benchmarks.
+    */
+   private int nodeIndex = -1;
+
+   private String keyGeneratorClass = StringKeyGenerator.class.getName();
+
+   private KeyGenerator keyGenerator;
 
 
    private CacheWrapper cacheWrapper;
@@ -69,13 +72,13 @@ public class PutGetStressor implements CacheWrapperStressor {
       startTime = System.currentTimeMillis();
       log.info("Executing: " + this.toString());
 
-      List<Stresser> stressers;
+      List<Stressor> stressors;
       try {
-         stressers = executeOperations();
+         stressors = executeOperations();
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
-      return processResults(stressers);
+      return processResults(stressors);
    }
 
    public void destroy() throws Exception {
@@ -83,7 +86,7 @@ public class PutGetStressor implements CacheWrapperStressor {
       cacheWrapper = null;
    }
 
-   private Map<String, String> processResults(List<Stresser> stressers) {
+   private Map<String, String> processResults(List<Stressor> stressors) {
       long duration = 0;
       int reads = 0;
       int writes = 0;
@@ -91,14 +94,14 @@ public class PutGetStressor implements CacheWrapperStressor {
       long readsDurations = 0;
       long writesDurations = 0;
 
-      for (Stresser stresser : stressers) {
-         duration += stresser.totalDuration();
-         readsDurations += stresser.readDuration;
-         writesDurations += stresser.writeDuration;
+      for (Stressor stressor : stressors) {
+         duration += stressor.totalDuration();
+         readsDurations += stressor.readDuration;
+         writesDurations += stressor.writeDuration;
 
-         reads += stresser.reads;
-         writes += stresser.writes;
-         failures += stresser.nrFailures;
+         reads += stressor.reads;
+         writes += stressor.writes;
+         failures += stressor.nrFailures;
       }
 
       Map<String, String> results = new LinkedHashMap<String, String>();
@@ -115,30 +118,33 @@ public class PutGetStressor implements CacheWrapperStressor {
       return results;
    }
 
-   private List<Stresser> executeOperations() throws Exception {
-      List<Stresser> stressers = new ArrayList<Stresser>();
+   private List<Stressor> executeOperations() throws Exception {
+      List<Stressor> stressors = new ArrayList<Stressor>();
       final AtomicInteger requestsLeft = new AtomicInteger(numberOfRequests);
       startPoint = new CountDownLatch(1);
       for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
-         Stresser stresser = new Stresser(threadIndex, requestsLeft);
-         stresser.initializeKeys();
-         stressers.add(stresser);
-         stresser.start();
+         Stressor stressor = new Stressor(threadIndex, requestsLeft);
+         stressor.initialiseKeys();
+         stressors.add(stressor);
+         stressor.start();
       }
       log.info("Cache wrapper info is: " + cacheWrapper.getInfo());
       startPoint.countDown();
-      for (Stresser stresser : stressers) {
-         stresser.join();
+      for (Stressor stressor : stressors) {
+         stressor.join();
       }
-      return stressers;
+      return stressors;
    }
 
-   private class Stresser extends Thread {
+   private boolean isLocalBenchmark() {
+      return nodeIndex == -1;
+   }
 
-      private ArrayList<String> pooledKeys = new ArrayList<String>(numberOfKeys);
+   private class Stressor extends Thread {
+
+      private ArrayList<Object> pooledKeys = new ArrayList<Object>(numberOfKeys);
 
       private int threadIndex;
-      private String bucketId;
       private int nrFailures;
       private long readDuration = 0;
       private long writeDuration = 0;
@@ -146,12 +152,13 @@ public class PutGetStressor implements CacheWrapperStressor {
       private long writes;
       private long startTime;
       private AtomicInteger requestsLeft;
+      private final String bucketId;
 
-      public Stresser(int threadIndex, AtomicInteger requestsLeft) {
-         super("Stresser-" + threadIndex);
+      public Stressor(int threadIndex, AtomicInteger requestsLeft) {
+         super("Stressor-" + threadIndex);
          this.threadIndex = threadIndex;
-         bucketId = getBucketId(threadIndex);
          this.requestsLeft = requestsLeft;
+         this.bucketId = isLocalBenchmark() ? String.valueOf(threadIndex): nodeIndex + "_" + threadIndex;
       }
 
       @Override
@@ -159,7 +166,6 @@ public class PutGetStressor implements CacheWrapperStressor {
          startTime = System.currentTimeMillis();
          int readPercentage = 100 - writePercentage;
          Random r = new Random();
-         String payload = generateRandomString(sizeOfValue);
          int randomAction;
          int randomKeyInt;
          try {
@@ -173,7 +179,7 @@ public class PutGetStressor implements CacheWrapperStressor {
          while(requestsLeft.getAndDecrement() > -1) {
             randomAction = r.nextInt(100);
             randomKeyInt = r.nextInt(numberOfKeys - 1);
-            String key = getKey(randomKeyInt);
+            Object key = getKey(randomKeyInt);
             Object result = null;
 
             if (randomAction < readPercentage) {
@@ -187,6 +193,7 @@ public class PutGetStressor implements CacheWrapperStressor {
                readDuration += System.currentTimeMillis() - start;
                reads++;
             } else {
+               String payload = generateRandomString(sizeOfValue);
                long start = System.currentTimeMillis();
                try {
                   cacheWrapper.put(bucketId, key, payload);
@@ -215,8 +222,7 @@ public class PutGetStressor implements CacheWrapperStressor {
             log.info("Thread index '" + threadIndex + "' executed " + (i + 1) + " operations. Elapsed time: " +
                   Utils.getDurationString((long) elapsedTime) + ". Estimated remaining: " + Utils.getDurationString((long) estimatedRemaining) +
                   ". Estimated total: " + Utils.getDurationString((long) estimatedTotal));
-            System.out.println("Last result" + result);//this is printed here just to make sure JIT doesn't
-            // skip the call to cacheWrapper.get
+            System.out.println("PutHetStressor: Ignore this line, added just to make sure JIT doesn't skip call to cacheWrapper.get" + result.toString().getBytes().length);
          }
       }
 
@@ -224,20 +230,26 @@ public class PutGetStressor implements CacheWrapperStressor {
          return readDuration + writeDuration;
       }
 
-      public void initializeKeys() {
+      public void initialiseKeys() {
          for (int keyIndex = 0; keyIndex < numberOfKeys; keyIndex++) {
             try {
-               String key = this.bucketId + "-" + this.threadIndex +  "::" + keyIndex;
+               Object key;
+               if (isLocalBenchmark()) {
+                  key = getKeyGenerator().generateKey(threadIndex, keyIndex);
+               } else {
+                  key = getKeyGenerator().generateKey(nodeIndex, threadIndex, keyIndex);
+               }
                pooledKeys.add(key);
                cacheWrapper.put(this.bucketId, key, generateRandomString(sizeOfValue));
             }
+
             catch (Throwable e) {
                log.warn("Error while initializing the session: ", e);
             }
          }
       }
 
-      public String getKey(int keyIndex) {
+      public Object getKey(int keyIndex) {
          return pooledKeys.get(keyIndex);
       }
    }
@@ -270,14 +282,6 @@ public class PutGetStressor implements CacheWrapperStressor {
       this.opsCountStatusLog = opsCountStatusLog;
    }
 
-   /**
-    * This will make sure that each session runs in its own thread and no collision will take place. See
-    * https://sourceforge.net/apps/trac/cachebenchfwk/ticket/14
-    */
-   private String getBucketId(int threadIndex) {
-      return bucketPrefix + "_" + threadIndex;
-   }
-
    private static String generateRandomString(int size) {
       // each char is 2 bytes
       StringBuilder sb = new StringBuilder();
@@ -285,12 +289,30 @@ public class PutGetStressor implements CacheWrapperStressor {
       return sb.toString();
    }
 
-   public String getBucketPrefix() {
-      return bucketPrefix;
+   public int getNodeIndex() {
+      return nodeIndex;
    }
 
-   public void setBucketPrefix(String bucketPrefix) {
-      this.bucketPrefix = bucketPrefix;
+   public void setNodeIndex(int nodeIndex) {
+      this.nodeIndex = nodeIndex;
+   }
+
+   public String getKeyGeneratorClass() {
+      return keyGeneratorClass;
+   }
+
+   public void setKeyGeneratorClass(String keyGeneratorClass) {
+      this.keyGeneratorClass = keyGeneratorClass;
+      instantiateGenerator(keyGeneratorClass);
+   }
+
+   private void instantiateGenerator(String keyGeneratorClass) {
+      keyGenerator = (KeyGenerator) Utils.instantiate(keyGeneratorClass);
+   }
+
+   public KeyGenerator getKeyGenerator() {
+      if (keyGenerator == null) instantiateGenerator(keyGeneratorClass);
+      return keyGenerator;
    }
 
    @Override
@@ -302,8 +324,8 @@ public class PutGetStressor implements CacheWrapperStressor {
             ", sizeOfValue=" + sizeOfValue +
             ", writePercentage=" + writePercentage +
             ", numOfThreads=" + numOfThreads +
-            ", bucketPrefix=" + bucketPrefix +
             ", cacheWrapper=" + cacheWrapper +
+            ", nodeIndex=" + nodeIndex +
             "}";
    }
 }
