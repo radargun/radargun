@@ -6,6 +6,7 @@ import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 import org.jgroups.util.Util;
 import org.radargun.CacheWrapper;
+import org.radargun.utils.TypedProperties;
 
 import javax.transaction.TransactionManager;
 import java.io.InputStream;
@@ -76,7 +77,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
 
 
 
-    public void setUp(String config, boolean isLocal, int nodeIndex) throws Exception {
+    public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
         if(!started) {
             log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
             log.info("JGroups version: " + org.jgroups.Version.printDescription());
@@ -190,6 +191,10 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
         catch(Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public int size() {
+        return 0;
     }
 
     private Address pickTarget() {
