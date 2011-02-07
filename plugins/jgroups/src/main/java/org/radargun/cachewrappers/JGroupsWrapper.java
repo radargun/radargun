@@ -8,7 +8,6 @@ import org.jgroups.util.Util;
 import org.radargun.CacheWrapper;
 
 import javax.transaction.TransactionManager;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -16,6 +15,18 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
+
+/**
+ * Plugin measuring the costs of remote gets and puts with JGroups, with regular arguments passed by RadarGun.
+ * However, a GET returns a <em>prefabricated</em> value (no cache handling) and a PUT simply invokes the remote call,
+ * but doesn't add anything to a hashmap.<p/>
+ * The point of this plugin is to measure the overhead of Infinispan's cache handling; it is a base line to the
+ * Infinispan plugin. The Infinispan plugin should be slower than the JGroups plugin, but the difference should always
+ * be constant, regardless of the cluster size.<p/>
+ * Properties, such as the size of the layload for gets, and the number of owners of a key, can be
+ * defined in jgroups.properties.
+ * @author Bela Ban
+ */
 public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
     private static Log log=LogFactory.getLog(JGroupsWrapper.class);
     protected JChannel ch;
@@ -91,7 +102,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
         ;
     }
 
-    public Object _get(Object key) throws Exception {
+    public static Object _get(Object key) throws Exception {
         return GET_RSP;
     }
 
