@@ -109,7 +109,7 @@ if ! [ "x${MASTER}" = "x" ] ; then
   fi
 fi
 
-java ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.radargun.LaunchMaster -config ${CONFIG} > stdout_master.out 2>&1 &
+${JAVA} ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.radargun.LaunchMaster -config ${CONFIG} > stdout_master.out 2>&1 &
 export RADARGUN_MASTER_PID=$!
 HOST_NAME=`hostname`
 echo "Master's PID is $RADARGUN_MASTER_PID running on ${HOST_NAME}"
