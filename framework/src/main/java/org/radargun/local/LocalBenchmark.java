@@ -60,6 +60,7 @@ public class LocalBenchmark {
                wrapper = null;
                gc();
             } catch (Exception e) {
+               log.error("Error processing " + product.getKey() + "-" + config, e);
                wrapper.tearDown();
             }
          }
