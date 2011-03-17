@@ -13,6 +13,7 @@ public class LaunchLocal {
       LocalConfigParser parser = new LocalConfigParser();
       LocalBenchmark benchmark = parser.parse(config);
       benchmark.benchmark();
+      ShutDownHook.exit(0);
    }
 
 

@@ -52,7 +52,22 @@ add_fwk_to_classpath() {
 }
 
 set_env() {
-   . ${RADARGUN_HOME}/bin/environment.sh
+  . ${RADARGUN_HOME}/bin/environment.sh
+
+  # If the user specified a JAVA_HOME, use that
+  if [ -n "$JAVA_HOME" ]
+  then
+    JAVA=$JAVA_HOME/bin/java
+  else
+    JAVA=`which java`
+  fi
+
+  # If on cygwin, java is a regular Windows program.
+  # So we have to convert the classpath to Windows paths.
+  if [ "$OSTYPE" == "cygwin" ]
+  then
+    CP=`cygpath -wp "$CP"`
+  fi
 }
 
 wait_for_process() {

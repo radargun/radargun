@@ -166,6 +166,7 @@ public class PutGetStressor implements CacheWrapperStressor {
          startTime = System.currentTimeMillis();
          int readPercentage = 100 - writePercentage;
          Random r = new Random();
+         String payload = generateRandomString(sizeOfValue);
          int randomAction;
          int randomKeyInt;
          try {
@@ -193,11 +194,9 @@ public class PutGetStressor implements CacheWrapperStressor {
                readDuration += System.currentTimeMillis() - start;
                reads++;
             } else {
-               String payload = generateRandomString(sizeOfValue);
                long start = System.currentTimeMillis();
                try {
                   cacheWrapper.put(bucketId, key, payload);
-                  logProgress(i, null);
                } catch (Exception e) {
                   log.warn(e);
                   nrFailures++;
@@ -222,7 +221,8 @@ public class PutGetStressor implements CacheWrapperStressor {
             log.info("Thread index '" + threadIndex + "' executed " + (i + 1) + " operations. Elapsed time: " +
                   Utils.getDurationString((long) elapsedTime) + ". Estimated remaining: " + Utils.getDurationString((long) estimatedRemaining) +
                   ". Estimated total: " + Utils.getDurationString((long) estimatedTotal));
-            System.out.println("PutHetStressor: Ignore this line, added just to make sure JIT doesn't skip call to cacheWrapper.get" + result.toString().getBytes().length);
+            String len = result != null ? String.valueOf(result.toString().length()) : "null";
+            System.out.println("PutGetStressor: Ignore this line, added just to make sure JIT doesn't skip call to cacheWrapper.get " + len);
          }
       }
 

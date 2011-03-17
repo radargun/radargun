@@ -168,12 +168,8 @@
    <repositories>
       <!-- basic JBoss repository -->
       <repository>
-         <id>repository.jboss.org</id>
-         <url>http://repository.jboss.org/maven2</url>
-      </repository>
-      <repository>
-         <id>snapshots.jboss.org</id>
-         <url>http://snapshots.jboss.org/maven2</url>
+         <id>jboss-public-repository-group</id>
+         <url>http://repository.jboss.org/nexus/content/groups/public-jboss</url>
       </repository>
    </repositories>
 
@@ -187,24 +183,19 @@
          <url>http://snapshots.repository.codehaus.org</url>
       </pluginRepository>
       <pluginRepository>
-         <id>repository.jboss.org</id>
-         <url>http://repository.jboss.org/maven2</url>
-      </pluginRepository>
-      <pluginRepository>
-         <id>snapshots.jboss.org</id>
-         <url>http://snapshots.jboss.org/maven2</url>
+         <id>jboss-public-repository-group</id>
+         <url>http://repository.jboss.org/nexus/content/groups/public-jboss</url>
       </pluginRepository>
    </pluginRepositories>
 
    <distributionManagement>
       <repository>
-         <id>repository.jboss.org</id>
-         <url>http://repository.jboss.org/maven2</url>
+         <id>jboss-staging-releases-repository</id>
+         <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
       </repository>
       <snapshotRepository>
-         <id>snapshots.jboss.org</id>
-         <name>JBoss Snapshot Repository</name>
-         <url>dav:https://snapshots.jboss.org/maven2</url>
+         <id>jboss-snapshots-repository</id>
+         <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
       </snapshotRepository>
    </distributionManagement>
 
