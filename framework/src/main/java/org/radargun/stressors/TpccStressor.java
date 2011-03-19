@@ -1,5 +1,17 @@
 package org.radargun.stressors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.radargun.CacheWrapper;
+import org.radargun.tpcc.ElementNotFoundException;
+import org.radargun.tpcc.TpccTerminal;
+import org.radargun.tpcc.TpccTools;
+import org.radargun.tpcc.transaction.NewOrderTransaction;
+import org.radargun.tpcc.transaction.OrderStatusTransaction;
+import org.radargun.tpcc.transaction.PaymentTransaction;
+import org.radargun.tpcc.transaction.TpccTransaction;
+import org.radargun.utils.Utils;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -9,19 +21,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.radargun.CacheWrapper;
-import org.radargun.CacheWrapperStressor;
-import org.radargun.tpcc.ElementNotFoundException;
-import org.radargun.tpcc.TpccTerminal;
-import org.radargun.tpcc.TpccTools;
-import org.radargun.tpcc.transaction.NewOrderTransaction;
-import org.radargun.tpcc.transaction.OrderStatusTransaction;
-import org.radargun.tpcc.transaction.PaymentTransaction;
-import org.radargun.tpcc.transaction.TpccTransaction;
-import org.radargun.utils.Utils;
 
 
 /**
@@ -361,7 +360,7 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
 
 
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
-                     ". Test duration is: " + Utils.getDurationString(System.currentTimeMillis() - startTime));
+                     ". Test duration is: " + Utils.getMillisDurationString(System.currentTimeMillis() - startTime));
       return results;
    }
 

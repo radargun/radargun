@@ -26,17 +26,20 @@ public class Utils {
    private static final NumberFormat NF = new DecimalFormat("##,###");
    private static final NumberFormat MEM_FMT = new DecimalFormat("##,###.##");
 
-   public static String getDurationString(long duration) {
-      long secs = duration / 1000;
-      String result = " ";
+   public static String getMillisDurationString(long millis) {
+      long secs = millis / 1000;
       long mins = secs / 60;
       if (mins > 0) {
-         result += mins + " mins ";
+         return String.format("%d mins %d secs", mins, secs);
       }
-      result += (secs % 60) + " secs ";
-      return result.trim();
+      else {
+         return String.format("%.3f secs", millis / 1000.0);
+      }
    }
 
+   public static String getNanosDurationString(long nanos) {
+      return getMillisDurationString(nanos / 1000000);
+   }
 
    public static String fileName2Config(String fileName) {
       int index = fileName.indexOf('.');
@@ -195,7 +198,7 @@ public class Utils {
    }
 
    public static String prettyPrintTime(long time, TimeUnit unit) {
-      return prettyPrintTime(unit.toMillis(time));
+      return prettyPrintMillis(unit.toMillis(time));
    }
 
    /**
@@ -204,7 +207,7 @@ public class Utils {
     * @param millis time in millis
     * @return the time, represented as millis, seconds, minutes or hours as appropriate, with suffix
     */
-   public static String prettyPrintTime(long millis) {
+   public static String prettyPrintMillis(long millis) {
       if (millis < 1000) return millis + " milliseconds";
       NumberFormat nf = NumberFormat.getNumberInstance();
       nf.setMaximumFractionDigits(2);

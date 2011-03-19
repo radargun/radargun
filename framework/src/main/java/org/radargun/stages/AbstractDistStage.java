@@ -100,7 +100,7 @@ public abstract class AbstractDistStage implements DistStage {
       for (DistStageAck ack: acks) {
          if (first) first = false;
          else processingDuration += ", ";
-         processingDuration += ack.getSlaveIndex() + ":" + Utils.prettyPrintTime(ack.getDuration());
+         processingDuration += ack.getSlaveIndex() + ":" + Utils.prettyPrintMillis(ack.getDuration());
       }
       log.info("Received responses from all " + acks.size() + " slaves. " + processingDuration + "]");
    }
