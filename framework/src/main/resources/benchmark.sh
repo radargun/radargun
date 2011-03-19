@@ -58,6 +58,9 @@ do
       MASTER=$2
       shift
       ;;
+    "-x")
+      SLAVE_COUNT=1
+      ;;
     "-t")
       TAILF=true
       ;;      
@@ -70,7 +73,7 @@ do
         help_and_exit
       fi
       SLAVES=$@
-      SLAVE_COUNT=$#
+      SLAVE_COUNT=$(($SLAVE_COUNT + $#))
       shift $#
       ;;
   esac
@@ -90,10 +93,11 @@ PID_OF_MASTER_PROCESS=$RADARGUN_MASTER_PID
 #### Sleep for a few seconds so master can open its port
 
 ####### then start the rest of the nodes
-CMD="source ~/.bash_profile ; cd $WORKING_DIR"
-CMD="$CMD ; bin/slave.sh -m ${MASTER}"
 
 for slave in $SLAVES; do
+  CMD="source ~/.bash_profile ; cd $WORKING_DIR"
+  CMD="$CMD ; bin/slave.sh -m ${MASTER} -p $slave"
+
   TOEXEC="$REMOTE_CMD -l $SSH_USER $slave '$CMD'"
   echo "$TOEXEC"
   eval $TOEXEC
