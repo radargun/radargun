@@ -142,8 +142,8 @@ public class ClusterValidationStage extends AbstractDistStage {
          }
          //adding our stuff one more time
          tryToPut();
-         log.info("Replication test failed, " + (i + 1) + " tries so far. Sleeping for " + Utils.prettyPrintTime(replicationTimeSleep)
-                        + " and trying again.");
+         log.info("Replication test failed, " + (i + 1) + " tries so far. Sleeping for " + Utils.prettyPrintMillis(replicationTimeSleep)
+               + " and trying again.");
          Thread.sleep(replicationTimeSleep);
       }
       log.info("Replication test failed. Last replication count is " + replCount);

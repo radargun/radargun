@@ -56,7 +56,7 @@ public class MasterState extends StateBase {
       //if we are here it means we finished executed the current benchmark and we should move to next one
       if (benchmarks.size() == 0) {
          long duration = System.currentTimeMillis() - startTime;
-         String duartionStr = Utils.getDurationString(duration);
+         String duartionStr = Utils.getMillisDurationString(duration);
          log.info("Successfully executed all benchmarks in " + duartionStr + ", exiting.");
          return null;
       }

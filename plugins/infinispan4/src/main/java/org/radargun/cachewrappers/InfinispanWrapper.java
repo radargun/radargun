@@ -146,7 +146,7 @@ public class InfinispanWrapper implements CacheWrapper {
       }
 
       if (cache.getConfiguration().getCacheMode().isDistributed() && !cache.getAdvancedCache().getDistributionManager().isJoinComplete())
-         throw new RuntimeException("Caches haven't discovered and joined the cluster even after " + Utils.prettyPrintTime(gracePeriod));
+         throw new RuntimeException("Caches haven't discovered and joined the cluster even after " + Utils.prettyPrintMillis(gracePeriod));
    }
 
    private void injectEvenConsistentHash(TypedProperties confAttributes) {
