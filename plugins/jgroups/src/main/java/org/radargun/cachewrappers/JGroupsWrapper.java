@@ -11,10 +11,7 @@ import org.radargun.utils.TypedProperties;
 import javax.transaction.TransactionManager;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 
 /**
@@ -30,41 +27,31 @@ import java.util.Properties;
  */
 public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    private static Log log = LogFactory.getLog(JGroupsWrapper.class);
-   protected JChannel ch;
-   protected Address local_addr;
-   protected RpcDispatcher disp;
-   protected TransactionManager tm;
-   protected boolean started = false;
-   protected final List<Address> members = new ArrayList<Address>();
+   public static Random random = new Random();
 
-   private static byte[] GET_RSP;
-   private static int num_owners;
-   private static boolean exclude_self_for_gets = false;
-
-   private static final Method[] METHODS = new Method[5];
-   private static final String PROP_FILE = "jgroups.properties";
    private static final String NUM_OWNERS = "num_owners";
    private static final String ATTR_SIZE = "attr_size";
-   private static final String EXCLUDE_SELF_FOR_GETS = "exclude_self_for_gets";
+   private static final String SELF_REQUESTS = "self_requests";
+   private static final String JGROUPS_CONFIG = "jgroups_config";
 
-   protected static final short GET = 1;
-   protected static final short PUT = 2;
+   private static final Method[] METHODS = new Method[2];
+   protected static final short GET = 0;
+   protected static final short PUT = 1;
+
+   protected JChannel ch;
+   protected RpcDispatcher disp;
+   protected TransactionManager tm;
+
+   protected volatile boolean started = false;
+   protected volatile Address local_addr;
+   protected volatile List<Address> members = Collections.emptyList();
+
+   private int num_owners;
+   private byte[] get_rsp;
+   private boolean exclude_self_requests;
+   private boolean noop_self_requests;
 
    static {
-      try {
-         InputStream in = Util.getResourceAsStream(PROP_FILE, JGroupsWrapper.class);
-         Properties props = new Properties();
-         props.load(in);
-         num_owners = Integer.parseInt(props.getProperty(NUM_OWNERS, "2"));
-         int size = Integer.parseInt(props.getProperty(ATTR_SIZE, "1000"));
-         GET_RSP = new byte[size];
-         exclude_self_for_gets = Boolean.parseBoolean(props.getProperty(EXCLUDE_SELF_FOR_GETS, "false"));
-         System.out.println("numOwners=" + num_owners + ", attrSize=" + size + ", exclude_self_for_gets=" + exclude_self_for_gets);
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
-
-
       try {
          METHODS[GET] = JGroupsWrapper.class.getMethod("_get", Object.class);
          METHODS[PUT] = JGroupsWrapper.class.getMethod("_put", Object.class, Object.class);
@@ -75,18 +62,37 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
 
 
    public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
+      InputStream in = Util.getResourceAsStream(config, JGroupsWrapper.class);
+      Properties props = new Properties();
+      props.load(in);
+      num_owners = Integer.parseInt(props.getProperty(NUM_OWNERS, "2"));
+
+      int attrSize = Integer.parseInt(props.getProperty(ATTR_SIZE, "1000"));
+      get_rsp = new byte[attrSize];
+
+      String self_requests = props.getProperty(SELF_REQUESTS, "").toLowerCase();
+      exclude_self_requests = "exclude".equals(self_requests);
+      noop_self_requests = "noop".equals(self_requests);
+
+      String jgroupsConfig = props.getProperty(JGROUPS_CONFIG);
+      log.debug("numOwners=" + num_owners + ", self_requests=" + self_requests + ", jgroupsConfig=" + jgroupsConfig);
+
       if (!started) {
          log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
          log.info("JGroups version: " + org.jgroups.Version.printDescription());
-         ch = new JChannel(config);
+
+         ch = new JChannel(jgroupsConfig);
+
          disp = new RpcDispatcher(ch, null, this, this);
          disp.setMethodLookup(new MethodLookup() {
             public Method findMethod(short id) {
                return METHODS[id];
             }
          });
+
          ch.connect("x");
          local_addr = ch.getAddress();
+
          started = true;
       }
    }
@@ -96,12 +102,12 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       started = false;
    }
 
-   public static void _put(Object key, Object value) throws Exception {
+   public void _put(Object key, Object value) throws Exception {
       ;
    }
 
-   public static Object _get(Object key) throws Exception {
-      return GET_RSP;
+   public Object _get(Object key) throws Exception {
+      return get_rsp;
    }
 
    public void put(String bucket, Object key, Object value) throws Exception {
@@ -114,7 +120,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       flags = Util.setFlag(flags, Message.NO_FC);
       put_options.setFlags(flags);
 
-      Collection<Address> targets = pickAnycastTargets();
+      Collection<Address> targets = pickPutTargets();
       disp.callRemoteMethods(targets, put_call, put_options);
    }
 
@@ -128,11 +134,12 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       flags = Util.setFlag(flags, Message.NO_FC);
       get_options.setFlags(flags);
 
-      Address target = pickTarget();
+      Address target = pickGetTarget();
 
-      // we're simulating picking ourself, which returns the data directly from the local cache - no RPC involved
-      if (local_addr.equals(target))
-         return GET_RSP;
+      // we're simulating picking ourselves, which returns the data directly from the local cache - no RPC involved
+      if (target == null)
+         return get_rsp;
+      
       try {
          return disp.callRemoteMethod(target, get_call, get_options);
       } catch (Throwable t) {
@@ -146,8 +153,10 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
 
 
    public void viewAccepted(View new_view) {
-      members.clear();
-      members.addAll(new_view.getMembers());
+      ArrayList<Address> members = new ArrayList<Address>(new_view.getMembers());
+      // put the local address at the end of the list
+      Collections.rotate(members, members.size() - members.indexOf(ch.getAddress()));
+      this.members = members;
    }
 
    public int getNumMembers() {
@@ -190,23 +199,31 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       return 0;
    }
 
-   private Address pickTarget() {
-      if (!exclude_self_for_gets)
-         return (Address) Util.pickRandomElement(members);
-      else {
-         int index = members.indexOf(local_addr);
-         int new_index = (index + 1) % members.size();
-         return members.get(new_index);
-      }
+   private Address pickGetTarget() {
+      int size = exclude_self_requests ? members.size() - 1 : members.size();
+      int index = random.nextInt(size);
+
+      // self also has the keys for the previous num_owners - 1 nodes
+      if (noop_self_requests && index >= members.size() - num_owners)
+         return null;
+      
+      return members.get(index);
    }
 
-   private Collection<Address> pickAnycastTargets() {
-      Collection<Address> anycast_targets = new ArrayList<Address>(num_owners);
-      int index = members.indexOf(local_addr);
-      for (int i = index + 1; i < index + 1 + num_owners; i++) {
-         int new_index = i % members.size();
-         anycast_targets.add(members.get(new_index));
+   private Collection<Address> pickPutTargets() {
+      int size = exclude_self_requests ? members.size() - 1 : members.size();
+      int startIndex = random.nextInt(size);
+
+      Collection<Address> targets = new ArrayList<Address>(num_owners);
+      for (int i = 0; i < num_owners; i++) {
+         int new_index = (startIndex + i) % size;
+
+         if (noop_self_requests && new_index == members.size() - 1)
+            continue;
+
+         targets.add(members.get(new_index));
       }
-      return anycast_targets;
+      return targets;
    }
+
 }
