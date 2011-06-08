@@ -98,7 +98,12 @@
    <category name="JoinTask">
       <priority value="TRACE"/>
    </category>
+
    <category name="org.infinispan">
+      <priority value="INFO"/>
+   </category>
+
+   <category name="com.arjuna.ats.arjuna">
       <priority value="INFO"/>
    </category>
 

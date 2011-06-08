@@ -111,7 +111,11 @@
                   </goals>
                   <configuration>
                      <tasks>
+<<<<<<< HEAD
                         <echo message="Packaging the framework, and the following plugins: infinispan4, infinispan5, jbosscache2, jbosscache3, ehcache17" />
+=======
+                        <echo message="Packaging the framework, and the following plugins: infinispan4, infinispan4, jbosscache2, jbosscache3, ehcache17" />
+>>>>>>> added support for infinispan 5.x
 
                         <copy todir="${distribution.artifact}/plugins/infinispan4">
                            <fileset dir="plugins/infinispan4/target/distribution/plugin-infinispan4-bin/plugin-infinispan4">
