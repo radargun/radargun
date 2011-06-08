@@ -59,6 +59,12 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    private CacheWrapper cacheWrapper;
 
+   private boolean useTransactions = false;
+
+   private boolean commitTransactions = true;
+
+   private int transactionSize = 1;
+
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
       this.cacheWrapper = slaveState.getCacheWrapper();
@@ -78,6 +84,9 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       putGetStressor.setSizeOfAnAttribute(sizeOfAnAttribute);
       putGetStressor.setWritePercentage(writePercentage);
       putGetStressor.setKeyGeneratorClass(keyGeneratorClass);
+      putGetStressor.setUseTransactions(useTransactions);
+      putGetStressor.setCommitTransactions(commitTransactions);
+      putGetStressor.setTransactionSize(transactionSize);
 
       try {
          Map<String, String> results = putGetStressor.stress(cacheWrapper);
@@ -160,6 +169,30 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       this.keyGeneratorClass = keyGeneratorClass;
    }
 
+   public int getTransactionSize() {
+      return transactionSize;
+   }
+
+   public void setTransactionSize(int transactionSize) {
+      this.transactionSize = transactionSize;
+   }
+
+   public boolean isUseTransactions() {
+      return useTransactions;
+   }
+
+   public void setUseTransactions(boolean useTransactions) {
+      this.useTransactions = useTransactions;
+   }
+
+   public boolean isCommitTransactions() {
+      return commitTransactions;
+   }
+
+   public void setCommitTransactions(boolean commitTransactions) {
+      this.commitTransactions = commitTransactions;
+   }
+
    @Override
    public String toString() {
       return "WebSessionBenchmarkStage {" +
@@ -171,6 +204,9 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
             ", numOfThreads=" + numOfThreads +
             ", reportNanos=" + reportNanos +
             ", cacheWrapper=" + cacheWrapper +
+            ", useTransactions=" + useTransactions +
+            ", commitTransactions=" + commitTransactions +
+            ", transactionSize=" + transactionSize +
             ", " + super.toString();
    }
 }
