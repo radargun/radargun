@@ -37,6 +37,8 @@ public class InfinispanWrapper implements CacheWrapper {
          cacheManager.defineConfiguration("x", new Configuration());
          cache = cacheManager.getCache("x");
          started = true;
+         tm = cache.getAdvancedCache().getTransactionManager();
+         log.info("Using transaction manager: " + tm);
       }
       log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
@@ -94,7 +96,7 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public Object startTransaction() {
-      if (tm == null) return null;
+      assertTm();
       try {
          tm.begin();
          return tm.getTransaction();
@@ -105,7 +107,7 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public void endTransaction(boolean successful) {
-      if (tm == null) return;
+      assertTm();
       try {
          if (successful)
             tm.commit();
@@ -152,5 +154,9 @@ public class InfinispanWrapper implements CacheWrapper {
 
    public Cache<Object, Object> getCache() {
       return cache;
+   }
+
+   private void assertTm() {
+      if (tm == null) throw new RuntimeException("No configured TM!");
    }
 }
