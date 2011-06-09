@@ -9,11 +9,7 @@ import java.util.Properties;
  * Type-aware properties.  Extends the JDK {@link Properties} class to provide accessors that convert values to certain
  * types, using default values if a conversion is not possible.
  *
- *
- * @configRef name="Properties to add to the enclosing component."
- *
  * @author Manik Surtani
- * @since 4.0
  */
 public class TypedProperties extends Properties {
 

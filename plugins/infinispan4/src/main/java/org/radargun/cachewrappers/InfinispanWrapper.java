@@ -31,17 +31,21 @@ public class InfinispanWrapper implements CacheWrapper {
 
    public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
       this.config = config;
+      String configFile  = confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
+      String cacheName = confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : "x";
+
+      log.trace("Using config file: " + configFile + " and cache name: " + cacheName);
+
       if (!started) {
-         cacheManager = new DefaultCacheManager(config);
-         // use a named cache, based on the 'default'
-         cacheManager.defineConfiguration("x", new Configuration());
-         cache = cacheManager.getCache("x");
+         cacheManager = new DefaultCacheManager(configFile);
+         cache = cacheManager.getCache(cacheName);
          started = true;
          tm = cache.getAdvancedCache().getTransactionManager();
          log.info("Using transaction manager: " + tm);
       }
       log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
+      log.info("Using config attributes: " + confAttributes);
       blockForRehashing();
       injectEvenConsistentHash(confAttributes);
    }
