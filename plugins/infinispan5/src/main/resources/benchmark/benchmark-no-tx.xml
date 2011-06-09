@@ -2,7 +2,7 @@
 
    <master bindAddress="${127.0.0.1:master.address}" port="${2103:master.port}"/>
 
-   <benchmark initSize="2" maxSize="${8:slaves}" increment="2">
+   <benchmark initSize="4" maxSize="${8:slaves}" increment="2">
       <DestroyWrapper runOnAllSlaves="true"/>
       <StartCluster staggerSlaveStartup="true" delayAfterFirstSlaveStarts="5000" delayBetweenStartingSlaves = "500"/>
       <ClusterValidation partialReplication="false"/>
@@ -14,7 +14,7 @@
 
    <products>
       <infinispan5>
-         <config file="dist-tx-configs.xml" cache="noXa" name="no-xa"/>
+         <config file="dist-tx-configs.xml" cache="noXa" name="no-tx"/>
       </infinispan5>
    </products>
 
