@@ -8,15 +8,13 @@
       <ClusterValidation partialReplication="false"/>
       <Warmup operationCount="100000"/>
       <ClearCluster/>
-      <WebSessionBenchmark numberOfRequests="500000" opsCountStatusLog="10000" numOfThreads="20" writePercentage="100" useTransactions="true"/>
+      <WebSessionBenchmark numberOfRequests="500000" opsCountStatusLog="10000" numOfThreads="20" writePercentage="100" useTransactions="false"/>
       <CsvReportGeneration/>
    </benchmark>
 
    <products>
       <infinispan5>
          <config file="dist-tx-configs.xml" cache="noXa" name="no-xa"/>
-         <config file="dist-tx-configs.xml" cache="xaNoRecovery" name="xa-no-recovery"/>
-         <config file="dist-tx-configs.xml" cache="xaWithRecovery" name="xa-with-recovery"/>
       </infinispan5>
    </products>
 
