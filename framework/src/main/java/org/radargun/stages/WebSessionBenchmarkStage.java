@@ -54,7 +54,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    private boolean reportNanos = false;
 
-   private String keyGeneratorClass = StringKeyGenerator.class.getName();;
+   private String keyGeneratorClass = StringKeyGenerator.class.getName();
 
 
    private CacheWrapper cacheWrapper;
