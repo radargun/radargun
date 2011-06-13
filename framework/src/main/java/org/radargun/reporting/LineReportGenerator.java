@@ -59,7 +59,6 @@ public class LineReportGenerator {
       StringTokenizer st = new StringTokenizer(items, ":" );
       while (st.hasMoreElements()) {
          String item = st.nextToken().trim();
-         System.out.println("st = " + item);
          int firstRoundBracket = item.indexOf("(");
          String fileNamePrefix = item.substring(0, firstRoundBracket);
          int indexOfComma = item.indexOf(",");
