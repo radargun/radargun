@@ -14,6 +14,7 @@ import org.radargun.CacheWrapper;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
+import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class InfinispanWrapper implements CacheWrapper {
    TransactionManager tm;
    boolean started = false;
    String config;
+   private volatile boolean enlistExtraXAResource;
 
    public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
       this.config = config;
@@ -102,7 +104,11 @@ public class InfinispanWrapper implements CacheWrapper {
       assertTm();
       try {
          tm.begin();
-         return tm.getTransaction();
+         Transaction transaction = tm.getTransaction();
+         if (enlistExtraXAResource) {
+            transaction.enlistResource(new DummyXAResource());
+         }
+         return transaction;
       }
       catch (Exception e) {
          throw new RuntimeException(e);
@@ -162,4 +168,9 @@ public class InfinispanWrapper implements CacheWrapper {
    private void assertTm() {
       if (tm == null) throw new RuntimeException("No configured TM!");
    }
+
+   public void setEnlistExtraXAResource(boolean enlistExtraXAResource) {
+      this.enlistExtraXAResource = enlistExtraXAResource;
+   }
+
 }

@@ -16,6 +16,7 @@
       <infinispan5>
          <config file="dist-tx.xml" cache="noXa" name="no-xa"/>
          <config file="dist-tx.xml" cache="xaNoRecovery" name="xa-no-recovery"/>
+         <config file="dist-tx.xml" cache="xaNoRecovery" name="xa-no-recovery-1pc-off" enlistExtraXAResource="true"/>
          <config file="dist-tx.xml" cache="xaWithRecovery" name="xa-with-recovery"/>
       </infinispan5>
    </products>
