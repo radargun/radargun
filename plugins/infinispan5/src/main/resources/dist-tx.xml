@@ -11,7 +11,7 @@
    </global>
 
    <default>
-      <transaction transactionManagerLookupClass="org.infinispan.transaction.lookup.DummyTransactionManagerLookup"/>
+      <transaction transactionManagerLookupClass="org.radargun.infinispan.JBossTMLookup"/>
       <locking concurrencyLevel="1000" useLockStriping="false"/>
 
       <clustering mode="d">
@@ -22,17 +22,17 @@
    </default>
 
    <namedCache name="noXa">
-      <transaction useSynchronization="true" transactionManagerLookupClass="org.infinispan.transaction.lookup.DummyTransactionManagerLookup"/>
+      <transaction useSynchronization="true" transactionManagerLookupClass="org.radargun.infinispan.JBossTMLookup"/>
    </namedCache>
 
    <namedCache name="xaNoRecovery" >
-      <transaction transactionManagerLookupClass="org.infinispan.transaction.lookup.DummyTransactionManagerLookup">
+      <transaction transactionManagerLookupClass="org.radargun.infinispan.JBossTMLookup">
          <recovery enabled="false"/>
       </transaction>
    </namedCache>
 
    <namedCache name="xaWithRecovery">
-      <transaction transactionManagerLookupClass="org.infinispan.transaction.lookup.DummyTransactionManagerLookup">
+      <transaction transactionManagerLookupClass="org.radargun.infinispan.JBossTMLookup">
          <recovery enabled="true"/>
       </transaction>
    </namedCache>
