@@ -169,11 +169,10 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
         return get(bucket, key);
     }
 
-    public Object startTransaction() {
-        if(tm == null) return null;
+    public void startTransaction() {
+        if(tm == null) return;
         try {
             tm.begin();
-            return tm.getTransaction();
         }
         catch(Exception e) {
             throw new RuntimeException(e);

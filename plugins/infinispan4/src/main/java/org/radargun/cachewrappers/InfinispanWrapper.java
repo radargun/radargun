@@ -100,7 +100,7 @@ public class InfinispanWrapper implements CacheWrapper {
       return get(bucket, key);
    }
 
-   public Object startTransaction() {
+   public void startTransaction() {
       assertTm();
       try {
          tm.begin();
@@ -108,7 +108,6 @@ public class InfinispanWrapper implements CacheWrapper {
          if (enlistExtraXAResource) {
             transaction.enlistResource(new DummyXAResource());
          }
-         return transaction;
       }
       catch (Exception e) {
          throw new RuntimeException(e);

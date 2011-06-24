@@ -111,7 +111,7 @@ public class EHCacheWrapper implements CacheWrapper
       return o;
    }
 
-   public Object startTransaction()
+   public void startTransaction()
    {
       throw new UnsupportedOperationException("Does not support JTA!");
    }

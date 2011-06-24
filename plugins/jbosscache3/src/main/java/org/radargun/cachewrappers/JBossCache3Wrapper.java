@@ -11,7 +11,6 @@ import org.jboss.cache.util.Caches;
 import org.radargun.CacheWrapper;
 import org.radargun.utils.TypedProperties;
 
-import javax.transaction.Transaction;
 import java.util.Map;
 
 /**
@@ -102,12 +101,11 @@ public class JBossCache3Wrapper implements CacheWrapper
    }
 
 
-   public Transaction startTransaction()
+   public void startTransaction()
    {
       try
       {
          DummyTransactionManager.getInstance().begin();
-         return DummyTransactionManager.getInstance().getTransaction();
       }
       catch (Exception e)
       {
