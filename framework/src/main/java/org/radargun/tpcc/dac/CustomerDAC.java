@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.radargun.CacheWrapper;
 import org.radargun.tpcc.TpccTools;
-import org.ragargun.tpcc.domain.Customer;
+import org.radargun.tpcc.domain.Customer;
 
 /**
  * 

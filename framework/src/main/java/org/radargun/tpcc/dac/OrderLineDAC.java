@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.radargun.CacheWrapper;
-import org.ragargun.tpcc.domain.Order;
-import org.ragargun.tpcc.domain.OrderLine;
+import org.radargun.tpcc.domain.Order;
+import org.radargun.tpcc.domain.OrderLine;
 
 /**
  * 
