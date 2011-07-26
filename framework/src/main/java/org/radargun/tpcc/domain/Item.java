@@ -1,4 +1,4 @@
-package org.ragargun.tpcc.domain;
+package org.radargun.tpcc.domain;
 
 import java.io.Serializable;
 
