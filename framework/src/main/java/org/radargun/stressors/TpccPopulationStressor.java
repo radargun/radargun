@@ -10,6 +10,7 @@ import org.radargun.CacheWrapper;
 import org.radargun.CacheWrapperStressor;
 import org.radargun.stages.TpccPopulationStage;
 import org.radargun.tpcc.TpccPopulation;
+import org.radargun.tpcc.TpccTools;
 
 /**
  * Populate <code>numWarehouses</code> Warehouses in cache.
@@ -21,6 +22,12 @@ public class TpccPopulationStressor implements CacheWrapperStressor{
    private static Log log = LogFactory.getLog(TpccPopulationStage.class);
    
    private int numWarehouses;
+   
+   private long cLastMask = 255L;
+   
+   private long olIdMask = 8191L;
+   
+   private long cIdMask = 1023L;
    
    private int slaveIndex;
 
@@ -44,7 +51,7 @@ public class TpccPopulationStressor implements CacheWrapperStressor{
    public void performPopulationOperations(CacheWrapper w) throws Exception {
       this.wrapper = w;
       log.info("Peforming population...");
-      new TpccPopulation(this.wrapper, this.numWarehouses, this.slaveIndex, this.numSlaves);
+      new TpccPopulation(this.wrapper, this.numWarehouses, this.slaveIndex, this.numSlaves, this.cLastMask, this.olIdMask, this.cIdMask);
       log.info("Population ended");
    }
    
@@ -62,19 +69,36 @@ public class TpccPopulationStressor implements CacheWrapperStressor{
       
       this.numSlaves = numSlaves;
    }
+   
+   public void setCLastMask(long cLastMask) {
+      this.cLastMask=cLastMask;
+      
+   }
+
+   public void setOlIdMask(long olIdMask) {
+      this.olIdMask=olIdMask;
+      
+   }
+
+   public void setCIdMask(long cIdMask) {
+      this.cIdMask=cIdMask;
+   }
 
    @Override
    public String toString() {
       return "TpccPopulationStressor{" +
             "numWarehouses=" + this.numWarehouses +
+            "cLastMask=" + TpccTools.A_C_LAST +
+            "olIdMask=" + TpccTools.A_OL_I_ID +
+            "cIdMask=" + TpccTools.A_C_ID +
             "slaveIndex=" + this.slaveIndex +
             "numSlaves=" + this.numSlaves + "}";
    }
 
 
    public void destroy() throws Exception {
-      wrapper.empty();
-      wrapper = null;
+      
+      //Don't destroy data in cache!
    }
 
 }

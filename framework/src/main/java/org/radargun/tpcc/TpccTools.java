@@ -55,11 +55,19 @@ public final class TpccTools {
    
    public final static int S_DATA_MINN = 26;
    
-   public static int A_C_LAST = 255;
+   public static int NB_WAREHOUSES = 1;
    
-   public static int A_OL_I_ID = 8191;
+   public static long A_C_LAST = 255L;
    
-   public static int A_C_ID = 1023;
+   public static long A_OL_I_ID = 8191L;
+   
+   public static long A_C_ID = 1023L;
+   
+   public static long C_C_LAST = 0L;
+   
+   public static long C_OL_I_ID = 0L;
+   
+   public static long C_C_ID = 0L;
    
    private final static int DEFAULT_RADIX = 10;
    

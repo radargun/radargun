@@ -23,7 +23,25 @@ import org.radargun.stressors.WarmupStressor;
 
 public class TpccPopulationStage extends AbstractDistStage{
    
+   /**
+    * number of Warehouses
+    */
    private int numWarehouses = 1;
+   
+   /**
+    * mask used to generate non-uniformly distributed random customer last names
+    */
+   private long cLastMask = 255;
+   
+   /**
+    * mask used to generate non-uniformly distributed random item numbers
+    */
+   private long olIdMask = 8191;
+   
+   /**
+    * mask used to generate non-uniformly distributed random customer numbers
+    */
+   private long cIdMask = 1023;
 
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
@@ -45,6 +63,9 @@ public class TpccPopulationStage extends AbstractDistStage{
       populationStressor.setNumWarehouses(numWarehouses);
       populationStressor.setSlaveIndex(getSlaveIndex());
       populationStressor.setNumSlaves(getActiveSlaveCount());
+      populationStressor.setCLastMask(this.cLastMask);
+      populationStressor.setOlIdMask(this.olIdMask);
+      populationStressor.setCIdMask(this.cIdMask);
       populationStressor.stress(wrapper);
    }
 
@@ -62,11 +83,27 @@ public class TpccPopulationStage extends AbstractDistStage{
    public void setNumWarehouses(int numWarehouses) {
       this.numWarehouses = numWarehouses;
    }
+   
+   public void setCLastMask(long cLastMask) {
+      this.cLastMask = cLastMask;
+   }
+
+   public void setOlIdMask(long olIdMask) {
+      this.olIdMask = olIdMask;
+   }
+
+   public void setCIdMask(long cIdMask) {
+      this.cIdMask = cIdMask;
+   }
 
    @Override
    public String toString() {
       return "TpccPopulationStage {" +
-            "numWarehouses=" + numWarehouses + ", " + super.toString();
+            "numWarehouses=" + numWarehouses + 
+            ", cLastMask=" + cLastMask +
+            ", olIdMask=" + olIdMask +
+            ", cIdMask=" + cIdMask +   
+            ", " + super.toString();
    }
 
 }

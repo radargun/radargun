@@ -46,12 +46,17 @@ public class TpccPopulation {
    private int slaveIndex;
    
    private int numSlaves;
+   
+   private long cLastMask;
+   
+   private long olIdMask;
+   
+   private long cIdMask;
 
 
-   public TpccPopulation(CacheWrapper wrapper, int numWarehouses, int slaveIndex, int numSlaves) {
+   public TpccPopulation(CacheWrapper wrapper, int numWarehouses, int slaveIndex, int numSlaves, long cLastMask, long olIdMask, long cIdMask) {
 
       this.wrapper=wrapper;
-
 
       this._seqIdCustomer = new int[TpccTools.NB_MAX_CUSTOMER];
 
@@ -62,7 +67,14 @@ public class TpccPopulation {
       this.slaveIndex=slaveIndex;
       
       this.numSlaves=numSlaves;
-
+      
+      this.cLastMask = cLastMask;
+      
+      this.olIdMask = olIdMask;
+      
+      this.cIdMask = cIdMask;
+      
+      initializeToolsParameters();
 
       populateItem();
 
@@ -72,6 +84,52 @@ public class TpccPopulation {
    }
 
 
+   public void initializeToolsParameters(){
+      
+      
+      TpccTools.NB_WAREHOUSES = this.numWarehouses;
+      TpccTools.A_C_LAST = this.cLastMask;
+      TpccTools.A_OL_I_ID = this.olIdMask;
+      TpccTools.A_C_ID = this.cIdMask;
+      
+      if(this.slaveIndex == 0){//Only one slave
+         long c_c_last=TpccTools.randomNumber(0, TpccTools.A_C_LAST);
+         long  c_c_id=TpccTools.randomNumber(0, TpccTools.A_C_ID);
+         long c_ol_i_id=TpccTools.randomNumber(0, TpccTools.A_OL_I_ID);
+         
+         boolean successful=false;
+         while (!successful){
+            try {
+               wrapper.put(null, "C_C_LAST", c_c_last);
+               successful=true;
+            } catch (Throwable e) {
+               log.warn(e);
+            }
+         }
+         
+         successful=false;
+         while (!successful){
+            try {
+               wrapper.put(null, "C_C_ID", c_c_id);
+               successful=true;
+            } catch (Throwable e) {
+               log.warn(e);
+            }
+         }
+         
+         successful=false;
+         while (!successful){
+            try {
+               wrapper.put(null, "C_OL_ID", c_ol_i_id);
+               successful=true;
+            } catch (Throwable e) {
+               log.warn(e);
+            }
+         }
+
+      }
+   }
+   
    public String c_last() {
       String c_last = "";
       long number = TpccTools.nonUniformRandom(getC_LAST(), TpccTools.A_C_LAST, TpccTools.MIN_C_LAST, TpccTools.MAX_C_LAST);
