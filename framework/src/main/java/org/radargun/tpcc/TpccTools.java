@@ -1,6 +1,7 @@
 package org.radargun.tpcc;
 
 import java.io.UnsupportedEncodingException;
+import java.lang.management.ManagementFactory;
 import java.util.Random;
 
 /**
@@ -64,11 +65,11 @@ public final class TpccTools {
    
    private final static int unicode[][] = { {65, 126}, {192, 259}};
    
-   private static Random _randUniform = new Random(System.nanoTime());
+   private static Random _randUniform = new Random(System.nanoTime()*31+ManagementFactory.getRuntimeMXBean().getName().hashCode());
    
-   private static Random _randNonUniform=new Random(System.nanoTime());
+   private static Random _randNonUniform=new Random(System.nanoTime()*31+ManagementFactory.getRuntimeMXBean().getName().hashCode());
    
-   private static Random _randAlea=new Random(System.nanoTime());
+   private static Random _randAlea=new Random(System.nanoTime()*31+ManagementFactory.getRuntimeMXBean().getName().hashCode());
    
    private TpccTools(){}
    
