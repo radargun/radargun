@@ -11,7 +11,7 @@ import org.radargun.stressors.WarmupStressor;
 
 /**
  * This stage shuld be run before the <b>TpccBenchmarkStage</b>. It will perform the population of
- * <b>numWarehouse</b> warehouses in cache. Note: this stage won't clear the added data from
+ * <b>numWarehouses</b> warehouses in cache. Note: this stage won't clear the added data from
  * slave.
  * <pre>
  * Params:
