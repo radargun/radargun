@@ -16,6 +16,14 @@ import org.radargun.stressors.TpccStressor;
 /**
  * Simulate the activities found in complex OLTP application environments.
  * Execute the TPC-C Benchmark.
+ * <pre>
+ * Params:
+ *       - numOfThreads : the number of stressor threads that will work on each slave.
+ *       - perThreadSimulTime : total time (in seconds) of simulation for each stressor thread.
+ *       - arrivalRate : if the value is greater than 0.0, the "open system" mode is active and the parameter represents the arrival rate (in transactions per second) of a job (a transaction to be executed) to the system; otherwise the "closed system" mode is active: this means that each thread generates and executes a new transaction in an iteration as soon as it has completed the previous iteration.
+ *       - paymentWeight : percentage of Payment transactions.
+ *       - orderStatusWeight : percentage of Order Status transactions.
+ * </pre>
  *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
@@ -34,7 +42,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
    /**
     * total time (in seconds) of simulation for each stressor thread
     */
-   private long perThreadSimulTime = 30000000000L;
+   private long perThreadSimulTime = 180L;
    
    /**
     * average arrival rate of the transactions to the system
