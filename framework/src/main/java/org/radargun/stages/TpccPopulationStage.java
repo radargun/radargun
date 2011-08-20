@@ -16,6 +16,9 @@ import org.radargun.stressors.WarmupStressor;
  * <pre>
  * Params:
  *       - numWarehouses : the number of warehouses to be populated.
+ *       - cLastMask : the mask used to generate non-uniformly distributed random customer last names.
+ *       - olIdMask : mask used to generate non-uniformly distributed random item numbers.
+ *       - cIdMask : mask used to generate non-uniformly distributed random customer numbers.
  * </pre>
  *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
