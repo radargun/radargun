@@ -654,6 +654,8 @@ public class TpccStressor implements CacheWrapperStressor {
 
             delta = end - initTime;
          }
+         
+         completedThread.incrementAndGet();
 
       }
 
