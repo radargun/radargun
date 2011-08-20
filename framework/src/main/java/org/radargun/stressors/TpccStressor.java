@@ -44,17 +44,17 @@ public class TpccStressor implements CacheWrapperStressor {
    private int numOfThreads = 10;
 
    /**
-    * This node's index in the Radargun cluster.  -1 is used for local benchmarks.
+    * this node's index in the Radargun cluster.  -1 is used for local benchmarks.
     */
    private int nodeIndex = -1;
 
    /**
-    * The number of nodes in the Radargun cluster.
+    * the number of nodes in the Radargun cluster.
     */
    private int numSlaves = 0;
 
    /**
-    * total time (in nanosec) of simulation for each stressor thread
+    * total time (in seconds) of simulation for each stressor thread
     */
    private long perThreadSimulTime = 30L;
 

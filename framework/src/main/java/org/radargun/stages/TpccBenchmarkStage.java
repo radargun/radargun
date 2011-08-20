@@ -32,7 +32,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
    private int numOfThreads = 10;
    
    /**
-    * total time (in nanosec) of simulation for each stressor thread
+    * total time (in seconds) of simulation for each stressor thread
     */
    private long perThreadSimulTime = 30000000000L;
    
