@@ -53,7 +53,7 @@ public class TpccPopulationStage extends AbstractDistStage{
       long startTime = System.currentTimeMillis();
       populate(wrapper);
       long duration = System.currentTimeMillis() - startTime;
-      log.info("The warmup took: " + (duration / 1000) + " seconds.");
+      log.info("The population took: " + (duration / 1000) + " seconds.");
       ack.setPayload(duration);
       return ack;
    }

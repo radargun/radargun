@@ -327,7 +327,7 @@ public class TpccPopulation {
                num_of_districts+=1;
             }
 
-            log.info("Index:"+slaveIndex+"; Init"+init_id_district+"; Num:"+num_of_districts);
+            log.info("Index:"+slaveIndex+"; Init:"+init_id_district+"; Num:"+num_of_districts);
          }
          for (int id_district = init_id_district; id_district <= (init_id_district-1+num_of_districts); id_district++) {
             log.info(" DISTRICT " + id_district);
