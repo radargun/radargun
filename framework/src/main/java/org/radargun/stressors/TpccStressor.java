@@ -24,6 +24,11 @@ import org.radargun.tpcc.transaction.TpccTransaction;
 import org.radargun.utils.Utils;
 
 
+
+
+
+
+
 /**
  * On multiple threads executes implementations of TPC-C Transaction Profiles against the CacheWrapper, and returns the result as a Map.
  *
@@ -51,7 +56,7 @@ public class TpccStressor implements CacheWrapperStressor {
    /**
     * total time (in nanosec) of simulation for each stressor thread
     */
-   private long perThreadSimulTime = 30000000000L;
+   private long perThreadSimulTime = 30L;
 
    /**
     * average arrival rate of the transactions to the system
@@ -474,7 +479,7 @@ public class TpccStressor implements CacheWrapperStressor {
          boolean isReadOnly = false;
          boolean successful = true;
 
-         while(delta < this.simulTime) {
+         while(delta < (this.simulTime*1000000000L)) {
 
             isReadOnly = false;
             successful = true;

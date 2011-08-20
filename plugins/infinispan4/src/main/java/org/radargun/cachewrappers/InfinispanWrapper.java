@@ -37,6 +37,7 @@ public class InfinispanWrapper implements CacheWrapper {
          // use a named cache, based on the 'default'
          cacheManager.defineConfiguration("x", new Configuration());
          cache = cacheManager.getCache("x");
+         tm = cache.getAdvancedCache().getTransactionManager();
          started = true;
       }
       log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
