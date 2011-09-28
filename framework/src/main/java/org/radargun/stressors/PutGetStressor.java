@@ -311,7 +311,12 @@ public class PutGetStressor implements CacheWrapperStressor {
 
    private boolean completeTransaction(int i, boolean force) {
       if ((((i + 1) % transactionSize) == 0) || force) {
-         cacheWrapper.endTransaction(commitTransactions);
+         try {
+            cacheWrapper.endTransaction(commitTransactions);
+         } catch (Exception e) {
+            log.error("Issues committing the transaction", e);
+            throw new RuntimeException(e);
+         }
          txCount.incrementAndGet();
          return true;
       }

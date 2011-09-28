@@ -46,19 +46,19 @@ public class LocalBenchmark {
    public void benchmark() throws Exception {
       log.info("Starting benchmark with " + Utils.kb(initialFreeMemory) + " kb initial free memory.");
       for (Map.Entry<String, List<Properties>> product : product2Config.entrySet()) {
-         for (Properties config : product.getValue()) {
+         for (Properties configProps : product.getValue()) {
+            final String config = configProps.getProperty("name");
             log.info("Processing " + product.getKey() + "-" + config);
             CacheWrapper wrapper = getCacheWrapper(product.getKey());
             try {
-               final String name = config.getProperty("name");
-               wrapper.setUp(name, true, -1, new TypedProperties(config));
+               wrapper.setUp(config, true, -1, new TypedProperties(configProps));
 
                Map<String, String> results = null;
                for (CacheWrapperStressor stressor : stressors) {
                   results = stressor.stress(wrapper);
                   stressor.destroy();
                }
-               generateReport(results, product.getKey(), name);
+               generateReport(results, product.getKey(), config);
                wrapper.tearDown();
                wrapper = null;
                gc();

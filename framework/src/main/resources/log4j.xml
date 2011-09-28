@@ -103,8 +103,12 @@
       <priority value="INFO"/>
    </category>
 
-   <category name="com.arjuna.ats.arjuna">
+   <category name="org.infinispan.marshall">
       <priority value="INFO"/>
+   </category>
+
+   <category name="com.arjuna.ats.arjuna">
+      <priority value="WARN"/>
    </category>
 
    <!-- Here goes the root -->
