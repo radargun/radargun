@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapperStressor;
 import org.radargun.config.ConfigHelper;
+import org.radargun.config.DomConfigParser;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -71,12 +73,11 @@ public class LocalConfigParser {
             Element nodeEl = (Element) node;
             String productName = nodeEl.getNodeName();
             NodeList configs = nodeEl.getElementsByTagName("config");
-            List<String> configNames = new ArrayList<String>();
+            List<Properties> configNames = new ArrayList<Properties>();
 
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
                Element configEl = (Element) configs.item(configIndex);
-               String configName = configEl.getAttribute("name");
-               configNames.add(configName);
+               configNames.add(DomConfigParser.getAttributes(configEl));
             }
             localBenchmark.addProductConfig(productName, configNames);
          }

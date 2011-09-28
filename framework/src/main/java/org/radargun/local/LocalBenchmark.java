@@ -5,6 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.CacheWrapperStressor;
 import org.radargun.ShutDownHook;
+import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
 import java.io.File;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -28,7 +30,7 @@ public class LocalBenchmark {
    private static final String REPORTS_DIR = "reports";
 
    private List<CacheWrapperStressor> stressors = new ArrayList<CacheWrapperStressor>();
-   private LinkedHashMap<String, List<String>> product2Config = new LinkedHashMap<String, List<String>>();
+   private LinkedHashMap<String, List<Properties>> product2Config = new LinkedHashMap<String, List<Properties>>();
    private boolean headerGenerted = false;
    private List<ReportDesc> reportDescs = new ArrayList<ReportDesc>();
 
@@ -43,19 +45,20 @@ public class LocalBenchmark {
 
    public void benchmark() throws Exception {
       log.info("Starting benchmark with " + Utils.kb(initialFreeMemory) + " kb initial free memory.");
-      for (Map.Entry<String, List<String>> product : product2Config.entrySet()) {
-         for (String config : product.getValue()) {
+      for (Map.Entry<String, List<Properties>> product : product2Config.entrySet()) {
+         for (Properties config : product.getValue()) {
             log.info("Processing " + product.getKey() + "-" + config);
             CacheWrapper wrapper = getCacheWrapper(product.getKey());
             try {
-               wrapper.setUp(config, true, -1, null);
+               final String name = config.getProperty("name");
+               wrapper.setUp(name, true, -1, new TypedProperties(config));
 
                Map<String, String> results = null;
                for (CacheWrapperStressor stressor : stressors) {
                   results = stressor.stress(wrapper);
                   stressor.destroy();
                }
-               generateReport(results, product.getKey(), config);
+               generateReport(results, product.getKey(), name);
                wrapper.tearDown();
                wrapper = null;
                gc();
@@ -165,7 +168,7 @@ public class LocalBenchmark {
       stressors.add(stressor);
    }
 
-   public void addProductConfig(String productName, List<String> configs) {
+   public void addProductConfig(String productName, List<Properties> configs) {
       product2Config.put(productName, configs);
    }
 
