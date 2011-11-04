@@ -9,15 +9,29 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>plugin-infinispan4</artifactId>
-   <name>Infinispan 4.x plugin for RadarGun</name>
+   <artifactId>plugin-infinispan5</artifactId>
+   <name>Infinispan 5.x plugin for RadarGun</name>
 
    <dependencies>
+
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-infinispan4</artifactId>
+         <version>${project.version}</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-core</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
-         <version>4.2.1.FINAL</version>
-      </dependency>           
+         <version>5.1.0.BETA3</version>
+      </dependency>
+
    </dependencies>
 
 </project>
