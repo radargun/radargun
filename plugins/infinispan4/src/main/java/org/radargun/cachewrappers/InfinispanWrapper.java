@@ -3,7 +3,6 @@ package org.radargun.cachewrappers;
 import org.infinispan.Cache;
 import org.infinispan.config.Configuration;
 import org.infinispan.context.Flag;
-import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;

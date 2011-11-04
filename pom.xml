@@ -12,7 +12,8 @@
    <modules>
       <module>framework</module>
       <module>plugins/infinispan4</module>
-       <module>plugins/jgroups</module>
+      <module>plugins/infinispan5</module>
+      <module>plugins/jgroups</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
       <module>plugins/ehcache17</module>
@@ -109,10 +110,16 @@
                   </goals>
                   <configuration>
                      <tasks>
-                        <echo message="Packaging the framework, and the following plugins: infinispan4, jbosscache2, jbosscache3, ehcache17" />
+                        <echo message="Packaging the framework, and the following plugins: infinispan4, infinispan5, jbosscache2, jbosscache3, ehcache17" />
 
                         <copy todir="${distribution.artifact}/plugins/infinispan4">
                            <fileset dir="plugins/infinispan4/target/distribution/plugin-infinispan4-bin/plugin-infinispan4">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan5">
+                           <fileset dir="plugins/infinispan5/target/distribution/plugin-infinispan5-bin/plugin-infinispan5">
                               <include name="**/*" />
                            </fileset>
                         </copy>

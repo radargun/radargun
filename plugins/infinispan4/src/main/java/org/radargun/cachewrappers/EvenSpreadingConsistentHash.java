@@ -6,6 +6,7 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.distribution.ch.DefaultConsistentHash;
 import org.infinispan.distribution.ch.TopologyInfo;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.util.Immutables;
 import org.radargun.stressors.ObjectKey;
 
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -45,15 +47,17 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
 
       if (threadCountPerNode <= 0 || keysPerThread <= 0) throw new IllegalStateException("keysPerThread and threadCountPerNode need to be set!");
 
-      int clusterSize = existing.getCaches().size();
+      Set<Address> caches = existing.getCaches();
+      int clusterSize = caches.size();
 
       int keyIndexInCluster = getSequenceNumber((ObjectKey) key);
-      int firstIndex = keyIndexInCluster % existing.getCaches().size();
+      int firstIndex = keyIndexInCluster % caches.size();
 
       List<Address> result = new ArrayList<Address>();
 
+      List<Address> addresses = Immutables.immutableListConvert(caches);
       for (int i = 0; i < replCount; i++) {
-         Address address = existing.getCaches().get((firstIndex + i) % clusterSize);
+         Address address = addresses.get((firstIndex + i) % clusterSize);
          result.add(address);
          if (result.size() == replCount) break;
       }
@@ -109,7 +113,7 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
    }
 
    @Override
-   public void setCaches(List<Address> caches) {
+   public void setCaches(Set<Address> caches) {
       existing.setCaches(caches);
    }
 
@@ -130,7 +134,7 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
    }
 
    @Override
-   public List<Address> getCaches() {
+   public Set<Address> getCaches() {
       return existing.getCaches();
    }
 }
