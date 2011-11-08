@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:5.1">
+   <global>
+      <transport clusterName="x">
+         <properties>
+            <property name="configurationFile" value="jgroups/fast.xml"/>
+         </properties>
+      </transport>
+   </global>
+
+   <default>
+      <transaction transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"/>
+      <locking concurrencyLevel="1000" useLockStriping="false"/>
+
+      <unsafe unreliableReturnValues="true" />
+
+      <clustering mode="d">
+         <sync replTimeout="60000"/>
+         <l1 enabled="false" />
+         <hash numOwners="2" rehashEnabled="false" rehashRpcTimeout="60000"/>
+      </clustering>
+   </default>
+
+</infinispan>
