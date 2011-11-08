@@ -80,7 +80,7 @@ public class TerracottaWrapper implements CacheWrapper {
       return "There are " + sz + " objects in cache";
    }
 
-   public Object startTransaction() {
+   public void startTransaction() {
       throw new UnsupportedOperationException("Does not support JTA!");
    }
 

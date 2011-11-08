@@ -56,6 +56,14 @@ public class PutGetStressor implements CacheWrapperStressor {
     */
    private int nodeIndex = -1;
 
+   private int transactionSize = 1;
+
+   private boolean useTransactions = false;
+
+   private boolean commitTransactions = true;
+
+   private AtomicInteger txCount = new AtomicInteger(0);
+
    private String keyGeneratorClass = StringKeyGenerator.class.getName();
 
    private KeyGenerator keyGenerator;
@@ -88,6 +96,7 @@ public class PutGetStressor implements CacheWrapperStressor {
 
    private Map<String, String> processResults(List<Stressor> stressors) {
       long duration = 0;
+      long transactionDuration = 0;
       int reads = 0;
       int writes = 0;
       int failures = 0;
@@ -98,6 +107,7 @@ public class PutGetStressor implements CacheWrapperStressor {
          duration += stressor.totalDuration();
          readsDurations += stressor.readDuration;
          writesDurations += stressor.writeDuration;
+         transactionDuration += stressor.getTransactionsDuration();
 
          reads += stressor.reads;
          writes += stressor.writes;
@@ -106,15 +116,19 @@ public class PutGetStressor implements CacheWrapperStressor {
 
       Map<String, String> results = new LinkedHashMap<String, String>();
       results.put("DURATION", str(duration));
-      double requestPerSec = (reads + writes) / ((duration/numOfThreads) / 1000.0);
+      double requestPerSec = (reads + writes) / ((duration / numOfThreads) / 1000.0);
       results.put("REQ_PER_SEC", str(requestPerSec));
-      results.put("READS_PER_SEC", str(reads / ((readsDurations/numOfThreads) / 1000.0)));
-      results.put("WRITES_PER_SEC", str(writes / ((writesDurations/numOfThreads) / 1000.0)));
+      results.put("READS_PER_SEC", str(reads / ((readsDurations / numOfThreads) / 1000.0)));
+      results.put("WRITES_PER_SEC", str(writes / ((writesDurations / numOfThreads) / 1000.0)));
       results.put("READ_COUNT", str(reads));
       results.put("WRITE_COUNT", str(writes));
       results.put("FAILURES", str(failures));
+      if (useTransactions) {
+         double txPerSec = txCount.get() / ((transactionDuration / numOfThreads) / 1000.0);
+         results.put("TX_PER_SEC", str(txPerSec));
+      }
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
-            ". Test duration is: " + Utils.getDurationString(System.currentTimeMillis() - startTime));
+                     ". Test duration is: " + Utils.getDurationString(System.currentTimeMillis() - startTime));
       return results;
    }
 
@@ -148,6 +162,7 @@ public class PutGetStressor implements CacheWrapperStressor {
       private int nrFailures;
       private long readDuration = 0;
       private long writeDuration = 0;
+      private long transactionDuration = 0;
       private long reads;
       private long writes;
       private long startTime;
@@ -158,7 +173,7 @@ public class PutGetStressor implements CacheWrapperStressor {
          super("Stressor-" + threadIndex);
          this.threadIndex = threadIndex;
          this.requestsLeft = requestsLeft;
-         this.bucketId = isLocalBenchmark() ? String.valueOf(threadIndex): nodeIndex + "_" + threadIndex;
+         this.bucketId = isLocalBenchmark() ? String.valueOf(threadIndex) : nodeIndex + "_" + threadIndex;
       }
 
       @Override
@@ -177,12 +192,23 @@ public class PutGetStressor implements CacheWrapperStressor {
          }
 
          int i = 0;
-         while(requestsLeft.getAndDecrement() > -1) {
+         boolean txNotCompleted = false;
+         while (requestsLeft.getAndDecrement() > -1) {
+
+            if (useTransactions) {
+               long start = System.currentTimeMillis();
+               txNotCompleted = startTransaction(i);
+               if (txNotCompleted) { //if a transaction has been started add the starting time
+                  transactionDuration += System.currentTimeMillis() - start;
+               }
+            }
+
             randomAction = r.nextInt(100);
             randomKeyInt = r.nextInt(numberOfKeys - 1);
             Object key = getKey(randomKeyInt);
             Object result = null;
 
+            long operationDuration;
             if (randomAction < readPercentage) {
                long start = System.currentTimeMillis();
                try {
@@ -191,7 +217,8 @@ public class PutGetStressor implements CacheWrapperStressor {
                   log.warn(e);
                   nrFailures++;
                }
-               readDuration += System.currentTimeMillis() - start;
+               operationDuration = System.currentTimeMillis() - start;
+               readDuration += operationDuration;
                reads++;
             } else {
                long start = System.currentTimeMillis();
@@ -201,11 +228,29 @@ public class PutGetStressor implements CacheWrapperStressor {
                   log.warn(e);
                   nrFailures++;
                }
-               writeDuration += System.currentTimeMillis() - start;
+               operationDuration = System.currentTimeMillis() - start;
+               writeDuration += operationDuration;
                writes++;
             }
+
+            if (useTransactions) {
+               transactionDuration += operationDuration;
+               long start = System.currentTimeMillis();
+               //if we commit the transaction add the time needed for transaction commit as well
+               if (completeTransaction(i, false)) {
+                  txNotCompleted = false;
+                  transactionDuration += System.currentTimeMillis() - start;
+               }
+            }
+
             i++;
             logProgress(i, result);
+         }
+
+         if (txNotCompleted) {
+            long start = System.currentTimeMillis();
+            completeTransaction(-1, true);
+            transactionDuration += System.currentTimeMillis() - start;
          }
       }
 
@@ -219,8 +264,8 @@ public class PutGetStressor implements CacheWrapperStressor {
                log.trace("i=" + i + ", elapsedTime=" + elapsedTime);
             }
             log.info("Thread index '" + threadIndex + "' executed " + (i + 1) + " operations. Elapsed time: " +
-                  Utils.getDurationString((long) elapsedTime) + ". Estimated remaining: " + Utils.getDurationString((long) estimatedRemaining) +
-                  ". Estimated total: " + Utils.getDurationString((long) estimatedTotal));
+                           Utils.getDurationString((long) elapsedTime) + ". Estimated remaining: " + Utils.getDurationString((long) estimatedRemaining) +
+                           ". Estimated total: " + Utils.getDurationString((long) estimatedTotal));
             String len = result != null ? String.valueOf(result.toString().length()) : "null";
             System.out.println("PutGetStressor: Ignore this line, added just to make sure JIT doesn't skip call to cacheWrapper.get " + len);
          }
@@ -241,9 +286,7 @@ public class PutGetStressor implements CacheWrapperStressor {
                }
                pooledKeys.add(key);
                cacheWrapper.put(this.bucketId, key, generateRandomString(sizeOfValue));
-            }
-
-            catch (Throwable e) {
+            } catch (Throwable e) {
                log.warn("Error while initializing the session: ", e);
             }
          }
@@ -252,6 +295,32 @@ public class PutGetStressor implements CacheWrapperStressor {
       public Object getKey(int keyIndex) {
          return pooledKeys.get(keyIndex);
       }
+
+      public long getTransactionsDuration() {
+         return transactionDuration;
+      }
+   }
+
+   private boolean startTransaction(int i) {
+      if ((i  % transactionSize) == 0) {
+         cacheWrapper.startTransaction();
+         return true;
+      }
+      return false;
+   }
+
+   private boolean completeTransaction(int i, boolean force) {
+      if ((((i + 1) % transactionSize) == 0) || force) {
+         try {
+            cacheWrapper.endTransaction(commitTransactions);
+         } catch (Exception e) {
+            log.error("Issues committing the transaction", e);
+            throw new RuntimeException(e);
+         }
+         txCount.incrementAndGet();
+         return true;
+      }
+      return false;
    }
 
    private String str(Object o) {
@@ -315,6 +384,30 @@ public class PutGetStressor implements CacheWrapperStressor {
       return keyGenerator;
    }
 
+   public int getTransactionSize() {
+      return transactionSize;
+   }
+
+   public void setTransactionSize(int transactionSize) {
+      this.transactionSize = transactionSize;
+   }
+
+   public boolean isUseTransactions() {
+      return useTransactions;
+   }
+
+   public void setUseTransactions(boolean useTransactions) {
+      this.useTransactions = useTransactions;
+   }
+
+   public boolean isCommitTransactions() {
+      return commitTransactions;
+   }
+
+   public void setCommitTransactions(boolean commitTransactions) {
+      this.commitTransactions = commitTransactions;
+   }
+
    @Override
    public String toString() {
       return "PutGetStressor{" +
@@ -326,6 +419,9 @@ public class PutGetStressor implements CacheWrapperStressor {
             ", numOfThreads=" + numOfThreads +
             ", cacheWrapper=" + cacheWrapper +
             ", nodeIndex=" + nodeIndex +
+            ", useTransactions=" + useTransactions +
+            ", transactionSize=" + transactionSize +
+            ", commitTransactions=" + commitTransactions +
             "}";
    }
 }

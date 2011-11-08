@@ -1,6 +1,8 @@
 package org.radargun;
 
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.radargun.config.ConfigParser;
 import org.radargun.config.MasterConfig;
 
@@ -11,14 +13,17 @@ import java.io.File;
  */
 public class LaunchMaster {
 
+   private static Log log = LogFactory.getLog(LaunchMaster.class);
+
    public static void main(String[] args) throws Exception {
 
       File currentDir = new File(".");
-      System.out.println("Running in directory: " + currentDir.getAbsolutePath());
+      String message = "Running in directory: " + currentDir.getAbsolutePath();
+      out(message);
 
       String config = getConfigOrExit(args);
 
-      System.out.println("Configuration file is: " + config);
+      out("Configuration file is: " + config);
 
       ConfigParser configParser = ConfigParser.getConfigParser();
       MasterConfig masterConfig = configParser.parseConfig(config);
@@ -52,7 +57,10 @@ public class LaunchMaster {
          System.err.println("No such file: " + configFile.getAbsolutePath());
          printUsageAndExit();
       }
+   }
 
-
+   private static void out(String message) {
+      System.out.println(message);
+      log.info(message);
    }
 }

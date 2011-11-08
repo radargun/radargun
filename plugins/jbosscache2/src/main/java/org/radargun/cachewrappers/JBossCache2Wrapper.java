@@ -13,8 +13,6 @@ import org.jboss.cache.transaction.DummyTransactionManager;
 import org.radargun.CacheWrapper;
 import org.radargun.utils.TypedProperties;
 
-import javax.transaction.Transaction;
-
 /**
  * @author Mircea.Markus@jboss.com
  * @since 2.2
@@ -81,12 +79,11 @@ public class JBossCache2Wrapper implements CacheWrapper
    }
 
 
-   public Transaction startTransaction()
+   public void startTransaction()
    {
       try
       {
          DummyTransactionManager.getInstance().begin();
-         return DummyTransactionManager.getInstance().getTransaction();
       }
       catch (Exception e)
       {

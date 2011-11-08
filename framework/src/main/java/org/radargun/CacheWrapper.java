@@ -70,8 +70,18 @@ public interface CacheWrapper
     */
    Object getReplicatedData(String bucket, String key) throws Exception;
 
-   Object startTransaction();
+   /**
+    * Starts a transaction against the cache node. All the put, get, empty invocations after this method returns will
+    * take place in the scope of the transaction started. The transaction will be completed by invoking {@link #endTransaction(boolean)}.
+    * @throws RuntimeException if a particular cache implementation does not support transactions it should throw a
+    * RuntimeException to signal that.
+    */
+   void startTransaction();
 
+   /**
+    * Called in conjunction with {@link #startTransaction()} in order to complete a transaction by either committing or rolling it back.
+    * @param successful commit or rollback?
+    */
    void endTransaction(boolean successful);
 
    public int size();

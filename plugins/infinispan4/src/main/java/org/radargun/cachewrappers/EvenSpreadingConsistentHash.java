@@ -12,6 +12,7 @@ import org.radargun.stressors.ObjectKey;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,8 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
    private volatile static int threadCountPerNode = -1;
    private volatile static int keysPerThread = -1;
    private volatile DefaultConsistentHash existing;
+
+   private final List<Address> cachesList = new ArrayList<Address>();
 
 
    public EvenSpreadingConsistentHash() {//needed for UT
@@ -57,7 +60,7 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
 
       List<Address> addresses = Immutables.immutableListConvert(caches);
       for (int i = 0; i < replCount; i++) {
-         Address address = addresses.get((firstIndex + i) % clusterSize);
+         Address address = cachesList.get((firstIndex + i) % clusterSize);
          result.add(address);
          if (result.size() == replCount) break;
       }
@@ -115,6 +118,14 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
    @Override
    public void setCaches(Set<Address> caches) {
       existing.setCaches(caches);
+
+      cachesList.addAll(caches);
+      Collections.sort(cachesList, new Comparator<Address>() {
+         @Override
+         public int compare(Address o1, Address o2) {
+            return o1.toString().compareTo(o2.toString());
+         }
+      });
    }
 
    @Override
