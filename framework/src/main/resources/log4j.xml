@@ -98,8 +98,17 @@
    <category name="JoinTask">
       <priority value="TRACE"/>
    </category>
+
    <category name="org.infinispan">
       <priority value="INFO"/>
+   </category>
+
+   <category name="org.infinispan.marshall">
+      <priority value="INFO"/>
+   </category>
+
+   <category name="com.arjuna.ats.arjuna">
+      <priority value="WARN"/>
    </category>
 
    <!-- Here goes the root -->

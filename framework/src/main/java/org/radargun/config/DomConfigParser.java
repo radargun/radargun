@@ -91,13 +91,7 @@ public class DomConfigParser extends ConfigParser {
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
                Element configEl = (Element) configs.item(configIndex);
                String configName = configEl.getAttribute("name");
-               Properties configAttributes = new Properties();
-               NamedNodeMap attributes = configEl.getAttributes();
-               for (int j = 0; j < attributes.getLength(); j++) {
-                  String name = attributes.item(j).getNodeName();
-                  String value = attributes.item(j).getNodeValue();
-                  configAttributes.put(name, value);
-               }
+               Properties configAttributes = getAttributes(configEl);
 
                ScalingBenchmarkConfig clone = prototype.clone();
                clone.setProductName(productName);
@@ -109,6 +103,17 @@ public class DomConfigParser extends ConfigParser {
 
          }
       }
+   }
+
+   public static Properties getAttributes(Element configEl) {
+      NamedNodeMap attributes = configEl.getAttributes();
+      Properties configAttributes = new Properties();
+      for (int j = 0; j < attributes.getLength(); j++) {
+         String name = attributes.item(j).getNodeName();
+         String value = attributes.item(j).getNodeValue();
+         configAttributes.put(name, value);
+      }
+      return configAttributes;
    }
 
    private MasterConfig parseMaster(Element configRoot, ScalingBenchmarkConfig prototype) {

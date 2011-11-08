@@ -17,7 +17,16 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
          <version>4.2.1.FINAL</version>
-      </dependency>           
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-core</artifactId>
+         <version>4.2.1.FINAL</version>
+         <scope>tests</scope>
+         <type>test-jar</type>
+      </dependency>
+
    </dependencies>
 
 </project>

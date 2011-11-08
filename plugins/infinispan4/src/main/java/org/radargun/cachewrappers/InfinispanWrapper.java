@@ -1,7 +1,6 @@
 package org.radargun.cachewrappers;
 
 import org.infinispan.Cache;
-import org.infinispan.config.Configuration;
 import org.infinispan.context.Flag;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.factories.ComponentRegistry;
@@ -15,6 +14,7 @@ import org.radargun.CacheWrapper;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
+import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import java.util.List;
 
@@ -28,18 +28,25 @@ public class InfinispanWrapper implements CacheWrapper {
    TransactionManager tm;
    boolean started = false;
    String config;
+   private volatile boolean enlistExtraXAResource;
 
    public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
       this.config = config;
+      String configFile  = confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
+      String cacheName = confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : "x";
+
+      log.trace("Using config file: " + configFile + " and cache name: " + cacheName);
+
       if (!started) {
-         cacheManager = new DefaultCacheManager(config);
-         // use a named cache, based on the 'default'
-         cacheManager.defineConfiguration("x", new Configuration());
-         cache = cacheManager.getCache("x");
+         cacheManager = new DefaultCacheManager(configFile);
+         cache = cacheManager.getCache(cacheName);
          started = true;
+         tm = cache.getAdvancedCache().getTransactionManager();
+         log.info("Using transaction manager: " + tm);
       }
       log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
+      log.info("Using config attributes: " + confAttributes);
       blockForRehashing();
       injectEvenConsistentHash(confAttributes);
    }
@@ -93,11 +100,14 @@ public class InfinispanWrapper implements CacheWrapper {
       return get(bucket, key);
    }
 
-   public Object startTransaction() {
-      if (tm == null) return null;
+   public void startTransaction() {
+      assertTm();
       try {
          tm.begin();
-         return tm.getTransaction();
+         Transaction transaction = tm.getTransaction();
+         if (enlistExtraXAResource) {
+            transaction.enlistResource(new DummyXAResource());
+         }
       }
       catch (Exception e) {
          throw new RuntimeException(e);
@@ -105,7 +115,7 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public void endTransaction(boolean successful) {
-      if (tm == null) return;
+      assertTm();
       try {
          if (successful)
             tm.commit();
@@ -153,4 +163,13 @@ public class InfinispanWrapper implements CacheWrapper {
    public Cache<Object, Object> getCache() {
       return cache;
    }
+
+   private void assertTm() {
+      if (tm == null) throw new RuntimeException("No configured TM!");
+   }
+
+   public void setEnlistExtraXAResource(boolean enlistExtraXAResource) {
+      this.enlistExtraXAResource = enlistExtraXAResource;
+   }
+
 }

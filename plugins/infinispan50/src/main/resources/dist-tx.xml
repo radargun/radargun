@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:5.0"
+            xsi:schemaLocation="urn:infinispan:config:5.0 http://www.infinispan.org/schemas/infinispan-config-5.0.xsd">
+   <global>
+      <transport clusterName="x">
+         <properties>
+            <property name="configurationFile" value="jgroups/fast.xml"/>
+         </properties>
+      </transport>
+   </global>
+
+   <default>
+      <transaction transactionManagerLookupClass="org.radargun.infinispan.JBossTMLookup"/>
+      <locking concurrencyLevel="1000" useLockStriping="false"/>
+
+      <clustering mode="d">
+         <sync replTimeout="60000"/>
+         <l1 enabled="false"/>
+         <hash numOwners="2" rehashEnabled="false" rehashRpcTimeout="60000"/>
+      </clustering>
+   </default>
+
+   <namedCache name="noXa">
+      <transaction useSynchronization="true" transactionManagerLookupClass="org.radargun.infinispan.JBossTMLookup"/>
+   </namedCache>
+
+   <namedCache name="xaNoRecovery" >
+      <transaction transactionManagerLookupClass="org.radargun.infinispan.JBossTMLookup">
+         <recovery enabled="false"/>
+      </transaction>
+   </namedCache>
+
+   <namedCache name="xaWithRecovery">
+      <transaction transactionManagerLookupClass="org.radargun.infinispan.JBossTMLookup">
+         <recovery enabled="true"/>
+      </transaction>
+   </namedCache>
+
+</infinispan>

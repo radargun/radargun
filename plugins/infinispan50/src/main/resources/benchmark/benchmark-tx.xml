@@ -1,0 +1,28 @@
+<bench-config>
+
+   <master bindAddress="${127.0.0.1:master.address}" port="${2103:master.port}"/>
+
+   <benchmark initSize="4" maxSize="${8:slaves}" increment="2">
+      <DestroyWrapper runOnAllSlaves="true"/>
+      <StartCluster staggerSlaveStartup="true" delayAfterFirstSlaveStarts="5000" delayBetweenStartingSlaves = "500"/>
+      <ClusterValidation partialReplication="false"/>
+      <Warmup operationCount="100000"/>
+      <ClearCluster/>
+      <WebSessionBenchmark numberOfRequests="500000" opsCountStatusLog="10000" numOfThreads="20" writePercentage="100" useTransactions="true"/>
+      <CsvReportGeneration/>
+   </benchmark>
+
+   <products>
+      <infinispan5>
+         <config file="dist-tx.xml" cache="noXa" name="no-xa"/>
+         <config file="dist-tx.xml" cache="xaNoRecovery" name="xa-no-recovery"/>
+         <config file="dist-tx.xml" cache="xaNoRecovery" name="xa-no-recovery-1pc-off" enlistExtraXAResource="true"/>
+         <config file="dist-tx.xml" cache="xaWithRecovery" name="xa-with-recovery"/>
+      </infinispan5>
+   </products>
+
+   <reports>
+      <report name="All" includeAll="true"/>
+   </reports>
+
+</bench-config>
