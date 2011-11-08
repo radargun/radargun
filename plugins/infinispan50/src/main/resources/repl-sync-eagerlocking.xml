@@ -17,6 +17,7 @@
       <locking concurrencyLevel="1000" useLockStriping="false" />
       <clustering mode="r">
          <sync replTimeout="10000"/>
+         <stateRetrieval fetchInMemoryState="false"/>
       </clustering>
    </default>
 </infinispan>
