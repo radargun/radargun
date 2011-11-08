@@ -13,6 +13,7 @@
       <module>framework</module>
       <module>plugins/infinispan4</module>
       <module>plugins/infinispan5</module>
+      <module>plugins/infinispan50</module>
       <module>plugins/jgroups</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
