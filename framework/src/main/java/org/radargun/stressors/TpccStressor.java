@@ -533,12 +533,7 @@ public class TpccStressor implements CacheWrapperStressor {
             long startService = System.nanoTime();
 
 
-            Object transactionManager = cacheWrapper.startTransaction();
-            if(transactionManager == null){
-               log.error("Unable to start transactions");
-               throw new IllegalStateException("Unable to start transactions");
-
-            }
+            cacheWrapper.startTransaction();
 
             try{
                transaction.executeTransaction(cacheWrapper);
