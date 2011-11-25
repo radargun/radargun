@@ -9,20 +9,27 @@ import java.io.Serializable;
  */
 public class District implements Serializable {
 
-   private long d_w_id;
-
    private long d_id;
 
+   /* warehouse id */
+   private long d_w_id;
+
+   /* size 10 */
    private String d_name;
 
+   /* max size 20 */
    private String d_street1;
 
+   /* max size 20 */
    private String d_street2;
 
+   /* max size 20 */
    private String d_city;
 
+   /* size 2 */
    private String d_state;
 
+   /* size 9 */
    private String d_zip;
 
    private double d_tax;

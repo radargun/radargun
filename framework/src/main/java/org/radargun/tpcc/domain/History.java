@@ -13,10 +13,13 @@ public class History implements Serializable {
 
    private static final AtomicLong idGenerator = new AtomicLong(0L);
 
+   /* customer id */
    private long h_c_id;
 
+   /* district id */
    private long h_c_d_id;
 
+   /* warehouse id */
    private long h_c_w_id;
 
    private long h_d_id;

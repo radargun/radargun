@@ -10,9 +10,11 @@ import java.util.Date;
  */
 public class Customer implements Serializable, Comparable {
 
-   private long c_w_id;
-
+   /* district id */
    private long c_d_id;
+
+   /* warehouse id */
+   private long c_w_id;
 
    private long c_id;
 

@@ -197,7 +197,7 @@ public class NewOrderTransaction implements TpccTransaction {
          // clause 2.4.2.2 (dot 8.4)
          i_data = i.getI_data();
          s_data = s.getS_data();
-         if (i_data.indexOf(TpccTools.ORIGINAL) != -1 && s_data.indexOf(TpccTools.ORIGINAL) != -1) {
+         if (i_data.contains(TpccTools.ORIGINAL) && s_data.contains(TpccTools.ORIGINAL)) {
             brandGeneric[ol_number - 1] = 'B';
          } else {
             brandGeneric[ol_number - 1] = 'G';

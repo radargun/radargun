@@ -101,8 +101,8 @@ public class TpccStressor implements CacheWrapperStressor {
       List<Stressor> stressors;
       try {
          if (this.arrivalRate != 0.0) { //Open system
-            for (int i = 0; i < producers.length; i++) {
-               producers[i].start();
+            for (Producer producer : producers) {
+               producer.start();
             }
          }
          stressors = executeOperations();
@@ -679,9 +679,9 @@ public class TpccStressor implements CacheWrapperStressor {
 
                Thread.sleep(time);
             } catch (InterruptedException i) {
-               log.error("»»»»»»INTERRUPTED_EXCEPTION«««««««");
+               log.error("»»»»»»INTERRUPTED_EXCEPTION«««««««", i);
             } catch (IllegalStateException il) {
-               log.error("»»»»»»»CODA PIENA«««««««««");
+               log.error("»»»»»»»IllegalStateException«««««««««", il);
 
             }
          }
