@@ -1,24 +1,22 @@
 package org.radargun.tpcc.domain;
 
-import java.io.Serializable;
-
 import org.radargun.CacheWrapper;
 
+import java.io.Serializable;
+
 /**
- * 
- *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
 public class NewOrder implements Serializable {
-   
+
    private long no_o_id;
-   
+
    private long no_d_id;
-   
+
    private long no_w_id;
 
    public NewOrder() {
-      
+
    }
 
    public NewOrder(long no_o_id, long no_d_id, long no_w_id) {
@@ -52,19 +50,19 @@ public class NewOrder implements Serializable {
       this.no_w_id = no_w_id;
    }
 
-   private String getKey(){
+   private String getKey() {
 
-      return "NEWORDER_"+this.no_w_id+"_"+this.no_d_id+"_"+this.no_o_id;
+      return "NEWORDER_" + this.no_w_id + "_" + this.no_d_id + "_" + this.no_o_id;
    }
 
-   public void store(CacheWrapper wrapper)throws Throwable{
+   public void store(CacheWrapper wrapper) throws Throwable {
 
-      wrapper.put(null,this.getKey(), this);
+      wrapper.put(null, this.getKey(), this);
    }
 
-   public void insert(CacheWrapper wrapper)throws Throwable{
+   public void insert(CacheWrapper wrapper) throws Throwable {
 
-      wrapper.put(null,this.getKey(), this);
+      wrapper.put(null, this.getKey(), this);
    }
 
    @Override

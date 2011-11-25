@@ -1,22 +1,23 @@
 package org.radargun.tpcc;
 
 /**
- * 
- *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
 public class ElementNotFoundException extends Exception {
-   
-   public ElementNotFoundException(){
+
+   public ElementNotFoundException() {
       super();
    }
-   public ElementNotFoundException(String message){
+
+   public ElementNotFoundException(String message) {
       super(message);
    }
-   public ElementNotFoundException(String message, Throwable cause){
+
+   public ElementNotFoundException(String message, Throwable cause) {
       super(message, cause);
    }
-   public ElementNotFoundException(Throwable cause){
+
+   public ElementNotFoundException(Throwable cause) {
       super(cause);
    }
 

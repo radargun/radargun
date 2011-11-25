@@ -1,39 +1,37 @@
 package org.radargun.tpcc.domain;
 
+import org.radargun.CacheWrapper;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.radargun.CacheWrapper;
-
 /**
- * 
- *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
 public class History implements Serializable {
-   
-   private static final AtomicLong idGenerator= new AtomicLong(0L);
+
+   private static final AtomicLong idGenerator = new AtomicLong(0L);
 
    private long h_c_id;
-   
+
    private long h_c_d_id;
-   
+
    private long h_c_w_id;
-   
+
    private long h_d_id;
-   
+
    private long h_w_id;
-   
+
    private long h_date;
-   
+
    private double h_amount;
-   
+
    private String h_data;
-   
+
 
    public History() {
-      
+
    }
 
    public History(long h_c_id, long h_c_d_id, long h_c_w_id, long h_d_id, long h_w_id, Date h_date, double h_amount, String h_data) {
@@ -42,7 +40,7 @@ public class History implements Serializable {
       this.h_c_w_id = h_c_w_id;
       this.h_d_id = h_d_id;
       this.h_w_id = h_w_id;
-      this.h_date = (h_date==null)?-1:h_date.getTime();
+      this.h_date = (h_date == null) ? -1 : h_date.getTime();
       this.h_amount = h_amount;
       this.h_data = h_data;
    }
@@ -68,7 +66,7 @@ public class History implements Serializable {
    }
 
    public Date getH_date() {
-      return (h_date==-1)?null:new Date(h_date);
+      return (h_date == -1) ? null : new Date(h_date);
    }
 
    public double getH_amount() {
@@ -100,7 +98,7 @@ public class History implements Serializable {
    }
 
    public void setH_date(Date h_date) {
-      this.h_date = (h_date==null)?-1:h_date.getTime();
+      this.h_date = (h_date == null) ? -1 : h_date.getTime();
    }
 
    public void setH_amount(double h_amount) {
@@ -111,13 +109,13 @@ public class History implements Serializable {
       this.h_data = h_data;
    }
 
-   private static String generateId(int slaveIndex){
+   private static String generateId(int slaveIndex) {
 
-      return String.valueOf(slaveIndex)+String.valueOf(History.idGenerator.incrementAndGet());
+      return String.valueOf(slaveIndex) + String.valueOf(History.idGenerator.incrementAndGet());
    }
 
-   public void store(CacheWrapper wrapper, int slaveIndex)throws Throwable{
-      String id=generateId(slaveIndex);
+   public void store(CacheWrapper wrapper, int slaveIndex) throws Throwable {
+      String id = generateId(slaveIndex);
       wrapper.put(null, id, this);
    }
 

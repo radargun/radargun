@@ -24,13 +24,9 @@ import org.radargun.tpcc.transaction.TpccTransaction;
 import org.radargun.utils.Utils;
 
 
-
-
-
-
-
 /**
- * On multiple threads executes implementations of TPC-C Transaction Profiles against the CacheWrapper, and returns the result as a Map.
+ * On multiple threads executes implementations of TPC-C Transaction Profiles against the CacheWrapper, and returns the
+ * result as a Map.
  *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
@@ -90,13 +86,13 @@ public class TpccStressor implements CacheWrapperStressor {
 
       completedThread = new AtomicLong(0L);
 
-      if(this.arrivalRate != 0.0){     //Open system
-         queue=new ArrayBlockingQueue<RequestType>(7000);
+      if (this.arrivalRate != 0.0) {     //Open system
+         queue = new ArrayBlockingQueue<RequestType>(7000);
          countJobs = new AtomicLong(0L);
          producers = new Producer[3];
-         producers[0]=new Producer(TpccTerminal.NEW_ORDER, 100.0-(this.paymentWeight + this.orderStatusWeight));
-         producers[1]=new Producer(TpccTerminal.PAYMENT, this.paymentWeight);
-         producers[2]=new Producer(TpccTerminal.ORDER_STATUS, this.orderStatusWeight);
+         producers[0] = new Producer(TpccTerminal.NEW_ORDER, 100.0 - (this.paymentWeight + this.orderStatusWeight));
+         producers[1] = new Producer(TpccTerminal.PAYMENT, this.paymentWeight);
+         producers[2] = new Producer(TpccTerminal.ORDER_STATUS, this.orderStatusWeight);
       }
 
       startTime = System.currentTimeMillis();
@@ -104,8 +100,8 @@ public class TpccStressor implements CacheWrapperStressor {
 
       List<Stressor> stressors;
       try {
-         if(this.arrivalRate != 0.0){ //Open system
-            for(int i=0; i<producers.length; i++){
+         if (this.arrivalRate != 0.0) { //Open system
+            for (int i = 0; i < producers.length; i++) {
                producers[i].start();
             }
          }
@@ -212,7 +208,7 @@ public class TpccStressor implements CacheWrapperStressor {
          writeInQueueTimes += stressor.writeInQueueTime;
          readInQueueTimes += stressor.readInQueueTime;
          newOrderInQueueTimes += stressor.newOrderInQueueTime;
-         paymentInQueueTimes +=stressor.paymentInQueueTime;
+         paymentInQueueTimes += stressor.paymentInQueueTime;
          numWritesDequeued += stressor.numWriteDequeued;
          numReadsDequeued += stressor.numReadDequeued;
          numNewOrderDequeued += stressor.numNewOrderDequeued;
@@ -221,7 +217,7 @@ public class TpccStressor implements CacheWrapperStressor {
 
       duration = duration / 1000000; // nanosec to millisec
       readsDurations = readsDurations / 1000; //nanosec to microsec
-      writesDurations=writesDurations / 1000; //nanosec to microsec
+      writesDurations = writesDurations / 1000; //nanosec to microsec
       newOrderDurations = newOrderDurations / 1000; //nanosec to microsec
       paymentDurations = paymentDurations / 1000;//nanosec to microsec
       successful_readsDurations = successful_readsDurations / 1000; //nanosec to microsec
@@ -241,39 +237,39 @@ public class TpccStressor implements CacheWrapperStressor {
 
       Map<String, String> results = new LinkedHashMap<String, String>();
       results.put("DURATION (msec)", str((duration / this.numOfThreads)));
-      double requestPerSec = (reads + writes) / ((duration/numOfThreads) / 1000.0);
+      double requestPerSec = (reads + writes) / ((duration / numOfThreads) / 1000.0);
       results.put("REQ_PER_SEC", str(requestPerSec));
 
-      double wrtPerSec=0;
-      double rdPerSec=0;
-      double newOrderPerSec=0;
-      double paymentPerSec=0; 
+      double wrtPerSec = 0;
+      double rdPerSec = 0;
+      double newOrderPerSec = 0;
+      double paymentPerSec = 0;
 
-      if(readsDurations+writesDurations==0)
-         results.put("READS_PER_SEC",str(0));
-      else{
-         rdPerSec=reads   / (((readsDurations+writesDurations)/numOfThreads) / 1000000.0);
+      if (readsDurations + writesDurations == 0)
+         results.put("READS_PER_SEC", str(0));
+      else {
+         rdPerSec = reads / (((readsDurations + writesDurations) / numOfThreads) / 1000000.0);
          results.put("READS_PER_SEC", str(rdPerSec));
       }
 
-      if (writesDurations+readsDurations==0)
+      if (writesDurations + readsDurations == 0)
          results.put("WRITES_PER_SEC", str(0));
-      else{
-         wrtPerSec=writes / (((writesDurations+readsDurations)/numOfThreads) / 1000000.0);
+      else {
+         wrtPerSec = writes / (((writesDurations + readsDurations) / numOfThreads) / 1000000.0);
          results.put("WRITES_PER_SEC", str(wrtPerSec));
       }
 
-      if (writesDurations+readsDurations==0)
+      if (writesDurations + readsDurations == 0)
          results.put("NEW_ORDER_PER_SEC", str(0));
-      else{
-         newOrderPerSec=newOrderTransactions/(((writesDurations+readsDurations)/numOfThreads)/1000000.0);
+      else {
+         newOrderPerSec = newOrderTransactions / (((writesDurations + readsDurations) / numOfThreads) / 1000000.0);
 
          results.put("NEW_ORDER_PER_SEC", str(newOrderPerSec));
       }
-      if (writesDurations+readsDurations==0)
+      if (writesDurations + readsDurations == 0)
          results.put("PAYMENT_PER_SEC", str(0));
-      else{
-         paymentPerSec=paymentTransactions/(((writesDurations+readsDurations)/numOfThreads)/1000000.0);
+      else {
+         paymentPerSec = paymentTransactions / (((writesDurations + readsDurations) / numOfThreads) / 1000000.0);
 
          results.put("PAYMENT_PER_SEC", str(paymentPerSec));
       }
@@ -281,7 +277,7 @@ public class TpccStressor implements CacheWrapperStressor {
       results.put("READ_COUNT", str(reads));
       results.put("WRITE_COUNT", str(writes));
       results.put("NEW_ORDER_COUNT", str(newOrderTransactions));
-      results.put("PAYMENT_COUNT",str(paymentTransactions));
+      results.put("PAYMENT_COUNT", str(paymentTransactions));
       results.put("FAILURES", str(failures));
       results.put("APPLICATION_FAILURES", str(appFailures));
       results.put("WRITE_FAILURES", str(wrFailures));
@@ -289,83 +285,83 @@ public class TpccStressor implements CacheWrapperStressor {
       results.put("PAYMENT_FAILURES", str(paymentFailures));
       results.put("READ_FAILURES", str(rdFailures));
 
-      if((reads+writes)!=0)
-         results.put("AVG_SUCCESSFUL_DURATION (usec)",str((successful_writesDurations+successful_readsDurations)/(reads+writes)));
+      if ((reads + writes) != 0)
+         results.put("AVG_SUCCESSFUL_DURATION (usec)", str((successful_writesDurations + successful_readsDurations) / (reads + writes)));
       else
-         results.put("AVG_SUCCESSFUL_DURATION (usec)",str(0));
+         results.put("AVG_SUCCESSFUL_DURATION (usec)", str(0));
 
 
-      if(reads!=0)
-         results.put("AVG_SUCCESSFUL_READ_DURATION (usec)",str(successful_readsDurations/reads));
+      if (reads != 0)
+         results.put("AVG_SUCCESSFUL_READ_DURATION (usec)", str(successful_readsDurations / reads));
       else
-         results.put("AVG_SUCCESSFUL_READ_DURATION (usec)",str(0));
+         results.put("AVG_SUCCESSFUL_READ_DURATION (usec)", str(0));
 
 
-      if(writes!=0)
-         results.put("AVG_SUCCESSFUL_WRITE_DURATION (usec)",str(successful_writesDurations/writes));
+      if (writes != 0)
+         results.put("AVG_SUCCESSFUL_WRITE_DURATION (usec)", str(successful_writesDurations / writes));
       else
-         results.put("AVG_SUCCESSFUL_WRITE_DURATION (usec)",str(0));
+         results.put("AVG_SUCCESSFUL_WRITE_DURATION (usec)", str(0));
 
 
-      if(writes != 0) {
-         results.put("AVG_SUCCESSFUL_COMMIT_WRITE_DURATION (usec)",str((successful_commitWriteDurations/writes)));
+      if (writes != 0) {
+         results.put("AVG_SUCCESSFUL_COMMIT_WRITE_DURATION (usec)", str((successful_commitWriteDurations / writes)));
       } else {
-         results.put("AVG_SUCCESSFUL_COMMIT_WRITE_DURATION (usec)",str(0));
+         results.put("AVG_SUCCESSFUL_COMMIT_WRITE_DURATION (usec)", str(0));
       }
 
-      if(nrWrFailuresOnCommit != 0) {
-         results.put("AVG_ABORTED_COMMIT_WRITE_DURATION (usec)",str((aborted_commitWriteDurations/nrWrFailuresOnCommit)));
+      if (nrWrFailuresOnCommit != 0) {
+         results.put("AVG_ABORTED_COMMIT_WRITE_DURATION (usec)", str((aborted_commitWriteDurations / nrWrFailuresOnCommit)));
       } else {
-         results.put("AVG_ABORTED_COMMIT_WRITE_DURATION (usec)",str(0));
+         results.put("AVG_ABORTED_COMMIT_WRITE_DURATION (usec)", str(0));
       }
 
 
-      if(writes + nrWrFailuresOnCommit != 0) {
-         results.put("AVG_COMMIT_WRITE_DURATION (usec)",str((commitWriteDurations/(writes + nrWrFailuresOnCommit))));
+      if (writes + nrWrFailuresOnCommit != 0) {
+         results.put("AVG_COMMIT_WRITE_DURATION (usec)", str((commitWriteDurations / (writes + nrWrFailuresOnCommit))));
       } else {
-         results.put("AVG_COMMIT_WRITE_DURATION (usec)",str(0));
+         results.put("AVG_COMMIT_WRITE_DURATION (usec)", str(0));
       }
 
-      if((reads+rdFailures)!=0)
-         results.put("AVG_RD_SERVICE_TIME (usec)",str(readServiceTimes/(reads+rdFailures)));
+      if ((reads + rdFailures) != 0)
+         results.put("AVG_RD_SERVICE_TIME (usec)", str(readServiceTimes / (reads + rdFailures)));
       else
-         results.put("AVG_RD_SERVICE_TIME (usec)",str(0));
+         results.put("AVG_RD_SERVICE_TIME (usec)", str(0));
 
-      if((writes+wrFailures)!=0)
-         results.put("AVG_WR_SERVICE_TIME (usec)",str(writeServiceTimes/(writes+wrFailures)));
+      if ((writes + wrFailures) != 0)
+         results.put("AVG_WR_SERVICE_TIME (usec)", str(writeServiceTimes / (writes + wrFailures)));
       else
-         results.put("AVG_WR_SERVICE_TIME (usec)",str(0));
+         results.put("AVG_WR_SERVICE_TIME (usec)", str(0));
 
-      if((newOrderTransactions+newOrderFailures)!=0)
-         results.put("AVG_NEW_ORDER_SERVICE_TIME (usec)",str(newOrderServiceTimes/(newOrderTransactions+newOrderFailures)));
+      if ((newOrderTransactions + newOrderFailures) != 0)
+         results.put("AVG_NEW_ORDER_SERVICE_TIME (usec)", str(newOrderServiceTimes / (newOrderTransactions + newOrderFailures)));
       else
-         results.put("AVG_NEW_ORDER_SERVICE_TIME (usec)",str(0));
+         results.put("AVG_NEW_ORDER_SERVICE_TIME (usec)", str(0));
 
-      if((paymentTransactions+paymentFailures)!=0)
-         results.put("AVG_PAYMENT_SERVICE_TIME (usec)",str(paymentServiceTimes/(paymentTransactions+paymentFailures)));
+      if ((paymentTransactions + paymentFailures) != 0)
+         results.put("AVG_PAYMENT_SERVICE_TIME (usec)", str(paymentServiceTimes / (paymentTransactions + paymentFailures)));
       else
-         results.put("AVG_PAYMENT_SERVICE_TIME (usec)",str(0));
+         results.put("AVG_PAYMENT_SERVICE_TIME (usec)", str(0));
 
-      if(numWritesDequeued!=0)
-         results.put("AVG_WR_INQUEUE_TIME (usec)",str(writeInQueueTimes/numWritesDequeued));
+      if (numWritesDequeued != 0)
+         results.put("AVG_WR_INQUEUE_TIME (usec)", str(writeInQueueTimes / numWritesDequeued));
       else
-         results.put("AVG_WR_INQUEUE_TIME (usec)",str(0));
-      if(numReadsDequeued!=0)
-         results.put("AVG_RD_INQUEUE_TIME (usec)",str(readInQueueTimes/numReadsDequeued));
+         results.put("AVG_WR_INQUEUE_TIME (usec)", str(0));
+      if (numReadsDequeued != 0)
+         results.put("AVG_RD_INQUEUE_TIME (usec)", str(readInQueueTimes / numReadsDequeued));
       else
-         results.put("AVG_RD_INQUEUE_TIME (usec)",str(0));
-      if(numNewOrderDequeued!=0)
-         results.put("AVG_NEW_ORDER_INQUEUE_TIME (usec)",str(newOrderInQueueTimes/numNewOrderDequeued));
+         results.put("AVG_RD_INQUEUE_TIME (usec)", str(0));
+      if (numNewOrderDequeued != 0)
+         results.put("AVG_NEW_ORDER_INQUEUE_TIME (usec)", str(newOrderInQueueTimes / numNewOrderDequeued));
       else
-         results.put("AVG_NEW_ORDER_INQUEUE_TIME (usec)",str(0));
-      if(numPaymentDequeued!=0)
-         results.put("AVG_PAYMENT_INQUEUE_TIME (usec)",str(paymentInQueueTimes/numPaymentDequeued));
+         results.put("AVG_NEW_ORDER_INQUEUE_TIME (usec)", str(0));
+      if (numPaymentDequeued != 0)
+         results.put("AVG_PAYMENT_INQUEUE_TIME (usec)", str(paymentInQueueTimes / numPaymentDequeued));
       else
-         results.put("AVG_PAYMENT_INQUEUE_TIME (usec)",str(0));
+         results.put("AVG_PAYMENT_INQUEUE_TIME (usec)", str(0));
 
 
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
-               ". Test duration is: " + Utils.getDurationString(System.currentTimeMillis() - startTime));
+                     ". Test duration is: " + Utils.getDurationString(System.currentTimeMillis() - startTime));
       return results;
    }
 
@@ -438,10 +434,6 @@ public class TpccStressor implements CacheWrapperStressor {
       private long paymentInQueueTime = 0L;
 
 
-
-
-
-
       public Stressor(int threadIndex, int nodeIndex, long simulTime, double arrivalRate, double paymentWeight, double orderStatusWeight) {
          super("Stressor-" + threadIndex);
          this.threadIndex = threadIndex;
@@ -463,15 +455,14 @@ public class TpccStressor implements CacheWrapperStressor {
             log.warn(e);
          }
 
-         TpccTerminal terminal=new TpccTerminal(this.paymentWeight, this.orderStatusWeight, this.nodeIndex);
+         TpccTerminal terminal = new TpccTerminal(this.paymentWeight, this.orderStatusWeight, this.nodeIndex);
 
          long delta = 0L;
          long end = 0L;
-         long initTime=System.nanoTime();
+         long initTime = System.nanoTime();
 
          long commit_start = 0L;
          long endInQueueTime = 0L;
-
 
 
          TpccTransaction transaction;
@@ -479,28 +470,27 @@ public class TpccStressor implements CacheWrapperStressor {
          boolean isReadOnly = false;
          boolean successful = true;
 
-         while(delta < (this.simulTime*1000000000L)) {
+         while (delta < (this.simulTime * 1000000000L)) {
 
             isReadOnly = false;
             successful = true;
             transaction = null;
 
             long start = System.nanoTime();
-            if(arrivalRate != 0.0){  //Open system
-               try{
+            if (arrivalRate != 0.0) {  //Open system
+               try {
                   RequestType request = queue.take();
 
                   endInQueueTime = System.nanoTime();
 
-                  if(request.transactionType == TpccTerminal.NEW_ORDER){
+                  if (request.transactionType == TpccTerminal.NEW_ORDER) {
                      numWriteDequeued++;
                      numNewOrderDequeued++;
                      writeInQueueTime += endInQueueTime - request.timestamp;
                      newOrderInQueueTime += endInQueueTime - request.timestamp;
 
                      transaction = new NewOrderTransaction();
-                  }
-                  else if(request.transactionType == TpccTerminal.PAYMENT){
+                  } else if (request.transactionType == TpccTerminal.PAYMENT) {
                      numWriteDequeued++;
                      numPaymentDequeued++;
                      writeInQueueTime += endInQueueTime - request.timestamp;
@@ -508,8 +498,7 @@ public class TpccStressor implements CacheWrapperStressor {
 
                      transaction = new PaymentTransaction(nodeIndex);
 
-                  }
-                  else if(request.transactionType == TpccTerminal.ORDER_STATUS){
+                  } else if (request.transactionType == TpccTerminal.ORDER_STATUS) {
                      numReadDequeued++;
                      readInQueueTime += endInQueueTime - request.timestamp;
 
@@ -518,13 +507,10 @@ public class TpccStressor implements CacheWrapperStressor {
                   }
 
 
-
-               }
-               catch(InterruptedException ir){
+               } catch (InterruptedException ir) {
                   log.error("»»»»»»»THREAD INTERRUPTED WHILE TRYING GETTING AN OBJECT FROM THE QUEUE«««««««");
                }
-            }
-            else{
+            } else {
 
                transaction = terminal.choiceTransaction();
             }
@@ -535,17 +521,16 @@ public class TpccStressor implements CacheWrapperStressor {
 
             cacheWrapper.startTransaction();
 
-            try{
+            try {
                transaction.executeTransaction(cacheWrapper);
-            }
-            catch (Throwable e) {
-               successful=false;
+            } catch (Throwable e) {
+               successful = false;
                log.warn(e);
-               if(e instanceof ElementNotFoundException){
+               if (e instanceof ElementNotFoundException) {
                   this.appFailures++;
                }
 
-               if(e instanceof Exception) {
+               if (e instanceof Exception) {
                   e.printStackTrace();
                }
             }
@@ -553,98 +538,89 @@ public class TpccStressor implements CacheWrapperStressor {
             //here we try to finalize the transaction
             //if any read/write has failed we abort
             boolean measureCommitTime = false;
-            try{
+            try {
                /* In our tests we are interested in the commit time spent for write txs*/
-               if(successful && !isReadOnly){
+               if (successful && !isReadOnly) {
                   commit_start = System.nanoTime();
                   measureCommitTime = true;
                }
 
                cacheWrapper.endTransaction(successful);
 
-               if(!successful){
+               if (!successful) {
                   nrFailures++;
-                  if(!isReadOnly){
+                  if (!isReadOnly) {
                      nrWrFailures++;
-                     if(transaction instanceof NewOrderTransaction){
+                     if (transaction instanceof NewOrderTransaction) {
                         nrNewOrderFailures++;
-                     }
-                     else if(transaction instanceof PaymentTransaction){
+                     } else if (transaction instanceof PaymentTransaction) {
                         nrPaymentFailures++;
                      }
 
-                  }
-                  else{
+                  } else {
                      nrRdFailures++;
                   }
 
                }
-            }
-            catch(Throwable rb){
-               log.info(this.threadIndex+"Error while committing");
+            } catch (Throwable rb) {
+               log.info(this.threadIndex + "Error while committing");
 
                nrFailures++;
 
-               if(!isReadOnly){
+               if (!isReadOnly) {
                   nrWrFailures++;
                   nrWrFailuresOnCommit++;
-                  if(transaction instanceof NewOrderTransaction){
+                  if (transaction instanceof NewOrderTransaction) {
                      nrNewOrderFailures++;
-                  }
-                  else if(transaction instanceof PaymentTransaction){
+                  } else if (transaction instanceof PaymentTransaction) {
                      nrPaymentFailures++;
                   }
-               }
-               else{
+               } else {
                   nrRdFailures++;
                }
-               successful=false;
+               successful = false;
                log.warn(rb);
 
             }
 
 
-
             end = System.nanoTime();
 
 
-            if(this.arrivalRate==0.0){  //Closed system
-               start=startService;
+            if (this.arrivalRate == 0.0) {  //Closed system
+               start = startService;
             }
 
-            if(!isReadOnly){
+            if (!isReadOnly) {
                writeDuration += end - start;
                writeServiceTime += end - startService;
-               if(transaction instanceof NewOrderTransaction){
+               if (transaction instanceof NewOrderTransaction) {
                   newOrderDuration += end - start;
                   newOrderServiceTime += end - startService;
-               }
-               else if(transaction instanceof PaymentTransaction){
+               } else if (transaction instanceof PaymentTransaction) {
                   paymentDuration += end - start;
                   paymentServiceTime += end - startService;
                }
-               if(successful){
+               if (successful) {
                   successful_writeDuration += end - startService;
                   writes++;
-                  if(transaction instanceof PaymentTransaction){
+                  if (transaction instanceof PaymentTransaction) {
                      payment++;
-                  }
-                  else if(transaction instanceof NewOrderTransaction){
+                  } else if (transaction instanceof NewOrderTransaction) {
                      newOrder++;
                   }
                }
-            }
-            else{
+            } else {
                readDuration += end - start;
-               readServiceTime += end -startService;
-               if(successful){
+               readServiceTime += end - startService;
+               if (successful) {
                   reads++;
                   successful_readDuration += end - startService;
                }
             }
 
-            if(measureCommitTime) {
-               if(successful) {
+            if (measureCommitTime) {
+               if (successful) {
                   this.successful_commitWriteDuration += end - commit_start;
                } else {
                   this.aborted_commitWriteDuration += end - commit_start;
@@ -655,12 +631,10 @@ public class TpccStressor implements CacheWrapperStressor {
 
             delta = end - initTime;
          }
-         
+
          completedThread.incrementAndGet();
 
       }
-
-
 
 
       public long totalDuration() {
@@ -670,7 +644,7 @@ public class TpccStressor implements CacheWrapperStressor {
 
    }
 
-   private class Producer extends Thread{
+   private class Producer extends Thread {
 
 
       private double transaction_weight;    //an integer in [0,100]
@@ -678,37 +652,35 @@ public class TpccStressor implements CacheWrapperStressor {
       private double producerRate;
       private Random random;
 
-      public Producer(int transaction_type, double transaction_weight){
+      public Producer(int transaction_type, double transaction_weight) {
 
-         this.transaction_weight=transaction_weight;
-         this.transaction_type=transaction_type;
-         this.producerRate=((arrivalRate/1000.0)*(this.transaction_weight/100.0)) / numSlaves;
-         this.random=new Random(System.currentTimeMillis());
+         this.transaction_weight = transaction_weight;
+         this.transaction_type = transaction_type;
+         this.producerRate = ((arrivalRate / 1000.0) * (this.transaction_weight / 100.0)) / numSlaves;
+         this.random = new Random(System.currentTimeMillis());
 
 
       }
 
-      public void run(){
+      public void run() {
 
          long time;
 
-         while(completedThread.get() != numOfThreads){
+         while (completedThread.get() != numOfThreads) {
 
-            try{
+            try {
 
 
-               queue.add(new RequestType(System.nanoTime(),this.transaction_type));
+               queue.add(new RequestType(System.nanoTime(), this.transaction_type));
                countJobs.incrementAndGet();
 
 
-               time =(long) (exp(this.producerRate));
+               time = (long) (exp(this.producerRate));
 
                Thread.sleep(time);
-            }
-            catch(InterruptedException i){
+            } catch (InterruptedException i) {
                log.error("»»»»»»INTERRUPTED_EXCEPTION«««««««");
-            }
-            catch(IllegalStateException il){
+            } catch (IllegalStateException il) {
                log.error("»»»»»»»CODA PIENA«««««««««");
 
             }
@@ -724,12 +696,12 @@ public class TpccStressor implements CacheWrapperStressor {
 
    }
 
-   private class RequestType{
+   private class RequestType {
 
       private long timestamp;
       private int transactionType;
 
-      public RequestType(long timestamp, int transactionType){
+      public RequestType(long timestamp, int transactionType) {
          this.timestamp = timestamp;
          this.transactionType = transactionType;
       }
@@ -752,7 +724,7 @@ public class TpccStressor implements CacheWrapperStressor {
       this.nodeIndex = nodeIndex;
    }
 
-   public void setNumSlaves(int value){
+   public void setNumSlaves(int value) {
       this.numSlaves = value;
    }
 
@@ -776,14 +748,14 @@ public class TpccStressor implements CacheWrapperStressor {
    @Override
    public String toString() {
       return "TpccStressor{" +
-               ", perThreadSimulTime=" + perThreadSimulTime +
-               ", arrivalRate=" + arrivalRate +
-               ", paymentWeight=" + paymentWeight +
-               ", orderStatusWeight=" + orderStatusWeight +
-               ", numOfThreads=" + numOfThreads +
-               ", cacheWrapper=" + cacheWrapper +
-               ", nodeIndex=" + nodeIndex +
-               "}";
+            ", perThreadSimulTime=" + perThreadSimulTime +
+            ", arrivalRate=" + arrivalRate +
+            ", paymentWeight=" + paymentWeight +
+            ", orderStatusWeight=" + orderStatusWeight +
+            ", numOfThreads=" + numOfThreads +
+            ", cacheWrapper=" + cacheWrapper +
+            ", nodeIndex=" + nodeIndex +
+            "}";
    }
 
 }

@@ -7,8 +7,6 @@ import org.radargun.tpcc.transaction.TpccTransaction;
 
 
 /**
- * 
- * 
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
 public class TpccTerminal {
@@ -24,26 +22,24 @@ public class TpccTerminal {
    private int indexNode;
 
 
-   public TpccTerminal(double paymentWeight, double orderStatusWeight, int indexNode){
+   public TpccTerminal(double paymentWeight, double orderStatusWeight, int indexNode) {
 
       this.paymentWeight = paymentWeight;
       this.orderStatusWeight = orderStatusWeight;
-      this.indexNode=indexNode;
+      this.indexNode = indexNode;
    }
 
-   public TpccTransaction choiceTransaction(){
+   public TpccTransaction choiceTransaction() {
 
-      double transactionType = TpccTools.doubleRandomNumber(0,100);
+      double transactionType = TpccTools.doubleRandomNumber(0, 100);
 
 
-      if(transactionType <= this.paymentWeight){
+      if (transactionType <= this.paymentWeight) {
          return new PaymentTransaction(this.indexNode);
-      }
-      else if(transactionType <= this.paymentWeight + this.orderStatusWeight){
+      } else if (transactionType <= this.paymentWeight + this.orderStatusWeight) {
          return new OrderStatusTransaction();
 
-      }
-      else{
+      } else {
          return new NewOrderTransaction();
       }
 

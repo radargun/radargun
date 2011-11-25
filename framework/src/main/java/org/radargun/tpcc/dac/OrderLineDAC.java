@@ -1,43 +1,42 @@
 package org.radargun.tpcc.dac;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.radargun.CacheWrapper;
 import org.radargun.tpcc.domain.Order;
 import org.radargun.tpcc.domain.OrderLine;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * 
- *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
 public final class OrderLineDAC {
-   
-   private OrderLineDAC(){}
 
-   public static List<OrderLine> loadByOrder(CacheWrapper cacheWrapper, Order order) throws Throwable{
+   private OrderLineDAC() {
+   }
 
-      List<OrderLine> list=new ArrayList<OrderLine>();
+   public static List<OrderLine> loadByOrder(CacheWrapper cacheWrapper, Order order) throws Throwable {
 
-      if(order==null) return list;
+      List<OrderLine> list = new ArrayList<OrderLine>();
 
-      int numLines=order.getO_ol_cnt();
+      if (order == null) return list;
 
-      OrderLine current=null;
-      boolean found=false;
+      int numLines = order.getO_ol_cnt();
 
-      for(int i=0; i<numLines; i++){
+      OrderLine current = null;
+      boolean found = false;
 
-         current= new OrderLine();
+      for (int i = 0; i < numLines; i++) {
+
+         current = new OrderLine();
          current.setOl_w_id(order.getO_w_id());
          current.setOl_d_id(order.getO_d_id());
          current.setOl_o_id(order.getO_id());
          current.setOl_number(i);
 
-         found=current.load(cacheWrapper);
+         found = current.load(cacheWrapper);
 
-         if(found) list.add(current);
+         if (found) list.add(current);
 
       }
 

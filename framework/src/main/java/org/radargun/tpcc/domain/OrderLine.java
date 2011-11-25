@@ -1,37 +1,35 @@
 package org.radargun.tpcc.domain;
 
+import org.radargun.CacheWrapper;
+
 import java.io.Serializable;
 import java.util.Date;
 
-import org.radargun.CacheWrapper;
-
 /**
- * 
- *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
 public class OrderLine implements Serializable {
-   
+
    private long ol_o_id;
-   
+
    private long ol_d_id;
-   
+
    private long ol_w_id;
-   
+
    private long ol_number;
-   
+
    private long ol_i_id;
-   
+
    private long ol_supply_w_id;
-   
+
    private long ol_delivery_d;
-   
+
    private long ol_quantity;
-   
+
    private double ol_amount;
-   
+
    private String ol_dist_info;
-   
+
 
    public OrderLine() {
    }
@@ -43,7 +41,7 @@ public class OrderLine implements Serializable {
       this.ol_number = ol_number;
       this.ol_i_id = ol_i_id;
       this.ol_supply_w_id = ol_supply_w_id;
-      this.ol_delivery_d = (ol_delivery_d==null)?-1:ol_delivery_d.getTime();
+      this.ol_delivery_d = (ol_delivery_d == null) ? -1 : ol_delivery_d.getTime();
       this.ol_quantity = ol_quantity;
       this.ol_amount = ol_amount;
       this.ol_dist_info = ol_dist_info;
@@ -74,7 +72,7 @@ public class OrderLine implements Serializable {
    }
 
    public Date getOl_delivery_d() {
-      return (ol_delivery_d==-1)?null:new Date(ol_delivery_d);
+      return (ol_delivery_d == -1) ? null : new Date(ol_delivery_d);
    }
 
    public long getOl_quantity() {
@@ -114,7 +112,7 @@ public class OrderLine implements Serializable {
    }
 
    public void setOl_delivery_d(Date ol_delivery_d) {
-      this.ol_delivery_d = (ol_delivery_d==null)?-1:ol_delivery_d.getTime();
+      this.ol_delivery_d = (ol_delivery_d == null) ? -1 : ol_delivery_d.getTime();
    }
 
    public void setOl_quantity(long ol_quantity) {
@@ -129,28 +127,27 @@ public class OrderLine implements Serializable {
       this.ol_dist_info = ol_dist_info;
    }
 
-   private String getKey(){
-      return "ORDERLINE_"+this.ol_w_id+"_"+this.ol_d_id+"_"+this.ol_o_id+"_"+this.ol_number;
+   private String getKey() {
+      return "ORDERLINE_" + this.ol_w_id + "_" + this.ol_d_id + "_" + this.ol_o_id + "_" + this.ol_number;
    }
 
-   public void store(CacheWrapper wrapper)throws Throwable{
+   public void store(CacheWrapper wrapper) throws Throwable {
 
-      wrapper.put(null,this.getKey(), this);
+      wrapper.put(null, this.getKey(), this);
    }
 
-   public boolean load(CacheWrapper wrapper)throws Throwable{
+   public boolean load(CacheWrapper wrapper) throws Throwable {
 
-      OrderLine loaded=(OrderLine)wrapper.get(null,this.getKey());
+      OrderLine loaded = (OrderLine) wrapper.get(null, this.getKey());
 
-      if(loaded==null) return false;
+      if (loaded == null) return false;
 
-      this.ol_i_id=loaded.ol_i_id;
-      this.ol_supply_w_id=loaded.ol_supply_w_id;
-      this.ol_delivery_d =loaded.ol_delivery_d;
-      this.ol_quantity =loaded.ol_quantity;
-      this.ol_amount  =loaded.ol_amount;
-      this.ol_dist_info =loaded.ol_dist_info;
-
+      this.ol_i_id = loaded.ol_i_id;
+      this.ol_supply_w_id = loaded.ol_supply_w_id;
+      this.ol_delivery_d = loaded.ol_delivery_d;
+      this.ol_quantity = loaded.ol_quantity;
+      this.ol_amount = loaded.ol_amount;
+      this.ol_dist_info = loaded.ol_dist_info;
 
 
       return true;

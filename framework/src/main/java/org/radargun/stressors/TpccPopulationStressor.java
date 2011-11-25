@@ -17,18 +17,18 @@ import org.radargun.tpcc.TpccTools;
  *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
-public class TpccPopulationStressor implements CacheWrapperStressor{
-   
+public class TpccPopulationStressor implements CacheWrapperStressor {
+
    private static Log log = LogFactory.getLog(TpccPopulationStage.class);
-   
+
    private int numWarehouses;
-   
+
    private long cLastMask = 255L;
-   
+
    private long olIdMask = 8191L;
-   
+
    private long cIdMask = 1023L;
-   
+
    private int slaveIndex;
 
    private int numSlaves;
@@ -43,45 +43,45 @@ public class TpccPopulationStressor implements CacheWrapperStressor{
          log.info("Performing Population Operations");
          performPopulationOperations(wrapper);
       } catch (Exception e) {
-         log.warn("Received exception durring cache population" + e.getMessage());
+         log.warn("Received exception during cache population" + e.getMessage());
       }
       return null;
    }
 
    public void performPopulationOperations(CacheWrapper w) throws Exception {
       this.wrapper = w;
-      log.info("Peforming population...");
+      log.info("Performing population...");
       new TpccPopulation(this.wrapper, this.numWarehouses, this.slaveIndex, this.numSlaves, this.cLastMask, this.olIdMask, this.cIdMask);
       log.info("Population ended");
    }
-   
-   public void setNumWarehouses(int numWarehouses){
-      
+
+   public void setNumWarehouses(int numWarehouses) {
+
       this.numWarehouses = numWarehouses;
    }
-   
-   public void setSlaveIndex(int slaveIndex){
-      
+
+   public void setSlaveIndex(int slaveIndex) {
+
       this.slaveIndex = slaveIndex;
    }
-   
-   public void setNumSlaves(int numSlaves){
-      
+
+   public void setNumSlaves(int numSlaves) {
+
       this.numSlaves = numSlaves;
    }
-   
+
    public void setCLastMask(long cLastMask) {
-      this.cLastMask=cLastMask;
-      
+      this.cLastMask = cLastMask;
+
    }
 
    public void setOlIdMask(long olIdMask) {
-      this.olIdMask=olIdMask;
-      
+      this.olIdMask = olIdMask;
+
    }
 
    public void setCIdMask(long cIdMask) {
-      this.cIdMask=cIdMask;
+      this.cIdMask = cIdMask;
    }
 
    @Override
@@ -97,7 +97,7 @@ public class TpccPopulationStressor implements CacheWrapperStressor{
 
 
    public void destroy() throws Exception {
-      
+
       //Don't destroy data in cache!
    }
 

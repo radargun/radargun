@@ -1,37 +1,35 @@
 package org.radargun.tpcc.domain;
 
-import java.io.Serializable;
-
 import org.radargun.CacheWrapper;
 
+import java.io.Serializable;
+
 /**
- * 
- *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
 public class Warehouse implements Serializable {
-   
+
    private long w_id;
-   
+
    private String w_name;
-   
+
    private String w_street1;
-   
+
    private String w_street2;
-   
+
    private String w_city;
-   
+
    private String w_state;
-   
+
    private String w_zip;
-   
+
    private double w_tax;
-   
+
    private double w_ytd;
-   
+
 
    public Warehouse() {
-      
+
    }
 
    public Warehouse(long w_id, String w_name, String w_street1, String w_street2, String w_city, String w_state, String w_zip, double w_tax, double w_ytd) {
@@ -119,29 +117,29 @@ public class Warehouse implements Serializable {
       return w_ytd;
    }
 
-   private String getKey(){
-      return "WAREHOUSE_"+this.w_id;
+   private String getKey() {
+      return "WAREHOUSE_" + this.w_id;
    }
 
-   public void store(CacheWrapper wrapper)throws Throwable{
+   public void store(CacheWrapper wrapper) throws Throwable {
 
-      wrapper.put(null,this.getKey(), this);
+      wrapper.put(null, this.getKey(), this);
    }
 
-   public boolean load(CacheWrapper wrapper)throws Throwable{
+   public boolean load(CacheWrapper wrapper) throws Throwable {
 
-      Warehouse loaded=(Warehouse)wrapper.get(null,this.getKey());
+      Warehouse loaded = (Warehouse) wrapper.get(null, this.getKey());
 
-      if(loaded==null) return false;
+      if (loaded == null) return false;
 
-      this.w_city=loaded.w_city;
-      this.w_name=loaded.w_name;
-      this.w_state=loaded.w_state;
-      this.w_street1=loaded.w_street1;
-      this.w_street2=loaded.w_street2;
-      this.w_tax=loaded.w_tax;
-      this.w_ytd=loaded.w_ytd;
-      this.w_zip=loaded.w_zip;
+      this.w_city = loaded.w_city;
+      this.w_name = loaded.w_name;
+      this.w_state = loaded.w_state;
+      this.w_street1 = loaded.w_street1;
+      this.w_street2 = loaded.w_street2;
+      this.w_tax = loaded.w_tax;
+      this.w_ytd = loaded.w_ytd;
+      this.w_zip = loaded.w_zip;
 
       return true;
    }

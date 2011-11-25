@@ -1,57 +1,55 @@
 package org.radargun.tpcc.domain;
 
+import org.radargun.CacheWrapper;
+
 import java.io.Serializable;
 import java.util.Date;
 
-import org.radargun.CacheWrapper;
-
 /**
- * 
- *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
-public class Customer implements Serializable, Comparable{
-   
+public class Customer implements Serializable, Comparable {
+
    private long c_w_id;
-   
+
    private long c_d_id;
-   
+
    private long c_id;
-   
+
    private String c_first;
-   
+
    private String c_middle;
-   
+
    private String c_last;
-   
+
    private String c_street1;
-   
+
    private String c_street2;
-   
+
    private String c_city;
-   
+
    private String c_state;
-   
+
    private String c_zip;
-   
+
    private String c_phone;
-   
+
    private long c_since;
-   
+
    private String c_credit;
-   
+
    private double c_credit_lim;
-   
+
    private double c_discount;
-   
+
    private double c_balance;
-   
+
    private double c_ytd_payment;
-   
+
    private int c_payment_cnt;
-   
+
    private int c_delivery_cnt;
-   
+
    private String c_data;
 
    public Customer() {
@@ -71,7 +69,7 @@ public class Customer implements Serializable, Comparable{
       this.c_state = c_state;
       this.c_zip = c_zip;
       this.c_phone = c_phone;
-      this.c_since = (c_since==null)?-1:c_since.getTime();
+      this.c_since = (c_since == null) ? -1 : c_since.getTime();
       this.c_credit = c_credit;
       this.c_credit_lim = c_credit_lim;
       this.c_discount = c_discount;
@@ -79,7 +77,7 @@ public class Customer implements Serializable, Comparable{
       this.c_ytd_payment = c_ytd_payment;
       this.c_payment_cnt = c_payment_cnt;
       this.c_delivery_cnt = c_delivery_cnt;
-      this.c_data=c_data;
+      this.c_data = c_data;
    }
 
    public long getC_w_id() {
@@ -131,7 +129,7 @@ public class Customer implements Serializable, Comparable{
    }
 
    public Date getC_since() {
-      return (c_since==-1)?null:new Date(c_since);
+      return (c_since == -1) ? null : new Date(c_since);
    }
 
    public String getC_credit() {
@@ -215,7 +213,7 @@ public class Customer implements Serializable, Comparable{
    }
 
    public void setC_since(Date c_since) {
-      this.c_since = (c_since==null)?-1:c_since.getTime();
+      this.c_since = (c_since == null) ? -1 : c_since.getTime();
    }
 
    public void setC_credit(String c_credit) {
@@ -250,39 +248,39 @@ public class Customer implements Serializable, Comparable{
       this.c_data = c_data;
    }
 
-   private String getKey(){
-      return "CUSTOMER_"+this.c_w_id+"_"+this.c_d_id+"_"+this.c_id;
+   private String getKey() {
+      return "CUSTOMER_" + this.c_w_id + "_" + this.c_d_id + "_" + this.c_id;
    }
 
-   public void store(CacheWrapper wrapper)throws Throwable{
+   public void store(CacheWrapper wrapper) throws Throwable {
 
-      wrapper.put(null,this.getKey(), this);
+      wrapper.put(null, this.getKey(), this);
    }
 
-   public boolean load(CacheWrapper wrapper)throws Throwable{
+   public boolean load(CacheWrapper wrapper) throws Throwable {
 
-      Customer loaded=(Customer)wrapper.get(null,this.getKey());
+      Customer loaded = (Customer) wrapper.get(null, this.getKey());
 
-      if(loaded==null) return false;
+      if (loaded == null) return false;
 
-      this.c_balance=loaded.c_balance;
-      this.c_city=loaded.c_city;
-      this.c_credit=loaded.c_credit;
-      this.c_credit_lim=loaded.c_credit_lim;
-      this.c_data=loaded.c_data;
-      this.c_delivery_cnt=loaded.c_delivery_cnt;
-      this.c_discount=loaded.c_discount;
-      this.c_first=loaded.c_first;
-      this.c_last=loaded.c_last;
-      this.c_middle=loaded.c_middle;
-      this.c_payment_cnt=loaded.c_payment_cnt;
-      this.c_phone=loaded.c_phone;
-      this.c_since=loaded.c_since;
-      this.c_state=loaded.c_state;
-      this.c_street1=loaded.c_street1;
-      this.c_street2=loaded.c_street2;
-      this.c_ytd_payment=loaded.c_ytd_payment;
-      this.c_zip=loaded.c_zip;
+      this.c_balance = loaded.c_balance;
+      this.c_city = loaded.c_city;
+      this.c_credit = loaded.c_credit;
+      this.c_credit_lim = loaded.c_credit_lim;
+      this.c_data = loaded.c_data;
+      this.c_delivery_cnt = loaded.c_delivery_cnt;
+      this.c_discount = loaded.c_discount;
+      this.c_first = loaded.c_first;
+      this.c_last = loaded.c_last;
+      this.c_middle = loaded.c_middle;
+      this.c_payment_cnt = loaded.c_payment_cnt;
+      this.c_phone = loaded.c_phone;
+      this.c_since = loaded.c_since;
+      this.c_state = loaded.c_state;
+      this.c_street1 = loaded.c_street1;
+      this.c_street2 = loaded.c_street2;
+      this.c_ytd_payment = loaded.c_ytd_payment;
+      this.c_zip = loaded.c_zip;
 
 
       return true;
@@ -290,12 +288,12 @@ public class Customer implements Serializable, Comparable{
 
    @Override
    public int compareTo(Object o) {
-      if(o==null || !(o instanceof Customer)) return -1;
+      if (o == null || !(o instanceof Customer)) return -1;
 
-      Customer other=(Customer) o;
-      if(this.c_first!=null)
+      Customer other = (Customer) o;
+      if (this.c_first != null)
          return this.c_first.compareTo(other.c_first);
-      else if(other.c_first!=null)
+      else if (other.c_first != null)
          return 1;
       else
          return 0;
@@ -364,6 +362,6 @@ public class Customer implements Serializable, Comparable{
       result = 31 * result + (c_data != null ? c_data.hashCode() : 0);
       return result;
 
-   }  
+   }
 
 }

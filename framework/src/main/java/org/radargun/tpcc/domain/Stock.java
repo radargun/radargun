@@ -1,53 +1,51 @@
 package org.radargun.tpcc.domain;
 
-import java.io.Serializable;
-
 import org.radargun.CacheWrapper;
 
+import java.io.Serializable;
+
 /**
- * 
- *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
 public class Stock implements Serializable {
-   
+
    private long s_i_id;
-   
+
    private long s_w_id;
-   
+
    private long s_quantity;
-   
+
    private String s_dist_01;
-   
+
    private String s_dist_02;
-   
+
    private String s_dist_03;
-   
+
    private String s_dist_04;
-   
+
    private String s_dist_05;
-   
+
    private String s_dist_06;
-   
+
    private String s_dist_07;
-   
+
    private String s_dist_08;
-   
+
    private String s_dist_09;
-   
+
    private String s_dist_10;
-   
+
    private long s_ytd;
-   
+
    private int s_order_cnt;
-   
+
    private int s_remote_cnt;
-   
+
    private String s_data;
-   
+
 
    public Stock() {
-      
+
    }
 
    public Stock(long s_i_id, long s_w_id, long s_quantity, String s_dist_01, String s_dist_02, String s_dist_03, String s_dist_04, String s_dist_05, String s_dist_06, String s_dist_07, String s_dist_08, String s_dist_09, String s_dist_10, long s_ytd, int s_order_cnt, int s_remote_cnt, String s_data) {
@@ -206,37 +204,36 @@ public class Stock implements Serializable {
       this.s_data = s_data;
    }
 
-   private String getKey(){
-      return "STOCK_"+this.s_w_id+"_"+this.s_i_id;
+   private String getKey() {
+      return "STOCK_" + this.s_w_id + "_" + this.s_i_id;
    }
 
-   public void store(CacheWrapper wrapper)throws Throwable{
+   public void store(CacheWrapper wrapper) throws Throwable {
 
-      wrapper.put(null,this.getKey(), this);
+      wrapper.put(null, this.getKey(), this);
    }
 
-   public boolean load(CacheWrapper wrapper)throws Throwable{
+   public boolean load(CacheWrapper wrapper) throws Throwable {
 
-      Stock loaded=(Stock)wrapper.get(null,this.getKey());
+      Stock loaded = (Stock) wrapper.get(null, this.getKey());
 
-      if(loaded==null) return false;
+      if (loaded == null) return false;
 
-      this.s_data=loaded.s_data;
-      this.s_dist_01=loaded.s_dist_01;
-      this.s_dist_02=loaded.s_dist_02;
-      this.s_dist_03=loaded.s_dist_03;
-      this.s_dist_04=loaded.s_dist_04;
-      this.s_dist_05=loaded.s_dist_05;
-      this.s_dist_06=loaded.s_dist_06;
-      this.s_dist_07=loaded.s_dist_07;
-      this.s_dist_08=loaded.s_dist_08;
-      this.s_dist_09=loaded.s_dist_09;
-      this.s_dist_10=loaded.s_dist_10;
-      this.s_order_cnt=loaded.s_order_cnt;
-      this.s_quantity=loaded.s_quantity;
-      this.s_remote_cnt=loaded.s_remote_cnt;
-      this.s_ytd=loaded.s_ytd;
-
+      this.s_data = loaded.s_data;
+      this.s_dist_01 = loaded.s_dist_01;
+      this.s_dist_02 = loaded.s_dist_02;
+      this.s_dist_03 = loaded.s_dist_03;
+      this.s_dist_04 = loaded.s_dist_04;
+      this.s_dist_05 = loaded.s_dist_05;
+      this.s_dist_06 = loaded.s_dist_06;
+      this.s_dist_07 = loaded.s_dist_07;
+      this.s_dist_08 = loaded.s_dist_08;
+      this.s_dist_09 = loaded.s_dist_09;
+      this.s_dist_10 = loaded.s_dist_10;
+      this.s_order_cnt = loaded.s_order_cnt;
+      this.s_quantity = loaded.s_quantity;
+      this.s_remote_cnt = loaded.s_remote_cnt;
+      this.s_ytd = loaded.s_ytd;
 
 
       return true;

@@ -1,16 +1,14 @@
 package org.radargun.tpcc.domain;
 
-import java.io.Serializable;
-
 import org.radargun.CacheWrapper;
 
+import java.io.Serializable;
+
 /**
- * 
- *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
 public class Item implements Serializable {
-   
+
    private long i_id;
 
    private long i_im_id;
@@ -73,12 +71,12 @@ public class Item implements Serializable {
       this.i_data = i_data;
    }
 
-   private String getKey(){
+   private String getKey() {
 
-      return "ITEM_"+this.i_id;
+      return "ITEM_" + this.i_id;
    }
 
-   public void store(CacheWrapper wrapper) throws Throwable{
+   public void store(CacheWrapper wrapper) throws Throwable {
 
 
       wrapper.put(null, this.getKey(), this);
@@ -86,16 +84,16 @@ public class Item implements Serializable {
 
    }
 
-   public boolean load(CacheWrapper wrapper)throws Throwable{
+   public boolean load(CacheWrapper wrapper) throws Throwable {
 
-      Item loaded=(Item)wrapper.get(null,this.getKey());
+      Item loaded = (Item) wrapper.get(null, this.getKey());
 
-      if(loaded==null) return false;
+      if (loaded == null) return false;
 
-      this.i_data=loaded.i_data;
-      this.i_im_id=loaded.i_im_id;
-      this.i_name=loaded.i_name;
-      this.i_price=loaded.i_price;
+      this.i_data = loaded.i_data;
+      this.i_im_id = loaded.i_im_id;
+      this.i_name = loaded.i_name;
+      this.i_price = loaded.i_price;
 
 
       return true;

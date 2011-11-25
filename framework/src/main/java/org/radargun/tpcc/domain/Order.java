@@ -1,17 +1,15 @@
 package org.radargun.tpcc.domain;
 
+import org.radargun.CacheWrapper;
+
 import java.io.Serializable;
 import java.util.Date;
 
-import org.radargun.CacheWrapper;
-
 /**
- * 
- *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
 public class Order implements Serializable, Comparable {
-   
+
    private long o_id;
 
    private long o_d_id;
@@ -38,7 +36,7 @@ public class Order implements Serializable, Comparable {
       this.o_d_id = o_d_id;
       this.o_w_id = o_w_id;
       this.o_c_id = o_c_id;
-      this.o_entry_d = (o_entry_d==null)?-1:o_entry_d.getTime();
+      this.o_entry_d = (o_entry_d == null) ? -1 : o_entry_d.getTime();
       this.o_carrier_id = o_carrier_id;
       this.o_ol_cnt = o_ol_cnt;
       this.o_all_local = o_all_local;
@@ -61,7 +59,7 @@ public class Order implements Serializable, Comparable {
    }
 
    public Date getO_entry_d() {
-      return o_entry_d==-1?null:new Date(o_entry_d);
+      return o_entry_d == -1 ? null : new Date(o_entry_d);
    }
 
    public long getO_carrier_id() {
@@ -93,7 +91,7 @@ public class Order implements Serializable, Comparable {
    }
 
    public void setO_entry_d(Date o_entry_d) {
-      this.o_entry_d = (o_entry_d==null)?-1:o_entry_d.getTime();
+      this.o_entry_d = (o_entry_d == null) ? -1 : o_entry_d.getTime();
    }
 
    public void setO_carrier_id(long o_carrier_id) {
@@ -108,27 +106,27 @@ public class Order implements Serializable, Comparable {
       this.o_all_local = o_all_local;
    }
 
-   private String getKey(){
-      return "ORDER_"+this.o_w_id+"_"+this.o_d_id+"_"+this.o_id;
+   private String getKey() {
+      return "ORDER_" + this.o_w_id + "_" + this.o_d_id + "_" + this.o_id;
    }
 
-   public void store(CacheWrapper wrapper)throws Throwable{
+   public void store(CacheWrapper wrapper) throws Throwable {
 
-      wrapper.put(null,this.getKey(), this);
+      wrapper.put(null, this.getKey(), this);
    }
 
-   public boolean load(CacheWrapper wrapper)throws Throwable{
+   public boolean load(CacheWrapper wrapper) throws Throwable {
 
-      Order loaded=(Order)wrapper.get(null,this.getKey());
+      Order loaded = (Order) wrapper.get(null, this.getKey());
 
-      if(loaded==null) return false;
+      if (loaded == null) return false;
 
 
-      this.o_c_id=loaded.o_c_id;
-      this.o_carrier_id=loaded.o_carrier_id;
-      this.o_entry_d=loaded.o_entry_d;
-      this.o_ol_cnt=loaded.o_ol_cnt;
-      this.o_all_local=loaded.o_all_local;
+      this.o_c_id = loaded.o_c_id;
+      this.o_carrier_id = loaded.o_carrier_id;
+      this.o_entry_d = loaded.o_entry_d;
+      this.o_ol_cnt = loaded.o_ol_cnt;
+      this.o_all_local = loaded.o_all_local;
 
 
       return true;
@@ -138,12 +136,12 @@ public class Order implements Serializable, Comparable {
    //For a decreasing order in sort operation
    @Override
    public int compareTo(Object o) {
-      if(o==null || !(o instanceof Order)) return -1;
+      if (o == null || !(o instanceof Order)) return -1;
 
-      Order other=(Order) o;
+      Order other = (Order) o;
 
-      if(this.o_id==other.o_id)return 0;
-      else if(this.o_id>other.o_id)return -1;
+      if (this.o_id == other.o_id) return 0;
+      else if (this.o_id > other.o_id) return -1;
       else return 1;
    }
 
