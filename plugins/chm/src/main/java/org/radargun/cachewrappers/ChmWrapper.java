@@ -49,7 +49,7 @@ public class ChmWrapper implements CacheWrapper {
       return null;
    }
 
-   public Transaction startTransaction() {
+   public void startTransaction() {
       throw new IllegalStateException("This is not transactional");
    }
 
