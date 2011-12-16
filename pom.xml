@@ -17,8 +17,9 @@
       <module>plugins/jgroups</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
-      <module>plugins/ehcache17</module>
+      <module>plugins/ehcache25</module>
       <module>plugins/terracotta3</module>
+      <module>plugins/chm</module>
    </modules>
 
    <scm>
@@ -111,7 +112,7 @@
                   </goals>
                   <configuration>
                      <tasks>
-                        <echo message="Packaging the framework, and the following plugins: infinispan4, infinispan5, infinispan50, jbosscache2, jbosscache3, ehcache17" />
+                        <echo message="Packaging the framework, and the following plugins: infinispan4, infinispan5, infinispan50, jbosscache2, jbosscache3, ehcache25" />
 
                         <copy todir="${distribution.artifact}/plugins/infinispan4">
                            <fileset dir="plugins/infinispan4/target/distribution/plugin-infinispan4-bin/plugin-infinispan4">
@@ -149,14 +150,20 @@
                            </fileset>
                         </copy>
 
-                        <copy todir="${distribution.artifact}/plugins/ehcache17">
-                           <fileset dir="plugins/ehcache17/target/distribution/plugin-ehcache17-bin/plugin-ehcache17">
+                        <copy todir="${distribution.artifact}/plugins/ehcache25">
+                           <fileset dir="plugins/ehcache25/target/distribution/plugin-ehcache25-bin/plugin-ehcache25">
                               <include name="**/*" />
                            </fileset>
                         </copy>                        
 
                         <copy todir="${distribution.artifact}/plugins/terracotta3">
                            <fileset dir="plugins/terracotta3/target/distribution/plugin-terracotta3-bin/plugin-terracotta3">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/chm">
+                           <fileset dir="plugins/chm/target/distribution/plugin-chm-bin/plugin-chm">
                               <include name="**/*" />
                            </fileset>
                         </copy>

@@ -17,7 +17,7 @@ import org.radargun.tpcc.TpccTools;
  *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
-public class TpccPopulationStressor implements CacheWrapperStressor {
+public class TpccPopulationStressor extends AbstractCacheWrapperStressor {
 
    private static Log log = LogFactory.getLog(TpccPopulationStage.class);
 

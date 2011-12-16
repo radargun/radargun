@@ -30,7 +30,7 @@ import org.radargun.utils.Utils;
  *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
-public class TpccStressor implements CacheWrapperStressor {
+public class TpccStressor extends AbstractCacheWrapperStressor {
 
    private static Log log = LogFactory.getLog(TpccStressor.class);
 

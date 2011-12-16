@@ -26,6 +26,8 @@ public class LocalConfigParser {
 
    private static Log log = LogFactory.getLog(LocalConfigParser.class);
 
+   List<ReportItem> all = new ArrayList<ReportItem>();
+
 
    public LocalBenchmark parse(String config) throws Exception {
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -77,7 +79,9 @@ public class LocalConfigParser {
 
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
                Element configEl = (Element) configs.item(configIndex);
-               configNames.add(DomConfigParser.getAttributes(configEl));
+               Properties configAttrs = DomConfigParser.getAttributes(configEl);
+               configNames.add(configAttrs);
+               all.add(new ReportItem(productName, configAttrs.getProperty("name")));
             }
             localBenchmark.addProductConfig(productName, configNames);
          }
@@ -96,6 +100,7 @@ public class LocalConfigParser {
                String inclAll = ConfigHelper.getStrAttribute(thisReportEl, "includeAll");
                if (inclAll.equalsIgnoreCase("true")) {
                   reportDesc.setIncludeAll(true);
+                  reportDesc.addReportItems(all);
                   localBenchmark.addReportDesc(reportDesc);
                   reportDesc.setReportName(ConfigHelper.getStrAttribute(thisReportEl, "name"));
                   continue;

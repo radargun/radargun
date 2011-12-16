@@ -6,7 +6,7 @@
          This will average to 10000 requests per thread, although a work-stealing pattern is used so some threads may
          do more work than others.
        -->
-      <PutGet numberOfRequests="250000" opsCountStatusLog="10000" numOfThreads="25"/>
+      <PutGet numberOfRequests="250000" opsCountStatusLog="10000" numOfThreads="25" sysMonitorEnabled="true"/>
    </benchmark>
 
    <products>
@@ -18,9 +18,9 @@
          <config name="mvcc/mvcc-local-RR.xml"/>
          <config name="mvcc/mvcc-local-RC.xml"/>
       </jbosscache3>
-      <ehcache17>
+      <ehcache25>
          <config name="ehcache-local.xml"/>
-      </ehcache17>
+      </ehcache25>
    </products>
 
 
@@ -28,12 +28,12 @@
       <report name="repeatable-read">
          <item product="infinispan4" config="local/repeatable-read.xml"/>
          <item product="jbosscache3" config="mvcc/mvcc-local-RR.xml"/>
-         <item product="ehcache17" config="ehcache-local.xml"/>
+         <item product="ehcache25" config="ehcache-local.xml"/>
       </report>
       <report name="read-committed">
          <item product="infinispan4" config="local/read-committed.xml"/>
          <item product="jbosscache3" config="mvcc/mvcc-local-RC.xml"/>
-         <item product="ehcache17" config="ehcache-local.xml"/>
+         <item product="ehcache25" config="ehcache-local.xml"/>
       </report>
       <report name="all_included" includeAll="true"/>
    </reports>

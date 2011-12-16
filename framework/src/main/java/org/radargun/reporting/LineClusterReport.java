@@ -44,8 +44,8 @@ public class LineClusterReport implements ClusterReport {
       this.subtitle = subtitle;
    }
 
-   public void addCategory(String productName, int clusterSize, Number value) {
-      this.categorySet.addValue(value, productName, clusterSize);
+   public void addCategory(String rowKey, int columnKey, Number value) {
+      this.categorySet.addValue(value, rowKey, columnKey);
    }
 
    public void generate() throws Exception {

@@ -81,36 +81,35 @@ public class Utils {
    }
 
    public static URLClassLoader buildProductSpecificClassLoader(String productName, ClassLoader parent) throws Exception {
-      log.trace("Using smart class laoding");
+      log.trace("Using smart class loading");
       File libFolder = new File(PLUGINS_DIR + File.separator + productName + File.separator + "lib");
-      if (!libFolder.isDirectory()) {
-         String message = "Could not find lib directory: " + libFolder.getAbsolutePath();
-         log.error(message);
-         throw new IllegalStateException(message);
-      }
-      String[] jarsSrt = libFolder.list(new FilenameFilter() {
-         public boolean accept(File dir, String name) {
-            String fileName = name.toUpperCase();
-            if (fileName.endsWith("JAR") || fileName.toUpperCase().endsWith("ZIP")) {
-               if (log.isTraceEnabled()) {
-                  log.trace("Accepting file: " + fileName);
-               }
-               return true;
-            } else {
-               if (log.isTraceEnabled()) {
-                  log.trace("Rejecting file: " + fileName);
-               }
-               return false;
-            }
-         }
-      });
       List<URL> jars = new ArrayList<URL>();
-      for (String file : jarsSrt) {
-         File aJar = new File(libFolder, file);
-         if (!aJar.exists() || !aJar.isFile()) {
-            throw new IllegalStateException();
+      if (!libFolder.isDirectory()) {
+         log.info("Could not find lib directory: " + libFolder.getAbsolutePath());
+      } else {
+         String[] jarsSrt = libFolder.list(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+               String fileName = name.toUpperCase();
+               if (fileName.endsWith("JAR") || fileName.toUpperCase().endsWith("ZIP")) {
+                  if (log.isTraceEnabled()) {
+                     log.trace("Accepting file: " + fileName);
+                  }
+                  return true;
+               } else {
+                  if (log.isTraceEnabled()) {
+                     log.trace("Rejecting file: " + fileName);
+                  }
+                  return false;
+               }
+            }
+         });
+         for (String file : jarsSrt) {
+            File aJar = new File(libFolder, file);
+            if (!aJar.exists() || !aJar.isFile()) {
+               throw new IllegalStateException();
+            }
+            jars.add(aJar.toURI().toURL());
          }
-         jars.add(aJar.toURI().toURL());
       }
       File confDir = new File(PLUGINS_DIR + File.separator + productName + File.separator + "conf/");
       jars.add(confDir.toURI().toURL());

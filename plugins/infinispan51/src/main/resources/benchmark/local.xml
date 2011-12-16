@@ -2,22 +2,38 @@
 
    <benchmark>
       <Warmup operationCount="1000000"/>
-      <PutGet numberOfRequests="100000000" opsCountStatusLog="1000000" numOfThreads="25" useTransactions="true"/>
+      <!--<PutGet numberOfRequests="1000000000" opsCountStatusLog="100000000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>-->
+      <PutGet numberOfRequests="1000000" opsCountStatusLog="1000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>
    </benchmark>
 
    <products>
-      <infinispan5>
-         <config file="local-config.xml" name="50_non_tx"/>
-      </infinispan5>
+      <ehcache25>
+         <config file="local.xml" cache="test" name="25_local"/>
+      </ehcache25>
+      <infinispan50>
+         <config file="local-config.xml" cache="noTx" name="50_non_tx"/>
+      </infinispan50>
       <infinispan51>
-         <config file="local-config.xml" name="51_non_tx"/>
+         <config file="local-config.xml" cache="noTx" name="51_non_tx"/>
       </infinispan51>
+      <chm>
+         <config name="ConcurrentHashMap"/>
+      </chm>
    </products>
 
-
-
    <reports>
-      <report name="All" includeAll="true"/>
+
+      <report name="noTx">
+         <item product="infinispan50" config="50_non_tx"/>
+         <item product="infinispan51" config="51_non_tx"/>
+         <item product="chm" config="ConcurrentHashMap"/>
+      </report>
+
+      <report name="ispn_ehcache">
+         <item product="ehcache25" config="25_local"/>
+         <item product="infinispan51" config="51_non_tx"/>
+      </report>
+
    </reports>
 
 </local-bench-config>

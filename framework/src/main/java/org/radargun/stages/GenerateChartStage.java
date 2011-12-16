@@ -34,8 +34,9 @@ public class GenerateChartStage extends AbstractMasterStage {
    private static Log log = LogFactory.getLog(GenerateChartStage.class);
 
    public static final String X_LABEL = "Cluster size (number of cache instances)";
+   public static final String REPORTS = "reports";
 
-   private String reportDirectory = "reports";
+   private String reportDirectory = REPORTS;
    private String csvFilesDirectory = "reports";
    private String fnPrefix;
    private Map<String, List<String>> filter = new HashMap<String, List<String>>();

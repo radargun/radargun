@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author Mircea.Markus@jboss.com
  */
-public class WarmupStressor implements CacheWrapperStressor {
+public class WarmupStressor extends AbstractCacheWrapperStressor {
 
    private static Log log = LogFactory.getLog(WarmupStage.class);
 
@@ -28,7 +28,7 @@ public class WarmupStressor implements CacheWrapperStressor {
 
    private CacheWrapper wrapper;
 
-   private static final int WARMUP_THREADS = 5; // yes, hard coded.
+   private int numThreads = 5;
 
    public Map<String, String> stress(CacheWrapper wrapper) {
       if (bucket == null || keyPrefix == null) {
@@ -49,13 +49,13 @@ public class WarmupStressor implements CacheWrapperStressor {
    public void performWarmupOperations(CacheWrapper w) throws Exception {
       this.wrapper = w;
       log.info("Cache launched, performing " + (Integer) operationCount + " put and get operations ");
-      Thread[] warmupThreads = new Thread[WARMUP_THREADS];
+      Thread[] warmupThreads = new Thread[numThreads];
 
       final AtomicInteger writes = new AtomicInteger(0);
       final AtomicInteger reads = new AtomicInteger(0);
       final Random r = new Random();
 
-      for (int i = 0; i < WARMUP_THREADS; i++) {
+      for (int i = 0; i < numThreads; i++) {
          final int threadId = i;
          warmupThreads[i] = new Thread() {
             public void run() {
@@ -109,6 +109,11 @@ public class WarmupStressor implements CacheWrapperStressor {
 
    public void setKeyPrefix(String keyPrefix) {
       this.keyPrefix = keyPrefix;
+   }
+
+   public void setNumThreads(int numThreads) {
+      if (numThreads <=0) throw new IllegalStateException("Invalid num of threads:" + numThreads);
+      this.numThreads = numThreads;
    }
 
    @Override

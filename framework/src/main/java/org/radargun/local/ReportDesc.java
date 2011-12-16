@@ -28,6 +28,10 @@ public class ReportDesc {
       this.includeAll = includeAll;
    }
 
+   public boolean isIncludeAll() {
+      return includeAll;
+   }
+
    public void updateData(String product, String config, long readsPerSec, long noReads, long writesPerSec, long noWrites) {
       if (includeAll) {
          ReportItem item = new ReportItem(product, config);
@@ -55,5 +59,9 @@ public class ReportDesc {
 
    public List<ReportItem> getItems() {
       return items;
+   }
+
+   public void addReportItems(List<ReportItem> all) {
+      items.addAll(all);
    }
 }

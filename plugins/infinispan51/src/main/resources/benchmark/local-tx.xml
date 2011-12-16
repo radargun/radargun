@@ -1,0 +1,24 @@
+<local-bench-config>
+
+   <benchmark>
+      <Warmup operationCount="1000000"/>
+      <PutGet numberOfRequests="100000000" opsCountStatusLog="1000000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>
+   </benchmark>
+
+   <products>
+      <infinispan50>
+         <config file="local-config.xml" cache="tx" name="50_tx"/>
+      </infinispan50>
+      <infinispan51>
+         <config file="local-config.xml" cache="tx" name="51_tx"/>
+      </infinispan51>
+   </products>
+
+   <reports>
+      <report name="tx">
+         <item product="infinispan50" config="50_tx"/>
+         <item product="infinispan51" config="51_tx"/>
+      </report>
+   </reports>
+
+</local-bench-config>

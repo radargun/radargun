@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author Mircea.Markus@jboss.com
  */
-public class PutGetStressor implements CacheWrapperStressor {
+public class PutGetStressor extends AbstractCacheWrapperStressor {
 
    private static Log log = LogFactory.getLog(PutGetStressor.class);
 
@@ -178,6 +178,14 @@ public class PutGetStressor implements CacheWrapperStressor {
 
       @Override
       public void run() {
+         try {
+            runInternal();
+         } catch (Exception e) {
+            log.error("Unexpected error in stressor!", e);
+         }
+      }
+
+      private void runInternal() {
          startTime = System.currentTimeMillis();
          int readPercentage = 100 - writePercentage;
          Random r = new Random();
@@ -266,8 +274,10 @@ public class PutGetStressor implements CacheWrapperStressor {
             log.info("Thread index '" + threadIndex + "' executed " + (i + 1) + " operations. Elapsed time: " +
                            Utils.getDurationString((long) elapsedTime) + ". Estimated remaining: " + Utils.getDurationString((long) estimatedRemaining) +
                            ". Estimated total: " + Utils.getDurationString((long) estimatedTotal));
-            String len = result != null ? String.valueOf(result.toString().length()) : "null";
-            System.out.println("PutGetStressor: Ignore this line, added just to make sure JIT doesn't skip call to cacheWrapper.get " + len);
+            if (result != null && result.hashCode() == System.identityHashCode(result)) {
+               //this line was added just to make sure JIT doesn't skip call to cacheWrapper.get
+               System.out.print("");
+            }
          }
       }
 

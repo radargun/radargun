@@ -3,9 +3,12 @@
 <infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:5.0"
             xsi:schemaLocation="urn:infinispan:config:5.0 http://www.infinispan.org/schemas/infinispan-config-5.0.xsd">
 
-   <default>
+   <default/>
+
+   <namedCache name="noTx"/>
+
+   <namedCache name="tx">
       <transaction transactionManagerLookupClass="org.infinispan.transaction.lookup.DummyTransactionManagerLookup"/>
-      <locking concurrencyLevel="10000" useLockStriping="false"/>
-   </default>
+   </namedCache>
 
 </infinispan>

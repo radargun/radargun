@@ -3,7 +3,7 @@ package org.radargun;
 import java.util.Map;
 
 /**
- * A stressor performs operations on a cache wrapper and returns the results of performing these operations as a Map..
+ * A stressor performs operations on a cache wrapper and returns the results of performing these operations as a Map.
  *
  * @author Mircea.Markus@jboss.com
  */
@@ -15,4 +15,8 @@ public interface CacheWrapperStressor {
    public Map<String, String> stress(CacheWrapper wrapper);
 
    public void destroy() throws Exception;
+
+   public boolean isSysMonitorEnabled();
+
+   public void setSysMonitorEnabled(boolean enabled);
 }

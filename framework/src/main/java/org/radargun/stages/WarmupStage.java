@@ -22,6 +22,8 @@ public class WarmupStage extends AbstractDistStage {
 
    private int operationCount = 10000;
 
+   private int numThreads = 5;
+
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
       CacheWrapper wrapper = slaveState.getCacheWrapper();
@@ -42,6 +44,7 @@ public class WarmupStage extends AbstractDistStage {
       warmupStressor.setBucket("warmup_bucket" + String.valueOf(getSlaveIndex()) + "_");
       warmupStressor.setKeyPrefix("warmup_key_" + String.valueOf(getSlaveIndex()) + "_");
       warmupStressor.setOperationCount(operationCount);
+      warmupStressor.setNumThreads(numThreads);
       warmupStressor.stress(wrapper);
    }
 
@@ -58,6 +61,10 @@ public class WarmupStage extends AbstractDistStage {
 
    public void setOperationCount(int operationCount) {
       this.operationCount = operationCount;
+   }
+
+   public void setNumThreads(int numThreads) {
+      this.numThreads = numThreads;
    }
 
    @Override

@@ -5,6 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.CacheWrapperStressor;
 import org.radargun.ShutDownHook;
+import org.radargun.reporting.LocalSystemMonitorChart;
+import org.radargun.sysmonitor.LocalJmxMonitor;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
@@ -14,6 +16,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +41,7 @@ public class LocalBenchmark {
 
    private StringBuilder reportCsvContent = new StringBuilder();
 
+   private Map<String, LocalJmxMonitor> sysMonitors = new HashMap<String, LocalJmxMonitor>();
 
    public LocalBenchmark() {
       Runtime.getRuntime().addShutdownHook(new ShutDownHook("Local benchmark process"));
@@ -55,7 +59,18 @@ public class LocalBenchmark {
 
                Map<String, String> results = null;
                for (CacheWrapperStressor stressor : stressors) {
+                  LocalJmxMonitor monitor = null;
+                  if (stressor.isSysMonitorEnabled()) {
+                     monitor = new LocalJmxMonitor();
+                     monitor.startMonitoringLocal();
+                     sysMonitors.put(product.getKey() + "(" + config + ")", monitor);
+                     monitor.setConfigName(config);
+                     monitor.setProductName(product.getKey());
+                  }
                   results = stressor.stress(wrapper);
+                  if (monitor != null) {
+                     monitor.stopMonitoringLocal();
+                  }
                   stressor.destroy();
                }
                generateReport(results, product.getKey(), config);
@@ -71,6 +86,17 @@ public class LocalBenchmark {
          createOutputFile();
 
          generateChart();
+
+         generateMonitorReports();
+      }
+   }
+
+   private void generateMonitorReports() {
+      if (sysMonitors.isEmpty()) {
+         return;
+      }
+      for (ReportDesc reportDesc : reportDescs) {
+         new LocalSystemMonitorChart(sysMonitors).generate(reportDesc);
       }
    }
 

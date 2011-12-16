@@ -63,6 +63,10 @@
       <priority value="INFO"/>
    </category>
 
+   <category name="org.radargun.sysmonitor">
+      <priority value="TRACE"/>
+   </category>
+
    <category name="org.radargun.reporting">
       <priority value="WARN"/>
    </category>
@@ -87,14 +91,6 @@
       <priority value="WARN"/>
    </category>
 
-  <category name="UDP">
-    <priority value="TRACE"/>
-  </category>
-
-  <category name="FD_SOCK">
-    <priority value="TRACE"/>
-  </category>
-
    <category name="JoinTask">
       <priority value="TRACE"/>
    </category>
@@ -111,9 +107,13 @@
       <priority value="WARN"/>
    </category>
 
+   <category name="org.radargun.cachewrappers.EHCacheWrapper">
+      <priority value="TRACE"/>
+   </category>
+
    <!-- Here goes the root -->
    <root>
-      <priority value="TRACE"/>
+      <priority value="INFO"/>
       <appender-ref ref="CONSOLE"/>
       <appender-ref ref="FILE"/>
    </root>
