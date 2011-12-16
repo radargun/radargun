@@ -1,14 +1,9 @@
 package org.radargun.cachewrappers;
 
-import com.tangosol.net.CacheFactory;
-import com.tangosol.net.NamedCache;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.utils.TypedProperties;
 
 
-import javax.transaction.Transaction;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ChmWrapper implements CacheWrapper {
