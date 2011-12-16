@@ -2,8 +2,8 @@
 
    <benchmark>
       <Warmup operationCount="1000000"/>
-      <!--<PutGet numberOfRequests="1000000000" opsCountStatusLog="100000000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>-->
-      <PutGet numberOfRequests="1000000" opsCountStatusLog="1000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>
+      <PutGet numberOfRequests="2000000000" opsCountStatusLog="100000000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>
+      <!--<PutGet numberOfRequests="1000000" opsCountStatusLog="100000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>-->
    </benchmark>
 
    <products>
