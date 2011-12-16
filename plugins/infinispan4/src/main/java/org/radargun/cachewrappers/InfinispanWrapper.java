@@ -39,6 +39,10 @@ public class InfinispanWrapper implements CacheWrapper {
 
       if (!started) {
          cacheManager = new DefaultCacheManager(configFile);
+         String cacheNames = cacheManager.getDefinedCacheNames();
+         if (!cacheNames.contains(cacheName))
+            throw new IllegalStateException("The requested cache(" + cacheName + ") is not defined. Defined cache " +
+                                                  "names are " + cacheNames);
          cache = cacheManager.getCache(cacheName);
          started = true;
          tm = cache.getAdvancedCache().getTransactionManager();
