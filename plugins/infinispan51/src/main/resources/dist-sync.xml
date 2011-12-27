@@ -22,4 +22,5 @@
       </clustering>
    </default>
 
+   <namedCache name="x" />
 </infinispan>

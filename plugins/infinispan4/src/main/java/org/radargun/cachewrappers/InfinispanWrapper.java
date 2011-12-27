@@ -48,7 +48,7 @@ public class InfinispanWrapper implements CacheWrapper {
          tm = cache.getAdvancedCache().getTransactionManager();
          log.info("Using transaction manager: " + tm);
       }
-      log.info("Loading JGroups form: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
+      log.debug("Loading JGroups from: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
       log.info("Using config attributes: " + confAttributes);
       blockForRehashing();

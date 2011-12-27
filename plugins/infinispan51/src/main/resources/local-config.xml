@@ -12,4 +12,5 @@
                    transactionMode="TRANSACTIONAL" lockingMode="OPTIMISTIC"/>
    </namedCache>
 
+   <namedCache name="x" />
 </infinispan>

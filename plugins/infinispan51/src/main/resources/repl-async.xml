@@ -18,4 +18,6 @@
          <async asyncMarshalling="false" />
       </clustering>
    </default>
+
+   <namedCache name="x" />
 </infinispan>

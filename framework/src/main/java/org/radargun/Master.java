@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This is the master that will coordonate the {@link Slave}s in order to run the benchmark.
+ * This is the master that will coordinate the {@link Slave}s in order to run the benchmark.
  *
  * @author Mircea.Markus@jboss.com
  */
@@ -33,8 +33,6 @@ public class Master {
 
    private ServerSocketChannel serverSocketChannel;
    private List<SocketChannel> slaves = new ArrayList<SocketChannel>();
-
-   private volatile boolean stopped = false;
 
    private Map<SocketChannel, ByteBuffer> writeBufferMap = new HashMap<SocketChannel, ByteBuffer>();
    private Map<SocketChannel, ByteBuffer> readBufferMap = new HashMap<SocketChannel, ByteBuffer>();
@@ -64,7 +62,7 @@ public class Master {
          prepareNextStage();
          startCommunicationWithSlaves();
       } finally {
-         releseResources();
+         releaseResources();
       }
    }
 
@@ -72,8 +70,9 @@ public class Master {
       DistStage toExecute = state.getNextDistStageToProcess();
       if (toExecute == null) {
          releaseResourcesAndExit();
+      } else {
+         runDistStage(toExecute, toExecute.getActiveSlaveCount());
       }
-      runDistStage(toExecute, toExecute.getActiveSlaveCount());
    }
 
    private void runDistStage(DistStage currentStage, int noSlaves) throws Exception {
@@ -93,7 +92,7 @@ public class Master {
       }
    }
 
-   private void releseResources() {
+   private void releaseResources() {
       try {
          discoverySelector.close();
       } catch (Throwable e) {
@@ -146,24 +145,24 @@ public class Master {
    }
 
    private void startCommunicationWithSlaves() throws Exception {
-      while (!stopped) {
+      while (true) {
          communicationSelector.select();
          Set<SelectionKey> keys = communicationSelector.selectedKeys();
-         if (log.isTraceEnabled()) log.trace("Received " + keys.size() + " keys.");
+//         if (log.isTraceEnabled()) log.trace("Received " + keys.size() + " keys.");
          if (keys.size() > 0) {
             Iterator<SelectionKey> keysIt = keys.iterator();
             while (keysIt.hasNext()) {
                SelectionKey key = keysIt.next();
                keysIt.remove();
                if (!key.isValid()) {
-                  log.trace("Key not valid, skipping!");
+//                  log.trace("Key not valid, skipping!");
                   continue;
                }
                if (key.isWritable()) {
-                  if (log.isTraceEnabled()) log.trace("Received writable key:" + key);
+//                  if (log.isTraceEnabled()) log.trace("Received writable key:" + key);
                   sendStage(key);
                } else if (key.isReadable()) {
-                  if (log.isTraceEnabled()) log.trace("Received readable key:" + key);
+//                  if (log.isTraceEnabled()) log.trace("Received readable key:" + key);
                   readStageAck(key);
                } else {
                   log.warn("Unknown selection on key " + key);
@@ -178,9 +177,9 @@ public class Master {
 
       ByteBuffer byteBuffer = readBufferMap.get(socketChannel);
       int value = socketChannel.read(byteBuffer);
-      if (log.isTraceEnabled()) {
-         log.trace("We've read into the buffer: " + byteBuffer + ". Number of read bytes is " + value);
-      }
+//      if (log.isTraceEnabled()) {
+//         log.trace("We've read into the buffer: " + byteBuffer + ". Number of read bytes is " + value);
+//      }
 
       if (value == -1) {
          log.warn("Slave stopped! Index: " + slave2Index.get(socketChannel) + ". Remote socket is: " + socketChannel);
@@ -220,18 +219,18 @@ public class Master {
    }
 
    private void releaseResourcesAndExit() {
-      releseResources();
+      releaseResources();
       ShutDownHook.exit(0);
    }
 
    private void sendStage(SelectionKey key) throws IOException {
       SocketChannel socketChannel = (SocketChannel) key.channel();
       ByteBuffer buf = writeBufferMap.get(socketChannel);
-      if (log.isTraceEnabled())
-         log.trace("Writing buffer '" + buf + " to channel '" + socketChannel + "' ");
+//      if (log.isTraceEnabled())
+//         log.trace("Writing buffer '" + buf + " to channel '" + socketChannel + "' ");
       socketChannel.write(buf);
-      if (log.isTraceEnabled())
-         log.trace("Buffer after write: '" + buf + "'");
+//      if (log.isTraceEnabled())
+//         log.trace("Buffer after write: '" + buf + "'");
       if (buf.remaining() == 0) {
          log.trace("Finished writing entire buffer");
          key.interestOps(SelectionKey.OP_READ);

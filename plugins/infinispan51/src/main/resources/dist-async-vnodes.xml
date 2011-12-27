@@ -22,4 +22,6 @@
          <hash numOwners="2" rehashEnabled="false" numVirtualNodes="1000"/>
       </clustering>
    </default>
+
+   <namedCache name="x" />
 </infinispan>

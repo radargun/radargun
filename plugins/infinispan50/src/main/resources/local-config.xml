@@ -11,4 +11,5 @@
       <transaction transactionManagerLookupClass="org.infinispan.transaction.lookup.DummyTransactionManagerLookup"/>
    </namedCache>
 
+   <namedCache name="x" />
 </infinispan>

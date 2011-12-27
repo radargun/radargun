@@ -37,4 +37,5 @@
       </transaction>
    </namedCache>
 
+   <namedCache name="x" />
 </infinispan>

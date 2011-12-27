@@ -20,4 +20,6 @@
          <stateRetrieval fetchInMemoryState="false"/>
       </clustering>
    </default>
+
+   <namedCache name="x" />
 </infinispan>

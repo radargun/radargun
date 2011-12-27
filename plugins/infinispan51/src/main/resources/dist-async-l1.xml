@@ -22,4 +22,6 @@
          <hash numOwners="2" rehashEnabled="false"/>
       </clustering>
    </default>
+
+   <namedCache name="x" />
 </infinispan>
