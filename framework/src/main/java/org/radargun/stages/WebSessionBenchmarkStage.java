@@ -124,7 +124,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
             results.put(ack.getSlaveIndex(), benchResult);
             Object reqPerSes = benchResult.get("REQ_PER_SEC");
             if (reqPerSes == null) {
-               throw new IllegalStateException("This should be there!");
+               throw new IllegalStateException("Requests per second should be present!");
             }
             log.info("On slave " + ack.getSlaveIndex() + " we had " + numberFormat(parseDouble(reqPerSes.toString())) + " requests per second");
             log.info("Received " +  benchResult.remove(SIZE_INFO));

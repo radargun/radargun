@@ -39,16 +39,10 @@ public class WebSessionWarmupStage extends WebSessionBenchmarkStage {
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
-
-
       logDurationInfo(acks);
       for (DistStageAck ack : acks) {
          DefaultDistStageAck dAck = (DefaultDistStageAck) ack;
-         if (dAck.isError()) {
-            log.warn("Caught error on slave " + dAck.getSlaveIndex() + " when running " + getClass().getSimpleName() + ".  Error details:" + dAck.getErrorMessage());
-         } else {
-            if (log.isInfoEnabled()) log.info("Warmup on slave " + dAck.getSlaveIndex() + " finished in " + dAck.getPayload() + " millis.");
-         }
+         if (dAck.isError()) log.warn("Caught error on slave " + dAck.getSlaveIndex() + " when running " + getClass().getSimpleName() + ".  Error details:" + dAck.getErrorMessage());
       }
       return true;
    }

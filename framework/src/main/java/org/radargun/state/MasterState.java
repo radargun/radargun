@@ -11,6 +11,8 @@ import org.radargun.config.MasterConfig;
 import org.radargun.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -73,6 +75,15 @@ public class MasterState extends StateBase {
    }
 
    public boolean distStageFinished(List<DistStageAck> acks) {
+      // Sort acks so that logs are more readable.
+      Collections.sort(acks, new Comparator<DistStageAck>() {
+         @Override
+         public int compare(DistStageAck o1, DistStageAck o2) {
+            int thisVal = o1.getSlaveIndex();
+            int anotherVal = o2.getSlaveIndex();
+            return (thisVal<anotherVal ? -1 : (thisVal==anotherVal ? 0 : 1));
+         }
+      });
       boolean stageOk = currentDistStage.processAckOnMaster(acks, this);
       if (stageOk) return true;
       if (!currentDistStage.isExitBenchmarkOnSlaveFailure()) {
