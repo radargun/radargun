@@ -5,13 +5,11 @@ import org.apache.commons.logging.LogFactory;
 import org.radargun.DistStage;
 import org.radargun.DistStageAck;
 import org.radargun.config.MasterConfig;
-import org.radargun.state.SlaveState;
 import org.radargun.state.MasterState;
+import org.radargun.state.SlaveState;
 import org.radargun.utils.Utils;
 
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Support class for distributed stages.
@@ -97,15 +95,12 @@ public abstract class AbstractDistStage implements DistStage {
    protected void logDurationInfo(List<DistStageAck> acks) {
       if (!log.isInfoEnabled()) return;
 
-      Map<Integer, String> data = new TreeMap<Integer, String>();  // make sure this is sorted
-      for (DistStageAck dsa: acks) data.put(dsa.getSlaveIndex(), Utils.prettyPrintTime(dsa.getDuration()));
-
       String processingDuration = "Durations [";
       boolean first = true;
-      for (Map.Entry<Integer, String> e: data.entrySet()) {
+      for (DistStageAck ack: acks) {
          if (first) first = false;
          else processingDuration += ", ";
-         processingDuration += e.getKey() + ":" + e.getValue();
+         processingDuration += ack.getSlaveIndex() + ":" + Utils.prettyPrintTime(ack.getDuration());
       }
       log.info(getClass().getSimpleName() + " received ack from all (" + acks.size() + ") slaves. " + processingDuration + "]");
    }
