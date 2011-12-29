@@ -17,7 +17,10 @@ import java.util.List;
  * </pre>
  *
  * @author Mircea.Markus@jboss.com
+ * @deprecated Do not use, since this only really warms up the PutGetStressor in a very simplistic access path.  Each
+ * <tt>*BenchmarkStage</tt> should have its own customized warmup.
  */
+@Deprecated
 public class WarmupStage extends AbstractDistStage {
 
    private int operationCount = 10000;
@@ -25,6 +28,7 @@ public class WarmupStage extends AbstractDistStage {
    private int numThreads = 5;
 
    public DistStageAck executeOnSlave() {
+      log.warn("**** DEPRECATED. This warmup is likely to not properly warm up your JIT compiler, giving you false results. Please see the javadoc of WarmupStage.java for more details.");
       DefaultDistStageAck ack = newDefaultStageAck();
       CacheWrapper wrapper = slaveState.getCacheWrapper();
       if (wrapper == null) {

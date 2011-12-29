@@ -6,7 +6,7 @@
       <DestroyWrapper runOnAllSlaves="true"/>
       <StartCluster staggerSlaveStartup="true" delayAfterFirstSlaveStarts="5000" delayBetweenStartingSlaves = "500"/>
       <ClusterValidation partialReplication="false"/>
-      <Warmup operationCount="1000"/>
+      <WebSessionWarmup numberOfRequests="2500" opsCountStatusLog="500" numOfThreads="2"/>
       <ClearCluster/>
       <!--
          This will average to 10000 requests per thread, although a work-stealing pattern is used so some threads may

@@ -57,7 +57,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
    private String keyGeneratorClass = StringKeyGenerator.class.getName();
 
 
-   private CacheWrapper cacheWrapper;
+   protected CacheWrapper cacheWrapper;
 
    private boolean useTransactions = false;
 
@@ -65,16 +65,8 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    private int transactionSize = 1;
 
-   public DistStageAck executeOnSlave() {
-      DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
-      this.cacheWrapper = slaveState.getCacheWrapper();
-      if (cacheWrapper == null) {
-         log.info("Not running test on this slave as the wrapper hasn't been configured.");
-         return result;
-      }
-
-      log.info("Starting WebSessionBenchmarkStage: " + this.toString());
-
+   protected Map<String, String> doWork() {
+      log.info("Starting "+getClass().getSimpleName()+": " + this);
       PutGetStressor putGetStressor = new PutGetStressor();
       putGetStressor.setNodeIndex(getSlaveIndex());
       putGetStressor.setNumberOfAttributes(numberOfAttributes);
@@ -87,9 +79,19 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       putGetStressor.setUseTransactions(useTransactions);
       putGetStressor.setCommitTransactions(commitTransactions);
       putGetStressor.setTransactionSize(transactionSize);
+      return putGetStressor.stress(cacheWrapper);
+   }
+   
+   public DistStageAck executeOnSlave() {
+      DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
+      this.cacheWrapper = slaveState.getCacheWrapper();
+      if (cacheWrapper == null) {
+         log.info("Not running test on this slave as the wrapper hasn't been configured.");
+         return result;
+      }
 
       try {
-         Map<String, String> results = putGetStressor.stress(cacheWrapper);
+         Map<String, String> results = doWork();
          String sizeInfo = "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + super.getActiveSlaveCount() + ", nodeIndex:" + super.getSlaveIndex() + ", cacheSize: " + cacheWrapper.size();
          log.info(sizeInfo);
          results.put(SIZE_INFO, sizeInfo);
