@@ -18,7 +18,8 @@
 
       <clustering mode="d">
          <async asyncMarshalling="false"/>
-         <l1 enabled="false"/>
+         <!-- Due to a bug in some versions of Infinispan, we should specify lifespan as ridiculously low to ensure L1 isn't in effect -->
+         <l1 enabled="false" lifespan="1"/>
          <hash numOwners="2" rehashEnabled="false"/>
       </clustering>
    </default>
