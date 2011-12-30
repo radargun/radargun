@@ -131,7 +131,7 @@ public class FixedSizeBenchmarkConfig implements Cloneable {
    }
 
    public void errorOnCurrentBenchmark() {
-      log.trace("Issues in curent benchmark, skipping remaining stages");
+      log.trace("Issues in current benchmark, skipping remaining stages");
       stIterator = stages.size();
    }
 

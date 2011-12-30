@@ -3,7 +3,6 @@ package org.radargun.stressors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
-import org.radargun.CacheWrapperStressor;
 import org.radargun.utils.Utils;
 
 import java.util.ArrayList;
@@ -133,7 +132,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
    }
 
    private List<Stressor> executeOperations() throws Exception {
-      List<Stressor> stressors = new ArrayList<Stressor>();
+      List<Stressor> stressors = new ArrayList<Stressor>(numOfThreads);
       final AtomicInteger requestsLeft = new AtomicInteger(numberOfRequests);
       startPoint = new CountDownLatch(1);
       for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
@@ -168,6 +167,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       private long startTime;
       private AtomicInteger requestsLeft;
       private final String bucketId;
+      boolean txNotCompleted = false;
 
       public Stressor(int threadIndex, AtomicInteger requestsLeft) {
          super("Stressor-" + threadIndex);
@@ -189,7 +189,6 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          startTime = System.currentTimeMillis();
          int readPercentage = 100 - writePercentage;
          Random r = new Random();
-         String payload = generateRandomString(sizeOfValue);
          int randomAction;
          int randomKeyInt;
          try {
@@ -200,55 +199,17 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          }
 
          int i = 0;
-         boolean txNotCompleted = false;
          while (requestsLeft.getAndDecrement() > -1) {
-
-            if (useTransactions) {
-               long start = System.currentTimeMillis();
-               txNotCompleted = startTransaction(i);
-               if (txNotCompleted) { //if a transaction has been started add the starting time
-                  transactionDuration += System.currentTimeMillis() - start;
-               }
-            }
-
             randomAction = r.nextInt(100);
             randomKeyInt = r.nextInt(numberOfKeys - 1);
             Object key = getKey(randomKeyInt);
             Object result = null;
 
-            long operationDuration;
             if (randomAction < readPercentage) {
-               long start = System.currentTimeMillis();
-               try {
-                  result = cacheWrapper.get(bucketId, key);
-               } catch (Exception e) {
-                  log.warn(e);
-                  nrFailures++;
-               }
-               operationDuration = System.currentTimeMillis() - start;
-               readDuration += operationDuration;
-               reads++;
+               result = doRead(key, i);
             } else {
-               long start = System.currentTimeMillis();
-               try {
-                  cacheWrapper.put(bucketId, key, payload);
-               } catch (Exception e) {
-                  log.warn(e);
-                  nrFailures++;
-               }
-               operationDuration = System.currentTimeMillis() - start;
-               writeDuration += operationDuration;
-               writes++;
-            }
-
-            if (useTransactions) {
-               transactionDuration += operationDuration;
-               long start = System.currentTimeMillis();
-               //if we commit the transaction add the time needed for transaction commit as well
-               if (completeTransaction(i, false)) {
-                  txNotCompleted = false;
-                  transactionDuration += System.currentTimeMillis() - start;
-               }
+               String payload = generateRandomString(sizeOfValue);
+               doWrite(key, payload, i);
             }
 
             i++;
@@ -262,6 +223,69 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          }
       }
 
+      private long startTx(int iteration) {
+         long start = System.currentTimeMillis();
+         txNotCompleted = startTransaction(iteration);
+         long txStartTime = 0;
+         if (txNotCompleted) { //if a transaction has been started add the starting time
+            txStartTime = System.currentTimeMillis() - start;
+            transactionDuration += txStartTime;
+         }
+         return txStartTime;
+      }
+
+      private long endTx(int iteration, long operationDuration) {
+         transactionDuration += operationDuration;
+         long start = System.currentTimeMillis();
+         //if we commit the transaction add the time needed for transaction commit as well
+         long txEndTime = 0;
+         if (completeTransaction(iteration, false)) {
+            txEndTime = System.currentTimeMillis() - start;
+            txNotCompleted = false;
+            transactionDuration += txEndTime;
+         }
+         return txEndTime;
+      }
+
+      private Object doRead(Object key, int iteration) {
+         long txOverhead = 0;
+         if (useTransactions) txOverhead = startTx(iteration);
+
+         Object result = null;
+         long start = System.currentTimeMillis();
+         try {
+            result = cacheWrapper.get(bucketId, key);
+         } catch (Exception e) {
+            log.warn(e);
+            nrFailures++;
+         }
+         long operationDuration = System.currentTimeMillis() - start;
+
+         if (useTransactions) txOverhead += endTx(iteration, operationDuration);
+         readDuration += operationDuration;
+         if (useTransactions) readDuration += txOverhead;
+         reads++;
+         return result;
+      }
+      
+      private void doWrite(Object key, Object payload, int iteration) {
+         long txOverhead = 0;
+         if (useTransactions) txOverhead = startTx(iteration);
+
+         long start = System.currentTimeMillis();
+         try {
+            cacheWrapper.put(bucketId, key, payload);
+         } catch (Exception e) {
+            log.warn(e);
+            nrFailures++;
+         }
+         long operationDuration = System.currentTimeMillis() - start;
+
+         if (useTransactions) txOverhead += endTx(iteration, operationDuration);
+         writeDuration += operationDuration;
+         if (useTransactions) writeDuration += txOverhead;
+         writes++;
+      }
 
       private void logProgress(int i, Object result) {
          if ((i + 1) % opsCountStatusLog == 0) {
