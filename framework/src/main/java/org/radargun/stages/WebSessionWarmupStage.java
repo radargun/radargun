@@ -19,15 +19,16 @@ public class WebSessionWarmupStage extends WebSessionBenchmarkStage {
 
    @Override
    public DistStageAck executeOnSlave() {
+      DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
+      this.cacheWrapper = slaveState.getCacheWrapper();
+      if (cacheWrapper == null) {
+         log.info("Not running test on this slave as the wrapper hasn't been configured.");
+         return result;
+      }
 
       String configName = cacheWrapper.getClass().getName() + " - " + cacheWrapper.getInfo();
-      DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
+
       if (!WARMED_UP_CONFIGS.contains(configName)) {
-         this.cacheWrapper = slaveState.getCacheWrapper();
-         if (cacheWrapper == null) {
-            log.info("Not running test on this slave as the wrapper hasn't been configured.");
-            return result;
-         }
 
          try {
             long startTime = System.currentTimeMillis();
