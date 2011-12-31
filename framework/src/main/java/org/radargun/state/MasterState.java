@@ -34,7 +34,7 @@ public class MasterState extends StateBase {
       this.config = config;
       benchmarks = new ArrayList<FixedSizeBenchmarkConfig>(config.getBenchmarks());
       if (benchmarks.isEmpty())
-         throw new IllegalStateException("there must be at least one benchmark");
+         throw new IllegalStateException("There must be at least one benchmark");
       currentBenchmark = benchmarks.remove(0);
       logBenchmarkStarted();
    }
@@ -116,7 +116,7 @@ public class MasterState extends StateBase {
    public String nameOfTheCurrentBenchmark() {
       String prodName = currentBenchmark.getProductName();
       if (prodName == null) {
-         throw new IllegalStateException("Null prod name not allowed!");
+         throw new IllegalStateException("Null product name not allowed!");
       }
       return prodName;
    }
@@ -126,9 +126,8 @@ public class MasterState extends StateBase {
    }
 
    private void logBenchmarkStarted() {
-      //this might happen in the benchmark that generates the report.GG
       if (currentBenchmark.getProductName() != null) {
-         log.info("Started benchmarking product '" + currentBenchmark.getProductName() + '\'');
+         log.info("Started benchmarking product '" + currentBenchmark.getProductName() + "' with configuration '" + currentBenchmark.getConfigName() + "'");
       }
    }
 }
