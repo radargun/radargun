@@ -97,7 +97,7 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public String getInfo() {
-      return "Running : " + cache.getVersion() +  ", config:" + config ;
+      return "Running : " + cache.getVersion() +  ", config:" + config + ", cacheName:" + cache.getName();
    }
 
    public Object getReplicatedData(String bucket, String key) throws Exception {

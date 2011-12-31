@@ -3,8 +3,6 @@ package org.radargun.cachewrappers;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
-import net.sf.ehcache.config.Configuration;
-import net.sf.ehcache.config.ConfigurationFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
@@ -27,14 +25,15 @@ public class EHCacheWrapper implements CacheWrapper {
    private Ehcache cache;
    private Log log = LogFactory.getLog("org.radargun.cachewrappers.EHCacheWrapper");
    boolean localMode;
+   private String configFile, cacheName;
 
    public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
       if (log.isTraceEnabled()) log.trace("Entering EHCacheWrapper.setUp()");
       localMode = isLocal;
       log.debug("Initializing the cache with props " + config);
 
-      String configFile  = confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
-      String cacheName = confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : "x";
+      configFile  = confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
+      cacheName = confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : "x";
 
 
       log.debug("Initializing the cache with props " + config);
@@ -87,7 +86,7 @@ public class EHCacheWrapper implements CacheWrapper {
    }
 
    public String getInfo() {
-      return "EHCache " + (localMode ? "" : (" remote peers: " + manager.getCachePeerListener("RMI").getBoundCachePeers()));
+      return "EHCache " + (localMode ? "" : (" remote peers: " + manager.getCachePeerListener("RMI").getBoundCachePeers())) + ", config: " + configFile + ", cacheName: " + cacheName;
    }
 
    public Object getReplicatedData(String path, String key) throws Exception {
