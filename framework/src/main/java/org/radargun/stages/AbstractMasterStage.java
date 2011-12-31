@@ -23,4 +23,9 @@ public abstract class AbstractMasterStage implements MasterStage {
          throw new IllegalStateException(e);
       }
    }
+
+   @Override
+   public String toString() {
+      return "{An instance of " + getClass().getSimpleName() + "}";
+   }
 }

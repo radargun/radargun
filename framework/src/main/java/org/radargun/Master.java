@@ -85,7 +85,10 @@ public class Master {
          toSerialize = currentStage.clone();
          toSerialize.initOnMaster(state, i);
          if (i == 0) {//only log this once
-            log.info("Starting dist stage '" + toSerialize.getClass().getSimpleName() + "' on " + toSerialize.getActiveSlaveCount() + " Slaves: " + toSerialize);
+            if (log.isDebugEnabled())
+               log.debug("Starting '" + toSerialize.getClass().getSimpleName() + "' on " + toSerialize.getActiveSlaveCount() + " slave nodes. Details: " + toSerialize);
+            else
+               log.info("Starting '" + toSerialize.getClass().getSimpleName() + "' on " + toSerialize.getActiveSlaveCount() + " slave nodes.");
          }
          byte[] bytes = SerializationHelper.prepareForSerialization(toSerialize);
          writeBufferMap.put(slave, ByteBuffer.wrap(bytes));
@@ -148,21 +151,17 @@ public class Master {
       while (true) {
          communicationSelector.select();
          Set<SelectionKey> keys = communicationSelector.selectedKeys();
-//         if (log.isTraceEnabled()) log.trace("Received " + keys.size() + " keys.");
          if (keys.size() > 0) {
             Iterator<SelectionKey> keysIt = keys.iterator();
             while (keysIt.hasNext()) {
                SelectionKey key = keysIt.next();
                keysIt.remove();
                if (!key.isValid()) {
-//                  log.trace("Key not valid, skipping!");
                   continue;
                }
                if (key.isWritable()) {
-//                  if (log.isTraceEnabled()) log.trace("Received writable key:" + key);
                   sendStage(key);
                } else if (key.isReadable()) {
-//                  if (log.isTraceEnabled()) log.trace("Received readable key:" + key);
                   readStageAck(key);
                } else {
                   log.warn("Unknown selection on key " + key);
@@ -177,9 +176,6 @@ public class Master {
 
       ByteBuffer byteBuffer = readBufferMap.get(socketChannel);
       int value = socketChannel.read(byteBuffer);
-//      if (log.isTraceEnabled()) {
-//         log.trace("We've read into the buffer: " + byteBuffer + ". Number of read bytes is " + value);
-//      }
 
       if (value == -1) {
          log.warn("Slave stopped! Index: " + slave2Index.get(socketChannel) + ". Remote socket is: " + socketChannel);
@@ -195,7 +191,7 @@ public class Master {
             replacer.put(byteBuffer.array());
             readBufferMap.put(socketChannel, replacer);
             if (log.isTraceEnabled())
-               log.trace("Expected size(" + expectedSize + ")" + " is > bytebuffer's capacity(" +
+               log.trace("Expected size(" + expectedSize + ")" + " is > ByteBuffer's capacity(" +
                      byteBuffer.capacity() + ")" + ".Replacing " + byteBuffer + " with " + replacer);
             byteBuffer = replacer;
          }
@@ -226,11 +222,7 @@ public class Master {
    private void sendStage(SelectionKey key) throws IOException {
       SocketChannel socketChannel = (SocketChannel) key.channel();
       ByteBuffer buf = writeBufferMap.get(socketChannel);
-//      if (log.isTraceEnabled())
-//         log.trace("Writing buffer '" + buf + " to channel '" + socketChannel + "' ");
       socketChannel.write(buf);
-//      if (log.isTraceEnabled())
-//         log.trace("Buffer after write: '" + buf + "'");
       if (buf.remaining() == 0) {
          log.trace("Finished writing entire buffer");
          key.interestOps(SelectionKey.OP_READ);

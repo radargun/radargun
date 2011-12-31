@@ -97,7 +97,10 @@ public class MasterState extends StateBase {
    }
 
    private void executeServerStage(MasterStage servStage) {
-      log.info("Starting master stage '" + servStage.getClass().getSimpleName() + "' :" + servStage);
+      if (log.isDebugEnabled())
+         log.debug("Starting '" + servStage.getClass().getSimpleName() + "' on master node only. Details:" + servStage);
+      else
+         log.info("Starting '" + servStage.getClass().getSimpleName() + "' on master node only.");
       servStage.init(this);
       try {
          if (!servStage.execute()) {

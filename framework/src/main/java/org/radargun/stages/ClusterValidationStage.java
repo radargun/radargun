@@ -13,7 +13,7 @@ import java.util.List;
  * Algorithm:
  * - each slave does a put(slaveIndex);
  * - each slave checks wether all (or part) of the remaining slaves replicated here.
- * <p/>
+ *
  * Config:
  *   - 'isPartialReplication' : is set to true, then the slave will consider that the cluster is formed when one slave
  *      replicated here. If false (default value) then replication will only be considered successful if all
@@ -111,11 +111,7 @@ public class ClusterValidationStage extends AbstractDistStage {
             }
          }
       }
-      if (success) {
-         log.info("Cluster successfully formed!");
-      } else {
-         log.warn("Cluster hasn't formed!");
-      }
+      if (!success) log.warn("Cluster hasn't formed!");
       return success;
    }
 
@@ -126,8 +122,7 @@ public class ClusterValidationStage extends AbstractDistStage {
          try {
             wrapper.put(nodeBucket(getSlaveIndex()), key(getSlaveIndex()), "true");
             return;
-         }
-         catch (Throwable e) {
+         } catch (Throwable e) {
             log.warn("Error while trying to put data: ", e);
             tryCount++;
          }
@@ -148,7 +143,7 @@ public class ClusterValidationStage extends AbstractDistStage {
          //adding our stuff one more time
          tryToPut();
          log.info("Replication test failed, " + (i + 1) + " tries so far. Sleeping for " + Utils.prettyPrintTime(replicationTimeSleep)
-               + " and trying again.");
+                        + " and trying again.");
          Thread.sleep(replicationTimeSleep);
       }
       log.info("Replication test failed. Last replication count is " + replCount);
@@ -181,8 +176,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       while (tryCont < 5) {
          try {
             return wrapper.getReplicatedData(nodeBucket(i), key(i));
-         }
-         catch (Throwable e) {
+         } catch (Throwable e) {
             tryCont++;
          }
       }
@@ -204,7 +198,7 @@ public class ClusterValidationStage extends AbstractDistStage {
    private String key(int slaveIndex) {
       return KEY + slaveIndex;
    }
-   
+
 
    @Override
    public String toString() {

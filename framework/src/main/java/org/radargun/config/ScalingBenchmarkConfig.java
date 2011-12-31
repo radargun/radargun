@@ -68,9 +68,9 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
 
    private void initialize() {
       if (!initialized) {
-         log.info("Initializing: " + initSize + ","+ getMaxSize() + "," + increment);
+         log.info("Initializing.  Starting with " + initSize + "nodes, up to "+ getMaxSize() + " nodes, incrementing by " + increment);
          for (int i = initSize; i <= getMaxSize(); i+=increment) {
-            log.info("Initializing config " + i);
+            log.info("Initializing configuration with " + i + " nodes");
             FixedSizeBenchmarkConfig conf = new FixedSizeBenchmarkConfig();
             conf.setMaxSize(getMaxSize());
             conf.stages = cloneStages(this.stages);
@@ -80,7 +80,7 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
             fixedBenchmarks.add(conf);
          }
          initialized = true;
-         log.info("Number of cluster topologies on which benchmark is executed is " + fixedBenchmarks.size());
+         log.info("Number of cluster topologies on which benchmark will be executed is " + fixedBenchmarks.size());
       }
    }
 
