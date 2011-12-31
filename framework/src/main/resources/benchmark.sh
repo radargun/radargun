@@ -8,6 +8,7 @@ if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DI
 #### parse plugins we want to test
 SSH_USER=$USER
 WORKING_DIR=`pwd`
+CONFIG=$WORKING_DIR/conf/benchmark.xml
 VERBOSE=false
 REMOTE_CMD='ssh -q -o "StrictHostKeyChecking false"'
 MASTER=`hostname`
@@ -17,11 +18,13 @@ TAILF=false
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ benchmark.sh [-u ssh_user] [-w WORKING DIRECTORY] [-m MASTER_IP[:PORT]] SLAVE...'
+  wrappedecho '  $ benchmark.sh [-c config_file] [-u ssh_user] [-w WORKING DIRECTORY] [-m MASTER_IP[:PORT]] SLAVE...'
   wrappedecho ""
   wrappedecho "e.g."
   wrappedecho "  $ benchmark.sh node1 node2 node3 node4"
   wrappedecho "  $ benchmark.sh node{1..4}"
+  wrappedecho ""
+  wrappedecho "   -c       Configuration file. Defaults to '$CONFIG'."
   wrappedecho ""
   wrappedecho "   -u       SSH user to use when SSH'ing across to the slaves.  Defaults to '$SSH_USER'."
   wrappedecho ""
@@ -42,6 +45,10 @@ help_and_exit() {
 while ! [ -z $1 ]
 do
   case "$1" in
+    "-c")
+      CONFIG=$2
+      shift
+      ;;
     "-u")
       SSH_USER=$2
       shift
@@ -88,7 +95,7 @@ fi
 
 
 ####### first start the master
-. ${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER}
+. ${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG}
 PID_OF_MASTER_PROCESS=$RADARGUN_MASTER_PID
 #### Sleep for a few seconds so master can open its port
 
