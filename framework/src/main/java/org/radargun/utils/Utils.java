@@ -64,8 +64,31 @@ public class Utils {
       return kb(Runtime.getRuntime().freeMemory());
    }
 
-   public static String getFreeMemoryKbString() {
-      return kbString(Runtime.getRuntime().freeMemory());
+   public static String getFreeMemoryFormatted() {
+      return format(Runtime.getRuntime().freeMemory());
+   }
+
+   private static String format(long bytes) {
+      double val = bytes;
+      int mag = 0;
+      while (val > 1024) {
+         val = val / 1024;
+         mag++;
+      }
+
+      String formatted = MEM_FMT.format(val);
+      switch (mag) {
+         case 0:
+            return formatted + " bytes";
+         case 1:
+            return formatted + " kb";
+         case 2:
+            return formatted + " Mb";
+         case 3:
+            return formatted + " Gb";
+         default:
+            return "WTF?";
+      }
    }
 
    public static long kb(long memBytes) {
@@ -164,7 +187,7 @@ public class Utils {
          }
          String fileName = outputFile.getName() + ".old." + System.currentTimeMillis() + extension;
          File newFile = new File(old, fileName);
-         log.info("A file named: '" + outputFile.getAbsolutePath() + "' already exist. Moving it to '" + newFile + "'");
+         log.info("A file named: '" + outputFile.getAbsolutePath() + "' already exists. Moving it to '" + newFile + "'");
          if (!outputFile.renameTo(newFile)) {
             log.warn("Could not rename!!!");
          }
