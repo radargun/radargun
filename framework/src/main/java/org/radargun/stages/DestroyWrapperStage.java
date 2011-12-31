@@ -16,8 +16,7 @@ import static org.radargun.utils.Utils.*;
  * @author Mircea.Markus@jboss.com
  */
 public class DestroyWrapperStage extends AbstractDistStage {
-
-   public static final String SERVER_STATE_PREFIX = DestroyWrapperStage.class.getSimpleName();
+   private static final String FREEMEM_KB = DestroyWrapperStage.class.getSimpleName() + ":FreeMem_KB";
 
    private boolean enforceMemoryThrashHold = true;
 
@@ -31,7 +30,7 @@ public class DestroyWrapperStage extends AbstractDistStage {
    @Override
    public void initOnMaster(MasterState masterState, int slaveIndex) {
       super.initOnMaster(masterState, slaveIndex);
-      this.initialFreeMemoryKb = (Long) masterState.get(SERVER_STATE_PREFIX + "_" +  getSlaveIndex());
+      this.initialFreeMemoryKb = (Long) masterState.get(FREEMEM_KB + "_" +  getSlaveIndex());
    }
 
    public DistStageAck executeOnSlave() {
@@ -79,13 +78,13 @@ public class DestroyWrapperStage extends AbstractDistStage {
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
       boolean result = super.processAckOnMaster(acks, masterState);
-      if (masterState.get(SERVER_STATE_PREFIX) == null) {
-         masterState.put(SERVER_STATE_PREFIX, "");
+      if (masterState.get(FREEMEM_KB) == null) {
+         masterState.put(FREEMEM_KB, "");
          for (DistStageAck distStageAck : acks) {
-            String key = SERVER_STATE_PREFIX + "_" + distStageAck.getSlaveIndex();
-            String freeMemory = (String) ((DefaultDistStageAck) distStageAck).getPayload();
-            log.info("Node " + distStageAck.getSlaveIndex() + " has an initial free memory of: " + freeMemory);
-            masterState.put(key, freeMemory);
+            String key = FREEMEM_KB + "_" + distStageAck.getSlaveIndex();
+            Long freeMemoryKB = (Long) ((DefaultDistStageAck) distStageAck).getPayload();
+            log.info("Node " + distStageAck.getSlaveIndex() + " has an initial free memory of: " + Utils.memString(freeMemoryKB * 1024));
+            masterState.put(key, freeMemoryKB);
          }
       }
       return result;
@@ -100,7 +99,7 @@ public class DestroyWrapperStage extends AbstractDistStage {
    }
 
    private DistStageAck returnAck(DefaultDistStageAck ack) {
-      ack.setPayload(getFreeMemoryFormatted());
+      ack.setPayload(getFreeMemoryKb());
       return ack;
    }
 
