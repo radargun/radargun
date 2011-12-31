@@ -125,7 +125,7 @@ public class Master {
       discoverySelector = Selector.open();
       serverSocketChannel.register(discoverySelector, SelectionKey.OP_ACCEPT);
       while (slaves.size() < masterConfig.getSlaveCount()) {
-         log.info("Waiting for " + (masterConfig.getSlaveCount() - slaves.size()) + " slaves to register to the master.");
+         log.info("Awaiting registration from " + (masterConfig.getSlaveCount() - slaves.size()) + " slaves.");
          discoverySelector.select();
          Set<SelectionKey> keySet = discoverySelector.selectedKeys();
          Iterator<SelectionKey> it = keySet.iterator();
