@@ -1,5 +1,7 @@
 package org.radargun.cachewrappers;
 
+import com.arjuna.ats.arjuna.common.arjPropertyManager;
+import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
 import org.infinispan.distribution.ch.ConsistentHash;
@@ -7,7 +9,6 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
-
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 import org.radargun.CacheWrapper;
@@ -21,6 +22,12 @@ import java.util.List;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class InfinispanWrapper implements CacheWrapper {
+
+   static {
+      // Set up transactional stores for JBoss TS
+      arjPropertyManager.getCoordinatorEnvironmentBean().setCommunicationStore(VolatileStore.class.getName());
+      arjPropertyManager.getObjectStoreEnvironmentBean().setObjectStoreType(VolatileStore.class.getName());
+   }
 
    private static Log log = LogFactory.getLog(InfinispanWrapper.class);
    DefaultCacheManager cacheManager;

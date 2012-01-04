@@ -33,15 +33,9 @@
       </dependency>
 
       <dependency>
-         <groupId>org.jboss.javaee</groupId>
-         <artifactId>jboss-transaction-api</artifactId>
-         <version>1.0.1.GA</version>
-      </dependency>
-
-      <dependency>
          <groupId>org.jboss.jbossts</groupId>
          <artifactId>jbossjta</artifactId>
-         <version>4.15.0.Final</version>
+         <version>4.16.0.Final</version>
          <exclusions>
             <exclusion>
                <groupId>org.jboss.logging</groupId>

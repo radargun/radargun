@@ -27,6 +27,18 @@
          <type>test-jar</type>
       </dependency>
 
+      <dependency>
+         <groupId>org.jboss.jbossts</groupId>
+         <artifactId>jbossjta</artifactId>
+         <version>4.16.0.Final</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging-spi</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+
    </dependencies>
 
 </project>
