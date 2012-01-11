@@ -55,7 +55,7 @@ public class Utils {
 
    public static String printMemoryFootprint(boolean before) {
       Runtime run = Runtime.getRuntime();
-      String memoryInfo = "Memory - free: " + kb(run.freeMemory()) + " - max:" + kbString(run.maxMemory()) + "- total:" + kbString(run.totalMemory());
+      String memoryInfo = "Memory - free: " + kbString(run.freeMemory()) + " - max:" + kbString(run.maxMemory()) + "- total:" + kbString(run.totalMemory());
       if (before) {
          return "Before executing clear, memory looks like this: " + memoryInfo;
       } else {
