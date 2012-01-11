@@ -29,6 +29,8 @@ public class WarmupStressor extends AbstractCacheWrapperStressor {
    private CacheWrapper wrapper;
 
    private int numThreads = 5;
+   
+   private int keysPerThread = 50;
 
    public Map<String, String> stress(CacheWrapper wrapper) {
       if (bucket == null || keyPrefix == null) {
@@ -80,7 +82,7 @@ public class WarmupStressor extends AbstractCacheWrapperStressor {
    }
 
    private void doPut(int operationId, int threadId) {
-      String key = new StringBuilder(keyPrefix).append("-").append(operationId).append("-").
+      String key = new StringBuilder(keyPrefix).append("-").append(operationId % keysPerThread).append("-").
             append(threadId).append("-").append(bucket).toString();
       try {
          wrapper.put(bucket, key, key);
@@ -90,7 +92,7 @@ public class WarmupStressor extends AbstractCacheWrapperStressor {
    }
 
    private void doGet(int operationId, int threadId) {
-      String key = new StringBuilder(keyPrefix).append("-").append(operationId).append("-").
+      String key = new StringBuilder(keyPrefix).append("-").append(operationId % keysPerThread).append("-").
             append(threadId).append("-").append(bucket).toString();
       try {
          wrapper.get(bucket, key);
@@ -114,6 +116,10 @@ public class WarmupStressor extends AbstractCacheWrapperStressor {
    public void setNumThreads(int numThreads) {
       if (numThreads <=0) throw new IllegalStateException("Invalid num of threads:" + numThreads);
       this.numThreads = numThreads;
+   }
+
+   public void setKeysPerThread(int keysPerThread) {
+      this.keysPerThread = keysPerThread;
    }
 
    @Override
