@@ -113,12 +113,9 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    public void put(String bucket, Object key, Object value) throws Exception {
       Object[] put_args = new Object[]{key, value};
       MethodCall put_call = new MethodCall(PUT, put_args);
-      RequestOptions put_options = new RequestOptions(Request.GET_ALL, 20000, true, null); // uses anycasting
+      RequestOptions put_options = new RequestOptions(ResponseMode.GET_ALL, 20000, true, null); // uses anycasting
 
-      byte flags = 0;
-      flags = Util.setFlag(flags, Message.DONT_BUNDLE);
-      flags = Util.setFlag(flags, Message.NO_FC);
-      put_options.setFlags(flags);
+      put_options.setFlags(Message.DONT_BUNDLE, Message.NO_FC);
 
       Collection<Address> targets = pickPutTargets();
       disp.callRemoteMethods(targets, put_call, put_options);
@@ -127,12 +124,9 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    public Object get(String bucket, Object key) throws Exception {
       Object[] get_args = new Object[]{key};
       MethodCall get_call = new MethodCall(GET, get_args);
-      RequestOptions get_options = new RequestOptions(Request.GET_ALL, 20000, false, null);
+      RequestOptions get_options = new RequestOptions(ResponseMode.GET_ALL, 20000, false, null);
 
-      byte flags = 0;
-      flags = Util.setFlag(flags, Message.DONT_BUNDLE);
-      flags = Util.setFlag(flags, Message.NO_FC);
-      get_options.setFlags(flags);
+      get_options.setFlags(Message.DONT_BUNDLE, Message.NO_FC);
 
       Address target = pickGetTarget();
 
