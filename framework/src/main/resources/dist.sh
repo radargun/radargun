@@ -37,7 +37,7 @@ do
 	echo "Configuration : $config"			
 	for size in $clusterSizes
 	do		
-		entryCount=`grep "Received size info" $MASTER_LOG_FILE  | grep "config:${config}, clusterSize:${size}" | sed -n 's/^.*cacheSize://p' | sed -n 's/$/,/p'`
+		entryCount=`grep "Received size info" $MASTER_LOG_FILE  | grep "config:${config},.*clusterSize:${size}" | sed -n 's/^.*cacheSize://p' | sed -n 's/$/,/p'`
 		entries=""		
 		for aCount in $entryCount
 		do
