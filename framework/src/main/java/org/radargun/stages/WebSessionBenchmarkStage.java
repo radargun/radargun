@@ -127,6 +127,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
                throw new IllegalStateException("Requests per second should be present!");
             }
             Object result = benchResult.remove(SIZE_INFO);
+            logForDistributionCounting(benchResult);
             log.info("Slave #" + ack.getSlaveIndex() + ": " + numberFormat(parseDouble(reqPerSes.toString())) + " requests per second. Result object = ["+result+"]");
             logForDistributionCounting(benchResult);
          } else {
