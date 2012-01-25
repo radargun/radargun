@@ -128,6 +128,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
             }
             Object result = benchResult.remove(SIZE_INFO);
             log.info("Slave #" + ack.getSlaveIndex() + ": " + numberFormat(parseDouble(reqPerSes.toString())) + " requests per second. Result object = ["+result+"]");
+            logForDistributionCounting(benchResult);
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }
@@ -135,6 +136,13 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       return success;
    }
 
+   /**
+    * Important: don't change the format of the log below as it is used by ./dist.sh in order to count the load
+    * distribution in the cluster.
+    */
+   private void logForDistributionCounting(Map<String, Object> benchResult) {
+      log.info("Received " +  benchResult.remove(SIZE_INFO));
+   }
    public void setNumberOfRequests(int numberOfRequests) {
       this.numberOfRequests = numberOfRequests;
    }
