@@ -104,6 +104,7 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public String getInfo() {
+      //Important: don't change this string without validating the ./dist.sh as it relies on its format!!
       return "Running : " + cache.getVersion() +  ", config:" + config + ", cacheName:" + cache.getName();
    }
 

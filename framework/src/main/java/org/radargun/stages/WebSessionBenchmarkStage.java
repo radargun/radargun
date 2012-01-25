@@ -92,7 +92,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
       try {
          Map<String, String> results = doWork();
-         String sizeInfo = "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + super.getActiveSlaveCount() + ", nodeIndex:" + super.getSlaveIndex() + ", cacheSize: " + cacheWrapper.size();
+         String sizeInfo = generateSizeInfo();
          log.info(sizeInfo);
          results.put(SIZE_INFO, sizeInfo);
          result.setPayload(results);
@@ -103,6 +103,13 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
          result.setRemoteException(e);
          return result;
       }
+   }
+
+   /**
+    * Important: do not change the format of rhe log below as is is used by ./dist.sh to measure distribution load.
+    */
+   private String generateSizeInfo() {
+      return "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + super.getActiveSlaveCount() + ", nodeIndex:" + super.getSlaveIndex() + ", cacheSize: " + cacheWrapper.size();
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
