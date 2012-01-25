@@ -1,8 +1,8 @@
 <local-bench-config>
 
    <benchmark>
-      <Warmup operationCount="500000000"/>
-      <PutGet numberOfRequests="2000000000" opsCountStatusLog="100000000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="false"/>
+      <!--<Warmup operationCount="500000"/>-->
+      <PutGet numberOfRequests="20000000" opsCountStatusLog="100000000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="false"/>
       <!--<PutGet numberOfRequests="1000000" opsCountStatusLog="100000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>-->
    </benchmark>
 
@@ -10,9 +10,9 @@
       <!--<ehcache25>-->
          <!--<config file="local.xml" cache="test" name="25_local"/>-->
       <!--</ehcache25>-->
-      <infinispan50>
-         <config file="local-config.xml" cache="noTx" name="50_non_tx"/>
-      </infinispan50>
+      <!--<infinispan50>-->
+         <!--<config file="local-config.xml" cache="noTx" name="50_non_tx"/>-->
+      <!--</infinispan50>-->
       <infinispan51>
          <config file="local-config.xml" cache="noTx" name="51_non_tx"/>
       </infinispan51>

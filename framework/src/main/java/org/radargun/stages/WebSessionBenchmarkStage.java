@@ -129,7 +129,6 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
             Object result = benchResult.remove(SIZE_INFO);
             logForDistributionCounting(benchResult);
             log.info("Slave #" + ack.getSlaveIndex() + ": " + numberFormat(parseDouble(reqPerSes.toString())) + " requests per second. Result object = ["+result+"]");
-            logForDistributionCounting(benchResult);
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }
