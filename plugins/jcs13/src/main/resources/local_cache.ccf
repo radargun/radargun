@@ -1,0 +1,15 @@
+jcs.default=RC
+jcs.default.cacheattributes=org.apache.jcs.engine.CompositeCacheAttributes
+jcs.default.cacheattributes.MaxObjects=30000
+jcs.default.cacheattributes.MemoryCacheName=org.apache.jcs.engine.memory.lru.LRUMemoryCache
+jcs.default.elementattributes.IsEternal=false
+jcs.default.elementattributes.MaxLifeSeconds=720000
+jcs.default.elementattributes.IdleTime=720000
+jcs.default.elementattributes.IsRemote=true
+
+jcs.auxiliary.RC=org.apache.jcs.auxiliary.remote.RemoteCacheFactory
+jcs.auxiliary.RC.attributes=org.apache.jcs.auxiliary.remote.RemoteCacheAttributes
+jcs.auxiliary.RC.attributes.RemoteTypeName=LOCAL
+jcs.auxiliary.RC.attributes.RemoteHost=127.0.0.1
+jcs.auxiliary.RC.attributes.RemotePort=8888
+jcs.auxiliary.RC.attributes.GetOnly=false

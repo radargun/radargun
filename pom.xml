@@ -22,6 +22,8 @@
       <module>plugins/ehcache26</module>
       <module>plugins/terracotta3</module>
       <module>plugins/chm</module>
+      <module>plugins/hotrod51</module>
+      <module>plugins/jcs13</module>
    </modules>
 
    <scm>
@@ -212,6 +214,24 @@
 
                         <copy todir="${distribution.artifact}/plugins/chm">
                            <fileset dir="plugins/chm/target/distribution/plugin-chm-bin/plugin-chm">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/chm">
+                           <fileset dir="plugins/chm/target/distribution/plugin-chm-bin/plugin-chm">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/hotrod51">
+                           <fileset dir="plugins/hotrod51/target/distribution/plugin-hotrod51-bin/plugin-hotrod51">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/jcs13">
+                           <fileset dir="plugins/jcs13/target/distribution/plugin-jcs13-bin/plugin-jcs13">
                               <include name="**/*" />
                            </fileset>
                         </copy>

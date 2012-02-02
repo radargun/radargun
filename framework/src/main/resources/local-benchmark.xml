@@ -20,6 +20,13 @@
          <config name="local-config.xml"/>
       </infinispan52>
 
+      <!--<hotrod51>-->
+         <!--<config name=""/>-->
+      <!--</hotrod51>-->
+      <!--<jcs13>-->
+         <!--<config name=""/>-->
+      <!--</jcs13>-->
+
       <!--
       <jbosscache3>
          <config name="mvcc/mvcc-local-RR.xml"/>
