@@ -1,8 +1,8 @@
 <local-bench-config>
 
    <benchmark>
-      <Warmup operationCount="1000000"/>
-      <PutGet numberOfRequests="100000000" opsCountStatusLog="1000000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>
+      <PutGetWarmup numberOfRequests="1000000"/>
+      <PutGetWarmup numberOfRequests="20000000" opsCountStatusLog="1000000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>
    </benchmark>
 
    <products>
@@ -12,13 +12,18 @@
       <infinispan51>
          <config file="local-config.xml" cache="tx" name="51_tx"/>
       </infinispan51>
+      <chm>
+         <config name="ConcurrentHashMap"/>
+      </chm>
+
    </products>
 
    <reports>
-      <report name="tx">
-         <item product="infinispan50" config="50_tx"/>
-         <item product="infinispan51" config="51_tx"/>
+      <report name="50vs51">
+         <item product="infinispan50" config="50_non_tx"/>
+         <item product="infinispan51" config="51_non_tx"/>
       </report>
+      <report name="All" includeAll="true"/>
    </reports>
 
 </local-bench-config>

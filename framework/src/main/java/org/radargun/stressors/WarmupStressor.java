@@ -3,9 +3,7 @@ package org.radargun.stressors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
-import org.radargun.CacheWrapperStressor;
 import org.radargun.stages.WarmupStage;
-import org.radargun.CacheWrapper;
 
 import java.util.Map;
 import java.util.Random;
@@ -15,6 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Do <code>operationCount</code> puts and  <code>operationCount</code> gets on the cache wrapper.
  *
  * @author Mircea.Markus@jboss.com
+ * @deprecated this should be replaced with the {@link PutGetWarmupStressor}. This is because that warmup mimics better the
+ * access pattern of the the {@link PutGetStressor}, especially in the case of transactions.
  */
 public class WarmupStressor extends AbstractCacheWrapperStressor {
 

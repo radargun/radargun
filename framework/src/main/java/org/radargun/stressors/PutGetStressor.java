@@ -93,7 +93,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       cacheWrapper = null;
    }
 
-   private Map<String, String> processResults(List<Stressor> stressors) {
+   protected Map<String, String> processResults(List<Stressor> stressors) {
       long duration = 0;
       long transactionDuration = 0;
       int reads = 0;
@@ -153,7 +153,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       return nodeIndex == -1;
    }
 
-   private class Stressor extends Thread {
+   protected class Stressor extends Thread {
 
       private ArrayList<Object> pooledKeys = new ArrayList<Object>(numberOfKeys);
 

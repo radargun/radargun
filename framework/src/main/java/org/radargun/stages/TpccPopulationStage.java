@@ -7,7 +7,6 @@ import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.TpccPopulationStressor;
-import org.radargun.stressors.WarmupStressor;
 
 /**
  * This stage shuld be run before the <b>TpccBenchmarkStage</b>. It will perform the population of
