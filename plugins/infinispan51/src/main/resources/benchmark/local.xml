@@ -1,8 +1,8 @@
 <local-bench-config>
 
    <benchmark>
-      <PutGetWarmup numberOfRequests="1000000" opsCountStatusLog="100000"/>
-      <PutGet numberOfRequests="20000000" opsCountStatusLog="100000000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>
+      <PutGetWarmup duration="20m"/>
+      <PutGet duration="30m" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>
    </benchmark>
 
    <products>

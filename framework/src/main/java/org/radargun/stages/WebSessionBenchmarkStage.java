@@ -5,6 +5,7 @@ import org.radargun.DistStageAck;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.PutGetStressor;
 import org.radargun.stressors.StringKeyGenerator;
+import org.radargun.utils.Utils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +66,8 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    private int transactionSize = 1;
 
+   private long durationMillis = -1;
+
    protected Map<String, String> doWork() {
       log.info("Starting "+getClass().getSimpleName()+": " + this);
       PutGetStressor putGetStressor = new PutGetStressor();
@@ -79,6 +82,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       putGetStressor.setUseTransactions(useTransactions);
       putGetStressor.setCommitTransactions(commitTransactions);
       putGetStressor.setTransactionSize(transactionSize);
+      putGetStressor.setDurationMillis(durationMillis);
       return putGetStressor.stress(cacheWrapper);
    }
    
@@ -209,6 +213,14 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       this.commitTransactions = commitTransactions;
    }
 
+   public long getDurationMillis() {
+      return durationMillis;
+   }
+
+   public void setDuration(String duration) {
+      this.durationMillis = Utils.string2Millis(duration);
+   }
+
    @Override
    public String toString() {
       return "WebSessionBenchmarkStage {" +
@@ -223,6 +235,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
             ", useTransactions=" + useTransactions +
             ", commitTransactions=" + commitTransactions +
             ", transactionSize=" + transactionSize +
+            ", durationMillis=" + durationMillis+
             ", " + super.toString();
    }
 }

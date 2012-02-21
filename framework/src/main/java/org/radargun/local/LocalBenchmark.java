@@ -82,13 +82,12 @@ public class LocalBenchmark {
                wrapper.tearDown();
             }
          }
-
-         createOutputFile();
-
-         generateChart();
-
-         generateMonitorReports();
       }
+      createOutputFile();
+
+      generateChart();
+
+      generateMonitorReports();
    }
 
    private void generateMonitorReports() {

@@ -3,8 +3,6 @@ package org.radargun.local;
 import org.radargun.ShutDownHook;
 
 /**
- * // TODO: Mircea - Document this!
- *
  * @author Mircea.Markus@jboss.com
  */
 public class LaunchLocal {

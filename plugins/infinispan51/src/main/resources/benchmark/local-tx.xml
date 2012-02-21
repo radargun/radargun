@@ -1,8 +1,8 @@
 <local-bench-config>
 
    <benchmark>
-      <PutGetWarmup numberOfRequests="1000000"/>
-      <PutGetWarmup numberOfRequests="20000000" opsCountStatusLog="1000000" numOfThreads="25" useTransactions="false" sysMonitorEnabled="true"/>
+      <PutGetWarmup durationMillis="20m"/>
+      <PutGet durationMillis="30m" opsCountStatusLog="1000000" numOfThreads="25" useTransactions="true" sysMonitorEnabled="true"/>
    </benchmark>
 
    <products>
@@ -19,9 +19,9 @@
    </products>
 
    <reports>
-      <report name="50vs51">
-         <item product="infinispan50" config="50_non_tx"/>
-         <item product="infinispan51" config="51_non_tx"/>
+      <report name="50vs51_tx">
+         <item product="infinispan50" config="50_tx"/>
+         <item product="infinispan51" config="51_tx"/>
       </report>
       <report name="All" includeAll="true"/>
    </reports>

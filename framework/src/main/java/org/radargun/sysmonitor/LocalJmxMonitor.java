@@ -54,6 +54,7 @@ public class LocalJmxMonitor {
 
    final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
 
+   //todo remove these lines once remote connection is available..
    public static void main(String[] args) throws Exception {
 //      // If running in same VM...
 //      final MBeanServerConnection con = ManagementFactory.getPlatformMBeanServer();

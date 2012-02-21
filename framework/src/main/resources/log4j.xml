@@ -64,7 +64,7 @@
    </category>
 
    <category name="org.radargun.sysmonitor">
-      <priority value="TRACE"/>
+      <priority value="INFO"/>
    </category>
 
    <category name="org.radargun.reporting">

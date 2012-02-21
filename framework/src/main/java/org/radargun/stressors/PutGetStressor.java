@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -44,6 +45,11 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
     */
    private int writePercentage = 20;
 
+   /**
+    * Negative values means duration is not enabled.
+    */
+   private long durationMillis = -1;
+
 
    /**
     * the number of threads that will work on this cache wrapper.
@@ -70,14 +76,20 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
    private CacheWrapper cacheWrapper;
    private static Random r = new Random();
-   private long startNanos;
+   private volatile long startNanos;
    private volatile CountDownLatch startPoint;
+   private volatile StressorCompletion completion;
 
 
    public Map<String, String> stress(CacheWrapper wrapper) {
       this.cacheWrapper = wrapper;
       startNanos = System.nanoTime();
       log.info("Executing: " + this.toString());
+      if (durationMillis > 0) {
+         completion = new TimeStressorCompletion(durationMillis);
+      } else {
+         completion = new OperationCountCompletion(new AtomicInteger(numberOfRequests));
+      }
 
       List<Stressor> stressors;
       try {
@@ -115,10 +127,10 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
       Map<String, String> results = new LinkedHashMap<String, String>();
       results.put("DURATION", str(duration));
-      double requestPerSec = (reads + writes) / ((duration/numOfThreads) / 1000000000.0);
+      double requestPerSec = (reads + writes) / ((duration / numOfThreads) / 1000000000.0);
       results.put("REQ_PER_SEC", str(requestPerSec));
-      results.put("READS_PER_SEC", str(reads / ((readsDurations/numOfThreads) / 1000000000.0)));
-      results.put("WRITES_PER_SEC", str(writes / ((writesDurations/numOfThreads) / 1000000000.0)));
+      results.put("READS_PER_SEC", str(reads / ((readsDurations / numOfThreads) / 1000000000.0)));
+      results.put("WRITES_PER_SEC", str(writes / ((writesDurations / numOfThreads) / 1000000000.0)));
       results.put("READ_COUNT", str(reads));
       results.put("WRITE_COUNT", str(writes));
       results.put("FAILURES", str(failures));
@@ -127,22 +139,22 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          results.put("TX_PER_SEC", str(txPerSec));
       }
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
-            ". Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
+                     ". Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
       return results;
    }
 
    private List<Stressor> executeOperations() throws Exception {
       List<Stressor> stressors = new ArrayList<Stressor>(numOfThreads);
-      final AtomicInteger requestsLeft = new AtomicInteger(numberOfRequests);
       startPoint = new CountDownLatch(1);
       for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
-         Stressor stressor = new Stressor(threadIndex, requestsLeft);
+         Stressor stressor = new Stressor(threadIndex);
          stressor.initialiseKeys();
          stressors.add(stressor);
          stressor.start();
       }
       log.info("Cache wrapper info is: " + cacheWrapper.getInfo());
       startPoint.countDown();
+      log.info("Started " + stressors.size() + " stressor threads.");
       for (Stressor stressor : stressors) {
          stressor.join();
       }
@@ -164,15 +176,12 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       private long transactionDuration = 0;
       private long reads;
       private long writes;
-      private long startNanos;
-      private AtomicInteger requestsLeft;
       private final String bucketId;
       boolean txNotCompleted = false;
 
-      public Stressor(int threadIndex, AtomicInteger requestsLeft) {
+      public Stressor(int threadIndex) {
          super("Stressor-" + threadIndex);
          this.threadIndex = threadIndex;
-         this.requestsLeft = requestsLeft;
          this.bucketId = isLocalBenchmark() ? String.valueOf(threadIndex) : nodeIndex + "_" + threadIndex;
       }
 
@@ -186,20 +195,19 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       }
 
       private void runInternal() {
-         startNanos = System.nanoTime();
          int readPercentage = 100 - writePercentage;
          Random r = new Random();
          int randomAction;
          int randomKeyInt;
          try {
             startPoint.await();
-            log.info("Starting thread: " + getName());
+            log.trace("Starting thread: " + getName());
          } catch (InterruptedException e) {
             log.warn(e);
          }
 
          int i = 0;
-         while (requestsLeft.getAndDecrement() > -1) {
+         while (completion.moreToRun()) {
             randomAction = r.nextInt(100);
             randomKeyInt = r.nextInt(numberOfKeys - 1);
             Object key = getKey(randomKeyInt);
@@ -213,7 +221,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
             }
 
             i++;
-            logProgress(i, result);
+            completion.logProgress(i, result, threadIndex);
          }
 
          if (txNotCompleted) {
@@ -267,7 +275,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          reads++;
          return result;
       }
-      
+
       private void doWrite(Object key, Object payload, int iteration) {
          long txOverhead = 0;
          if (useTransactions) txOverhead = startTx(iteration);
@@ -285,22 +293,6 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          writeDuration += operationDuration;
          if (useTransactions) writeDuration += txOverhead;
          writes++;
-      }
-
-      private void logProgress(int i, Object result) {
-         if ((i + 1) % opsCountStatusLog == 0) {
-            double elapsedNanos = System.nanoTime() - startNanos;
-            double estimatedTotal = ((double) (numberOfRequests / numOfThreads) / (double) i) * elapsedNanos;
-            double estimatedRemaining = estimatedTotal - elapsedNanos;
-            if (log.isTraceEnabled()) {
-               log.trace("i=" + i + ", elapsedTime=" + elapsedNanos);
-            }
-            log.info("Thread index '" + threadIndex + "' executed " + (i + 1) + " operations. Elapsed time: " +
-                  Utils.getNanosDurationString((long) elapsedNanos) + ". Estimated remaining: " + Utils.getNanosDurationString((long) estimatedRemaining) +
-                  ". Estimated total: " + Utils.getNanosDurationString((long) estimatedTotal));
-            //this line was added just to make sure JIT doesn't skip call to cacheWrapper.get
-            if (result == null) System.out.print("");
-         }
       }
 
       public long totalDuration() {
@@ -334,7 +326,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
    }
 
    private boolean startTransaction(int i) {
-      if ((i  % transactionSize) == 0) {
+      if ((i % transactionSize) == 0) {
          cacheWrapper.startTransaction();
          return true;
       }
@@ -440,6 +432,115 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       this.commitTransactions = commitTransactions;
    }
 
+   public long getDurationMillis() {
+      return durationMillis;
+   }
+
+   public void setDurationMillis(long durationMillis) {
+      this.durationMillis = durationMillis;
+   }
+
+   public void setDuration(String duration) {
+      this.durationMillis = Utils.string2Millis(duration);
+   }
+
+
+   abstract class StressorCompletion {
+ 
+      abstract boolean moreToRun();
+
+      public void logProgress(int i, Object result, int threadIndex) {
+         if (shoulLogBasedOnOpCount(i)) {
+            avoidJit(result);
+            logRemainingTime(i, threadIndex);
+         }
+      }
+
+      protected boolean shoulLogBasedOnOpCount(int i) {
+         return (i + 1) % opsCountStatusLog == 0;
+      }
+
+      protected void logRemainingTime(int i, int threadIndex) {
+         double elapsedNanos = System.nanoTime() - startNanos;
+         double estimatedTotal = ((double) (numberOfRequests / numOfThreads) / (double) i) * elapsedNanos;
+         double estimatedRemaining = estimatedTotal - elapsedNanos;
+         if (log.isTraceEnabled()) {
+            log.trace("i=" + i + ", elapsedTime=" + elapsedNanos);
+         }
+         log.info("Thread index '" + threadIndex + "' executed " + (i + 1) + " operations. Elapsed time: " +
+                        Utils.getNanosDurationString((long) elapsedNanos) + ". Estimated remaining: " + Utils.getNanosDurationString((long) estimatedRemaining) +
+                        ". Estimated total: " + Utils.getNanosDurationString((long) estimatedTotal));
+      }
+
+      protected void avoidJit(Object result) {
+         //this line was added just to make sure JIT doesn't skip call to cacheWrapper.get
+         if (result != null && System.identityHashCode(result) == result.hashCode()) System.out.print("");
+      }
+   }
+
+   class OperationCountCompletion extends StressorCompletion {
+      
+      private final AtomicInteger requestsLeft;
+
+      OperationCountCompletion(AtomicInteger requestsLeft) {
+         this.requestsLeft = requestsLeft;
+      }
+
+      @Override
+      public boolean moreToRun() {
+         return requestsLeft.getAndDecrement() > -1;
+      }
+   }
+   
+   class TimeStressorCompletion extends StressorCompletion {
+      
+      private volatile long startTime;
+      
+      private final long durationMillis;
+
+      private volatile long lastPrint = -1;
+      
+      TimeStressorCompletion(long durationMillis) {
+         this.durationMillis = durationMillis;
+         startTime = nowMillis();
+      }
+
+      @Override
+      boolean moreToRun() {
+         return nowMillis() <= startTime + durationMillis;
+      }
+
+      public void logProgress(int i, Object result, int threadIndex) {
+         long nowMillis = nowMillis();
+
+         //make sure this info is not printed more frequently than 20 secs
+         int logFrequency = 20;
+         if (lastPrint > 0 && (getSecondsSinceLastPrint(nowMillis) < logFrequency)) return; {
+            synchronized (this) {
+               if (getSecondsSinceLastPrint(nowMillis) < logFrequency) return;
+               avoidJit(result);
+
+               lastPrint = nowMillis;
+               long elapsedMillis = nowMillis - startTime;
+
+               //make sure negative durations are not printed
+               long remaining = Math.max(0, (startTime + durationMillis) - nowMillis);
+
+               log.info("Number of ops executed so far: " + i + ". Elapsed time: " + Utils.getMillisDurationString(elapsedMillis) + ". Remaining: " + Utils.getMillisDurationString(remaining) +
+                              ". Total: " + Utils.getMillisDurationString(durationMillis));
+            }
+         }
+      }
+
+      private long getSecondsSinceLastPrint(long nowMillis) {
+         return TimeUnit.MILLISECONDS.toSeconds(nowMillis - lastPrint);
+      }
+
+      private long nowMillis() {
+         return TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
+      }
+   }
+
    @Override
    public String toString() {
       return "PutGetStressor{" +
@@ -454,6 +555,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
             ", useTransactions=" + useTransactions +
             ", transactionSize=" + transactionSize +
             ", commitTransactions=" + commitTransactions +
+            ", durationMillis=" + durationMillis +
             "}";
    }
 }

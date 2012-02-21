@@ -29,8 +29,9 @@ public class Utils {
    public static String getMillisDurationString(long millis) {
       long secs = millis / 1000;
       long mins = secs / 60;
+      long remainingSecs = secs % 60;
       if (mins > 0) {
-         return String.format("%d mins %d secs", mins, secs);
+         return String.format("%d mins %d secs", mins, remainingSecs);
       }
       else {
          return String.format("%.3f secs", millis / 1000.0);
@@ -249,5 +250,28 @@ public class Utils {
       } catch (Exception e) {
          throw new IllegalStateException(e);
       }
+   }
+   
+   public static long string2Millis(String duration) {
+      long durationMillis = 0;
+      try {
+         durationMillis = Long.parseLong(duration);
+      } catch (NumberFormatException nfe) {
+         int indexOfM = duration.toUpperCase().indexOf('M');
+         if (indexOfM > 0) {
+            durationMillis = Long.parseLong(duration.substring(0, indexOfM));
+            durationMillis = TimeUnit.MINUTES.toMillis(durationMillis);
+         } else {
+            int indexOfS = duration.toUpperCase().indexOf('S');
+            if (indexOfS > 0) {
+               durationMillis = Long.parseLong(duration.substring(0, indexOfS));
+               durationMillis = TimeUnit.SECONDS.toMillis(durationMillis);
+            }
+            else {
+               throw new IllegalArgumentException("Cannot parse string: '" + duration + "' Supported formats: '321321' (millis), '3m' (minutes) or '75s' (seconds)");
+            }
+         }
+      }
+      return durationMillis;
    }
 }
