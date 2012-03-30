@@ -9,27 +9,34 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>plugin-infinispan50</artifactId>
+   <artifactId>plugin-infinispan52</artifactId>
    <version>1.1.0-SNAPSHOT</version>
-   <name>Infinispan 5.0.x plugin for RadarGun</name>
+   <name>Infinispan 5.2.x plugin for RadarGun</name>
 
    <dependencies>
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
-         <version>5.0.1.FINAL</version>
+         <version>5.2.0-SNAPSHOT</version>
       </dependency>
 
       <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>plugin-infinispan4</artifactId>
-         <version>${project.version}</version>
+         <version>1.1.0-SNAPSHOT</version>
          <exclusions>
             <exclusion>
                <groupId>org.infinispan</groupId>
                <artifactId>infinispan-core</artifactId>
             </exclusion>
          </exclusions>
+      </dependency>
+
+      <!-- needed for jbosstm lookup -->
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-infinispan50</artifactId>
+         <version>1.1.0-SNAPSHOT</version>
       </dependency>
 
       <dependency>
