@@ -1,36 +1,31 @@
 package org.radargun.stages;
 
+import java.net.URLClassLoader;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.state.MasterState;
+import org.radargun.stressors.BackgroundStats;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
-import java.net.URLClassLoader;
-
 /**
- * Stage that strts a CacheWrapper on each slave.
- *
+ * Stage that starts a CacheWrapper on each slave.
+ * 
  * @author Mircea.Markus@jboss.com
  */
 public class StartClusterStage extends AbstractDistStage {
 
-   private String productName;
-   private boolean useSmartClassLoading = true;
    private boolean performClusterSizeValidation = true;
    private boolean staggerSlaveStartup = true;
    private long delayAfterFirstSlaveStarts = 5000;
    private long delayBetweenStartingSlaves = 500;
-   
+   private Integer expectNumSlaves;
 
    private String config;
    private final int TRY_COUNT = 180;
 
-
-   private static final String PREV_PRODUCT = "StartClusterStage.previousProduct";
-   private static final String CLASS_LOADER = "StartClusterStage.classLoader";
    private TypedProperties confAttributes;
-
 
    public StartClusterStage() {
       super.setExitBenchmarkOnSlaveFailure(true);
@@ -42,8 +37,18 @@ public class StartClusterStage extends AbstractDistStage {
          log.info("Wrapper already set on this slave, not starting it again.");
          return ack;
       }
-      staggerStartup(slaveIndex, getActiveSlaveCount());
-      log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress() + ". This slave's index is: " + getSlaveIndex());
+      if (slaves != null) {
+         if (!slaves.contains(getSlaveIndex())) {
+            log.trace("Start request not targeted for this slave, ignoring.");
+            return ack;
+         } else {
+            staggerStartup(slaves.indexOf(getSlaveIndex()), slaves.size());
+         }
+      } else {
+         staggerStartup(slaveIndex, getActiveSlaveCount());
+      }
+      log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
+            + ". This slave's index is: " + getSlaveIndex());
       CacheWrapper wrapper = null;
       try {
          String plugin = Utils.getCacheWrapperFqnClass(productName);
@@ -51,13 +56,14 @@ public class StartClusterStage extends AbstractDistStage {
          wrapper.setUp(config, false, slaveIndex, confAttributes);
          slaveState.setCacheWrapper(wrapper);
          if (performClusterSizeValidation) {
+            int expectedNumberOfSlaves = expectNumSlaves == null ? getActiveSlaveCount() : expectNumSlaves;
             for (int i = 0; i < TRY_COUNT; i++) {
                int numMembers = wrapper.getNumMembers();
-               if (numMembers != getActiveSlaveCount()) {
-                  String msg = "Number of members=" + numMembers + " is not the one expected: " + getActiveSlaveCount();
+               if (numMembers != expectedNumberOfSlaves) {
+                  String msg = "Number of members=" + numMembers + " is not the one expected: " + expectedNumberOfSlaves;
                   log.info(msg);
                   Thread.sleep(1000);
-                  if (i == TRY_COUNT) {
+                  if (i == TRY_COUNT - 1) {
                      ack.setError(true);
                      ack.setErrorMessage(msg);
                      return ack;
@@ -68,6 +74,7 @@ public class StartClusterStage extends AbstractDistStage {
                }
             }
          }
+         BackgroundStats.afterCacheWrapperStart(slaveState);
       } catch (Exception e) {
          log.error("Issues while instantiating/starting cache wrapper", e);
          ack.setError(true);
@@ -84,35 +91,11 @@ public class StartClusterStage extends AbstractDistStage {
       return ack;
    }
 
-   private Object createInstance(String classFqn) throws Exception {
-      if (!useSmartClassLoading) {
-         return Class.forName(classFqn).newInstance();
-      }
-      URLClassLoader classLoader;
-      String prevProduct = (String) slaveState.get(PREV_PRODUCT);
-      if (prevProduct == null || !prevProduct.equals(productName)) {
-         classLoader = createLoader();
-         slaveState.put(CLASS_LOADER, classLoader);
-         slaveState.put(PREV_PRODUCT, productName);
-      } else {//same product and there is a class loader
-         classLoader = (URLClassLoader) slaveState.get(CLASS_LOADER);
-      }
-      log.info("Creating newInstance " + classFqn + " with classloader " + classLoader);
-      Thread.currentThread().setContextClassLoader(classLoader);
-      return classLoader.loadClass(classFqn).newInstance();
-   }
-
-   private URLClassLoader createLoader() throws Exception {
-      return Utils.buildProductSpecificClassLoader(productName, this.getClass().getClassLoader());
-   }
 
    public void setConfig(String config) {
       this.config = config;
    }
 
-   public void setUseSmartClassLoading(boolean useSmartClassLoading) {
-      this.useSmartClassLoading = useSmartClassLoading;
-   }
 
    public void setPerformCLusterSizeValidation(boolean performCLusterSizeValidation) {
       this.performClusterSizeValidation = performCLusterSizeValidation;
@@ -121,18 +104,12 @@ public class StartClusterStage extends AbstractDistStage {
    @Override
    public void initOnMaster(MasterState masterState, int slaveIndex) {
       super.initOnMaster(masterState, slaveIndex);
-      this.productName = masterState.nameOfTheCurrentBenchmark();
    }
 
    @Override
    public String toString() {
-      return "StartClusterStage {" +
-            "productName='" + productName + '\'' +
-            ", useSmartClassLoading=" + useSmartClassLoading +
-            ", config=" + config +
-            ", " + super.toString();
+      return "StartClusterStage {config=" + config + ", " + super.toString();
    }
-
 
    public void setStaggerSlaveStartup(boolean staggerSlaveStartup) {
       this.staggerSlaveStartup = staggerSlaveStartup;
@@ -146,7 +123,7 @@ public class StartClusterStage extends AbstractDistStage {
       this.delayBetweenStartingSlaves = delayBetweenSlavesStarts;
    }
 
-   private void staggerStartup(int thisNodeIndex, int activeNodes) {
+   private void staggerStartup(int thisNodeIndex, int numSlavesToStart) {
       if (!staggerSlaveStartup) {
          if (log.isTraceEnabled()) {
             log.trace("Not using slave startup staggering");
@@ -154,11 +131,13 @@ public class StartClusterStage extends AbstractDistStage {
          return;
       }
       if (thisNodeIndex == 0) {
-         log.info("Startup staggering, cluster size is " + activeNodes + " This is the slave with index 0, not sleeping");
+         log.info("Startup staggering, number of slaves to start is " + numSlavesToStart
+               + " This is the slave with index 0, not sleeping");
          return;
       }
       long toSleep = delayAfterFirstSlaveStarts + thisNodeIndex * delayBetweenStartingSlaves;
-      log.info(" Startup staggering, cluster size is " + activeNodes + ". This is the slave with index " + thisNodeIndex + ". Sleeping for " + toSleep + " millis.");
+      log.info(" Startup staggering, starting " + numSlavesToStart + " slaves. This is the slave with index "
+            + thisNodeIndex + ". Sleeping for " + toSleep + " millis.");
       try {
          Thread.sleep(toSleep);
       } catch (InterruptedException e) {
@@ -169,4 +148,9 @@ public class StartClusterStage extends AbstractDistStage {
    public void setConfAttributes(TypedProperties confAttributes) {
       this.confAttributes = confAttributes;
    }
+
+   public void setExpectNumSlaves(int numSlaves) {
+      this.expectNumSlaves = numSlaves;
+   }
+   
 }

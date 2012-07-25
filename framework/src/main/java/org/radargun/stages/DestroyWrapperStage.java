@@ -4,6 +4,7 @@ import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.Slave;
 import org.radargun.state.MasterState;
+import org.radargun.stressors.BackgroundStats;
 import org.radargun.utils.Utils;
 
 import java.util.List;
@@ -39,6 +40,7 @@ public class DestroyWrapperStage extends AbstractDistStage {
       try {
          CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
          if (cacheWrapper != null) {
+            BackgroundStats.beforeCacheWrapperDestroy(slaveState);
             cacheWrapper.tearDown();
             for (int i = 0; i < 120; i++) {
                if (cacheWrapper.getNumMembers() <= 0) break; //negative value might be returned by impl that do not support this method

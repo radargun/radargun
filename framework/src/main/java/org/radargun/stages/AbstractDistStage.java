@@ -1,5 +1,9 @@
 package org.radargun.stages;
 
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.DistStage;
@@ -9,8 +13,6 @@ import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.Utils;
 
-import java.util.List;
-
 /**
  * Support class for distributed stages.
  *
@@ -19,10 +21,13 @@ import java.util.List;
 public abstract class AbstractDistStage implements DistStage {
 
    protected Log log = LogFactory.getLog(getClass());
+   private static final String PREV_PRODUCT = "AbstractDistStage.previousProduct";
+   private static final String CLASS_LOADER = "AbstractDistStage.classLoader";
 
    protected transient SlaveState slaveState;
 
    protected transient MasterConfig masterConfig;
+   protected List<Integer> slaves;
 
    protected boolean exitBenchmarkOnSlaveFailure = false;
 
@@ -30,6 +35,8 @@ public abstract class AbstractDistStage implements DistStage {
    private int activeSlavesCount;
    private int totalSlavesCount;
    private boolean runOnAllSlaves;
+   private boolean useSmartClassLoading = true;
+   protected String productName;
 
    public void initOnSlave(SlaveState slaveState) {
       this.slaveState = slaveState;
@@ -43,7 +50,7 @@ public abstract class AbstractDistStage implements DistStage {
       if (isRunOnAllSlaves()) {
          setActiveSlavesCount(totalSlavesCount);
       }
-
+      this.productName = masterState.nameOfTheCurrentBenchmark();
    }
 
    public void setRunOnAllSlaves(boolean runOnAllSlaves) {
@@ -119,9 +126,42 @@ public abstract class AbstractDistStage implements DistStage {
 
    @Override
    public String toString() {
-      return "slaveIndex=" + slaveIndex +
-            ", activeSlavesCount=" + activeSlavesCount +
-            ", totalSlavesCount=" + totalSlavesCount +
-            "} ";
+      return "productName='" + productName + "', useSmartClassLoading=" + useSmartClassLoading + ", slaveIndex="
+            + slaveIndex + ", activeSlavesCount=" + activeSlavesCount + ", totalSlavesCount=" + totalSlavesCount
+            + (slaves == null ? "}" : ", slaves=" + slaves + "}");
    }
+
+   public void setSlaves(String slaves) {
+      this.slaves = new ArrayList<Integer>();
+      for (String slave : slaves.split(",")) {
+         this.slaves.add(Integer.valueOf(slave));
+      }
+   }
+
+   public void setUseSmartClassLoading(boolean useSmartClassLoading) {
+      this.useSmartClassLoading = useSmartClassLoading;
+   }
+
+   protected Object createInstance(String classFqn) throws Exception {
+      if (!useSmartClassLoading) {
+         return Class.forName(classFqn).newInstance();
+      }
+      URLClassLoader classLoader;
+      String prevProduct = (String) slaveState.get(PREV_PRODUCT);
+      if (prevProduct == null || !prevProduct.equals(productName)) {
+         classLoader = createLoader();
+         slaveState.put(CLASS_LOADER, classLoader);
+         slaveState.put(PREV_PRODUCT, productName);
+      } else {//same product and there is a class loader
+         classLoader = (URLClassLoader) slaveState.get(CLASS_LOADER);
+      }
+      log.info("Creating newInstance " + classFqn + " with classloader " + classLoader);
+      Thread.currentThread().setContextClassLoader(classLoader);
+      return classLoader.loadClass(classFqn).newInstance();
+   }
+
+   private URLClassLoader createLoader() throws Exception {
+      return Utils.buildProductSpecificClassLoader(productName, this.getClass().getClassLoader());
+   }
+
 }

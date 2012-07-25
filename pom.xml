@@ -73,6 +73,43 @@
             </plugins>
          </build>
       </profile>
+      <profile>
+         <id>jdg</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+         </activation>
+         <modules>
+            <module>plugins/jdg60</module>
+         </modules>
+         <build>
+            <plugins>
+               <plugin>
+                  <groupId>org.apache.maven.plugins</groupId>
+                  <artifactId>maven-antrun-plugin</artifactId>
+                  <version>1.3</version>
+                  <executions>
+                     <execution>
+                        <id>prepare_jdg_plugin</id>
+                        <phase>verify</phase>
+                        <goals>
+                           <goal>run</goal>
+                        </goals>
+                        <configuration>
+                           <tasks>
+                              <echo message="Packaging the JDG 6.0.x plugin" />
+                              <copy todir="${distribution.artifact}/plugins/jdg60">
+                                 <fileset dir="plugins/jdg60/target/distribution/plugin-jdg60-bin/plugin-jdg60">
+                                    <include name="**/*" />
+                                 </fileset>
+                              </copy>
+                           </tasks>
+                        </configuration>
+                     </execution>
+                  </executions>
+               </plugin>
+            </plugins>
+         </build>
+      </profile>
    </profiles>
 
    <build>

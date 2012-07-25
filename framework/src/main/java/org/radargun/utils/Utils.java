@@ -143,7 +143,7 @@ public class Utils {
       return new URLClassLoader(jars.toArray(new URL[jars.size()]), parent);
    }
 
-   public static String getCacheWrapperFqnClass(String productName) {
+   public static String getCacheProviderProperty(String productName, String propertyName) {
       File file = new File(PLUGINS_DIR + File.separator + productName + File.separator + "conf" + File.separator + "cacheprovider.properties");
       if (!file.exists()) {
          log.warn("Could not find a plugin descriptor : " + file);
@@ -154,7 +154,7 @@ public class Utils {
       try {
          inStream = new FileInputStream(file);
          properties.load(inStream);
-         return properties.getProperty("org.radargun.wrapper");
+         return properties.getProperty(propertyName);
       } catch (IOException e) {
          throw new RuntimeException(e);
       } finally {
@@ -165,6 +165,10 @@ public class Utils {
                log.warn(e);
             }
       }
+   }
+
+   public static String getCacheWrapperFqnClass(String productName) {
+      return Utils.getCacheProviderProperty(productName, "org.radargun.wrapper");
    }
 
    public static File createOrReplaceFile(File parentDir, String actualFileName) throws IOException {

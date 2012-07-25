@@ -30,10 +30,10 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    private static Log log = LogFactory.getLog(InfinispanWrapper.class);
-   DefaultCacheManager cacheManager;
+   protected DefaultCacheManager cacheManager;
    private Cache<Object, Object> cache;
    TransactionManager tm;
-   boolean started = false;
+   protected boolean started = false;
    String config;
    private volatile boolean enlistExtraXAResource;
 
