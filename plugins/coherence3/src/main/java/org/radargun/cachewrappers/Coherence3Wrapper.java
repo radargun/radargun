@@ -1,41 +1,34 @@
 package org.radargun.cachewrappers;
 
-import com.tangosol.net.CacheFactory;
-import com.tangosol.net.NamedCache;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 import org.radargun.CacheWrapper;
 import org.radargun.utils.TypedProperties;
 
-
-import javax.transaction.Transaction;
+import com.tangosol.net.CacheFactory;
+import com.tangosol.net.DefaultConfigurableCacheFactory;
+import com.tangosol.net.NamedCache;
 
 /**
- * Pass in a -Dtangosol.coherence.localhost=IP_ADDRESS
- *
+ * Oracle Coherence 3.x CacheWrapper implementation.
+ * 
  * @author <a href="mailto:manik@jboss.org">Manik Surtani</a>
- * @since 2.0.0
+ * @author <a href="mailto:mlinhard@redhat.com">Michal Linhard</a>
+ * @since 1.0.0
  */
 public class Coherence3Wrapper implements CacheWrapper {
-
+   private static final String CACHE_NAME = "x"; // this must be synced with cache configs
    private NamedCache nc;
-   private Log log = LogFactory.getLog(Coherence3Wrapper.class);
+   private Logger log = Logger.getLogger(Coherence3Wrapper.class);
 
    @Override
-   public void setUp(String configuration, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
-      String config;
-      if (configuration.indexOf("repl") == 0) {
-         config = "radargun-repl";
-      } else if (configuration.indexOf("dist") == 0) {
-         config = "radargun-dist";
-      } else if (configuration.indexOf("near") == 0) {
-         config = "radargun-near";
-      } else {
-         throw new RuntimeException("Invalid configuration ('" + configuration + "'). Configuration name should start with: 'dist', 'repl', 'local', 'opt' or 'near'");
-      }
-      nc = CacheFactory.getCache(config);
-
-      log.info("Starting Coherence cache " + nc.getCacheName());
+   public void setUp(String configuration, boolean isLocal, int nodeIndex, TypedProperties confAttributes)
+         throws Exception {
+      CacheFactory.setConfigurableCacheFactory(new DefaultConfigurableCacheFactory(configuration));
+      nc = CacheFactory.getCache(CACHE_NAME);
+      log.debug("CacheFactory.getClusterConfig(): \n" + CacheFactory.getClusterConfig());
+      log.debug("CacheFactory.getConfigurableCacheFactoryConfig(): \n"
+            + CacheFactory.getConfigurableCacheFactoryConfig());
+      log.info("Started Coherence cache " + nc.getCacheName());
    }
 
    public void tearDown() throws Exception {
@@ -84,7 +77,7 @@ public class Coherence3Wrapper implements CacheWrapper {
       return get(bucket, key);
    }
 
-   public Transaction startTransaction() {
+   public void startTransaction() {
       throw new UnsupportedOperationException("Does not support JTA!");
    }
 
@@ -94,6 +87,6 @@ public class Coherence3Wrapper implements CacheWrapper {
 
    @Override
    public int size() {
-      return 0;  // TODO: Customise this generated block
+      return nc.size();
    }
 }
