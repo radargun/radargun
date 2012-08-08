@@ -58,8 +58,8 @@ public class InfinispanWrapper implements CacheWrapper {
       log.debug("Loading JGroups from: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
       log.info("Using config attributes: " + confAttributes);
-      blockForRehashing();
-      injectEvenConsistentHash(confAttributes);
+      blockForRehashing(cache);
+      injectEvenConsistentHash(cache, confAttributes);
    }
 
    public void tearDown() throws Exception {
@@ -144,22 +144,22 @@ public class InfinispanWrapper implements CacheWrapper {
       return cache.keySet().size();
    }
 
-   private void blockForRehashing() throws InterruptedException {
+   protected void blockForRehashing(Cache aCache) throws InterruptedException {
       // should we be blocking until all rehashing, etc. has finished?
       long gracePeriod = MINUTES.toMillis(15);
       long giveup = System.currentTimeMillis() + gracePeriod;
-      if (cache.getConfiguration().getCacheMode().isDistributed()) {
-         while (!cache.getAdvancedCache().getDistributionManager().isJoinComplete() && System.currentTimeMillis() < giveup)
+      if (aCache.getConfiguration().getCacheMode().isDistributed()) {
+         while (!aCache.getAdvancedCache().getDistributionManager().isJoinComplete() && System.currentTimeMillis() < giveup)
             Thread.sleep(200);
       }
 
-      if (cache.getConfiguration().getCacheMode().isDistributed() && !cache.getAdvancedCache().getDistributionManager().isJoinComplete())
+      if (aCache.getConfiguration().getCacheMode().isDistributed() && !aCache.getAdvancedCache().getDistributionManager().isJoinComplete())
          throw new RuntimeException("Caches haven't discovered and joined the cluster even after " + Utils.prettyPrintMillis(gracePeriod));
    }
 
-   private void injectEvenConsistentHash(TypedProperties confAttributes) {
-      if (cache.getConfiguration().getCacheMode().isDistributed()) {
-         ConsistentHash ch = cache.getAdvancedCache().getDistributionManager().getConsistentHash();
+   protected void injectEvenConsistentHash(Cache aCache, TypedProperties confAttributes) {
+      if (aCache.getConfiguration().getCacheMode().isDistributed()) {
+         ConsistentHash ch = aCache.getAdvancedCache().getDistributionManager().getConsistentHash();
          if (ch instanceof EvenSpreadingConsistentHash) {
             int threadsPerNode = confAttributes.getIntProperty("threadsPerNode", -1);
             if (threadsPerNode < 0) throw new IllegalStateException("When EvenSpreadingConsistentHash is used threadsPerNode must also be set.");
