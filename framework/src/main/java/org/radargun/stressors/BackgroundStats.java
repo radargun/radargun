@@ -300,6 +300,7 @@ public class BackgroundStats {
       }
 
       private void loadData() {
+         log.trace("Loading key range [" + keyRangeStart + ", " + keyRangeEnd + "]");
          for (currentKey = keyRangeStart; currentKey < keyRangeEnd; currentKey++) {
             try {
                cacheWrapper.put(NAME, key(currentKey), generateRandomString(entrySize));
@@ -311,10 +312,12 @@ public class BackgroundStats {
             // each slave takes responsibility to load keys for a subset of dead slaves
             int[] deadSlaveIdxRange = divideRange(loadDataForDeadSlaves.size(), numSlaves, slaveIndex); // range of dead slaves this slave will load data for
             for (int deadSlaveIdx = deadSlaveIdxRange[0]; deadSlaveIdx < deadSlaveIdxRange[1]; deadSlaveIdx++) {
-               int[] deadSlaveKeyRange = divideRange(numEntries, numSlaves, deadSlaveIdx); // key range for the current dead slave
+               int[] deadSlaveKeyRange = divideRange(numEntries, numSlaves, loadDataForDeadSlaves.get(deadSlaveIdx)); // key range for the current dead slave
                int[] keyRange = divideRange(deadSlaveKeyRange[1] - deadSlaveKeyRange[0], numThreads, idx); // key range for this thread
                int deadKeyRangeStart = deadSlaveKeyRange[0] + keyRange[0];
                int deadKeyRangeEnd = deadSlaveKeyRange[0] + keyRange[1];
+               log.trace("Loading key range for dead slave " + loadDataForDeadSlaves.get(deadSlaveIdx) + ": [" + deadKeyRangeStart + ", "
+                     + deadKeyRangeEnd + "]");
                for (currentKey = deadKeyRangeStart; currentKey < deadKeyRangeEnd; currentKey++) {
                   try {
                      cacheWrapper.put(NAME, key(currentKey), generateRandomString(entrySize));
@@ -372,7 +375,6 @@ public class BackgroundStats {
                resetLastOpTime();
                Object result = cacheWrapper.get(NAME, key);
                threadStats.registerRequest(lastOpTime(), isPut, result == null);
-               log.trace(reqDescription + " sucessfull");
                remainingGets--;
             } else if (remainingPuts > 0) {
                isPut = true;
