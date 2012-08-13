@@ -60,7 +60,7 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper imple
           * There SHOULD be just one instance of transaction manager!
           */
          tm = caches.get(0).getAdvancedCache().getTransactionManager();
-
+         started = true;
       }
       log.debug("Loading JGroups from: "
                + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
@@ -144,11 +144,6 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper imple
    @Override
    public Cache<Object, Object> getCache() {
       throw new IllegalStateException("Can't get a single cache in multi cache test!");
-   }
-
-   @Override
-   public void tearDown() throws Exception {
-      super.tearDown();
    }
 
    @Override
