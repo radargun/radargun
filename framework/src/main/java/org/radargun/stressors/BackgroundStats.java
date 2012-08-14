@@ -39,6 +39,7 @@ public class BackgroundStats {
    private long delayBetweenRequests;
    private StressorThread[] stressorThreads;
    private SizeThread sizeThread;
+   private volatile boolean stressorsRunning = false;
    private CacheWrapper cacheWrapper;
    private int numSlaves;
    private int slaveIndex;
@@ -99,7 +100,7 @@ public class BackgroundStats {
     * 
     */
    public void startStressors() {
-      if (stressorThreads != null || cacheWrapper != null) {
+      if (stressorThreads != null || cacheWrapper != null || stressorsRunning) {
          throw new IllegalStateException("Can't start stressors, they're already running.");
       }
       cacheWrapper = slaveState.getCacheWrapper();
@@ -116,6 +117,7 @@ public class BackgroundStats {
       }
       sizeThread = new SizeThread();
       sizeThread.start();
+      stressorsRunning = true;
    }
 
    /**
@@ -149,9 +151,10 @@ public class BackgroundStats {
     * 
     */
    public void stopStressors() {
-      if (stressorThreads == null || cacheWrapper == null) {
+      if (stressorThreads == null || cacheWrapper == null || !stressorsRunning) {
          throw new IllegalStateException("Can't stop stressors, they're not running.");
       }
+      stressorsRunning = false;
       // first interrupt all threads
       sizeThread.interrupt();
       for (int i = 0; i < stressorThreads.length; i++) {
@@ -172,7 +175,7 @@ public class BackgroundStats {
    }
 
    public boolean areStressorsRunning() {
-      return stressorThreads != null;
+      return stressorsRunning;
    }
 
    public void startStats() {
@@ -201,6 +204,8 @@ public class BackgroundStats {
 
    private class BackgroundStatsThread extends Thread {
 
+      private Stats nodeDownStats = new Stats(false);
+
       public BackgroundStatsThread() {
          super("BackgroundStatsThread");
       }
@@ -218,12 +223,14 @@ public class BackgroundStats {
       }
 
       private Stats gatherStats() {
-         if (stressorThreads == null) {
-            return Stats.NODE_DOWN;
+         long now = System.currentTimeMillis();
+         if (!stressorsRunning) {
+            return nodeDownStats.snapshot(true, now);
          } else {
+            nodeDownStats.reset(now); // we need to reset should we need them in next round
             Stats r = null;
             for (int i = 0; i < stressorThreads.length; i++) {
-               Stats threadStats = stressorThreads[i].threadStats.snapshot(true, System.currentTimeMillis());
+               Stats threadStats = stressorThreads[i].threadStats.snapshot(true, now);
                if (r == null) {
                   r = threadStats;
                } else {
@@ -253,13 +260,15 @@ public class BackgroundStats {
       private int size = -1;
 
       @Override
-      public synchronized void run() {
+      public void run() {
          try {
             while (!isInterrupted()) {
-               while (!getSize) {
-                  wait(100);
+               synchronized (this) {
+                  while (!getSize) {
+                     wait(100);
+                  }
+                  getSize = false;
                }
-               getSize = false;
                size = cacheWrapper.size();
             }
          } catch (InterruptedException e) {
@@ -316,8 +325,8 @@ public class BackgroundStats {
                int[] keyRange = divideRange(deadSlaveKeyRange[1] - deadSlaveKeyRange[0], numThreads, idx); // key range for this thread
                int deadKeyRangeStart = deadSlaveKeyRange[0] + keyRange[0];
                int deadKeyRangeEnd = deadSlaveKeyRange[0] + keyRange[1];
-               log.trace("Loading key range for dead slave " + loadDataForDeadSlaves.get(deadSlaveIdx) + ": [" + deadKeyRangeStart + ", "
-                     + deadKeyRangeEnd + "]");
+               log.trace("Loading key range for dead slave " + loadDataForDeadSlaves.get(deadSlaveIdx) + ": ["
+                     + deadKeyRangeStart + ", " + deadKeyRangeEnd + "]");
                for (currentKey = deadKeyRangeStart; currentKey < deadKeyRangeEnd; currentKey++) {
                   try {
                      cacheWrapper.put(NAME, key(currentKey), generateRandomString(entrySize));
@@ -436,17 +445,16 @@ public class BackgroundStats {
    }
 
    public static class Stats implements Serializable {
-      static final Stats NODE_DOWN = new Stats(false);
 
       protected boolean nodeUp = true;
       protected boolean snapshot = false;
 
       protected long requestsPut;
-      protected long maxResponseTimePut = Long.MAX_VALUE;
+      protected long maxResponseTimePut = Long.MIN_VALUE;
       protected long responseTimeSumPut = 0;
 
       protected long requestsGet;
-      protected long maxResponseTimeGet = Long.MAX_VALUE;
+      protected long maxResponseTimeGet = Long.MIN_VALUE;
       protected long responseTimeSumGet = 0;
       protected long requestsNullGet;
 
@@ -540,6 +548,7 @@ public class BackgroundStats {
          result.snapshot = true;
          result.errorsPut = errorsPut;
          result.errorsGet = errorsGet;
+         result.nodeUp = nodeUp;
          if (reset) {
             reset(time);
          }
@@ -680,6 +689,14 @@ public class BackgroundStats {
          return intervalEndTime - intervalBeginTime;
       }
 
+      public synchronized long getIntervalBeginTime() {
+         return intervalBeginTime;
+      }
+
+      public synchronized long getIntervalEndTime() {
+         return intervalEndTime;
+      }
+
       public synchronized double getThroughputPut() {
          if (getDuration() == 0) {
             return Double.NaN;
@@ -742,6 +759,106 @@ public class BackgroundStats {
          return requestsNullGet;
       }
 
+      public static long getIntervalBeginMin(List<Stats> stats) {
+         long ret = Long.MAX_VALUE;
+         for (Stats s : stats) {
+            if (s.intervalBeginTime < ret) {
+               ret = s.intervalBeginTime;
+            }
+         }
+         return ret;
+      }
+
+      public static long getIntervalBeginMax(List<Stats> stats) {
+         long ret = Long.MIN_VALUE;
+         for (Stats s : stats) {
+            if (s.intervalBeginTime > ret) {
+               ret = s.intervalBeginTime;
+            }
+         }
+         return ret;
+      }
+
+      public static long getIntervalEndMin(List<Stats> stats) {
+         long ret = Long.MAX_VALUE;
+         for (Stats s : stats) {
+            if (s.intervalEndTime < ret) {
+               ret = s.intervalEndTime;
+            }
+         }
+         return ret;
+      }
+
+      public static long getIntervalEndMax(List<Stats> stats) {
+         long ret = Long.MIN_VALUE;
+         for (Stats s : stats) {
+            if (s.intervalEndTime > ret) {
+               ret = s.intervalEndTime;
+            }
+         }
+         return ret;
+      }
+
+      public static double getTotalThroughput(List<Stats> stats) {
+         double ret = 0;
+         for (Stats s : stats) {
+            ret += s.getThroughput();
+         }
+         return ret;
+      }
+
+      public static double getAvgThroughput(List<Stats> stats) {
+         return getTotalThroughput(stats) / ((double) stats.size());
+      }
+
+      public static double getAvgRespTime(List<Stats> stats) {
+         long responseTimeSum = 0;
+         long numRequests = 0;
+         for (Stats s : stats) {
+            responseTimeSum += s.responseTimeSumGet;
+            responseTimeSum += s.responseTimeSumPut;
+            numRequests += s.requestsGet;
+            numRequests += s.requestsPut;
+         }
+         return ((double) responseTimeSum) / ((double) numRequests);
+      }
+
+      public static long getMaxRespTime(List<Stats> stats) {
+         long ret = Long.MIN_VALUE;
+         for (Stats s : stats) {
+            if (s.maxResponseTimeGet > ret) {
+               ret = s.maxResponseTimeGet;
+            }
+            if (s.maxResponseTimePut > ret) {
+               ret = s.maxResponseTimePut;
+            }
+         }
+         return ret;
+      }
+
+      public static long getTotalCacheSize(List<Stats> stats) {
+         long ret = 0;
+         for (Stats s : stats) {
+            ret += s.getCacheSize();
+         }
+         return ret;
+      }
+
+      public static long getTotalErrors(List<Stats> stats) {
+         long ret = 0;
+         for (Stats s : stats) {
+            ret += s.getNumErrors();
+         }
+         return ret;
+      }
+
+      public static long getTotalNullRequests(List<Stats> stats) {
+         long ret = 0;
+         for (Stats s : stats) {
+            ret += s.getRequestsNullGet();
+         }
+         return ret;
+      }
    }
 
    public static void beforeCacheWrapperDestroy(SlaveState slaveState) {

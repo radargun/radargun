@@ -145,7 +145,9 @@ public class InfinispanJMXClusterValidator implements JMXClusterValidator {
             status = poller.checkStatus();
          }
          if (formed) {
-            log.debug("Cluster formed: " + status.jgroupsViews.iterator().next());
+            log.info("Cluster formed: " + status.jgroupsViews.iterator().next());
+         } else {
+            log.error("Cluster failed to form, last status: " + getDebugStatus(status));
          }
          return formed;
       } catch (Exception e) {

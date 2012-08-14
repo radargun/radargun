@@ -6,8 +6,10 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.radargun.reporting.CSVChart;
@@ -23,10 +25,12 @@ import org.radargun.stressors.BackgroundStats.Stats;
  */
 public class ReportBackgroundStatsStage extends AbstractMasterStage {
    public static final Format NUMFORMAT = new DecimalFormat("0.000");
+   private static final SimpleDateFormat DATEFORMAT = new SimpleDateFormat("HH:mm:ss,SSS");
 
    private String targetDir = "reports";
    private int chartWidth = 800;
    private int chartHeight = 600;
+   private boolean generateIntervalTimeData = false;
 
    public boolean execute() {
       @SuppressWarnings("unchecked")
@@ -67,6 +71,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
          File csvEntryCounts = new File(subdir, "entry-counts.csv");
          File csvNullGets = new File(subdir, "null-responses.csv");
          File csvErrors = new File(subdir, "errors.csv");
+         File csvTotals = new File(subdir, "total.csv");
 
          generateMultiSlaveCsv(csvThroughput, results, maxResultSize, new StatGetter() {
             @Override
@@ -108,7 +113,30 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
                }
             }
          });
+         if (generateIntervalTimeData) {
+            generateMultiSlaveCsv(new File(subdir, "interval-time-begin.csv"), results, maxResultSize,
+                  new StatGetter() {
+                     @Override
+                     public String getStat(Stats cell) {
+                        return humanReadableTime(cell.getIntervalBeginTime());
+                     }
+                  });
+            generateMultiSlaveCsv(new File(subdir, "interval-time-end.csv"), results, maxResultSize, new StatGetter() {
+               @Override
+               public String getStat(Stats cell) {
+                  return humanReadableTime(cell.getIntervalEndTime());
+               }
+            });
+            generateMultiSlaveCsv(new File(subdir, "interval-duration.csv"), results, maxResultSize, new StatGetter() {
+               @Override
+               public String getStat(Stats cell) {
+                  return Long.toString(cell.getDuration());
+               }
+            });
+         }
+
          generateEntryCountCsv(csvEntryCounts, results, maxResultSize);
+         generateTotalsCsv(csvTotals, results, maxResultSize);
 
          CSVChart.writeCSVAsChart("Throughput on slaves", "Iteration", "Throughput (ops/sec)",
                csvThroughput.getAbsolutePath(), CSVChart.SEPARATOR, "Iteration", getSlaveNames(), chartWidth,
@@ -220,6 +248,89 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
       w.close();
    }
 
+   private void generateTotalsCsv(File file, List<List<Stats>> results, int maxResultSize) throws Exception {
+      PrintWriter w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
+      w.print("Iteration");
+      w.print(CSVChart.SEPARATOR);
+      w.print("IntervalBeginMin");
+      w.print(CSVChart.SEPARATOR);
+      w.print("IntervalEndMax");
+      w.print(CSVChart.SEPARATOR);
+      w.print("IntervalBeginDiff");
+      w.print(CSVChart.SEPARATOR);
+      w.print("IntervalEndDiff");
+
+      w.print(CSVChart.SEPARATOR);
+      w.print("TotalThroughput");
+      w.print(CSVChart.SEPARATOR);
+      w.print("AvgThroughput");
+      w.print(CSVChart.SEPARATOR);
+      w.print("AvgRespTime");
+      w.print(CSVChart.SEPARATOR);
+      w.print("MaxRespTime");
+      w.print(CSVChart.SEPARATOR);
+      w.print("EntryCount");
+      w.print(CSVChart.SEPARATOR);
+      w.print("Errors");
+      w.print(CSVChart.SEPARATOR);
+      w.print("NullRequests");
+      w.print(CSVChart.SEPARATOR);
+      w.print("SlaveCount");
+      w.println();
+      List<Stats> row = new ArrayList<Stats>();
+      List<Stats> rowAll = new ArrayList<Stats>();
+      for (int i = 0; i < maxResultSize; i++) {
+         row.clear();
+         rowAll.clear();
+         for (int j = 0; j < results.size(); j++) {
+            List<Stats> statList = results.get(j);
+            if (i < statList.size()) {
+               if (statList.get(i).isNodeUp()) {
+                  row.add(statList.get(i));
+               }
+               rowAll.add(statList.get(i));
+            }
+         }
+         w.print(i);
+
+         long beginMin = Stats.getIntervalBeginMin(rowAll);
+         long beginMax = Stats.getIntervalBeginMax(rowAll);
+         long endMin = Stats.getIntervalEndMin(rowAll);
+         long endMax = Stats.getIntervalEndMax(rowAll);
+
+         w.print(CSVChart.SEPARATOR);
+         w.print(humanReadableTime(beginMin));
+         w.print(CSVChart.SEPARATOR);
+         w.print(humanReadableTime(endMax));
+         w.print(CSVChart.SEPARATOR);
+         w.print(beginMax - beginMin);
+         w.print(CSVChart.SEPARATOR);
+         w.print(endMax - endMin);
+         w.print(CSVChart.SEPARATOR);
+         w.print(Stats.getTotalThroughput(row));
+         w.print(CSVChart.SEPARATOR);
+         w.print(Stats.getAvgThroughput(row));
+         w.print(CSVChart.SEPARATOR);
+         w.print(ffcsv(Stats.getAvgRespTime(row)));
+         w.print(CSVChart.SEPARATOR);
+         w.print(Stats.getMaxRespTime(row));
+         w.print(CSVChart.SEPARATOR);
+         w.print(Stats.getTotalCacheSize(row));
+         w.print(CSVChart.SEPARATOR);
+         w.print(Stats.getTotalErrors(row));
+         w.print(CSVChart.SEPARATOR);
+         w.print(Stats.getTotalNullRequests(row));
+         w.print(CSVChart.SEPARATOR);
+         w.print(row.size());
+         w.println();
+      }
+      w.close();
+   }
+
+   private String humanReadableTime(long aTime) {
+      return DATEFORMAT.format(new Date(aTime));
+   }
+
    private interface StatGetter {
       String getStat(Stats cell);
    }
@@ -228,4 +339,15 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
       this.targetDir = targetDir;
    }
 
+   public void setChartHeight(int chartHeight) {
+      this.chartHeight = chartHeight;
+   }
+
+   public void setChartWidth(int chartWidth) {
+      this.chartWidth = chartWidth;
+   }
+
+   public void setGenerateIntervalTimeData(boolean generateIntervalTimeData) {
+      this.generateIntervalTimeData = generateIntervalTimeData;
+   }
 }

@@ -14,7 +14,7 @@ import org.radargun.stressors.BackgroundStats;
  * @author Michal Linhard <mlinhard@redhat.com>
  */
 public class StopBackgroundStatsStage extends AbstractDistStage {
-   
+
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
@@ -51,5 +51,10 @@ public class StopBackgroundStatsStage extends AbstractDistStage {
       }
       masterState.put(BackgroundStats.NAME, result);
       return true;
+   }
+
+   @Override
+   public String toString() {
+      return "StopBackgroundStatsStage {" + super.toString();
    }
 }

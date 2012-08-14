@@ -25,4 +25,8 @@ public class SleepStage extends AbstractMasterStage {
       }
    }
 
+   @Override
+   public String toString() {
+      return "SleepStage {time=" + time + "}";
+   }
 }

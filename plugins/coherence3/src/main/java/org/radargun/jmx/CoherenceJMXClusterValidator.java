@@ -121,7 +121,9 @@ public class CoherenceJMXClusterValidator implements JMXClusterValidator {
             status = poller.checkStatus();
          }
          if (formed) {
-            log.debug("Cluster formed: " + status.partitions.iterator().next());
+            log.info("Cluster formed: " + status.partitions.iterator().next());
+         } else {
+            log.error("Cluster failed to form, last status: " + getDebugStatus(status));
          }
          return formed;
       } catch (Exception e) {

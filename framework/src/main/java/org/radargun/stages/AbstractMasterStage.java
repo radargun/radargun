@@ -52,7 +52,7 @@ public abstract class AbstractMasterStage implements MasterStage {
       } else {//same product and there is a class loader
          classLoader = (URLClassLoader) masterState.get(CLASS_LOADER);
       }
-      log.info("Creating newInstance " + classFqn + " with classloader " + classLoader);
+      log.debug("Creating newInstance " + classFqn + " with classloader " + classLoader);
       Thread.currentThread().setContextClassLoader(classLoader);
       return classLoader.loadClass(classFqn).newInstance();
    }
