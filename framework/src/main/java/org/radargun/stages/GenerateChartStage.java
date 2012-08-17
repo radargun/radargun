@@ -33,7 +33,8 @@ public class GenerateChartStage extends AbstractMasterStage {
 
    private static Log log = LogFactory.getLog(GenerateChartStage.class);
 
-   public static final String X_LABEL = "Cluster size (number of cache instances)";
+   public static final String X_LABEL_CLUSTER_SIZE = "Cluster size (number of cache instances)";
+   public static final String X_LABEL_ITERATION = "Iteration (related to number of stressor threads)";
    public static final String REPORTS = "reports";
 
    private String reportDirectory = REPORTS;
@@ -45,81 +46,129 @@ public class GenerateChartStage extends AbstractMasterStage {
    ClusterReport getReport = new LineClusterReport();
 
    public boolean execute() throws Exception {
-      putReport.setReportFile(reportDirectory, fnPrefix + "_PUT");
-      putReport.init(X_LABEL, "PUT ops/sec on each cache instance", "Average PUT per cache instance", getSubtitle());
-      getReport.setReportFile(reportDirectory, fnPrefix + "_GET");
-      getReport.init(X_LABEL, "GET ops/sec on each cache instance", "Average GET per cache instance", getSubtitle());
-
       File[] files = getFilteredFiles(new File(csvFilesDirectory));
+      boolean xLabelIteration = true;
       for (File f : files) {
-         readData(f);
+         try {
+            StringTokenizer tokenizer = new StringTokenizer(Utils.fileName2Config(f.getName()), "_");
+            String productName = tokenizer.nextToken();
+            String configName = tokenizer.nextToken();
+            String prefix = productName + "_" + configName;
+            for (File other : files) {
+               if (!other.getName().equals(f.getName()) && other.getName().startsWith(prefix)) {
+                  xLabelIteration = false;
+                  break;
+               }
+            }
+         } catch (Throwable e) {            
+         }
       }
-
+      for (File f : files) {
+         readData(f, xLabelIteration);
+      }
+           
+      putReport.setReportFile(reportDirectory, fnPrefix + "_PUT");
+      putReport.init(xLabelIteration ? X_LABEL_ITERATION : X_LABEL_CLUSTER_SIZE,
+            "PUT ops/sec on each cache instance", "Average PUT per cache instance", getSubtitle());
+      getReport.setReportFile(reportDirectory, fnPrefix + "_GET");
+      getReport.init(xLabelIteration ? X_LABEL_ITERATION : X_LABEL_CLUSTER_SIZE,
+            "GET ops/sec on each cache instance", "Average GET per cache instance", getSubtitle());
+      
       putReport.generate();
       getReport.generate();
       return true;
    }
 
-   private void readData(File f) throws IOException {
+   private void readData(File f, boolean xLabelIteration) throws IOException {
       log.debug("Processing file " + f);
       //expected file format is: <product>_<config>_<size>.csv
-      String productName = null;
-      String configName = null;
-      int clusterSize = 0;
+      final String productName;
+      final String configName;
+      int clusterSize = 0;      
       try {
          StringTokenizer tokenizer = new StringTokenizer(Utils.fileName2Config(f.getName()), "_");
          productName = tokenizer.nextToken();
          configName = tokenizer.nextToken();
-         clusterSize = Integer.parseInt(tokenizer.nextToken());
+         clusterSize = Integer.parseInt(tokenizer.nextToken());         
       } catch (Throwable e) {
          String fileName = f == null ? null : f.getAbsolutePath();
          log.error("unexpected exception while parsing filename: " + fileName, e);
+         return;
       }
 
       //now the contents of this file:
       String line;
       BufferedReader br = new BufferedReader(new FileReader(f));
-      long avgPutPerSec = 0, avgGetsPerSec = 0;
-      Stats s = null;
-      br.readLine(); //this is the header
+      String header = br.readLine(); //this is the header
+      String[] columns = header.split(",", -1);
+      int getIndex = getIndexOf("READS_PER_SEC", columns);
+      int putIndex = getIndexOf("WRITES_PER_SEC", columns);
+      int iterIndex = getIndexOf("ITERATION", columns);
+      if (getIndex < 0 || putIndex < 0) {
+         log.error("Cannot find statistics in file " + f.getAbsolutePath());
+         br.close();
+         return;
+      }
+      Map<String, Double> avgPutsPerSec = new HashMap<String, Double>();
+      Map<String, Double> avgGetsPerSec = new HashMap<String, Double>();
       while ((line = br.readLine()) != null) {
-         s = getAveragePutAndGet(line);
+         Stats s = getAveragePutAndGet(line, iterIndex, getIndex, putIndex);
          log.debug("Read stats " + s);
          if (s != null) {
-            avgPutPerSec += s.putsPerSec;
-            avgGetsPerSec += s.getsPerSec;
+            Double avgPut = avgPutsPerSec.get(s.iteration);
+            avgPutsPerSec.put(s.iteration, avgPut == null ? s.putsPerSec : s.putsPerSec + avgPut);
+            Double avgGet = avgGetsPerSec.get(s.iteration);
+            avgGetsPerSec.put(s.iteration,  avgGet == null ? s.getsPerSec : s.getsPerSec + avgGet);
          }
       }
       br.close();
-      avgGetsPerSec = avgGetsPerSec / clusterSize;
-      avgPutPerSec = avgPutPerSec / clusterSize;
-
-      String name = productName + "(" + configName + ")";
-      putReport.addCategory(name, clusterSize, avgPutPerSec);
-      getReport.addCategory(name, clusterSize, avgGetsPerSec);
+      
+      for (String iteration : avgPutsPerSec.keySet()) {
+         String name = productName + "(" + configName + ")" + (xLabelIteration ? "" : iteration);
+         
+         Double avgPut = avgPutsPerSec.get(iteration);
+         Double avgGet = avgGetsPerSec.get(iteration);
+         
+         int xCoord;
+         if (xLabelIteration) {
+            try {
+               xCoord = Integer.parseInt(iteration);
+            } catch (NumberFormatException e) {
+               xCoord = clusterSize;
+            }
+         } else {
+            xCoord = clusterSize;
+         }
+         putReport.addCategory(name, xCoord, avgPut / clusterSize);
+         getReport.addCategory(name, xCoord, avgGet / clusterSize);
+      }
    }
 
-   private Stats getAveragePutAndGet(String line) {
+   private int getIndexOf(String string, String[] parts) {
+      int i = 0;
+      for (String part : parts) {
+         if (part.equals(string)) return i;
+         ++i;
+      }
+      return -1;
+   }
+
+   private Stats getAveragePutAndGet(String line, int iterIndex, int getIndex, int putIndex) {
       // To be a valid line, the line should be comma delimited
-      StringTokenizer strTokenizer = new StringTokenizer(line, ",");
-      if (strTokenizer.countTokens() < 7) return null;
-
-      strTokenizer.nextToken();//skip index
-      strTokenizer.nextToken();//skip duration
-      strTokenizer.nextToken();//skip request per sec
-
-      String getStr = strTokenizer.nextToken(); //this is get/sec
-      String putStr = strTokenizer.nextToken(); //this is put/sec
-
+      String[] parts = line.split(",", -1);
+      String getStr = parts[getIndex];
+      String putStr = parts[putIndex];
+      
       Stats s = new Stats();
       try {
-         s.putsPerSec = Double.parseDouble(putStr);
-         s.getsPerSec = Double.parseDouble(getStr);
+         s.putsPerSec = putStr.isEmpty() ? 0 : Double.parseDouble(putStr);
+         s.getsPerSec = getStr.isEmpty() ? 0 : Double.parseDouble(getStr);
       }
       catch (NumberFormatException nfe) {
          log.error("Unable to parse file properly!", nfe);
          return null;
       }
+      s.iteration = iterIndex < 0 ? "" : parts[iterIndex];      
       return s;
    }
 
@@ -227,6 +276,7 @@ public class GenerateChartStage extends AbstractMasterStage {
 
    private static class Stats {
       private double putsPerSec, getsPerSec;
+      private String iteration;
 
       public String toString() {
          return "Stats{" +

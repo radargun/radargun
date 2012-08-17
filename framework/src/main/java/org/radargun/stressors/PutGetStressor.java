@@ -80,16 +80,21 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
    private volatile CountDownLatch startPoint;
    private volatile StressorCompletion completion;
 
-
-   public Map<String, String> stress(CacheWrapper wrapper) {
+   protected void init(CacheWrapper wrapper) {
       this.cacheWrapper = wrapper;
       startNanos = System.nanoTime();
-      log.info("Executing: " + this.toString());
+      log.info("Executing: " + this.toString());      
+   }
+   
+   public Map<String, String> stress(CacheWrapper wrapper) {
+      init(wrapper);
+      StressorCompletion completion;
       if (durationMillis > 0) {
          completion = new TimeStressorCompletion(durationMillis);
       } else {
          completion = new OperationCountCompletion(new AtomicInteger(numberOfRequests));
       }
+      setStressorCompletion(completion);
 
       List<Stressor> stressors;
       try {
@@ -135,7 +140,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       results.put("WRITE_COUNT", str(writes));
       results.put("FAILURES", str(failures));
       if (useTransactions) {
-         double txPerSec = txCount.get() / ((transactionDuration / numOfThreads) / 1000.0);
+         double txPerSec = getTxCount() / ((transactionDuration / numOfThreads) / 1000.0);
          results.put("TX_PER_SEC", str(txPerSec));
       }
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
@@ -143,7 +148,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       return results;
    }
 
-   private List<Stressor> executeOperations() throws Exception {
+   protected List<Stressor> executeOperations() throws Exception {
       List<Stressor> stressors = new ArrayList<Stressor>(numOfThreads);
       startPoint = new CountDownLatch(1);
       for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
@@ -159,6 +164,10 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          stressor.join();
       }
       return stressors;
+   }
+   
+   protected void setStressorCompletion(StressorCompletion completion) {
+      this.completion = completion;
    }
 
    private boolean isLocalBenchmark() {
@@ -323,6 +332,26 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       public long getTransactionsDuration() {
          return transactionDuration;
       }
+
+      public int getNrFailures() {
+         return nrFailures;
+      }
+
+      public long getReadDuration() {
+         return readDuration;
+      }
+
+      public long getWriteDuration() {
+         return writeDuration;
+      }
+
+      public long getReads() {
+         return reads;
+      }
+
+      public long getWrites() {
+         return writes;
+      }
    }
 
    private boolean startTransaction(int i) {
@@ -347,10 +376,22 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       return false;
    }
 
-   private String str(Object o) {
+   protected static String str(Object o) {
       return String.valueOf(o);
    }
 
+   protected int getTxCount() {
+      return txCount.get();
+   }
+   
+   public int getNumberOfRequests() {
+      return numberOfRequests;
+   }
+      
+   public int getNumOfThreads() {
+      return numOfThreads;
+   }
+   
    public void setNumberOfRequests(int numberOfRequests) {
       this.numberOfRequests = numberOfRequests;
    }

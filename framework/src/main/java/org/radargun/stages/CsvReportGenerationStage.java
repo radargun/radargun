@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Stage that generates
@@ -50,7 +53,10 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       List<String> headerRow = new ArrayList<String>();
       Map<String, Object> aReport = results.get(0);
       headerRow.add("SLAVE_INDEX");
-      headerRow.addAll(aReport.keySet());
+      SortedSet<String> iterations = getIterations(aReport.keySet());
+      SortedSet<String> columns = getColumns(aReport.keySet());
+      if (!iterations.isEmpty()) headerRow.add("ITERATION");
+      headerRow.addAll(columns);
       writeRowToFile(headerRow);
 
       List<Integer> slaveIndexes = new ArrayList<Integer>(results.keySet());
@@ -61,19 +67,65 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
          Map<String, Object> reportPerSlave = results.get(i);
          if (reportPerSlave == null)
             throw new IllegalStateException("Missing report for slave index: " + i);
-         dataRow.add(String.valueOf(i));//add the slave index first
-         for (int j = 1; j < headerRow.size(); j++) {
-            String header = headerRow.get(j);
-            Object data = reportPerSlave.get(header);
-            if (data == null)
-               throw new IllegalStateException("Missing data for header: " + header + " from slave " + i + ". Report for this slave is: " + reportPerSlave);
-            dataRow.add(String.valueOf(data));
+         for (String iteration : iterations) {
+            dataRow.add(String.valueOf(i));//add the slave index first
+            dataRow.add(iteration);               
+            addData(reportPerSlave, columns, iteration + '.', dataRow);
+            writeRowToFile(dataRow);
+            dataRow.clear();
          }
-         writeRowToFile(dataRow);
-         dataRow.clear();
+         boolean hasDataOutOfIteration = iterations.isEmpty();
+         for (String column : columns) {
+            if (reportPerSlave.containsKey(column)) {
+               hasDataOutOfIteration = true;
+               break;
+            }
+         }
+         if (hasDataOutOfIteration) {
+            dataRow.add(String.valueOf(i));//add the slave index first
+            if (!iterations.isEmpty()) {
+               dataRow.add("");
+            }
+            addData(reportPerSlave, columns, "", dataRow);
+            writeRowToFile(dataRow);
+            dataRow.clear();
+         }
       }
 
       closeFile();
+   }
+
+   private void addData(Map<String, Object> reportPerSlave, SortedSet<String> columns, String prefix, List<String> dataRow) {
+      for (String column : columns) {
+         Object data = reportPerSlave.get(prefix + column);
+         //if (data == null)
+         //   throw new IllegalStateException("Missing data for header: " + header + " from slave " + i + ". Report for this slave is: " + reportPerSlave);
+         dataRow.add(data == null ? "" : String.valueOf(data));
+      }
+   }
+
+   private SortedSet<String> getColumns(Set<String> keySet) {
+      SortedSet<String> list = new TreeSet<String>();
+      for (String key : keySet) {
+         int dot = key.indexOf('.');
+         if (dot >= 0) {
+            list.add(key.substring(dot + 1));
+         } else {
+            list.add(key);
+         }
+      }
+      return list;
+   }
+
+   private SortedSet<String> getIterations(Set<String> keySet) {
+      SortedSet<String> iterations = new TreeSet<String>();
+      for (String key : keySet) {
+         int dot = key.indexOf('.');
+         if (dot >= 0) {
+            iterations.add(key.substring(0, dot));
+         }
+      }
+      return iterations;
    }
 
    private void closeFile() throws IOException {

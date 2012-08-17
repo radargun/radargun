@@ -161,6 +161,34 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       this.numberOfAttributes = numberOfAttributes;
    }
 
+   public int getOpsCountStatusLog() {
+      return opsCountStatusLog;
+   }
+
+   public int getNumberOfRequests() {
+      return numberOfRequests;
+   }
+
+   public int getNumberOfAttributes() {
+      return numberOfAttributes;
+   }
+
+   public int getSizeOfAnAttribute() {
+      return sizeOfAnAttribute;
+   }
+
+   public int getWritePercentage() {
+      return writePercentage;
+   }
+
+   public int getNumOfThreads() {
+      return numOfThreads;
+   }
+
+   public boolean isReportNanos() {
+      return reportNanos;
+   }
+
    public void setSizeOfAnAttribute(int sizeOfAnAttribute) {
       this.sizeOfAnAttribute = sizeOfAnAttribute;
    }
