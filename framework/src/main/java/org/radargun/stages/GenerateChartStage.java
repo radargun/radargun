@@ -134,13 +134,15 @@ public class GenerateChartStage extends AbstractMasterStage {
             try {
                xCoord = Integer.parseInt(iteration);
             } catch (NumberFormatException e) {
-               xCoord = clusterSize;
+               xCoord = -1;
             }
          } else {
             xCoord = clusterSize;
          }
-         putReport.addCategory(name, xCoord, avgPut / clusterSize);
-         getReport.addCategory(name, xCoord, avgGet / clusterSize);
+         if (xCoord != -1) {
+            putReport.addCategory(name, xCoord, avgPut / clusterSize);
+            getReport.addCategory(name, xCoord, avgGet / clusterSize);
+         }
       }
    }
 

@@ -535,19 +535,23 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
    
    class TimeStressorCompletion extends StressorCompletion {
       
-      private volatile long startTime;
+      private volatile long startTime = -1;
       
       private final long durationMillis;
 
       private volatile long lastPrint = -1;
       
       TimeStressorCompletion(long durationMillis) {
-         this.durationMillis = durationMillis;
-         startTime = nowMillis();
+         this.durationMillis = durationMillis;         
       }
 
       @Override
       boolean moreToRun() {
+         // Synchronize the start until someone is ready
+         // we don't care about the race condition here
+         if (startTime == -1) {
+            startTime = nowMillis();
+         }
          return nowMillis() <= startTime + durationMillis;
       }
 
