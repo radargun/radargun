@@ -3,7 +3,8 @@ package org.radargun.stages;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.reporting.ClusterReport;
-import org.radargun.reporting.LineClusterReport;
+import org.radargun.reporting.HtmlReportGenerator;
+import org.radargun.reporting.LineReportGenerator;
 import org.radargun.utils.Utils;
 
 import java.io.BufferedReader;
@@ -38,12 +39,12 @@ public class GenerateChartStage extends AbstractMasterStage {
    public static final String REPORTS = "reports";
 
    private String reportDirectory = REPORTS;
-   private String csvFilesDirectory = "reports";
+   private String csvFilesDirectory = REPORTS;
    private String fnPrefix;
    private Map<String, List<String>> filter = new HashMap<String, List<String>>();
    protected Map<String, List<Pattern>> compiledFilters = null;
-   ClusterReport putReport = new LineClusterReport();
-   ClusterReport getReport = new LineClusterReport();
+   ClusterReport putReport = new ClusterReport();
+   ClusterReport getReport = new ClusterReport();
 
    public boolean execute() throws Exception {
       File[] files = getFilteredFiles(new File(csvFilesDirectory));
@@ -67,15 +68,14 @@ public class GenerateChartStage extends AbstractMasterStage {
          readData(f, xLabelIteration);
       }
            
-      putReport.setReportFile(reportDirectory, fnPrefix + "_PUT");
-      putReport.init(xLabelIteration ? X_LABEL_ITERATION : X_LABEL_CLUSTER_SIZE,
-            "PUT ops/sec on each cache instance", "Average PUT per cache instance", getSubtitle());
-      getReport.setReportFile(reportDirectory, fnPrefix + "_GET");
-      getReport.init(xLabelIteration ? X_LABEL_ITERATION : X_LABEL_CLUSTER_SIZE,
-            "GET ops/sec on each cache instance", "Average GET per cache instance", getSubtitle());
+      String xLabel = xLabelIteration ? X_LABEL_ITERATION : X_LABEL_CLUSTER_SIZE; 
+      putReport.init(xLabel, "PUT ops/sec on each cache instance", "Average PUT per cache instance", getSubtitle());
+      getReport.init(xLabel, "GET ops/sec on each cache instance", "Average GET per cache instance", getSubtitle());
       
-      putReport.generate();
-      getReport.generate();
+      LineReportGenerator.generate(putReport, reportDirectory, fnPrefix + "_PUT");
+      HtmlReportGenerator.generate(putReport, reportDirectory, fnPrefix + "_PUT");
+      LineReportGenerator.generate(getReport, reportDirectory, fnPrefix + "_GET");
+      HtmlReportGenerator.generate(getReport, reportDirectory, fnPrefix + "_GET");
       return true;
    }
 
@@ -103,6 +103,9 @@ public class GenerateChartStage extends AbstractMasterStage {
       String[] columns = header.split(",", -1);
       int getIndex = getIndexOf("READS_PER_SEC", columns);
       int putIndex = getIndexOf("WRITES_PER_SEC", columns);
+      int getTotalIndex = getIndexOf("READ_COUNT", columns);
+      int putTotalIndex = getIndexOf("WRITE_COUNT", columns);
+      
       int iterIndex = getIndexOf("ITERATION", columns);
       if (getIndex < 0 || putIndex < 0) {
          log.error("Cannot find statistics in file " + f.getAbsolutePath());
@@ -111,14 +114,22 @@ public class GenerateChartStage extends AbstractMasterStage {
       }
       Map<String, Double> avgPutsPerSec = new HashMap<String, Double>();
       Map<String, Double> avgGetsPerSec = new HashMap<String, Double>();
+      Map<String, List<Integer>> putsTotal = new HashMap<String, List<Integer>>();
+      Map<String, List<Integer>> getsTotal = new HashMap<String, List<Integer>>();      
       while ((line = br.readLine()) != null) {
-         Stats s = getAveragePutAndGet(line, iterIndex, getIndex, putIndex);
+         Stats s = getStats(line, iterIndex, getIndex, putIndex, getTotalIndex, putTotalIndex);
          log.debug("Read stats " + s);
          if (s != null) {
             Double avgPut = avgPutsPerSec.get(s.iteration);
             avgPutsPerSec.put(s.iteration, avgPut == null ? s.putsPerSec : s.putsPerSec + avgPut);
+            List<Integer> puts = putsTotal.get(s.iteration);
+            if (puts == null) putsTotal.put(s.iteration, puts = new ArrayList<Integer>());
+            puts.add(s.putsTotal);
             Double avgGet = avgGetsPerSec.get(s.iteration);
             avgGetsPerSec.put(s.iteration,  avgGet == null ? s.getsPerSec : s.getsPerSec + avgGet);
+            List<Integer> gets = getsTotal.get(s.iteration);
+            if (gets == null) getsTotal.put(s.iteration, gets = new ArrayList<Integer>());
+            gets.add(s.getsTotal);
          }
       }
       br.close();
@@ -126,11 +137,14 @@ public class GenerateChartStage extends AbstractMasterStage {
       for (String iteration : avgPutsPerSec.keySet()) {
          String name = productName + "(" + configName + ")" + (xLabelIteration ? "" : iteration);
          
+         computeRange(getsTotal.get(iteration), getReport, name, "Reads");
+         computeRange(putsTotal.get(iteration), putReport, name, "Writes");
+         
          Double avgPut = avgPutsPerSec.get(iteration);
          Double avgGet = avgGetsPerSec.get(iteration);
          
          int xCoord;
-         if (xLabelIteration) {
+         if (xLabelIteration && !iteration.isEmpty()) {
             try {
                xCoord = Integer.parseInt(iteration);
             } catch (NumberFormatException e) {
@@ -146,6 +160,21 @@ public class GenerateChartStage extends AbstractMasterStage {
       }
    }
 
+   private void computeRange(List<Integer> operations, ClusterReport report, String name, String operationType) {
+      int avgOps = 0;
+      for (int opsCount : operations) {
+         avgOps += opsCount;
+      }
+      avgOps /= operations.size();
+      double minDiff = 0, maxDiff = 0;
+      for (int opsCount : operations) {
+         double diff = ((double)(opsCount - avgOps))/avgOps;
+         minDiff = Math.min(minDiff, diff);
+         maxDiff = Math.min(maxDiff, diff);
+      }
+      report.addNote(operationType + " for " + name + " vary in range " + minDiff*100 + "% - " + maxDiff*100 + "% from average value");
+   }
+
    private int getIndexOf(String string, String[] parts) {
       int i = 0;
       for (String part : parts) {
@@ -155,16 +184,16 @@ public class GenerateChartStage extends AbstractMasterStage {
       return -1;
    }
 
-   private Stats getAveragePutAndGet(String line, int iterIndex, int getIndex, int putIndex) {
+   private Stats getStats(String line, int iterIndex, int getIndex, int putIndex, int getTotalIndex, int putTotalIndex) {
       // To be a valid line, the line should be comma delimited
       String[] parts = line.split(",", -1);
-      String getStr = parts[getIndex];
-      String putStr = parts[putIndex];
       
       Stats s = new Stats();
       try {
-         s.putsPerSec = putStr.isEmpty() ? 0 : Double.parseDouble(putStr);
-         s.getsPerSec = getStr.isEmpty() ? 0 : Double.parseDouble(getStr);
+         s.getsPerSec = parts[getIndex].isEmpty() ? 0 : Double.parseDouble(parts[getIndex]);
+         s.putsPerSec = parts[putIndex].isEmpty() ? 0 : Double.parseDouble(parts[putIndex]);
+         s.getsTotal = parts[getTotalIndex].isEmpty() ? 0 : Integer.parseInt(parts[getTotalIndex]);
+         s.putsTotal = parts[putTotalIndex].isEmpty() ? 0 : Integer.parseInt(parts[putTotalIndex]);
       }
       catch (NumberFormatException nfe) {
          log.error("Unable to parse file properly!", nfe);
@@ -278,6 +307,7 @@ public class GenerateChartStage extends AbstractMasterStage {
 
    private static class Stats {
       private double putsPerSec, getsPerSec;
+      private int putsTotal, getsTotal;
       private String iteration;
 
       public String toString() {

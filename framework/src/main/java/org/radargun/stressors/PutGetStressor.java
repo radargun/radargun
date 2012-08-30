@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class PutGetStressor extends AbstractCacheWrapperStressor {
 
    private static Log log = LogFactory.getLog(PutGetStressor.class);
+   private static final double NANOSECS_IN_SEC = 1000000000.0;
 
    private int opsCountStatusLog = 5000;
 
@@ -132,15 +133,15 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
       Map<String, String> results = new LinkedHashMap<String, String>();
       results.put("DURATION", str(duration));
-      double requestPerSec = (reads + writes) / ((duration / numOfThreads) / 1000000000.0);
+      double requestPerSec = (reads + writes) / ((duration / numOfThreads) / NANOSECS_IN_SEC);
       results.put("REQ_PER_SEC", str(requestPerSec));
-      results.put("READS_PER_SEC", str(reads / ((readsDurations / numOfThreads) / 1000000000.0)));
-      results.put("WRITES_PER_SEC", str(writes / ((writesDurations / numOfThreads) / 1000000000.0)));
+      results.put("READS_PER_SEC", str(reads / ((readsDurations / numOfThreads) / NANOSECS_IN_SEC)));
+      results.put("WRITES_PER_SEC", str(writes / ((writesDurations / numOfThreads) / NANOSECS_IN_SEC)));
       results.put("READ_COUNT", str(reads));
       results.put("WRITE_COUNT", str(writes));
       results.put("FAILURES", str(failures));
       if (useTransactions) {
-         double txPerSec = getTxCount() / ((transactionDuration / numOfThreads) / 1000.0);
+         double txPerSec = getTxCount() / ((transactionDuration / numOfThreads) / NANOSECS_IN_SEC);
          results.put("TX_PER_SEC", str(txPerSec));
       }
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +

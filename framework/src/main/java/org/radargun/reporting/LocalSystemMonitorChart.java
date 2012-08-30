@@ -59,7 +59,7 @@ public class LocalSystemMonitorChart {
    }
 
    private void generateMemory() {
-      LineClusterReport lcr = new LineClusterReport();
+      ClusterReport lcr = new ClusterReport();
       lcr.init("Time(sec)", "Memory(Mb)", "Memory consumption", "");
       for (String s : sysMonitors.keySet()) {
          MemoryUsageMonitor memMonitor = sysMonitors.get(s).getMemoryMonitor();
@@ -70,7 +70,7 @@ public class LocalSystemMonitorChart {
    }
 
    private void generateCpuAndGc() {
-      LineClusterReport lcr = new LineClusterReport();
+      ClusterReport lcr = new ClusterReport();
       lcr.init("Time(sec)", "CPU&GC", "CPU & GC Usage (%)", "");
       for (String s : sysMonitors.keySet()) {
          CpuUsageMonitor cpuMonitor = sysMonitors.get(s).getCpuMonitor();
@@ -83,7 +83,7 @@ public class LocalSystemMonitorChart {
       generateReport(lcr, "cpu_gc_usage");
    }
 
-   private void populateGraph(LineClusterReport lcr, String s, AbstractActivityMonitor activityMonitor) {
+   private void populateGraph(ClusterReport lcr, String s, AbstractActivityMonitor activityMonitor) {
       int measuringFrequencySecs = (int) TimeUnit.MILLISECONDS.toSeconds(LocalJmxMonitor.MEASURING_FREQUENCY);
       LinkedHashMap<Integer,BigDecimal> graphData = activityMonitor.formatForGraph(measuringFrequencySecs, 25);
       for (Map.Entry<Integer, BigDecimal> e : graphData.entrySet()) {
@@ -91,10 +91,9 @@ public class LocalSystemMonitorChart {
       }
    }
 
-   private void generateReport(LineClusterReport lcr, String fileNameNoExtension) {
-      lcr.setReportFile(GenerateChartStage.REPORTS, reportPrefix + "-" + fileNameNoExtension);
+   private void generateReport(ClusterReport lcr, String fileNameNoExtension) {      
       try {
-         lcr.generate();
+         LineReportGenerator.generate(lcr, GenerateChartStage.REPORTS, reportPrefix + "-" + fileNameNoExtension);
       } catch (Exception e) {
          log.error(e.getMessage(), e);
       }

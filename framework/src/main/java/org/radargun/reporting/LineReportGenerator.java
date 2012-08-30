@@ -2,6 +2,7 @@ package org.radargun.reporting;
 
 import sun.awt.image.OffScreenImage;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -13,13 +14,25 @@ import java.util.SortedMap;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.title.TextTitle;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.radargun.utils.Utils;
+
 /**
  * @author Mircea Markus
  */
 public class LineReportGenerator {
 
+   private static Log log = LogFactory.getLog(LineReportGenerator.class);
+   
    private static final String REPORT_PNG = "report";
-
+  
    public static void main(String[] args) throws Exception {
 
       if (args.length == 0) {
@@ -50,9 +63,7 @@ public class LineReportGenerator {
       }
 
 
-      LineClusterReport lcr = new LineClusterReport();
-
-      lcr.setReportFile(".", reportFile);
+      ClusterReport lcr = new ClusterReport();
 
       lcr.init(xLabels, yLabels, title, subtitle);
 
@@ -70,7 +81,36 @@ public class LineReportGenerator {
          }
       }
 
-      lcr.generate();
+      generate(lcr, ".", reportFile);
+   }
+    
+   public static void generate(ClusterReport report, String reportDir, String fileName) throws IOException {
+      File root = new File(reportDir);
+      if (!root.exists()) {
+         if (root.mkdirs()) {
+            log.warn("Could not create root dir : " + root.getAbsolutePath() + " This might result in reports not being generated");
+         } else {
+            log.info("Created root file: " + root);
+         }
+      }
+      File chartFile = new File(root, fileName + ".png");
+      Utils.backupFile(chartFile);
+
+      report.sort();
+      ChartUtilities.saveChartAsPNG(chartFile, createChart(report), 1024, 768);
+
+      log.info("Chart saved as " + chartFile);
+   }
+      
+   private static JFreeChart createChart(ClusterReport report) {      
+      JFreeChart chart = ChartFactory.createLineChart(report.getTitle(),
+         report.getXLabel(), report.getYLabel(), report.getCategorySet(), PlotOrientation.VERTICAL, true, false, false);
+      chart.addSubtitle(new TextTitle(report.getSubtitle()));
+      chart.setBorderVisible(true);
+      chart.setAntiAlias(true);
+      chart.setTextAntiAlias(true);
+      chart.setBackgroundPaint(new Color(0x61, 0x9e, 0xa1));
+      return chart;
    }
 
    private static SortedMap<Integer, Double> getValues(final String dir, final Integer columnIndex, final String fileNamePrefix) throws Exception {
