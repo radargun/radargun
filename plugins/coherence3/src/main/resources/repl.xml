@@ -22,6 +22,9 @@
             </local-scheme>
          </backing-map-scheme>
          <autostart>true</autostart>
+         <member-listener>
+         	<class-name>org.radargun.listeners.MemberListenerImpl</class-name>
+         </member-listener>
       </replicated-scheme>
 
       <local-scheme>
