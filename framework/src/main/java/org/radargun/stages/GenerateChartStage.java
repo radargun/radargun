@@ -172,7 +172,7 @@ public class GenerateChartStage extends AbstractMasterStage {
          minDiff = Math.min(minDiff, diff);
          maxDiff = Math.min(maxDiff, diff);
       }
-      report.addNote(operationType + " for " + name + " vary in range " + minDiff*100 + "% - " + maxDiff*100 + "% from average value");
+      report.addNote(String.format("%s for %s vary in range [%.2f%%, %.2f%%] from average value", operationType, name, minDiff*100, maxDiff*100));
    }
 
    private int getIndexOf(String string, String[] parts) {

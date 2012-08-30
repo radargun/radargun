@@ -51,24 +51,32 @@ public class HtmlReportGenerator {
             writer.print("</TH>");
             for (int j = 0; j < set.getColumnCount(); ++j) {
                writer.print("<TD>");
-               writer.print(set.getValue(i, j).toString());
+               writer.print(humanFormat(set.getValue(i, j)));
                writer.print("</TD>");
             }
             writer.println("</TR>");
          }
          writer.println("</TABLE>");
-         writer.print("<small>");
-         writer.print(report.getSubtitle());
-         writer.println("</small>");
          writer.println("<H4>Notes:</H4><UL>");
          for (String note : report.getNotes()) {
             writer.print("<LI>");
             writer.print(note);
             writer.println("</LI>");
          }
-         writer.println("</UL></HTML>");
+         writer.println("</UL>");
+         writer.print("<br><br><br><small>");
+         writer.print(report.getSubtitle());
+         writer.println("</small>");
+         writer.println("</HTML>");         
       } finally {
          if (writer != null) writer.close();
       }
+   }
+
+   private static String humanFormat(Object o) {
+      if (o instanceof Double) {
+         return String.format("%.2f", o);
+      }
+      return o.toString();
    }
 }
