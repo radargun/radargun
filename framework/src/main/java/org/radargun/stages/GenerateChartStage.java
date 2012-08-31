@@ -170,7 +170,7 @@ public class GenerateChartStage extends AbstractMasterStage {
       for (int opsCount : operations) {
          double diff = ((double)(opsCount - avgOps))/avgOps;
          minDiff = Math.min(minDiff, diff);
-         maxDiff = Math.min(maxDiff, diff);
+         maxDiff = Math.max(maxDiff, diff);
       }
       report.addNote(String.format("%s for %s vary in range [%.2f%%, %.2f%%] from average value", operationType, name, minDiff*100, maxDiff*100));
    }
