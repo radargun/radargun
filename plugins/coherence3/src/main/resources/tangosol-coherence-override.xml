@@ -10,4 +10,9 @@
       <message-format>(thread={thread}, member={member}): {text}</message-format>
       <character-limit system-property="tangosol.coherence.log.limit">1048576</character-limit>
    </logging-config>
+   
+   <management-config>
+   	<managed-nodes>all</managed-nodes>
+   	<allow-remote-management>true</allow-remote-management>
+   </management-config>
 </coherence>
