@@ -19,7 +19,6 @@
 package org.radargun.stressors;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -55,20 +54,21 @@ public class ClientStressTestStressor extends PutGetStressor {
          }
          setStressorCompletion(completion);
          
-         List<Stressor> stressors;
          super.setNumOfThreads(threads);
          try {
-            stressors = executeOperations();
+            executeOperations();
          } catch (Exception e) {
             throw new RuntimeException(e);
          }
-         processResults(String.format("%03d", iteration), results, stressors);
+         processResults(String.format("%03d", iteration), results);
       }
       results.put("REQ_PER_SEC", str(requestPerSec));
+      
+      finishOperations();      
       return results;
    }
    
-   protected Map<String, String> processResults(String iteration, Map<String, String> results, List<Stressor> stressors) {
+   protected Map<String, String> processResults(String iteration, Map<String, String> results) {
       long duration = 0;
       long transactionDuration = 0;
       int reads = 0;

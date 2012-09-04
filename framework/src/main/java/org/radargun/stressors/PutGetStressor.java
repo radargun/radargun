@@ -79,7 +79,12 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
    private static Random r = new Random();
    private volatile long startNanos;
    private volatile CountDownLatch startPoint;
+   private volatile CountDownLatch endPoint;
+   private volatile CountDownLatch cleanUpPoint;
    private volatile StressorCompletion completion;
+   private volatile boolean finished = false;
+   
+   protected List<Stressor> stressors = new ArrayList<Stressor>(numOfThreads);
 
    protected void init(CacheWrapper wrapper) {
       this.cacheWrapper = wrapper;
@@ -97,13 +102,15 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       }
       setStressorCompletion(completion);
 
-      List<Stressor> stressors;
       try {
-         stressors = executeOperations();
+         executeOperations();
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
-      return processResults(stressors);
+      
+      Map<String, String> results = processResults();
+      finishOperations();
+      return results;
    }
 
    public void destroy() throws Exception {
@@ -111,7 +118,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       cacheWrapper = null;
    }
 
-   protected Map<String, String> processResults(List<Stressor> stressors) {
+   private Map<String, String> processResults() {
       long duration = 0;
       long transactionDuration = 0;
       int reads = 0;
@@ -149,10 +156,14 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       return results;
    }
 
-   protected List<Stressor> executeOperations() throws Exception {
-      List<Stressor> stressors = new ArrayList<Stressor>(numOfThreads);
+   protected void executeOperations() throws Exception {      
       startPoint = new CountDownLatch(1);
-      for (int threadIndex = 0; threadIndex < numOfThreads; threadIndex++) {
+      if (cleanUpPoint != null) {
+         cleanUpPoint.countDown();
+      }
+      cleanUpPoint = new CountDownLatch(1);
+      endPoint = new CountDownLatch(numOfThreads);      
+      for (int threadIndex = stressors.size(); threadIndex < numOfThreads; threadIndex++) {
          Stressor stressor = new Stressor(threadIndex);
          stressor.initialiseKeys();
          stressors.add(stressor);
@@ -161,10 +172,21 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       log.info("Cache wrapper info is: " + cacheWrapper.getInfo());
       startPoint.countDown();
       log.info("Started " + stressors.size() + " stressor threads.");
-      for (Stressor stressor : stressors) {
-         stressor.join();
+            
+      endPoint.await();      
+   }
+   
+   protected void finishOperations() {
+      finished = true;
+      cleanUpPoint.countDown();
+      for (Stressor s : stressors) {
+         try {
+            s.join();
+         } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+         }
       }
-      return stressors;
+      stressors.clear();
    }
    
    protected void setStressorCompletion(StressorCompletion completion) {
@@ -190,7 +212,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       boolean txNotCompleted = false;
 
       public Stressor(int threadIndex) {
-         super("Stressor-" + threadIndex);
+         super("Stressor-" + threadIndex);         
          this.threadIndex = threadIndex;
          this.bucketId = isLocalBenchmark() ? String.valueOf(threadIndex) : nodeIndex + "_" + threadIndex;
       }
@@ -198,12 +220,16 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       @Override
       public void run() {
          try {
-            runInternal();
+            do {
+               runInternal();
+               cleanUpPoint.await();
+               clean();
+            } while (!finished);
          } catch (Exception e) {
             log.error("Unexpected error in stressor!", e);
          }
       }
-
+      
       private void runInternal() {
          int readPercentage = 100 - writePercentage;
          Random r = new Random();
@@ -239,6 +265,8 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
             completeTransaction(-1, true);
             transactionDuration += System.nanoTime() - start;
          }
+         
+         endPoint.countDown();
       }
 
       private long startTx(int iteration) {
@@ -352,6 +380,15 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
       public long getWrites() {
          return writes;
+      }
+      
+      private void clean() {
+         nrFailures = 0;
+         readDuration = 0;
+         writeDuration = 0;
+         transactionDuration = 0;
+         reads = 0;
+         writes = 0;
       }
    }
 
