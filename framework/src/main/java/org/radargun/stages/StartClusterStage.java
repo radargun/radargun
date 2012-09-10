@@ -51,8 +51,7 @@ public class StartClusterStage extends AbstractDistStage {
             + ". This slave's index is: " + getSlaveIndex());
       CacheWrapper wrapper = null;
       try {
-         Object multicache = confAttributes.get("multiCache");
-         String plugin =  multicache != null && multicache.equals("true") ? Utils.getCacheProviderProperty(productName, "org.radargun.wrapper.multicache") : Utils.getCacheWrapperFqnClass(productName);
+         String plugin = getPluginWrapperClass(confAttributes.get("multiCache"), confAttributes.get("partitions"));         
          wrapper = (CacheWrapper) createInstance(plugin);
          wrapper.setUp(config, false, slaveIndex, confAttributes);
          slaveState.setCacheWrapper(wrapper);
@@ -92,6 +91,15 @@ public class StartClusterStage extends AbstractDistStage {
       return ack;
    }
 
+   private String getPluginWrapperClass(Object multicache, Object partitions) {
+      if (multicache != null && multicache.equals("true")) {
+         return Utils.getCacheProviderProperty(productName, "org.radargun.wrapper.multicache");
+      } else if (partitions != null && partitions.equals("true")) {
+         return Utils.getCacheProviderProperty(productName, "org.radargun.wrapper.partitions");
+      } else {
+         return Utils.getCacheWrapperFqnClass(productName);
+      }
+   }
 
    public void setConfig(String config) {
       this.config = config;
