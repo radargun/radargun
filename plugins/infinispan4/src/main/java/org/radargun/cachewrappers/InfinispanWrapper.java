@@ -141,12 +141,12 @@ public class InfinispanWrapper implements CacheWrapper {
 
    @Override
    public int getLocalSize() {
-      return cache.keySet().size();
+      return cache.size();
    }
    
    @Override
    public int getTotalSize() {
-      return cache.size();
+      return -1; // Infinispan does not provide this directly, JMX stats would have to be summed
    }
 
    protected void blockForRehashing(Cache aCache) throws InterruptedException {
