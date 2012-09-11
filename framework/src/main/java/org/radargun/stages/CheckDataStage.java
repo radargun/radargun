@@ -18,7 +18,12 @@
  */
 package org.radargun.stages;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,21 +35,71 @@ import org.radargun.stressors.BackgroundStats;
 public class CheckDataStage extends AbstractDistStage {
 
    private static final Log log = LogFactory.getLog(CheckDataStage.class);
-   private static final int LOG_CHECKS_COUNT = 1000;
+   private static final int LOG_CHECKS_COUNT = 100;
    
    private int numEntries;
    private int entrySize;
    private String extraEntries;
    private int numOwners = -1;
-   
+   private int checkThreads = 1;
+    
    @Override
    public DistStageAck executeOnSlave() {      
-      DefaultDistStageAck ack = newDefaultStageAck();
-      CacheWrapper wrapper = slaveState.getCacheWrapper();      
+      DefaultDistStageAck ack = newDefaultStageAck();           
       int found = 0;
-      for (int i = 0; i < numEntries; ++i) {
-         if (i % LOG_CHECKS_COUNT == 0) {
-            log.debug("Checked " + i + " entries, so far " + found + " found");
+      if (checkThreads <= 1) {
+         found = checkRange(0, numEntries);
+      } else {
+         ExecutorService executor = Executors.newFixedThreadPool(checkThreads);
+         List<Callable<Integer>> tasks = new ArrayList<Callable<Integer>>();
+         int rangeSize = numEntries / checkThreads;
+         int start = 0;
+         for (int i = 0; i < checkThreads; ++i) {
+            tasks.add(new CheckRangeTask(start, i == checkThreads - 1 ? numEntries : start + rangeSize));
+            start += rangeSize;
+         }
+         try {
+            for (Future<Integer> future : executor.invokeAll(tasks)) {
+               found += future.get();
+            }
+         } catch (Exception e) {
+            ack.setError(true);
+            ack.setRemoteException(e);
+            ack.setErrorMessage("Failed to check entries");
+            return ack;
+         }
+      }
+            
+      if (found != numEntries) {
+         ack.setError(true);
+         ack.setErrorMessage("Found " + found + " entries while " + numEntries + " should be loaded.");         
+         return ack;
+      }
+      CacheWrapper wrapper = slaveState.getCacheWrapper();
+      ack.setPayload(wrapper.getLocalSize());
+      return ack;
+   }
+   
+   private class CheckRangeTask implements Callable<Integer> {
+      private int from, to;
+      
+      public CheckRangeTask(int from, int to) {
+         this.from = from;
+         this.to = to;
+      }
+      
+      @Override
+      public Integer call() throws Exception {
+         return checkRange(from, to);
+      }
+   }
+   
+   private int checkRange(int from, int to) {
+      CacheWrapper wrapper = slaveState.getCacheWrapper();
+      int found = 0, checked = 0;
+      for (int i = from; i < to; ++i) {
+         if (checked % LOG_CHECKS_COUNT == 0) {
+            log.debug("Checked " + checked + " entries, so far " + found + " found");
          }
          try {
             Object value = wrapper.get(BackgroundStats.NAME, "key" + i);
@@ -60,15 +115,9 @@ public class CheckDataStage extends AbstractDistStage {
                log.trace("Error retrieving value for key" + i + "\n" + e);
             }
          }
+         checked++;
       }
-      wrapper.getTotalSize();
-      if (found != numEntries) {
-         ack.setError(true);
-         ack.setErrorMessage("Found " + found + " entries while " + numEntries + " should be loaded.");         
-         return ack;
-      }
-      ack.setPayload(wrapper.getLocalSize());
-      return ack;
+      return found;
    }
    
    @Override
@@ -142,9 +191,13 @@ public class CheckDataStage extends AbstractDistStage {
       this.numOwners = numOwners;
    }
    
+   public void setCheckThreads(int threads) {
+      this.checkThreads = threads;
+   }
+   
    @Override
    public String toString() {
-      return "CheckDataStage(numEntries=" + numEntries + ", entrySize=" + entrySize + ", extraEntries=" + extraEntries + ", numOwners=" + numOwners + ", " + super.toString();
+      return "CheckDataStage(numEntries=" + numEntries + ", entrySize=" + entrySize + ", extraEntries=" + extraEntries + ", numOwners=" + numOwners + ", checkThreads=" + checkThreads + ", " + super.toString();
    }
    
 }
