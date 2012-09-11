@@ -107,7 +107,12 @@ public class JBossCache2Wrapper implements CacheWrapper
    }
 
    @Override
-   public int size() {
-      return 0;  // TODO: Customise this generated block
+   public int getLocalSize() {
+      return -1;  // TODO: Customise this generated block
+   }
+   
+   @Override
+   public int getTotalSize() {
+      return -1;  // TODO: Customise this generated block
    }
 }

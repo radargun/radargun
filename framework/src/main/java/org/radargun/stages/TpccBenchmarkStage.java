@@ -83,7 +83,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
 
       try {
          Map<String, String> results = tpccStressor.stress(cacheWrapper);
-         String sizeInfo = "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + super.getActiveSlaveCount() + ", nodeIndex:" + super.getSlaveIndex() + ", cacheSize: " + cacheWrapper.size();
+         String sizeInfo = "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + super.getActiveSlaveCount() + ", nodeIndex:" + super.getSlaveIndex() + ", cacheSize: " + cacheWrapper.getLocalSize();
          log.info(sizeInfo);
          results.put(SIZE_INFO, sizeInfo);
          result.setPayload(results);

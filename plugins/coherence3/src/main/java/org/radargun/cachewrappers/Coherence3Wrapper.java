@@ -2,12 +2,8 @@ package org.radargun.cachewrappers;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
-import javax.management.InstanceNotFoundException;
 import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectInstance;
 import javax.management.ObjectName;
-import javax.management.ReflectionException;
 
 import org.apache.log4j.Logger;
 import org.radargun.CacheWrapper;
@@ -120,7 +116,7 @@ public class Coherence3Wrapper implements CacheWrapper {
    }
 
    @Override
-   public int size() {
+   public int getLocalSize() {
       if (nc != null) {
          synchronized (this) {
             if (mBeanServer == null || jmxCacheName == null) {
@@ -140,5 +136,10 @@ public class Coherence3Wrapper implements CacheWrapper {
          log.info("Cache is not available.");
          return -1;
       }
+   }
+   
+   @Override
+   public int getTotalSize() {
+      return nc == null ? -1 : nc.size(); 
    }
 }

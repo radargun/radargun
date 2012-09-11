@@ -140,8 +140,13 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    @Override
-   public int size() {
+   public int getLocalSize() {
       return cache.keySet().size();
+   }
+   
+   @Override
+   public int getTotalSize() {
+      return cache.size();
    }
 
    protected void blockForRehashing(Cache aCache) throws InterruptedException {

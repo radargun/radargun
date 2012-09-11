@@ -49,14 +49,18 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
             throws Exception {
       super.setUp(config, isLocal, nodeIndex, confAttributes);
       
+      stopDiscarding();
+      
+      setUpExplicitLocking(getCache(), confAttributes);
+   }
+   
+   protected void stopDiscarding() {
       JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
       JChannel channel = (JChannel) transport.getChannel();
       DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
       if (discard != null) {
          discard.setDiscardAll(false);
       }
-      
-      setUpExplicitLocking(getCache(), confAttributes);
    }
 
    protected void setUpExplicitLocking(Cache aCache, TypedProperties confAttributes) {

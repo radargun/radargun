@@ -13,7 +13,6 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
-import org.radargun.Killable;
 import org.radargun.utils.TypedProperties;
 
 /**
@@ -22,7 +21,7 @@ import org.radargun.utils.TypedProperties;
  * 
  * @author Ondrej Nevelik <onevelik@redhat.com>
  */
-public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper implements Killable {
+public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
 
    private Map<Integer, Cache<Object, Object>> caches = null;
    private static Log log = LogFactory.getLog(InfinispanMultiCacheWrapper.class);
@@ -71,6 +70,8 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper imple
          blockForRehashing(aCache);
          injectEvenConsistentHash(aCache, confAttributes);
       }
+      
+      stopDiscarding();
 
       setUpExplicitLocking(caches.get(0), confAttributes);
    }
@@ -133,10 +134,19 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper imple
    }
 
    @Override
-   public int size() {
+   public int getLocalSize() {
       int size = 0;
       for (Cache aCache : caches.values()) {
          size += aCache.keySet().size();
+      }
+      return size;
+   }
+   
+   @Override
+   public int getTotalSize() {
+      int size = 0;
+      for (Cache aCache : caches.values()) {
+         size += aCache.size();
       }
       return size;
    }

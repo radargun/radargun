@@ -159,6 +159,13 @@ public class BackgroundStats {
       sizeThread.interrupt();
       for (int i = 0; i < stressorThreads.length; i++) {
          stressorThreads[i].terminate = true;
+      }
+      // give the threads a second to terminate
+      try {
+         Thread.sleep(1000);
+      } catch (InterruptedException e) {         
+      }
+      for (int i = 0; i < stressorThreads.length; i++) {
          stressorThreads[i].interrupt();
       }
       // then wait for them to finish
@@ -269,7 +276,7 @@ public class BackgroundStats {
                   }
                   getSize = false;
                }
-               size = cacheWrapper.size();
+               size = cacheWrapper.getLocalSize();
             }
          } catch (InterruptedException e) {
             log.trace("SizeThread interrupted.");
@@ -310,13 +317,7 @@ public class BackgroundStats {
 
       private void loadData() {
          log.trace("Loading key range [" + keyRangeStart + ", " + keyRangeEnd + "]");
-         for (currentKey = keyRangeStart; currentKey < keyRangeEnd; currentKey++) {
-            try {
-               cacheWrapper.put(NAME, key(currentKey), generateRandomString(entrySize));
-            } catch (Exception e) {
-               log.error("Error while loading data", e);
-            }
-         }
+         loadKeyRange(keyRangeStart, keyRangeEnd);            
          if (loadDataForDeadSlaves != null && !loadDataForDeadSlaves.isEmpty()) {
             // each slave takes responsibility to load keys for a subset of dead slaves
             int[] deadSlaveIdxRange = divideRange(loadDataForDeadSlaves.size(), numSlaves, slaveIndex); // range of dead slaves this slave will load data for
@@ -327,17 +328,21 @@ public class BackgroundStats {
                int deadKeyRangeEnd = deadSlaveKeyRange[0] + keyRange[1];
                log.trace("Loading key range for dead slave " + loadDataForDeadSlaves.get(deadSlaveIdx) + ": ["
                      + deadKeyRangeStart + ", " + deadKeyRangeEnd + "]");
-               for (currentKey = deadKeyRangeStart; currentKey < deadKeyRangeEnd; currentKey++) {
-                  try {
-                     cacheWrapper.put(NAME, key(currentKey), generateRandomString(entrySize));
-                  } catch (Exception e) {
-                     log.error("Error while loading data", e);
-                  }
-               }
+               loadKeyRange(deadKeyRangeStart, deadKeyRangeEnd);                  
             }
          }
          currentKey = keyRangeStart;
          loaded = true;
+      }
+      
+      private void loadKeyRange(int from, int to) {
+         for (currentKey = from; currentKey < to; currentKey++) {
+            try {
+               cacheWrapper.put(NAME, key(currentKey), generateRandomString(entrySize));
+            } catch (Exception e) {
+               log.error("Error while loading data", e);
+            }
+         }
       }
 
       @Override
@@ -369,7 +374,6 @@ public class BackgroundStats {
 
       private void makeRequest() throws InterruptedException {
          String key = null;
-         String reqDescription = null;
          boolean isPut = false;
          try {
             key = key(currentKey++);
@@ -380,14 +384,12 @@ public class BackgroundStats {
                cacheWrapper.startTransaction();
             }
             if (remainingGets > 0) {
-               reqDescription = "GET(" + key + ")";
                resetLastOpTime();
                Object result = cacheWrapper.get(NAME, key);
                threadStats.registerRequest(lastOpTime(), isPut, result == null);
                remainingGets--;
             } else if (remainingPuts > 0) {
                isPut = true;
-               reqDescription = "PUT(" + key + ")";
                resetLastOpTime();
                cacheWrapper.put(NAME, key, generateRandomString(entrySize));
                threadStats.registerRequest(lastOpTime(), isPut, false);

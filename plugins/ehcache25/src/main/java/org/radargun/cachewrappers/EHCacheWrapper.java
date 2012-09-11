@@ -106,7 +106,12 @@ public class EHCacheWrapper implements CacheWrapper {
    }
 
    @Override
-   public int size() {
+   public int getLocalSize() {
       return cache.getKeys().size();
+   }
+   
+   @Override
+   public int getTotalSize() {
+      return cache.getSize();
    }
 }

@@ -189,8 +189,14 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       }
    }
 
-   public int size() {
-      return 0;
+   @Override
+   public int getLocalSize() {
+      return -1; // TODO: implement me
+   }
+   
+   @Override
+   public int getTotalSize() {
+      return -1; // TODO: implement me
    }
 
    private Address pickGetTarget() {

@@ -84,6 +84,14 @@ public interface CacheWrapper
     */
    void endTransaction(boolean successful);
 
-   public int size();
+   /**
+    * @return number of entries on this cache node
+    */
+   public int getLocalSize();
+
+   /**
+    * @return number of entries int the whole cache
+    */
+   public int getTotalSize();
 
 }

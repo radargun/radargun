@@ -113,7 +113,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
     * Important: do not change the format of rhe log below as is is used by ./dist.sh to measure distribution load.
     */
    private String generateSizeInfo() {
-      return "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + super.getActiveSlaveCount() + ", nodeIndex:" + super.getSlaveIndex() + ", cacheSize: " + cacheWrapper.size();
+      return "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + super.getActiveSlaveCount() + ", nodeIndex:" + super.getSlaveIndex() + ", cacheSize: " + cacheWrapper.getLocalSize();
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {

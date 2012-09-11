@@ -52,7 +52,12 @@ public class ChmWrapper implements CacheWrapper {
    }
 
    @Override
-   public int size() {
-      return 0;  // TODO: Customise this generated block
+   public int getLocalSize() {
+      return chm.size();
+   }
+   
+   @Override
+   public int getTotalSize() {
+      return chm.size();
    }
 }
