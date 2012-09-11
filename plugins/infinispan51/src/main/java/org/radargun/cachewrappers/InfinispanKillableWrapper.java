@@ -9,6 +9,8 @@ import org.jgroups.JChannel;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 import org.jgroups.protocols.DISCARD;
+import org.jgroups.protocols.TP;
+import org.jgroups.stack.ProtocolStack;
 import org.radargun.Killable;
 import org.radargun.utils.TypedProperties;
 
@@ -30,7 +32,13 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
       if (started) {
          JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
          JChannel channel = (JChannel) transport.getChannel();
-         channel.getProtocolStack().addProtocol(new DISCARD());
+         DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
+         if (discard == null) {
+            discard = new DISCARD();                        
+            channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);
+         }  
+         // Disabling the discard as ISPN cannot handle it gracefully, see https://issues.jboss.org/browse/ISPN-2283
+         // discard.setDiscardAll(true);
          cacheManager.stop();
          started = false;
       }
@@ -40,6 +48,14 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
    public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes)
             throws Exception {
       super.setUp(config, isLocal, nodeIndex, confAttributes);
+      
+      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
+      JChannel channel = (JChannel) transport.getChannel();
+      DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
+      if (discard != null) {
+         discard.setDiscardAll(false);
+      }
+      
       setUpExplicitLocking(getCache(), confAttributes);
    }
 
