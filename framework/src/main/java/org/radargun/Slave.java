@@ -118,7 +118,11 @@ public class Slave {
                            byte[] bytes = SerializationHelper.prepareForSerialization(ack);
                            log.info("Finished stage: " + stage);
                            byteBuffer.clear();
-                           byteBuffer.put(bytes);
+                           if (bytes.length > byteBuffer.capacity()) {
+                              log.info("Buffer is too short, required " + bytes.length + " bytes, reallocating");                              
+                              byteBuffer = ByteBuffer.allocate(bytes.length);
+                           }
+                           byteBuffer.put(bytes);                           
                            byteBuffer.flip();
                         } catch (IOException e) {
                            log.error(e);
