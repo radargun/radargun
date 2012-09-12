@@ -48,6 +48,11 @@ public class JBossCache2Wrapper implements CacheWrapper
    {
       return cache.get(Fqn.fromString(bucket), key);
    }
+   
+   public Object remove(String bucket, Object key) throws Exception
+   {
+      return cache.remove(Fqn.fromString(bucket), key);
+   }
 
    public void empty() throws Exception
    {

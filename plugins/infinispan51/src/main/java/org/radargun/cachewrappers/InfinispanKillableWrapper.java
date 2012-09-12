@@ -95,6 +95,23 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
          endTransaction(true);
       }
    }
+   
+   @Override
+   public Object remove(String bucket, Object key) throws Exception {
+      boolean shouldStopTransactionHere = false;
+      if (isExplicitLocking && !isClusterValidationRequest(bucket)) {
+         if (tm.getStatus() == Status.STATUS_NO_TRANSACTION) {
+            shouldStopTransactionHere = true;
+            startTransaction();
+         }
+         getCache().getAdvancedCache().lock(key);
+      }
+      Object old = super.remove(bucket, key);
+      if (shouldStopTransactionHere) {
+         endTransaction(true);
+      }
+      return old;
+   }
 
    protected boolean isClusterValidationRequest(String bucket) {
       return bucket.startsWith("clusterValidation") ? true : false;

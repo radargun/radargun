@@ -8,6 +8,8 @@ import org.jgroups.util.Util;
 import org.radargun.CacheWrapper;
 import org.radargun.utils.TypedProperties;
 
+import com.arjuna.ats.jta.exceptions.NotImplementedException;
+
 import javax.transaction.TransactionManager;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -140,6 +142,10 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
          throw new Exception(t);
       }
    }
+   
+   public Object remove(String bucket, Object key) throws Exception {
+      throw new NotImplementedException();
+   }   
 
    public void empty() throws Exception {
       ; // no-op

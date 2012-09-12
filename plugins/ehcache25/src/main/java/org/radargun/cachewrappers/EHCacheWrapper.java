@@ -80,6 +80,11 @@ public class EHCacheWrapper implements CacheWrapper {
          return ((Element) s).getValue();
       } else return s;
    }
+   
+   @Override
+   public Object remove(String bucket, Object key) throws Exception {
+      return cache.remove(key);
+   }
 
    public int getNumMembers() {
       return localMode ? 0 : manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(cache).size();

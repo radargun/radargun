@@ -101,6 +101,11 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
    public Object get(String bucket, Object key) throws Exception {
       return caches.get(getThreadIdFromBucket(bucket)).get(key);
    }
+   
+   @Override
+   public Object remove(String bucket, Object key) throws Exception {
+      return caches.get(getThreadIdFromBucket(bucket)).remove(key);
+   }
 
    @Override
    public void empty() throws Exception {

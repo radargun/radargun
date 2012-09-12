@@ -64,6 +64,14 @@ public class JBossCache3Wrapper implements CacheWrapper
       else
          return cache.get(Fqn.fromString(bucket), key);
    }
+   
+   public Object remove(String bucket, Object key) throws Exception
+   {
+      if (FLAT)
+         return flatCache.remove(key);
+      else
+         return cache.remove(Fqn.fromString(bucket), key);
+   }
 
    public void empty() throws Exception
    {

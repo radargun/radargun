@@ -48,6 +48,11 @@ public interface CacheWrapper
    Object get(String bucket, Object key) throws Exception;
 
    /**
+    * @see #put(String, Object, Object)
+    */
+   Object remove(String bucket, Object key) throws Exception;
+   
+   /**
     * This is called after each test type (if emptyCacheBetweenTests is set to true in benchmark.xml) and is
     * used to flush the cache.
     */

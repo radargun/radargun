@@ -72,6 +72,11 @@ public class Coherence3Wrapper implements CacheWrapper {
    public Object get(String bucket, Object key) throws Exception {
       return nc.get(key);
    }
+   
+   @Override
+   public Object remove(String bucket, Object key) throws Exception {
+      return nc.remove(key);
+   }
 
    public void empty() throws Exception {
       nc.clear();

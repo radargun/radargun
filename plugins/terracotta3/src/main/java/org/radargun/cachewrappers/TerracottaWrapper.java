@@ -46,6 +46,15 @@ public class TerracottaWrapper implements CacheWrapper {
          return sessionMap.get(key);
       }
    }
+   
+   @Override
+   public Object remove(String bucket, Object key) throws Exception {
+      Map sessionMap = getSessionMap(bucket);
+      if (sessionMap == null) return null;
+      synchronized (sessionMap) {
+         return sessionMap.remove(key);
+      }
+   }
 
    @Override
    public Object getReplicatedData(String bucket, String key) throws Exception {

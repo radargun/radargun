@@ -78,6 +78,11 @@ public class InfinispanWrapper implements CacheWrapper {
    public Object get(String bucket, Object key) throws Exception {
       return cache.get(key);
    }
+   
+   @Override
+   public Object remove(String bucket, Object key) throws Exception {
+      return cache.remove(key);
+   }
 
    public void empty() throws Exception {
       RpcManager rpcManager = cache.getAdvancedCache().getRpcManager();

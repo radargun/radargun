@@ -26,6 +26,11 @@ public class ChmWrapper implements CacheWrapper {
    public Object get(String bucket, Object key) throws Exception {
       return chm.get(key);
    }
+   
+   @Override
+   public Object remove(String bucket, Object key) throws Exception {
+      return chm.remove(key);
+   }
 
    public void empty() throws Exception {
       chm.clear();
