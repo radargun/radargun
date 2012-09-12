@@ -1,6 +1,5 @@
 package org.radargun.stages;
 
-import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +10,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.MasterConfig;
 import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
+import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
 
 /**
@@ -37,9 +37,11 @@ public abstract class AbstractDistStage implements DistStage {
    private boolean runOnAllSlaves;
    private boolean useSmartClassLoading = true;
    protected String productName;
+   protected ClassLoadHelper classLoadHelper;
 
    public void initOnSlave(SlaveState slaveState) {
       this.slaveState = slaveState;
+      classLoadHelper = new ClassLoadHelper(useSmartClassLoading, getClass(), productName, slaveState, PREV_PRODUCT, CLASS_LOADER);
    }
 
    public void initOnMaster(MasterState masterState, int slaveIndex) {
@@ -50,7 +52,7 @@ public abstract class AbstractDistStage implements DistStage {
       if (isRunOnAllSlaves()) {
          setActiveSlavesCount(totalSlavesCount);
       }
-      this.productName = masterState.nameOfTheCurrentBenchmark();
+      this.productName = masterState.nameOfTheCurrentBenchmark();      
    }
 
    public void setRunOnAllSlaves(boolean runOnAllSlaves) {
@@ -143,25 +145,6 @@ public abstract class AbstractDistStage implements DistStage {
    }
 
    protected Object createInstance(String classFqn) throws Exception {
-      if (!useSmartClassLoading) {
-         return Class.forName(classFqn).newInstance();
-      }
-      URLClassLoader classLoader;
-      String prevProduct = (String) slaveState.get(PREV_PRODUCT);
-      if (prevProduct == null || !prevProduct.equals(productName)) {
-         classLoader = createLoader();
-         slaveState.put(CLASS_LOADER, classLoader);
-         slaveState.put(PREV_PRODUCT, productName);
-      } else {//same product and there is a class loader
-         classLoader = (URLClassLoader) slaveState.get(CLASS_LOADER);
-      }
-      log.info("Creating newInstance " + classFqn + " with classloader " + classLoader);
-      Thread.currentThread().setContextClassLoader(classLoader);
-      return classLoader.loadClass(classFqn).newInstance();
+      return classLoadHelper.createInstance(classFqn);
    }
-
-   private URLClassLoader createLoader() throws Exception {
-      return Utils.buildProductSpecificClassLoader(productName, this.getClass().getClassLoader());
-   }
-
 }

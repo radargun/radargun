@@ -7,8 +7,8 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Attr;
+import org.radargun.stages.AbstractStartStage;
 import org.radargun.stages.GenerateChartStage;
-import org.radargun.stages.StartClusterStage;
 import org.radargun.Master;
 import org.radargun.Stage;
 
@@ -127,10 +127,10 @@ public class DomConfigParser extends ConfigParser {
 
    private void updateStartupStage(String configName, ScalingBenchmarkConfig clone) {
       for (Stage st : clone.getStages()) {
-         if (st instanceof StartClusterStage) {
-            StartClusterStage scs = (StartClusterStage) st;
-            scs.setConfig(configName);
-            scs.setConfAttributes(clone.getConfigAttributes());
+         if (st instanceof AbstractStartStage) {
+            AbstractStartStage ass = (AbstractStartStage) st;
+            ass.setConfig(configName);
+            ass.setConfAttributes(clone.getConfigAttributes());
          }
       }
    }

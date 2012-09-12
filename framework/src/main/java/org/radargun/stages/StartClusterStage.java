@@ -1,31 +1,20 @@
 package org.radargun.stages;
 
-import java.net.URLClassLoader;
-
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.state.MasterState;
-import org.radargun.stressors.BackgroundStats;
-import org.radargun.utils.TypedProperties;
-import org.radargun.utils.Utils;
 
 /**
  * Stage that starts a CacheWrapper on each slave.
  * 
  * @author Mircea.Markus@jboss.com
  */
-public class StartClusterStage extends AbstractDistStage {
+public class StartClusterStage extends AbstractStartStage {
 
    private boolean performClusterSizeValidation = true;
    private boolean staggerSlaveStartup = true;
    private long delayAfterFirstSlaveStarts = 5000;
    private long delayBetweenStartingSlaves = 500;
    private Integer expectNumSlaves;
-
-   private String config;
-   private final int TRY_COUNT = 180;
-
-   private TypedProperties confAttributes;
 
    public StartClusterStage() {
       super.setExitBenchmarkOnSlaveFailure(true);
@@ -49,62 +38,15 @@ public class StartClusterStage extends AbstractDistStage {
       }
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
             + ". This slave's index is: " + getSlaveIndex());
-      CacheWrapper wrapper = null;
-      try {
-         String plugin = getPluginWrapperClass(confAttributes.get("multiCache"), confAttributes.get("partitions"));         
-         wrapper = (CacheWrapper) createInstance(plugin);
-         wrapper.setUp(config, false, slaveIndex, confAttributes);
-         slaveState.setCacheWrapper(wrapper);
-         if (performClusterSizeValidation) {
-            int expectedNumberOfSlaves = expectNumSlaves == null ? getActiveSlaveCount() : expectNumSlaves;
-            for (int i = 0; i < TRY_COUNT; i++) {
-               int numMembers = wrapper.getNumMembers();
-               if (numMembers != expectedNumberOfSlaves) {
-                  String msg = "Number of members=" + numMembers + " is not the one expected: " + expectedNumberOfSlaves;
-                  log.info(msg);
-                  Thread.sleep(1000);
-                  if (i == TRY_COUNT - 1) {
-                     ack.setError(true);
-                     ack.setErrorMessage(msg);
-                     return ack;
-                  }
-               } else {
-                  log.info("Number of members is the one expected: " + wrapper.getNumMembers());
-                  break;
-               }
-            }
-         }
-         BackgroundStats.afterCacheWrapperStart(slaveState);
-      } catch (Exception e) {
-         log.error("Issues while instantiating/starting cache wrapper", e);
-         ack.setError(true);
-         ack.setRemoteException(e);
-         if (wrapper != null) {
-            try {
-               wrapper.tearDown();
-            } catch (Exception ignored) {
-            }
-         }
-         return ack;
+      
+      int expectedSlaves = expectNumSlaves == null ? getActiveSlaveCount() : expectNumSlaves;
+      StartHelper.start(productName, config, confAttributes, slaveState, getSlaveIndex(),
+            performClusterSizeValidation, expectedSlaves, classLoadHelper, ack);
+      if (!ack.isError()) {
+         log.info("Successfully started cache wrapper on slave " + getSlaveIndex() + ": " + slaveState.getCacheWrapper());
       }
-      log.info("Successfully started cache wrapper on slave " + getSlaveIndex() + ": " + wrapper);
       return ack;
    }
-
-   private String getPluginWrapperClass(Object multicache, Object partitions) {
-      if (multicache != null && multicache.equals("true")) {
-         return Utils.getCacheProviderProperty(productName, "org.radargun.wrapper.multicache");
-      } else if (partitions != null && partitions.equals("true")) {
-         return Utils.getCacheProviderProperty(productName, "org.radargun.wrapper.partitions");
-      } else {
-         return Utils.getCacheWrapperFqnClass(productName);
-      }
-   }
-
-   public void setConfig(String config) {
-      this.config = config;
-   }
-
 
    public void setPerformCLusterSizeValidation(boolean performCLusterSizeValidation) {
       this.performClusterSizeValidation = performCLusterSizeValidation;
@@ -152,10 +94,6 @@ public class StartClusterStage extends AbstractDistStage {
       } catch (InterruptedException e) {
          throw new IllegalStateException("Should never happen");
       }
-   }
-
-   public void setConfAttributes(TypedProperties confAttributes) {
-      this.confAttributes = confAttributes;
    }
 
    public void setExpectNumSlaves(int numSlaves) {
