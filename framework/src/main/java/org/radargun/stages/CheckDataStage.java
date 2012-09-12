@@ -47,6 +47,10 @@ public class CheckDataStage extends AbstractDistStage {
    public DistStageAck executeOnSlave() {      
       DefaultDistStageAck ack = newDefaultStageAck();           
       int found = 0;
+      if (slaveState.getCacheWrapper() == null) {         
+         // this slave is dead and does not participate on check
+         return ack;
+      }
       if (checkThreads <= 1) {
          found = checkRange(0, numEntries);
       } else {
@@ -127,8 +131,10 @@ public class CheckDataStage extends AbstractDistStage {
          int sumSize = 0;
          for (DistStageAck ack : acks) {
             DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-            Integer localSize = (Integer) dack.getPayload();
-            sumSize += localSize;
+            if (dack.getPayload() != null) {
+               Integer localSize = (Integer) dack.getPayload();
+               sumSize += localSize;
+            }
          }
          int expectedSize;
          int extraEntries = getExtraEntries();

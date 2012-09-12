@@ -5,6 +5,7 @@ import org.radargun.DistStageAck;
 import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,14 +34,17 @@ public class ClusterValidationStage extends AbstractDistStage {
    private int replicationTryCount = 60;
    private int replicationTimeSleep = 2000;
 
-
    private CacheWrapper wrapper;
    private static final String BUCKET = "clusterValidation";
 
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck response = newDefaultStageAck();
+      DefaultDistStageAck response = newDefaultStageAck();      
       try {
          wrapper = slaveState.getCacheWrapper();
+         if (wrapper == null) {
+            log.info("Missing wrapper, not participating on validation");
+            return response;
+         }
          int replResult = checkReplicationSeveralTimes();
          if (!isPartialReplication) {
             if (replResult > 0) {//only executes this on the slaves on which replication happened.
@@ -65,7 +69,7 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    private int confirmReplication() throws Exception {
       wrapper.put(nodeBucket(getSlaveIndex()), confirmationKey(getSlaveIndex()), "true");
-      for (int i = 0; i < getActiveSlaveCount(); i++) {
+      for (int i : getSlaves()) {
          for (int j = 0; j < 10 && (wrapper.get(nodeBucket(i), confirmationKey(i)) == null); j++) {
             tryToPut();
             wrapper.put(nodeBucket(getSlaveIndex()), confirmationKey(getSlaveIndex()), "true");
@@ -97,6 +101,10 @@ public class ClusterValidationStage extends AbstractDistStage {
             log.warn("Ack error from remote slave: " + defaultStageAck);
             return false;
          }
+         if (defaultStageAck.getPayload() == null) {
+            log.info("Slave " + defaultStageAck.getSlaveIndex() + " did not sent any response");
+            continue;
+         }
          int replCount = (Integer) defaultStageAck.getPayload();
          if (isPartialReplication) {
             if (!(replCount > 0)) {
@@ -104,7 +112,7 @@ public class ClusterValidationStage extends AbstractDistStage {
                success = false;
             }
          } else { //total replication expected
-            int expectedRepl = getActiveSlaveCount() - 1;
+            int expectedRepl = getSlaves().size() - 1;
             if (!(replCount == expectedRepl)) {
                log.warn("On slave " + ack + " total replication hasn't occurred. Expected " + expectedRepl + " and received " + replCount);
                success = false;
@@ -133,10 +141,10 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    private int checkReplicationSeveralTimes() throws Exception {
       tryToPut();
-      int replCount = 0;
+      int replCount = 0;      
       for (int i = 0; i < replicationTryCount; i++) {
          replCount = replicationCount();
-         if ((isPartialReplication && replCount >= 1) || (!isPartialReplication && (replCount == getActiveSlaveCount() - 1))) {
+         if ((isPartialReplication && replCount >= 1) || (!isPartialReplication && (replCount == getSlaves().size() - 1))) {
             log.info("Replication test successfully passed. isPartialReplication? " + isPartialReplication + ", replicationCount = " + replCount);
             return replCount;
          }
@@ -193,6 +201,17 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    public void setReplicationTimeSleep(int replicationTimeSleep) {
       this.replicationTimeSleep = replicationTimeSleep;
+   }
+   
+   public List<Integer> getSlaves() {
+      if (slaves == null) {
+         List<Integer> list = new ArrayList<Integer>();
+         for (int i = 0; i < getActiveSlaveCount(); ++i) {
+            list.add(i);
+         }
+         slaves = list;
+      }
+      return slaves;
    }
 
    private String key(int slaveIndex) {
