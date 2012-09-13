@@ -38,7 +38,7 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
             channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);
          }  
          // Disabling the discard as ISPN cannot handle it gracefully, see https://issues.jboss.org/browse/ISPN-2283
-         // discard.setDiscardAll(true);
+         discard.setDiscardAll(true);
          cacheManager.stop();
          started = false;
       }
