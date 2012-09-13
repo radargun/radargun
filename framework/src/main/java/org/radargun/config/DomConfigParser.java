@@ -54,6 +54,7 @@ public class DomConfigParser extends ConfigParser {
       Element reportsEl = (Element) configRoot.getElementsByTagName("reports").item(0);
       NodeList reportElList = reportsEl.getElementsByTagName("report");
       FixedSizeBenchmarkConfig reportBenchmark = new FixedSizeBenchmarkConfig();
+      reportBenchmark.setProductName("report");
 
       masterConfig.addBenchmark(reportBenchmark);
       for (int i = 0; i < reportElList.getLength(); i++) {

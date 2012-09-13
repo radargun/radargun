@@ -16,6 +16,7 @@ public class StartBackgroundStatsStage extends AbstractDistStage {
 
    private int puts = 1;
    private int gets = 2;
+   private int removes = 0;
    private int numEntries = 1024;
    private int entrySize = 1024;
    private int numThreads = 10;
@@ -33,7 +34,7 @@ public class StartBackgroundStatsStage extends AbstractDistStage {
       try {
          BackgroundStats bgStats = (BackgroundStats) slaveState.get(BackgroundStats.NAME);
          if (bgStats == null) {
-            bgStats = new BackgroundStats(puts, gets, numEntries, entrySize, numThreads, slaveState,
+            bgStats = new BackgroundStats(puts, gets, removes, numEntries, entrySize, numThreads, slaveState,
                   delayBetweenRequests, getActiveSlaveCount(), getSlaveIndex(), statsIterationDuration,
                   transactionSize, loadDataForDeadSlaves);
             slaveState.put(BackgroundStats.NAME, bgStats);
@@ -68,6 +69,10 @@ public class StartBackgroundStatsStage extends AbstractDistStage {
 
    public void setGets(int gets) {
       this.gets = gets;
+   }
+   
+   public void setRemoves(int removes) {
+      this.removes = removes;
    }
 
    public void setNumEntries(int numEntries) {

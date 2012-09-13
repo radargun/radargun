@@ -27,11 +27,18 @@ public class BackgroundStats {
     */
    public static final String NAME = "BackgroundStats";
 
+   private enum Operation {
+      GET, PUT, REMOVE
+   }
+   
    private static Logger log = Logger.getLogger(BackgroundStats.class);
    private static Random r = new Random();
 
    private int puts;
    private int gets;
+   private int removes;
+   private int operations;
+   
    private int numEntries;
    private int entrySize;
    private int numThreads;
@@ -50,12 +57,14 @@ public class BackgroundStats {
    private int transactionSize;
    private List<Integer> loadDataForDeadSlaves;
 
-   public BackgroundStats(int puts, int gets, int numEntries, int entrySize, int numThreads, SlaveState slaveState,
+   public BackgroundStats(int puts, int gets, int removes, int numEntries, int entrySize, int numThreads, SlaveState slaveState,
          long delayBetweenRequests, int numSlaves, int slaveIndex, long statsIteration, int transactionSize,
          List<Integer> loadDataForDeadSlaves) {
       super();
       this.puts = puts;
       this.gets = gets;
+      this.removes = removes;
+      this.operations = puts + gets + removes;
       this.numEntries = numEntries;
       this.entrySize = entrySize;
       this.numThreads = numThreads;
@@ -294,8 +303,7 @@ public class BackgroundStats {
 
    private class StressorThread extends Thread {
 
-      private int remainingGets = gets;
-      private int remainingPuts = puts;
+      private Random rand = new Random(); 
       private long lastOpStartTime;
       private Stats threadStats = new Stats();
       private int keyRangeStart;
@@ -371,10 +379,19 @@ public class BackgroundStats {
       private long lastOpTime() {
          return System.currentTimeMillis() - lastOpStartTime;
       }
-
+      
+      private Operation getOperation() {
+         int r = rand.nextInt(operations);
+         if (r < gets) {
+            return Operation.GET;
+         } else if (r < gets + puts) {
+            return Operation.PUT;
+         } else return Operation.REMOVE;
+      }
+            
       private void makeRequest() throws InterruptedException {
          String key = null;
-         boolean isPut = false;
+         Operation operation = getOperation();
          try {
             key = key(currentKey++);
             if (currentKey == keyRangeEnd) {
@@ -383,23 +400,22 @@ public class BackgroundStats {
             if (transactionSize != -1 && remainingTxOps == transactionSize) {
                cacheWrapper.startTransaction();
             }
-            if (remainingGets > 0) {
-               resetLastOpTime();
-               Object result = cacheWrapper.get(NAME, key);
-               threadStats.registerRequest(lastOpTime(), isPut, result == null);
-               remainingGets--;
-            } else if (remainingPuts > 0) {
-               isPut = true;
-               resetLastOpTime();
+            resetLastOpTime();
+            Object result;
+            switch (operation)
+            {
+            case GET:
+               result = cacheWrapper.get(NAME, key);
+               threadStats.registerRequest(lastOpTime(), operation, result == null);
+               break;
+            case PUT:
                cacheWrapper.put(NAME, key, generateRandomString(entrySize));
-               threadStats.registerRequest(lastOpTime(), isPut, false);
-               remainingPuts--;
-            } else {
-               throw new Exception("Both puts and gets can't be zero!");
-            }
-            if (remainingGets == 0 && remainingPuts == 0) {
-               remainingGets = gets;
-               remainingPuts = puts;
+               threadStats.registerRequest(lastOpTime(), operation, false);
+               break;
+            case REMOVE:
+               result = cacheWrapper.remove(NAME, key);
+               threadStats.registerRequest(lastOpTime(), operation, result == null);
+               break;
             }
             if (transactionSize != -1) {
                remainingTxOps--;
@@ -423,7 +439,7 @@ public class BackgroundStats {
                }
                remainingTxOps = transactionSize;
             }
-            threadStats.registerError(lastOpTime(), isPut);
+            threadStats.registerError(lastOpTime(), operation);
          }
       }
 
@@ -459,11 +475,16 @@ public class BackgroundStats {
       protected long maxResponseTimeGet = Long.MIN_VALUE;
       protected long responseTimeSumGet = 0;
       protected long requestsNullGet;
+      
+      protected long requestsRemove;
+      protected long maxResponseTimeRemove = Long.MIN_VALUE;
+      protected long responseTimeSumRemove = 0;
 
       protected long intervalBeginTime;
       protected long intervalEndTime;
       protected long errorsPut = 0;
       protected long errorsGet = 0;
+      protected long errorsRemove = 0;
 
       protected int cacheSize;
 
@@ -481,42 +502,53 @@ public class BackgroundStats {
          return nodeUp;
       }
 
-      public synchronized void registerRequest(long responseTime, boolean isPut, boolean isNull) {
+      public synchronized void registerRequest(long responseTime, Operation operation, boolean isNull) {
          ensureNotSnapshot();
-         if (isPut) {
-            requestsPut++;
-            responseTimeSumPut += responseTime;
-            if (maxResponseTimePut < responseTime) {
-               maxResponseTimePut = responseTime;
-            }
-         } else {
+         switch (operation)
+         {
+         case GET:
             requestsGet++;
             if (isNull) {
                requestsNullGet++;
             }
             responseTimeSumGet += responseTime;
-            if (maxResponseTimeGet < responseTime) {
-               maxResponseTimeGet = responseTime;
-            }
+            maxResponseTimeGet = Math.max(maxResponseTimeGet, responseTime);
+            break;
+         case PUT:
+            requestsPut++;
+            responseTimeSumPut += responseTime;
+            maxResponseTimePut = Math.max(maxResponseTimePut, responseTime);
+            break;
+         case REMOVE:
+            requestsRemove++;
+            responseTimeSumRemove += responseTime;
+            maxResponseTimeRemove = Math.max(maxResponseTimeRemove, responseTime);
+            break;
          }
 
       }
 
-      public synchronized void registerError(long responseTime, boolean isPut) {
-         if (isPut) {
-            requestsPut++;
-            errorsPut++;
-            responseTimeSumPut += responseTime;
-            if (maxResponseTimePut < responseTime) {
-               maxResponseTimePut = responseTime;
-            }
-         } else {
+      public synchronized void registerError(long responseTime, Operation operation) {
+         switch (operation)
+         {
+         case GET:
             requestsGet++;
             errorsGet++;
             responseTimeSumGet += responseTime;
-            if (maxResponseTimeGet < responseTime) {
-               maxResponseTimeGet = responseTime;
-            }
+            maxResponseTimeGet = Math.max(maxResponseTimeGet, responseTime);
+            break;
+         case PUT:
+            requestsPut++;
+            errorsPut++;
+            responseTimeSumPut += responseTime;
+            maxResponseTimePut = Math.max(maxResponseTimePut, responseTime);
+            break;
+         case REMOVE:
+            requestsRemove++;
+            errorsRemove++;
+            responseTimeSumRemove += responseTime;
+            maxResponseTimeRemove = Math.max(maxResponseTimeRemove, responseTime);
+            break;
          }
       }
 
@@ -527,29 +559,26 @@ public class BackgroundStats {
          requestsPut = 0;
          requestsGet = 0;
          requestsNullGet = 0;
+         requestsRemove = 0;
          responseTimeSumPut = 0;
          responseTimeSumGet = 0;
+         responseTimeSumRemove = 0;
          maxResponseTimePut = Long.MIN_VALUE;
          maxResponseTimeGet = Long.MIN_VALUE;
+         maxResponseTimeRemove = Long.MIN_VALUE;
          errorsPut = 0;
          errorsGet = 0;
+         errorsRemove = 0;
       }
 
       public synchronized Stats snapshot(boolean reset, long time) {
          ensureNotSnapshot();
          Stats result = new Stats();
-         result.responseTimeSumPut = responseTimeSumPut;
-         result.responseTimeSumGet = responseTimeSumGet;
-         result.requestsPut = requestsPut;
-         result.requestsGet = requestsGet;
-         result.requestsNullGet = requestsNullGet;
-         result.intervalBeginTime = intervalBeginTime;
+         
+         fillCopy(result);
+         
          result.intervalEndTime = time;
-         result.maxResponseTimePut = maxResponseTimePut;
-         result.maxResponseTimeGet = maxResponseTimeGet;
          result.snapshot = true;
-         result.errorsPut = errorsPut;
-         result.errorsGet = errorsGet;
          result.nodeUp = nodeUp;
          if (reset) {
             reset(time);
@@ -572,13 +601,17 @@ public class BackgroundStats {
          result.requestsPut = requestsPut;
          result.requestsGet = requestsGet;
          result.requestsNullGet = requestsNullGet;
+         result.requestsRemove = requestsRemove;
          result.maxResponseTimePut = maxResponseTimePut;
          result.maxResponseTimeGet = maxResponseTimeGet;
+         result.maxResponseTimeRemove = maxResponseTimeRemove;
 
          result.responseTimeSumPut = responseTimeSumPut;
          result.responseTimeSumGet = responseTimeSumGet;
+         result.responseTimeSumRemove = responseTimeSumRemove;
          result.errorsPut = errorsPut;
          result.errorsGet = errorsGet;
+         result.errorsRemove = errorsRemove;
       }
 
       /**
@@ -593,14 +626,18 @@ public class BackgroundStats {
          intervalBeginTime = Math.min(otherStats.intervalBeginTime, intervalBeginTime);
          intervalEndTime = Math.max(otherStats.intervalEndTime, intervalEndTime);
          requestsPut += otherStats.requestsPut;
-         requestsGet += otherStats.requestsGet;
+         requestsGet += otherStats.requestsGet;         
          requestsNullGet += otherStats.requestsNullGet;
+         requestsRemove += otherStats.requestsRemove;
          maxResponseTimePut = Math.max(otherStats.maxResponseTimePut, maxResponseTimePut);
          maxResponseTimeGet = Math.max(otherStats.maxResponseTimeGet, maxResponseTimeGet);
+         maxResponseTimeRemove = Math.max(otherStats.maxResponseTimeRemove, maxResponseTimeRemove);
          errorsPut += otherStats.errorsPut;
          errorsGet += otherStats.errorsGet;
+         errorsRemove += otherStats.errorsRemove;
          responseTimeSumGet += otherStats.responseTimeSumGet;
          responseTimeSumPut += otherStats.responseTimeSumPut;
+         responseTimeSumRemove += otherStats.responseTimeSumRemove;
       }
 
       public synchronized static Stats merge(Collection<Stats> set) {
@@ -632,7 +669,7 @@ public class BackgroundStats {
       }
 
       public long getNumErrors() {
-         return errorsPut + errorsGet;
+         return errorsPut + errorsGet + errorsRemove;
       }
 
       public long getNumErrorsPut() {
@@ -656,7 +693,7 @@ public class BackgroundStats {
       }
 
       public synchronized long getNumberOfRequests() {
-         return requestsPut + requestsGet;
+         return requestsPut + requestsGet + requestsRemove;
       }
 
       public synchronized long getMaxResponseTime() {
@@ -683,7 +720,7 @@ public class BackgroundStats {
          if (getNumberOfRequests() == 0) {
             return Double.NaN;
          } else {
-            return ((double) responseTimeSumPut + responseTimeSumGet) / ((double) getNumberOfRequests());
+            return ((double) responseTimeSumPut + responseTimeSumGet + responseTimeSumRemove) / ((double) getNumberOfRequests());
          }
       }
 
@@ -819,8 +856,10 @@ public class BackgroundStats {
          for (Stats s : stats) {
             responseTimeSum += s.responseTimeSumGet;
             responseTimeSum += s.responseTimeSumPut;
+            responseTimeSum += s.responseTimeSumRemove;
             numRequests += s.requestsGet;
             numRequests += s.requestsPut;
+            numRequests += s.requestsRemove;
          }
          return ((double) responseTimeSum) / ((double) numRequests);
       }
@@ -828,12 +867,9 @@ public class BackgroundStats {
       public static long getMaxRespTime(List<Stats> stats) {
          long ret = Long.MIN_VALUE;
          for (Stats s : stats) {
-            if (s.maxResponseTimeGet > ret) {
-               ret = s.maxResponseTimeGet;
-            }
-            if (s.maxResponseTimePut > ret) {
-               ret = s.maxResponseTimePut;
-            }
+            ret = Math.max(ret, s.maxResponseTimeGet);
+            ret = Math.max(ret, s.maxResponseTimePut);
+            ret = Math.max(ret, s.maxResponseTimeRemove);            
          }
          return ret;
       }
