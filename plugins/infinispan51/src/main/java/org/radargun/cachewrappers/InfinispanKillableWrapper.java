@@ -108,10 +108,12 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
       JChannel channel = (JChannel) transport.getChannel();
       DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
       if (discard == null) {
-         discard = new DISCARD();                        
-         channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);
+         discard = new DISCARD();
+         log.debug("No DISCARD protocol in stack, inserting new instance");
+         channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);         
       }  
       discard.setDiscardAll(true);
+      log.debug("Started discarding packets");
       List<Address> addressList = cacheManager.getMembers();
       cacheManager.stop();
       log.info("Killed, previous view is " + addressList);
@@ -134,6 +136,9 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
       DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
       if (discard != null) {
          discard.setDiscardAll(false);
+         log.debug("Stopped discarding.");
+      } else {
+         log.debug("No DISCARD protocol in stack, cannot stop discarding");
       }
    }
 
