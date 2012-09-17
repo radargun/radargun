@@ -13,6 +13,7 @@ import org.radargun.state.MasterState;
 public class KillStage extends AbstractDistStage {
 
    private boolean tearDown = false;
+   private boolean async = false;
 
    public KillStage() {
       // nada
@@ -27,7 +28,7 @@ public class KillStage extends AbstractDistStage {
       log.info("Received kill request from master...");
       DefaultDistStageAck ack = newDefaultStageAck();
       if (slaves != null && slaves.contains(getSlaveIndex())) {
-         KillHelper.kill(slaveState, tearDown, ack);
+         KillHelper.kill(slaveState, tearDown, async, ack);
       } else {
          log.trace("Ignoring kill request, not targeted for this slave");
       }
@@ -41,6 +42,10 @@ public class KillStage extends AbstractDistStage {
 
    public void setTearDown(boolean tearDown) {
       this.tearDown = tearDown;
+   }
+   
+   public void setAsync(boolean async) {
+      this.async = async;
    }
 
 }

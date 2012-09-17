@@ -37,7 +37,7 @@ public class KillHelper {
   
    private static final Log log = LogFactory.getLog(KillHelper.class);
    
-   public static DefaultDistStageAck kill(SlaveState slaveState, boolean tearDown, DefaultDistStageAck ack) {
+   public static void kill(SlaveState slaveState, boolean tearDown, boolean async, DefaultDistStageAck ack) {
       try {
          CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
          if (cacheWrapper != null) {
@@ -47,7 +47,11 @@ public class KillHelper {
                cacheWrapper.tearDown();
             } else if (cacheWrapper instanceof Killable) {
                log.info("Killing cache wrapper.");
-               ((Killable) cacheWrapper).kill();
+               if (async) {
+                  ((Killable) cacheWrapper).killAsync();
+               } else {
+                  ((Killable) cacheWrapper).kill();
+               }
             } else {
                log.info("CacheWrapper is not killable, calling tearDown instead");
                cacheWrapper.tearDown();
@@ -56,12 +60,10 @@ public class KillHelper {
             log.info("No cache wrapper deployed on this slave, nothing to do.");
          }
          slaveState.setCacheWrapper(null);
-         return ack;
       } catch (Exception e) {
          log.error("Error while killing slave", e);
          ack.setError(true);
          ack.setRemoteException(e);
-         return ack;
       } finally {
          System.gc();
       }
