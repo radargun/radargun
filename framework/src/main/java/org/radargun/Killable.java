@@ -14,5 +14,6 @@ public interface Killable {
     * @throws Exception
     */
    void kill() throws Exception;
+   void killAsync() throws Exception;
 
 }

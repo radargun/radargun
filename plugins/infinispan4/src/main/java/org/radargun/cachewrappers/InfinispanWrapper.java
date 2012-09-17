@@ -17,12 +17,22 @@ import org.radargun.utils.Utils;
 
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+
+import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class InfinispanWrapper implements CacheWrapper {
 
+   enum State {
+      STOPPED,
+      STARTING,
+      STARTED,
+      STOPPING
+   }
+   
    static {
       // Set up transactional stores for JBoss TS
       arjPropertyManager.getCoordinatorEnvironmentBean().setCommunicationStore(VolatileStore.class.getName());
@@ -33,28 +43,62 @@ public class InfinispanWrapper implements CacheWrapper {
    protected DefaultCacheManager cacheManager;
    private Cache<Object, Object> cache;
    TransactionManager tm;
-   protected boolean started = false;
+   protected volatile State state = State.STOPPED;
+   protected ReentrantLock stateLock = new ReentrantLock();
    String config;
    private volatile boolean enlistExtraXAResource;
 
    public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
       this.config = config;
+      
+      try {
+         stateLock.lock();
+         while (state == State.STOPPING) {
+            stateLock.unlock();
+            log.info("Waiting for the wrapper to stop");
+            Thread.sleep(5000);
+            stateLock.lock();
+         }
+         if (state == State.STARTING) {
+            log.info("Wrapper already starting");
+         } else if (state == State.STARTED) {
+            log.info("Wrapper already started");
+         } else if (state == State.STOPPED) {
+            state = State.STARTING;
+            stateLock.unlock();
+            
+            setUpInternal(confAttributes);
+            
+            stateLock.lock();
+            state = State.STARTED;
+         }
+      } finally {
+         if (stateLock.isHeldByCurrentThread()) {
+            stateLock.unlock();
+         }
+      }
+      
+      postSetUpInternal(confAttributes);
+   }
+   
+   protected void setUpInternal(TypedProperties confAttributes) throws Exception {
       String configFile  = confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
       String cacheName = confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : "x";
 
       log.trace("Using config file: " + configFile + " and cache name: " + cacheName);
 
-      if (!started) {
-         cacheManager = new DefaultCacheManager(configFile);
-         String cacheNames = cacheManager.getDefinedCacheNames();
-         if (!cacheNames.contains(cacheName))
-            throw new IllegalStateException("The requested cache(" + cacheName + ") is not defined. Defined cache " +
-                                                  "names are " + cacheNames);
-         cache = cacheManager.getCache(cacheName);
-         started = true;
-         tm = cache.getAdvancedCache().getTransactionManager();
-         log.info("Using transaction manager: " + tm);
-      }
+      
+      cacheManager = new DefaultCacheManager(configFile);
+      String cacheNames = cacheManager.getDefinedCacheNames();
+      if (!cacheNames.contains(cacheName))
+         throw new IllegalStateException("The requested cache(" + cacheName + ") is not defined. Defined cache " +
+                                               "names are " + cacheNames);
+      cache = cacheManager.getCache(cacheName);      
+      tm = cache.getAdvancedCache().getTransactionManager();
+      log.info("Using transaction manager: " + tm);
+   }
+   
+   protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {
       log.debug("Loading JGroups from: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
       log.info("Using config attributes: " + confAttributes);
@@ -62,12 +106,34 @@ public class InfinispanWrapper implements CacheWrapper {
       injectEvenConsistentHash(cache, confAttributes);
    }
 
-   public void tearDown() throws Exception {
-      List<Address> addressList = cacheManager.getMembers();
-      if (started) {
-         cacheManager.stop();
-         log.trace("Stopped, previous view is " + addressList);
-         started = false;
+   public void tearDown() throws Exception {     
+      try {
+         stateLock.lock();
+         while (state == State.STARTING) {
+            stateLock.unlock();
+            log.info("Waiting for the wrapper to start");
+            Thread.sleep(5000);
+            stateLock.lock();
+         }
+         if (state == State.STOPPING) {
+            log.warn("Wrapper already stopping");
+         } else if (state == State.STOPPED) {
+            log.warn("Wrapper already stopped");
+         } else if (state == State.STARTED) {
+            state = State.STOPPING;
+            stateLock.unlock();
+            
+            List<Address> addressList = cacheManager.getMembers();
+            cacheManager.stop();         
+            log.info("Stopped, previous view is " + addressList);
+                    
+            stateLock.lock();
+            state = State.STOPPED;
+         }
+      } finally {
+         if (stateLock.isHeldByCurrentThread()) {
+            stateLock.unlock();
+         }
       }
    }
 

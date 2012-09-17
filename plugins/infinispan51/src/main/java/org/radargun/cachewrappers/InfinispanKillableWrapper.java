@@ -1,8 +1,11 @@
 package org.radargun.cachewrappers;
 
+import java.util.List;
+
 import javax.transaction.Status;
 
 import org.infinispan.Cache;
+import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.infinispan.transaction.LockingMode;
 import org.jgroups.JChannel;
@@ -26,35 +29,106 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
 
    private boolean isExplicitLocking;
    private static Log log = LogFactory.getLog(InfinispanKillableWrapper.class);
-
+   
    @Override
    public void kill() throws Exception {
-      if (started) {
-         JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
-         JChannel channel = (JChannel) transport.getChannel();
-         DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
-         if (discard == null) {
-            discard = new DISCARD();                        
-            channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);
-         }  
-         // Disabling the discard as ISPN cannot handle it gracefully, see https://issues.jboss.org/browse/ISPN-2283
-         discard.setDiscardAll(true);
-         cacheManager.stop();
-         started = false;
+      try {
+         stateLock.lock();
+         while (state == State.STARTING) {
+            stateLock.unlock();
+            log.info("Waiting for the wrapper to start");
+            Thread.sleep(5000);
+            stateLock.lock();
+         }
+         if (state == State.STOPPING) {
+            log.warn("Wrapper already stopping");
+         } else if (state == State.STOPPED) {
+            log.warn("Wrapper already stopped");
+         } else if (state == State.STARTED) {
+            state = State.STOPPING;
+            stateLock.unlock();
+            
+            killInternal();
+                    
+            stateLock.lock();
+            state = State.STOPPED;
+         }
+      } finally {
+         if (stateLock.isHeldByCurrentThread()) {
+            stateLock.unlock();
+         }
       }
+   }
+   
+   @Override
+   public void killAsync() throws Exception {
+      try {
+         stateLock.lock();
+         while (state == State.STARTING) {
+            stateLock.unlock();
+            log.info("Waiting for the wrapper to start");
+            Thread.sleep(5000);
+            stateLock.lock();
+         }
+         if (state == State.STOPPING) {
+            log.warn("Wrapper already stopping");
+         } else if (state == State.STOPPED) {
+            log.warn("Wrapper already stopped");
+         } else if (state == State.STARTED) {
+            state = State.STOPPING;
+            stateLock.unlock();
+            
+            new Thread(new Runnable() {
+               @Override
+               public void run() {
+                  try {
+                     killInternal();
+                     
+                     stateLock.lock();
+                     state = State.STOPPED;
+                  } catch (Exception e) {
+                     log.error("Exception while async killing", e);
+                  } finally {
+                     if (stateLock.isHeldByCurrentThread()) {
+                        stateLock.unlock();
+                     }
+                  }
+               }
+            }).start();                                
+         }
+      } finally {
+         if (stateLock.isHeldByCurrentThread()) {
+            stateLock.unlock();
+         }
+      }   
+   }
+   
+   private void killInternal() throws Exception {
+      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
+      JChannel channel = (JChannel) transport.getChannel();
+      DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
+      if (discard == null) {
+         discard = new DISCARD();                        
+         channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);
+      }  
+      discard.setDiscardAll(true);
+      List<Address> addressList = cacheManager.getMembers();
+      cacheManager.stop();
+      log.info("Killed, previous view is " + addressList);
    }
 
    @Override
-   public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes)
-            throws Exception {
-      super.setUp(config, isLocal, nodeIndex, confAttributes);
-      
+   protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {      
       stopDiscarding();
-      
+      super.postSetUpInternal(confAttributes);      
       setUpExplicitLocking(getCache(), confAttributes);
    }
    
    protected void stopDiscarding() {
+      if (cacheManager == null) {
+         log.warn("Cache manager is not ready!");
+         return;
+      }
       JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
       JChannel channel = (JChannel) transport.getChannel();
       DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 

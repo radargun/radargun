@@ -428,6 +428,8 @@ public class BackgroundStats {
             InterruptedException ie = findInterruptionCause(null, e);
             if (ie != null) {
                throw ie;
+            } else if (e.getClass().getName().contains("SuspectException")) {
+               log.error("Request failed due to SuspectException: " + e.getMessage());
             } else {
                log.error("Cache operation error", e);
             }

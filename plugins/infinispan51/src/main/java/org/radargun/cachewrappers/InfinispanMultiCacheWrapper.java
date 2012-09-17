@@ -1,5 +1,6 @@
 package org.radargun.cachewrappers;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -25,54 +26,50 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
 
    private Map<Integer, Cache<Object, Object>> caches = null;
    private static Log log = LogFactory.getLog(InfinispanMultiCacheWrapper.class);
-
-
+  
    @Override
-   public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes)
-            throws Exception {
-      this.config = config;
-      String configFile = confAttributes.containsKey("file") ? confAttributes.getProperty("file")
-               : config;
+   protected void setUpInternal(TypedProperties confAttributes) throws Exception {
+      String configFile = confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
+      cacheManager = new DefaultCacheManager(configFile);
 
-      if (!started) {
-         cacheManager = new DefaultCacheManager(configFile);
-
-         /*
-          * Test case with multiple caches
-          */
-         String multiCache = (String) confAttributes.get("multiCache");
-         if (multiCache == null || multiCache.equals("false")) {
-            throw new InstantiationException(
-                     "Can't create an instance of InfinispanMultiCacheWrapper! The multiCache conf wasn't set!");
-         }
-         Set<String> cacheNames = cacheManager.getCacheNames();
-         log.trace("Using config file: " + configFile + " and " + cacheNames.size()
-                  + " caches defined in it");
-         int i = 0;
-         caches = new HashMap<Integer, Cache<Object, Object>>(cacheNames.size());
-         for (String aCache : cacheNames) {
-            log.trace(i + " adding cache: " + aCache);
-            caches.put(i++, cacheManager.getCache(aCache));
-
-         }
-         /*
-          * There SHOULD be just one instance of transaction manager!
-          */
-         tm = caches.get(0).getAdvancedCache().getTransactionManager();
-         started = true;
+      /*
+       * Test case with multiple caches
+       */
+      String multiCache = (String) confAttributes.get("multiCache");
+      if (multiCache == null || multiCache.equals("false")) {
+         throw new InstantiationException(
+                  "Can't create an instance of InfinispanMultiCacheWrapper! The multiCache conf wasn't set!");
       }
+      Set<String> cacheNames = cacheManager.getCacheNames();
+      log.trace("Using config file: " + configFile + " and " + cacheNames.size()
+               + " caches defined in it");
+      int i = 0;
+      caches = new HashMap<Integer, Cache<Object, Object>>(cacheNames.size());
+      for (String aCache : cacheNames) {
+         log.trace(i + " adding cache: " + aCache);
+         caches.put(i++, cacheManager.getCache(aCache));
+
+      }
+      /*
+       * There SHOULD be just one instance of transaction manager!
+       */
+      tm = caches.get(0).getAdvancedCache().getTransactionManager();
+   }
+   
+   @Override
+   protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {
+      stopDiscarding();
+      
       log.debug("Loading JGroups from: "
-               + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
+            + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
       log.info("Using config attributes: " + confAttributes);
-
-      for (Cache aCache : caches.values()) {
+   
+      for (Cache<?,?> aCache : caches.values()) {
          blockForRehashing(aCache);
          injectEvenConsistentHash(aCache, confAttributes);
-      }
-      
-      stopDiscarding();
-
+      }   
+   
       setUpExplicitLocking(caches.get(0), confAttributes);
    }
 
