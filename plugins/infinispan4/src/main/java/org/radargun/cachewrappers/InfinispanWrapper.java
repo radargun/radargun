@@ -18,7 +18,6 @@ import org.radargun.utils.Utils;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,7 +29,8 @@ public class InfinispanWrapper implements CacheWrapper {
       STOPPED,
       STARTING,
       STARTED,
-      STOPPING
+      STOPPING,
+      FAILED
    }
    
    static {
@@ -52,14 +52,16 @@ public class InfinispanWrapper implements CacheWrapper {
       this.config = config;
       
       try {
-         stateLock.lock();
+         stateLock.lock();         
          while (state == State.STOPPING) {
             stateLock.unlock();
             log.info("Waiting for the wrapper to stop");
             Thread.sleep(5000);
             stateLock.lock();
          }
-         if (state == State.STARTING) {
+         if (state == State.FAILED){
+            log.info("Cannot start, previous attempt failed");
+         } else if (state == State.STARTING) {
             log.info("Wrapper already starting");
          } else if (state == State.STARTED) {
             log.info("Wrapper already started");
@@ -72,6 +74,13 @@ public class InfinispanWrapper implements CacheWrapper {
             stateLock.lock();
             state = State.STARTED;
          }
+      } catch (Exception e) {
+         log.error("Wrapper start failed.");
+         if (!stateLock.isHeldByCurrentThread()) {
+            stateLock.lock();
+         }
+         state = State.FAILED;         
+         throw e;
       } finally {
          if (stateLock.isHeldByCurrentThread()) {
             stateLock.unlock();
@@ -115,7 +124,9 @@ public class InfinispanWrapper implements CacheWrapper {
             Thread.sleep(5000);
             stateLock.lock();
          }
-         if (state == State.STOPPING) {
+         if (state == State.FAILED) {
+            log.info("Cannot tear down, previous attempt failed");            
+         } else if (state == State.STOPPING) {
             log.warn("Wrapper already stopping");
          } else if (state == State.STOPPED) {
             log.warn("Wrapper already stopped");
@@ -130,6 +141,13 @@ public class InfinispanWrapper implements CacheWrapper {
             stateLock.lock();
             state = State.STOPPED;
          }
+      } catch (Exception e) {
+         log.error("Wrapper tear down failed.");
+         if (!stateLock.isHeldByCurrentThread()) {
+            stateLock.lock();
+         }
+         state = State.FAILED;
+         throw e;
       } finally {
          if (stateLock.isHeldByCurrentThread()) {
             stateLock.unlock();

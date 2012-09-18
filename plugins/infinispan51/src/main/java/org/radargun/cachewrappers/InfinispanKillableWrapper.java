@@ -24,6 +24,7 @@ import org.radargun.utils.TypedProperties;
  * 
  * @author Michal Linhard <mlinhard@redhat.com>
  * @author Ondrej Nevelik <onevelik@redhat.com>
+ * @author Radim Vansa <rvansa@redhat.com>
  */
 public class InfinispanKillableWrapper extends InfinispanWrapper implements Killable {
 
@@ -40,7 +41,9 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
             Thread.sleep(5000);
             stateLock.lock();
          }
-         if (state == State.STOPPING) {
+         if (state == State.FAILED) {
+            log.info("Cannot kill, previous attempt failed.");
+         } else if (state == State.STOPPING) {
             log.warn("Wrapper already stopping");
          } else if (state == State.STOPPED) {
             log.warn("Wrapper already stopped");
@@ -53,6 +56,13 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
             stateLock.lock();
             state = State.STOPPED;
          }
+      } catch (Exception e) {
+         log.error("Wrapper kill failed");
+         if (!stateLock.isHeldByCurrentThread()) {
+            stateLock.lock();
+         }
+         state = State.FAILED;
+         throw e;
       } finally {
          if (stateLock.isHeldByCurrentThread()) {
             stateLock.unlock();
@@ -87,7 +97,11 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
                      stateLock.lock();
                      state = State.STOPPED;
                   } catch (Exception e) {
-                     log.error("Exception while async killing", e);
+                     log.error("Wrapper async kill failed. Exception while async killing", e);
+                     if (!stateLock.isHeldByCurrentThread()) {
+                        stateLock.lock();
+                     }
+                     state = State.FAILED;
                   } finally {
                      if (stateLock.isHeldByCurrentThread()) {
                         stateLock.unlock();
