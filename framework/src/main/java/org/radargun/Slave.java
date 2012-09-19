@@ -70,7 +70,7 @@ public class Slave {
 
    private void startCommunicationWithMaster() throws Exception {
       Selector selector = Selector.open();
-      socketChannel.register(selector, SelectionKey.OP_CONNECT);
+      socketChannel.register(selector, SelectionKey.OP_READ);
       while (true) {
          selector.select();
          // Get set of ready objects
@@ -83,22 +83,7 @@ public class Slave {
             readyItor.remove();
             SocketChannel keyChannel = (SocketChannel) key.channel();
 
-            if (key.isConnectable()) {
-               if (keyChannel.isConnectionPending()) {
-                  try {
-                     keyChannel.finishConnect();
-                  } catch (IOException e) {
-                     key.cancel();
-                     log.warn("Could not finish connecting. Is the master started?", e);
-                     throw e;
-                  }
-                  state.setLocalAddress(keyChannel.socket().getLocalAddress());
-                  state.setMasterAddress(keyChannel.socket().getInetAddress());
-                  key.interestOps(SelectionKey.OP_READ);
-               }
-               log.info("Successfully established connection with master at: " + masterHost + ":" + masterPort);
-
-            } else if (key.isReadable()) {
+            if (key.isReadable()) {
                int numRead = keyChannel.read(byteBuffer);
                if (numRead == -1) {
                   log.info("Master shutdown!");
@@ -168,26 +153,19 @@ public class Slave {
       log.info("Attempting to connect to master " + masterHost + ":" + masterPort);
       socketChannel = SocketChannel.open();
       socketChannel.connect(socketAddress);
+      log.info("Successfully established connection with master at: " + masterHost + ":" + masterPort);
       
       ByteBuffer slaveIndexBuffer = ByteBuffer.allocate(4);
       slaveIndexBuffer.putInt(slaveIndex);
       slaveIndexBuffer.flip();
       socketChannel.write(slaveIndexBuffer);
       
+      // now the channel must be connected
+      state.setLocalAddress(socketChannel.socket().getLocalAddress());
+      state.setMasterAddress(socketChannel.socket().getInetAddress());
+      
       socketChannel.configureBlocking(false);
-      
-      /*Selector indexSelector = Selector.open();
-      socketChannel.register(indexSelector, SelectionKey.OP_WRITE);
-      while (true) {
-         indexSelector.select();
-         for (SelectionKey key : indexSelector.keys()) {
-            if (key.isWritable()) {
-               ((SocketChannel) key.channel()).write(slaveIndexBuffer);               
-            }
-         }
-         if (!slaveIndexBuffer.hasRemaining()) break;
-      }*/
-      
+                 
       if (exitOnMasterShutdown) {
          es = Executors.newSingleThreadExecutor();
       } else {
