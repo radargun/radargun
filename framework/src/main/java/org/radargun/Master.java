@@ -32,7 +32,7 @@ public class Master {
    MasterConfig masterConfig;
 
    private ServerSocketChannel serverSocketChannel;
-   private List<SocketChannel> slaves = new ArrayList<SocketChannel>();
+   private SocketChannel[] slaves;
 
    private Map<SocketChannel, ByteBuffer> writeBufferMap = new HashMap<SocketChannel, ByteBuffer>();
    private Map<SocketChannel, ByteBuffer> readBufferMap = new HashMap<SocketChannel, ByteBuffer>();
@@ -47,6 +47,7 @@ public class Master {
    public Master(MasterConfig masterConfig) {
       this.masterConfig = masterConfig;
       state = new MasterState(masterConfig);
+      slaves = new SocketChannel[masterConfig.getSlaveCount()];
       try {
          communicationSelector = Selector.open();
       } catch (IOException e) {
@@ -61,6 +62,8 @@ public class Master {
          runDiscovery();
          prepareNextStage();
          startCommunicationWithSlaves();
+      } catch (Exception e) {
+         log.error(e.toString());
       } finally {
          releaseResources();
       }
@@ -79,7 +82,7 @@ public class Master {
       writeBufferMap.clear();
       DistStage toSerialize;
       for (int i = 0; i < noSlaves; i++) {
-         SocketChannel slave = slaves.get(i);
+         SocketChannel slave = slaves[i];
          slave.configureBlocking(false);
          slave.register(communicationSelector, SelectionKey.OP_WRITE);
          toSerialize = currentStage.clone();
@@ -124,8 +127,9 @@ public class Master {
    private void runDiscovery() throws IOException {
       discoverySelector = Selector.open();
       serverSocketChannel.register(discoverySelector, SelectionKey.OP_ACCEPT);
-      while (slaves.size() < masterConfig.getSlaveCount()) {
-         log.info("Awaiting registration from " + (masterConfig.getSlaveCount() - slaves.size()) + " slaves.");
+      int slaveCount = 0;
+      while (slaveCount < masterConfig.getSlaveCount()) {
+         log.info("Awaiting registration from " + (masterConfig.getSlaveCount() - slaveCount) + " slaves.");
          discoverySelector.select();
          Set<SelectionKey> keySet = discoverySelector.selectedKeys();
          Iterator<SelectionKey> it = keySet.iterator();
@@ -136,15 +140,37 @@ public class Master {
                continue;
             }
             ServerSocketChannel srvSocketChannel = (ServerSocketChannel) selectionKey.channel();
-            SocketChannel socketChannel = srvSocketChannel.accept();
-            slaves.add(socketChannel);
-            slave2Index.put(socketChannel, (slaves.size() - 1));
+            SocketChannel socketChannel = srvSocketChannel.accept();            
+            
+            int slaveIndex = readIndex(socketChannel);
+            if (slaveIndex >= slaves.length || slaves[slaveIndex] != null) {
+               throw new IllegalArgumentException("Slave requests invalid slaveIndex " + slaveIndex);
+            } else if (slaveIndex < 0) {
+               for (int i = 0; i < slaves.length; ++i) {
+                  if (slaves[i] == null) {
+                     slaveIndex = i;
+                     break;
+                  }
+               }
+            }
+            slaves[slaveIndex] = socketChannel;
+            slaveCount++;
+            slave2Index.put(socketChannel, slaveIndex);
             this.readBufferMap.put(socketChannel, ByteBuffer.allocate(DEFAULT_READ_BUFF_CAPACITY));
             if (log.isTraceEnabled())
                log.trace("Added new slave connection from: " + socketChannel.socket().getInetAddress());
          }
       }
-      log.info("Connection established from " + slaves.size() + " slaves.");
+      log.info("Connection established from " + slaveCount + " slaves.");
+   }
+
+   private int readIndex(SocketChannel socketChannel) throws IOException {      
+      ByteBuffer slaveIndexBuffer = ByteBuffer.allocate(4);
+      while (slaveIndexBuffer.hasRemaining()) {
+         socketChannel.read(slaveIndexBuffer);      
+      }
+      slaveIndexBuffer.flip();
+      return slaveIndexBuffer.getInt();
    }
 
    private void startCommunicationWithSlaves() throws Exception {
@@ -178,9 +204,10 @@ public class Master {
       int value = socketChannel.read(byteBuffer);
 
       if (value == -1) {
-         log.warn("Slave stopped! Index: " + slave2Index.get(socketChannel) + ". Remote socket is: " + socketChannel);
+         Integer slaveIndex = slave2Index.get(socketChannel);
+         log.warn("Slave stopped! Index: " + slaveIndex + ". Remote socket is: " + socketChannel);
          key.cancel();
-         if (!slaves.remove(socketChannel)) {
+         if (slaveIndex == null || slaves[slaveIndex] != socketChannel) {
             throw new IllegalStateException("Socket " + socketChannel + " should have been there!");
          }
          releaseResourcesAndExit();

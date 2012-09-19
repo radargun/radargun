@@ -37,6 +37,7 @@ public class Slave {
    private SocketChannel socketChannel;
    private ByteBuffer byteBuffer = null;
    private SlaveState state = new SlaveState();
+   private int slaveIndex = -1;
 
    ExecutorService es = Executors.newSingleThreadExecutor(new ThreadFactory() {
       public Thread newThread(Runnable r) {
@@ -47,9 +48,10 @@ public class Slave {
    });
    private Future<?> future;
 
-   public Slave(String masterHost, int masterPort) {
+   public Slave(String masterHost, int masterPort, int slaveIndex) {
       this.masterHost = masterHost;
       this.masterPort = masterPort;
+      this.slaveIndex = slaveIndex;
       Runtime.getRuntime().addShutdownHook(new ShutDownHook("Slave process"));
       int byteBufferSize = 8192;
       try {
@@ -165,8 +167,27 @@ public class Slave {
       InetSocketAddress socketAddress = new InetSocketAddress(masterHost, masterPort);
       log.info("Attempting to connect to master " + masterHost + ":" + masterPort);
       socketChannel = SocketChannel.open();
-      socketChannel.configureBlocking(false);
       socketChannel.connect(socketAddress);
+      
+      ByteBuffer slaveIndexBuffer = ByteBuffer.allocate(4);
+      slaveIndexBuffer.putInt(slaveIndex);
+      slaveIndexBuffer.flip();
+      socketChannel.write(slaveIndexBuffer);
+      
+      socketChannel.configureBlocking(false);
+      
+      /*Selector indexSelector = Selector.open();
+      socketChannel.register(indexSelector, SelectionKey.OP_WRITE);
+      while (true) {
+         indexSelector.select();
+         for (SelectionKey key : indexSelector.keys()) {
+            if (key.isWritable()) {
+               ((SocketChannel) key.channel()).write(slaveIndexBuffer);               
+            }
+         }
+         if (!slaveIndexBuffer.hasRemaining()) break;
+      }*/
+      
       if (exitOnMasterShutdown) {
          es = Executors.newSingleThreadExecutor();
       } else {
@@ -200,6 +221,7 @@ public class Slave {
    public static void main(String[] args) throws Exception {
       String masterHost = null;
       int masterPort = Master.DEFAULT_PORT;
+      int slaveIndex = -1;
       for (int i = 0; i < args.length - 1; i++) {
          if (args[i].equals("-master")) {
             String param = args[i + 1];
@@ -214,12 +236,19 @@ public class Slave {
             } else {
                masterHost = param;
             }
+         } else if (args[i].equals("-slaveIndex")) {            
+            try {
+               slaveIndex = Integer.parseInt(args[i + 1]);
+            } catch (NumberFormatException nfe) {
+               log.warn("Unable to parse slaveIndex!  Failing!");
+               ShutDownHook.exit(10);
+            }
          }
       }
       if (masterHost == null) {
          printUsageAndExit();
       }
-      Slave slave = new Slave(masterHost, masterPort);
+      Slave slave = new Slave(masterHost, masterPort, slaveIndex);
       slave.start();
    }
 
