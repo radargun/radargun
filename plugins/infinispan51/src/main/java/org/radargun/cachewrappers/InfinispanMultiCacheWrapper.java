@@ -1,6 +1,5 @@
 package org.radargun.cachewrappers;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -29,8 +28,8 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
    private static boolean trace = log.isTraceEnabled();
   
    @Override
-   protected void setUpInternal(TypedProperties confAttributes) throws Exception {
-      String configFile = confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
+   protected void setUpInternal(TypedProperties confAttributes, int nodeIndex) throws Exception {
+      String configFile = getConfigFile(confAttributes, nodeIndex);
       cacheManager = new DefaultCacheManager(configFile);
 
       /*

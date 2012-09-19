@@ -70,7 +70,7 @@ public class InfinispanWrapper implements CacheWrapper {
             state = State.STARTING;
             stateLock.unlock();
             
-            setUpInternal(confAttributes);
+            setUpInternal(confAttributes, nodeIndex);
             
             stateLock.lock();
             state = State.STARTED;
@@ -91,10 +91,24 @@ public class InfinispanWrapper implements CacheWrapper {
       postSetUpInternal(confAttributes);
    }
    
-   protected void setUpInternal(TypedProperties confAttributes) throws Exception {
+   protected String getConfigFile(TypedProperties confAttributes, int nodeIndex) {
       String configFile  = confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
-      String cacheName = confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : "x";
-
+      // used for starting individual nodes with different configs - the config file in the conf dir should start with the slave ID
+      boolean prefixConfWithId = confAttributes.getBooleanProperty("prefixConfWithId", false);
+      if (prefixConfWithId) {         
+         configFile = "slave" + nodeIndex + "-" + configFile;
+      }
+      return configFile;
+   }
+   
+   protected String getCacheName(TypedProperties confAttributes) {
+      return confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : "x";
+   }
+   
+   protected void setUpInternal(TypedProperties confAttributes, int nodeIndex) throws Exception {     
+      String configFile = getConfigFile(confAttributes, nodeIndex);
+      String cacheName = getCacheName(confAttributes);
+      
       log.trace("Using config file: " + configFile + " and cache name: " + cacheName);
 
       
