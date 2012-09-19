@@ -59,7 +59,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
                   return ack;
                }
             } else {
-               KillHelper.kill(slaveState, false, ack);
+               KillHelper.kill(slaveState, false, false, ack);
                if (ack.isError()) return ack;
                killMe = false;
             }
