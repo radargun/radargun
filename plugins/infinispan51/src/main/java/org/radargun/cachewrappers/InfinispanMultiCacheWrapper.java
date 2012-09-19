@@ -26,6 +26,7 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
 
    private Map<Integer, Cache<Object, Object>> caches = null;
    private static Log log = LogFactory.getLog(InfinispanMultiCacheWrapper.class);
+   private static boolean trace = log.isTraceEnabled();
   
    @Override
    protected void setUpInternal(TypedProperties confAttributes) throws Exception {
@@ -80,6 +81,7 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
     */
    @Override
    public void put(String bucket, Object key, Object value) throws Exception {
+      if (trace) log.trace("PUT key=" + key + " to " + bucket);
       boolean shouldStopTransactionHere = false;
       if (isExplicitLockingEnabled() && !isClusterValidationRequest(bucket)) {
          if (tm.getStatus() == Status.STATUS_NO_TRANSACTION) {
@@ -96,11 +98,13 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
 
    @Override
    public Object get(String bucket, Object key) throws Exception {
+      if (trace) log.trace("GET key=" + key + " from " + bucket);
       return caches.get(getThreadIdFromBucket(bucket)).get(key);
    }
    
    @Override
    public Object remove(String bucket, Object key) throws Exception {
+      if (trace) log.trace("REMOVE key=" + key + " from " + bucket);
       return caches.get(getThreadIdFromBucket(bucket)).remove(key);
    }
 

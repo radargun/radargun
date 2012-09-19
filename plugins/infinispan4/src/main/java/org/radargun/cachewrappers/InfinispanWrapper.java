@@ -40,6 +40,7 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    private static Log log = LogFactory.getLog(InfinispanWrapper.class);
+   private static boolean trace = log.isTraceEnabled();
    protected DefaultCacheManager cacheManager;
    private Cache<Object, Object> cache;
    TransactionManager tm;
@@ -156,15 +157,18 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public void put(String bucket, Object key, Object value) throws Exception {
-      cache.put(key, value);
+      if (trace) log.trace("PUT key=" + key);
+      cache.put(key, value);      
    }
 
    public Object get(String bucket, Object key) throws Exception {
+      if (trace) log.trace("GET key=" + key);
       return cache.get(key);
    }
    
    @Override
    public Object remove(String bucket, Object key) throws Exception {
+      if (trace) log.trace("REMOVE key=" + key);
       return cache.remove(key);
    }
 
