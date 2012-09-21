@@ -143,15 +143,15 @@ public class Master {
             SocketChannel socketChannel = srvSocketChannel.accept();            
             
             int slaveIndex = readIndex(socketChannel);
-            if (slaveIndex >= slaves.length || slaves[slaveIndex] != null) {
-               throw new IllegalArgumentException("Slave requests invalid slaveIndex " + slaveIndex);
-            } else if (slaveIndex < 0) {
+            if (slaveIndex < 0) {
                for (int i = 0; i < slaves.length; ++i) {
                   if (slaves[i] == null) {
                      slaveIndex = i;
                      break;
                   }
                }
+            } else if (slaveIndex >= slaves.length || slaves[slaveIndex] != null) {
+               throw new IllegalArgumentException("Slave requests invalid slaveIndex " + slaveIndex);            
             }
             slaves[slaveIndex] = socketChannel;
             slaveCount++;
