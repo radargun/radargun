@@ -24,6 +24,7 @@ import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
+import org.jgroups.protocols.DISCARD;
 import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
 import org.radargun.Partitionable;
@@ -32,7 +33,16 @@ import org.radargun.protocols.SLAVE_PARTITION;
 public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper implements Partitionable {
    
    private static Log log = LogFactory.getLog(InfinispanPartitionableWrapper.class);
+   private int mySlaveIndex = -1;
+   private Set<Integer> initiallyReachable;
      
+   @Override
+   protected void preStartInternal() {
+      if (mySlaveIndex >= 0 && initiallyReachable != null) {
+         setMembersInPartition(mySlaveIndex, initiallyReachable);
+      }
+   }
+   
    @Override
    public void setMembersInPartition(int slaveIndex, Set<Integer> members) {
       JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();      
@@ -49,6 +59,11 @@ public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper im
          }         
       }
       partition.setSlaveIndex(slaveIndex);
-      partition.setAllowedSlaves(members);
+      partition.setAllowedSlaves(members);      
+   }
+
+   @Override
+   public void setStartWithReachable(int slaveIndex, Set<Integer> members) {
+      initiallyReachable = members;
    }
 }

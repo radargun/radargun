@@ -1,5 +1,9 @@
 package org.radargun.stages;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringTokenizer;
+
 import org.radargun.DistStageAck;
 import org.radargun.state.MasterState;
 
@@ -15,6 +19,7 @@ public class StartClusterStage extends AbstractStartStage {
    private long delayAfterFirstSlaveStarts = 5000;
    private long delayBetweenStartingSlaves = 500;
    private Integer expectNumSlaves;
+   private Set<Integer> reachable = null;
 
    public StartClusterStage() {
       super.setExitBenchmarkOnSlaveFailure(true);
@@ -41,7 +46,7 @@ public class StartClusterStage extends AbstractStartStage {
       
       int expectedSlaves = expectNumSlaves == null ? getActiveSlaveCount() : expectNumSlaves;
       StartHelper.start(productName, config, confAttributes, slaveState, getSlaveIndex(),
-            performClusterSizeValidation, expectedSlaves, classLoadHelper, ack);
+            performClusterSizeValidation, expectedSlaves, reachable, classLoadHelper, ack);
       if (!ack.isError()) {
          log.info("Successfully started cache wrapper on slave " + getSlaveIndex() + ": " + slaveState.getCacheWrapper());
       }
@@ -100,4 +105,16 @@ public class StartClusterStage extends AbstractStartStage {
       this.expectNumSlaves = numSlaves;
    }
    
+   public void setReachable(String reachable) {
+      Set<Integer> r = new HashSet<Integer>();
+      StringTokenizer tokenizer = new StringTokenizer(reachable, ",");
+      try {
+         while (tokenizer.hasMoreTokens()) {
+            r.add(Integer.parseInt(tokenizer.nextToken().trim()));
+         }
+      } catch (NumberFormatException e) {
+         log.error("Failed to parse slave list " + reachable);
+      }
+      this.reachable = r;
+   }
 }

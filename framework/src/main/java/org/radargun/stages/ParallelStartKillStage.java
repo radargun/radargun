@@ -19,7 +19,10 @@
 package org.radargun.stages;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.radargun.DistStageAck;
 
@@ -27,6 +30,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
 
    private List<Integer> kill = new ArrayList<Integer>();
    private List<Integer> start = new ArrayList<Integer>();
+   private Set<Integer> reachable = new HashSet<Integer>();
    
    @Override
    public DistStageAck executeOnSlave() {
@@ -46,7 +50,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
                } 
             } else {
                StartHelper.start(productName, config, confAttributes, slaveState, getSlaveIndex(),
-                     false, 0, classLoadHelper, ack);
+                     false, 0, reachable, classLoadHelper, ack);
                if (ack.isError()) return ack;
                startMe = false;               
             }            
@@ -79,6 +83,19 @@ public class ParallelStartKillStage extends AbstractStartStage {
    
    public void setStart(String startString) {
       setList(start, startString);
+   }
+   
+   public void setReachable(String reachable) {
+      Set<Integer> r = new HashSet<Integer>();
+      StringTokenizer tokenizer = new StringTokenizer(reachable, ",");
+      try {
+         while (tokenizer.hasMoreTokens()) {
+            r.add(Integer.parseInt(tokenizer.nextToken().trim()));
+         }
+      } catch (NumberFormatException e) {
+         log.error("Failed to parse slave list " + reachable);
+      }
+      this.reachable = r;
    }
    
    private void setList(List<Integer> list, String listString) {

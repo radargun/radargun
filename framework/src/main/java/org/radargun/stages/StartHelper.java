@@ -18,9 +18,12 @@
  */
 package org.radargun.stages;
 
+import java.util.Set;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.Partitionable;
 import org.radargun.state.SlaveState;
 import org.radargun.stressors.BackgroundStats;
 import org.radargun.utils.ClassLoadHelper;
@@ -34,11 +37,14 @@ public class StartHelper {
    private static final int TRY_COUNT = 180;
    
    public static void start(String productName, String config, TypedProperties confAttributes, SlaveState slaveState, int slaveIndex,
-         boolean performClusterSizeValidation, int expectedNumberOfSlaves, ClassLoadHelper classLoadHelper, DefaultDistStageAck ack) {
+         boolean performClusterSizeValidation, int expectedNumberOfSlaves, Set<Integer> reachable, ClassLoadHelper classLoadHelper, DefaultDistStageAck ack) {
       CacheWrapper wrapper = null;
       try {
          String plugin = getPluginWrapperClass(productName, confAttributes.get("multiCache"), confAttributes.get("partitions"));         
          wrapper = (CacheWrapper) classLoadHelper.createInstance(plugin);
+         if (wrapper instanceof Partitionable) {
+            ((Partitionable) wrapper).setStartWithReachable(slaveIndex, reachable);
+         }
          wrapper.setUp(config, false, slaveIndex, confAttributes);
          slaveState.setCacheWrapper(wrapper);
          if (performClusterSizeValidation) {            

@@ -22,4 +22,6 @@ import java.util.Set;
 
 public interface Partitionable {
    void setMembersInPartition(int slaveIndex, Set<Integer> members);
+
+   void setStartWithReachable(int slaveIndex, Set<Integer> members);
 }

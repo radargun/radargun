@@ -45,11 +45,17 @@ public class SetPartitionsStage extends AbstractDistStage {
       }
       try {
          CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-         if (cacheWrapper != null && cacheWrapper instanceof Partitionable) {
+         if (cacheWrapper == null) {
+            log.info("Cache wrapper not running, ignoring request to partition");
+            return ack;
+         }
+         if (cacheWrapper instanceof Partitionable) {
             ((Partitionable) cacheWrapper).setMembersInPartition(getSlaveIndex(), partitions.get(myPartitionIndex));
          } else {
+            String message = "Cache wrapper " + cacheWrapper.getClass() + "does not allow to split partitions";
             ack.setError(true);
-            ack.setErrorMessage("Cache wrapper does not allow to split partitions");
+            ack.setErrorMessage(message);
+            log.error(message);
          }
       } catch (Exception e) {
          ack.setError(true);

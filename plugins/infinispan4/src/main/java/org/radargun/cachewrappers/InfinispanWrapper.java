@@ -112,7 +112,9 @@ public class InfinispanWrapper implements CacheWrapper {
       log.trace("Using config file: " + configFile + " and cache name: " + cacheName);
 
       
-      cacheManager = new DefaultCacheManager(configFile);
+      cacheManager = new DefaultCacheManager(configFile, false);
+      preStartInternal();
+      cacheManager.start();
       String cacheNames = cacheManager.getDefinedCacheNames();
       if (!cacheNames.contains(cacheName))
          throw new IllegalStateException("The requested cache(" + cacheName + ") is not defined. Defined cache " +
@@ -120,6 +122,9 @@ public class InfinispanWrapper implements CacheWrapper {
       cache = cacheManager.getCache(cacheName);      
       tm = cache.getAdvancedCache().getTransactionManager();
       log.info("Using transaction manager: " + tm);
+   }
+   
+   protected void preStartInternal() {      
    }
    
    protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {

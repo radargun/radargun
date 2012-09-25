@@ -118,16 +118,7 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
    }
    
    private void killInternal() throws Exception {
-      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
-      JChannel channel = (JChannel) transport.getChannel();
-      DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
-      if (discard == null) {
-         discard = new DISCARD();
-         log.debug("No DISCARD protocol in stack, inserting new instance");
-         channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);         
-      }  
-      discard.setDiscardAll(true);
-      log.debug("Started discarding packets");
+      startDiscarding();
       List<Address> addressList = cacheManager.getMembers();
       cacheManager.stop();
       log.info("Killed, previous view is " + addressList);
@@ -138,6 +129,24 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
       stopDiscarding();
       super.postSetUpInternal(confAttributes);      
       setUpExplicitLocking(getCache(), confAttributes);
+   }
+   
+   protected void startDiscarding() {
+      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
+      JChannel channel = (JChannel) transport.getChannel();
+      DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
+      if (discard == null) {
+         discard = new DISCARD();
+         log.debug("No DISCARD protocol in stack, inserting new instance");
+         try {
+            channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);
+         } catch (Exception e) {
+            log.error("Failed to insert the DISCARD protocol");
+            return;
+         }         
+      }  
+      discard.setDiscardAll(true);
+      log.debug("Started discarding packets");
    }
    
    protected void stopDiscarding() {
