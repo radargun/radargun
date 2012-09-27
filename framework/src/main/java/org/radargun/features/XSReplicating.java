@@ -16,12 +16,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.radargun;
+package org.radargun.features;
 
-import java.util.Set;
+import java.util.Collection;
+import java.util.List;
 
-public interface Partitionable {
-   void setMembersInPartition(int slaveIndex, Set<Integer> members);
+import org.radargun.CacheWrapper;
 
-   void setStartWithReachable(int slaveIndex, Set<Integer> members);
+public interface XSReplicating extends CacheWrapper {
+   String getMainCache();
+   Collection<String> getBackupCaches();
+   List<Integer> getSlaves();
+   boolean isBridge();
 }

@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.radargun.DistStageAck;
+import org.radargun.stages.helpers.StartHelper;
 import org.radargun.state.MasterState;
 
 /**
@@ -44,9 +45,9 @@ public class StartClusterStage extends AbstractStartStage {
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
             + ". This slave's index is: " + getSlaveIndex());
       
-      int expectedSlaves = expectNumSlaves == null ? getActiveSlaveCount() : expectNumSlaves;
       StartHelper.start(productName, config, confAttributes, slaveState, getSlaveIndex(),
-            performClusterSizeValidation, expectedSlaves, reachable, classLoadHelper, ack);
+            performClusterSizeValidation ? new StartHelper.ClusterValidation(expectNumSlaves, getActiveSlaveCount()) : null,
+            reachable, classLoadHelper, ack);
       if (!ack.isError()) {
          log.info("Successfully started cache wrapper on slave " + getSlaveIndex() + ": " + slaveState.getCacheWrapper());
       }

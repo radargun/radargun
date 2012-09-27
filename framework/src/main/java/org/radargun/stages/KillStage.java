@@ -1,6 +1,8 @@
 package org.radargun.stages;
 
 import org.radargun.DistStageAck;
+import org.radargun.stages.helpers.KillHelper;
+import org.radargun.stages.helpers.RoleHelper;
 import org.radargun.state.MasterState;
 
 /**
@@ -14,6 +16,7 @@ public class KillStage extends AbstractDistStage {
 
    private boolean tearDown = false;
    private boolean async = false;
+   private String role;
 
    public KillStage() {
       // nada
@@ -27,7 +30,9 @@ public class KillStage extends AbstractDistStage {
    public DistStageAck executeOnSlave() {
       log.info("Received kill request from master...");
       DefaultDistStageAck ack = newDefaultStageAck();
-      if (slaves != null && slaves.contains(getSlaveIndex())) {
+      if (role != null && RoleHelper.hasRole(slaveState, role)) {
+         KillHelper.kill(slaveState, tearDown, async, ack);
+      } else if (slaves != null && slaves.contains(getSlaveIndex())) {
          KillHelper.kill(slaveState, tearDown, async, ack);
       } else {
          log.trace("Ignoring kill request, not targeted for this slave");
@@ -46,6 +51,10 @@ public class KillStage extends AbstractDistStage {
    
    public void setAsync(boolean async) {
       this.async = async;
+   }
+   
+   public void setRole(String role) {
+      this.role = role;
    }
 
 }

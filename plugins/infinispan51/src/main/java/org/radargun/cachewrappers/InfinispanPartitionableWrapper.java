@@ -20,14 +20,12 @@ package org.radargun.cachewrappers;
 
 import java.util.Set;
 
-import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
-import org.jgroups.protocols.DISCARD;
 import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
-import org.radargun.Partitionable;
+import org.radargun.features.Partitionable;
 import org.radargun.protocols.SLAVE_PARTITION;
 
 public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper implements Partitionable {
@@ -37,7 +35,7 @@ public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper im
    private Set<Integer> initiallyReachable;
      
    @Override
-   protected void preStartInternal() {
+   protected void preStartCacheManager() {
       if (mySlaveIndex >= 0 && initiallyReachable != null) {
          setMembersInPartition(mySlaveIndex, initiallyReachable);
       }
@@ -45,21 +43,21 @@ public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper im
    
    @Override
    public void setMembersInPartition(int slaveIndex, Set<Integer> members) {
-      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();      
-      JChannel channel = (JChannel) transport.getChannel();
-      SLAVE_PARTITION partition = (SLAVE_PARTITION) channel.getProtocolStack().findProtocol(SLAVE_PARTITION.class);
-      if (partition == null) {
-         log.info("No SLAVE_PARTITION protocol found, inserting above transport protocol");
-         partition = new SLAVE_PARTITION();
-         try {
-            channel.getProtocolStack().insertProtocol(partition, ProtocolStack.ABOVE, TP.class);
-         } catch (Exception e) {
-            log.error("Error inserting the SLAVE_PARTITION protocol");
-            return;
-         }         
+      for (JChannel channel : getChannels()) {
+         SLAVE_PARTITION partition = (SLAVE_PARTITION) channel.getProtocolStack().findProtocol(SLAVE_PARTITION.class);
+         if (partition == null) {
+            log.info("No SLAVE_PARTITION protocol found in stack for " + channel.getName() + ", inserting above transport protocol");
+            partition = new SLAVE_PARTITION();
+            try {
+               channel.getProtocolStack().insertProtocol(partition, ProtocolStack.ABOVE, TP.class);
+            } catch (Exception e) {
+               log.error("Error inserting the SLAVE_PARTITION protocol to stack for " + channel.getName());
+               return;
+            }         
+         }
+         partition.setSlaveIndex(slaveIndex);
+         partition.setAllowedSlaves(members);
       }
-      partition.setSlaveIndex(slaveIndex);
-      partition.setAllowedSlaves(members);      
    }
 
    @Override

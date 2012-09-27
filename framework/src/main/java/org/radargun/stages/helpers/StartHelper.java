@@ -16,14 +16,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.radargun.stages;
+package org.radargun.stages.helpers;
 
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
-import org.radargun.Partitionable;
+import org.radargun.features.Partitionable;
+import org.radargun.features.XSReplicating;
+import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
 import org.radargun.stressors.BackgroundStats;
 import org.radargun.utils.ClassLoadHelper;
@@ -32,22 +34,45 @@ import org.radargun.utils.Utils;
 
 public class StartHelper {
    
+   private StartHelper() {}
+   
    private static final Log log = LogFactory.getLog(StartHelper.class);
    
    private static final int TRY_COUNT = 180;
    
+   public static class ClusterValidation {
+      Integer expectedSlaves;
+      int activeSlaveCount;
+      
+      public ClusterValidation(Integer expectedSlaves, int activeSlaveCount) {
+         super();
+         this.expectedSlaves = expectedSlaves;
+         this.activeSlaveCount = activeSlaveCount;
+      }
+   }
+   
    public static void start(String productName, String config, TypedProperties confAttributes, SlaveState slaveState, int slaveIndex,
-         boolean performClusterSizeValidation, int expectedNumberOfSlaves, Set<Integer> reachable, ClassLoadHelper classLoadHelper, DefaultDistStageAck ack) {
+         ClusterValidation clusterValidation, Set<Integer> reachable, ClassLoadHelper classLoadHelper, DefaultDistStageAck ack) {
       CacheWrapper wrapper = null;
       try {
-         String plugin = getPluginWrapperClass(productName, confAttributes.get("multiCache"), confAttributes.get("partitions"));         
+         String plugin = getPluginWrapperClass(productName, confAttributes);         
          wrapper = (CacheWrapper) classLoadHelper.createInstance(plugin);
          if (wrapper instanceof Partitionable) {
             ((Partitionable) wrapper).setStartWithReachable(slaveIndex, reachable);
          }
          wrapper.setUp(config, false, slaveIndex, confAttributes);
          slaveState.setCacheWrapper(wrapper);
-         if (performClusterSizeValidation) {            
+         if (clusterValidation != null) {
+            
+            int expectedNumberOfSlaves;
+            if (clusterValidation.expectedSlaves != null) {
+               expectedNumberOfSlaves = clusterValidation.expectedSlaves;
+            } else if (wrapper instanceof XSReplicating) {
+               expectedNumberOfSlaves = ((XSReplicating) wrapper).getSlaves().size();
+            } else {
+               expectedNumberOfSlaves = clusterValidation.activeSlaveCount;
+            }
+            
             for (int i = 0; i < TRY_COUNT; i++) {
                int numMembers = wrapper.getNumMembers();
                if (numMembers != expectedNumberOfSlaves) {
@@ -79,11 +104,9 @@ public class StartHelper {
       }
    }
    
-   private static String getPluginWrapperClass(String productName, Object multicache, Object partitions) {
-      if (multicache != null && multicache.equals("true")) {
-         return Utils.getCacheProviderProperty(productName, "org.radargun.wrapper.multicache");
-      } else if (partitions != null && partitions.equals("true")) {
-         return Utils.getCacheProviderProperty(productName, "org.radargun.wrapper.partitions");
+   private static String getPluginWrapperClass(String productName, TypedProperties confAttributes) {
+      if (confAttributes.getProperty("wrapper") != null) {
+         return confAttributes.getProperty("wrapper");
       } else {
          return Utils.getCacheWrapperFqnClass(productName);
       }

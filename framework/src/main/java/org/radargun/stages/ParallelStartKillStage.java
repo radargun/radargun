@@ -25,17 +25,21 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.radargun.DistStageAck;
+import org.radargun.stages.helpers.KillHelper;
+import org.radargun.stages.helpers.RoleHelper;
+import org.radargun.stages.helpers.StartHelper;
 
 public class ParallelStartKillStage extends AbstractStartStage {
 
    private List<Integer> kill = new ArrayList<Integer>();
    private List<Integer> start = new ArrayList<Integer>();
    private Set<Integer> reachable = new HashSet<Integer>();
+   private String role;
    
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      boolean killMe = kill.contains(getSlaveIndex());
+      boolean killMe = kill.contains(getSlaveIndex()) || RoleHelper.hasRole(slaveState, role);
       boolean startMe = start.contains(getSlaveIndex());
       if (!(killMe || startMe)) {
          log.info("Nothing to kill or start...");
@@ -50,7 +54,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
                } 
             } else {
                StartHelper.start(productName, config, confAttributes, slaveState, getSlaveIndex(),
-                     false, 0, reachable, classLoadHelper, ack);
+                     null, reachable, classLoadHelper, ack);
                if (ack.isError()) return ack;
                startMe = false;               
             }            
@@ -83,6 +87,10 @@ public class ParallelStartKillStage extends AbstractStartStage {
    
    public void setStart(String startString) {
       setList(start, startString);
+   }
+   
+   public void setRole(String role) {
+      this.role = role;
    }
    
    public void setReachable(String reachable) {

@@ -1,20 +1,17 @@
 package org.radargun.cachewrappers;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import javax.transaction.Status;
-
-import org.infinispan.Cache;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
-import org.infinispan.transaction.LockingMode;
 import org.jgroups.JChannel;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 import org.jgroups.protocols.DISCARD;
 import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
-import org.radargun.Killable;
+import org.radargun.features.Killable;
 import org.radargun.utils.TypedProperties;
 
 /**
@@ -26,9 +23,8 @@ import org.radargun.utils.TypedProperties;
  * @author Ondrej Nevelik <onevelik@redhat.com>
  * @author Radim Vansa <rvansa@redhat.com>
  */
-public class InfinispanKillableWrapper extends InfinispanWrapper implements Killable {
+public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper implements Killable {
 
-   private boolean isExplicitLocking;
    private static Log log = LogFactory.getLog(InfinispanKillableWrapper.class);
    
    @Override
@@ -128,24 +124,31 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
    protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {      
       stopDiscarding();
       super.postSetUpInternal(confAttributes);      
-      setUpExplicitLocking(getCache(), confAttributes);
+   }
+   
+   protected List<JChannel> getChannels() {
+      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();      
+      JChannel channel = (JChannel) transport.getChannel();
+      List<JChannel> list = new ArrayList<JChannel>();
+      list.add(channel);
+      return list;
    }
    
    protected void startDiscarding() {
-      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
-      JChannel channel = (JChannel) transport.getChannel();
-      DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
-      if (discard == null) {
-         discard = new DISCARD();
-         log.debug("No DISCARD protocol in stack, inserting new instance");
-         try {
-            channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);
-         } catch (Exception e) {
-            log.error("Failed to insert the DISCARD protocol");
-            return;
-         }         
-      }  
-      discard.setDiscardAll(true);
+      for (JChannel channel : getChannels()) {
+         DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
+         if (discard == null) {
+            discard = new DISCARD();
+            log.debug("No DISCARD protocol in stack for " + channel.getName() + ", inserting new instance");
+            try {
+               channel.getProtocolStack().insertProtocol(discard, ProtocolStack.ABOVE, TP.class);
+            } catch (Exception e) {
+               log.error("Failed to insert the DISCARD protocol to stack for " + channel.getName());
+               return;
+            }         
+         }  
+         discard.setDiscardAll(true);
+      }
       log.debug("Started discarding packets");
    }
    
@@ -154,73 +157,14 @@ public class InfinispanKillableWrapper extends InfinispanWrapper implements Kill
          log.warn("Cache manager is not ready!");
          return;
       }
-      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
-      JChannel channel = (JChannel) transport.getChannel();
-      DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
-      if (discard != null) {
-         discard.setDiscardAll(false);
-         log.debug("Stopped discarding.");
-      } else {
-         log.debug("No DISCARD protocol in stack, cannot stop discarding");
-      }
-   }
-
-   protected void setUpExplicitLocking(Cache aCache, TypedProperties confAttributes) {
-      LockingMode lockingMode = aCache.getAdvancedCache().getCacheConfiguration().transaction()
-               .lockingMode();
-
-      Object explicitLocking = confAttributes.get("explicitLocking");
-      if (explicitLocking != null && explicitLocking.equals("true")
-               && lockingMode.equals(LockingMode.PESSIMISTIC)) {
-         isExplicitLocking = true;
-         log.info("Using explicit locking!");
-      }
-   }
-
-   /**
-    * If transactions and explicit locking are enabled and the locking mode is pessimistic then
-    * explicit locking is performed! i.e. before any put the key is explicitly locked by call
-    * cache.lock(key). Doesn't lock the key if the request was made by ClusterValidationStage.
-    */
-   @Override
-   public void put(String bucket, Object key, Object value) throws Exception {
-      boolean shouldStopTransactionHere = false;
-      if (isExplicitLocking && !isClusterValidationRequest(bucket)) {
-         if (tm.getStatus() == Status.STATUS_NO_TRANSACTION) {
-            shouldStopTransactionHere = true;
-            startTransaction();
+      for (JChannel channel : getChannels()) {
+         DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
+         if (discard != null) {
+            discard.setDiscardAll(false);            
+         } else {
+            log.debug("No DISCARD protocol in stack for " + channel.getName());
          }
-         getCache().getAdvancedCache().lock(key);
       }
-      super.put(bucket, key, value);
-      if (shouldStopTransactionHere) {
-         endTransaction(true);
-      }
+      log.debug("Stopped discarding.");
    }
-   
-   @Override
-   public Object remove(String bucket, Object key) throws Exception {
-      boolean shouldStopTransactionHere = false;
-      if (isExplicitLocking && !isClusterValidationRequest(bucket)) {
-         if (tm.getStatus() == Status.STATUS_NO_TRANSACTION) {
-            shouldStopTransactionHere = true;
-            startTransaction();
-         }
-         getCache().getAdvancedCache().lock(key);
-      }
-      Object old = super.remove(bucket, key);
-      if (shouldStopTransactionHere) {
-         endTransaction(true);
-      }
-      return old;
-   }
-
-   protected boolean isClusterValidationRequest(String bucket) {
-      return bucket.startsWith("clusterValidation") ? true : false;
-   }
-
-   public boolean isExplicitLockingEnabled() {
-      return isExplicitLocking;
-   }
-
 }

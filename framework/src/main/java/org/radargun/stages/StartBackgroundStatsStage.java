@@ -27,6 +27,7 @@ public class StartBackgroundStatsStage extends AbstractDistStage {
    protected List<Integer> loadDataForDeadSlaves;
    private boolean startStressors = false;
    private boolean startStats = false;
+   private String bucketId;
 
    @Override
    public DistStageAck executeOnSlave() {
@@ -34,7 +35,7 @@ public class StartBackgroundStatsStage extends AbstractDistStage {
       try {
          BackgroundStats bgStats = (BackgroundStats) slaveState.get(BackgroundStats.NAME);
          if (bgStats == null) {
-            bgStats = new BackgroundStats(puts, gets, removes, numEntries, entrySize, numThreads, slaveState,
+            bgStats = new BackgroundStats(puts, gets, removes, numEntries, entrySize, bucketId, numThreads, slaveState,
                   delayBetweenRequests, getActiveSlaveCount(), getSlaveIndex(), statsIterationDuration,
                   transactionSize, loadDataForDeadSlaves);
             slaveState.put(BackgroundStats.NAME, bgStats);
@@ -117,11 +118,15 @@ public class StartBackgroundStatsStage extends AbstractDistStage {
    public void setStartStressors(boolean startStressors) {
       this.startStressors = startStressors;
    }
+   
+   public void setBucketId(String id) {
+      bucketId = id;
+   }
 
    @Override
    public String toString() {
-      return "StartBackgroundStatsStage {puts=" + puts + ", gets=" + gets + ", startStats=" + startStats
-            + ", startStressors=" + startStressors + ", numEntries=" + numEntries + ", entrySize=" + entrySize
+      return "StartBackgroundStatsStage {puts=" + puts + ", gets=" + gets + ", removes=" + removes + ", startStats=" + startStats
+            + ", startStressors=" + startStressors + ", numEntries=" + numEntries + ", entrySize=" + entrySize + ", bucketId=" + bucketId
             + ", numThreads=" + numThreads + ", transactionSize=" + transactionSize + ", delayBetweenRequests="
             + delayBetweenRequests + ", statsIterationDuration=" + statsIterationDuration + ", waitUntilLoaded="
             + waitUntilLoaded + ", loadDataForDeadSlaves=" + loadDataForDeadSlaves + ", " + super.toString();

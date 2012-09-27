@@ -16,12 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.radargun.stages;
+package org.radargun.stages.helpers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
-import org.radargun.Killable;
+import org.radargun.features.Killable;
+import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.stages.KillStage;
+import org.radargun.stages.ParallelStartKillStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stressors.BackgroundStats;
 
@@ -34,6 +37,8 @@ import org.radargun.stressors.BackgroundStats;
  * @since September 2012
  */
 public class KillHelper {
+   
+   private KillHelper() {}
   
    private static final Log log = LogFactory.getLog(KillHelper.class);
    

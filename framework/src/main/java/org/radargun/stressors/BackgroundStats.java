@@ -9,6 +9,7 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 import org.radargun.CacheWrapper;
+import org.radargun.stages.helpers.RangeHelper;
 import org.radargun.state.SlaveState;
 
 /**
@@ -56,8 +57,9 @@ public class BackgroundStats {
    private boolean loaded = false;
    private int transactionSize;
    private List<Integer> loadDataForDeadSlaves;
+   private String bucketId;
 
-   public BackgroundStats(int puts, int gets, int removes, int numEntries, int entrySize, int numThreads, SlaveState slaveState,
+   public BackgroundStats(int puts, int gets, int removes, int numEntries, int entrySize, String bucketId, int numThreads, SlaveState slaveState,
          long delayBetweenRequests, int numSlaves, int slaveIndex, long statsIteration, int transactionSize,
          List<Integer> loadDataForDeadSlaves) {
       super();
@@ -67,6 +69,7 @@ public class BackgroundStats {
       this.operations = puts + gets + removes;
       this.numEntries = numEntries;
       this.entrySize = entrySize;
+      this.bucketId = bucketId;
       this.numThreads = numThreads;
       this.slaveState = slaveState;
       this.delayBetweenRequests = delayBetweenRequests;
@@ -75,32 +78,6 @@ public class BackgroundStats {
       this.statsIteration = statsIteration;
       this.transactionSize = transactionSize;
       this.loadDataForDeadSlaves = loadDataForDeadSlaves;
-   }
-
-   /**
-    * 
-    * Returns pair [startKey, endKey] that specifies a subrange { startKey, ..., endKey-1 } of key
-    * range { 0, 1, ..., numKeys-1 } divideRange divides the keyset evenly to numParts parts with
-    * difference of part lengths being max 1.
-    * 
-    * @param numKeys
-    *           Total number of keys
-    * @param numParts
-    *           Number of parts we're dividing to
-    * @param partIdx
-    *           Index of part we want to get
-    * @return The pair [startKey, endKey]
-    */
-   public static int[] divideRange(int numKeys, int numParts, int partIdx) {
-      int base = (numKeys / numParts) + 1;
-      int mod = numKeys % numParts;
-      if (partIdx < mod) {
-         int startKey = partIdx * base;
-         return new int[] { startKey, startKey + base };
-      } else {
-         int startKey = base * mod + (partIdx - mod) * (base - 1);
-         return new int[] { startKey, startKey + base - 1 };
-      }
    }
 
    /**
@@ -117,11 +94,11 @@ public class BackgroundStats {
          throw new IllegalStateException("Can't start stressors, cache wrapper not available");
       }
       stressorThreads = new StressorThread[numThreads];
-      int[] slaveKeyRange = divideRange(numEntries, numSlaves, slaveIndex);
+      RangeHelper.Range slaveKeyRange = RangeHelper.divideRange(numEntries, numSlaves, slaveIndex);
       for (int i = 0; i < stressorThreads.length; i++) {
-         int[] threadKeyRange = divideRange(slaveKeyRange[1] - slaveKeyRange[0], numThreads, i);
-         stressorThreads[i] = new StressorThread(slaveKeyRange[0] + threadKeyRange[0], slaveKeyRange[0]
-               + threadKeyRange[1], i);
+         RangeHelper.Range threadKeyRange = RangeHelper.divideRange(slaveKeyRange.getSize(), numThreads, i);
+         stressorThreads[i] = new StressorThread(slaveKeyRange.getStart() + threadKeyRange.getStart(),
+            slaveKeyRange.getStart() + threadKeyRange.getEnd(), i);
          stressorThreads[i].start();
       }
       sizeThread = new SizeThread();
@@ -328,12 +305,12 @@ public class BackgroundStats {
          loadKeyRange(keyRangeStart, keyRangeEnd);            
          if (loadDataForDeadSlaves != null && !loadDataForDeadSlaves.isEmpty()) {
             // each slave takes responsibility to load keys for a subset of dead slaves
-            int[] deadSlaveIdxRange = divideRange(loadDataForDeadSlaves.size(), numSlaves, slaveIndex); // range of dead slaves this slave will load data for
-            for (int deadSlaveIdx = deadSlaveIdxRange[0]; deadSlaveIdx < deadSlaveIdxRange[1]; deadSlaveIdx++) {
-               int[] deadSlaveKeyRange = divideRange(numEntries, numSlaves, loadDataForDeadSlaves.get(deadSlaveIdx)); // key range for the current dead slave
-               int[] keyRange = divideRange(deadSlaveKeyRange[1] - deadSlaveKeyRange[0], numThreads, idx); // key range for this thread
-               int deadKeyRangeStart = deadSlaveKeyRange[0] + keyRange[0];
-               int deadKeyRangeEnd = deadSlaveKeyRange[0] + keyRange[1];
+            RangeHelper.Range deadSlaveIdxRange = RangeHelper.divideRange(loadDataForDeadSlaves.size(), numSlaves, slaveIndex); // range of dead slaves this slave will load data for
+            for (int deadSlaveIdx = deadSlaveIdxRange.getStart(); deadSlaveIdx < deadSlaveIdxRange.getEnd(); deadSlaveIdx++) {
+               RangeHelper.Range deadSlaveKeyRange = RangeHelper.divideRange(numEntries, numSlaves, loadDataForDeadSlaves.get(deadSlaveIdx)); // key range for the current dead slave
+               RangeHelper.Range keyRange = RangeHelper.divideRange(deadSlaveKeyRange.getSize(), numThreads, idx); // key range for this thread
+               int deadKeyRangeStart = deadSlaveKeyRange.getStart() + keyRange.getStart();
+               int deadKeyRangeEnd = deadSlaveKeyRange.getStart() + keyRange.getEnd();
                log.trace("Loading key range for dead slave " + loadDataForDeadSlaves.get(deadSlaveIdx) + ": ["
                      + deadKeyRangeStart + ", " + deadKeyRangeEnd + "]");
                loadKeyRange(deadKeyRangeStart, deadKeyRangeEnd);                  
@@ -346,7 +323,7 @@ public class BackgroundStats {
       private void loadKeyRange(int from, int to) {
          for (currentKey = from; currentKey < to; currentKey++) {
             try {
-               cacheWrapper.put(NAME, key(currentKey), generateRandomString(entrySize));
+               cacheWrapper.put(bucketId, key(currentKey), generateRandomEntry(entrySize));
             } catch (Exception e) {
                log.error("Error while loading data", e);
             }
@@ -405,15 +382,15 @@ public class BackgroundStats {
             switch (operation)
             {
             case GET:
-               result = cacheWrapper.get(NAME, key);
+               result = cacheWrapper.get(bucketId, key);
                threadStats.registerRequest(lastOpTime(), operation, result == null);
                break;
             case PUT:
-               cacheWrapper.put(NAME, key, generateRandomString(entrySize));
+               cacheWrapper.put(bucketId, key, generateRandomEntry(entrySize));
                threadStats.registerRequest(lastOpTime(), operation, false);
                break;
             case REMOVE:
-               result = cacheWrapper.remove(NAME, key);
+               result = cacheWrapper.remove(bucketId, key);
                threadStats.registerRequest(lastOpTime(), operation, result == null);
                break;
             }
@@ -455,12 +432,11 @@ public class BackgroundStats {
          }
       }
 
-      private String generateRandomString(int size) {
-         // each char is 2 bytes
-         StringBuilder sb = new StringBuilder();
-         for (int i = 0; i < size / 2; i++)
-            sb.append((char) (64 + r.nextInt(26)));
-         return sb.toString();
+      private byte[] generateRandomEntry(int size) {
+         // each char is 2 bytes         
+         byte[] data = new byte[size];
+         rand.nextBytes(data);
+         return data;
       }
    }
 
@@ -918,5 +894,9 @@ public class BackgroundStats {
 
    public void setLoaded() {
       loaded = true;
+   }
+   
+   public String getBucketId() {
+      return bucketId;
    }
 }

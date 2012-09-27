@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.transaction.Status;
-
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
 import org.infinispan.factories.ComponentRegistry;
@@ -25,16 +23,12 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
 
    private Map<Integer, Cache<Object, Object>> caches = null;
    private static Log log = LogFactory.getLog(InfinispanMultiCacheWrapper.class);
-   private static boolean trace = log.isTraceEnabled();
   
    @Override
-   protected void setUpInternal(TypedProperties confAttributes, int nodeIndex) throws Exception {
+   protected void setUpCache(TypedProperties confAttributes, int nodeIndex) throws Exception {
       String configFile = getConfigFile(confAttributes, nodeIndex);
       cacheManager = new DefaultCacheManager(configFile);
 
-      /*
-       * Test case with multiple caches
-       */
       String multiCache = (String) confAttributes.get("multiCache");
       if (multiCache == null || multiCache.equals("false")) {
          throw new InstantiationException(
@@ -50,71 +44,24 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
          caches.put(i++, cacheManager.getCache(aCache));
 
       }
-      /*
-       * There SHOULD be just one instance of transaction manager!
-       */
-      tm = caches.get(0).getAdvancedCache().getTransactionManager();
    }
-   
+     
    @Override
-   protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {
-      stopDiscarding();
-      
-      log.debug("Loading JGroups from: "
-            + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
-      log.info("JGroups version: " + org.jgroups.Version.printDescription());
-      log.info("Using config attributes: " + confAttributes);
-   
-      for (Cache<?,?> aCache : caches.values()) {
-         blockForRehashing(aCache);
-         injectEvenConsistentHash(aCache, confAttributes);
-      }   
-   
-      setUpExplicitLocking(caches.get(0), confAttributes);
-   }
-
-   /**
-    * If transactions are enabled and the locking mode is optimistic then explicit locking is
-    * performed! i.e. before any put the key is explicitly locked by cache.lock(key). Doesn't lock
-    * the key if the request was made by ClusterValidationStage.
-    */
-   @Override
-   public void put(String bucket, Object key, Object value) throws Exception {
-      if (trace) log.trace("PUT key=" + key + " to " + bucket);
-      boolean shouldStopTransactionHere = false;
-      if (isExplicitLockingEnabled() && !isClusterValidationRequest(bucket)) {
-         if (tm.getStatus() == Status.STATUS_NO_TRANSACTION) {
-            shouldStopTransactionHere = true;
-            startTransaction();
-         }
-         caches.get(getThreadIdFromBucket(bucket)).getAdvancedCache().lock(key);
+   protected void waitForRehash(TypedProperties confAttributes) throws InterruptedException {
+      for (Cache<Object, Object> cache : caches.values()) {
+         blockForRehashing(cache);
+         injectEvenConsistentHash(cache, confAttributes);
       }
-      caches.get(getThreadIdFromBucket(bucket)).put(key, value);
-      if (shouldStopTransactionHere) {
-         endTransaction(true);
-      }
-   }
-
-   @Override
-   public Object get(String bucket, Object key) throws Exception {
-      if (trace) log.trace("GET key=" + key + " from " + bucket);
-      return caches.get(getThreadIdFromBucket(bucket)).get(key);
-   }
-   
-   @Override
-   public Object remove(String bucket, Object key) throws Exception {
-      if (trace) log.trace("REMOVE key=" + key + " from " + bucket);
-      return caches.get(getThreadIdFromBucket(bucket)).remove(key);
    }
 
    @Override
    public void empty() throws Exception {
-      for (Cache aCache : caches.values()) {
+      for (Cache<Object, Object> aCache : caches.values()) {
          empty(aCache);
       }
    }
 
-   private void empty(Cache cache) {
+   private void empty(Cache<Object, Object> cache) {
       RpcManager rpcManager = cache.getAdvancedCache().getRpcManager();
       int clusterSize = 0;
       if (rpcManager != null) {
@@ -141,7 +88,7 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
    @Override
    public int getLocalSize() {
       int size = 0;
-      for (Cache aCache : caches.values()) {
+      for (Cache<Object, Object> aCache : caches.values()) {
          size += aCache.keySet().size();
       }
       return size;
@@ -150,15 +97,16 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
    @Override
    public int getTotalSize() {
       int size = 0;
-      for (Cache aCache : caches.values()) {
+      for (Cache<Object, Object> aCache : caches.values()) {
          size += aCache.size();
       }
       return size;
    }
 
    @Override
-   public Cache<Object, Object> getCache() {
-      throw new IllegalStateException("Can't get a single cache in multi cache test!");
+   public Cache<Object, Object> getCache(String bucket) {
+      if (bucket == null) return caches.get(0);
+      return caches.get(getThreadIdFromBucket(bucket));
    }
 
    @Override

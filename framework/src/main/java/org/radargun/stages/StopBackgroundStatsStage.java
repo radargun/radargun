@@ -32,7 +32,7 @@ public class StopBackgroundStatsStage extends AbstractDistStage {
          }
          return ack;
       } catch (Exception e) {
-         log.error("Error while stopping background stats");
+         log.error("Error while stopping background stats", e);
          ack.setError(true);
          ack.setRemoteException(e);
          return ack;

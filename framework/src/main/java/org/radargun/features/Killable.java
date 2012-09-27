@@ -1,4 +1,6 @@
-package org.radargun;
+package org.radargun.features;
+
+import org.radargun.CacheWrapper;
 
 /**
  * 
@@ -6,7 +8,7 @@ package org.radargun;
  * 
  * @author Michal Linhard <mlinhard@redhat.com>
  */
-public interface Killable {
+public interface Killable extends CacheWrapper {
    /**
     * 
     * Kill the CacheWrapper instance abruptly.

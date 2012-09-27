@@ -92,7 +92,7 @@ public class DomConfigParser extends ConfigParser {
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
                Element configEl = (Element) configs.item(configIndex);
                String configName = configEl.getAttribute("name");
-               Properties configAttributes = getAttributes(configEl);
+               Properties configAttributes = getAttributes(configEl, "");
 
                ScalingBenchmarkConfig clone = prototype.clone();
                clone.setProductName(productName);
@@ -106,13 +106,21 @@ public class DomConfigParser extends ConfigParser {
       }
    }
 
-   public static Properties getAttributes(Element configEl) {
+   public static Properties getAttributes(Element configEl, String prefix) {
       NamedNodeMap attributes = configEl.getAttributes();
       Properties configAttributes = new Properties();
       for (int j = 0; j < attributes.getLength(); j++) {
          String name = attributes.item(j).getNodeName();
          String value = attributes.item(j).getNodeValue();
-         configAttributes.put(name, value);
+         configAttributes.put(prefix + name, value);
+      }
+      NodeList childList = configEl.getChildNodes();
+      for (int i = 0; i < childList.getLength(); ++i) {
+         if (childList.item(i) instanceof Element) {
+            Element child = (Element) childList.item(i);
+            Properties childAttributes = getAttributes(child, child.getNodeName() + "[" + i + "].");
+            configAttributes.putAll(childAttributes);
+         }
       }
       return configAttributes;
    }

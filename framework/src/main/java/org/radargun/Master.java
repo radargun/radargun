@@ -63,7 +63,7 @@ public class Master {
          prepareNextStage();
          startCommunicationWithSlaves();
       } catch (Exception e) {
-         log.error(e.toString());
+         log.error("Exception in start: ", e);
       } finally {
          releaseResources();
       }

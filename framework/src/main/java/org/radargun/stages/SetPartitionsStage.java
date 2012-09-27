@@ -8,7 +8,7 @@ import java.util.StringTokenizer;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
-import org.radargun.Partitionable;
+import org.radargun.features.Partitionable;
 import org.radargun.state.MasterState;
 
 /**

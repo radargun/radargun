@@ -41,13 +41,14 @@ public class InfinispanWrapper implements CacheWrapper {
 
    private static Log log = LogFactory.getLog(InfinispanWrapper.class);
    private static boolean trace = log.isTraceEnabled();
+   
    protected DefaultCacheManager cacheManager;
-   private Cache<Object, Object> cache;
-   TransactionManager tm;
+   protected TransactionManager tm;
    protected volatile State state = State.STOPPED;
    protected ReentrantLock stateLock = new ReentrantLock();
-   String config;
+   protected String config;
    private volatile boolean enlistExtraXAResource;
+   private Cache<Object, Object> cache;
 
    public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
       this.config = config;
@@ -70,7 +71,8 @@ public class InfinispanWrapper implements CacheWrapper {
             state = State.STARTING;
             stateLock.unlock();
             
-            setUpInternal(confAttributes, nodeIndex);
+            setUpCache(confAttributes, nodeIndex);
+            setUpTransactionManager();
             
             stateLock.lock();
             state = State.STARTED;
@@ -91,21 +93,20 @@ public class InfinispanWrapper implements CacheWrapper {
       postSetUpInternal(confAttributes);
    }
    
+   private void setUpTransactionManager() {
+      tm = getCache(null).getAdvancedCache().getTransactionManager();
+      log.info("Using transaction manager: " + tm);
+   }
+
    protected String getConfigFile(TypedProperties confAttributes, int nodeIndex) {
-      String configFile  = confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
-      // used for starting individual nodes with different configs - the config file in the conf dir should start with the slave ID
-      boolean prefixConfWithId = confAttributes.getBooleanProperty("prefixConfWithId", false);
-      if (prefixConfWithId) {         
-         configFile = "slave" + nodeIndex + "-" + configFile;
-      }
-      return configFile;
+      return confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
    }
    
    protected String getCacheName(TypedProperties confAttributes) {
       return confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : "x";
    }
    
-   protected void setUpInternal(TypedProperties confAttributes, int nodeIndex) throws Exception {     
+   protected void setUpCache(TypedProperties confAttributes, int nodeIndex) throws Exception {     
       String configFile = getConfigFile(confAttributes, nodeIndex);
       String cacheName = getCacheName(confAttributes);
       
@@ -113,28 +114,30 @@ public class InfinispanWrapper implements CacheWrapper {
 
       
       cacheManager = new DefaultCacheManager(configFile, false);
-      preStartInternal();
+      preStartCacheManager();
       cacheManager.start();
       String cacheNames = cacheManager.getDefinedCacheNames();
       if (!cacheNames.contains(cacheName))
          throw new IllegalStateException("The requested cache(" + cacheName + ") is not defined. Defined cache " +
                                                "names are " + cacheNames);
       cache = cacheManager.getCache(cacheName);      
-      tm = cache.getAdvancedCache().getTransactionManager();
-      log.info("Using transaction manager: " + tm);
    }
    
-   protected void preStartInternal() {      
+   protected void preStartCacheManager() {      
    }
    
    protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {
       log.debug("Loading JGroups from: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
       log.info("Using config attributes: " + confAttributes);
-      blockForRehashing(cache);
-      injectEvenConsistentHash(cache, confAttributes);
+      waitForRehash(confAttributes);
    }
 
+   protected void waitForRehash(TypedProperties confAttributes) throws InterruptedException {
+      blockForRehashing(getCache(null));
+      injectEvenConsistentHash(getCache(null), confAttributes);
+   }
+   
    public void tearDown() throws Exception {     
       try {
          stateLock.lock();
@@ -175,22 +178,24 @@ public class InfinispanWrapper implements CacheWrapper {
       }
    }
 
+   @Override
    public void put(String bucket, Object key, Object value) throws Exception {
       if (trace) log.trace("PUT key=" + key);
-      cache.put(key, value);      
+      getCache(bucket).put(key, value);
    }
-
+   
+   @Override
    public Object get(String bucket, Object key) throws Exception {
       if (trace) log.trace("GET key=" + key);
-      return cache.get(key);
+      return getCache(bucket).get(key);
    }
    
    @Override
    public Object remove(String bucket, Object key) throws Exception {
       if (trace) log.trace("REMOVE key=" + key);
-      return cache.remove(key);
+      return getCache(bucket).remove(key);
    }
-
+   
    public void empty() throws Exception {
       RpcManager rpcManager = cache.getAdvancedCache().getRpcManager();
       int clusterSize = 0;
@@ -205,7 +210,7 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    public int getNumMembers() {
-      ComponentRegistry componentRegistry = cache.getAdvancedCache().getComponentRegistry();
+      ComponentRegistry componentRegistry = getCache(null).getAdvancedCache().getComponentRegistry();
       if (componentRegistry.getStatus().startingUp()) {
          log.trace("We're in the process of starting up.");
       }
@@ -253,7 +258,7 @@ public class InfinispanWrapper implements CacheWrapper {
 
    @Override
    public int getLocalSize() {
-      return cache.size();
+      return getCache(null).size();
    }
    
    @Override
@@ -261,7 +266,7 @@ public class InfinispanWrapper implements CacheWrapper {
       return -1; // Infinispan does not provide this directly, JMX stats would have to be summed
    }
 
-   protected void blockForRehashing(Cache aCache) throws InterruptedException {
+   protected void blockForRehashing(Cache<Object, Object> aCache) throws InterruptedException {
       // should we be blocking until all rehashing, etc. has finished?
       long gracePeriod = MINUTES.toMillis(15);
       long giveup = System.currentTimeMillis() + gracePeriod;
@@ -274,7 +279,7 @@ public class InfinispanWrapper implements CacheWrapper {
          throw new RuntimeException("Caches haven't discovered and joined the cluster even after " + Utils.prettyPrintMillis(gracePeriod));
    }
 
-   protected void injectEvenConsistentHash(Cache aCache, TypedProperties confAttributes) {
+   protected void injectEvenConsistentHash(Cache<Object, Object> aCache, TypedProperties confAttributes) {
       if (aCache.getConfiguration().getCacheMode().isDistributed()) {
          ConsistentHash ch = aCache.getAdvancedCache().getDistributionManager().getConsistentHash();
          if (ch instanceof EvenSpreadingConsistentHash) {
@@ -289,7 +294,7 @@ public class InfinispanWrapper implements CacheWrapper {
       }
    }
 
-   public Cache<Object, Object> getCache() {
+   public Cache<Object, Object> getCache(String bucket) {
       return cache;
    }
 
