@@ -79,7 +79,7 @@ public class LocalConfigParser {
 
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
                Element configEl = (Element) configs.item(configIndex);
-               Properties configAttrs = DomConfigParser.getAttributes(configEl);
+               Properties configAttrs = DomConfigParser.getAttributes(configEl, "");
                configNames.add(configAttrs);
                all.add(new ReportItem(productName, configAttrs.getProperty("name")));
             }
