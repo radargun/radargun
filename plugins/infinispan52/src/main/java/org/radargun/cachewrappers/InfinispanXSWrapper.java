@@ -90,10 +90,13 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
       preStartCacheManager();
       cacheManager.start();
       String cacheNames = cacheManager.getDefinedCacheNames();
-      if (!cacheNames.contains(mainCacheName))
-         throw new IllegalStateException("The requested cache(" + mainCacheName + ") is not defined. Defined cache " +
-                                               "names are " + cacheNames);
-      mainCache = cacheManager.getCache(mainCacheName);
+      if (mainCacheName == null) {
+         log.info("No main cache, only backups");
+      } else {
+         if (!cacheNames.contains(mainCacheName))
+            throw new IllegalStateException("The requested cache(" + mainCacheName + ") is not defined. Defined cache names are " + cacheNames);
+         mainCache = cacheManager.getCache(mainCacheName);
+      }
       // Start also the other caches
       for (String cacheName : getBackupCaches()) {
          cacheManager.getCache(cacheName);
@@ -153,13 +156,16 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
 
    @Override
    public String getMainCache() {
+      if (mainCache == null) return null;
       return mainCache.getName();
    }
 
    @Override
    public Collection<String> getBackupCaches() {
       Set<String> backupCaches = new HashSet<String>(cacheManager.getCacheNames());
-      backupCaches.remove(mainCache.getName());
+      if (mainCache != null) {
+         backupCaches.remove(mainCache.getName());
+      }
       return backupCaches;
    }
    

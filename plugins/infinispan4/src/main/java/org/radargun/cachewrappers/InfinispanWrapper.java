@@ -94,7 +94,9 @@ public class InfinispanWrapper implements CacheWrapper {
    }
    
    private void setUpTransactionManager() {
-      tm = getCache(null).getAdvancedCache().getTransactionManager();
+      Cache<?, ?> cache = getCache(null);
+      if (cache == null) return;
+      tm = cache.getAdvancedCache().getTransactionManager();
       log.info("Using transaction manager: " + tm);
    }
 
