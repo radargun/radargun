@@ -10,7 +10,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.radargun.reporting.CSVChart;
 import org.radargun.stressors.BackgroundStats;
@@ -31,22 +35,35 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
    private int chartWidth = 800;
    private int chartHeight = 600;
    private boolean generateIntervalTimeData = false;
+   private Set<Integer> ignore;
 
    public boolean execute() {
       @SuppressWarnings("unchecked")
-      List<List<Stats>> results = (List<List<Stats>>) masterState.get(BackgroundStats.NAME);
-      if (results == null) {
+      Map<Integer, List<Stats>> allResults = (Map<Integer, List<Stats>>) masterState.get(BackgroundStats.NAME);
+      if (allResults == null) {
          log.error("Could not find BackgroundStats results on the master. Master's state is  " + masterState);
          return false;
       }
-      if (results.size() == 0) {
+      if (allResults.size() == 0) {
          log.warn("Nothing to report!");
          return false;
       }
-      if (masterState.getSlavesCountForCurrentStage() != results.size()) {
+      if (masterState.getSlavesCountForCurrentStage() != allResults.size()) {
          log.error("We're missing statistics from some slaves");
          return false;
       }
+      
+      List<List<Stats>> results = new ArrayList<List<Stats>>();
+      if (ignore != null) {
+         for (int slave : allResults.keySet()) {
+            if (!ignore.contains(slave)) {
+               results.add(allResults.get(slave));
+            }
+         }
+      } else {
+         results.addAll(allResults.values());
+      }
+      
       try {
          File reportDir = new File(targetDir);
          if (!reportDir.exists() && !reportDir.mkdirs()) {
@@ -349,5 +366,18 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
 
    public void setGenerateIntervalTimeData(boolean generateIntervalTimeData) {
       this.generateIntervalTimeData = generateIntervalTimeData;
+   }
+   
+   public void setIgnore(String list) {
+      StringTokenizer tokenizer = new StringTokenizer(list, ",");
+      Set<Integer> ignored = new HashSet<Integer>();
+      try {
+         while (tokenizer.hasMoreTokens()) {         
+            ignored.add(Integer.parseInt(tokenizer.nextToken().trim()));
+         }
+         this.ignore = ignored;
+      } catch (NumberFormatException e) {
+         log.error("Failed to parse ignore list: " + list);
+      }
    }
 }

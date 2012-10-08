@@ -1,11 +1,14 @@
 package org.radargun.stages;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.radargun.DistStageAck;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.BackgroundStats;
+import org.radargun.stressors.BackgroundStats.Stats;
 
 /**
  * 
@@ -41,10 +44,10 @@ public class StopBackgroundStatsStage extends AbstractDistStage {
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
-      List<Object> result = new ArrayList<Object>();
+      Map<Integer, List<Stats>> result = new HashMap<Integer, List<Stats>>();
       for (DistStageAck ack : acks) {
          DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-         result.add(dack.getPayload());
+         result.put(dack.getSlaveIndex(), (List<Stats>) dack.getPayload());
          if (dack.isError()) {
             return false;
          }
