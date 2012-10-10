@@ -141,8 +141,10 @@ public class BackgroundStats {
          throw new IllegalStateException("Can't stop stressors, they're not running.");
       }
       stressorsRunning = false;
-      // first interrupt all threads
+      log.debug("Interrupting size thread");
+      // interrupt all threads
       sizeThread.interrupt();
+      log.debug("Stopping stressors");
       for (int i = 0; i < stressorThreads.length; i++) {
          stressorThreads[i].terminate = true;
       }
@@ -151,15 +153,18 @@ public class BackgroundStats {
          Thread.sleep(1000);
       } catch (InterruptedException e) {         
       }
+      log.debug("Interrupting stressors");
       for (int i = 0; i < stressorThreads.length; i++) {
          stressorThreads[i].interrupt();
       }
+      log.debug("Waiting until all threads join");
       // then wait for them to finish
       try {
          sizeThread.join();
          for (int i = 0; i < stressorThreads.length; i++) {
             stressorThreads[i].join();
          }
+         log.debug("All threads have joined");
       } catch (InterruptedException e1) {
          log.error("interrupted while waiting for sizeThread and stressorThreads to stop");
       }
@@ -305,7 +310,7 @@ public class BackgroundStats {
          loadKeyRange(keyRangeStart, keyRangeEnd);            
          if (loadDataForDeadSlaves != null && !loadDataForDeadSlaves.isEmpty()) {
             // each slave takes responsibility to load keys for a subset of dead slaves
-            RangeHelper.Range deadSlaveIdxRange = RangeHelper.divideRange(loadDataForDeadSlaves.size(), numSlaves, slaveIndex); // range of dead slaves this slave will load data for
+            RangeHelper.Range deadSlaveIdxRange = RangeHelper.divideRange(loadDataForDeadSlaves.size(), numSlaves - loadDataForDeadSlaves.size(), slaveIndex); // range of dead slaves this slave will load data for
             for (int deadSlaveIdx = deadSlaveIdxRange.getStart(); deadSlaveIdx < deadSlaveIdxRange.getEnd(); deadSlaveIdx++) {
                RangeHelper.Range deadSlaveKeyRange = RangeHelper.divideRange(numEntries, numSlaves, loadDataForDeadSlaves.get(deadSlaveIdx)); // key range for the current dead slave
                RangeHelper.Range keyRange = RangeHelper.divideRange(deadSlaveKeyRange.getSize(), numThreads, idx); // key range for this thread
@@ -320,14 +325,19 @@ public class BackgroundStats {
          loaded = true;
       }
       
-      private void loadKeyRange(int from, int to) {
-         for (currentKey = from; currentKey < to; currentKey++) {
+      private void loadKeyRange(int from, int to) {         
+         int loaded_keys = 0;
+         for (currentKey = from; currentKey < to; currentKey++, loaded_keys++) {
             try {
                cacheWrapper.put(bucketId, key(currentKey), generateRandomEntry(entrySize));
+               if (loaded_keys % 1000 == 0) {
+                  log.debug("Loaded " + loaded_keys + " out of " + (to - from));
+               }
             } catch (Exception e) {
                log.error("Error while loading data", e);
             }
          }
+         log.debug("Loaded all " + (from - to) + " keys");
       }
 
       @Override
@@ -342,6 +352,14 @@ public class BackgroundStats {
             }
          } catch (InterruptedException e) {
             log.trace("Stressor interrupted.");
+            // we should close the transaction, otherwise TX Reaper would find dead thread in tx
+            if (transactionSize != -1) {
+               try {
+                  cacheWrapper.endTransaction(false);
+               } catch (Exception e1) {
+                  log.error("Error while ending transaction", e);
+               }             
+            }
          }
       }
 
