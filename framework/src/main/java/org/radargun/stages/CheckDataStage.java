@@ -41,6 +41,7 @@ public class CheckDataStage extends AbstractDistStage {
    private int numOwners = -1;
    private int checkThreads = 1;
    private boolean ignoreSum = false;
+   private boolean deleted = false;
     
    @Override
    public DistStageAck executeOnSlave() {      
@@ -65,18 +66,26 @@ public class CheckDataStage extends AbstractDistStage {
                found += value;
             }
          }
-      } catch (Exception e) {
+      } catch (Exception e) {         
          log.error(e);
          ack.setError(true);
          ack.setRemoteException(e);
          ack.setErrorMessage("Failed to check entries");
          return ack;
       }
-            
-      if (found != getExpectedNumEntries()) {
-         ack.setError(true);
-         ack.setErrorMessage("Found " + found + " entries while " + numEntries + " should be loaded.");         
-         return ack;
+      
+      if (!isDeleted()) {
+         if (found != getExpectedNumEntries()) {
+            ack.setError(true);
+            ack.setErrorMessage("Found " + found + " entries while " + getExpectedNumEntries() + " should be loaded.");         
+            return ack;
+         }
+      } else {
+         if (found > 0) {
+            ack.setError(true);
+            ack.setErrorMessage("Found " + found + " entries while these should be deleted.");         
+            return ack;
+         }
       }
       CacheWrapper wrapper = slaveState.getCacheWrapper();
       ack.setPayload(wrapper.getLocalSize());
@@ -118,11 +127,20 @@ public class CheckDataStage extends AbstractDistStage {
          }
          try {
             Object value = wrapper.get(bucketId, "key" + i);
-            if (value != null && value instanceof byte[] && (entrySize <= 0 || ((byte[]) value).length == entrySize)) {
-               found++;
+            if (!isDeleted()) {
+               if (value != null && value instanceof byte[] && (entrySize <= 0 || ((byte[]) value).length == entrySize)) {
+                  found++;
+               } else {
+                  if (log.isTraceEnabled()) {
+                     log.trace("Key" + i + " has unexpected value " + value);
+                  }
+               }
             } else {
-               if (log.isTraceEnabled()) {
-                  log.trace("Key" + i + " has unexpected value " + value);
+               if (value != null) {
+                  found++;
+                  if (log.isTraceEnabled()) {
+                     log.trace("Key" + i + " still has value " + value);
+                  }
                }
             }
          } catch (Exception e) {
@@ -152,10 +170,11 @@ public class CheckDataStage extends AbstractDistStage {
          } else {
             int expectedSize;
             int extraEntries = getExtraEntries();
+            int commonEntries = isDeleted() ? 0 : numEntries;            
             if (numOwners < 0) {
-               expectedSize = -numOwners * getActiveSlaveCount() * (numEntries + extraEntries);
+               expectedSize = -numOwners * getActiveSlaveCount() * (commonEntries + extraEntries);
             } else {
-               expectedSize = numOwners * (numEntries + extraEntries);
+               expectedSize = numOwners * (commonEntries + extraEntries);
             }
             if (expectedSize != sumSize) {
                log.error("The cache should contain " + expectedSize + " entries (including backups) but contains " + sumSize + " entries.");
@@ -223,6 +242,14 @@ public class CheckDataStage extends AbstractDistStage {
    
    public void setIgnoreSum(boolean ignore) {
       ignoreSum = ignore;
+   }
+   
+   public void setDeleted(boolean deleted) {
+      this.deleted = deleted;
+   }
+   
+   public boolean isDeleted() {
+      return deleted;
    }
    
    public String attributesToString() {

@@ -40,10 +40,17 @@ public class XSReplCheckStage extends CheckDataStage {
          }
          try {
             Object value = wrapper.get(null,  "key" + i);
-            if (value != null && value.equals("value" + i + "@" + wrapper.getMainCache())) {
-               found++;
-            } else if (value != null) {
-               unexpected(i, value);
+            if (!isDeleted()) {
+               if (value != null && value.equals("value" + i + "@" + wrapper.getMainCache())) {
+                  found++;
+               } else if (value != null) {
+                  unexpected(i, value);
+               }
+            } else {
+               if (value != null) {
+                  found++;
+                  shouldBeDeleted(i);
+               }
             }
          } catch (Exception e) {
             if (log.isTraceEnabled()) {
@@ -62,23 +69,30 @@ public class XSReplCheckStage extends CheckDataStage {
             try {
                Object value = wrapper.get(cacheName, "key" + i);
                Matcher m;
-               if (value != null && value instanceof String && (m = valuePattern.matcher((String) value)).matches()) {
-                  try {
-                     Integer.parseInt(m.group(1));
-                  } catch (NumberFormatException e) {
+               if (!isDeleted()) {
+                  if (value != null && value instanceof String && (m = valuePattern.matcher((String) value)).matches()) {
+                     try {
+                        Integer.parseInt(m.group(1));
+                     } catch (NumberFormatException e) {
+                        unexpected(i, value);
+                     }
+                     if (originCache == null) {
+                        log.info("Cache " + cacheName + " has entries from " + m.group(2));
+                        originCache = m.group(2);
+                     } else if (!originCache.equals(m.group(2))) {
+                        String message = "Cache " + cacheName + " has entries from " + m.group(2) + " but it also had entries from " + originCache + "!"; 
+                        log.error(message);
+                        throw new IllegalStateException(message);
+                     }
+                     found++;
+                  } else {
                      unexpected(i, value);
                   }
-                  if (originCache == null) {
-                     log.info("Cache " + cacheName + " has entries from " + m.group(2));
-                     originCache = m.group(2);
-                  } else if (!originCache.equals(m.group(2))) {
-                     String message = "Cache " + cacheName + " has entries from " + m.group(2) + " but it also had entries from " + originCache + "!"; 
-                     log.error(message);
-                     throw new IllegalStateException(message);
-                  }
-                  found++;
                } else {
-                  unexpected(i, value);
+                  if (value != null) {
+                     found++;
+                     shouldBeDeleted(i);
+                  }
                }
             } catch (Exception e) {
                if (log.isTraceEnabled()) {
@@ -88,6 +102,12 @@ public class XSReplCheckStage extends CheckDataStage {
          }
       }
       return found;
+   }
+
+   private void shouldBeDeleted(int i) {
+      if (log.isTraceEnabled()) {
+         log.trace("Key" + i + " should be deleted!");
+      }
    }
 
    @Override

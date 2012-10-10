@@ -11,6 +11,7 @@ import org.radargun.state.MasterState;
 public class XSReplLoadStage extends AbstractDistStage {
 
    int numEntries;
+   boolean delete = false;
    
    public XSReplLoadStage() {
       // nada
@@ -35,7 +36,11 @@ public class XSReplLoadStage extends AbstractDistStage {
       RangeHelper.Range myRange = RangeHelper.divideRange(numEntries, wrapper.getSlaves().size(), wrapper.getSlaves().indexOf(getSlaveIndex()));
       for (int i = myRange.getStart(); i < myRange.getEnd(); ++i) {
          try {
-            wrapper.put(cacheName, "key" + i, "value" + i + "@" + cacheName);
+            if (!delete) {
+               wrapper.put(cacheName, "key" + i, "value" + i + "@" + cacheName);
+            } else {
+               wrapper.remove(cacheName, "key" + i);
+            }
          } catch (Exception e) {
             log.error("Error inserting key " + i + " into " + cacheName);
          }
@@ -50,5 +55,9 @@ public class XSReplLoadStage extends AbstractDistStage {
 
    public void setNumEntries(int entries) {
       numEntries = entries;
+   }
+   
+   public void setDelete(boolean delete) {
+      this.delete = delete;
    }
 }
