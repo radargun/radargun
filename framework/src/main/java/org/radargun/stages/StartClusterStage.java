@@ -1,10 +1,9 @@
 package org.radargun.stages;
 
-import java.util.HashSet;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.radargun.DistStageAck;
+import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.stages.helpers.StartHelper;
 import org.radargun.state.MasterState;
 
@@ -106,16 +105,7 @@ public class StartClusterStage extends AbstractStartStage {
       this.expectNumSlaves = numSlaves;
    }
    
-   public void setReachable(String reachable) {
-      Set<Integer> r = new HashSet<Integer>();
-      StringTokenizer tokenizer = new StringTokenizer(reachable, ",");
-      try {
-         while (tokenizer.hasMoreTokens()) {
-            r.add(Integer.parseInt(tokenizer.nextToken().trim()));
-         }
-      } catch (NumberFormatException e) {
-         log.error("Failed to parse slave list " + reachable);
-      }
-      this.reachable = r;
+   public void setReachable(String reachable) {      
+      this.reachable = ParseHelper.parseSet(reachable, "reachable", log);
    }
 }
