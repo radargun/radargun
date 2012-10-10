@@ -1,5 +1,6 @@
 package org.radargun.config;
 
+import org.jfree.util.Log;
 import org.radargun.utils.TypedProperties;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -156,20 +157,44 @@ public class DomConfigParser extends ConfigParser {
       for (int i = 0; i < childNodes.getLength(); i++) {
          Node child = childNodes.item(i);
          if (child instanceof Element) {
-            Element childEl = (Element) child;
-            String stageShortName = childEl.getNodeName();
-            Stage st = JaxbConfigParser.getStage(stageShortName + "Stage");
-            prototype.addStage(st);
-            NamedNodeMap attributes = childEl.getAttributes();
-            Map<String, String> attrToSet = new HashMap<String, String>();
-            for (int attrIndex = 0; attrIndex < attributes.getLength(); attrIndex++) {
-               Attr attr = (Attr) attributes.item(attrIndex);
-               attrToSet.put(attr.getName(), ConfigHelper.parseString(attr.getValue()));
-            }
-            ConfigHelper.setValues(st, attrToSet, true);
+            addStage(prototype, (Element) child);            
          }
       }
       return prototype;
+   }
+
+
+   private void addStage(ScalingBenchmarkConfig prototype, Element element) {
+      if (element.getNodeName().equalsIgnoreCase("Repeat")) {
+         String timesStr = element.getAttribute("times");
+         int times = 1;
+         try {
+            times = Integer.parseInt(timesStr);
+         } catch (NumberFormatException e) {
+            Log.warn("Attribute times=" + timesStr + "on repeat is not an integer!");
+         }
+         NodeList childNodes = element.getChildNodes();
+         // TODO: we could pass the counter to the stage
+         for (int counter = 0; counter < times; ++counter) {
+            for (int i = 0; i < childNodes.getLength(); i++) {
+               Node child = childNodes.item(i);
+               if (child instanceof Element) {
+                  addStage(prototype, (Element) child);            
+               }
+            }
+         }         
+      } else {
+         String stageShortName = element.getNodeName();      
+         Stage st = JaxbConfigParser.getStage(stageShortName + "Stage");
+         prototype.addStage(st);
+         NamedNodeMap attributes = element.getAttributes();
+         Map<String, String> attrToSet = new HashMap<String, String>();
+         for (int attrIndex = 0; attrIndex < attributes.getLength(); attrIndex++) {
+            Attr attr = (Attr) attributes.item(attrIndex);
+            attrToSet.put(attr.getName(), ConfigHelper.parseString(attr.getValue()));
+         }
+         ConfigHelper.setValues(st, attrToSet, true);
+      }
    }
 
 }
