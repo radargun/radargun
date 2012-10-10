@@ -44,4 +44,9 @@ public class SetLogLevelStage extends AbstractDistStage {
    public void setPriority(String priority) {
       this.priority = priority;
    }
+   
+   @Override
+   public String toString() {
+	   return "SetLogLevel(package=" + pkg + ", priority=" + Level.toLevel(priority).toString() + ", " + super.toString();
+   }
 }
