@@ -24,6 +24,9 @@ import java.util.regex.Pattern;
 import org.radargun.features.XSReplicating;
 
 public class XSReplCheckStage extends CheckDataStage {
+   
+   private String valuePostFix;
+   
    @Override
    protected int checkRange(int from, int to) {
       if (!(slaveState.getCacheWrapper() instanceof XSReplicating)) {
@@ -41,7 +44,7 @@ public class XSReplCheckStage extends CheckDataStage {
          try {
             Object value = wrapper.get(null,  "key" + i);
             if (!isDeleted()) {
-               if (value != null && value.equals("value" + i + "@" + wrapper.getMainCache())) {
+               if (value != null && value.equals("value" + i + valuePostFix + "@" + wrapper.getMainCache())) {
                   found++;
                } else if (value != null) {
                   unexpected(i, value);
@@ -121,6 +124,11 @@ public class XSReplCheckStage extends CheckDataStage {
          log.trace("Key" + key + " has unexpected value " + value);
       }
    }
+   
+   public void setValuePostFix(String valuePostFix) {
+      this.valuePostFix = valuePostFix;
+   }
+
    
    @Override
    public String toString() {

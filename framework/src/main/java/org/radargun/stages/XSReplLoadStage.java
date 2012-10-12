@@ -10,8 +10,9 @@ import org.radargun.state.MasterState;
  */
 public class XSReplLoadStage extends AbstractDistStage {
 
-   int numEntries;
-   boolean delete = false;
+   private int numEntries;
+   private boolean delete = false;
+   private String valuePostFix = "";
    
    public XSReplLoadStage() {
       // nada
@@ -37,7 +38,7 @@ public class XSReplLoadStage extends AbstractDistStage {
       for (int i = myRange.getStart(); i < myRange.getEnd(); ++i) {
          try {
             if (!delete) {
-               wrapper.put(cacheName, "key" + i, "value" + i + "@" + cacheName);
+               wrapper.put(cacheName, "key" + i, "value" + i + valuePostFix + "@" + cacheName);
             } else {
                wrapper.remove(cacheName, "key" + i);
             }
@@ -59,5 +60,9 @@ public class XSReplLoadStage extends AbstractDistStage {
    
    public void setDelete(boolean delete) {
       this.delete = delete;
+   }
+   
+   public void setValuePostFix(String valuePostFix) {
+      this.valuePostFix = valuePostFix;
    }
 }
