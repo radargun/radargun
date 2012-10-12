@@ -25,7 +25,7 @@ import org.radargun.features.XSReplicating;
 
 public class XSReplCheckStage extends CheckDataStage {
    
-   private String valuePostFix;
+   private String valuePostFix = "";
    
    @Override
    protected int checkRange(int from, int to) {
@@ -33,7 +33,7 @@ public class XSReplCheckStage extends CheckDataStage {
          throw new IllegalStateException("This stage requires wrapper that supports cross-site replication");
       }
       XSReplicating wrapper = (XSReplicating) slaveState.getCacheWrapper();
-      Pattern valuePattern = Pattern.compile("value(\\d*)@(.*)");      
+      Pattern valuePattern = Pattern.compile("value(\\d*)([^@]*)@(.*)");      
       
       int found = 0, checked = 0;
       log.info("Checking contents of main cache " + wrapper.getMainCache());
@@ -79,11 +79,14 @@ public class XSReplCheckStage extends CheckDataStage {
                      } catch (NumberFormatException e) {
                         unexpected(i, value);
                      }
+                     if (!m.group(2).equals(valuePostFix)) {
+                        unexpected(i, value);
+                     }
                      if (originCache == null) {
-                        log.info("Cache " + cacheName + " has entries from " + m.group(2));
-                        originCache = m.group(2);
-                     } else if (!originCache.equals(m.group(2))) {
-                        String message = "Cache " + cacheName + " has entries from " + m.group(2) + " but it also had entries from " + originCache + "!"; 
+                        log.info("Cache " + cacheName + " has entries from " + m.group(3));
+                        originCache = m.group(3);
+                     } else if (!originCache.equals(m.group(3))) {
+                        String message = "Cache " + cacheName + " has entries from " + m.group(3) + " but it also had entries from " + originCache + "!"; 
                         log.error(message);
                         throw new IllegalStateException(message);
                      }
