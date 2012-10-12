@@ -119,7 +119,9 @@ public class SingleTXCheckStage extends AbstractDistStage {
       log.error(message, e);
       ack.setError(true);
       ack.setErrorMessage(message);
-      ack.setRemoteException(e);
+      if (e != null) {
+         ack.setRemoteException(e);
+      }
    }
 
    public void setDeleted(boolean deleted) {
