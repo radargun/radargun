@@ -1,8 +1,15 @@
 package org.radargun.cachewrappers;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
+import org.infinispan.notifications.Listener;
+import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
+import org.infinispan.notifications.cachelistener.annotation.TopologyChanged;
+import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
+import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
@@ -12,6 +19,7 @@ import org.jgroups.protocols.DISCARD;
 import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
 import org.radargun.features.Killable;
+import org.radargun.features.TopologyAware;
 import org.radargun.utils.TypedProperties;
 
 /**
@@ -23,9 +31,12 @@ import org.radargun.utils.TypedProperties;
  * @author Ondrej Nevelik <onevelik@redhat.com>
  * @author Radim Vansa <rvansa@redhat.com>
  */
-public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper implements Killable {
+public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper implements Killable, TopologyAware {
 
    private static Log log = LogFactory.getLog(InfinispanKillableWrapper.class);
+   
+   private List<TopologyAware.Event> topologyChanges = new ArrayList<TopologyAware.Event>();
+   private List<TopologyAware.Event> hashChanges = new ArrayList<TopologyAware.Event>();
    
    @Override
    public void kill() throws Exception {
@@ -123,9 +134,10 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
    @Override
    protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {      
       stopDiscarding();
-      super.postSetUpInternal(confAttributes);      
+      super.postSetUpInternal(confAttributes);
+      getCache(null).addListener(new TopologyAwareListener());
    }
-   
+         
    protected List<JChannel> getChannels() {
       JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();      
       JChannel channel = (JChannel) transport.getChannel();
@@ -166,5 +178,72 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
          }
       }
       log.debug("Stopped discarding.");
+   }
+
+   @Override
+   public List<TopologyAware.Event> getTopologyChangeHistory() {
+      return Collections.unmodifiableList(topologyChanges);
+   }
+
+   @Override
+   public List<TopologyAware.Event> getRehashHistory() {
+      return Collections.unmodifiableList(hashChanges);
+   }
+   
+   @Listener
+   public class TopologyAwareListener {
+      @TopologyChanged
+      public void onTopologyChanged(TopologyChangedEvent<?,?> e) {
+         log.debug("Topology change " + (e.isPre() ? "started" : "finished"));
+         addEvent(topologyChanges, e.isPre());
+      }
+      
+      @DataRehashed
+      public void onDataRehashed(DataRehashedEvent<?,?> e) {
+         log.debug("Rehash " + (e.isPre() ? "started" : "finished"));
+         addEvent(hashChanges, e.isPre());
+      }
+
+      private void addEvent(List<TopologyAware.Event> list, boolean isPre) {
+         if (isPre) {
+            list.add(new Event(false));
+         } else {
+            int size = list.size();
+            if (size == 0 || list.get(size - 1).getEnded() != null) {
+               Event ev = new Event(true);                  
+               list.add(ev);
+            } else {
+               ((Event) list.get(size - 1)).setEnded();
+            }
+         }
+      }
+      
+      class Event extends TopologyAware.Event {
+         private Date started;
+         private Date ended;
+         
+         public Event(boolean finished) {
+            if (finished) {
+               this.started = this.ended = new Date();
+            } else {
+               this.started = new Date();
+            }
+         }
+
+         @Override
+         public Date getStarted() {
+            return started;
+         }
+         
+         public void setEnded() {
+            if (ended != null) throw new IllegalStateException();
+            ended = new Date();
+         }
+
+         @Override
+         public Date getEnded() {
+            return ended;
+         }      
+      }
    }
 }
