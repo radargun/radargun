@@ -1,6 +1,5 @@
 package org.radargun.config;
 
-import org.jfree.util.Log;
 import org.radargun.utils.TypedProperties;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -23,6 +22,7 @@ import java.util.Properties;
  * @author Mircea.Markus@jboss.com
  */
 public class DomConfigParser extends ConfigParser {
+   
    public MasterConfig parseConfig(String config) throws Exception {
       //the content in the new file is too dynamic, let's just use DOM for now
 
@@ -167,15 +167,27 @@ public class DomConfigParser extends ConfigParser {
    private void addStage(ScalingBenchmarkConfig prototype, Element element) {
       if (element.getNodeName().equalsIgnoreCase("Repeat")) {
          String timesStr = element.getAttribute("times");
-         int times = 1;
-         try {
-            times = Integer.parseInt(timesStr);
-         } catch (NumberFormatException e) {
-            Log.warn("Attribute times=" + timesStr + "on repeat is not an integer!");
+         String fromStr = element.getAttribute("from");
+         String toStr = element.getAttribute("to");
+         String incStr = element.getAttribute("inc");
+         String repeatName = element.getAttribute("name");
+         if ((timesStr == null && (fromStr == null || toStr == null))
+               || (timesStr != null && (fromStr != null || toStr != null || incStr != null))) {
+            throw new IllegalArgumentException("Define either times or from, to, [inc]");
          }
+         int from = 0, to = 1, inc = 1;
+         if (timesStr != null) {
+            to = parseRepeatArg(timesStr, "times", repeatName);            
+         } else {
+            from = parseRepeatArg(fromStr, "from", repeatName);
+            to = parseRepeatArg(toStr, "to", repeatName);
+            if (incStr != null) {
+               inc = parseRepeatArg(incStr, "inc", repeatName);           
+            }
+         }                  
          NodeList childNodes = element.getChildNodes();
-         // TODO: we could pass the counter to the stage
-         for (int counter = 0; counter < times; ++counter) {
+         for (int counter = from; counter < to; counter += inc) {
+            System.getProperties().setProperty("repeat." + (repeatName != null ? repeatName + ".counter" : "counter"), String.valueOf(counter));
             for (int i = 0; i < childNodes.getLength(); i++) {
                Node child = childNodes.item(i);
                if (child instanceof Element) {
@@ -197,4 +209,12 @@ public class DomConfigParser extends ConfigParser {
       }
    }
 
+
+   private int parseRepeatArg(String value, String name, String repeatName) {
+      try {
+         return Integer.parseInt(value);
+      } catch (NumberFormatException e) {
+         throw new IllegalArgumentException(String.format("Attribute %s=%s on %s is not an integer!", name, value, repeatName != null ? repeatName : "repeat"), e);
+      }
+   }
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.radargun.DistStageAck;
+import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.stressors.BackgroundStats;
 
 /**
@@ -105,10 +106,7 @@ public class StartBackgroundStatsStage extends AbstractDistStage {
    }
 
    public void setLoadDataForDeadSlaves(String slaves) {
-      this.loadDataForDeadSlaves = new ArrayList<Integer>();
-      for (String slave : slaves.split(",")) {
-         this.loadDataForDeadSlaves.add(Integer.valueOf(slave));
-      }
+      loadDataForDeadSlaves = ParseHelper.parseList(slaves, "loadDataForDeadSlaves", log);
    }
 
    public void setStartStats(boolean startStats) {
