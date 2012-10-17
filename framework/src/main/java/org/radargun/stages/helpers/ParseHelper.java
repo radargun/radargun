@@ -54,8 +54,10 @@ public class ParseHelper {
             if (nextSeparator == nextDotDot) {
                addRange = true;
                lastNumber = number;
+               pos = nextDotDot + 2;
             } else {
                addRange = false;
+               pos = nextComma + 1;
             }
          } while (cont);         
       } catch (NumberFormatException e) {
