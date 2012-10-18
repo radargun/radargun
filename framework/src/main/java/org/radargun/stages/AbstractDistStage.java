@@ -8,6 +8,7 @@ import org.apache.commons.logging.LogFactory;
 import org.radargun.DistStage;
 import org.radargun.DistStageAck;
 import org.radargun.config.MasterConfig;
+import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.ClassLoadHelper;
@@ -134,10 +135,7 @@ public abstract class AbstractDistStage implements DistStage {
    }
 
    public void setSlaves(String slaves) {
-      this.slaves = new ArrayList<Integer>();
-      for (String slave : slaves.split(",")) {
-         this.slaves.add(Integer.valueOf(slave));
-      }
+      this.slaves = ParseHelper.parseList(slaves, "slaves", log);
    }
 
    public void setUseSmartClassLoading(boolean useSmartClassLoading) {
