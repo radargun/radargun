@@ -80,6 +80,7 @@
          </activation>
          <modules>
             <module>plugins/jdg60</module>
+            <module>plugins/jdg61</module>
          </modules>
          <build>
             <plugins>
@@ -96,9 +97,14 @@
                         </goals>
                         <configuration>
                            <tasks>
-                              <echo message="Packaging the JDG 6.0.x plugin" />
+                              <echo message="Packaging the JDG 6.0.x and JDG 6.1.x plugins" />
                               <copy todir="${distribution.artifact}/plugins/jdg60">
                                  <fileset dir="plugins/jdg60/target/distribution/plugin-jdg60-bin/plugin-jdg60">
+                                    <include name="**/*" />
+                                 </fileset>
+                              </copy>
+                              <copy todir="${distribution.artifact}/plugins/jdg61">
+                                 <fileset dir="plugins/jdg61/target/distribution/plugin-jdg61-bin/plugin-jdg61">
                                     <include name="**/*" />
                                  </fileset>
                               </copy>
