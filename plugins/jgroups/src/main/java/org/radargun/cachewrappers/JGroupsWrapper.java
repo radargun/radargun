@@ -104,6 +104,11 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       started = false;
    }
 
+   @Override
+   public boolean isRunning() {
+      return ch.isConnected();
+   }
+
    public void _put(Object key, Object value) throws Exception {
       ;
    }

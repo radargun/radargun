@@ -3,6 +3,7 @@ package org.radargun.cachewrappers;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jboss.cache.Cache;
+import org.jboss.cache.CacheStatus;
 import org.jboss.cache.DefaultCacheFactory;
 import org.jboss.cache.Fqn;
 import org.jboss.cache.config.Option;
@@ -47,6 +48,11 @@ public class JBossCache3Wrapper implements CacheWrapper
    public void tearDown() throws Exception
    {
       cache.stop();
+   }
+
+   @Override
+   public boolean isRunning() {
+      return cache.getCacheStatus() == CacheStatus.STARTED;
    }
 
    public void put(String path, Object key, Object value) throws Exception

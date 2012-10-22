@@ -30,6 +30,8 @@ public interface CacheWrapper
     */
    void tearDown() throws Exception;
 
+   boolean isRunning();
+
    /**
     * This method is called when the framework needs to put an object in cache.  This method is treated
     * as a black box, and is what is timed, so it should be implemented in the most efficient (or most

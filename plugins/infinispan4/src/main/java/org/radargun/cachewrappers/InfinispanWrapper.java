@@ -46,6 +46,7 @@ public class InfinispanWrapper implements CacheWrapper {
    protected TransactionManager tm;
    protected volatile State state = State.STOPPED;
    protected ReentrantLock stateLock = new ReentrantLock();
+   protected Thread startingThread = null;
    protected String config;
    private volatile boolean enlistExtraXAResource;
    private Cache<Object, Object> cache;
@@ -63,20 +64,37 @@ public class InfinispanWrapper implements CacheWrapper {
          }
          if (state == State.FAILED){
             log.info("Cannot start, previous attempt failed");
+            return;
          } else if (state == State.STARTING) {
             log.info("Wrapper already starting");
+            return;
          } else if (state == State.STARTED) {
             log.info("Wrapper already started");
+            return;
          } else if (state == State.STOPPED) {
             state = State.STARTING;
+            startingThread = Thread.currentThread();
             stateLock.unlock();
             
             setUpCache(confAttributes, nodeIndex);
             setUpTransactionManager();
             
             stateLock.lock();
+            if (state != State.STARTING) {
+               /* The start has been interrupted */
+               return;
+            }
             state = State.STARTED;
+            stateLock.unlock();
          }
+
+         postSetUpInternal(confAttributes);
+
+         stateLock.lock();
+         startingThread = null;
+
+      } catch (InterruptedException e) {
+         log.info("Wrapper start was interrupted");
       } catch (Exception e) {
          log.error("Wrapper start failed.");
          if (!stateLock.isHeldByCurrentThread()) {
@@ -89,8 +107,6 @@ public class InfinispanWrapper implements CacheWrapper {
             stateLock.unlock();
          }
       }
-      
-      postSetUpInternal(confAttributes);
    }
    
    private void setUpTransactionManager() {
@@ -173,6 +189,18 @@ public class InfinispanWrapper implements CacheWrapper {
          }
          state = State.FAILED;
          throw e;
+      } finally {
+         if (stateLock.isHeldByCurrentThread()) {
+            stateLock.unlock();
+         }
+      }
+   }
+
+   @Override
+   public boolean isRunning() {
+      try {
+         stateLock.lock();
+         return state == State.STARTED;
       } finally {
          if (stateLock.isHeldByCurrentThread()) {
             stateLock.unlock();

@@ -64,6 +64,11 @@ public class Coherence3Wrapper implements CacheWrapper {
    }
 
    @Override
+   public boolean isRunning() {
+      return nc.isActive();
+   }
+
+   @Override
    public void put(String bucket, Object key, Object value) throws Exception {
       nc.put(key, value);
    }

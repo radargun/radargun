@@ -18,6 +18,11 @@ public class ChmWrapper implements CacheWrapper {
    }
 
    @Override
+   public boolean isRunning() {
+      return true;
+   }
+
+   @Override
    public void put(String bucket, Object key, Object value) throws Exception {
       chm.put(key, value);
    }

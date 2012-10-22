@@ -3,6 +3,7 @@ package org.radargun.cachewrappers;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
+import net.sf.ehcache.Status;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
@@ -55,6 +56,11 @@ public class EHCacheWrapper implements CacheWrapper {
 
    public void tearDown() throws Exception {
       manager.shutdown();
+   }
+
+   @Override
+   public boolean isRunning() {
+      return manager.getStatus() == Status.STATUS_ALIVE;
    }
 
    public void putSerializable(Serializable key, Serializable value) throws Exception {

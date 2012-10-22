@@ -27,6 +27,11 @@ public class TerracottaWrapper implements CacheWrapper {
    }
 
    @Override
+   public boolean isRunning() {
+      return true;
+   }
+
+   @Override
    public void put(String bucket, Object key, Object value) throws Exception {
       Map sessionMap = getSessionMap(bucket);
       if (sessionMap == null) {
