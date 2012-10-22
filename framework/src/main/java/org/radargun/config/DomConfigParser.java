@@ -171,23 +171,23 @@ public class DomConfigParser extends ConfigParser {
          String toStr = element.getAttribute("to");
          String incStr = element.getAttribute("inc");
          String repeatName = element.getAttribute("name");
-         if ((timesStr == null && (fromStr == null || toStr == null))
-               || (timesStr != null && (fromStr != null || toStr != null || incStr != null))) {
+         if ((timesStr.isEmpty() && (fromStr.isEmpty() || toStr.isEmpty()))
+               || (!timesStr.isEmpty() && (!fromStr.isEmpty() || !toStr.isEmpty() || !incStr.isEmpty()))) {
             throw new IllegalArgumentException("Define either times or from, to, [inc]");
          }
          int from = 0, to = 1, inc = 1;
-         if (timesStr != null) {
+         if (!timesStr.isEmpty()) {
             to = parseRepeatArg(timesStr, "times", repeatName);            
          } else {
             from = parseRepeatArg(fromStr, "from", repeatName);
             to = parseRepeatArg(toStr, "to", repeatName);
-            if (incStr != null) {
+            if (!incStr.isEmpty()) {
                inc = parseRepeatArg(incStr, "inc", repeatName);           
             }
          }                  
          NodeList childNodes = element.getChildNodes();
          for (int counter = from; counter < to; counter += inc) {
-            System.getProperties().setProperty("repeat." + (repeatName != null ? repeatName + ".counter" : "counter"), String.valueOf(counter));
+            System.getProperties().setProperty("repeat." + (repeatName.isEmpty() ? "counter" : repeatName + ".counter"), String.valueOf(counter));
             for (int i = 0; i < childNodes.getLength(); i++) {
                Node child = childNodes.item(i);
                if (child instanceof Element) {
