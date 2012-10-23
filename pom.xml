@@ -156,14 +156,20 @@
                            </fileset>
                         </copy>
 
+                        <copy todir="${distribution.artifact}/plugins/infinispan50">
+                           <fileset dir="plugins/infinispan50/target/distribution/plugin-infinispan50-bin/plugin-infinispan50">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
                         <copy todir="${distribution.artifact}/plugins/infinispan51">
                            <fileset dir="plugins/infinispan51/target/distribution/plugin-infinispan51-bin/plugin-infinispan51">
                               <include name="**/*" />
                            </fileset>
                         </copy>
 
-                        <copy todir="${distribution.artifact}/plugins/infinispan50">
-                           <fileset dir="plugins/infinispan50/target/distribution/plugin-infinispan50-bin/plugin-infinispan50">
+                        <copy todir="${distribution.artifact}/plugins/infinispan52">
+                           <fileset dir="plugins/infinispan52/target/distribution/plugin-infinispan52-bin/plugin-infinispan52">
                               <include name="**/*" />
                            </fileset>
                         </copy>
@@ -190,7 +196,13 @@
                            <fileset dir="plugins/ehcache25/target/distribution/plugin-ehcache25-bin/plugin-ehcache25">
                               <include name="**/*" />
                            </fileset>
-                        </copy>                        
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/ehcache26">
+                           <fileset dir="plugins/ehcache26/target/distribution/plugin-ehcache26-bin/plugin-ehcache26">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
 
                         <copy todir="${distribution.artifact}/plugins/terracotta3">
                            <fileset dir="plugins/terracotta3/target/distribution/plugin-terracotta3-bin/plugin-terracotta3">
