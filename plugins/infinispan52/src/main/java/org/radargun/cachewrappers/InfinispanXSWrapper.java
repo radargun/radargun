@@ -163,7 +163,9 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
    @Override
    public Cache<Object, Object> getCache(String name) {
       if (name == null) return mainCache;
-      return ((DefaultCacheManager) cacheManager).getCache(name, false);
+      Cache<Object, Object> cache = ((DefaultCacheManager) cacheManager).getCache(name, false);
+      // fallback to the main cache to keep backward compatibility
+      return cache != null ? cache : mainCache;
    }
 
    @Override

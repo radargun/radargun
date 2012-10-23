@@ -18,6 +18,7 @@
  */
 package org.radargun.stages.helpers;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
@@ -68,7 +69,8 @@ public class StartHelper {
             if (clusterValidation.expectedSlaves != null) {
                expectedNumberOfSlaves = clusterValidation.expectedSlaves;
             } else if (wrapper instanceof XSReplicating) {
-               expectedNumberOfSlaves = ((XSReplicating) wrapper).getSlaves().size();
+               List<Integer> slaves = ((XSReplicating) wrapper).getSlaves();
+               expectedNumberOfSlaves = slaves != null ? slaves.size() : clusterValidation.activeSlaveCount;
             } else {
                expectedNumberOfSlaves = clusterValidation.activeSlaveCount;
             }

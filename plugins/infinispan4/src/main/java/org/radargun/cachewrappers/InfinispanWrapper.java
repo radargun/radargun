@@ -259,7 +259,7 @@ public class InfinispanWrapper implements CacheWrapper {
 
    public String getInfo() {
       //Important: don't change this string without validating the ./dist.sh as it relies on its format!!
-      return "Running : " + cache.getVersion() +  ", config:" + config + ", cacheName:" + cache.getName();
+      return "Running : " + getCache(null).getVersion() +  ", config:" + config + ", cacheName:" + getCache(null).getName();
    }
 
    public Object getReplicatedData(String bucket, String key) throws Exception {
