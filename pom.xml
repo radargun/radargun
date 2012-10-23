@@ -19,6 +19,7 @@
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
       <module>plugins/ehcache25</module>
+      <module>plugins/ehcache26</module>
       <module>plugins/terracotta3</module>
       <module>plugins/chm</module>
    </modules>
