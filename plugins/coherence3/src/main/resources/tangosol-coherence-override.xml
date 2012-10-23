@@ -1,30 +1,13 @@
-<coherence>
+<?xml version='1.0'?>
+<coherence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns="http://xmlns.oracle.com/coherence/coherence-operational-config"
+   xsi:schemaLocation="http://xmlns.oracle.com/coherence/coherence-operational-config coherence-operational-config.xsd" >
 
-   <cluster-config>
-      <unicast-listener>
-         <address system-property="tangosol.coherence.localhost">localhost</address>
-      </unicast-listener>
-   </cluster-config>
-
-   <!-- this is where you set the config, as described here: http://coherence.oracle.com/display/COH35UG/configurable-cache-factory-config -->
-   <configurable-cache-factory-config>
-     <class-name>com.tangosol.net.DefaultConfigurableCacheFactory</class-name>
-     <init-params>
-       <init-param>
-         <param-type>java.lang.String</param-type>
-         <param-value system-property="tangosol.coherence.cacheconfig">cache-config.xml</param-value>
-       </init-param>
-     </init-params>
-   </configurable-cache-factory-config>
-
-
-   <!-- configure logging as described here: http://coherence.oracle.com/display/COH35UG/services -->
    <logging-config>
-     <destination system-property="tangosol.coherence.log">log4j</destination>
-     <logger-name system-property="tangosol.coherence.log.logger"></logger-name>
-     <severity-level system-property="tangosol.coherence.log.level">3</severity-level>
-     <message-format>{date}/{uptime} {product} {version} &lt;{level}&gt; (thread={thread}, member={member}): {text}</message-format>
-     <character-limit system-property="tangosol.coherence.log.limit">1048576</character-limit>
+      <destination system-property="tangosol.coherence.log">log4j</destination>
+      <logger-name system-property="tangosol.coherence.log.logger"></logger-name>
+      <severity-level system-property="tangosol.coherence.log.level">5</severity-level>
+      <message-format>(thread={thread}, member={member}): {text}</message-format>
+      <character-limit system-property="tangosol.coherence.log.limit">1048576</character-limit>
    </logging-config>
-
 </coherence>

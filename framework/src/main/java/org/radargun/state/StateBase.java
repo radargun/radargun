@@ -11,6 +11,10 @@ import java.util.HashMap;
 public class StateBase {
    private Map<Object, Object> stateMap = new HashMap<Object, Object>();
 
+   public void remove(Object key) {
+      stateMap.remove(key);
+   }
+
    public void put(Object key, Object value) {
       stateMap.put(key, value);
    }

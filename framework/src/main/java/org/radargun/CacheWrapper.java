@@ -4,7 +4,7 @@ package org.radargun;
 import org.radargun.utils.TypedProperties;
 
 /**
- * CacheWrappers wrap caching products tp provide RadarGun with a standard way of
+ * CacheWrappers wrap caching products to provide RadarGun with a standard way of
  * accessing and manipulating a cache.
  *
  * @author Manik Surtani (manik@surtani.org)
