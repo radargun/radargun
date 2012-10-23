@@ -17,6 +17,7 @@ public class KillStage extends AbstractDistStage {
    private boolean tearDown = false;
    private boolean async = false;
    private String role;
+   private long delayExecution;
 
    public KillStage() {
       // nada
@@ -29,11 +30,23 @@ public class KillStage extends AbstractDistStage {
 
    public DistStageAck executeOnSlave() {
       log.info("Received kill request from master...");
-      DefaultDistStageAck ack = newDefaultStageAck();
-      if (role != null && RoleHelper.hasRole(slaveState, role)) {
-         KillHelper.kill(slaveState, tearDown, async, ack);
-      } else if (slaves != null && slaves.contains(getSlaveIndex())) {
-         KillHelper.kill(slaveState, tearDown, async, ack);
+      DefaultDistStageAck ack = newDefaultStageAck();      
+      if ((role != null && RoleHelper.hasRole(slaveState, role)) || (slaves != null && slaves.contains(getSlaveIndex()))) {
+         if (delayExecution > 0) {
+            Thread t = new Thread() {
+               @Override
+               public void run() {
+                  try {
+                     Thread.sleep(delayExecution);
+                  } catch (InterruptedException e) {                    
+                  }
+                  KillHelper.kill(slaveState, tearDown, async, null);
+               }
+            };
+            t.start();
+         } else {
+            KillHelper.kill(slaveState, tearDown, async, ack);
+         }
       } else {
          log.trace("Ignoring kill request, not targeted for this slave");
       }
@@ -56,5 +69,8 @@ public class KillStage extends AbstractDistStage {
    public void setRole(String role) {
       this.role = role;
    }
-
+   
+   public void setDelayExecution(long milliseconds) {
+      this.delayExecution = milliseconds;
+   }
 }

@@ -14,7 +14,7 @@ import org.radargun.state.MasterState;
  */
 public class StartClusterStage extends AbstractStartStage {
 
-   private boolean performClusterSizeValidation = true;
+   private boolean validateCluster = true;
    private boolean staggerSlaveStartup = true;
    private long delayAfterFirstSlaveStarts = 5000;
    private long delayBetweenStartingSlaves = 500;
@@ -45,7 +45,7 @@ public class StartClusterStage extends AbstractStartStage {
             + ". This slave's index is: " + getSlaveIndex());
       
       StartHelper.start(productName, config, confAttributes, slaveState, getSlaveIndex(),
-            performClusterSizeValidation ? new StartHelper.ClusterValidation(expectNumSlaves, getActiveSlaveCount()) : null,
+            validateCluster ? new StartHelper.ClusterValidation(expectNumSlaves, getActiveSlaveCount()) : null,
             reachable, classLoadHelper, ack);
       if (!ack.isError()) {
          log.info("Successfully started cache wrapper on slave " + getSlaveIndex() + ": " + slaveState.getCacheWrapper());
@@ -53,8 +53,8 @@ public class StartClusterStage extends AbstractStartStage {
       return ack;
    }
 
-   public void setPerformCLusterSizeValidation(boolean performCLusterSizeValidation) {
-      this.performClusterSizeValidation = performCLusterSizeValidation;
+   public void setValidateCluster(boolean validateCluster) {
+      this.validateCluster = validateCluster;
    }
 
    @Override

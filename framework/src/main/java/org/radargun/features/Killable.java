@@ -10,12 +10,16 @@ import org.radargun.CacheWrapper;
  */
 public interface Killable extends CacheWrapper {
    /**
-    * 
     * Kill the CacheWrapper instance abruptly.
-    * 
+    *
     * @throws Exception
     */
    void kill() throws Exception;
+   
+   /**
+    * Wait until the CacheWrapper is in the state where it can be killed, but then kill it in different thread.
+    *
+    * @throws Exception
+    */
    void killAsync() throws Exception;
-
 }

@@ -73,22 +73,24 @@ public class CheckDataStage extends AbstractDistStage {
          ack.setErrorMessage("Failed to check entries");
          return ack;
       }
-      
-      if (!isDeleted()) {
-         if (found != getExpectedNumEntries()) {
-            ack.setError(true);
-            ack.setErrorMessage("Found " + found + " entries while " + getExpectedNumEntries() + " should be loaded.");         
-            return ack;
-         }
-      } else {
-         if (found > 0) {
-            ack.setError(true);
-            ack.setErrorMessage("Found " + found + " entries while these should be deleted.");         
-            return ack;
-         }
-      }
+
       CacheWrapper wrapper = slaveState.getCacheWrapper();
-      ack.setPayload(wrapper.getLocalSize());
+      if (wrapper != null && wrapper.isRunning()) {
+         if (!isDeleted()) {
+            if (found != getExpectedNumEntries()) {
+               ack.setError(true);
+               ack.setErrorMessage("Found " + found + " entries while " + getExpectedNumEntries() + " should be loaded.");
+               return ack;
+            }
+         } else {
+            if (found > 0) {
+               ack.setError(true);
+               ack.setErrorMessage("Found " + found + " entries while these should be deleted.");
+               return ack;
+            }
+         }
+         ack.setPayload(wrapper.getLocalSize());
+      }
       return ack;
    }
    

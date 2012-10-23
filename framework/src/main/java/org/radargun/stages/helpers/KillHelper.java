@@ -65,10 +65,15 @@ public class KillHelper {
             log.info("No cache wrapper deployed on this slave, nothing to do.");
          }
          slaveState.setCacheWrapper(null);
+         // in case of concurrent start and kill the stats could be still running
+         BackgroundStats.beforeCacheWrapperDestroy(slaveState);
       } catch (Exception e) {
          log.error("Error while killing slave", e);
-         ack.setError(true);
-         ack.setRemoteException(e);
+         if (ack != null) {
+            ack.setError(true);
+            ack.setErrorMessage(e.getMessage());
+            ack.setRemoteException(e);
+         }
       } finally {
          System.gc();
       }

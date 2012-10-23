@@ -1,6 +1,5 @@
 package org.radargun.stages;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;

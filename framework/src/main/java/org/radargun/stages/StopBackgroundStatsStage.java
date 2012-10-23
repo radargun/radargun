@@ -25,9 +25,7 @@ public class StopBackgroundStatsStage extends AbstractDistStage {
          BackgroundStats bgStats = (BackgroundStats) slaveState.get(BackgroundStats.NAME);
          if (bgStats != null) {
             ack.setPayload(bgStats.stopStats());
-            if (bgStats.areStressorsRunning()) {
-               bgStats.stopStressors();
-            }
+            bgStats.stopStressors();
             slaveState.remove(BackgroundStats.NAME);
          } else {
             log.error("BackgroundStats not available");

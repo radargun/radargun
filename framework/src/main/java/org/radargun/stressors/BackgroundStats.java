@@ -48,7 +48,6 @@ public class BackgroundStats {
    private StressorThread[] stressorThreads;
    private SizeThread sizeThread;
    private volatile boolean stressorsRunning = false;
-   private CacheWrapper cacheWrapper;
    private int numSlaves;
    private int slaveIndex;
    private List<Stats> stats;
@@ -85,13 +84,14 @@ public class BackgroundStats {
     * Starts numThreads stressors.
     * 
     */
-   public void startStressors() {
-      if (stressorThreads != null || cacheWrapper != null || stressorsRunning) {
-         throw new IllegalStateException("Can't start stressors, they're already running.");
+   public synchronized void startStressors() {
+      if (stressorThreads != null || stressorsRunning) {
+         log.warn("Can't start stressors, they're already running.");
+         return;
       }
-      cacheWrapper = slaveState.getCacheWrapper();
-      if (cacheWrapper == null) {
-         throw new IllegalStateException("Can't start stressors, cache wrapper not available");
+      if (slaveState.getCacheWrapper() == null) {
+         log.warn("Can't start stressors, cache wrapper not available");
+         return;
       }
       stressorThreads = new StressorThread[numThreads];
       RangeHelper.Range slaveKeyRange = RangeHelper.divideRange(numEntries, numSlaves, slaveIndex);
@@ -113,7 +113,7 @@ public class BackgroundStats {
     * @throws InterruptedException
     * 
     */
-   public void waitUntilLoaded() throws InterruptedException {
+   public synchronized void waitUntilLoaded() throws InterruptedException {
       if (stressorThreads == null) {
          return;
       }
@@ -136,9 +136,10 @@ public class BackgroundStats {
     * Stops the stressors, call this before tearing down or killing CacheWrapper.
     * 
     */
-   public void stopStressors() {
-      if (stressorThreads == null || cacheWrapper == null || !stressorsRunning) {
-         throw new IllegalStateException("Can't stop stressors, they're not running.");
+   public synchronized void stopStressors() {
+      if (stressorThreads == null || !stressorsRunning) {
+         log.warn("Can't stop stressors, they're not running.");
+         return;
       }
       stressorsRunning = false;
       log.debug("Interrupting size thread");
@@ -169,14 +170,9 @@ public class BackgroundStats {
          log.error("interrupted while waiting for sizeThread and stressorThreads to stop");
       }
       stressorThreads = null;
-      cacheWrapper = null;
    }
 
-   public boolean areStressorsRunning() {
-      return stressorsRunning;
-   }
-
-   public void startStats() {
+   public synchronized void startStats() {
       if (backgroundStatsThread != null || stats != null) {
          throw new IllegalStateException("Stat thread already running");
       }
@@ -185,7 +181,7 @@ public class BackgroundStats {
       backgroundStatsThread.start();
    }
 
-   public List<Stats> stopStats() {
+   public synchronized List<Stats> stopStats() {
       if (backgroundStatsThread == null || stats == null) {
          throw new IllegalStateException("Stat thread not running");
       }
@@ -267,7 +263,12 @@ public class BackgroundStats {
                   }
                   getSize = false;
                }
-               size = cacheWrapper.getLocalSize();
+               CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
+               if (cacheWrapper != null && cacheWrapper.isRunning()) {
+                  size = slaveState.getCacheWrapper().getLocalSize();
+               } else {
+                  size = 0;
+               }
             }
          } catch (InterruptedException e) {
             log.trace("SizeThread interrupted.");
@@ -327,6 +328,7 @@ public class BackgroundStats {
       
       private void loadKeyRange(int from, int to) {         
          int loaded_keys = 0;
+         CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
          for (currentKey = from; currentKey < to; currentKey++, loaded_keys++) {
             try {
                cacheWrapper.put(bucketId, key(currentKey), generateRandomEntry(entrySize));
@@ -337,7 +339,7 @@ public class BackgroundStats {
                log.error("Error while loading data", e);
             }
          }
-         log.debug("Loaded all " + (from - to) + " keys");
+         log.debug("Loaded all " + (to - from) + " keys");
       }
 
       @Override
@@ -355,7 +357,10 @@ public class BackgroundStats {
             // we should close the transaction, otherwise TX Reaper would find dead thread in tx
             if (transactionSize != -1) {
                try {
-                  cacheWrapper.endTransaction(false);
+                  CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
+                  if (cacheWrapper != null && cacheWrapper.isRunning()) {
+                     cacheWrapper.endTransaction(false);
+                  }
                } catch (Exception e1) {
                   log.error("Error while ending transaction", e);
                }             
@@ -387,6 +392,7 @@ public class BackgroundStats {
       private void makeRequest() throws InterruptedException {
          String key = null;
          Operation operation = getOperation();
+         CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
          try {
             key = key(currentKey++);
             if (currentKey == keyRangeEnd) {

@@ -41,66 +41,35 @@ public class InfinispanWrapper implements CacheWrapper {
 
    private static Log log = LogFactory.getLog(InfinispanWrapper.class);
    private static boolean trace = log.isTraceEnabled();
+   private static final String DEFAULT_CACHE_NAME = "testCache";
    
    protected DefaultCacheManager cacheManager;
    protected TransactionManager tm;
    protected volatile State state = State.STOPPED;
    protected ReentrantLock stateLock = new ReentrantLock();
-   protected Thread startingThread = null;
    protected String config;
    private volatile boolean enlistExtraXAResource;
    private Cache<Object, Object> cache;
 
    public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
       this.config = config;
-      
       try {
-         stateLock.lock();         
-         while (state == State.STOPPING) {
-            stateLock.unlock();
-            log.info("Waiting for the wrapper to stop");
-            Thread.sleep(5000);
-            stateLock.lock();
-         }
-         if (state == State.FAILED){
-            log.info("Cannot start, previous attempt failed");
-            return;
-         } else if (state == State.STARTING) {
-            log.info("Wrapper already starting");
-            return;
-         } else if (state == State.STARTED) {
-            log.info("Wrapper already started");
-            return;
-         } else if (state == State.STOPPED) {
-            state = State.STARTING;
-            startingThread = Thread.currentThread();
-            stateLock.unlock();
-            
+         if (beginStart()) {
             setUpCache(confAttributes, nodeIndex);
             setUpTransactionManager();
             
             stateLock.lock();
-            if (state != State.STARTING) {
-               /* The start has been interrupted */
-               return;
-            }
             state = State.STARTED;
             stateLock.unlock();
+
+            postSetUpInternal(confAttributes);
          }
-
-         postSetUpInternal(confAttributes);
-
-         stateLock.lock();
-         startingThread = null;
-
-      } catch (InterruptedException e) {
-         log.info("Wrapper start was interrupted");
       } catch (Exception e) {
-         log.error("Wrapper start failed.");
+         log.error("Wrapper start failed.", e);
          if (!stateLock.isHeldByCurrentThread()) {
             stateLock.lock();
          }
-         state = State.FAILED;         
+         state = State.FAILED;
          throw e;
       } finally {
          if (stateLock.isHeldByCurrentThread()) {
@@ -116,16 +85,16 @@ public class InfinispanWrapper implements CacheWrapper {
       log.info("Using transaction manager: " + tm);
    }
 
-   protected String getConfigFile(TypedProperties confAttributes, int nodeIndex) {
+   protected String getConfigFile(TypedProperties confAttributes) {
       return confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
    }
    
    protected String getCacheName(TypedProperties confAttributes) {
-      return confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : "x";
+      return confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : DEFAULT_CACHE_NAME;
    }
    
    protected void setUpCache(TypedProperties confAttributes, int nodeIndex) throws Exception {     
-      String configFile = getConfigFile(confAttributes, nodeIndex);
+      String configFile = getConfigFile(confAttributes);
       String cacheName = getCacheName(confAttributes);
       
       log.trace("Using config file: " + configFile + " and cache name: " + cacheName);
@@ -158,23 +127,7 @@ public class InfinispanWrapper implements CacheWrapper {
    
    public void tearDown() throws Exception {     
       try {
-         stateLock.lock();
-         while (state == State.STARTING) {
-            stateLock.unlock();
-            log.info("Waiting for the wrapper to start");
-            Thread.sleep(5000);
-            stateLock.lock();
-         }
-         if (state == State.FAILED) {
-            log.info("Cannot tear down, previous attempt failed");            
-         } else if (state == State.STOPPING) {
-            log.warn("Wrapper already stopping");
-         } else if (state == State.STOPPED) {
-            log.warn("Wrapper already stopped");
-         } else if (state == State.STARTED) {
-            state = State.STOPPING;
-            stateLock.unlock();
-            
+         if (beginStop()) {
             List<Address> addressList = cacheManager.getMembers();
             cacheManager.stop();         
             log.info("Stopped, previous view is " + addressList);
@@ -189,6 +142,60 @@ public class InfinispanWrapper implements CacheWrapper {
          }
          state = State.FAILED;
          throw e;
+      } finally {
+         if (stateLock.isHeldByCurrentThread()) {
+            stateLock.unlock();
+         }
+      }
+   }
+
+   protected boolean beginStart() throws InterruptedException {
+      try {
+         stateLock.lock();
+         while (state == State.STOPPING) {
+            stateLock.unlock();
+            log.info("Waiting for the wrapper to stop");
+            Thread.sleep(1000);
+            stateLock.lock();
+         }
+         if (state == State.FAILED){
+            log.info("Cannot start, previous attempt failed");
+         } else if (state == State.STARTING) {
+            log.info("Wrapper already starting");
+         } else if (state == State.STARTED) {
+            log.info("Wrapper already started");
+         } else if (state == State.STOPPED) {
+            state = State.STARTING;
+            return true;
+         }
+         return false;
+      } finally {
+         if (stateLock.isHeldByCurrentThread()) {
+            stateLock.unlock();
+         }
+      }
+   }
+
+   protected boolean beginStop() throws InterruptedException {
+      try {
+         stateLock.lock();
+         while (state == State.STARTING) {
+            stateLock.unlock();
+            log.info("Waiting for the wrapper to start");
+            Thread.sleep(1000);
+            stateLock.lock();
+         }
+         if (state == State.FAILED) {
+            log.info("Cannot stop, previous attempt failed.");
+         } else if (state == State.STOPPING) {
+            log.warn("Wrapper already stopping");
+         } else if (state == State.STOPPED) {
+            log.warn("Wrapper already stopped");
+         } else if (state == State.STARTED) {
+            state = State.STOPPING;
+            return true;
+         }
+         return false;
       } finally {
          if (stateLock.isHeldByCurrentThread()) {
             stateLock.unlock();

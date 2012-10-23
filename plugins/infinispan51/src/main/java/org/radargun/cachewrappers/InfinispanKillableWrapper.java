@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
 import org.infinispan.notifications.cachelistener.annotation.TopologyChanged;
@@ -34,30 +35,33 @@ import org.radargun.utils.TypedProperties;
 public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper implements Killable, TopologyAware {
 
    private static Log log = LogFactory.getLog(InfinispanKillableWrapper.class);
-   
+
+   private enum KillRequest {
+      NO_REQUEST,
+      KILL_STARTED,
+      KILL_FINISHED
+   }
+
    private List<TopologyAware.Event> topologyChanges = new ArrayList<TopologyAware.Event>();
    private List<TopologyAware.Event> hashChanges = new ArrayList<TopologyAware.Event>();
-   
+   private KillRequest killState = KillRequest.NO_REQUEST;
+   private Object killSync = new Object();
+
+   @Override
+   public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
+      synchronized (killSync) {
+         if (killState == KillRequest.KILL_FINISHED) {
+            killState = KillRequest.NO_REQUEST;
+         }
+      }
+      super.setUp(config, isLocal, nodeIndex, confAttributes);
+   }
+
    @Override
    public void kill() throws Exception {
+      startDiscarding();
       try {
-         stateLock.lock();
-         while (state == State.STARTING) {
-            stateLock.unlock();
-            log.info("Waiting for the wrapper to start");
-            Thread.sleep(5000);
-            stateLock.lock();
-         }
-         if (state == State.FAILED) {
-            log.info("Cannot kill, previous attempt failed.");
-         } else if (state == State.STOPPING) {
-            log.warn("Wrapper already stopping");
-         } else if (state == State.STOPPED) {
-            log.warn("Wrapper already stopped");
-         } else if (state == State.STARTED) {
-            state = State.STOPPING;
-            stateLock.unlock();
-            
+         if (beginStop()) {
             killInternal();
                     
             stateLock.lock();
@@ -74,58 +78,55 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
          if (stateLock.isHeldByCurrentThread()) {
             stateLock.unlock();
          }
+         setKillFinished();
       }
    }
    
    @Override
    public void killAsync() throws Exception {
+      startDiscarding();
       try {
-         stateLock.lock();
-         while (state == State.STARTING) {
-            stateLock.unlock();
-            log.info("Waiting for the wrapper to start");
-            Thread.sleep(5000);
-            stateLock.lock();
+         if (!beginStop()) {
+            return;
          }
-         if (state == State.STOPPING) {
-            log.warn("Wrapper already stopping");
-         } else if (state == State.STOPPED) {
-            log.warn("Wrapper already stopped");
-         } else if (state == State.STARTED) {
-            state = State.STOPPING;
-            stateLock.unlock();
-            
-            new Thread(new Runnable() {
-               @Override
-               public void run() {
-                  try {
-                     killInternal();
-                     
+         new Thread(new Runnable() {
+            @Override
+            public void run() {
+               try {
+                  killInternal();
+
+                  stateLock.lock();
+                  state = State.STOPPED;
+               } catch (Exception e) {
+                  log.error("Wrapper async kill failed. Exception while async killing", e);
+                  if (!stateLock.isHeldByCurrentThread()) {
                      stateLock.lock();
-                     state = State.STOPPED;
-                  } catch (Exception e) {
-                     log.error("Wrapper async kill failed. Exception while async killing", e);
-                     if (!stateLock.isHeldByCurrentThread()) {
-                        stateLock.lock();
-                     }
-                     state = State.FAILED;
-                  } finally {
-                     if (stateLock.isHeldByCurrentThread()) {
-                        stateLock.unlock();
-                     }
                   }
+                  state = State.FAILED;
+               } finally {
+                  if (stateLock.isHeldByCurrentThread()) {
+                     stateLock.unlock();
+                  }
+                  setKillFinished();
                }
+            }
             }).start();                                
-         }
-      } finally {
-         if (stateLock.isHeldByCurrentThread()) {
-            stateLock.unlock();
-         }
-      }   
+      } catch (Exception e) {
+         // only in case of exception, cannot use finally
+         setKillFinished();
+         throw e;
+      }
+   }
+
+   private void setKillFinished() {
+      synchronized (killSync) {
+         if (killState != KillRequest.KILL_STARTED) throw new IllegalStateException();
+         killState = KillRequest.KILL_FINISHED;
+         killSync.notifyAll();
+      }
    }
    
    private void killInternal() throws Exception {
-      startDiscarding();
       List<Address> addressList = cacheManager.getMembers();
       cacheManager.stop();
       log.info("Killed, previous view is " + addressList);
@@ -133,20 +134,44 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
 
    @Override
    protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {      
-      stopDiscarding();
+      synchronized (killSync) {
+         if (killState == KillRequest.NO_REQUEST) {
+            stopDiscarding();
+         }
+      }
       super.postSetUpInternal(confAttributes);
       getCache(null).addListener(new TopologyAwareListener());
    }
          
    protected List<JChannel> getChannels() {
-      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();      
-      JChannel channel = (JChannel) transport.getChannel();
       List<JChannel> list = new ArrayList<JChannel>();
+      JGroupsTransport transport;
+      while (cacheManager == null) {
+         log.trace("Cache Manager is not ready");
+         Thread.yield();
+      }
+      for (;;) {
+         transport = (JGroupsTransport) ((DefaultCacheManager) cacheManager).getTransport();
+         if (transport != null) break;
+         log.trace("Transport is not ready");
+         Thread.yield();
+      }
+      JChannel channel;
+      for(;;) {
+         channel = (JChannel) transport.getChannel();
+         if (channel != null && channel.getName() != null && channel.isOpen()) break;
+         log.trace("Channel " + channel + " is not ready");
+         Thread.yield();
+      }
       list.add(channel);
       return list;
    }
    
-   protected void startDiscarding() {
+   protected void startDiscarding() throws InterruptedException {
+      synchronized (killSync) {
+         while (killState == KillRequest.KILL_STARTED) killSync.wait();
+         killState = KillRequest.KILL_STARTED;
+      }
       for (JChannel channel : getChannels()) {
          DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
          if (discard == null) {
@@ -164,7 +189,7 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
       log.debug("Started discarding packets");
    }
    
-   protected void stopDiscarding() {
+   protected synchronized void stopDiscarding() {
       if (cacheManager == null) {
          log.warn("Cache manager is not ready!");
          return;

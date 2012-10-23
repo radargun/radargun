@@ -26,7 +26,7 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
   
    @Override
    protected void setUpCache(TypedProperties confAttributes, int nodeIndex) throws Exception {
-      String configFile = getConfigFile(confAttributes, nodeIndex);
+      String configFile = getConfigFile(confAttributes);
       cacheManager = new DefaultCacheManager(configFile);
 
       String multiCache = (String) confAttributes.get("multiCache");

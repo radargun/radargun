@@ -53,15 +53,7 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
       for (String property : confAttributes.stringPropertyNames()) {
          if ((m = slavesPattern.matcher(property)).matches()) {
             String value = confAttributes.getProperty(property);
-            StringTokenizer tokenizer = new StringTokenizer(value, ",");   
-            List<Integer> slaves = new ArrayList<Integer>();
-            while (tokenizer.hasMoreTokens()) {
-               try {
-                  slaves.add(Integer.parseInt(tokenizer.nextToken().trim()));
-               } catch (NumberFormatException e) {
-                  log.debug("Cannot parse slave index from " + property + "=" + value);
-               }
-            }
+            slaves = org.radargun.stages.helpers.ParseHelper.parseList(value, property, null);
             if (slaves.contains(nodeIndex)) {
                try {
                   mySiteIndex = Integer.parseInt(m.group(1));
@@ -73,17 +65,19 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
             }
          }
       }
+
+      String configFile, mainCacheName;
       if (mySiteIndex < 0) {
-         log.error("Cannot find any site for slave index " + nodeIndex);
-         throw new IllegalArgumentException();
+         log.info("Cannot find any site for slave index " + nodeIndex);
+         configFile = getConfigFile(confAttributes);
+         mainCacheName = getCacheName(confAttributes);
       } else {
          String siteName = confAttributes.getProperty("site[" + mySiteIndex + "].name", "site[" + mySiteIndex + "]");
          log.info("Slave " + nodeIndex + " will use site " + siteName);
+         configFile = confAttributes.getProperty("site[" + mySiteIndex + "].config");
+         mainCacheName = confAttributes.getProperty("site[" + mySiteIndex + "].cache");
       }
-      
-      String configFile = confAttributes.getProperty("site[" + mySiteIndex + "].config");
-      String mainCacheName = confAttributes.getProperty("site[" + mySiteIndex + "].cache");
-      
+
       log.trace("Using config file: " + configFile + " and cache name: " + mainCacheName);
 
       cacheManager = new DefaultCacheManager(configFile, false);
@@ -114,11 +108,8 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
    
    @Override
    protected List<JChannel> getChannels() {
-      List<JChannel> list = new ArrayList<JChannel>();
-      JGroupsTransport transport = ((JGroupsTransport) cacheManager.getTransport());
-      JChannel clusterChannel = (JChannel) transport.getChannel();
-      list.add(clusterChannel);
-      RELAY2 relay = (RELAY2) clusterChannel.getProtocolStack().findProtocol(RELAY2.class);
+      List<JChannel> list = super.getChannels();
+      RELAY2 relay = (RELAY2) list.get(0).getProtocolStack().findProtocol(RELAY2.class);
       if (relay != null) {
          try {
             Field relayerField = RELAY2.class.getDeclaredField("relayer");
@@ -172,7 +163,7 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
    @Override
    public Cache<Object, Object> getCache(String name) {
       if (name == null) return mainCache;
-      return cacheManager.getCache(name, false);
+      return ((DefaultCacheManager) cacheManager).getCache(name, false);
    }
 
    @Override

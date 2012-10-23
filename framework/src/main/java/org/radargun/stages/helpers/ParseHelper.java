@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.apache.commons.logging.Log;
 
@@ -37,10 +36,11 @@ public class ParseHelper {
             if (nextComma < 0) nextComma = Integer.MAX_VALUE;
             int nextDotDot = str.indexOf("..", pos);
             if (nextDotDot < 0) nextDotDot = Integer.MAX_VALUE;
-            int nextSeparator = Math.min(nextComma, nextDotDot);
+            int nextSeparator = Math.min(nextComma, nextDotDot);            
             int number;
             if (nextSeparator == Integer.MAX_VALUE) {
-               number = Integer.parseInt(str.substring(pos).trim());               
+               number = Integer.parseInt(str.substring(pos).trim());
+               cont = false;
             } else {
                number = Integer.parseInt(str.substring(pos, nextSeparator).trim());
             }
@@ -61,7 +61,10 @@ public class ParseHelper {
             }
          } while (cont);         
       } catch (NumberFormatException e) {
-         log.error("Failed to parse " + property + "=" + str);
+         if (log != null) {
+            log.error("Failed to parse " + property + "=" + str);
+         }
+         throw e;         
       }      
 	}
 	

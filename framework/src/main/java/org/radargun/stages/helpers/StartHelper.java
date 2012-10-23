@@ -60,8 +60,8 @@ public class StartHelper {
          if (wrapper instanceof Partitionable) {
             ((Partitionable) wrapper).setStartWithReachable(slaveIndex, reachable);
          }
-         wrapper.setUp(config, false, slaveIndex, confAttributes);
          slaveState.setCacheWrapper(wrapper);
+         wrapper.setUp(config, false, slaveIndex, confAttributes);
          if (clusterValidation != null) {
             
             int expectedNumberOfSlaves;
@@ -90,7 +90,10 @@ public class StartHelper {
                }
             }
          }
-         BackgroundStats.afterCacheWrapperStart(slaveState);
+         if (wrapper.isRunning()) {
+            // here is a race so this is rather an optimization
+            BackgroundStats.afterCacheWrapperStart(slaveState);
+         }
       } catch (Exception e) {
          log.error("Issues while instantiating/starting cache wrapper", e);
          ack.setError(true);
