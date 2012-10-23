@@ -18,19 +18,7 @@
       <dependency>
          <groupId>com.oracle.coherence</groupId>
          <artifactId>coherence</artifactId>
-         <version>3.5</version>
-      </dependency>
-
-      <dependency>
-         <groupId>com.oracle.coherence</groupId>
-         <artifactId>coherence-common</artifactId>
-         <version>3.5</version>
-      </dependency>
-
-      <dependency>
-         <groupId>com.oracle.coherence</groupId>
-         <artifactId>tangosol</artifactId>
-         <version>3.5</version>
+         <version>3.7.1</version>
       </dependency>
    </dependencies>
 </project>

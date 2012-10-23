@@ -12,7 +12,7 @@ import java.util.List;
  * <pre>
  * Algorithm:
  * - each slave does a put(slaveIndex);
- * - each slave checks wether all (or part) of the remaining slaves replicated here.
+ * - each slave checks whether all (or part) of the remaining slaves replicated here.
  *
  * Config:
  *   - 'isPartialReplication' : is set to true, then the slave will consider that the cluster is formed when one slave

@@ -1,7 +1,5 @@
 package org.radargun.stages;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.radargun.utils.Utils;
 
 import java.io.File;
@@ -18,8 +16,6 @@ import java.util.Map;
  * @author Mircea.Markus@jboss.com
  */
 public class CsvReportGenerationStage extends AbstractMasterStage {
-
-   private static Log log = LogFactory.getLog(CsvReportGenerationStage.class);
 
    private String targetDir = "reports";
    private String separator = ",";

@@ -35,7 +35,7 @@ public class Slave {
    private boolean exitOnMasterShutdown = true;
    private int masterPort;
    private SocketChannel socketChannel;
-   private ByteBuffer byteBuffer = ByteBuffer.allocate(8192);
+   private ByteBuffer byteBuffer = null;
    private SlaveState state = new SlaveState();
 
    ExecutorService es = Executors.newSingleThreadExecutor(new ThreadFactory() {
@@ -51,6 +51,13 @@ public class Slave {
       this.masterHost = masterHost;
       this.masterPort = masterPort;
       Runtime.getRuntime().addShutdownHook(new ShutDownHook("Slave process"));
+      int byteBufferSize = 8192;
+      try {
+         byteBufferSize = Integer.valueOf(System.getProperty("slave.bufsize", "8192"));
+      } catch (Exception e) {
+         log.error("Couldn't parse byte buffer size, keeping default", e);
+      }
+      this.byteBuffer = ByteBuffer.allocate(byteBufferSize);
    }
 
    private void start() throws Exception {
