@@ -1,0 +1,26 @@
+<local-bench-config>
+
+   <benchmark>
+      <Warmup operationCount="5000000"/>
+      <!-- LOW contention.  25 threads working on 1 million keys. -->
+      <PutGet numberOfRequests="10000000" opsCountStatusLog="100000" numOfThreads="25" sysMonitorEnabled="true" numberOfKeys="1000000"/>
+   </benchmark>
+
+   <products>
+      <infinispan50>
+         <config name="local-config.xml"/>
+      </infinispan50>
+      <infinispan51>
+         <config name="local-config.xml"/>
+      </infinispan51>
+      <infinispan52>
+         <config name="local-config.xml"/>
+      </infinispan52>
+   </products>
+
+
+   <reports>
+      <report name="all_included" includeAll="true"/>
+   </reports>
+</local-bench-config>
+      
