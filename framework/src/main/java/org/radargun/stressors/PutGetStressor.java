@@ -375,6 +375,14 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       this.opsCountStatusLog = opsCountStatusLog;
    }
 
+   public void setNumberOfKeys(int numberOfKeys) {
+      this.numberOfKeys = numberOfKeys;
+   }
+
+   public void setSizeOfValue(int sizeOfValue) {
+      this.sizeOfValue = sizeOfValue;
+   }
+
    private static String generateRandomString(int size) {
       // each char is 2 bytes
       StringBuilder sb = new StringBuilder();
