@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PutGetStressor extends AbstractCacheWrapperStressor {
 
-   private static Log log = LogFactory.getLog(PutGetStressor.class);
+   private static final Log log = LogFactory.getLog(PutGetStressor.class);
 
    private int opsCountStatusLog = 5000;
 
@@ -75,7 +75,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
 
    private CacheWrapper cacheWrapper;
-   private static Random r = new Random();
+   private static final Random r = new Random();
    private volatile long startNanos;
    private volatile CountDownLatch startPoint;
    private volatile StressorCompletion completion;
