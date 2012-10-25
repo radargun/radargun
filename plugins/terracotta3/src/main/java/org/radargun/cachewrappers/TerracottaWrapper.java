@@ -11,7 +11,7 @@ import java.util.Map;
  * <p/>
  * Using the terracotta-cache package on http://www.terracotta.org
  *
- * @author <a href="manik@jboss.org">Manik Surtani</a>
+ * @author Manik Surtani
  * @author Mircea.Markus@jboss.com
  */
 public class TerracottaWrapper implements CacheWrapper {

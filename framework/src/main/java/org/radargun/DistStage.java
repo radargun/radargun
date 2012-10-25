@@ -16,11 +16,11 @@ public interface DistStage extends Stage, Serializable {
    /**
     * After un-marshalling on the slave, this method will be called to setUp the stage with slave's state.
     */
-   public void initOnSlave(SlaveState slaveState);
+   void initOnSlave(SlaveState slaveState);
 
-   public int getActiveSlaveCount();
+   int getActiveSlaveCount();
 
-   public void setActiveSlavesCount(int activeSlaves);
+   void setActiveSlavesCount(int activeSlaves);
 
    /**
     * Do whatever on the slave. This will only be called after {@link #initOnSlave(org.radargun.state.SlaveState)} is called.
@@ -31,7 +31,7 @@ public interface DistStage extends Stage, Serializable {
    /**
     * Called on master. Master state should not be passed to the slaves.
     */
-   public void initOnMaster(MasterState masterState, int slaveIndex);
+   void initOnMaster(MasterState masterState, int slaveIndex);
 
    /**
     * After all slaves replied through {@link #executeOnSlave()}, this method will be called on the master.
@@ -39,13 +39,13 @@ public interface DistStage extends Stage, Serializable {
     */
    boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState);
 
-   public DistStage clone();
+   DistStage clone();
 
-   public boolean isRunOnAllSlaves();
+   boolean isRunOnAllSlaves();
 
-   public void setRunOnAllSlaves(boolean runOnAllSlaves);
+   void setRunOnAllSlaves(boolean runOnAllSlaves);
 
-   public boolean isExitBenchmarkOnSlaveFailure();
+   boolean isExitBenchmarkOnSlaveFailure();
 
-   public void setExitBenchmarkOnSlaveFailure(boolean exitOnFailure);
+   void setExitBenchmarkOnSlaveFailure(boolean exitOnFailure);
 }

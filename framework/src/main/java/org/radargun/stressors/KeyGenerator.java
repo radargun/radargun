@@ -13,10 +13,10 @@ public interface KeyGenerator {
    /**
     * Called for distributed benchmarks.
     */
-   public Object generateKey(int nodeIndex, int threadIndex, int keyIndex);
+   Object generateKey(int nodeIndex, int threadIndex, int keyIndex);
 
    /**
     * Called for local benchmarks.
     */
-   public Object generateKey(int threadIndex, int keyIndex);
+   Object generateKey(int threadIndex, int keyIndex);
 }

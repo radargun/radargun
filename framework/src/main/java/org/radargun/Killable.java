@@ -14,5 +14,4 @@ public interface Killable {
     * @throws Exception
     */
    void kill() throws Exception;
-
 }

@@ -7,11 +7,11 @@ package org.radargun.reporting;
  */
 public interface ClusterReport {
 
-   public void setReportFile(String reportDir, String fileName);
+   void setReportFile(String reportDir, String fileName);
 
-   public void init(String xLabels, String yLabels, String title, String subtitle);
+   void init(String xLabels, String yLabels, String title, String subtitle);
 
-   public void addCategory(String productName, int clusterSize, Number value);
+   void addCategory(String productName, int clusterSize, Number value);
 
-   public void generate() throws Exception;
+   void generate() throws Exception;
 }

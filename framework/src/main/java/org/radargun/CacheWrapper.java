@@ -7,10 +7,9 @@ import org.radargun.utils.TypedProperties;
  * CacheWrappers wrap caching products to provide RadarGun with a standard way of
  * accessing and manipulating a cache.
  *
- * @author Manik Surtani (manik@surtani.org)
+ * @author Manik Surtani
  */
-public interface CacheWrapper
-{
+public interface CacheWrapper {
    /**
     * Initialises the cache.  Typically this step will configure the
     * caching product with various params passed in, described in
@@ -84,6 +83,5 @@ public interface CacheWrapper
     */
    void endTransaction(boolean successful);
 
-   public int size();
-
+   int size();
 }

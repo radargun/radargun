@@ -11,7 +11,7 @@ import com.tangosol.net.NamedCache;
 /**
  * Oracle Coherence 3.x CacheWrapper implementation.
  * 
- * @author <a href="mailto:manik@jboss.org">Manik Surtani</a>
+ * @author Manik Surtani
  * @author <a href="mailto:mlinhard@redhat.com">Michal Linhard</a>
  * @since 1.0.0
  */

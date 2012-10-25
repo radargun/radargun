@@ -6,5 +6,5 @@ package org.radargun;
  * @author Mircea.Markus@jboss.com
  */
 public interface Stage extends Cloneable{
-   public Stage clone();
+   Stage clone();
 }
