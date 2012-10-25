@@ -6,6 +6,7 @@ import java.util.List;
 public interface TopologyAware {
    List<Event> getTopologyChangeHistory();
    List<Event> getRehashHistory();
+   boolean isCoordinator();
    
    abstract class Event {
       public abstract Date getStarted();

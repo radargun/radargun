@@ -18,6 +18,7 @@
  */
 package org.radargun.stages.helpers;
 
+import org.radargun.features.TopologyAware;
 import org.radargun.features.XSReplicating;
 import org.radargun.state.SlaveState;
 
@@ -26,6 +27,10 @@ public class RoleHelper {
 
    public static boolean hasRole(SlaveState slaveState, String role) {
       if (role == null) return false;
+      if (role.equalsIgnoreCase("COORDINATOR")) {
+         if (!(slaveState.getCacheWrapper() instanceof TopologyAware)) return false;
+         return ((TopologyAware) slaveState.getCacheWrapper()).isCoordinator();
+      }
       if (role.equalsIgnoreCase("BRIDGE")) {
          if (!(slaveState.getCacheWrapper() instanceof XSReplicating)) return false;
          return ((XSReplicating) slaveState.getCacheWrapper()).isBridge();

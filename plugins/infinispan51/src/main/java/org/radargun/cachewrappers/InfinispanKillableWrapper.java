@@ -214,7 +214,12 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
    public List<TopologyAware.Event> getRehashHistory() {
       return Collections.unmodifiableList(hashChanges);
    }
-   
+
+   @Override
+   public boolean isCoordinator() {
+      return cacheManager.isCoordinator();
+   }
+
    @Listener
    public class TopologyAwareListener {
       @TopologyChanged
