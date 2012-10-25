@@ -68,6 +68,8 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
    private boolean commitTransactions = true;
 
+   private boolean sharedAttributes;
+
    private AtomicInteger txCount = new AtomicInteger(0);
 
    private String keyGeneratorClass = StringKeyGenerator.class.getName();
@@ -197,6 +199,14 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       return nodeIndex == -1;
    }
 
+   public void setSharedAttributes(boolean sharedAttributes) {
+      this.sharedAttributes = sharedAttributes;
+   }
+
+   public boolean isSharedAttributes() {
+      return sharedAttributes;
+   }
+
    protected class Stressor extends Thread {
 
       private ArrayList<Object> pooledKeys = new ArrayList<Object>(numberOfKeys);
@@ -252,8 +262,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
             if (randomAction < readPercentage) {
                result = doRead(key, i);
             } else {
-               String payload = generateRandomString(sizeOfValue);
-               doWrite(key, payload, i);
+               doWrite(key, generateRandomBytes(sizeOfValue), i);
             }
 
             i++;
@@ -341,13 +350,15 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          for (int keyIndex = 0; keyIndex < numberOfKeys; keyIndex++) {
             try {
                Object key;
-               if (isLocalBenchmark()) {
+               if (isSharedAttributes()) {
+                  key = getKeyGenerator().generateKey(keyIndex);
+               } else if (isLocalBenchmark()) {
                   key = getKeyGenerator().generateKey(threadIndex, keyIndex);
                } else {
                   key = getKeyGenerator().generateKey(nodeIndex, threadIndex, keyIndex);
                }
                pooledKeys.add(key);
-               cacheWrapper.put(this.bucketId, key, generateRandomString(sizeOfValue));
+               cacheWrapper.put(this.bucketId, key, generateRandomBytes(sizeOfValue));
             } catch (Throwable e) {
                log.warn("Error while initializing the session: ", e);
             }
@@ -454,11 +465,10 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       this.opsCountStatusLog = opsCountStatusLog;
    }
 
-   private static String generateRandomString(int size) {
-      // each char is 2 bytes
-      StringBuilder sb = new StringBuilder();
-      for (int i = 0; i < size / 2; i++) sb.append((char) (64 + r.nextInt(26)));
-      return sb.toString();
+   private static byte[] generateRandomBytes(int size) {
+      byte[] array = new byte[size];
+      r.nextBytes(array);
+      return array;
    }
 
    public int getNodeIndex() {

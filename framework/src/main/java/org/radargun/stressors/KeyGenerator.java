@@ -19,4 +19,12 @@ public interface KeyGenerator {
     * Called for local benchmarks.
     */
    public Object generateKey(int threadIndex, int keyIndex);
+
+   /**
+    * Called for benchmarks with shared attributes
+    *
+    * @param keyIndex
+    * @return
+    */
+   public Object generateKey(int keyIndex);
 }

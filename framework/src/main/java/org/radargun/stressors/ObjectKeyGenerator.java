@@ -15,4 +15,9 @@ public class ObjectKeyGenerator implements KeyGenerator {
       return new ObjectKey(threadIndex, keyIndex);
    }
 
+   @Override
+   public Object generateKey(int keyIndex) {
+      return new ObjectKey(-1, keyIndex);
+   }
+
 }

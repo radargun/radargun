@@ -68,6 +68,8 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    private long durationMillis = -1;
 
+   private boolean sharedAttributes = false;
+
    protected Map<String, String> doWork() {
       log.info("Starting "+getClass().getSimpleName()+": " + this);
       PutGetStressor putGetStressor = new PutGetStressor();
@@ -83,6 +85,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       putGetStressor.setCommitTransactions(commitTransactions);
       putGetStressor.setTransactionSize(transactionSize);
       putGetStressor.setDurationMillis(durationMillis);
+      putGetStressor.setSharedAttributes(sharedAttributes);
       return putGetStressor.stress(cacheWrapper);
    }
    
@@ -247,6 +250,10 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    public void setDuration(String duration) {
       this.durationMillis = Utils.string2Millis(duration);
+   }
+
+   public void setSharedAttributes(boolean sharedAttributes) {
+      this.sharedAttributes = sharedAttributes;
    }
 
    @Override
