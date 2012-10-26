@@ -88,6 +88,9 @@ public class InfinispanWrapper implements CacheWrapper {
       //use keySet().size() rather than size directly as cache.size might not be reliable
       log.info("Cache size before clear (cluster size= " + clusterSize +")" + cache.keySet().size());
 
+      // We don't need locks, etc - we're shutting down.  Clear as much as we can directly;
+      // speeds things up when we have a very large key-set.  This operation isn't measured in any benchmark anyway.
+      cache.getAdvancedCache().getDataContainer().clear();
       cache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).clear();
       log.info("Cache size after clear: " + cache.keySet().size());
    }
