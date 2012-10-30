@@ -17,6 +17,7 @@ import org.jgroups.JChannel;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 import org.jgroups.protocols.DISCARD;
+import org.jgroups.protocols.FD_SOCK;
 import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
 import org.radargun.features.Killable;
@@ -185,6 +186,11 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
             }         
          }  
          discard.setDiscardAll(true);
+         // The FD_SOCK requires special handling because it uses non-standard sockets to interconnect
+         FD_SOCK fdSock = (FD_SOCK)channel.getProtocolStack().findProtocol(FD_SOCK.class);
+         if (fdSock != null) {
+            fdSock.stopServerSocket(false);
+         }
       }
       log.debug("Started discarding packets");
    }
@@ -217,7 +223,7 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
 
    @Override
    public boolean isCoordinator() {
-      return cacheManager.isCoordinator();
+      return ((DefaultCacheManager) cacheManager).isCoordinator();
    }
 
    @Listener
