@@ -1,9 +1,5 @@
 package org.radargun.cachewrappers;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
 import org.infinispan.factories.ComponentRegistry;
@@ -12,6 +8,10 @@ import org.infinispan.remoting.rpc.RpcManager;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 import org.radargun.utils.TypedProperties;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 
@@ -29,11 +29,6 @@ public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
       String configFile = getConfigFile(confAttributes);
       cacheManager = new DefaultCacheManager(configFile);
 
-      String multiCache = (String) confAttributes.get("multiCache");
-      if (multiCache == null || multiCache.equals("false")) {
-         throw new InstantiationException(
-                  "Can't create an instance of InfinispanMultiCacheWrapper! The multiCache conf wasn't set!");
-      }
       Set<String> cacheNames = cacheManager.getCacheNames();
       log.trace("Using config file: " + configFile + " and " + cacheNames.size()
                + " caches defined in it");
