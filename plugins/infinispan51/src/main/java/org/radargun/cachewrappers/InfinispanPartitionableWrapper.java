@@ -18,8 +18,6 @@
  */
 package org.radargun.cachewrappers;
 
-import java.util.Set;
-
 import org.jgroups.JChannel;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
@@ -27,6 +25,9 @@ import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
 import org.radargun.features.Partitionable;
 import org.radargun.protocols.SLAVE_PARTITION;
+
+import java.util.List;
+import java.util.Set;
 
 public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper implements Partitionable {
    
@@ -43,7 +44,13 @@ public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper im
    
    @Override
    public void setMembersInPartition(int slaveIndex, Set<Integer> members) {
-      for (JChannel channel : getChannels()) {
+      List<JChannel> channels = getChannels();
+      if (channels.size() <= 0) {
+         log.warn("No channels found!");
+      } else {
+         log.trace("Found " + channels.size() + " channels");
+      }
+      for (JChannel channel : channels) {
          SLAVE_PARTITION partition = (SLAVE_PARTITION) channel.getProtocolStack().findProtocol(SLAVE_PARTITION.class);
          if (partition == null) {
             log.info("No SLAVE_PARTITION protocol found in stack for " + channel.getName() + ", inserting above transport protocol");
@@ -62,6 +69,7 @@ public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper im
 
    @Override
    public void setStartWithReachable(int slaveIndex, Set<Integer> members) {
+      mySlaveIndex = slaveIndex;
       initiallyReachable = members;
    }
 }
