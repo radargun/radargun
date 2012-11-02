@@ -18,10 +18,10 @@
  */
 package org.radargun.stages;
 
+import org.radargun.features.XSReplicating;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.radargun.features.XSReplicating;
 
 public class XSReplCheckStage extends CheckDataStage {
    
@@ -38,7 +38,7 @@ public class XSReplCheckStage extends CheckDataStage {
       int found = 0, checked = 0;
       log.info("Checking contents of main cache " + wrapper.getMainCache());
       for (int i = from; i < to; ++i, ++checked) {
-         if (checked % LOG_CHECKS_COUNT == 0) {
+         if (checked % getLogChecksCount() == 0) {
             log.debug("Checked " + checked + " entries, so far " + found + " found");
          }
          try {
@@ -66,7 +66,7 @@ public class XSReplCheckStage extends CheckDataStage {
          log.info("Checking contents of backup cache " + cacheName);
          String originCache = null;
          for (int i = from; i < to; ++i, ++checked) {
-            if (checked % LOG_CHECKS_COUNT == 0) {
+            if (checked % getLogChecksCount() == 0) {
                log.debug("Checked " + checked + " entries, so far " + found + " found");
             }
             try {

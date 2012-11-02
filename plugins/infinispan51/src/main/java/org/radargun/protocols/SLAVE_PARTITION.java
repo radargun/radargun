@@ -18,10 +18,6 @@
  */
 package org.radargun.protocols;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.util.Set;
-
 import org.jgroups.Event;
 import org.jgroups.Global;
 import org.jgroups.Header;
@@ -32,6 +28,10 @@ import org.jgroups.logging.LogFactory;
 import org.jgroups.stack.Protocol;
 import org.jgroups.util.Streamable;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.util.Set;
+
 public class SLAVE_PARTITION extends Protocol {
 
    private static final short PROTOCOL_ID = (short)0x51A7;
@@ -41,6 +41,7 @@ public class SLAVE_PARTITION extends Protocol {
    private Set<Integer> allowedSlaves;
    
    static {
+      log.info("Registering SLAVE_PARTITION with id " + PROTOCOL_ID);
       ClassConfigurator.add(PROTOCOL_ID, SlaveHeader.class);
    }
    

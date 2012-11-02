@@ -40,6 +40,7 @@ public class CheckTopologyStage extends AbstractDistStage {
          List<Event> history = ta.getTopologyChangeHistory(); 
          if (!check(history)) {
             String message = "Topology check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1));
+            log.error(message);
             ack.setError(true);
             ack.setErrorMessage(message);
             return ack;
@@ -51,6 +52,7 @@ public class CheckTopologyStage extends AbstractDistStage {
          List<Event> history = ta.getRehashHistory(); 
          if (!check(history)) {
             String message = "Hash check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1));
+            log.error(message);
             ack.setError(true);
             ack.setErrorMessage(message);
             return ack;
@@ -81,4 +83,8 @@ public class CheckTopologyStage extends AbstractDistStage {
       this.changed = changed;
    }
 
+   @Override
+   public String toString() {
+      return "CheckTopologyStage(type=" + type + ", changed=" + changed + ", period=" + period + ", " + super.toString();
+   }
 }

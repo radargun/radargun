@@ -18,6 +18,12 @@
  */
 package org.radargun.stages;
 
+import org.radargun.CacheWrapper;
+import org.radargun.DistStageAck;
+import org.radargun.stages.helpers.RangeHelper;
+import org.radargun.state.MasterState;
+import org.radargun.stressors.BackgroundStats;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -25,23 +31,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.radargun.CacheWrapper;
-import org.radargun.DistStageAck;
-import org.radargun.stages.helpers.RangeHelper;
-import org.radargun.state.MasterState;
-import org.radargun.stressors.BackgroundStats;
-
 public class CheckDataStage extends AbstractDistStage {
 
-   protected static final int LOG_CHECKS_COUNT = 100;
-   
    private int numEntries;
    private int entrySize;
    private String extraEntries;
    private int numOwners = -1;
    private int checkThreads = 1;
    private boolean ignoreSum = false;
+   private int liveSlavesHint = -1;
    private boolean deleted = false;
+   private int logChecksCount = 10000;
     
    @Override
    public DistStageAck executeOnSlave() {      
@@ -89,6 +89,29 @@ public class CheckDataStage extends AbstractDistStage {
                return ack;
             }
          }
+         if (liveSlavesHint > 0) {
+            // try to wait until data are properly replicated
+            int myExpectedSize;
+            int extraEntries = getExtraEntries();
+            int commonEntries = isDeleted() ? 0 : numEntries;
+            if (numOwners < 0) {
+               myExpectedSize = -numOwners * getActiveSlaveCount() * (commonEntries + extraEntries) / liveSlavesHint;
+            } else {
+               myExpectedSize = numOwners * (commonEntries + extraEntries) / liveSlavesHint;
+            }
+            for (int attempt = 0; attempt < 5; ++attempt) {
+               int local = wrapper.getLocalSize();
+               double ratio = (double) local / (double) myExpectedSize;
+               if (ratio < 0.9 || ratio > 1.1) {
+                  log.warn("Local size (" + wrapper.getLocalSize() + ") differs substantially from expected size (" + myExpectedSize + "), waiting 30s to let it replicate");
+                  try {
+                     Thread.sleep(30000);
+                  } catch (InterruptedException e) {
+                     break;
+                  }
+               } else break;
+            }
+         }
          ack.setPayload(wrapper.getLocalSize());
       }
       return ack;
@@ -124,7 +147,7 @@ public class CheckDataStage extends AbstractDistStage {
       String bucketId = BackgroundStats.NAME;
       if (bgStats != null) bucketId = bgStats.getBucketId();
       for (int i = from; i < to; ++i, ++checked) {
-         if (checked % LOG_CHECKS_COUNT == 0) {
+         if (checked % logChecksCount == 0) {
             log.debug("Checked " + checked + " entries, so far " + found + " found");
          }
          try {
@@ -253,7 +276,19 @@ public class CheckDataStage extends AbstractDistStage {
    public boolean isDeleted() {
       return deleted;
    }
-   
+
+   public void setLiveSlavesHint(int liveSlavesHint) {
+      this.liveSlavesHint = liveSlavesHint;
+   }
+
+   public void setLogChecksCount(int logChecksCount) {
+      this.logChecksCount = logChecksCount;
+   }
+
+   public int getLogChecksCount() {
+      return logChecksCount;
+   }
+
    public String attributesToString() {
       return "numEntries=" + numEntries + ", entrySize=" + entrySize + ", extraEntries=" + extraEntries + ", numOwners=" + numOwners + ", checkThreads=" + checkThreads + ", " + super.toString();
    }

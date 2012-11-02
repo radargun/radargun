@@ -1,11 +1,10 @@
 package org.radargun.stages;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.radargun.DistStageAck;
 import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.stressors.BackgroundStats;
+
+import java.util.List;
 
 /**
  * 
@@ -58,7 +57,7 @@ public class StartBackgroundStatsStage extends AbstractDistStage {
          }
          return ack;
       } catch (Exception e) {
-         log.error("Error while starting background stats");
+         log.error("Error while starting background stats", e);
          ack.setError(true);
          ack.setRemoteException(e);
          return ack;
