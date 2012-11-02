@@ -232,18 +232,19 @@ public class InfinispanWrapper implements CacheWrapper {
       if (trace) log.trace("REMOVE key=" + key);
       return getCache(bucket).remove(key);
    }
-   
+
+   @Override
    public void empty() throws Exception {
-      RpcManager rpcManager = cache.getAdvancedCache().getRpcManager();
+      RpcManager rpcManager = getCache(null).getAdvancedCache().getRpcManager();
       int clusterSize = 0;
       if (rpcManager != null) {
          clusterSize = rpcManager.getTransport().getMembers().size();
       }
       //use keySet().size() rather than size directly as cache.size might not be reliable
-      log.info("Cache size before clear (cluster size= " + clusterSize +")" + cache.keySet().size());
+      log.info("Cache size before clear (cluster size= " + clusterSize +")" + getCache(null).keySet().size());
 
-      cache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).clear();
-      log.info("Cache size after clear: " + cache.keySet().size());
+      getCache(null).getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).clear();
+      log.info("Cache size after clear: " + getCache(null).keySet().size());
    }
 
    public int getNumMembers() {
