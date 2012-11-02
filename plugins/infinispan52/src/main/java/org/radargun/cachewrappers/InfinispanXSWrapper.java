@@ -18,19 +18,8 @@
  */
 package org.radargun.cachewrappers;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.infinispan.Cache;
 import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
@@ -38,6 +27,14 @@ import org.jgroups.protocols.relay.RELAY2;
 import org.jgroups.protocols.relay.Relayer;
 import org.radargun.features.XSReplicating;
 import org.radargun.utils.TypedProperties;
+
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implements XSReplicating {
    
@@ -176,5 +173,12 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
    @Override
    public boolean isBridge() {
       return cacheManager.isCoordinator();
+   }
+
+   @Override
+   public void empty() {
+      for (String cache : cacheManager.getCacheNames()) {
+         cacheManager.getCache(cache, false).clear();
+      }
    }
 }
