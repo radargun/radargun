@@ -19,7 +19,10 @@
 package org.radargun.cachewrappers;
 
 import org.infinispan.Cache;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.util.FileLookupFactory;
 import org.jgroups.JChannel;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
@@ -28,11 +31,10 @@ import org.jgroups.protocols.relay.Relayer;
 import org.radargun.features.XSReplicating;
 import org.radargun.utils.TypedProperties;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,9 +79,7 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
 
       log.trace("Using config file: " + configFile + " and cache name: " + mainCacheName);
 
-      cacheManager = new DefaultCacheManager(configFile, false);
-      preStartCacheManager();
-      cacheManager.start();
+      cacheManager = createCacheManager(configFile);
       String cacheNames = cacheManager.getDefinedCacheNames();
       if (mainCacheName == null) {
          log.info("No main cache, only backups");
@@ -93,6 +93,12 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
          cacheManager.getCache(cacheName);
       }
    }
+
+   @Override
+   protected ConfigurationBuilderHolder createConfiguration(String configFile) throws FileNotFoundException {
+      InputStream input = FileLookupFactory.newInstance().lookupFileStrict(configFile, Thread.currentThread().getContextClassLoader());
+      return new ParserRegistry(Thread.currentThread().getContextClassLoader()).parse(input);
+   }
    
    @Override
    protected void waitForRehash(TypedProperties confAttributes) throws InterruptedException {
@@ -104,8 +110,14 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
    }
    
    @Override
-   protected List<JChannel> getChannels() {
-      List<JChannel> list = super.getChannels();
+   protected List<JChannel> getChannels(JChannel parentChannel, boolean failOnNotReady) {
+      List<JChannel> list;
+      if (parentChannel == null) {
+         list = super.getChannels(null, failOnNotReady);
+      } else {
+         list = new ArrayList<JChannel>();
+         list.add(parentChannel);
+      }
       RELAY2 relay = (RELAY2) list.get(0).getProtocolStack().findProtocol(RELAY2.class);
       if (relay != null) {
          try {

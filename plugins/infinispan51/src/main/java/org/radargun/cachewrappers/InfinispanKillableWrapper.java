@@ -1,10 +1,5 @@
 package org.radargun.cachewrappers;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
@@ -23,6 +18,11 @@ import org.jgroups.stack.ProtocolStack;
 import org.radargun.features.Killable;
 import org.radargun.features.TopologyAware;
 import org.radargun.utils.TypedProperties;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 /**
  * 
@@ -143,31 +143,47 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
       super.postSetUpInternal(confAttributes);
       getCache(null).addListener(new TopologyAwareListener());
    }
-         
+
    protected List<JChannel> getChannels() {
+      return getChannels(null, false);
+   }
+         
+   protected List<JChannel> getChannels(JChannel parentChannel, boolean failOnNotReady) {
       List<JChannel> list = new ArrayList<JChannel>();
+      if (parentChannel != null) {
+         list.add(parentChannel);
+         return list;
+      }
       JGroupsTransport transport;
       while (cacheManager == null) {
-         log.trace("Cache Manager is not ready");
+         notReadyMessage("Cache manager is not ready", failOnNotReady);
          Thread.yield();
       }
       for (;;) {
          transport = (JGroupsTransport) ((DefaultCacheManager) cacheManager).getTransport();
          if (transport != null) break;
-         log.trace("Transport is not ready");
+         notReadyMessage("Transport is not ready", failOnNotReady);
          Thread.yield();
       }
       JChannel channel;
       for(;;) {
          channel = (JChannel) transport.getChannel();
          if (channel != null && channel.getName() != null && channel.isOpen()) break;
-         log.trace("Channel " + channel + " is not ready");
+         notReadyMessage("Channel " + channel + " is not ready", failOnNotReady);
          Thread.yield();
       }
       list.add(channel);
       return list;
    }
-   
+
+   private void notReadyMessage(String message, boolean failOnNotAvailable) {
+      if (failOnNotAvailable) {
+         //throw new IllegalStateException(message);
+      } else {
+         log.trace("Cache Manager is not ready");
+      }
+   }
+
    protected void startDiscarding() throws InterruptedException {
       synchronized (killSync) {
          while (killState == KillRequest.KILL_STARTED) killSync.wait();

@@ -18,6 +18,7 @@ import org.radargun.utils.Utils;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -99,20 +100,18 @@ public class InfinispanWrapper implements CacheWrapper {
       
       log.trace("Using config file: " + configFile + " and cache name: " + cacheName);
 
-      
-      cacheManager = new DefaultCacheManager(configFile, false);
-      preStartCacheManager();
-      cacheManager.start();
+      cacheManager = createCacheManager(configFile);
       String cacheNames = cacheManager.getDefinedCacheNames();
       if (!cacheNames.contains(cacheName))
          throw new IllegalStateException("The requested cache(" + cacheName + ") is not defined. Defined cache " +
                                                "names are " + cacheNames);
-      cache = cacheManager.getCache(cacheName);      
+      cache = cacheManager.getCache(cacheName);
    }
-   
-   protected void preStartCacheManager() {      
+
+   protected DefaultCacheManager createCacheManager(String configFile) throws IOException {
+      return new DefaultCacheManager(configFile);
    }
-   
+
    protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {
       log.debug("Loading JGroups from: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
@@ -241,7 +240,7 @@ public class InfinispanWrapper implements CacheWrapper {
          clusterSize = rpcManager.getTransport().getMembers().size();
       }
       //use keySet().size() rather than size directly as cache.size might not be reliable
-      log.info("Cache size before clear (cluster size= " + clusterSize +")" + getCache(null).keySet().size());
+      log.info("Cache size before clear (cluster size= " + clusterSize + ")" + getCache(null).keySet().size());
 
       getCache(null).getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).clear();
       log.info("Cache size after clear: " + getCache(null).keySet().size());

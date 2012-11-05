@@ -18,6 +18,10 @@
  */
 package org.radargun.cachewrappers;
 
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.configuration.parsing.Parser;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
@@ -25,7 +29,9 @@ import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
 import org.radargun.features.Partitionable;
 import org.radargun.protocols.SLAVE_PARTITION;
+import org.radargun.stages.helpers.ParseHelper;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -34,42 +40,66 @@ public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper im
    private static Log log = LogFactory.getLog(InfinispanPartitionableWrapper.class);
    private int mySlaveIndex = -1;
    private Set<Integer> initiallyReachable;
-     
+
    @Override
-   protected void preStartCacheManager() {
-      if (mySlaveIndex >= 0 && initiallyReachable != null) {
-         setMembersInPartition(mySlaveIndex, initiallyReachable);
-      }
+   protected DefaultCacheManager createCacheManager(String configFile) throws IOException {
+      ConfigurationBuilderHolder cbh = createConfiguration(configFile);
+      cbh.getGlobalConfigurationBuilder().transport().transport(new HookedJGroupsTransport());
+      return new DefaultCacheManager(cbh, true);
    }
-   
+
+   protected ConfigurationBuilderHolder createConfiguration(String configFile) throws IOException {
+      return new Parser(Thread.currentThread().getContextClassLoader()).parseFile(configFile);
+   }
+
    @Override
    public void setMembersInPartition(int slaveIndex, Set<Integer> members) {
-      List<JChannel> channels = getChannels();
-      if (channels.size() <= 0) {
-         log.warn("No channels found!");
-      } else {
-         log.trace("Found " + channels.size() + " channels");
-      }
+      List<JChannel> channels = getChannels(null, true);
+      log.trace("Found " + channels.size() + " channels");
       for (JChannel channel : channels) {
-         SLAVE_PARTITION partition = (SLAVE_PARTITION) channel.getProtocolStack().findProtocol(SLAVE_PARTITION.class);
-         if (partition == null) {
-            log.info("No SLAVE_PARTITION protocol found in stack for " + channel.getName() + ", inserting above transport protocol");
-            partition = new SLAVE_PARTITION();
-            try {
-               channel.getProtocolStack().insertProtocol(partition, ProtocolStack.ABOVE, TP.class);
-            } catch (Exception e) {
-               log.error("Error inserting the SLAVE_PARTITION protocol to stack for " + channel.getName());
-               return;
-            }         
-         }
-         partition.setSlaveIndex(slaveIndex);
-         partition.setAllowedSlaves(members);
+         setPartitionInChannel(channel, slaveIndex, members);
       }
+   }
+
+   private void setPartitionInChannel(JChannel channel, int slaveIndex, Set<Integer> members) {
+      log.trace("Setting partition in channel " + channel);
+      SLAVE_PARTITION partition = (SLAVE_PARTITION) channel.getProtocolStack().findProtocol(SLAVE_PARTITION.class);
+      if (partition == null) {
+         log.info("No SLAVE_PARTITION protocol found in stack for " + channel.getName() + ", inserting above transport protocol");
+         partition = new SLAVE_PARTITION();
+         try {
+            channel.getProtocolStack().insertProtocol(partition, ProtocolStack.ABOVE, TP.class);
+         } catch (Exception e) {
+            log.error("Error inserting the SLAVE_PARTITION protocol to stack for " + channel.getName());
+            return;
+         }
+      }
+      partition.setSlaveIndex(slaveIndex);
+      partition.setAllowedSlaves(members);
+      log.trace("Finished setting partition in channel " + channel);
    }
 
    @Override
    public void setStartWithReachable(int slaveIndex, Set<Integer> members) {
       mySlaveIndex = slaveIndex;
       initiallyReachable = members;
+   }
+
+   private class HookedJGroupsTransport extends JGroupsTransport {
+      /**
+       * This is called after the channel is initialized but before it is connected
+       */
+      @Override
+      protected void startJGroupsChannelIfNeeded() {
+         log.trace("My index is " + mySlaveIndex + " and these slaves should be reachable: " + ParseHelper.toString(initiallyReachable, "undefined"));
+         if (mySlaveIndex >= 0 && initiallyReachable != null) {
+            List<JChannel> channels = getChannels((JChannel) this.channel, true);
+            log.trace("Found " + channels.size() + " channels");
+            for (JChannel channel : channels) {
+               setPartitionInChannel(channel, mySlaveIndex, initiallyReachable);
+            }
+         }
+         super.startJGroupsChannelIfNeeded();
+      }
    }
 }
