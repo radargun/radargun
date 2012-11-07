@@ -44,8 +44,11 @@ public class CheckDataStage extends AbstractDistStage {
    private int logChecksCount = 10000;
     
    @Override
-   public DistStageAck executeOnSlave() {      
+   public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
+      if (slaves != null && !slaves.contains(getSlaveIndex())) {
+         return ack;
+      }
       int found = 0;
       try {
          if (slaveState.getCacheWrapper() == null) {         
