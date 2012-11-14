@@ -1,16 +1,12 @@
 package org.radargun.stressors;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-
 import org.apache.log4j.Logger;
 import org.radargun.CacheWrapper;
 import org.radargun.stages.helpers.RangeHelper;
 import org.radargun.state.SlaveState;
+
+import java.io.Serializable;
+import java.util.*;
 
 /**
  * 
@@ -174,7 +170,8 @@ public class BackgroundStats {
 
    public synchronized void startStats() {
       if (backgroundStatsThread != null || stats != null) {
-         throw new IllegalStateException("Stat thread already running");
+         log.info("Stats thread already running");
+         return;
       }
       stats = new ArrayList<Stats>();
       backgroundStatsThread = new BackgroundStatsThread();
