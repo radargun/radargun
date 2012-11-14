@@ -89,6 +89,9 @@ public class DomConfigParser extends ConfigParser {
          if (node instanceof Element) {
             Element nodeEl = (Element) node;
             String productName = nodeEl.getNodeName();
+            if ("product".equalsIgnoreCase(productName)) {
+               productName = ConfigHelper.getStrAttribute(nodeEl, "name");
+            }
             NodeList configs = nodeEl.getElementsByTagName("config");
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
                Element configEl = (Element) configs.item(configIndex);
