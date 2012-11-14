@@ -1,5 +1,10 @@
 package org.radargun;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.radargun.config.MasterConfig;
+import org.radargun.state.MasterState;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -7,17 +12,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.radargun.config.MasterConfig;
-import org.radargun.state.MasterState;
+import java.util.*;
 
 /**
  * This is the master that will coordinate the {@link Slave}s in order to run the benchmark.
@@ -211,11 +206,11 @@ public class Master {
             throw new IllegalStateException("Socket " + socketChannel + " should have been there!");
          }
          releaseResourcesAndExit();
-      } else if (byteBuffer.limit() >= 4) {
+      } else if (byteBuffer.position() >= 4) {
          int expectedSize = byteBuffer.getInt(0);
          if ((expectedSize + 4) > byteBuffer.capacity()) {
             ByteBuffer replacer = ByteBuffer.allocate(expectedSize + 4);
-            replacer.put(byteBuffer.array());
+            replacer.put(byteBuffer.array(), 0, byteBuffer.position());
             readBufferMap.put(socketChannel, replacer);
             if (log.isTraceEnabled())
                log.trace("Expected size(" + expectedSize + ")" + " is > ByteBuffer's capacity(" +
