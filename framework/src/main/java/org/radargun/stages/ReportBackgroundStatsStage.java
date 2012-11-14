@@ -1,7 +1,13 @@
 package org.radargun.stages;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.text.DecimalFormat;
@@ -84,6 +90,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
          }
 
          File csvThroughput = new File(subdir, "throughput.csv");
+         File csvTotalThroughput = new File(subdir, "total-throughput.csv");
          File csvAvgRespTimes = new File(subdir, "avg-response-times.csv");
          File csvEntryCounts = new File(subdir, "entry-counts.csv");
          File csvNullGets = new File(subdir, "null-responses.csv");
@@ -154,10 +161,21 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
 
          generateEntryCountCsv(csvEntryCounts, results, maxResultSize);
          generateTotalsCsv(csvTotals, results, maxResultSize);
+         
+         
+         generateTotalThroughputCsvFromThroughputCsv(csvThroughput.getAbsolutePath(), csvTotalThroughput.getAbsolutePath());
+         
+         List<String> total = new ArrayList<String>();
+         total.add("TOTAL");
 
          CSVChart.writeCSVAsChart("Throughput on slaves", "Iteration", "Throughput (ops/sec)",
                csvThroughput.getAbsolutePath(), CSVChart.SEPARATOR, "Iteration", getSlaveNames(), chartWidth,
                chartHeight, replaceExtension(csvThroughput.getAbsolutePath(), "png"));
+         
+         CSVChart.writeCSVAsChart("Total Throughput", "Iteration", "Throughput (ops/sec)",
+                 csvTotalThroughput.getAbsolutePath(), CSVChart.SEPARATOR, "Iteration", total, chartWidth,
+                 chartHeight, replaceExtension(csvTotalThroughput.getAbsolutePath(), "png"));         
+         
          CSVChart.writeCSVAsChart("Average response times", "Iteration", "Average response time (ms)",
                csvAvgRespTimes.getAbsolutePath(), CSVChart.SEPARATOR, "Iteration", getSlaveNames(), chartWidth,
                chartHeight, replaceExtension(csvAvgRespTimes.getAbsolutePath(), "png"));
@@ -347,7 +365,8 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
    private String humanReadableTime(long aTime) {
       return DATEFORMAT.format(new Date(aTime));
    }
-
+   
+   
    private interface StatGetter {
       String getStat(Stats cell);
    }
@@ -380,4 +399,66 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
          log.error("Failed to parse ignore list: " + list);
       }
    }
+   
+   
+   
+   
+   
+   private void generateTotalThroughputCsvFromThroughputCsv(String from, String to){
+
+	   try{
+			// Create output file 
+			FileWriter fstreamOut = new FileWriter(to);
+			BufferedWriter out = new BufferedWriter(fstreamOut);
+			// Initialize input 
+			FileInputStream fstreamIn = new FileInputStream(from);
+			DataInputStream in = new DataInputStream(fstreamIn);
+			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			// initialize strLine
+			String strLine;
+			
+			//first line
+			br.readLine();
+			out.write("Iteration;TOTAL" + System.getProperty( "line.separator" ));
+			
+			String[] temp;
+			String delimiter=";"; 
+			double toReturn;
+			while ((strLine = br.readLine()) != null)   {
+				toReturn=0;
+				temp = strLine.split(delimiter);
+				for (int i=1; i<temp.length; i++){
+					toReturn = toReturn + addValue(temp[i]); 
+				}
+				
+				out.write(temp[0] +";"+toReturn);
+				out.write(System.getProperty( "line.separator" ));
+			}
+			
+			//Close the input and output stream
+			in.close();
+			out.close();
+		} 
+		catch (Exception e) {//Catch exception if any
+			log.error("Error creating total throughput csv: ", e);
+		}
+   	}
+   
+
+   	private static boolean isDouble(String string) {
+	    try {
+	        Double.valueOf(string);
+	        return true;
+	    } catch (NumberFormatException e) {
+	        return false;
+	    }
+	}
+	
+	private static double addValue(String value){
+		if (isDouble(value)){
+			return Double.valueOf(value);
+		}
+		return 0;
+	}
+   
 }
