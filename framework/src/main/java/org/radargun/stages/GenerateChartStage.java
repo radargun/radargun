@@ -48,6 +48,8 @@ public class GenerateChartStage extends AbstractMasterStage {
 
    public boolean execute() throws Exception {
       File[] files = getFilteredFiles(new File(csvFilesDirectory));
+      if (files == null) return true;
+
       boolean xLabelIteration = true;
       for (File f : files) {
          try {
