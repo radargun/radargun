@@ -1,9 +1,10 @@
 package org.radargun.stages;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.radargun.MasterStage;
 import org.radargun.state.MasterState;
 import org.radargun.utils.ClassLoadHelper;
-import org.radargun.MasterStage;
 
 /**
  * Support class for MasterStages.
@@ -14,7 +15,7 @@ public abstract class AbstractMasterStage implements MasterStage {
 
    private static final String PREV_PRODUCT = "AbstractMasterStage.previousProduct";
    private static final String CLASS_LOADER = "AbstractMasterStage.classLoader";
-   protected Logger log = Logger.getLogger(getClass());
+   protected Log log = LogFactory.getLog(getClass());
       
    protected MasterState masterState;
    private ClassLoadHelper classLoadHelper;

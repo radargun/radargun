@@ -5,8 +5,6 @@ import org.infinispan.context.Flag;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.rpc.RpcManager;
-import org.jgroups.logging.Log;
-import org.jgroups.logging.LogFactory;
 import org.radargun.utils.TypedProperties;
 
 import java.util.HashMap;
@@ -22,8 +20,7 @@ import java.util.Set;
 public class InfinispanMultiCacheWrapper extends InfinispanKillableWrapper {
 
    private Map<Integer, Cache<Object, Object>> caches = null;
-   private static Log log = LogFactory.getLog(InfinispanMultiCacheWrapper.class);
-  
+
    @Override
    protected void setUpCache(TypedProperties confAttributes, int nodeIndex) throws Exception {
       String configFile = getConfigFile(confAttributes);

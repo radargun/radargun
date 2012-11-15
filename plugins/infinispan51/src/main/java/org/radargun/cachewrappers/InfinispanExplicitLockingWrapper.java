@@ -22,13 +22,10 @@ import javax.transaction.Status;
 
 import org.infinispan.Cache;
 import org.infinispan.transaction.LockingMode;
-import org.jgroups.logging.Log;
-import org.jgroups.logging.LogFactory;
 import org.radargun.utils.TypedProperties;
 
 public class InfinispanExplicitLockingWrapper extends InfinispanWrapper {
-   
-   private static Log log = LogFactory.getLog(InfinispanExplicitLockingWrapper.class);
+
    private boolean isExplicitLocking;
    
    @Override

@@ -23,8 +23,6 @@ import org.infinispan.configuration.parsing.Parser;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
-import org.jgroups.logging.Log;
-import org.jgroups.logging.LogFactory;
 import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
 import org.radargun.features.Partitionable;
@@ -37,7 +35,6 @@ import java.util.Set;
 
 public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper implements Partitionable {
    
-   private static Log log = LogFactory.getLog(InfinispanPartitionableWrapper.class);
    private int mySlaveIndex = -1;
    private Set<Integer> initiallyReachable;
 

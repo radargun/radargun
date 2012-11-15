@@ -2,6 +2,8 @@ package org.radargun.cachewrappers;
 
 import com.arjuna.ats.arjuna.common.arjPropertyManager;
 import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
 import org.infinispan.distribution.ch.ConsistentHash;
@@ -9,15 +11,12 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
-import org.jgroups.logging.Log;
-import org.jgroups.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
@@ -40,10 +39,11 @@ public class InfinispanWrapper implements CacheWrapper {
       arjPropertyManager.getObjectStoreEnvironmentBean().setObjectStoreType(VolatileStore.class.getName());
    }
 
-   private static Log log = LogFactory.getLog(InfinispanWrapper.class);
-   private static boolean trace = log.isTraceEnabled();
    private static final String DEFAULT_CACHE_NAME = "testCache";
-   
+
+   protected final Log log = LogFactory.getLog(getClass());
+   private final boolean trace = log.isTraceEnabled();
+
    protected DefaultCacheManager cacheManager;
    protected TransactionManager tm;
    protected volatile State state = State.STOPPED;

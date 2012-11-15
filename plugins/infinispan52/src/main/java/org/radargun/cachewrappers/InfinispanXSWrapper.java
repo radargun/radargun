@@ -24,8 +24,6 @@ import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.util.FileLookupFactory;
 import org.jgroups.JChannel;
-import org.jgroups.logging.Log;
-import org.jgroups.logging.LogFactory;
 import org.jgroups.protocols.relay.RELAY2;
 import org.jgroups.protocols.relay.Relayer;
 import org.radargun.features.XSReplicating;
@@ -40,7 +38,6 @@ import java.util.regex.Pattern;
 
 public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implements XSReplicating {
    
-   private static Log log = LogFactory.getLog(InfinispanWrapper.class);
    private Cache<Object, Object> mainCache;
    private List<Integer> slaves;
    
@@ -52,7 +49,7 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
       for (String property : confAttributes.stringPropertyNames()) {
          if ((m = slavesPattern.matcher(property)).matches()) {
             String value = confAttributes.getProperty(property);
-            slaves = org.radargun.stages.helpers.ParseHelper.parseList(value, property, null);
+            slaves = org.radargun.stages.helpers.ParseHelper.parseList(value, property, log);
             if (slaves.contains(nodeIndex)) {
                try {
                   mySiteIndex = Integer.parseInt(m.group(1));

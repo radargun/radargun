@@ -9,8 +9,6 @@ import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
-import org.jgroups.logging.Log;
-import org.jgroups.logging.LogFactory;
 import org.jgroups.protocols.DISCARD;
 import org.jgroups.protocols.FD_SOCK;
 import org.jgroups.protocols.TP;
@@ -34,8 +32,6 @@ import java.util.List;
  * @author Radim Vansa <rvansa@redhat.com>
  */
 public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper implements Killable, TopologyAware {
-
-   private static Log log = LogFactory.getLog(InfinispanKillableWrapper.class);
 
    private enum KillRequest {
       NO_REQUEST,

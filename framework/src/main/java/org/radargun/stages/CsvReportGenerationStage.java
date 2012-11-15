@@ -1,5 +1,6 @@
 package org.radargun.stages;
 
+import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.utils.Utils;
 
 import java.io.File;
@@ -22,6 +23,7 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
 
    private String targetDir = "reports";
    private String separator = ",";
+   private Set<Integer> ignore;
 
    private File outputFile;
    private FileWriter fileWriter;
@@ -31,6 +33,12 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       if (results == null) {
          log.error("Could not find reports('results') on the master. Master's state is  " + masterState);
          return false;
+      }
+      if (ignore != null) {
+         for (int slaveIndex : ignore) {
+            log.trace("Removing results for slave " + slaveIndex);
+            results.remove(slaveIndex);
+         }
       }
       try {
          if (results.size() == 0) {
@@ -170,5 +178,9 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
 
    public void setTargetDir(String targetDir) {
       this.targetDir = targetDir;
+   }
+
+   public void setIgnore(String ignore) {
+      this.ignore = ParseHelper.parseSet(ignore, "ignore", log);
    }
 }
