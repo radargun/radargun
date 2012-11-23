@@ -18,13 +18,13 @@
  */
 package org.radargun.stages;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.stages.helpers.ParseHelper;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 public class SingleTXLoadStage extends AbstractDistStage {
 
@@ -38,6 +38,9 @@ public class SingleTXLoadStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
+      if (slaves != null && !slaves.contains(slaveIndex)) {
+         return ack;
+      }
       List<ClientThread> clients = new ArrayList<ClientThread>();
       for (int i = 0; i < threads; ++i) {
          ClientThread ct = new ClientThread(i);
@@ -143,9 +146,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
    
    @Override
    public String toString() {
-	   return "SingleTXLoadStage(delete=" + delete + ", transactionSize=" + transactionSize +
-			   ", commitSlave=" + ParseHelper.toString(commitSlave, "all") + 
-			   ", commitThread=" + ParseHelper.toString(commitThread, "all") + 
-			   ", threads=" + threads + ", duration=" + duration + ", " + super.toString();
+	   return String.format("SingleTXLoadStage(delete=%s, transactionSize=%d, commitSlave=%s, commitThread=%s, threads=%d, duration=%d, %s",
+            delete, transactionSize, ParseHelper.toString(commitSlave, "all"), ParseHelper.toString(commitThread, "all"), threads, duration, super.toString());
    }
 }

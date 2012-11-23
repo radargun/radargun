@@ -2,11 +2,9 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
-import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.utils.Utils;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
 
 /**
  * Distributed stage that will clear the content of the cache wrapper on each slave.
@@ -15,13 +13,11 @@ import java.util.Set;
  */
 public class ClearClusterStage extends AbstractDistStage {
 
-   private Set<Integer> slaves;
-
    public ClearClusterStage() {
       /* The clear command should be executed only once to clear the whole cache, not only this node.
        * With optimistic locking the clear could timeout if executed on all nodes (this causes maximal contention on all
        * keys) */
-      slaves = new HashSet<Integer>();
+      slaves = new ArrayList<Integer>();
       slaves.add(0);
    }
 
@@ -51,13 +47,8 @@ public class ClearClusterStage extends AbstractDistStage {
       return defaultDistStageAck;
    }
 
-
    @Override
    public String toString() {
       return "ClearClusterStage {" + super.toString();
-   }
-
-   public void setSlaves(String slaves) {
-      this.slaves = ParseHelper.parseSet(slaves, "slaves", log);
    }
 }

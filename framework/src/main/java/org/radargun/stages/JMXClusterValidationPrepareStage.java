@@ -1,11 +1,11 @@
 package org.radargun.stages;
 
+import org.radargun.DistStageAck;
+import org.radargun.state.MasterState;
+
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.radargun.DistStageAck;
-import org.radargun.state.MasterState;
 
 /**
  * Collects configuration for JMXClusterValidationStage.
@@ -104,12 +104,5 @@ public class JMXClusterValidationPrepareStage extends AbstractDistStage {
 
    public void setWaitTimeout(long waitTimeout) {
       this.waitTimeout = waitTimeout;
-   }
-
-   public void setSlaves(String slaves) {
-      this.slaves = new ArrayList<Integer>();
-      for (String slave : slaves.split(",")) {
-         this.slaves.add(Integer.valueOf(slave));
-      }
    }
 }

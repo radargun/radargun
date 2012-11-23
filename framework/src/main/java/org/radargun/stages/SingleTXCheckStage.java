@@ -18,16 +18,16 @@
  */
 package org.radargun.stages;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.features.XSReplicating;
 import org.radargun.stages.helpers.ParseHelper;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SingleTXCheckStage extends AbstractDistStage {
 
@@ -40,7 +40,10 @@ public class SingleTXCheckStage extends AbstractDistStage {
    
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();      
+      DefaultDistStageAck ack = newDefaultStageAck();
+      if (slaves != null && !slaves.contains(slaveIndex)) {
+         return ack;
+      }
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
       List<String> caches = new ArrayList<String>();      
       if (cacheWrapper instanceof XSReplicating) {
