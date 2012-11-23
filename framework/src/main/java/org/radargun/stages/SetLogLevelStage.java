@@ -22,15 +22,38 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.radargun.DistStageAck;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Stack;
+
 public class SetLogLevelStage extends AbstractDistStage {
 
    private String pkg;
    private String priority;
-   
+   private boolean pop;
+
+   private static Map<String, Stack<Level>> stacks = new HashMap<String, Stack<Level>>();
+
    @Override
    public DistStageAck executeOnSlave() {
       try {
-         Logger.getLogger(pkg).setLevel(Level.toLevel(priority));
+         Stack<Level> stack = stacks.get(pkg);
+         if (stack == null) {
+            stack = new Stack<Level>();
+            stacks.put(pkg, stack);
+         }
+         if (priority != null) {
+            stack.push(Logger.getLogger(pkg).getLevel());
+            Logger.getLogger(pkg).setLevel(Level.toLevel(priority));
+         } else if (pop) {
+            if (stack.empty()) {
+               log.error("Cannot POP priority level, stack empty!");
+            } else {
+               Logger.getLogger(pkg).setLevel(stack.pop());
+            }
+         } else {
+            log.error("Neither priority nor POP request specified");
+         }
       } catch (Exception e) {
          log.error("Failed to change log level", e);
       }
@@ -48,5 +71,9 @@ public class SetLogLevelStage extends AbstractDistStage {
    @Override
    public String toString() {
 	   return "SetLogLevel(package=" + pkg + ", priority=" + Level.toLevel(priority).toString() + ", " + super.toString();
+   }
+
+   public void setPop(boolean pop) {
+      this.pop = pop;
    }
 }
