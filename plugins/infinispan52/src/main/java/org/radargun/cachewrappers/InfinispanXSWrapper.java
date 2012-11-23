@@ -127,7 +127,7 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
             }
             Field bridgesField = Relayer.class.getDeclaredField("bridges");
             bridgesField.setAccessible(true);
-            List<?> bridges = (List<?>) bridgesField.get(relayer);
+            Collection<?> bridges = (Collection<?>) bridgesField.get(relayer);
             if (bridges == null) {
                return list;
             }
