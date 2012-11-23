@@ -28,34 +28,37 @@ public class XSReplCheckStage extends CheckDataStage {
    private String valuePostFix = "";
    
    @Override
-   protected int checkRange(int from, int to) {
+   protected CheckResult checkRange(int from, int to) {
       if (!(slaveState.getCacheWrapper() instanceof XSReplicating)) {
          throw new IllegalStateException("This stage requires wrapper that supports cross-site replication");
       }
       XSReplicating wrapper = (XSReplicating) slaveState.getCacheWrapper();
       Pattern valuePattern = Pattern.compile("value(\\d*)([^@]*)@(.*)");      
       
-      int found = 0, checked = 0;
+      int checked = 0;
+      CheckResult result = new CheckResult();
       log.info("Checking contents of main cache " + wrapper.getMainCache());
       for (int i = from; i < to; ++i, ++checked) {
          if (checked % getLogChecksCount() == 0) {
-            log.debug("Checked " + checked + " entries, so far " + found + " found");
+            log.debug("Checked " + checked + " entries, so far " + result);
          }
          try {
             Object value = wrapper.get(null,  "key" + i);
             if (!isDeleted()) {
                if (value != null && value.equals("value" + i + valuePostFix + "@" + wrapper.getMainCache())) {
-                  found++;
+                  result.found++;
                } else if (value != null) {
+                  result.invalidValues++;
                   unexpected(i, value);
-               }
+               } else result.nullValues++;
             } else {
                if (value != null) {
-                  found++;
+                  result.found++;
                   shouldBeDeleted(i);
-               }
+               } else result.nullValues++;
             }
          } catch (Exception e) {
+            result.exceptions++;
             if (log.isTraceEnabled()) {
                log.trace("Error retrieving value for key" + i + "\n" + e);
             }
@@ -67,20 +70,27 @@ public class XSReplCheckStage extends CheckDataStage {
          String originCache = null;
          for (int i = from; i < to; ++i, ++checked) {
             if (checked % getLogChecksCount() == 0) {
-               log.debug("Checked " + checked + " entries, so far " + found + " found");
+               log.debug("Checked " + checked + " entries, so far " + result);
             }
             try {
                Object value = wrapper.get(cacheName, "key" + i);
                Matcher m;
                if (!isDeleted()) {
-                  if (value != null && value instanceof String && (m = valuePattern.matcher((String) value)).matches()) {
+                  if (value == null) {
+                     unexpected(i, value);
+                     result.nullValues++;
+                  } else if (value instanceof String && (m = valuePattern.matcher((String) value)).matches()) {
                      try {
                         Integer.parseInt(m.group(1));
                      } catch (NumberFormatException e) {
                         unexpected(i, value);
+                        result.invalidValues++;
+                        continue;
                      }
                      if (!m.group(2).equals(valuePostFix)) {
                         unexpected(i, value);
+                        result.invalidValues++;
+                        continue;
                      }
                      if (originCache == null) {
                         log.info("Cache " + cacheName + " has entries from " + m.group(3));
@@ -88,26 +98,31 @@ public class XSReplCheckStage extends CheckDataStage {
                      } else if (!originCache.equals(m.group(3))) {
                         String message = "Cache " + cacheName + " has entries from " + m.group(3) + " but it also had entries from " + originCache + "!"; 
                         log.error(message);
-                        throw new IllegalStateException(message);
+                        result.invalidValues++;
+                        continue;
                      }
-                     found++;
+                     result.found++;
                   } else {
                      unexpected(i, value);
+                     result.invalidValues++;
                   }
                } else {
                   if (value != null) {
-                     found++;
+                     result.found++;
                      shouldBeDeleted(i);
+                  } else {
+                     result.nullValues++;
                   }
                }
             } catch (Exception e) {
+               result.exceptions++;
                if (log.isTraceEnabled()) {
                   log.trace("Error retrieving value for key" + i + "\n" + e);
                }
             }
          }
       }
-      return found;
+      return result;
    }
 
    private void shouldBeDeleted(int i) {
