@@ -147,6 +147,7 @@
       <attribute name="from" type="string"/>
       <attribute name="to" type="string"/>
       <attribute name="inc" type="string"/>
+      <attribute name="name" type="string"/>
    </complexType>
    <complexType abstract="true" name="AbstractDist">
       <attribute name="runOnAllSlaves" type="string"/>

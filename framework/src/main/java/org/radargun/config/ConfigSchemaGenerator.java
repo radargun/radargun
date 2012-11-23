@@ -103,6 +103,7 @@ public class ConfigSchemaGenerator {
       addAttribute(doc, repeatType, "from");
       addAttribute(doc, repeatType, "to");
       addAttribute(doc, repeatType, "inc");
+      addAttribute(doc, repeatType, "name");
       createReference(doc, benchmarkChoice, "Repeat", RG_PREFIX + "repeat");
       createReference(doc, repeatChoice, "Repeat", RG_PREFIX + "repeat");
       generateStageDefinitions(doc, schema, new Element[]{benchmarkChoice, repeatChoice});
