@@ -1,0 +1,574 @@
+<schema xmlns:rg="urn:radargun:benchmark:1.1" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:radargun:benchmark:1.1" version="1.0" xmlns="http://www.w3.org/2001/XMLSchema">
+   <element name="bench-config">
+      <complexType>
+         <sequence>
+            <element maxOccurs="1" minOccurs="1" name="master">
+               <complexType>
+                  <attribute name="bindAddress" type="string"/>
+                  <attribute name="port" type="string"/>
+               </complexType>
+            </element>
+            <element maxOccurs="1" minOccurs="1" name="benchmark">
+               <complexType>
+                  <sequence>
+                     <choice maxOccurs="unbounded" minOccurs="1">
+                        <element name="Repeat" type="rg:repeat"/>
+                        <element name="AbstractDist" type="rg:AbstractDist"/>
+                        <element name="WebSessionBenchmark" type="rg:WebSessionBenchmark"/>
+                        <element name="WebSessionWarmup" type="rg:WebSessionWarmup"/>
+                        <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
+                        <element name="CheckData" type="rg:CheckData"/>
+                        <element name="XSReplCheck" type="rg:XSReplCheck"/>
+                        <element name="AbstractMaster" type="rg:AbstractMaster"/>
+                        <element name="GenerateChart" type="rg:GenerateChart"/>
+                        <element name="ClearCluster" type="rg:ClearCluster"/>
+                        <element name="AbstractStart" type="rg:AbstractStart"/>
+                        <element name="StartCluster" type="rg:StartCluster"/>
+                        <element name="TpccPopulation" type="rg:TpccPopulation"/>
+                        <element name="SetLogLevel" type="rg:SetLogLevel"/>
+                        <element name="Check" type="rg:Check"/>
+                        <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
+                        <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
+                        <element name="Kill" type="rg:Kill"/>
+                        <element name="SingleTXCheck" type="rg:SingleTXCheck"/>
+                        <element name="Warmup" type="rg:Warmup"/>
+                        <element name="StartBackgroundStats" type="rg:StartBackgroundStats"/>
+                        <element name="CheckTopology" type="rg:CheckTopology"/>
+                        <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
+                        <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
+                        <element name="SingleTXLoad" type="rg:SingleTXLoad"/>
+                        <element name="JMXClusterValidation" type="rg:JMXClusterValidation"/>
+                        <element name="Dummy" type="rg:Dummy"/>
+                        <element name="SetPartitions" type="rg:SetPartitions"/>
+                        <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
+                        <element name="ClusterValidation" type="rg:ClusterValidation"/>
+                        <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
+                        <element name="StopBackgroundStats" type="rg:StopBackgroundStats"/>
+                        <element name="Sleep" type="rg:Sleep"/>
+                        <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
+                        <element name="ClientStressTest" type="rg:ClientStressTest"/>
+                        <element name="XSReplLoad" type="rg:XSReplLoad"/>
+                        <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
+                     </choice>
+                  </sequence>
+                  <attribute name="initSize" type="string"/>
+                  <attribute name="maxSize" type="string"/>
+                  <attribute name="increment" type="string"/>
+               </complexType>
+            </element>
+            <element maxOccurs="1" minOccurs="1" name="products">
+               <complexType>
+                  <sequence>
+                     <choice maxOccurs="unbounded" minOccurs="1">
+                        <element name="product" type="rg:product"/>
+                        <element name="infinispan4" type="rg:infinispan4"/>
+                        <element name="infinispan50" type="rg:infinispan50"/>
+                        <element name="infinispan51" type="rg:infinispan51"/>
+                        <element name="infinispan52" type="rg:infinispan52"/>
+                        <element name="jgroups" type="rg:jgroups"/>
+                        <element name="jbosscache2" type="rg:jbosscache2"/>
+                        <element name="jbosscache3" type="rg:jbosscache3"/>
+                        <element name="ehcache25" type="rg:ehcache25"/>
+                        <element name="terracota3" type="rg:terracota3"/>
+                        <element name="chm" type="rg:chm"/>
+                        <element name="coherence" type="rg:coherence"/>
+                        <element name="jdg60" type="rg:jdg60"/>
+                        <element name="jdg61" type="rg:jdg61"/>
+                     </choice>
+                  </sequence>
+               </complexType>
+            </element>
+            <element maxOccurs="1" minOccurs="1" name="reports">
+               <complexType>
+                  <sequence>
+                     <element maxOccurs="unbounded" minOccurs="0" name="report">
+                        <complexType>
+                           <sequence>
+                              <element maxOccurs="unbounded" minOccurs="0" name="item">
+                                 <complexType>
+                                    <attribute name="product" type="string"/>
+                                    <attribute name="config" type="string"/>
+                                 </complexType>
+                              </element>
+                           </sequence>
+                           <attribute name="name" type="string"/>
+                           <attribute name="includeAll" type="string"/>
+                        </complexType>
+                     </element>
+                  </sequence>
+               </complexType>
+            </element>
+         </sequence>
+      </complexType>
+   </element>
+   <complexType name="repeat">
+      <sequence>
+         <choice maxOccurs="unbounded" minOccurs="1">
+            <element name="Repeat" type="rg:repeat"/>
+            <element name="AbstractDist" type="rg:AbstractDist"/>
+            <element name="WebSessionBenchmark" type="rg:WebSessionBenchmark"/>
+            <element name="WebSessionWarmup" type="rg:WebSessionWarmup"/>
+            <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
+            <element name="CheckData" type="rg:CheckData"/>
+            <element name="XSReplCheck" type="rg:XSReplCheck"/>
+            <element name="AbstractMaster" type="rg:AbstractMaster"/>
+            <element name="GenerateChart" type="rg:GenerateChart"/>
+            <element name="ClearCluster" type="rg:ClearCluster"/>
+            <element name="AbstractStart" type="rg:AbstractStart"/>
+            <element name="StartCluster" type="rg:StartCluster"/>
+            <element name="TpccPopulation" type="rg:TpccPopulation"/>
+            <element name="SetLogLevel" type="rg:SetLogLevel"/>
+            <element name="Check" type="rg:Check"/>
+            <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
+            <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
+            <element name="Kill" type="rg:Kill"/>
+            <element name="SingleTXCheck" type="rg:SingleTXCheck"/>
+            <element name="Warmup" type="rg:Warmup"/>
+            <element name="StartBackgroundStats" type="rg:StartBackgroundStats"/>
+            <element name="CheckTopology" type="rg:CheckTopology"/>
+            <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
+            <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
+            <element name="SingleTXLoad" type="rg:SingleTXLoad"/>
+            <element name="JMXClusterValidation" type="rg:JMXClusterValidation"/>
+            <element name="Dummy" type="rg:Dummy"/>
+            <element name="SetPartitions" type="rg:SetPartitions"/>
+            <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
+            <element name="ClusterValidation" type="rg:ClusterValidation"/>
+            <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
+            <element name="StopBackgroundStats" type="rg:StopBackgroundStats"/>
+            <element name="Sleep" type="rg:Sleep"/>
+            <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
+            <element name="ClientStressTest" type="rg:ClientStressTest"/>
+            <element name="XSReplLoad" type="rg:XSReplLoad"/>
+            <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
+         </choice>
+      </sequence>
+      <attribute name="times" type="string"/>
+      <attribute name="from" type="string"/>
+      <attribute name="to" type="string"/>
+      <attribute name="inc" type="string"/>
+   </complexType>
+   <complexType abstract="true" name="AbstractDist">
+      <attribute name="runOnAllSlaves" type="string"/>
+      <attribute name="exitBenchmarkOnSlaveFailure" type="string"/>
+      <attribute name="activeSlavesCount" type="string"/>
+      <attribute name="slaves" type="string"/>
+      <attribute name="useSmartClassLoading" type="string"/>
+   </complexType>
+   <complexType name="WebSessionBenchmark">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="numberOfRequests" type="string"/>
+            <attribute name="numberOfAttributes" type="string"/>
+            <attribute name="sizeOfAnAttribute" type="string"/>
+            <attribute name="numOfThreads" type="string"/>
+            <attribute name="reportNanos" type="string"/>
+            <attribute name="writePercentage" type="string"/>
+            <attribute name="opsCountStatusLog" type="string"/>
+            <attribute name="keyGeneratorClass" type="string"/>
+            <attribute name="transactionSize" type="string"/>
+            <attribute name="useTransactions" type="string"/>
+            <attribute name="commitTransactions" type="string"/>
+            <attribute name="duration" type="string"/>
+            <attribute name="sharedAttributes" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="WebSessionWarmup">
+      <complexContent>
+         <extension base="rg:WebSessionBenchmark"/>
+      </complexContent>
+   </complexType>
+   <complexType name="TpccBenchmark">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="numOfThreads" type="string"/>
+            <attribute name="perThreadSimulTime" type="string"/>
+            <attribute name="arrivalRate" type="string"/>
+            <attribute name="paymentWeight" type="string"/>
+            <attribute name="orderStatusWeight" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="CheckData">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="numEntries" type="string"/>
+            <attribute name="entrySize" type="string"/>
+            <attribute name="extraEntries" type="string"/>
+            <attribute name="numOwners" type="string"/>
+            <attribute name="checkThreads" type="string"/>
+            <attribute name="ignoreSum" type="string"/>
+            <attribute name="deleted" type="string"/>
+            <attribute name="liveSlavesHint" type="string"/>
+            <attribute name="logChecksCount" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="XSReplCheck">
+      <complexContent>
+         <extension base="rg:CheckData">
+            <attribute name="valuePostFix" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType abstract="true" name="AbstractMaster"/>
+   <complexType name="GenerateChart">
+      <complexContent>
+         <extension base="rg:AbstractMaster">
+            <attribute name="csvFilesDirectory" type="string"/>
+            <attribute name="fnPrefix" type="string"/>
+            <attribute name="reportDirectory" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="ClearCluster">
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
+      </complexContent>
+   </complexType>
+   <complexType abstract="true" name="AbstractStart">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="config" type="string"/>
+            <attribute name="confAttributes" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="StartCluster">
+      <complexContent>
+         <extension base="rg:AbstractStart">
+            <attribute name="validateCluster" type="string"/>
+            <attribute name="staggerSlaveStartup" type="string"/>
+            <attribute name="delayAfterFirstSlaveStarts" type="string"/>
+            <attribute name="delayBetweenStartingSlaves" type="string"/>
+            <attribute name="expectNumSlaves" type="string"/>
+            <attribute name="reachable" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="TpccPopulation">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="numWarehouses" type="string"/>
+            <attribute name="cLastMask" type="string"/>
+            <attribute name="olIdMask" type="string"/>
+            <attribute name="cIdMask" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="SetLogLevel">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="priority" type="string"/>
+            <attribute name="package" type="string"/>
+            <attribute name="pop" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType abstract="true" name="Check">
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
+      </complexContent>
+   </complexType>
+   <complexType name="WriteSkewCheck">
+      <complexContent>
+         <extension base="rg:Check">
+            <attribute name="duration" type="string"/>
+            <attribute name="threads" type="string"/>
+            <attribute name="testNull" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="StackTraceWatchdog">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="period" type="string"/>
+            <attribute name="mask" type="string"/>
+            <attribute name="onlyStuck" type="string"/>
+            <attribute name="shortStack" type="string"/>
+            <attribute name="asyncLogging" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="Kill">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="role" type="string"/>
+            <attribute name="async" type="string"/>
+            <attribute name="tearDown" type="string"/>
+            <attribute name="delayExecution" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="SingleTXCheck">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="transactionSize" type="string"/>
+            <attribute name="deleted" type="string"/>
+            <attribute name="commitSlave" type="string"/>
+            <attribute name="commitThread" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="Warmup">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="operationCount" type="string"/>
+            <attribute name="numThreads" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="StartBackgroundStats">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="transactionSize" type="string"/>
+            <attribute name="numEntries" type="string"/>
+            <attribute name="entrySize" type="string"/>
+            <attribute name="numThreads" type="string"/>
+            <attribute name="puts" type="string"/>
+            <attribute name="gets" type="string"/>
+            <attribute name="removes" type="string"/>
+            <attribute name="delayBetweenRequests" type="string"/>
+            <attribute name="statsIterationDuration" type="string"/>
+            <attribute name="waitUntilLoaded" type="string"/>
+            <attribute name="loadDataForDeadSlaves" type="string"/>
+            <attribute name="startStats" type="string"/>
+            <attribute name="startStressors" type="string"/>
+            <attribute name="bucketId" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="CheckTopology">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="type" type="string"/>
+            <attribute name="period" type="string"/>
+            <attribute name="changed" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="JMXClusterValidationPrepare">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="prop1" type="string"/>
+            <attribute name="prop2" type="string"/>
+            <attribute name="prop3" type="string"/>
+            <attribute name="jmxConnectionTimeout" type="string"/>
+            <attribute name="waitTimeout" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="CsvReportGeneration">
+      <complexContent>
+         <extension base="rg:AbstractMaster">
+            <attribute name="targetDir" type="string"/>
+            <attribute name="ignore" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="SingleTXLoad">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="transactionSize" type="string"/>
+            <attribute name="duration" type="string"/>
+            <attribute name="threads" type="string"/>
+            <attribute name="commitSlave" type="string"/>
+            <attribute name="commitThread" type="string"/>
+            <attribute name="delete" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="JMXClusterValidation">
+      <complexContent>
+         <extension base="rg:AbstractMaster">
+            <attribute name="slaves" type="string"/>
+            <attribute name="waitTimeout" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="Dummy">
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
+      </complexContent>
+   </complexType>
+   <complexType name="SetPartitions">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="partitions" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="DestroyWrapper">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="enforceMemoryThrashHold" type="string"/>
+            <attribute name="memoryThreshold" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="ClusterValidation">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="partialReplication" type="string"/>
+            <attribute name="replicationTryCount" type="string"/>
+            <attribute name="replicationTimeSleep" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="ParallelStartKill">
+      <complexContent>
+         <extension base="rg:AbstractStart">
+            <attribute name="role" type="string"/>
+            <attribute name="reachable" type="string"/>
+            <attribute name="kill" type="string"/>
+            <attribute name="start" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="StopBackgroundStats">
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
+      </complexContent>
+   </complexType>
+   <complexType name="Sleep">
+      <complexContent>
+         <extension base="rg:AbstractMaster">
+            <attribute name="time" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="ReportBackgroundStats">
+      <complexContent>
+         <extension base="rg:AbstractMaster">
+            <attribute name="targetDir" type="string"/>
+            <attribute name="ignore" type="string"/>
+            <attribute name="chartHeight" type="string"/>
+            <attribute name="chartWidth" type="string"/>
+            <attribute name="generateIntervalTimeData" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="ClientStressTest">
+      <complexContent>
+         <extension base="rg:WebSessionBenchmark">
+            <attribute name="initThreads" type="string"/>
+            <attribute name="maxThreads" type="string"/>
+            <attribute name="increment" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="XSReplLoad">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="numEntries" type="string"/>
+            <attribute name="valuePostFix" type="string"/>
+            <attribute name="delete" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="IsolationLevelCheck">
+      <complexContent>
+         <extension base="rg:Check">
+            <attribute name="transactionSize" type="string"/>
+            <attribute name="duration" type="string"/>
+            <attribute name="writers" type="string"/>
+            <attribute name="readers" type="string"/>
+            <attribute name="expectedLevel" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType abstract="true" name="abstractProduct">
+      <sequence>
+         <element maxOccurs="unbounded" minOccurs="1" name="config">
+            <complexType>
+               <sequence>
+                  <element maxOccurs="unbounded" minOccurs="0" name="site">
+                     <complexType>
+                        <attribute name="name" type="string"/>
+                        <attribute name="config" type="string"/>
+                        <attribute name="slaves" type="string"/>
+                        <attribute name="cache" type="string"/>
+                     </complexType>
+                  </element>
+               </sequence>
+               <attribute name="name" type="string"/>
+               <attribute name="file" type="string"/>
+               <attribute name="cache" type="string"/>
+            </complexType>
+         </element>
+      </sequence>
+   </complexType>
+   <complexType name="product">
+      <complexContent>
+         <extension base="rg:abstractProduct">
+            <attribute name="name" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="infinispan4">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="infinispan50">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="infinispan51">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="infinispan52">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="jgroups">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="jbosscache2">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="jbosscache3">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="ehcache25">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="terracota3">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="chm">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="coherence">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="jdg60">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="jdg61">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+</schema>

@@ -153,6 +153,29 @@
                   </goals>
                   <configuration>
                      <tasks>
+  			               <echo message="Generating XSD schema" />
+			               <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true">
+				               <classpath>
+					               <pathelement location="framework/target/distribution/radargun-framework-bin/radargun-framework/lib/radargun-framework-1.1.0-SNAPSHOT.jar" />
+					               <pathelement location="framework/target/distribution/radargun-framework-bin/radargun-framework/lib/commons-logging-1.1.1.jar" />
+				               </classpath>
+				               <arg value="framework/src/main/resources" />
+				               <arg value="framework/target/distribution/radargun-framework-bin/radargun-framework/lib/radargun-framework-1.1.0-SNAPSHOT.jar" />
+				               <arg value="infinispan4" />
+				               <arg value="infinispan50" />
+				               <arg value="infinispan51" />
+				               <arg value="infinispan52" />
+				               <arg value="jgroups" />
+				               <arg value="jbosscache2" />
+				               <arg value="jbosscache3" />
+				               <arg value="ehcache25" />
+				               <arg value="terracota3" />
+				               <arg value="chm" />
+				               <arg value="coherence" />				               
+				               <arg value="jdg60" />
+				               <arg value="jdg61" />
+			               </java>
+
                         <echo message="Packaging the framework, and the following plugins: infinispan4, infinispan5, infinispan50, jbosscache2, jbosscache3, ehcache25" />
 
                         <copy todir="${distribution.artifact}/plugins/infinispan4">
