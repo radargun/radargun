@@ -309,7 +309,9 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
                   key = getKeyGenerator().generateKey(nodeIndex, threadIndex, keyIndex);
                }
                pooledKeys.add(key);
+               if (useTransactions) cacheWrapper.startTransaction();
                cacheWrapper.put(this.bucketId, key, generateRandomString(sizeOfValue));
+               if (useTransactions) cacheWrapper.endTransaction(true);
             } catch (Throwable e) {
                log.warn("Error while initializing the session: ", e);
             }
