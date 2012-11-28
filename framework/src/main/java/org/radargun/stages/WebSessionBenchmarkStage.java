@@ -91,6 +91,9 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
    
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
+      if (slaves != null && !slaves.contains(slaveIndex)) {
+         return result;
+      }
       this.cacheWrapper = slaveState.getCacheWrapper();
       if (cacheWrapper == null) {
          log.info("Not running test on this slave as the wrapper hasn't been configured.");
