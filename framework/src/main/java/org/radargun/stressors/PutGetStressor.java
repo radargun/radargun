@@ -83,7 +83,6 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
    public Map<String, String> stress(CacheWrapper wrapper) {
       this.cacheWrapper = wrapper;
-      startNanos = System.nanoTime();
       log.info("Executing: " + this.toString());
       if (durationMillis > 0) {
          completion = new TimeStressorCompletion(durationMillis);
@@ -153,6 +152,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          stressor.start();
       }
       log.info("Cache wrapper info is: " + cacheWrapper.getInfo());
+      startNanos = System.nanoTime();
       startPoint.countDown();
       log.info("Started " + stressors.size() + " stressor threads.");
       for (Stressor stressor : stressors) {
