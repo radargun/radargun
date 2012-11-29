@@ -496,6 +496,8 @@
                <attribute name="name" type="string"/>
                <attribute name="file" type="string"/>
                <attribute name="cache" type="string"/>
+               <attribute name="wrapper" type="string"/>
+               <attribute name="explicitLocking" type="string"/>
             </complexType>
          </element>
       </sequence>

@@ -122,6 +122,8 @@ public class ConfigSchemaGenerator {
       addAttribute(doc, configComplex, "name");
       addAttribute(doc, configComplex, "file");
       addAttribute(doc, configComplex, "cache");
+      addAttribute(doc, configComplex, "wrapper");
+      addAttribute(doc, configComplex, "explicitLocking"); //TODO: this is wrapper-specific
       Element siteComplex = createComplexElement(doc, configSequence, "site", 0, -1);
       addAttribute(doc, siteComplex, "name");
       addAttribute(doc, siteComplex, "config");
