@@ -5,6 +5,7 @@ import org.radargun.DistStageAck;
 import org.radargun.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Distributed stage that will clear the content of the cache wrapper on each slave.
@@ -30,9 +31,13 @@ public class ClearClusterStage extends AbstractDistStage {
             if (slaves == null || slaves.contains(getSlaveIndex())) {
                cacheWrapper.empty();
             } else {
-               while (cacheWrapper.getLocalSize() > 0) {
-                  log.trace("Waiting until the cache gets empty");
+               for (int count = new Random().nextInt(20) + 10; count > 0 && cacheWrapper.getLocalSize() > 0; --count) {
+                  log.debug("Waiting until the cache gets empty");
                   Thread.sleep(1000);
+               }
+               if (cacheWrapper.getLocalSize() > 0) {
+                  log.error("The cache was not cleared from another node, clearing locally");
+                  cacheWrapper.empty();
                }
             }
             return defaultDistStageAck;
