@@ -13,8 +13,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Do <code>operationCount</code> puts and  <code>operationCount</code> gets on the cache wrapper.
  *
  * @author Mircea.Markus@jboss.com
- * @deprecated this should be replaced with the {@link PutGetWarmupStressor}. This is because that warmup mimics better the
- * access pattern of the the {@link PutGetStressor}, especially in the case of transactions.
+ * @deprecated this should be replaced with the {@link StressTestWarmupStressor}. This is because that warmup mimics better the
+ * access pattern of the the {@link StressTestStressor}, especially in the case of transactions.
  */
 public class WarmupStressor extends AbstractCacheWrapperStressor {
 

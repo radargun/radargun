@@ -21,6 +21,7 @@ import java.util.TreeSet;
  */
 public class CsvReportGenerationStage extends AbstractMasterStage {
 
+   public static final String RESULTS = "results";
    private String targetDir = "reports";
    private String separator = ",";
    private Set<Integer> ignore;
@@ -29,7 +30,7 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
    private FileWriter fileWriter;
 
    public boolean execute() {
-      Map<Integer, Map<String, Object>> results = (Map<Integer, Map<String, Object>>) masterState.get("results");
+      Map<Integer, Map<String, Object>> results = (Map<Integer, Map<String, Object>>) masterState.get(RESULTS);
       if (results == null) {
          log.error("Could not find reports('results') on the master. Master's state is  " + masterState);
          return false;

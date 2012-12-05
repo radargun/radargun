@@ -1,7 +1,7 @@
 package org.radargun.stressors;
 
 /**
- * Used for generating key used by {@link PutGetStressor}. All implementations must have an default/no-arg public
+ * Used for generating key used by {@link StressTestStressor}. All implementations must have an default/no-arg public
  * constructor.
  * <p/>
  * Concurrency: methods of this class might be called from multiple threads concurrently.

@@ -1,4 +1,4 @@
-<bench-config>
+<bench-config xmlns="urn:radargun:benchmark:1.1">
 
    <master bindAddress="${127.0.0.1:master.address}" port="${2103:master.port}"/>
 
@@ -12,7 +12,7 @@
          This will average to 10000 requests per thread, although a work-stealing pattern is used so some threads may
          do more work than others.
        -->
-      <WebSessionBenchmark numberOfRequests="2500" opsCountStatusLog="500" numOfThreads="2" numberOfAttributes="10"
+      <StressTest numRequests="2500" opsCountStatusLog="500" numThreads="2" numEntries="10"
                            keyGeneratorClass="org.radargun.stressors.ObjectKeyGenerator" />
       <CsvReportGeneration/>
    </benchmark>

@@ -21,6 +21,7 @@
                         <element name="XSReplCheck" type="rg:XSReplCheck"/>
                         <element name="AbstractMaster" type="rg:AbstractMaster"/>
                         <element name="GenerateChart" type="rg:GenerateChart"/>
+                        <element name="StressTest" type="rg:StressTest"/>
                         <element name="ClearCluster" type="rg:ClearCluster"/>
                         <element name="AbstractStart" type="rg:AbstractStart"/>
                         <element name="StartCluster" type="rg:StartCluster"/>
@@ -47,6 +48,7 @@
                         <element name="Sleep" type="rg:Sleep"/>
                         <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
                         <element name="ClientStressTest" type="rg:ClientStressTest"/>
+                        <element name="StressTestWarmup" type="rg:StressTestWarmup"/>
                         <element name="XSReplLoad" type="rg:XSReplLoad"/>
                         <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
                      </choice>
@@ -113,6 +115,7 @@
             <element name="XSReplCheck" type="rg:XSReplCheck"/>
             <element name="AbstractMaster" type="rg:AbstractMaster"/>
             <element name="GenerateChart" type="rg:GenerateChart"/>
+            <element name="StressTest" type="rg:StressTest"/>
             <element name="ClearCluster" type="rg:ClearCluster"/>
             <element name="AbstractStart" type="rg:AbstractStart"/>
             <element name="StartCluster" type="rg:StartCluster"/>
@@ -139,6 +142,7 @@
             <element name="Sleep" type="rg:Sleep"/>
             <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
             <element name="ClientStressTest" type="rg:ClientStressTest"/>
+            <element name="StressTestWarmup" type="rg:StressTestWarmup"/>
             <element name="XSReplLoad" type="rg:XSReplLoad"/>
             <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
          </choice>
@@ -162,7 +166,7 @@
             <attribute name="numberOfRequests" type="string"/>
             <attribute name="numberOfAttributes" type="string"/>
             <attribute name="sizeOfAnAttribute" type="string"/>
-            <attribute name="numOfThreads" type="string"/>
+            <attribute name="numThreads" type="string"/>
             <attribute name="reportNanos" type="string"/>
             <attribute name="writePercentage" type="string"/>
             <attribute name="opsCountStatusLog" type="string"/>
@@ -183,7 +187,7 @@
    <complexType name="TpccBenchmark">
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="numOfThreads" type="string"/>
+            <attribute name="numThreads" type="string"/>
             <attribute name="perThreadSimulTime" type="string"/>
             <attribute name="arrivalRate" type="string"/>
             <attribute name="paymentWeight" type="string"/>
@@ -220,6 +224,25 @@
             <attribute name="csvFilesDirectory" type="string"/>
             <attribute name="fnPrefix" type="string"/>
             <attribute name="reportDirectory" type="string"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="StressTest">
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="reportNanos" type="string"/>
+            <attribute name="writePercentage" type="string"/>
+            <attribute name="opsCountStatusLog" type="string"/>
+            <attribute name="keyGeneratorClass" type="string"/>
+            <attribute name="transactionSize" type="string"/>
+            <attribute name="useTransactions" type="string"/>
+            <attribute name="commitTransactions" type="string"/>
+            <attribute name="duration" type="string"/>
+            <attribute name="numEntries" type="string"/>
+            <attribute name="entrySize" type="string"/>
+            <attribute name="numRequests" type="string"/>
+            <attribute name="numThreads" type="string"/>
+            <attribute name="sharedKeys" type="string"/>
          </extension>
       </complexContent>
    </complexType>
@@ -315,8 +338,8 @@
    <complexType name="Warmup">
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="operationCount" type="string"/>
             <attribute name="numThreads" type="string"/>
+            <attribute name="operationCount" type="string"/>
          </extension>
       </complexContent>
    </complexType>
@@ -452,11 +475,16 @@
    </complexType>
    <complexType name="ClientStressTest">
       <complexContent>
-         <extension base="rg:WebSessionBenchmark">
+         <extension base="rg:StressTest">
             <attribute name="initThreads" type="string"/>
             <attribute name="maxThreads" type="string"/>
             <attribute name="increment" type="string"/>
          </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="StressTestWarmup">
+      <complexContent>
+         <extension base="rg:StressTest"/>
       </complexContent>
    </complexType>
    <complexType name="XSReplLoad">

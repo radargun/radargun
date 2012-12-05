@@ -15,9 +15,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author Mircea.Markus@jboss.com
  */
-public class PutGetStressor extends AbstractCacheWrapperStressor {
+public class StressTestStressor extends AbstractCacheWrapperStressor {
 
-   private static Log log = LogFactory.getLog(PutGetStressor.class);
+   private static Log log = LogFactory.getLog(StressTestStressor.class);
    private static final double NANOSECS_IN_SEC = 1000000000.0;
 
    private int opsCountStatusLog = 5000;
@@ -25,17 +25,17 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
    /**
     * total number of operation to be made against cache wrapper: reads + writes
     */
-   private int numberOfRequests = 50000;
+   private int numRequests = 50000;
 
    /**
     * for each there will be created fixed number of keys. All the GETs and PUTs are performed on these keys only.
     */
-   private int numberOfKeys = 100;
+   private int numEntries = 100;
 
    /**
     * Each key will be a byte[] of this size.
     */
-   private int sizeOfValue = 1000;
+   private int entrySize = 1000;
 
    /**
     * Out of the total number of operations, this defines the frequency of writes (percentage).
@@ -51,7 +51,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
    /**
     * the number of threads that will work on this cache wrapper.
     */
-   private int numOfThreads = 10;
+   private int numThreads = 10;
 
    /**
     * This node's index in the Radargun cluster.  -1 is used for local benchmarks.
@@ -64,7 +64,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
    private boolean commitTransactions = true;
 
-   private boolean sharedAttributes;
+   private boolean sharedKeys;
 
    private AtomicInteger txCount = new AtomicInteger(0);
 
@@ -83,7 +83,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
    private volatile boolean finished = false;
    private volatile boolean terminated = false;
    
-   protected List<Stressor> stressors = new ArrayList<Stressor>(numOfThreads);
+   protected List<Stressor> stressors = new ArrayList<Stressor>(numThreads);
 
    protected void init(CacheWrapper wrapper) {
       this.cacheWrapper = wrapper;
@@ -97,7 +97,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       if (durationMillis > 0) {
          completion = new TimeStressorCompletion(durationMillis);
       } else {
-         completion = new OperationCountCompletion(new AtomicInteger(numberOfRequests));
+         completion = new OperationCountCompletion(new AtomicInteger(numRequests));
       }
       setStressorCompletion(completion);
 
@@ -143,15 +143,15 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
       Map<String, String> results = new LinkedHashMap<String, String>();
       results.put("DURATION", str(duration));
-      double requestPerSec = (reads + writes) / ((duration / numOfThreads) / NANOSECS_IN_SEC);
+      double requestPerSec = (reads + writes) / ((duration / numThreads) / NANOSECS_IN_SEC);
       results.put("REQ_PER_SEC", str(requestPerSec));
-      results.put("READS_PER_SEC", str(reads / ((readsDurations / numOfThreads) / NANOSECS_IN_SEC)));
-      results.put("WRITES_PER_SEC", str(writes / ((writesDurations / numOfThreads) / NANOSECS_IN_SEC)));
+      results.put("READS_PER_SEC", str(reads / ((readsDurations / numThreads) / NANOSECS_IN_SEC)));
+      results.put("WRITES_PER_SEC", str(writes / ((writesDurations / numThreads) / NANOSECS_IN_SEC)));
       results.put("READ_COUNT", str(reads));
       results.put("WRITE_COUNT", str(writes));
       results.put("FAILURES", str(failures));
       if (useTransactions) {
-         double txPerSec = getTxCount() / ((transactionDuration / numOfThreads) / NANOSECS_IN_SEC);
+         double txPerSec = getTxCount() / ((transactionDuration / numThreads) / NANOSECS_IN_SEC);
          results.put("TX_PER_SEC", str(txPerSec));
       }
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
@@ -165,8 +165,8 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          cleanUpPoint.countDown();
       }
       cleanUpPoint = new CountDownLatch(1);
-      endPoint = new CountDownLatch(numOfThreads);      
-      for (int threadIndex = stressors.size(); threadIndex < numOfThreads; threadIndex++) {
+      endPoint = new CountDownLatch(numThreads);
+      for (int threadIndex = stressors.size(); threadIndex < numThreads; threadIndex++) {
          Stressor stressor = new Stressor(threadIndex);
          stressor.initialiseKeys();
          stressors.add(stressor);
@@ -200,17 +200,17 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       return nodeIndex == -1;
    }
 
-   public void setSharedAttributes(boolean sharedAttributes) {
-      this.sharedAttributes = sharedAttributes;
+   public void setSharedKeys(boolean sharedAttributes) {
+      this.sharedKeys = sharedAttributes;
    }
 
-   public boolean isSharedAttributes() {
-      return sharedAttributes;
+   public boolean isSharedKeys() {
+      return sharedKeys;
    }
 
    protected class Stressor extends Thread {
 
-      private ArrayList<Object> pooledKeys = new ArrayList<Object>(numberOfKeys);
+      private ArrayList<Object> pooledKeys = new ArrayList<Object>(numEntries);
 
       private int threadIndex;
       private int nrFailures;
@@ -263,14 +263,14 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          int i = 0;
          while (completion.moreToRun()) {
             randomAction = r.nextInt(100);
-            randomKeyInt = r.nextInt(numberOfKeys - 1);
+            randomKeyInt = r.nextInt(numEntries - 1);
             Object key = getKey(randomKeyInt);
             Object result = null;
 
             if (randomAction < readPercentage) {
                result = doRead(key, i);
             } else {
-               doWrite(key, generateRandomBytes(sizeOfValue), i);
+               doWrite(key, generateRandomBytes(entrySize), i);
             }
 
             i++;
@@ -353,10 +353,10 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       }
 
       public void initialiseKeys() {
-         for (int keyIndex = 0; keyIndex < numberOfKeys; keyIndex++) {
+         for (int keyIndex = 0; keyIndex < numEntries; keyIndex++) {
             try {
                Object key;
-               if (isSharedAttributes()) {
+               if (isSharedKeys()) {
                   key = getKeyGenerator().generateKey(keyIndex);
                } else if (isLocalBenchmark()) {
                   key = getKeyGenerator().generateKey(threadIndex, keyIndex);
@@ -364,7 +364,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
                   key = getKeyGenerator().generateKey(nodeIndex, threadIndex, keyIndex);
                }
                pooledKeys.add(key);
-               cacheWrapper.put(this.bucketId, key, generateRandomBytes(sizeOfValue));
+               cacheWrapper.put(this.bucketId, key, generateRandomBytes(entrySize));
             } catch (Throwable e) {
                log.warn("Error while initializing the session: ", e);
             }
@@ -442,28 +442,28 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       return txCount.get();
    }
    
-   public int getNumberOfRequests() {
-      return numberOfRequests;
+   public int getNumRequests() {
+      return numRequests;
    }
       
-   public int getNumOfThreads() {
-      return numOfThreads;
+   public int getNumThreads() {
+      return numThreads;
    }
    
-   public void setNumberOfRequests(int numberOfRequests) {
-      this.numberOfRequests = numberOfRequests;
+   public void setNumRequests(int numberOfRequests) {
+      this.numRequests = numberOfRequests;
    }
 
-   public void setNumberOfAttributes(int numberOfKeys) {
-      this.numberOfKeys = numberOfKeys;
+   public void setNumEntries(int numberOfKeys) {
+      this.numEntries = numberOfKeys;
    }
 
-   public void setSizeOfAnAttribute(int sizeOfValue) {
-      this.sizeOfValue = sizeOfValue;
+   public void setEntrySize(int sizeOfValue) {
+      this.entrySize = sizeOfValue;
    }
 
-   public void setNumOfThreads(int numOfThreads) {
-      this.numOfThreads = numOfThreads;
+   public void setNumThreads(int numOfThreads) {
+      this.numThreads = numOfThreads;
    }
 
    public void setWritePercentage(int writePercentage) {
@@ -560,7 +560,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
       protected void logRemainingTime(int i, int threadIndex) {
          double elapsedNanos = System.nanoTime() - startNanos;
-         double estimatedTotal = ((double) (numberOfRequests / numOfThreads) / (double) i) * elapsedNanos;
+         double estimatedTotal = ((double) (numRequests / numThreads) / (double) i) * elapsedNanos;
          double estimatedRemaining = estimatedTotal - elapsedNanos;
          if (log.isTraceEnabled()) {
             log.trace("i=" + i + ", elapsedTime=" + elapsedNanos);
@@ -645,13 +645,13 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
    @Override
    public String toString() {
-      return "PutGetStressor{" +
+      return "StressTestStressor{" +
             "opsCountStatusLog=" + opsCountStatusLog +
-            ", numberOfRequests=" + numberOfRequests +
-            ", numberOfKeys=" + numberOfKeys +
-            ", sizeOfValue=" + sizeOfValue +
+            ", numRequests=" + numRequests +
+            ", numEntries=" + numEntries +
+            ", entrySize=" + entrySize +
             ", writePercentage=" + writePercentage +
-            ", numOfThreads=" + numOfThreads +
+            ", numThreads=" + numThreads +
             ", cacheWrapper=" + cacheWrapper +
             ", nodeIndex=" + nodeIndex +
             ", useTransactions=" + useTransactions +

@@ -3,7 +3,7 @@ package org.radargun.stages;
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.state.MasterState;
-import org.radargun.stressors.PutGetStressor;
+import org.radargun.stressors.StressTestStressor;
 import org.radargun.stressors.StringKeyGenerator;
 import org.radargun.utils.Utils;
 
@@ -19,7 +19,7 @@ import static org.radargun.utils.Utils.numberFormat;
  *
  * @author Mircea.Markus@jboss.com
  */
-public class WebSessionBenchmarkStage extends AbstractDistStage {
+public class StressTestStage extends AbstractDistStage {
 
    private static final String SIZE_INFO = "SIZE_INFO";
    private int opsCountStatusLog = 5000;
@@ -29,34 +29,32 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
    /**
     * total number of request to be made against this session: reads + writes
     */
-   private int numberOfRequests = 50000;
+   private int numRequests = 50000;
 
    /**
     * for each session there will be created fixed number of attributes. On those attributes all the GETs and PUTs are
     * performed (for PUT is overwrite)
     */
-   private int numberOfAttributes = 100;
+   private int numEntries = 100;
 
    /**
     * Each attribute will be a byte[] of this size
     */
-   private int sizeOfAnAttribute = 1000;
+   private int entrySize = 1000;
 
    /**
     * Out of the total number of request, this define the frequency of writes (percentage)
     */
    private int writePercentage = 20;
 
-
    /**
     * the number of threads that will work on this slave
     */
-   private int numOfThreads = 10;
+   private int numThreads = 10;
 
    private boolean reportNanos = false;
 
    private String keyGeneratorClass = StringKeyGenerator.class.getName();
-
 
    protected CacheWrapper cacheWrapper;
 
@@ -68,25 +66,25 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    private long durationMillis = -1;
 
-   private boolean sharedAttributes = false;
+   private boolean sharedKeys = false;
 
    protected Map<String, String> doWork() {
       log.info("Starting "+getClass().getSimpleName()+": " + this);
-      PutGetStressor putGetStressor = new PutGetStressor();
-      putGetStressor.setNodeIndex(getSlaveIndex());
-      putGetStressor.setNumberOfAttributes(numberOfAttributes);
-      putGetStressor.setNumberOfRequests(numberOfRequests);
-      putGetStressor.setNumOfThreads(numOfThreads);
-      putGetStressor.setOpsCountStatusLog(opsCountStatusLog);
-      putGetStressor.setSizeOfAnAttribute(sizeOfAnAttribute);
-      putGetStressor.setWritePercentage(writePercentage);
-      putGetStressor.setKeyGeneratorClass(keyGeneratorClass);
-      putGetStressor.setUseTransactions(useTransactions);
-      putGetStressor.setCommitTransactions(commitTransactions);
-      putGetStressor.setTransactionSize(transactionSize);
-      putGetStressor.setDurationMillis(durationMillis);
-      putGetStressor.setSharedAttributes(sharedAttributes);
-      return putGetStressor.stress(cacheWrapper);
+      StressTestStressor stressTestStressor = new StressTestStressor();
+      stressTestStressor.setNodeIndex(getSlaveIndex());
+      stressTestStressor.setNumEntries(numEntries);
+      stressTestStressor.setNumRequests(numRequests);
+      stressTestStressor.setNumThreads(numThreads);
+      stressTestStressor.setOpsCountStatusLog(opsCountStatusLog);
+      stressTestStressor.setEntrySize(entrySize);
+      stressTestStressor.setWritePercentage(writePercentage);
+      stressTestStressor.setKeyGeneratorClass(keyGeneratorClass);
+      stressTestStressor.setUseTransactions(useTransactions);
+      stressTestStressor.setCommitTransactions(commitTransactions);
+      stressTestStressor.setTransactionSize(transactionSize);
+      stressTestStressor.setDurationMillis(durationMillis);
+      stressTestStressor.setSharedKeys(sharedKeys);
+      return stressTestStressor.stress(cacheWrapper);
    }
    
    public DistStageAck executeOnSlave() {
@@ -126,7 +124,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       logDurationInfo(acks);
       boolean success = true;
       Map<Integer, Map<String, Object>> results = new HashMap<Integer, Map<String, Object>>();
-      masterState.put("results", results);
+      masterState.put(CsvReportGenerationStage.RESULTS, results);
       for (DistStageAck ack : acks) {
          DefaultDistStageAck wAck = (DefaultDistStageAck) ack;
          if (wAck.isError()) {
@@ -159,48 +157,48 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
    private void logForDistributionCounting(Map<String, Object> benchResult) {
       log.info("Received " +  benchResult.remove(SIZE_INFO));
    }
-   public void setNumberOfRequests(int numberOfRequests) {
-      this.numberOfRequests = numberOfRequests;
+   public void setNumRequests(int numRequests) {
+      this.numRequests = numRequests;
    }
 
-   public void setNumberOfAttributes(int numberOfAttributes) {
-      this.numberOfAttributes = numberOfAttributes;
+   public void setNumEntries(int numEntries) {
+      this.numEntries = numEntries;
    }
 
    public int getOpsCountStatusLog() {
       return opsCountStatusLog;
    }
 
-   public int getNumberOfRequests() {
-      return numberOfRequests;
+   public int getNumRequests() {
+      return numRequests;
    }
 
-   public int getNumberOfAttributes() {
-      return numberOfAttributes;
+   public int getNumEntries() {
+      return numEntries;
    }
 
-   public int getSizeOfAnAttribute() {
-      return sizeOfAnAttribute;
+   public int getEntrySize() {
+      return entrySize;
    }
 
    public int getWritePercentage() {
       return writePercentage;
    }
 
-   public int getNumOfThreads() {
-      return numOfThreads;
+   public int getNumThreads() {
+      return numThreads;
    }
 
    public boolean isReportNanos() {
       return reportNanos;
    }
 
-   public void setSizeOfAnAttribute(int sizeOfAnAttribute) {
-      this.sizeOfAnAttribute = sizeOfAnAttribute;
+   public void setEntrySize(int entrySize) {
+      this.entrySize = entrySize;
    }
 
-   public void setNumOfThreads(int numOfThreads) {
-      this.numOfThreads = numOfThreads;
+   public void setNumThreads(int numThreads) {
+      this.numThreads = numThreads;
    }
 
    public void setReportNanos(boolean reportNanos) {
@@ -255,19 +253,19 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       this.durationMillis = Utils.string2Millis(duration);
    }
 
-   public void setSharedAttributes(boolean sharedAttributes) {
-      this.sharedAttributes = sharedAttributes;
+   public void setSharedKeys(boolean sharedKeys) {
+      this.sharedKeys = sharedKeys;
    }
 
    @Override
    public String toString() {
-      return "WebSessionBenchmarkStage {" +
+      return "StressTestStage {" +
             "opsCountStatusLog=" + opsCountStatusLog +
-            ", numberOfRequests=" + numberOfRequests +
-            ", numberOfAttributes=" + numberOfAttributes +
-            ", sizeOfAnAttribute=" + sizeOfAnAttribute +
+            ", numRequests=" + numRequests +
+            ", numEntries=" + numEntries +
+            ", entrySize=" + entrySize +
             ", writePercentage=" + writePercentage +
-            ", numOfThreads=" + numOfThreads +
+            ", numThreads=" + numThreads +
             ", reportNanos=" + reportNanos +
             ", cacheWrapper=" + cacheWrapper +
             ", useTransactions=" + useTransactions +

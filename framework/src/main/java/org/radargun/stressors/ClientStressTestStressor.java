@@ -26,7 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ClientStressTestStressor extends PutGetStressor {
+public class ClientStressTestStressor extends StressTestStressor {
    private static Log log = LogFactory.getLog(ClientStressTestStressor.class);
      
    private int initThreads = 1;
@@ -50,11 +50,11 @@ public class ClientStressTestStressor extends PutGetStressor {
          if (getDurationMillis() > 0) {
             completion = new TimeStressorCompletion(getDurationMillis() / iterations);
          } else {
-            completion = new OperationCountCompletion(new AtomicInteger(getNumberOfRequests() / iterations));
+            completion = new OperationCountCompletion(new AtomicInteger(getNumRequests() / iterations));
          }
          setStressorCompletion(completion);
          
-         super.setNumOfThreads(threads);
+         super.setNumThreads(threads);
          try {
             executeOperations();
          } catch (Exception e) {
@@ -92,15 +92,15 @@ public class ClientStressTestStressor extends PutGetStressor {
       }
             
       results.put(iteration  + ".DURATION", str(duration));
-      double requestPerSec = (reads + writes) / ((duration / super.getNumOfThreads()) / 1000000000.0);
+      double requestPerSec = (reads + writes) / ((duration / super.getNumThreads()) / 1000000000.0);
       results.put(iteration  + ".REQ_PER_SEC", str(requestPerSec));
-      results.put(iteration  + ".READS_PER_SEC", str(reads / ((readsDurations / super.getNumOfThreads()) / 1000000000.0)));
-      results.put(iteration  + ".WRITES_PER_SEC", str(writes / ((writesDurations / super.getNumOfThreads()) / 1000000000.0)));
+      results.put(iteration  + ".READS_PER_SEC", str(reads / ((readsDurations / super.getNumThreads()) / 1000000000.0)));
+      results.put(iteration  + ".WRITES_PER_SEC", str(writes / ((writesDurations / super.getNumThreads()) / 1000000000.0)));
       results.put(iteration  + ".READ_COUNT", str(reads));
       results.put(iteration  + ".WRITE_COUNT", str(writes));
       results.put(iteration  + ".FAILURES", str(failures));
       if (isUseTransactions()) {
-         double txPerSec = getTxCount() / ((transactionDuration / super.getNumOfThreads()) / 1000.0);
+         double txPerSec = getTxCount() / ((transactionDuration / super.getNumThreads()) / 1000.0);
          results.put(iteration  + ".TX_PER_SEC", str(txPerSec));
       }
       
@@ -110,13 +110,13 @@ public class ClientStressTestStressor extends PutGetStressor {
          
    @Override
    @Deprecated
-   public int getNumOfThreads() {
+   public int getNumThreads() {
       throw new UnsupportedOperationException("Set initThreads, maxThreads and increment instead");
    }
    
    @Override
    @Deprecated
-   public void setNumOfThreads(int numberOfThreads) {
+   public void setNumThreads(int numberOfThreads) {
       throw new UnsupportedOperationException("Set initThreads, maxThreads and increment instead");
    }
    

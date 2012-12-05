@@ -13,7 +13,7 @@ import java.util.Set;
  *
  * @author Manik Surtani
  */
-public class WebSessionWarmupStage extends WebSessionBenchmarkStage {
+public class StressTestWarmupStage extends StressTestStage {
 
    private static final Set<String> WARMED_UP_CONFIGS = new HashSet<String>(2);
 

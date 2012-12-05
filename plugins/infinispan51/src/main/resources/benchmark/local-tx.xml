@@ -2,7 +2,7 @@
 
    <benchmark>
       <PutGetWarmup durationMillis="20m"/>
-      <PutGet durationMillis="30m" opsCountStatusLog="1000000" numOfThreads="25" useTransactions="true" sysMonitorEnabled="true"/>
+      <PutGet durationMillis="30m" opsCountStatusLog="1000000" numThreads="25" useTransactions="true" sysMonitorEnabled="true"/>
    </benchmark>
 
    <products>

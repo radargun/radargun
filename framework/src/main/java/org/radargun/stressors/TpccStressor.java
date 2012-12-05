@@ -711,7 +711,7 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
       return String.valueOf(o);
    }
 
-   public void setNumOfThreads(int numOfThreads) {
+   public void setNumThreads(int numOfThreads) {
       this.numOfThreads = numOfThreads;
    }
 

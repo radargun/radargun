@@ -1,4 +1,4 @@
-<bench-config>
+<bench-config xmlns="urn:radargun:benchmark:1.1">
 
    <master bindAddress="${127.0.0.1:master.address}" port="${2103:master.port}"/>
 
@@ -8,17 +8,17 @@
       <ClusterValidation partialReplication="false"/>
       <Warmup operationCount="100000"/>
       <ClearCluster/>
-      <WebSessionBenchmark numberOfRequests="500000" opsCountStatusLog="10000" numOfThreads="20" writePercentage="100" useTransactions="true"/>
+      <StressTest numRequests="500000" opsCountStatusLog="10000" numThreads="20" writePercentage="100" useTransactions="true"/>
       <CsvReportGeneration/>
    </benchmark>
 
    <products>
-      <infinispan5>
+      <infinispan50>
          <config file="dist-tx.xml" cache="noXa" name="no-xa"/>
          <config file="dist-tx.xml" cache="xaNoRecovery" name="xa-no-recovery"/>
          <config file="dist-tx.xml" cache="xaNoRecovery" name="xa-no-recovery-1pc-off" enlistExtraXAResource="true"/>
          <config file="dist-tx.xml" cache="xaWithRecovery" name="xa-with-recovery"/>
-      </infinispan5>
+      </infinispan50>
    </products>
 
    <reports>

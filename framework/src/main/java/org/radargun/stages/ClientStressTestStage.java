@@ -23,7 +23,7 @@ import java.util.Map;
 import org.radargun.stressors.ClientStressTestStressor;
 
 
-public class ClientStressTestStage extends WebSessionBenchmarkStage {
+public class ClientStressTestStage extends StressTestStage {
 
    private int initThreads = 1;
    
@@ -36,13 +36,13 @@ public class ClientStressTestStage extends WebSessionBenchmarkStage {
       log.info("Starting " + getClass().getSimpleName() + ": " + this);
       ClientStressTestStressor putGetStressor = new ClientStressTestStressor();
       putGetStressor.setNodeIndex(getSlaveIndex());
-      putGetStressor.setNumberOfAttributes(getNumberOfAttributes());
-      putGetStressor.setNumberOfRequests(getNumberOfRequests());
+      putGetStressor.setNumEntries(getNumEntries());
+      putGetStressor.setNumRequests(getNumRequests());
       putGetStressor.setInitThreads(initThreads);
       putGetStressor.setMaxThreads(maxThreads);
       putGetStressor.setIncrement(increment);
       putGetStressor.setOpsCountStatusLog(getOpsCountStatusLog());
-      putGetStressor.setSizeOfAnAttribute(getSizeOfAnAttribute());
+      putGetStressor.setEntrySize(getEntrySize());
       putGetStressor.setWritePercentage(getWritePercentage());
       putGetStressor.setKeyGeneratorClass(getKeyGeneratorClass());
       putGetStressor.setUseTransactions(isUseTransactions());

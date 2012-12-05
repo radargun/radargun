@@ -1,24 +1,23 @@
 package org.radargun.stages;
 
-import static java.lang.Double.parseDouble;
-import static org.radargun.utils.Utils.numberFormat;
+import org.radargun.CacheWrapper;
+import org.radargun.DistStageAck;
+import org.radargun.state.MasterState;
+import org.radargun.stressors.TpccStressor;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-import org.radargun.CacheWrapper;
-import org.radargun.DistStageAck;
-import org.radargun.state.MasterState;
-import org.radargun.stressors.TpccStressor;
+import static java.lang.Double.parseDouble;
+import static org.radargun.utils.Utils.numberFormat;
 
 /**
  * Simulate the activities found in complex OLTP application environments.
  * Execute the TPC-C Benchmark.
  * <pre>
  * Params:
- *       - numOfThreads : the number of stressor threads that will work on each slave.
+ *       - numThreads : the number of stressor threads that will work on each slave.
  *       - perThreadSimulTime : total time (in seconds) of simulation for each stressor thread.
  *       - arrivalRate : if the value is greater than 0.0, the "open system" mode is active and the parameter represents the arrival rate (in transactions per second) of a job (a transaction to be executed) to the system; otherwise the "closed system" mode is active: this means that each thread generates and executes a new transaction in an iteration as soon as it has completed the previous iteration.
  *       - paymentWeight : percentage of Payment transactions.
@@ -37,7 +36,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
    /**
     * the number of threads that will work on this slave
     */
-   private int numOfThreads = 10;
+   private int numThreads = 10;
    
    /**
     * total time (in seconds) of simulation for each stressor thread
@@ -75,7 +74,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       TpccStressor tpccStressor = new TpccStressor();
       tpccStressor.setNodeIndex(getSlaveIndex());
       tpccStressor.setNumSlaves(getActiveSlaveCount());
-      tpccStressor.setNumOfThreads(this.numOfThreads);
+      tpccStressor.setNumThreads(this.numThreads);
       tpccStressor.setPerThreadSimulTime(this.perThreadSimulTime);
       tpccStressor.setArrivalRate(this.arrivalRate);
       tpccStressor.setPaymentWeight(this.paymentWeight);
@@ -100,7 +99,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       logDurationInfo(acks);
       boolean success = true;
       Map<Integer, Map<String, Object>> results = new HashMap<Integer, Map<String, Object>>();
-      masterState.put("results", results);
+      masterState.put(CsvReportGenerationStage.RESULTS, results);
       for (DistStageAck ack : acks) {
          DefaultDistStageAck wAck = (DefaultDistStageAck) ack;
          if (wAck.isError()) {
@@ -126,8 +125,8 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       return success;
    }
 
-   public void setNumOfThreads(int numOfThreads) {
-      this.numOfThreads = numOfThreads;
+   public void setNumThreads(int numThreads) {
+      this.numThreads = numThreads;
    }
    
    public void setPerThreadSimulTime(long perThreadSimulTime) {
@@ -150,8 +149,8 @@ public class TpccBenchmarkStage extends AbstractDistStage {
 
    @Override
    public String toString() {
-      return "WebSessionBenchmarkStage {" +
-            ", numOfThreads=" + numOfThreads +
+      return "TpccBenchmarkStage {" +
+            ", numThreads=" + numThreads +
             ", perThreadSimulTime=" + perThreadSimulTime +
             ", arrivalRate=" + arrivalRate +
             ", paymentWeight=" + paymentWeight +
