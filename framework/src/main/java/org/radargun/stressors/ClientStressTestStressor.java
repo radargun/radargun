@@ -18,13 +18,13 @@
  */
 package org.radargun.stressors;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientStressTestStressor extends PutGetStressor {
    private static Log log = LogFactory.getLog(ClientStressTestStressor.class);
@@ -59,6 +59,9 @@ public class ClientStressTestStressor extends PutGetStressor {
             executeOperations();
          } catch (Exception e) {
             throw new RuntimeException(e);
+         }
+         if (isTerminated()) {
+            break;
          }
          processResults(String.format("%03d", iteration), results);
       }

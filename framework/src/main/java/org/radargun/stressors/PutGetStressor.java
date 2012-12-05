@@ -5,11 +5,7 @@ import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.utils.Utils;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -85,6 +81,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
    private volatile CountDownLatch cleanUpPoint;
    private volatile StressorCompletion completion;
    private volatile boolean finished = false;
+   private volatile boolean terminated = false;
    
    protected List<Stressor> stressors = new ArrayList<Stressor>(numOfThreads);
 
@@ -118,6 +115,10 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
    public void destroy() throws Exception {
       cacheWrapper.empty();
       cacheWrapper = null;
+   }
+
+   protected boolean isTerminated() {
+      return terminated;
    }
 
    private Map<String, String> processResults() {
@@ -175,7 +176,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       startPoint.countDown();
       log.info("Started " + stressors.size() + " stressor threads.");
             
-      endPoint.await();      
+      endPoint.await();
    }
    
    protected void finishOperations() {
@@ -231,7 +232,14 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       public void run() {
          try {
             do {
-               runInternal();
+               try {
+                  runInternal();
+               } catch (Exception e) {
+                  terminated = true;
+                  throw e;
+               } finally {
+                  endPoint.countDown();
+               }
                cleanUpPoint.await();
                clean();
             } while (!finished);
@@ -274,8 +282,6 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
             completeTransaction(-1, true);
             transactionDuration += System.nanoTime() - start;
          }
-         
-         endPoint.countDown();
       }
 
       private long startTx(int iteration) {
@@ -405,7 +411,11 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
    private boolean startTransaction(int i) {
       if ((i % transactionSize) == 0) {
-         cacheWrapper.startTransaction();
+         try {
+            cacheWrapper.startTransaction();
+         } catch (Exception e) {
+            log.error("Cannot start transaction");
+         }
          return true;
       }
       return false;
@@ -417,7 +427,6 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
             cacheWrapper.endTransaction(commitTransactions);
          } catch (Exception e) {
             log.error("Issues committing the transaction", e);
-            throw new RuntimeException(e);
          }
          txCount.incrementAndGet();
          return true;
