@@ -155,6 +155,9 @@ public class ConfigHelper {
             stack.push(range(stack.pop(), stack.pop()));
             next = 2;
          } else if (expression.startsWith(",")) {
+            stack.push(add(stack.pop(), stack.pop()));
+            next = 1;
+         } else if (expression.startsWith("++")) {
             stack.push(concat(stack.pop(), stack.pop()));
             next = 1;
          } else {
@@ -186,8 +189,12 @@ public class ConfigHelper {
       return stack.pop();
    }
 
-   private static String concat(String second, String first) {
+   private static String add(String second, String first) {
       return first + "," + second;
+   }
+
+   private static String concat(String second, String first) {
+      return first + second;
    }
 
    private static String range(String second, String first) {
