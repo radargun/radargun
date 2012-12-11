@@ -18,17 +18,27 @@
  */
 package org.radargun.stages;
 
-import java.util.Map;
-
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.stressors.ClientStressTestStressor;
 
+import java.util.Map;
 
+/**
+ * Repeats the StressTest logic with variable amount of threads.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
+@Stage(doc = "Repeats the StressTest logic with increasing amount of client threads.")
 public class ClientStressTestStage extends StressTestStage {
 
+   @Property(optional = false, doc = "Initial number of threads.")
    private int initThreads = 1;
-   
+
+   @Property(optional = false, doc = "Maximum number of threads this will be run with.")
    private int maxThreads = 10;
-   
+
+   @Property(doc = "Number of threads which should be added in each iteration. Default is 1.")
    private int increment = 1;
    
    @Override   
@@ -48,7 +58,7 @@ public class ClientStressTestStage extends StressTestStage {
       putGetStressor.setUseTransactions(isUseTransactions());
       putGetStressor.setCommitTransactions(isCommitTransactions());
       putGetStressor.setTransactionSize(getTransactionSize());
-      putGetStressor.setDurationMillis(getDurationMillis());
+      putGetStressor.setDurationMillis(getDuration());
       return putGetStressor.stress(cacheWrapper);
    }
 

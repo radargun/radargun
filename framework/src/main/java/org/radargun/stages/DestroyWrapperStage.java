@@ -3,6 +3,8 @@ package org.radargun.stages;
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.Slave;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.BackgroundStats;
 import org.radargun.utils.Utils;
@@ -14,16 +16,19 @@ import static org.radargun.utils.Utils.*;
 /**
  * Distributed stage that will stop the cache wrapper on each slave.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
+@Stage(doc = "Distributed stage that will stop the cache wrapper on each slave.")
 public class DestroyWrapperStage extends AbstractDistStage {
    private static final String FREEMEM_KB = DestroyWrapperStage.class.getSimpleName() + ":FreeMem_KB";
 
+   @Property(doc = "Specifies whether the check for amount of free memory should be performed. Default is true.")
    private boolean enforceMemoryThrashHold = true;
 
-   private Long initialFreeMemoryKb;
-
+   @Property(doc = "If the free memory after wrapper destroy and System.gc() is below percentage specified in this property the benchmark will stop. Default is 95.")
    private byte memoryThreshold = 95;
+
+   private Long initialFreeMemoryKb;
 
    public DestroyWrapperStage() {
    }

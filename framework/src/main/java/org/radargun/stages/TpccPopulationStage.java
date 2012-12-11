@@ -1,12 +1,14 @@
 
 package org.radargun.stages;
 
-import java.util.List;
-
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.TpccPopulationStressor;
+
+import java.util.List;
 
 /**
  * This stage shuld be run before the <b>TpccBenchmarkStage</b>. It will perform the population of
@@ -22,27 +24,19 @@ import org.radargun.stressors.TpccPopulationStressor;
  *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
-
+@Stage(doc = "This stage shuld be run before the TpccBenchmarkStage.")
 public class TpccPopulationStage extends AbstractDistStage{
    
-   /**
-    * number of Warehouses
-    */
+   @Property(doc = "Number of Warehouses. Default is 1.")
    private int numWarehouses = 1;
-   
-   /**
-    * mask used to generate non-uniformly distributed random customer last names
-    */
+
+   @Property(doc = "Mask used to generate non-uniformly distributed random customer last names. Default is 255.")
    private long cLastMask = 255;
-   
-   /**
-    * mask used to generate non-uniformly distributed random item numbers
-    */
+
+   @Property(doc = "Mask used to generate non-uniformly distributed random item numbers. Default is 8191.")
    private long olIdMask = 8191;
    
-   /**
-    * mask used to generate non-uniformly distributed random customer numbers
-    */
+   @Property(doc = "Mask used to generate non-uniformly distributed random customer numbers. Default is 1023.")
    private long cIdMask = 1023;
 
    public DistStageAck executeOnSlave() {

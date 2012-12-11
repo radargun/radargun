@@ -5,19 +5,23 @@ import org.apache.commons.logging.LogFactory;
 import org.radargun.DistStage;
 import org.radargun.DistStageAck;
 import org.radargun.config.MasterConfig;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
  * Support class for distributed stages.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
+@Stage(doc = "")
 public abstract class AbstractDistStage implements DistStage {
 
    protected Log log = LogFactory.getLog(getClass());
@@ -27,15 +31,22 @@ public abstract class AbstractDistStage implements DistStage {
    protected transient SlaveState slaveState;
 
    protected transient MasterConfig masterConfig;
-   protected List<Integer> slaves;
 
+   @Property(doc = "Specifies on which slaves should this stage actively run. Default is stage-dependent (usually all or none).")
+   protected Collection<Integer> slaves;
+
+   @Property(doc = "Smart class loading loads libraries specific for the product. Default is true.")
+   private boolean useSmartClassLoading = true;
+
+   @Property(doc = "Should the benchmark fail if one of the slaves sends error acknowledgement? Default is false.")
    protected boolean exitBenchmarkOnSlaveFailure = false;
+
+   @Property(doc = "If set to true the stage should be run on maxSlaves (applies to scaling benchmarks). Default is false.")
+   private boolean runOnAllSlaves;
 
    protected int slaveIndex;
    private int activeSlavesCount;
    private int totalSlavesCount;
-   private boolean runOnAllSlaves;
-   private boolean useSmartClassLoading = true;
    protected String productName;
    protected ClassLoadHelper classLoadHelper;
 

@@ -1,46 +1,40 @@
 package org.radargun.stages;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.text.DecimalFormat;
-import java.text.Format;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.reporting.CSVChart;
 import org.radargun.stressors.BackgroundStats;
 import org.radargun.stressors.BackgroundStats.Stats;
 
+import java.io.*;
+import java.text.DecimalFormat;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 /**
- * 
  * Generates reports from BackgroundStats results.
  * 
  * @author Michal Linhard <mlinhard@redhat.com>
- * 
  */
+@Stage(doc = "Generates reports from BackgroundStats results.")
 public class ReportBackgroundStatsStage extends AbstractMasterStage {
    public static final Format NUMFORMAT = new DecimalFormat("0.000");
    private static final SimpleDateFormat DATEFORMAT = new SimpleDateFormat("HH:mm:ss,SSS");
 
+   @Property(doc = "Directory where the reports should be written. Default is 'reports'")
    private String targetDir = "reports";
+
+   @Property(doc = "Width of the produced charts. Default is 800px.")
    private int chartWidth = 800;
+
+   @Property(doc = "Height of the produced charts. Default is 600px.")
    private int chartHeight = 600;
+
+   @Property(doc = "Generate files for verifying time synchronization of slaves. Default is false.")
    private boolean generateIntervalTimeData = false;
+
+   @Property(doc = "Set of slaves whose results should be ignored. Default is empty.")
    private Set<Integer> ignore;
 
    public boolean execute() {

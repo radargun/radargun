@@ -1,13 +1,22 @@
 package org.radargun.stages;
 
-import java.util.Date;
-import java.util.List;
-
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
 import org.radargun.features.TopologyAware;
 import org.radargun.features.TopologyAware.Event;
 
+import java.util.Date;
+import java.util.List;
+
+/**
+ * Controls which topology events have (not) happened recently
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
+@Stage(doc = "Controls which topology events have (not) happened recently")
 public class CheckTopologyStage extends AbstractDistStage {
 
    enum Type {
@@ -15,9 +24,14 @@ public class CheckTopologyStage extends AbstractDistStage {
       HASH,
       TOPOLOGY
    }
-   
+
+   @Property(doc = "What does this stage control. Default is both DataRehashed and TopologyChanged events.")
    private Type type = Type.HASH_AND_TOPOLOGY;
+
+   @Property(converter = TimeConverter.class, doc = "The period in milliseconds which is checked. Default is infinite.")
    private long period = Long.MAX_VALUE;
+
+   @Property(doc = "The check controls if this event has happened (true) or not happened (false). Defaults to true.")
    private boolean changed = true;
    
    @Override

@@ -2,17 +2,31 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
 import org.radargun.state.MasterState;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * Stage checking the write skew detection in transactional caches.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
+@Stage(doc = "Stage checking the write skew detection in transactional caches.")
 public class WriteSkewCheckStage extends CheckStage {
    private static final String WRITE_SKEW_CHECK_KEY = "writeSkewCheckKey";
 
+   @Property(converter = TimeConverter.class, doc = "Duration of the test. Default is 1 minute.")
    private long duration = 60000;
+
+   @Property(doc = "Number of threads overwriting concurrently the entry. Default is 10.")
    private int threads = 10;
+
+   @Property(doc = "Should write skew between null value and first value be tested? Default is false.")
    private boolean testNull = false;
 
    private volatile boolean finished = false;

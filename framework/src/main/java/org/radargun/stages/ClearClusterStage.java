@@ -2,6 +2,7 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Stage;
 import org.radargun.utils.Utils;
 
 import java.util.ArrayList;
@@ -10,8 +11,9 @@ import java.util.Random;
 /**
  * Distributed stage that will clear the content of the cache wrapper on each slave.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
+@Stage(doc = "Removes all data from the cache")
 public class ClearClusterStage extends AbstractDistStage {
 
    public ClearClusterStage() {

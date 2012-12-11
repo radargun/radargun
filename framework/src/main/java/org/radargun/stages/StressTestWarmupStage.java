@@ -1,6 +1,7 @@
 package org.radargun.stages;
 
 import org.radargun.DistStageAck;
+import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 
 import java.util.HashSet;
@@ -8,11 +9,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * The warmup stage for web session benchmarks.  This ensures the same access paths are used for the warmup and the
+ * The warmup stage for stress test benchmarks.  This ensures the same access paths are used for the warmup and the
  * actual benchmark.
  *
- * @author Manik Surtani
+ * @author Manik Surtani &lt;manik@jboss.org&gt;
  */
+@Stage(doc = "Warmup stage for stress test benchmarks.")
 public class StressTestWarmupStage extends StressTestStage {
 
    private static final Set<String> WARMED_UP_CONFIGS = new HashSet<String>(2);

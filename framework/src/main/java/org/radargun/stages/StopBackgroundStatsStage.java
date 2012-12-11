@@ -1,21 +1,22 @@
 package org.radargun.stages;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.radargun.DistStageAck;
+import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.BackgroundStats;
 import org.radargun.stressors.BackgroundStats.Stats;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 
  * Stop BackgroundStats and return collected statistics to master.
  * 
- * @author Michal Linhard <mlinhard@redhat.com>
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
+@Stage(doc = "Stop BackgroundStats and return collected statistics to master.")
 public class StopBackgroundStatsStage extends AbstractDistStage {
 
    @Override

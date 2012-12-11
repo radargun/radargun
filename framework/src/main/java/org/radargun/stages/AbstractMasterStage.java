@@ -3,14 +3,16 @@ package org.radargun.stages;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.MasterStage;
+import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.utils.ClassLoadHelper;
 
 /**
  * Support class for MasterStages.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
+@Stage(doc = "")
 public abstract class AbstractMasterStage implements MasterStage {
 
    private static final String PREV_PRODUCT = "AbstractMasterStage.previousProduct";

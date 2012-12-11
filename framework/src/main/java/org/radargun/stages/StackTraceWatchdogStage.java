@@ -1,6 +1,9 @@
 package org.radargun.stages;
 
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -12,12 +15,25 @@ import java.util.*;
  * 
  * @author Radim Vansa <rvansa@redhat.com>
  */
+@Stage(doc = "Debug usage only. Periodically check for all thread stack traces and print them out.")
 public class StackTraceWatchdogStage extends AbstractDistStage {
 
+   @Property(converter = TimeConverter.class, doc = "The delay between consecutive checks. Default is 10 seconds.")
    private long period = 10000;
+
+   @Property(doc = "If set, only those threads which have this mask in the name will be checked. Default is not set.")
    private String mask = null;
+
+   @Property(doc = "By default the check will print out only those threads which appear to be stuck. If this is set " +
+         "to false all threads will be printed out. Default is true.")
    private boolean onlyStuck = true;
+
+   @Property(doc = "Threads with stack lower or equal to this value are never printed (because usually such threads " +
+         "are parked in thread pools). Default is 10.")
    private int shortStack = 10;
+
+   @Property(doc = "If set to true the watchdog will not use standard logging for output but will push the output "
+         + "to queue consumed (logged) by another thread. Default is false.")
    private boolean asyncLogging;
 
    private static final String WATCHDOG = "__watchdog__";

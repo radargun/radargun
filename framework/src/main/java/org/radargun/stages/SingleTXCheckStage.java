@@ -20,6 +20,7 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Stage;
 import org.radargun.features.XSReplicating;
 import org.radargun.stages.helpers.ParseHelper;
 
@@ -29,6 +30,10 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Paired with SingleTXLoadStage. Checks that the previous stage had the expected result.
+ */
+@Stage(doc = "Paired with SingleTXLoadStage. Checks that the previous stage had the expected result")
 public class SingleTXCheckStage extends AbstractDistStage {
 
    private static final Pattern txValue = Pattern.compile("txValue(\\d*)@(\\d*-\\d*)");

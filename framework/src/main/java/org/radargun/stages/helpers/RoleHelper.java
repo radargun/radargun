@@ -23,6 +23,8 @@ import org.radargun.features.XSReplicating;
 import org.radargun.state.SlaveState;
 
 public class RoleHelper {
+   public final static String SUPPORTED_ROLES = "[COORDINATOR, BRIDGE]";
+
    private RoleHelper() {}
 
    public static boolean hasRole(SlaveState slaveState, String role) {

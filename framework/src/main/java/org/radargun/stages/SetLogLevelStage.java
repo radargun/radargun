@@ -21,15 +21,28 @@ package org.radargun.stages;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
+/**
+ * This stage is meant for debugging. Changes log priorities. Beware that some code can cache the is{LogLevel}Enabled().
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
+@Stage(doc = "Debugging stage: changes log priorities")
 public class SetLogLevelStage extends AbstractDistStage {
 
+   @Property(optional = false, name="package", doc = "The package or class which should be affected.")
    private String pkg;
+
+   @Property(doc = "The new priority that should be used. No defaults.")
    private String priority;
+
+   @Property(doc = "If set to true, instead of setting the priority directly just undo the last priority change. Default is false.")
    private boolean pop;
 
    private static Map<String, Stack<Level>> stacks = new HashMap<String, Stack<Level>>();

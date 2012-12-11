@@ -20,19 +20,40 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
 import org.radargun.stages.helpers.ParseHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Performs single transaction in multiple threads on multiple slaves.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
+@Stage(doc = "Performs single transaction with requests on key0 .. keyN in multiple threads on multiple slaves.")
 public class SingleTXLoadStage extends AbstractDistStage {
 
+   @Property(converter = TimeConverter.class, doc = "The enforced duration of the transaction. If > 0 the threads " +
+         "will sleep for duration/transactionSize after each request. Default is 0.")
    private long duration = 0;
+
+   @Property(doc = "Number of threads that should execute the transaction. Default is 1.")
    private int threads = 1;
+
+   @Property(doc = "Indices of slaves which should commit the transaction (others will rollback). Default is all commit.")
    private Set<Integer> commitSlave; // null == all commit
+
+   @Property(doc = "Indices of threads which should commit the transaction (others will rollback). Default is all commit.")
    private Set<Integer> commitThread; // null == all commit
+
+   @Property(doc = "Number of request in the transaction. Default is 20.")
    private int transactionSize = 20;
+
+   @Property(doc = "The threads by default do the PUT request, if this is set to true they will do REMOVE. Default is false.")
    private boolean delete;
    
    @Override

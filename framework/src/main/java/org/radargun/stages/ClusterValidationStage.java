@@ -2,10 +2,13 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -16,22 +19,29 @@ import java.util.List;
  * - each slave checks whether all (or part) of the remaining slaves replicated here.
  *
  * Config:
- *   - 'isPartialReplication' : is set to true, then the slave will consider that the cluster is formed when one slave
+ *   - 'partialReplication' : is set to true, then the slave will consider that the cluster is formed when one slave
  *      replicated here. If false (default value) then replication will only be considered successful if all
  * (clusterSize)
  *      slaves replicated here.
  * </pre>
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
+@Stage(doc = "Verifies that the cluster is formed by injecting an entry into the cache and then reading it from other nodes.")
 public class ClusterValidationStage extends AbstractDistStage {
 
    private static final String KEY = "_InstallBenchmarkStage_";
    private static final String CONFIRMATION_KEY = "_confirmation_";
 
+   @Property(doc = "If set to true, then the slave will consider that the cluster is formed when one slave " +
+         "replicated the control entry. Otherwise the replication will only be considered successful if all " +
+         "slaves replicated the control value. Default is false.")
+   private boolean partialReplication = false;
 
-   private boolean isPartialReplication = false;
+   @Property(doc = "How many times we should try to retrieve the control entry.")
    private int replicationTryCount = 60;
+
+   @Property(doc = "Delay between attempts to retrieve the control entry.")
    private int replicationTimeSleep = 2000;
 
    private CacheWrapper wrapper;
@@ -46,7 +56,7 @@ public class ClusterValidationStage extends AbstractDistStage {
             return response;
          }
          int replResult = checkReplicationSeveralTimes();
-         if (!isPartialReplication) {
+         if (!partialReplication) {
             if (replResult > 0) {//only executes this on the slaves on which replication happened.
                int index = confirmReplication();
                if (index >= 0) {
@@ -106,7 +116,7 @@ public class ClusterValidationStage extends AbstractDistStage {
             continue;
          }
          int replCount = (Integer) defaultStageAck.getPayload();
-         if (isPartialReplication) {
+         if (partialReplication) {
             if (!(replCount > 0)) {
                log.warn("Replication hasn't occurred on slave: " + defaultStageAck);
                success = false;
@@ -144,8 +154,8 @@ public class ClusterValidationStage extends AbstractDistStage {
       int replCount = 0;      
       for (int i = 0; i < replicationTryCount; i++) {
          replCount = replicationCount();
-         if ((isPartialReplication && replCount >= 1) || (!isPartialReplication && (replCount == getSlaves().size() - 1))) {
-            log.info("Replication test successfully passed. isPartialReplication? " + isPartialReplication + ", replicationCount = " + replCount);
+         if ((partialReplication && replCount >= 1) || (!partialReplication && (replCount == getSlaves().size() - 1))) {
+            log.info("Replication test successfully passed. partialReplication? " + partialReplication + ", replicationCount = " + replCount);
             return replCount;
          }
          //adding our stuff one more time
@@ -192,7 +202,7 @@ public class ClusterValidationStage extends AbstractDistStage {
    }
 
    public void setPartialReplication(boolean partialReplication) {
-      isPartialReplication = partialReplication;
+      this.partialReplication = partialReplication;
    }
 
    public void setReplicationTryCount(int replicationTryCount) {
@@ -203,9 +213,9 @@ public class ClusterValidationStage extends AbstractDistStage {
       this.replicationTimeSleep = replicationTimeSleep;
    }
    
-   public List<Integer> getSlaves() {
+   public Collection<Integer> getSlaves() {
       if (slaves == null) {
-         List<Integer> list = new ArrayList<Integer>();
+         Collection<Integer> list = new ArrayList<Integer>();
          for (int i = 0; i < getActiveSlaveCount(); ++i) {
             list.add(i);
          }
@@ -222,7 +232,7 @@ public class ClusterValidationStage extends AbstractDistStage {
    @Override
    public String toString() {
       return "ClusterValidationStage {" +
-            "isPartialReplication=" + isPartialReplication +
+            "partialReplication=" + partialReplication +
             ", replicationTryCount=" + replicationTryCount +
             ", replicationTimeSleep=" + replicationTimeSleep +
             ", wrapper=" + wrapper + ", " + super.toString();

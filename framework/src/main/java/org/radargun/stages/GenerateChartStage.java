@@ -2,22 +2,15 @@ package org.radargun.stages;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.reporting.ClusterReport;
 import org.radargun.reporting.HtmlReportGenerator;
 import org.radargun.reporting.LineReportGenerator;
 import org.radargun.utils.Utils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.io.*;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -28,8 +21,9 @@ import java.util.regex.Pattern;
  * - outputDir - where to output the generated graphical reports. Defaults to 'reports'
  * </pre>
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
+@Stage(doc = "Stage that generates a chart from a set of csv files.")
 public class GenerateChartStage extends AbstractMasterStage {
 
    private static Log log = LogFactory.getLog(GenerateChartStage.class);
@@ -38,9 +32,14 @@ public class GenerateChartStage extends AbstractMasterStage {
    public static final String X_LABEL_ITERATION = "Iteration (related to number of stressor threads)";
    public static final String REPORTS = "reports";
 
+   @Property(doc = "Path to directory where the report (output) should be generated. Default is '" + GenerateChartStage.REPORTS + "'.")
    private String reportDirectory = REPORTS;
+
+   @Property(doc = "Path to directory where are the (input) CSV files. Default is '" + GenerateChartStage.REPORTS + "'.")
    private String csvFilesDirectory = REPORTS;
+
    private String fnPrefix;
+
    private Map<String, List<String>> filter = new HashMap<String, List<String>>();
    protected Map<String, List<Pattern>> compiledFilters = null;
    ClusterReport putReport = new ClusterReport();

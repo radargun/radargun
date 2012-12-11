@@ -1,13 +1,19 @@
 package org.radargun.stages;
 
 
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
+
 /**
  * Sleeps specified number of milliseconds.
  * 
- * @author Michal Linhard <mlinhard@redhat.com>
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
+@Stage(doc = "Sleeps specified number of milliseconds.")
 public class SleepStage extends AbstractMasterStage {
 
+   @Property(optional = false, converter = TimeConverter.class, doc = "Sleep duration.")
    private long time;
 
    public void setTime(long time) {

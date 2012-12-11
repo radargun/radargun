@@ -1,23 +1,24 @@
 package org.radargun.stages;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.StringTokenizer;
-
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.features.Partitionable;
 import org.radargun.state.MasterState;
+
+import java.util.*;
 
 /**
  * Stage that partitions the cluster into several parts that cannot communicate
  * 
- * @author rvansa@redhat.com
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@Stage(doc = "Partitions the cluster into several parts that cannot communicate.")
 public class SetPartitionsStage extends AbstractDistStage {
 
+   @Property(optional = false, doc = "Set of sets of partitions, e.g. (0,1),(2) makes two partitions," +
+         "one with slaves 0 and 1 and second with slave 2 alone.")
    private List<Set<Integer>> partitions;
    
    public SetPartitionsStage() {

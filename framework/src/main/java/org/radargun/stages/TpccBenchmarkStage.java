@@ -2,6 +2,8 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.TpccStressor;
 
@@ -26,38 +28,26 @@ import static org.radargun.utils.Utils.numberFormat;
  *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
+@Stage(doc = "Simulate the activities found in complex OLTP application environments.")
 public class TpccBenchmarkStage extends AbstractDistStage {
    
    private static final String SIZE_INFO = "SIZE_INFO";
-   
-
    public static final String SESSION_PREFIX = "SESSION";
 
-   /**
-    * the number of threads that will work on this slave
-    */
+   @Property(doc = "Number of threads that will work on this slave. Default is 10.")
    private int numThreads = 10;
    
-   /**
-    * total time (in seconds) of simulation for each stressor thread
-    */
+   @Property(doc = "Total time (in seconds) of simulation for each stressor thread. Default is 180.")
    private long perThreadSimulTime = 180L;
    
-   /**
-    * average arrival rate of the transactions to the system
-    */
+   @Property(doc = "Average arrival rate of the transactions to the system. Default is 0.")
    private double arrivalRate = 0.0D;
    
-   /**
-    * percentage of Payment transactions
-    */
+   @Property(doc = "Percentage of Payment transactions. Default is 45 %.")
    private double paymentWeight = 45.0D;
    
-   /**
-    * percentage of Order Status transactions
-    */
+   @Property(doc = "Percentage of Order Status transactions. Default is 5 %.")
    private double orderStatusWeight = 5.0D;
-
 
    private CacheWrapper cacheWrapper;
 

@@ -18,13 +18,22 @@
  */
 package org.radargun.stages;
 
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.features.XSReplicating;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Checks data loaded in XSReplLoadStage.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
+@Stage(doc = "Checks data loaded in XSReplLoadStage.")
 public class XSReplCheckStage extends CheckDataStage {
-   
+
+   @Property(doc = "Postfix part of the value contents. Default is empty string.")
    private String valuePostFix = "";
    
    @Override

@@ -1,24 +1,40 @@
 package org.radargun.stages;
 
-import java.util.Set;
-
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
 import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.stages.helpers.StartHelper;
 import org.radargun.state.MasterState;
 
+import java.util.Set;
+
 /**
  * Stage that starts a CacheWrapper on each slave.
  * 
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
+@Stage(doc = "Starts cache wrappers on specified slaves")
 public class StartClusterStage extends AbstractStartStage {
 
+   @Property(doc = "Specifies whether the cluster formation should be checked after cache wrapper startup. Default is true.")
    private boolean validateCluster = true;
+
+   @Property(doc = "If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.")
    private boolean staggerSlaveStartup = true;
+
+   @Property(converter = TimeConverter.class, doc = "Delay (staggering) after first slave's start is initiated. Default is 5s")
    private long delayAfterFirstSlaveStarts = 5000;
+
+   @Property(converter = TimeConverter.class, doc = "Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms")
    private long delayBetweenStartingSlaves = 500;
+
+   @Property(doc = "The number of slaves that should be up after all slaves are started. Applicable only with " +
+         "validateCluster=true. Default is all slaves in the cluster (in the same site in case of multi-site configuration).")
    private Integer expectNumSlaves;
+
+   @Property(doc = "Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.")
    private Set<Integer> reachable = null;
 
    public StartClusterStage() {
@@ -36,7 +52,12 @@ public class StartClusterStage extends AbstractStartStage {
             log.trace("Start request not targeted for this slave, ignoring.");
             return ack;
          } else {
-            staggerStartup(slaves.indexOf(getSlaveIndex()), slaves.size());
+            int index = 0;
+            for (Integer slave : slaves) {
+               if (slave.equals(getSlaveIndex())) break;
+               index++;
+            }
+            staggerStartup(index, slaves.size());
          }
       } else {
          staggerStartup(slaveIndex, getActiveSlaveCount());

@@ -20,6 +20,8 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.stages.helpers.RangeHelper;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.BackgroundStats;
@@ -32,16 +34,42 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+/**
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
+@Stage(doc = "Stage for checking presence or absence of data uploaded by BackgroundStats")
 public class CheckDataStage extends AbstractDistStage {
 
+   @Property(optional = false, doc = "Number of entries with key in form key{number} in the cache.")
    private int numEntries;
+
+   @Property(optional = false, doc = "Number of bytes carried in single entry.")
    private int entrySize;
+
+   @Property(doc = "Entries that have not the form key{number} but occur in the cluster. This string specifies " +
+         "a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries." +
+         "Defaults to 0.")
    private String extraEntries;
+
+   @Property(doc = "Number of owners of one key (primary + backups). If negative the number is multiplied by cluster " +
+         "size, therefore, -1 means full replication. Default is -1.")
    private int numOwners = -1;
+
+   @Property(doc = "Number of thread per node which check data validity. Default is 1.")
    private int checkThreads = 1;
+
+   @Property(doc = "Usually the test checks that sum of local nodes = numOwners * numEntries + extraEntries." +
+         "This option disables such behaviour. Default is false.")
    private boolean ignoreSum = false;
+
+   @Property(doc = "Hint how many slaves are currently alive - if set to > 0 then the query for amount of entries in" +
+         "this cache is postponed until the cache appears to be fully replicated. By default this is disabled.")
    private int liveSlavesHint = -1;
+
+   @Property(doc = "If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.")
    private boolean deleted = false;
+
+   @Property(doc = "Number of queries after which a DEBUG log message is printed. Default is 10000.")
    private int logChecksCount = 10000;
     
    @Override
@@ -225,7 +253,7 @@ public class CheckDataStage extends AbstractDistStage {
    public int getNumEntries() {
       return this.numEntries;
    }
-   
+
    public void setNumEntries(int entries) {
       this.numEntries = entries;
    }
@@ -272,11 +300,11 @@ public class CheckDataStage extends AbstractDistStage {
    public void setNumOwners(int numOwners) {
       this.numOwners = numOwners;
    }
-   
+
    public void setCheckThreads(int threads) {
       this.checkThreads = threads;
    }
-   
+
    public void setIgnoreSum(boolean ignore) {
       ignoreSum = ignore;
    }

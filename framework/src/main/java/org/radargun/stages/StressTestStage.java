@@ -2,6 +2,8 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.StressTestStressor;
 import org.radargun.stressors.StringKeyGenerator;
@@ -17,56 +19,56 @@ import static org.radargun.utils.Utils.numberFormat;
 /**
  * Simulates the work with a distributed web sessions.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
+@Stage(doc = "Benchmark where several client threads access cache limited by time or number of requests.")
 public class StressTestStage extends AbstractDistStage {
 
    private static final String SIZE_INFO = "SIZE_INFO";
-   private int opsCountStatusLog = 5000;
 
    public static final String SESSION_PREFIX = "SESSION";
 
-   /**
-    * total number of request to be made against this session: reads + writes
-    */
+   @Property(doc = "Number of operations after which a log entry should be written. Default is 5000.")
+   private int opsCountStatusLog = 5000;
+
+   @Property(doc = "Total number of request to be made against this session: reads + writes. If duration " +
+         "is specified this value is ignored. Default is 50000.")
    private int numRequests = 50000;
 
-   /**
-    * for each session there will be created fixed number of attributes. On those attributes all the GETs and PUTs are
-    * performed (for PUT is overwrite)
-    */
+   @Property(doc = "Number of key-value entries per each client thread which should be used. Default is 100.")
    private int numEntries = 100;
 
-   /**
-    * Each attribute will be a byte[] of this size
-    */
+   @Property(doc = "Size of the value in bytes. Default is 1000.")
    private int entrySize = 1000;
 
-   /**
-    * Out of the total number of request, this define the frequency of writes (percentage)
-    */
+   @Property(doc = "Ratio of writes = PUT requests (percentage). Default is 20%")
    private int writePercentage = 20;
 
-   /**
-    * the number of threads that will work on this slave
-    */
+   @Property(doc = "The number of threads that will work on this slave. Default is 10.")
    private int numThreads = 10;
 
-   private boolean reportNanos = false;
-
+   @Property(doc = "Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.")
    private String keyGeneratorClass = StringKeyGenerator.class.getName();
 
-   protected CacheWrapper cacheWrapper;
-
+   @Property(doc = "Specifies if the requests should be explicitely wrapped in transactions. Default is false.")
    private boolean useTransactions = false;
 
+   @Property(doc = "Specifies whether the transactions should be committed (true) or rolled back (false). " +
+         "Default is true")
    private boolean commitTransactions = true;
 
+   @Property(doc = "Number of requests in one transaction. Default is 1.")
    private int transactionSize = 1;
 
-   private long durationMillis = -1;
+   @Property(doc = "Benchmark duration. This takes precedence over numRequests. By default switched off.")
+   private long duration = -1;
 
+   @Property(doc = "By default each client thread operates on his private set of keys. Setting this to true " +
+         "introduces contention between the threads, the numThreads property says total amount of entries that are " +
+         "used by all threads. Default is false.")
    private boolean sharedKeys = false;
+
+   protected CacheWrapper cacheWrapper;
 
    protected Map<String, String> doWork() {
       log.info("Starting "+getClass().getSimpleName()+": " + this);
@@ -82,7 +84,7 @@ public class StressTestStage extends AbstractDistStage {
       stressTestStressor.setUseTransactions(useTransactions);
       stressTestStressor.setCommitTransactions(commitTransactions);
       stressTestStressor.setTransactionSize(transactionSize);
-      stressTestStressor.setDurationMillis(durationMillis);
+      stressTestStressor.setDurationMillis(duration);
       stressTestStressor.setSharedKeys(sharedKeys);
       return stressTestStressor.stress(cacheWrapper);
    }
@@ -90,6 +92,7 @@ public class StressTestStage extends AbstractDistStage {
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
       if (slaves != null && !slaves.contains(slaveIndex)) {
+         log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveIndex, slaves));
          return result;
       }
       this.cacheWrapper = slaveState.getCacheWrapper();
@@ -189,20 +192,12 @@ public class StressTestStage extends AbstractDistStage {
       return numThreads;
    }
 
-   public boolean isReportNanos() {
-      return reportNanos;
-   }
-
    public void setEntrySize(int entrySize) {
       this.entrySize = entrySize;
    }
 
    public void setNumThreads(int numThreads) {
       this.numThreads = numThreads;
-   }
-
-   public void setReportNanos(boolean reportNanos) {
-      this.reportNanos = reportNanos;
    }
 
    public void setWritePercentage(int writePercentage) {
@@ -245,12 +240,12 @@ public class StressTestStage extends AbstractDistStage {
       this.commitTransactions = commitTransactions;
    }
 
-   public long getDurationMillis() {
-      return durationMillis;
+   public long getDuration() {
+      return duration;
    }
 
    public void setDuration(String duration) {
-      this.durationMillis = Utils.string2Millis(duration);
+      this.duration = Utils.string2Millis(duration);
    }
 
    public void setSharedKeys(boolean sharedKeys) {
@@ -266,12 +261,11 @@ public class StressTestStage extends AbstractDistStage {
             ", entrySize=" + entrySize +
             ", writePercentage=" + writePercentage +
             ", numThreads=" + numThreads +
-            ", reportNanos=" + reportNanos +
             ", cacheWrapper=" + cacheWrapper +
             ", useTransactions=" + useTransactions +
             ", commitTransactions=" + commitTransactions +
             ", transactionSize=" + transactionSize +
-            ", durationMillis=" + durationMillis+
+            ", duration=" + duration +
             ", " + super.toString();
    }
 }

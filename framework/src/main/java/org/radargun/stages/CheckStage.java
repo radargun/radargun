@@ -1,15 +1,17 @@
 package org.radargun.stages;
 
+import org.radargun.config.Stage;
+
 import java.util.List;
 
 /**
- * Created with IntelliJ IDEA.
- * User: rvansa
- * Date: 11/12/12
- * Time: 3:55 PM
- * To change this template use File | Settings | File Templates.
+ * Abstract stage that handles error messages from multiple threads
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@Stage(doc = "")
 public abstract class CheckStage extends AbstractDistStage {
+
    protected DefaultDistStageAck exception(DefaultDistStageAck ack, String message, Exception e) {
       log.error(message, e);
       ack.setError(true);

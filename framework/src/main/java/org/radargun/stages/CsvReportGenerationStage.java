@@ -1,30 +1,33 @@
 package org.radargun.stages;
 
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.utils.Utils;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
- * Stage that generates
+ * Stage that generates reports of StressTest (or TpccBenchmark) in CSV format
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt; (modifications)
  */
+@Stage(doc = "Generates report in CSV format from the latest StressTest results")
 public class CsvReportGenerationStage extends AbstractMasterStage {
 
    public static final String RESULTS = "results";
+
+   @Property(doc = "Directory into which will be report files written.")
    private String targetDir = "reports";
-   private String separator = ",";
+
+   @Property(doc = "Slaves whose results will be ignored.")
    private Set<Integer> ignore;
+
+   private String separator = ",";
 
    private File outputFile;
    private FileWriter fileWriter;

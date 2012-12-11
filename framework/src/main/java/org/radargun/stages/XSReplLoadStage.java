@@ -1,17 +1,28 @@
 package org.radargun.stages;
 
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.features.XSReplicating;
 import org.radargun.stages.helpers.RangeHelper;
 import org.radargun.state.MasterState;
 
 /**
- * @author Radim Vansa <rvansa@redhat.com>
+ * Loads data into the cache with input cache name encoded into the value.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@Stage(doc = "Loads data into the cache with input cache name encoded into the value.")
 public class XSReplLoadStage extends AbstractDistStage {
 
+   @Property(optional = false, doc = "Amount of entries that should be inserted into the cache.")
    private int numEntries;
+
+   @Property(doc = "If set to true, the entries are removed instead of being inserted. Default is false.")
    private boolean delete = false;
+
+   @Property(doc = "String encoded into the value so that the entry may be distinguished from entries loaded in " +
+         "different load stages. Default is empty string.")
    private String valuePostFix = "";
    
    public XSReplLoadStage() {

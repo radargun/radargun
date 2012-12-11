@@ -18,12 +18,28 @@
  */
 package org.radargun.stages;
 
+import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.state.MasterState;
 import org.radargun.utils.TypedProperties;
 
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * Common base for stages that start slaves.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
+@Stage(doc = "")
 public abstract class AbstractStartStage extends AbstractDistStage {
    
    protected String config;
    protected TypedProperties confAttributes;
+
+   @Property(doc = "Set of slaves where the start may fail but this will not cause an error. Default is none.")
+   protected Collection<Integer> mayFailOn;
 
    public void setConfig(String config) {
       this.config = config;
@@ -33,4 +49,23 @@ public abstract class AbstractStartStage extends AbstractDistStage {
       this.confAttributes = confAttributes;
    }
 
+   @Override
+   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+      boolean success = true;
+      logDurationInfo(acks);
+      for (DistStageAck stageAck : acks) {
+         DefaultDistStageAck defaultStageAck = (DefaultDistStageAck) stageAck;
+         if (defaultStageAck.isError() && (mayFailOn == null || !mayFailOn.contains(stageAck.getSlaveIndex()))) {
+            log.warn("Received error ack " + defaultStageAck);
+            return false;
+         } else if (defaultStageAck.isError()) {
+            log.info("Received allowed error ack " + defaultStageAck);
+         } else {
+            log.trace("Received success ack " + defaultStageAck);
+         }
+      }
+      if (log.isTraceEnabled())
+         log.trace("All ack messages were successful");
+      return success;
+   }
 }

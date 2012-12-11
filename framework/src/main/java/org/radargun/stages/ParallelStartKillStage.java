@@ -18,22 +18,37 @@
  */
 package org.radargun.stages;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.StringTokenizer;
-
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
 import org.radargun.stages.helpers.KillHelper;
+import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.stages.helpers.RoleHelper;
 import org.radargun.stages.helpers.StartHelper;
 
+import java.util.*;
+
+/**
+ * The stage start and kills some nodes concurrently (without waiting for each other).
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
+@Stage(doc = "The stage start and kills some nodes concurrently (without waiting for each other).")
 public class ParallelStartKillStage extends AbstractStartStage {
 
-   private List<Integer> kill = new ArrayList<Integer>();
-   private List<Integer> start = new ArrayList<Integer>();
+   @Property(doc = "Set of slaves which should be killed in this stage. Default is empty.")
+   private Collection<Integer> kill = new ArrayList<Integer>();
+
+   @Property(doc = "Set of slaves which should be started in this stage. Default is empty.")
+   private Collection<Integer> start = new ArrayList<Integer>();
+
+   @Property(doc = "Applicable only for cache wrappers with Partitionable feature. Set of slaves that should be" +
+         "reachable from the new node. Default is empty.")
    private Set<Integer> reachable = new HashSet<Integer>();
+
+   /* Note: having role for start has no sense as the dead nodes cannot have any role in the cluster */
+   @Property(doc = "Another way how to specify killed nodes is by role. Available roles are "
+         + RoleHelper.SUPPORTED_ROLES + ". By default this is not used.")
    private String role;
    
    @Override
@@ -82,11 +97,11 @@ public class ParallelStartKillStage extends AbstractStartStage {
    }
    
    public void setKill(String killString) {
-      setList(kill, killString);
+      kill = ParseHelper.parseSet(killString, "kill", log);
    }
    
    public void setStart(String startString) {
-      setList(start, startString);
+      start = ParseHelper.parseSet(startString, "start", log);
    }
    
    public void setRole(String role) {
@@ -106,18 +121,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
       this.reachable = r;
    }
    
-   private void setList(List<Integer> list, String listString) {
-      list.clear();
-      try {
-         for (String id : listString.split(",")) {
-            list.add(Integer.parseInt(id));
-         }
-      } catch (NumberFormatException e) {
-         log.error("Cannot parse " + listString + " as a list of slaves", e);
-      }
-   }
-   
-   public String str(List<Integer> list) {
+   public String str(Collection<Integer> list) {
       StringBuilder sb = new StringBuilder();
       for (int element : list) {
          sb.append(element);

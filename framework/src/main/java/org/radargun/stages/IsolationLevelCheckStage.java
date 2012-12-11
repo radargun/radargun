@@ -2,22 +2,41 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
 import org.radargun.state.MasterState;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Stage for testing guaranties of isolation levels.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
+@Stage(doc = "Stage for testing guaranties of isolation levels.")
 public class IsolationLevelCheckStage extends CheckStage {
 
    private static final String ISOLATION_CHECK_KEY = "isolationCheckKey";
    public static final String REPEATABLE_READ = "REPEATABLE_READ";
    public static final String READ_COMMITTED = "READ_COMMITTED";
 
+   @Property(doc = "Number of concurrent threads that modify the value. Default is 2.")
    private int writers = 2;
+
+   @Property(doc = "Number of concurrent threads that try to retrieve the value. Default is 10.")
    private int readers = 10;
+
+   @Property(converter = TimeConverter.class, doc = "How long should this stage take. Default is 1 minute.")
    private long duration = 60000;
+
+   @Property(doc = "Number of reads executed inside on transaction. Default is 30.")
    private int transactionSize = 30;
+
+   @Property(optional = false, doc = "Expected isolation level (should match to cache configuration). Supported " +
+         "values are [" + IsolationLevelCheckStage.READ_COMMITTED + ", " + IsolationLevelCheckStage.REPEATABLE_READ + "]")
    private String expectedLevel;
 
    private volatile boolean finished;
