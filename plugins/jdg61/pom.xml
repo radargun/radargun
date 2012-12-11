@@ -16,7 +16,7 @@
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
-         <version>5.2.0.Beta4-redhat-1</version>
+         <version>5.2.0.Beta5-redhat-1</version>
       </dependency>
 
       <dependency>
