@@ -70,6 +70,7 @@
                   <sequence>
                      <choice maxOccurs="unbounded" minOccurs="1">
                         <element name="product" type="rg:product"/>
+                        <element name="hazelcast2" type="rg:hazelcast2"/>
                         <element name="infinispan4" type="rg:infinispan4"/>
                         <element name="infinispan50" type="rg:infinispan50"/>
                         <element name="infinispan51" type="rg:infinispan51"/>
@@ -1290,6 +1291,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <extension base="rg:abstractProduct">
             <attribute name="name" type="string"/>
          </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="hazelcast2">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
       </complexContent>
    </complexType>
    <complexType name="infinispan4">
