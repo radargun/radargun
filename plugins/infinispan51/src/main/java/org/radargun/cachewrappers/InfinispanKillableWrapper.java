@@ -58,7 +58,7 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
    public void kill() throws Exception {
       startDiscarding();
       try {
-         if (beginStop()) {
+         if (beginStop(true)) {
             killInternal();
                     
             stateLock.lock();
@@ -83,7 +83,7 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
    public void killAsync() throws Exception {
       startDiscarding();
       try {
-         if (!beginStop()) {
+         if (!beginStop(true)) {
             return;
          }
          new Thread(new Runnable() {
