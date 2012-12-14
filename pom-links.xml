@@ -202,7 +202,7 @@
 				               <arg value="ehcache25" />
 				               <arg value="terracota3" />
 				               <arg value="chm" />
-				               <arg value="coherence" />				               
+				               <arg value="coherence3" />				               
 				               <arg value="jdg60" />
 				               <arg value="jdg61" />
 			               </java>
