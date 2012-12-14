@@ -75,31 +75,4 @@ public class TpccPopulationStage extends AbstractDistStage{
       }
       return true;
    }
-
-   public void setNumWarehouses(int numWarehouses) {
-      this.numWarehouses = numWarehouses;
-   }
-   
-   public void setCLastMask(long cLastMask) {
-      this.cLastMask = cLastMask;
-   }
-
-   public void setOlIdMask(long olIdMask) {
-      this.olIdMask = olIdMask;
-   }
-
-   public void setCIdMask(long cIdMask) {
-      this.cIdMask = cIdMask;
-   }
-
-   @Override
-   public String toString() {
-      return "TpccPopulationStage {" +
-            "numWarehouses=" + numWarehouses + 
-            ", cLastMask=" + cLastMask +
-            ", olIdMask=" + olIdMask +
-            ", cIdMask=" + cIdMask +   
-            ", " + super.toString();
-   }
-
 }

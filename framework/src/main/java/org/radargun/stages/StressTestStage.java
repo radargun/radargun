@@ -4,10 +4,10 @@ import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.StressTestStressor;
 import org.radargun.stressors.StringKeyGenerator;
-import org.radargun.utils.Utils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,44 +29,44 @@ public class StressTestStage extends AbstractDistStage {
    public static final String SESSION_PREFIX = "SESSION";
 
    @Property(doc = "Number of operations after which a log entry should be written. Default is 5000.")
-   private int opsCountStatusLog = 5000;
+   protected int opsCountStatusLog = 5000;
 
    @Property(doc = "Total number of request to be made against this session: reads + writes. If duration " +
          "is specified this value is ignored. Default is 50000.")
-   private int numRequests = 50000;
+   protected int numRequests = 50000;
 
    @Property(doc = "Number of key-value entries per each client thread which should be used. Default is 100.")
-   private int numEntries = 100;
+   protected int numEntries = 100;
 
    @Property(doc = "Size of the value in bytes. Default is 1000.")
-   private int entrySize = 1000;
+   protected int entrySize = 1000;
 
    @Property(doc = "Ratio of writes = PUT requests (percentage). Default is 20%")
-   private int writePercentage = 20;
+   protected int writePercentage = 20;
 
    @Property(doc = "The number of threads that will work on this slave. Default is 10.")
-   private int numThreads = 10;
+   protected int numThreads = 10;
 
    @Property(doc = "Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.")
-   private String keyGeneratorClass = StringKeyGenerator.class.getName();
+   protected String keyGeneratorClass = StringKeyGenerator.class.getName();
 
    @Property(doc = "Specifies if the requests should be explicitely wrapped in transactions. Default is false.")
-   private boolean useTransactions = false;
+   protected boolean useTransactions = false;
 
    @Property(doc = "Specifies whether the transactions should be committed (true) or rolled back (false). " +
          "Default is true")
-   private boolean commitTransactions = true;
+   protected boolean commitTransactions = true;
 
    @Property(doc = "Number of requests in one transaction. Default is 1.")
-   private int transactionSize = 1;
+   protected int transactionSize = 1;
 
-   @Property(doc = "Benchmark duration. This takes precedence over numRequests. By default switched off.")
-   private long duration = -1;
+   @Property(converter = TimeConverter.class, doc = "Benchmark duration. This takes precedence over numRequests. By default switched off.")
+   protected long duration = -1;
 
    @Property(doc = "By default each client thread operates on his private set of keys. Setting this to true " +
          "introduces contention between the threads, the numThreads property says total amount of entries that are " +
          "used by all threads. Default is false.")
-   private boolean sharedKeys = false;
+   protected boolean sharedKeys = false;
 
    protected CacheWrapper cacheWrapper;
 
@@ -159,113 +159,5 @@ public class StressTestStage extends AbstractDistStage {
     */
    private void logForDistributionCounting(Map<String, Object> benchResult) {
       log.info("Received " +  benchResult.remove(SIZE_INFO));
-   }
-   public void setNumRequests(int numRequests) {
-      this.numRequests = numRequests;
-   }
-
-   public void setNumEntries(int numEntries) {
-      this.numEntries = numEntries;
-   }
-
-   public int getOpsCountStatusLog() {
-      return opsCountStatusLog;
-   }
-
-   public int getNumRequests() {
-      return numRequests;
-   }
-
-   public int getNumEntries() {
-      return numEntries;
-   }
-
-   public int getEntrySize() {
-      return entrySize;
-   }
-
-   public int getWritePercentage() {
-      return writePercentage;
-   }
-
-   public int getNumThreads() {
-      return numThreads;
-   }
-
-   public void setEntrySize(int entrySize) {
-      this.entrySize = entrySize;
-   }
-
-   public void setNumThreads(int numThreads) {
-      this.numThreads = numThreads;
-   }
-
-   public void setWritePercentage(int writePercentage) {
-      this.writePercentage = writePercentage;
-   }
-
-   public void setOpsCountStatusLog(int opsCountStatusLog) {
-      this.opsCountStatusLog = opsCountStatusLog;
-   }
-
-   public String getKeyGeneratorClass() {
-      return keyGeneratorClass;
-   }
-
-   public void setKeyGeneratorClass(String keyGeneratorClass) {
-      this.keyGeneratorClass = keyGeneratorClass;
-   }
-
-   public int getTransactionSize() {
-      return transactionSize;
-   }
-
-   public void setTransactionSize(int transactionSize) {
-      this.transactionSize = transactionSize;
-   }
-
-   public boolean isUseTransactions() {
-      return useTransactions;
-   }
-
-   public void setUseTransactions(boolean useTransactions) {
-      this.useTransactions = useTransactions;
-   }
-
-   public boolean isCommitTransactions() {
-      return commitTransactions;
-   }
-
-   public void setCommitTransactions(boolean commitTransactions) {
-      this.commitTransactions = commitTransactions;
-   }
-
-   public long getDuration() {
-      return duration;
-   }
-
-   public void setDuration(String duration) {
-      this.duration = Utils.string2Millis(duration);
-   }
-
-   public void setSharedKeys(boolean sharedKeys) {
-      this.sharedKeys = sharedKeys;
-   }
-
-   @Override
-   public String toString() {
-      return "StressTestStage {" +
-            "opsCountStatusLog=" + opsCountStatusLog +
-            ", numRequests=" + numRequests +
-            ", numEntries=" + numEntries +
-            ", entrySize=" + entrySize +
-            ", writePercentage=" + writePercentage +
-            ", numThreads=" + numThreads +
-            ", cacheWrapper=" + cacheWrapper +
-            ", useTransactions=" + useTransactions +
-            ", commitTransactions=" + commitTransactions +
-            ", transactionSize=" + transactionSize +
-            ", duration=" + duration +
-            ", " + super.toString();
    }
 }

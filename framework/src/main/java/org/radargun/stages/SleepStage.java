@@ -16,10 +16,6 @@ public class SleepStage extends AbstractMasterStage {
    @Property(optional = false, converter = TimeConverter.class, doc = "Sleep duration.")
    private long time;
 
-   public void setTime(long time) {
-      this.time = time;
-   }
-
    public boolean execute() {
       log.trace("Sleeping " + time + " ms");
       try {
@@ -29,10 +25,5 @@ public class SleepStage extends AbstractMasterStage {
          log.warn("Sleep interrupted", e);
          return false;
       }
-   }
-
-   @Override
-   public String toString() {
-      return "SleepStage {time=" + time + "}";
    }
 }

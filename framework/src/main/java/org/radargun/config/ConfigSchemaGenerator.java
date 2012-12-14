@@ -1,6 +1,7 @@
 package org.radargun.config;
 
 import org.radargun.Stage;
+import org.radargun.stages.AbstractStage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -13,10 +14,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -180,29 +178,20 @@ public class ConfigSchemaGenerator {
       org.radargun.config.Stage stageAnnotation = (org.radargun.config.Stage)stage.getAnnotation(org.radargun.config.Stage.class);
       if (stageAnnotation == null) return; // not a proper stage
 
-      String stageName = getStageName(stage);
+      String stageName = AbstractStage.getStageName(stage);
       Element stageType = createComplexType(doc, schema, stageName,
-            hasParentStage ? RG_PREFIX + getStageName(stage.getSuperclass()) : null, Modifier.isAbstract(stage.getModifiers()),
+            hasParentStage ? RG_PREFIX + AbstractStage.getStageName(stage.getSuperclass()) : null,
+            Modifier.isAbstract(stage.getModifiers()),
             stageAnnotation.doc());
       for (Element parent : parents) {
          createReference(doc, parent, stageName, RG_PREFIX + stageName);
       }
-      for (Field field : stage.getDeclaredFields()) {
-         if (Modifier.isStatic(field.getModifiers())) continue; // property cannot be static
-         Property propertyAnnotation = field.getAnnotation(Property.class);
-         if (propertyAnnotation == null) continue; // not a property
-         String propertyName = propertyAnnotation.name().equals(Property.FIELD_NAME) ? field.getName() : propertyAnnotation.name();
-         addAttribute(doc, stageType, propertyName, propertyAnnotation.doc(), !propertyAnnotation.optional());
+      for (Map.Entry<String, Field> property : PropertyHelper.getDeclaredProperties(stage).entrySet()) {
+         Property propertyAnnotation = property.getValue().getAnnotation(Property.class);
+         if (propertyAnnotation.readonly()) continue; // cannot be configured
+         addAttribute(doc, stageType, property.getKey(), propertyAnnotation.doc(), !propertyAnnotation.optional());
       }
       generatedStages.add(stage);
-   }
-
-   private static String getStageName(Class stage) {
-      org.radargun.config.Stage stageAnnotation = (org.radargun.config.Stage)stage.getAnnotation(org.radargun.config.Stage.class);
-      if (!stageAnnotation.name().equals(org.radargun.config.Stage.CLASS_NAME_WITHOUT_STAGE)) return stageAnnotation.name();
-      String name = stage.getSimpleName();
-      if (!name.endsWith("Stage")) throw new IllegalArgumentException(stage.getCanonicalName());
-      return name.substring(0, name.length() - 5);
    }
 
    private static List<String> getStageNames() {

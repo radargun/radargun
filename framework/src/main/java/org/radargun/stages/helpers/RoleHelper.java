@@ -23,17 +23,23 @@ import org.radargun.features.XSReplicating;
 import org.radargun.state.SlaveState;
 
 public class RoleHelper {
+
+   public enum Role {
+      COORDINATOR,
+      BRIDGE
+   }
+
    public final static String SUPPORTED_ROLES = "[COORDINATOR, BRIDGE]";
 
    private RoleHelper() {}
 
-   public static boolean hasRole(SlaveState slaveState, String role) {
+   public static boolean hasRole(SlaveState slaveState, Role role) {
       if (role == null) return false;
-      if (role.equalsIgnoreCase("COORDINATOR")) {
+      if (role == Role.COORDINATOR) {
          if (!(slaveState.getCacheWrapper() instanceof TopologyAware)) return false;
          return ((TopologyAware) slaveState.getCacheWrapper()).isCoordinator();
       }
-      if (role.equalsIgnoreCase("BRIDGE")) {
+      if (role == Role.BRIDGE) {
          if (!(slaveState.getCacheWrapper() instanceof XSReplicating)) return false;
          return ((XSReplicating) slaveState.getCacheWrapper()).isBridge();
       }

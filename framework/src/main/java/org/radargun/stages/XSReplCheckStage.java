@@ -151,14 +151,4 @@ public class XSReplCheckStage extends CheckDataStage {
          log.trace("Key" + key + " has unexpected value " + value);
       }
    }
-   
-   public void setValuePostFix(String valuePostFix) {
-      this.valuePostFix = valuePostFix;
-   }
-
-   
-   @Override
-   public String toString() {
-      return "XSReplCheckStage(" + super.attributesToString();
-   }
 }

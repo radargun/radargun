@@ -20,9 +20,9 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.features.XSReplicating;
-import org.radargun.stages.helpers.ParseHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,10 +37,17 @@ import java.util.regex.Pattern;
 public class SingleTXCheckStage extends AbstractDistStage {
 
    private static final Pattern txValue = Pattern.compile("txValue(\\d*)@(\\d*-\\d*)");
-   
+
+   @Property(doc = "Indices of slaves which should have committed the transaction (others rolled back). Default is all committed.")
    private Set<Integer> commitSlave;
+
+   @Property(doc = "Indices of threads which should have committed the transaction (others rolled back). Default is all committed.")
    private Set<Integer> commitThread;
+
+   @Property(doc = "Expected size of the transcation.")
    private int transactionSize = 20;
+
+   @Property(doc = "If this is set to true, REMOVE operation should have been executed. Default is false.")
    private boolean deleted = false;
    
    @Override
@@ -130,29 +137,5 @@ public class SingleTXCheckStage extends AbstractDistStage {
       if (e != null) {
          ack.setRemoteException(e);
       }
-   }
-
-   public void setDeleted(boolean deleted) {
-      this.deleted = deleted;
-   }
-
-   public void setCommitSlave(String commitSlave) {
-      this.commitSlave = ParseHelper.parseSet(commitSlave, "commitSlave", log);
-   }
-   
-   public void setCommitThread(String commitThread) {
-      this.commitThread = ParseHelper.parseSet(commitThread, "commmitThread", log);
-   }
-
-   public void setTransactionSize(int transactionSize) {
-      this.transactionSize = transactionSize;
-   }
-   
-   @Override
-   public String toString() {
-	   return "SingleTXCheckStage(deleted=" + deleted + ", transactionSize=" + transactionSize + 
-	         ", commitSlave=" + ParseHelper.toString(commitSlave, "all") + 
-            ", commitThread=" + ParseHelper.toString(commitThread, "all") +
-			   ", " + super.toString(); 
    }
 }

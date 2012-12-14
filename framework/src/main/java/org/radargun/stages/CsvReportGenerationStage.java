@@ -2,7 +2,6 @@ package org.radargun.stages;
 
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.utils.Utils;
 
 import java.io.File;
@@ -178,13 +177,5 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       String actualFileName =  masterState.nameOfTheCurrentBenchmark() + "_" + masterState.configNameOfTheCurrentBenchmark() + "_" + clusterSize +".csv";
 
       outputFile = Utils.createOrReplaceFile(parentDir, actualFileName);
-   }
-
-   public void setTargetDir(String targetDir) {
-      this.targetDir = targetDir;
-   }
-
-   public void setIgnore(String ignore) {
-      this.ignore = ParseHelper.parseSet(ignore, "ignore", log);
    }
 }

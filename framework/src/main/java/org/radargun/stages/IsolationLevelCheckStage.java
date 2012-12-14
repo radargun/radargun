@@ -102,26 +102,6 @@ public class IsolationLevelCheckStage extends CheckStage {
       return true;
    }
 
-   public void setWriters(int writers) {
-      this.writers = writers;
-   }
-
-   public void setReaders(int readers) {
-      this.readers = readers;
-   }
-
-   public void setDuration(long duration) {
-      this.duration = duration;
-   }
-
-   public void setTransactionSize(int transactionSize) {
-      this.transactionSize = transactionSize;
-   }
-
-   public void setExpectedLevel(String expectedLevel) {
-      this.expectedLevel = expectedLevel;
-   }
-
    private class WriterThread extends ClientThread {
       @Override
       public void run() {

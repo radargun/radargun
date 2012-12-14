@@ -111,18 +111,6 @@ public class WriteSkewCheckStage extends CheckStage {
       }
    }
 
-   public void setDuration(long duration) {
-      this.duration = duration;
-   }
-
-   public void setThreads(int threads) {
-      this.threads = threads;
-   }
-
-   public void setTestNull(boolean testNull) {
-      this.testNull = testNull;
-   }
-
    private class WriteSkewThread extends ClientThread {
       @Override
       public void run() {

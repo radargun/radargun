@@ -2,11 +2,13 @@ package org.radargun.stages;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.DefaultConverter;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.features.Partitionable;
 import org.radargun.state.MasterState;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 /**
@@ -17,8 +19,8 @@ import java.util.*;
 @Stage(doc = "Partitions the cluster into several parts that cannot communicate.")
 public class SetPartitionsStage extends AbstractDistStage {
 
-   @Property(optional = false, doc = "Set of sets of partitions, e.g. (0,1),(2) makes two partitions," +
-         "one with slaves 0 and 1 and second with slave 2 alone.")
+   @Property(optional = false, converter = UniqueCheckerConverter.class, doc = "Set of sets of partitions," +
+         "e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.")
    private List<Set<Integer>> partitions;
    
    public SetPartitionsStage() {
@@ -86,37 +88,21 @@ public class SetPartitionsStage extends AbstractDistStage {
       sb.append(super.toString());
       return sb.toString();
    }
-   
-   public void setPartitions(String partitions) {
-      StringTokenizer tokenizer = new StringTokenizer(partitions, "(),", true);
-      List<Set<Integer>> clusterParts = new ArrayList<Set<Integer>>();
-      Set<Integer> slaves = new HashSet<Integer>();
-      boolean closed = true;
-      while (tokenizer.hasMoreTokens()) {
-         String token = tokenizer.nextToken();
-         if (token.trim().length() == 0) {
-            continue;
-         } else if ("(".equals(token)) {
-            clusterParts.add(new HashSet<Integer>());
-            closed = false;
-         } else if (")".equals(token)) {
-            closed = true;
-         } else if (",".equals(token)) {
-            // ignore
-         } else {
-            if (closed) throw new IllegalArgumentException("Invalid partitions: " + partitions);
-            try {
-               int slave = Integer.parseInt(token);
-               if (slaves.contains(slave)) {
+
+   public static class UniqueCheckerConverter extends DefaultConverter {
+      @Override
+      public Object convert(String string, Type type) {
+         Collection setOfSets = (Collection) super.convert(string, type);
+         Set<Object> all = new HashSet<Object>();
+         for (Object set : setOfSets) {
+            for (Object slave : (Collection) set) {
+               if (all.contains(slave)) {
                   throw new IllegalArgumentException("Each slave can be only in one part! Error found for slave " + slave);
                }
-               clusterParts.get(clusterParts.size() - 1).add(slave);
-               slaves.add(slave);
-            } catch (NumberFormatException e) {
-               throw new IllegalArgumentException("Invalid partitions: " + partitions + "\n" + e);
+               all.add(slave);
             }
          }
+         return setOfSets;
       }
-      this.partitions = clusterParts;
    }
 }

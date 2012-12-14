@@ -59,21 +59,4 @@ public class XSReplLoadStage extends AbstractDistStage {
       }
       return ack;
    }
-
-   @Override
-   public String toString() {
-      return "XSReplLoadStage {" + super.toString();
-   }
-
-   public void setNumEntries(int entries) {
-      numEntries = entries;
-   }
-   
-   public void setDelete(boolean delete) {
-      this.delete = delete;
-   }
-   
-   public void setValuePostFix(String valuePostFix) {
-      this.valuePostFix = valuePostFix;
-   }
 }

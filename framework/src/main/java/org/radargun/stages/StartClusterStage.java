@@ -4,7 +4,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.stages.helpers.StartHelper;
 import org.radargun.state.MasterState;
 
@@ -74,30 +73,9 @@ public class StartClusterStage extends AbstractStartStage {
       return ack;
    }
 
-   public void setValidateCluster(boolean validateCluster) {
-      this.validateCluster = validateCluster;
-   }
-
    @Override
    public void initOnMaster(MasterState masterState, int slaveIndex) {
       super.initOnMaster(masterState, slaveIndex);
-   }
-
-   @Override
-   public String toString() {
-      return "StartClusterStage {config=" + config + ", " + super.toString();
-   }
-
-   public void setStaggerSlaveStartup(boolean staggerSlaveStartup) {
-      this.staggerSlaveStartup = staggerSlaveStartup;
-   }
-
-   public void setDelayAfterFirstSlaveStarts(long delayAfterFirstSlaveStarts) {
-      this.delayAfterFirstSlaveStarts = delayAfterFirstSlaveStarts;
-   }
-
-   public void setDelayBetweenStartingSlaves(long delayBetweenSlavesStarts) {
-      this.delayBetweenStartingSlaves = delayBetweenSlavesStarts;
    }
 
    private void staggerStartup(int thisNodeIndex, int numSlavesToStart) {
@@ -120,13 +98,5 @@ public class StartClusterStage extends AbstractStartStage {
       } catch (InterruptedException e) {
          throw new IllegalStateException("Should never happen");
       }
-   }
-
-   public void setExpectNumSlaves(int numSlaves) {
-      this.expectNumSlaves = numSlaves;
-   }
-   
-   public void setReachable(String reachable) {      
-      this.reachable = ParseHelper.parseSet(reachable, "reachable", log);
    }
 }

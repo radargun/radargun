@@ -72,21 +72,4 @@ public class SetLogLevelStage extends AbstractDistStage {
       }
       return newDefaultStageAck();
    }
-
-   public void setPackage(String pkg) {
-      this.pkg = pkg;
-   }
-
-   public void setPriority(String priority) {
-      this.priority = priority;
-   }
-   
-   @Override
-   public String toString() {
-	   return "SetLogLevel(package=" + pkg + ", priority=" + Level.toLevel(priority).toString() + ", " + super.toString();
-   }
-
-   public void setPop(boolean pop) {
-      this.pop = pop;
-   }
 }

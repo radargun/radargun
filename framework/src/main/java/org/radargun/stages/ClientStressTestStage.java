@@ -46,43 +46,19 @@ public class ClientStressTestStage extends StressTestStage {
       log.info("Starting " + getClass().getSimpleName() + ": " + this);
       ClientStressTestStressor putGetStressor = new ClientStressTestStressor();
       putGetStressor.setNodeIndex(getSlaveIndex());
-      putGetStressor.setNumEntries(getNumEntries());
-      putGetStressor.setNumRequests(getNumRequests());
+      putGetStressor.setNumEntries(numEntries);
+      putGetStressor.setNumRequests(numRequests);
       putGetStressor.setInitThreads(initThreads);
       putGetStressor.setMaxThreads(maxThreads);
       putGetStressor.setIncrement(increment);
-      putGetStressor.setOpsCountStatusLog(getOpsCountStatusLog());
-      putGetStressor.setEntrySize(getEntrySize());
-      putGetStressor.setWritePercentage(getWritePercentage());
-      putGetStressor.setKeyGeneratorClass(getKeyGeneratorClass());
-      putGetStressor.setUseTransactions(isUseTransactions());
-      putGetStressor.setCommitTransactions(isCommitTransactions());
-      putGetStressor.setTransactionSize(getTransactionSize());
-      putGetStressor.setDurationMillis(getDuration());
+      putGetStressor.setOpsCountStatusLog(opsCountStatusLog);
+      putGetStressor.setEntrySize(entrySize);
+      putGetStressor.setWritePercentage(writePercentage);
+      putGetStressor.setKeyGeneratorClass(keyGeneratorClass);
+      putGetStressor.setUseTransactions(useTransactions);
+      putGetStressor.setCommitTransactions(commitTransactions);
+      putGetStressor.setTransactionSize(transactionSize);
+      putGetStressor.setDurationMillis(duration);
       return putGetStressor.stress(cacheWrapper);
-   }
-
-   public int getInitThreads() {
-      return initThreads;
-   }
-
-   public void setInitThreads(int initThreads) {
-      this.initThreads = initThreads;
-   }
-
-   public int getMaxThreads() {
-      return maxThreads;
-   }
-
-   public void setMaxThreads(int maxThreads) {
-      this.maxThreads = maxThreads;
-   }
-
-   public int getIncrement() {
-      return increment;
-   }
-
-   public void setIncrement(int increment) {
-      this.increment = increment;
    }
 }

@@ -34,12 +34,14 @@ import java.util.List;
  */
 @Stage(doc = "")
 public abstract class AbstractStartStage extends AbstractDistStage {
-   
+
+   @Property(readonly = true, doc = "Config used for this stage")
    protected String config;
-   protected TypedProperties confAttributes;
 
    @Property(doc = "Set of slaves where the start may fail but this will not cause an error. Default is none.")
    protected Collection<Integer> mayFailOn;
+
+   protected TypedProperties confAttributes;
 
    public void setConfig(String config) {
       this.config = config;

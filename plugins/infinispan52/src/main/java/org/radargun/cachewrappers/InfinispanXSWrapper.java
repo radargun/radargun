@@ -26,6 +26,7 @@ import org.infinispan.util.FileLookupFactory;
 import org.jgroups.JChannel;
 import org.jgroups.protocols.relay.RELAY2;
 import org.jgroups.protocols.relay.Relayer;
+import org.radargun.config.DefaultConverter;
 import org.radargun.features.XSReplicating;
 import org.radargun.utils.TypedProperties;
 
@@ -49,7 +50,7 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
       for (String property : confAttributes.stringPropertyNames()) {
          if ((m = slavesPattern.matcher(property)).matches()) {
             String value = confAttributes.getProperty(property);
-            slaves = org.radargun.stages.helpers.ParseHelper.parseList(value, property, log);
+            slaves = (List<Integer>) DefaultConverter.staticConvert(value, DefaultConverter.parametrized(List.class, Integer.class));
             if (slaves.contains(nodeIndex)) {
                try {
                   mySiteIndex = Integer.parseInt(m.group(1));

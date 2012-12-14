@@ -84,21 +84,4 @@ public class CheckTopologyStage extends AbstractDistStage {
       boolean hasChanged = lastChange + period > current; 
       return hasChanged == changed;
    }
-
-   public void setType(String type) {
-      this.type = Enum.valueOf(Type.class, type);
-   }
-
-   public void setPeriod(long period) {
-      this.period = period;
-   }
-
-   public void setChanged(boolean changed) {
-      this.changed = changed;
-   }
-
-   @Override
-   public String toString() {
-      return "CheckTopologyStage(type=" + type + ", changed=" + changed + ", period=" + period + ", " + super.toString();
-   }
 }

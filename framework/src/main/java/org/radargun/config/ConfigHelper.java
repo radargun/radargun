@@ -4,9 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Element;
 
-import java.beans.PropertyEditor;
-import java.beans.PropertyEditorManager;
-import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
@@ -37,62 +35,36 @@ public class ConfigHelper {
       return sb.toString();
    }
 
-   public static void setValues(Object target, Map<?, ?> attribs, boolean failOnMissingSetter) {
+   public static void setValues(Object target, Map<String, String> attribs, boolean failOnMissingSetter) {
       Class objectClass = target.getClass();
 
+      Map<String, Field> properties = PropertyHelper.getProperties(target.getClass());
+
       // go thru simple string setters first.
-      for (Map.Entry entry : attribs.entrySet()) {
+      for (Map.Entry<String, String> entry : attribs.entrySet()) {
          String propName = (String) entry.getKey();
-         String setter = setterName(propName);
-         Method method;
 
-         try {
-            method = objectClass.getMethod(setter, String.class);
-            method.invoke(target, entry.getValue());
-            continue;
-         }
-         catch (NoSuchMethodException me) {
-            // try other setters that may fit later on.  Don't throw this exception though.
-         }
-         catch (Exception e) {
-            throw new RuntimeException("Unable to invoke setter " + setter + " on " + objectClass, e);
-         }
-
-         boolean setterFound = false;
-         // if we get here, we could not find a String or Element setter.
-         for (Method m : objectClass.getMethods()) {
-            if (setter.equals(m.getName())) {
-               Class paramTypes[] = m.getParameterTypes();
-               if (paramTypes.length != 1) {
-                  if (log.isTraceEnabled()) {
-                     log.trace("Rejecting setter " + m + " on class " + objectClass + " due to incorrect number of parameters");
-                  }
-                  continue; // try another param with the same name.
-               }
-
-               Class parameterType = paramTypes[0];
-               PropertyEditor editor = PropertyEditorManager.findEditor(parameterType);
-               if (editor == null) {
-                  throw new RuntimeException("Couldn't find a property editor for parameter type " + parameterType);
-               }
-
-               editor.setAsText((String) attribs.get(propName));
-
-               Object parameter = editor.getValue();
-               //if (log.isDebugEnabled()) log.debug("Invoking setter method: " + setter + " with parameter \"" + parameter + "\" of type " + parameter.getClass());
-
-               try {
-                  m.invoke(target, parameter);
-                  setterFound = true;
-                  break;
-               }
-               catch (Exception e) {
-                  throw new RuntimeException("Unable to invoke setter " + setter + " on " + objectClass, e);
-               }
+         Field field = properties.get(propName);
+         if (field != null) {
+            Class<? extends Converter> converterClass = field.getAnnotation(Property.class).converter();
+            try {
+               Converter converter = converterClass.newInstance();
+               field.setAccessible(true);
+               field.set(target, converter.convert(entry.getValue(), field.getGenericType()));
+               continue;
+            } catch (InstantiationException e) {
+               log.error(String.format("Cannot instantiate converter %s for setting %s.%s (%s): %s",
+                     converterClass.getName(), target.getClass().getName(), field.getName(), propName, e));
+            } catch (IllegalAccessException e) {
+               log.error(String.format("Cannot access converter %s for setting %s.%s (%s): %s",
+                     converterClass.getName(), target.getClass().getName(), field.getName(), propName, e));
+            } catch (Throwable t) {
+               log.error("Failed to convert value " + entry.getValue() + ": " + t);
             }
          }
-         if (!setterFound && failOnMissingSetter) {
-            throw new RuntimeException("Couldn't find a setter named [" + setter + "] which takes a single parameter, for parameter " + propName + " on class [" + objectClass + "]");
+
+         if (failOnMissingSetter) {
+            throw new RuntimeException("Couldn't find a property for parameter " + propName + " on class [" + objectClass + "]");
          }
       }
    }
@@ -250,22 +222,13 @@ public class ConfigHelper {
       }
    }
 
-   public static int parseInt(String val) {
+   /*public static int parseInt(String val) {
       val = checkForProps(val);
       return Integer.valueOf(val);
-   }
-
-   public static float parseFloat(String val) {
-      val = checkForProps(val);
-      return Float.valueOf(val);
-   }
+   } */
 
    public static String parseString(String value) {
       return checkForProps(value);
-   }
-
-   public static boolean parseBoolean(String value) {
-      return Boolean.valueOf(checkForProps(value));
    }
 
    public static String getStrAttribute(Element master, String attrName) {

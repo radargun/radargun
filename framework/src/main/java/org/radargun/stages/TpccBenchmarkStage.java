@@ -114,39 +114,4 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       }
       return success;
    }
-
-   public void setNumThreads(int numThreads) {
-      this.numThreads = numThreads;
-   }
-   
-   public void setPerThreadSimulTime(long perThreadSimulTime) {
-      this.perThreadSimulTime = perThreadSimulTime;
-   }
-
-   public void setArrivalRate(double arrivalRate) {
-      this.arrivalRate = arrivalRate;
-   }
-
-   public void setPaymentWeight(double paymentWeight) {
-      this.paymentWeight = paymentWeight;
-   }
-
-   public void setOrderStatusWeight(double orderStatusWeight) {
-      this.orderStatusWeight = orderStatusWeight;
-   }
-
-   
-
-   @Override
-   public String toString() {
-      return "TpccBenchmarkStage {" +
-            ", numThreads=" + numThreads +
-            ", perThreadSimulTime=" + perThreadSimulTime +
-            ", arrivalRate=" + arrivalRate +
-            ", paymentWeight=" + paymentWeight +
-            ", orderStatusWeight=" + orderStatusWeight +
-            ", cacheWrapper=" + cacheWrapper +
-            ", " + super.toString();
-   }
-
 }

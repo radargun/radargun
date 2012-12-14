@@ -13,7 +13,7 @@ import org.radargun.utils.ClassLoadHelper;
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Stage(doc = "")
-public abstract class AbstractMasterStage implements MasterStage {
+public abstract class AbstractMasterStage extends AbstractStage implements MasterStage {
 
    private static final String PREV_PRODUCT = "AbstractMasterStage.previousProduct";
    private static final String CLASS_LOADER = "AbstractMasterStage.classLoader";
@@ -29,18 +29,9 @@ public abstract class AbstractMasterStage implements MasterStage {
    }
 
    public AbstractMasterStage clone() {
-      try {
-         return (AbstractMasterStage) super.clone();
-      } catch (CloneNotSupportedException e) {
-         throw new IllegalStateException(e);
-      }
+      return (AbstractMasterStage) super.clone();
    }
 
-   @Override
-   public String toString() {
-      return "{An instance of " + getClass().getSimpleName() + "}";
-   }
-   
    protected Object createInstance(String classFqn) throws Exception {
       return classLoadHelper.createInstance(classFqn);
    }

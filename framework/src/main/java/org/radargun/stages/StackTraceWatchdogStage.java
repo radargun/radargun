@@ -161,50 +161,5 @@ public class StackTraceWatchdogStage extends AbstractDistStage {
          log.trace(message);
       }
    }
-
-   @Override
-   public String toString() {
-      return "WatchDogStage {period=" + period + ", mask=" + mask + ", onlyStuck=" + onlyStuck + ", " + super.toString();
-   }
-
-   /**
-    * Period of checking in milliseconds.
-    * 
-    * @param period
-    */
-   public void setPeriod(long period) {
-      this.period = period;
-   }
-   
-   /**
-    * Limit to those threads with name containing the mask.
-    * 
-    * @param mask
-    */
-   public void setMask(String mask) {
-      this.mask = mask;
-   }
-   
-   /**
-    * Print out only those threads that appear stuck 
-    * 
-    * @param onlyStuck
-    */
-   public void setOnlyStuck(boolean onlyStuck) {
-      this.onlyStuck = onlyStuck;
-   }
-   
-   /**
-    * If the stacktrace has less entries it is omitted.
-    * Usual for threads parking in threadpool or waiting on socket.
-    * 
-    * @param length
-    */
-   public void setShortStack(int length) {
-      this.shortStack = length;
-   }
-
-   public void setAsyncLogging(boolean asyncLogging) {
-      this.asyncLogging = asyncLogging;
-   }
 }
+

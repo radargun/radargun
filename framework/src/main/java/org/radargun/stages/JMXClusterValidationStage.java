@@ -1,24 +1,39 @@
 package org.radargun.stages;
 
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
+import org.radargun.jmx.JMXClusterValidator;
+import org.radargun.utils.Utils;
+
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.radargun.jmx.JMXClusterValidator;
-import org.radargun.utils.Utils;
 
 /**
  * Validates formation of the cluster remotely via JMX
  * 
  * @author Michal Linhard <mlinhard@redhat.com>
  */
+@Stage(doc = "Validates formation of the cluster remotely via JMX.")
 public class JMXClusterValidationStage extends AbstractMasterStage {
 
+   @Property(doc = "Indices of slaves that should be up. Default is empty.")
    protected List<Integer> slaves;
+
+   @Property(converter = TimeConverter.class, doc = "JMX connection timeout. Default is 3 seconds.")
    private long jmxConnectionTimeout = 3000;
+
+   @Property(converter = TimeConverter.class, doc = "Cluster validation timeout. Default is 1 minute.")
    private long waitTimeout = 60000;
+
+   @Property(doc = "Generic property 1.")
    private String prop1;
+
+   @Property(doc = "Generic property 1.")
    private String prop2;
+
+   @Property(doc = "Generic property 1.")
    private String prop3;
 
    public JMXClusterValidationStage() {
@@ -58,22 +73,6 @@ public class JMXClusterValidationStage extends AbstractMasterStage {
       } catch (Exception e) {
          log.error("Error while validating cluster", e);
          return false;
-      }
-   }
-
-   @Override
-   public String toString() {
-      return "JMXClusterValidationStage {" + super.toString();
-   }
-
-   public void setWaitTimeout(long waitTimeout) {
-      this.waitTimeout = waitTimeout;
-   }
-
-   public void setSlaves(String slaves) {
-      this.slaves = new ArrayList<Integer>();
-      for (String slave : slaves.split(",")) {
-         this.slaves.add(Integer.valueOf(slave));
       }
    }
 }

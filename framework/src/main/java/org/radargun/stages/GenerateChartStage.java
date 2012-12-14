@@ -204,17 +204,8 @@ public class GenerateChartStage extends AbstractMasterStage {
       return s;
    }
 
-
-   public void setCsvFilesDirectory(String csvFilesDirectory) {
-      this.csvFilesDirectory = csvFilesDirectory;
-   }
-
    public void setFnPrefix(String fnPrefix) {
       this.fnPrefix = fnPrefix;
-   }
-
-   public void setReportDirectory(String reportDirectory) {
-      this.reportDirectory = reportDirectory;
    }
 
    protected File[] getFilteredFiles(File file) {
@@ -304,6 +295,14 @@ public class GenerateChartStage extends AbstractMasterStage {
             System.getProperty("java.vm.name") + " (" + System.getProperty("java.vm.version") + ", " +
             System.getProperty("java.vm.vendor") + ") OS: " + System.getProperty("os.name") + " (" +
             System.getProperty("os.version") + ", " + System.getProperty("os.arch") + ")";
+   }
+
+   public void setCsvFilesDirectory(String csvFilesDirectory) {
+      this.csvFilesDirectory = csvFilesDirectory;
+   }
+
+   public void setReportDirectory(String reportDirectory) {
+      this.reportDirectory = reportDirectory;
    }
 
    private static class Stats {

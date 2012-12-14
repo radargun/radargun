@@ -22,6 +22,10 @@ public class StressTestWarmupStage extends StressTestStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
+      if (slaves != null && !slaves.contains(slaveIndex)) {
+         log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveIndex, slaves));
+         return result;
+      }
       this.cacheWrapper = slaveState.getCacheWrapper();
       if (cacheWrapper == null) {
          log.info("Not running test on this slave as the wrapper hasn't been configured.");
@@ -61,10 +65,5 @@ public class StressTestWarmupStage extends StressTestStage {
             log.warn("Caught error on slave " + dAck.getSlaveIndex() + " when running " + getClass().getSimpleName() + ".  Error details:" + dAck.getErrorMessage());
       }
       return true;
-   }
-
-   @Override
-   public String toString() {
-      return "Warmup for " + super.toString();
    }
 }

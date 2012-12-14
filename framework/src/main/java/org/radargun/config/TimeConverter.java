@@ -2,6 +2,8 @@ package org.radargun.config;
 
 import org.radargun.utils.Utils;
 
+import java.lang.reflect.Type;
+
 /**
  * Converts string with time suffix into milliseconds
  *
@@ -10,7 +12,7 @@ import org.radargun.utils.Utils;
  */
 public class TimeConverter implements Converter<Long> {
    @Override
-   public Long convert(String string) {
+   public Long convert(String string, Type ignored) {
       return Utils.string2Millis(string);
    }
 
@@ -20,7 +22,7 @@ public class TimeConverter implements Converter<Long> {
    }
 
    @Override
-   public String allowedPattern() {
+   public String allowedPattern(Type type) {
       return "[0-9]+\\s*[mMsS]?";
    }
 }

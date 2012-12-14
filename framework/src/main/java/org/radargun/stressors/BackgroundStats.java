@@ -326,7 +326,7 @@ public class BackgroundStats {
       private void loadKeyRange(int from, int to) {         
          int loaded_keys = 0;
          CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-         for (currentKey = from; currentKey < to; currentKey++, loaded_keys++) {
+         for (currentKey = from; currentKey < to && !terminate; currentKey++, loaded_keys++) {
             try {
                cacheWrapper.put(bucketId, key(currentKey), generateRandomEntry(entrySize));
                if (loaded_keys % 1000 == 0) {

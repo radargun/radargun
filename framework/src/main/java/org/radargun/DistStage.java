@@ -43,9 +43,5 @@ public interface DistStage extends Stage, Serializable {
 
    public boolean isRunOnAllSlaves();
 
-   public void setRunOnAllSlaves(boolean runOnAllSlaves);
-
    public boolean isExitBenchmarkOnSlaveFailure();
-
-   public void setExitBenchmarkOnSlaveFailure(boolean exitOnFailure);
 }

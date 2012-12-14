@@ -94,8 +94,16 @@ public class ClientStressTestStressor extends StressTestStressor {
       results.put(iteration  + ".DURATION", str(duration));
       double requestPerSec = (reads + writes) / ((duration / super.getNumThreads()) / 1000000000.0);
       results.put(iteration  + ".REQ_PER_SEC", str(requestPerSec));
-      results.put(iteration  + ".READS_PER_SEC", str(reads / ((readsDurations / super.getNumThreads()) / 1000000000.0)));
-      results.put(iteration  + ".WRITES_PER_SEC", str(writes / ((writesDurations / super.getNumThreads()) / 1000000000.0)));
+      if (reads > 0) {
+         results.put(iteration  + ".READS_PER_SEC", str(reads / ((readsDurations / super.getNumThreads()) / 1000000000.0)));
+      } else {
+         results.put(iteration + ".READS_PER_SEC", str(0));
+      }
+      if (writes > 0) {
+         results.put(iteration  + ".WRITES_PER_SEC", str(writes / ((writesDurations / super.getNumThreads()) / 1000000000.0)));
+      } else {
+         results.put(iteration  + ".WRITES_PER_SEC", str(0));
+      }
       results.put(iteration  + ".READ_COUNT", str(reads));
       results.put(iteration  + ".WRITE_COUNT", str(writes));
       results.put(iteration  + ".FAILURES", str(failures));

@@ -1,6 +1,9 @@
 package org.radargun.stages;
 
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
 import org.radargun.state.MasterState;
 
 import java.net.InetSocketAddress;
@@ -12,6 +15,7 @@ import java.util.List;
  * 
  * @author Michal Linhard <mlinhard@redhat.com>
  */
+@Stage(doc = "Collects configuration for JMXClusterValidationStage.")
 public class JMXClusterValidationPrepareStage extends AbstractDistStage {
 
    public static final String STATE_JMX_CONN_TIMEOUT = "JMXClusterValidationPrepareStage_jmxConnectionTimeout";
@@ -21,10 +25,19 @@ public class JMXClusterValidationPrepareStage extends AbstractDistStage {
    public static final String STATE_PROP3 = "JMXClusterValidationPrepareStage_prop3";
    public static final String STATE_SLAVE_JMX_ENDPOINTS = "JMXClusterValidationPrepareStage_slaveJmxEndpoints";
 
+   @Property(converter = TimeConverter.class, doc = "JMX Connection timeout. Default is 3 seconds.")
    private long jmxConnectionTimeout = 3000;
+
+   @Property(converter = TimeConverter.class, doc = "Cluster validation timeout. Default is 1 minute.")
    private long waitTimeout = 60000;
+
+   @Property(doc = "Generic property 1.")
    private String prop1;
+
+   @Property(doc = "Generic property 2.")
    private String prop2;
+
+   @Property(doc = "Generic property 3.")
    private String prop3;
 
    public JMXClusterValidationPrepareStage() {
@@ -78,31 +91,5 @@ public class JMXClusterValidationPrepareStage extends AbstractDistStage {
          masterState.put(STATE_PROP3, prop3);
       }
       return true;
-   }
-
-   @Override
-   public String toString() {
-      return "JMXClusterValidationPrepareStage {jmxConnectionTimeout=" + jmxConnectionTimeout + ", waitTimeout="
-            + waitTimeout + ", prop1=" + prop1 + ", prop2=" + prop2 + ", prop3=" + prop3 + ", " + super.toString();
-   }
-
-   public void setProp1(String prop1) {
-      this.prop1 = prop1;
-   }
-
-   public void setProp2(String prop2) {
-      this.prop2 = prop2;
-   }
-
-   public void setProp3(String prop3) {
-      this.prop3 = prop3;
-   }
-
-   public void setJmxConnectionTimeout(long jmxConnectionTimeout) {
-      this.jmxConnectionTimeout = jmxConnectionTimeout;
-   }
-
-   public void setWaitTimeout(long waitTimeout) {
-      this.waitTimeout = waitTimeout;
    }
 }

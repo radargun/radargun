@@ -23,7 +23,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.stages.helpers.ParseHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -139,35 +138,5 @@ public class SingleTXLoadStage extends AbstractDistStage {
             exception = e;
          }
       }
-   }
-   
-   public void setDuration(long duration) {
-      this.duration = duration;
-   }
-
-   public void setThreads(int threads) {
-      this.threads = threads;
-   }
-
-   public void setCommitSlave(String commitSlave) {
-      this.commitSlave = ParseHelper.parseSet(commitSlave, "commitSlave", log);
-   }
-   
-   public void setCommitThread(String commitThread) {
-      this.commitThread = ParseHelper.parseSet(commitThread, "commitThread", log);
-   }
-
-   public void setTransactionSize(int transactionSize) {
-      this.transactionSize = transactionSize;
-   }
-
-   public void setDelete(boolean delete) {
-      this.delete = delete;
-   }
-   
-   @Override
-   public String toString() {
-	   return String.format("SingleTXLoadStage(delete=%s, transactionSize=%d, commitSlave=%s, commitThread=%s, threads=%d, duration=%d, %s",
-            delete, transactionSize, ParseHelper.toString(commitSlave, "all"), ParseHelper.toString(commitThread, "all"), threads, duration, super.toString());
    }
 }

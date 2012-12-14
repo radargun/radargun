@@ -97,14 +97,6 @@ public class DestroyWrapperStage extends AbstractDistStage {
       return result;
    }
 
-   public void setEnforceMemoryThrashHold(boolean enforceMemoryThrashHold) {
-      this.enforceMemoryThrashHold = enforceMemoryThrashHold;
-   }
-
-   public void setMemoryThreshold(byte memoryThreshold) {
-      this.memoryThreshold = memoryThreshold;
-   }
-
    private DistStageAck returnAck(DefaultDistStageAck ack) {
       ack.setPayload(getFreeMemoryKb());
       return ack;
@@ -128,11 +120,5 @@ public class DestroyWrapperStage extends AbstractDistStage {
          log.error(msg);
          throw new RuntimeException(msg);
       }
-   }
-
-
-   @Override
-   public String toString() {
-      return "DestroyWrapperStage {" + super.toString();
    }
 }

@@ -54,9 +54,4 @@ public class StopBackgroundStatsStage extends AbstractDistStage {
       masterState.put(BackgroundStats.NAME, result);
       return true;
    }
-
-   @Override
-   public String toString() {
-      return "StopBackgroundStatsStage {" + super.toString();
-   }
 }

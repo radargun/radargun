@@ -4,7 +4,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.stressors.BackgroundStats;
 
 import java.util.List;
@@ -40,7 +39,7 @@ public class StartBackgroundStatsStage extends AbstractDistStage {
    private int transactionSize = -1;
 
    @Property(converter = TimeConverter.class, doc = "Time between consecutive requests of one stressor thread. Default is 0.")
-   private long delayBetweenRequests;
+   private long delayBetweenRequests = 0;
 
    @Property(converter = TimeConverter.class, doc = "Delay between statistics snapshots. Default is 5 seconds.")
    private long statsIterationDuration = 5000;
@@ -94,70 +93,4 @@ public class StartBackgroundStatsStage extends AbstractDistStage {
          return ack;
       }
    }
-
-   public void setPuts(int puts) {
-      this.puts = puts;
-   }
-
-   public void setGets(int gets) {
-      this.gets = gets;
-   }
-   
-   public void setRemoves(int removes) {
-      this.removes = removes;
-   }
-
-   public void setNumEntries(int numEntries) {
-      this.numEntries = numEntries;
-   }
-
-   public void setEntrySize(int entrySize) {
-      this.entrySize = entrySize;
-   }
-
-   public void setNumThreads(int numThreads) {
-      this.numThreads = numThreads;
-   }
-
-   public void setDelayBetweenRequests(long delayBetweenRequests) {
-      this.delayBetweenRequests = delayBetweenRequests;
-   }
-
-   public void setStatsIterationDuration(long statsIterationDuration) {
-      this.statsIterationDuration = statsIterationDuration;
-   }
-
-   public void setTransactionSize(int transactionSize) {
-      this.transactionSize = transactionSize;
-   }
-
-   public void setWaitUntilLoaded(boolean waitUntilLoaded) {
-      this.waitUntilLoaded = waitUntilLoaded;
-   }
-
-   public void setLoadDataForDeadSlaves(String slaves) {
-      loadDataForDeadSlaves = ParseHelper.parseList(slaves, "loadDataForDeadSlaves", log);
-   }
-
-   public void setStartStats(boolean startStats) {
-      this.startStats = startStats;
-   }
-
-   public void setStartStressors(boolean startStressors) {
-      this.startStressors = startStressors;
-   }
-   
-   public void setBucketId(String id) {
-      bucketId = id;
-   }
-
-   @Override
-   public String toString() {
-      return "StartBackgroundStatsStage {puts=" + puts + ", gets=" + gets + ", removes=" + removes + ", startStats=" + startStats
-            + ", startStressors=" + startStressors + ", numEntries=" + numEntries + ", entrySize=" + entrySize + ", bucketId=" + bucketId
-            + ", numThreads=" + numThreads + ", transactionSize=" + transactionSize + ", delayBetweenRequests="
-            + delayBetweenRequests + ", statsIterationDuration=" + statsIterationDuration + ", waitUntilLoaded="
-            + waitUntilLoaded + ", loadDataForDeadSlaves=" + loadDataForDeadSlaves + ", " + super.toString();
-   }
-
 }

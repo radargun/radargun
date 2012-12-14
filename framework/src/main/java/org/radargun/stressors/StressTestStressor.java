@@ -145,8 +145,16 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       results.put("DURATION", str(duration));
       double requestPerSec = (reads + writes) / ((duration / numThreads) / NANOSECS_IN_SEC);
       results.put("REQ_PER_SEC", str(requestPerSec));
-      results.put("READS_PER_SEC", str(reads / ((readsDurations / numThreads) / NANOSECS_IN_SEC)));
-      results.put("WRITES_PER_SEC", str(writes / ((writesDurations / numThreads) / NANOSECS_IN_SEC)));
+      if (reads > 0) {
+         results.put("READS_PER_SEC", str(reads / ((readsDurations / numThreads) / NANOSECS_IN_SEC)));
+      } else {
+         results.put("READS_PER_SEC", str(0));
+      }
+      if (writes > 0) {
+         results.put("WRITES_PER_SEC", str(writes / ((writesDurations / numThreads) / NANOSECS_IN_SEC)));
+      } else {
+         results.put("WRITES_PER_SEC", str(0));
+      }
       results.put("READ_COUNT", str(reads));
       results.put("WRITE_COUNT", str(writes));
       results.put("FAILURES", str(failures));

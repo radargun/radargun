@@ -22,11 +22,13 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.helpers.KillHelper;
-import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.stages.helpers.RoleHelper;
 import org.radargun.stages.helpers.StartHelper;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The stage start and kills some nodes concurrently (without waiting for each other).
@@ -49,7 +51,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
    /* Note: having role for start has no sense as the dead nodes cannot have any role in the cluster */
    @Property(doc = "Another way how to specify killed nodes is by role. Available roles are "
          + RoleHelper.SUPPORTED_ROLES + ". By default this is not used.")
-   private String role;
+   private RoleHelper.Role role;
    
    @Override
    public DistStageAck executeOnSlave() {
@@ -89,49 +91,5 @@ public class ParallelStartKillStage extends AbstractStartStage {
          }
       }
       return ack;
-   }
-
-   @Override
-   public void setSlaves(String slaves) {
-      log.warn("Slaves attribute is deprecated for this stage, use kill or start instead");
-   }
-   
-   public void setKill(String killString) {
-      kill = ParseHelper.parseSet(killString, "kill", log);
-   }
-   
-   public void setStart(String startString) {
-      start = ParseHelper.parseSet(startString, "start", log);
-   }
-   
-   public void setRole(String role) {
-      this.role = role;
-   }
-   
-   public void setReachable(String reachable) {
-      Set<Integer> r = new HashSet<Integer>();
-      StringTokenizer tokenizer = new StringTokenizer(reachable, ",");
-      try {
-         while (tokenizer.hasMoreTokens()) {
-            r.add(Integer.parseInt(tokenizer.nextToken().trim()));
-         }
-      } catch (NumberFormatException e) {
-         log.error("Failed to parse slave list " + reachable);
-      }
-      this.reachable = r;
-   }
-   
-   public String str(Collection<Integer> list) {
-      StringBuilder sb = new StringBuilder();
-      for (int element : list) {
-         sb.append(element);
-         sb.append(", ");
-      }
-      return sb.toString();
-   }
-   
-   @Override
-   public String toString() {
-      return "ParallelStartKillStage(start=" + str(start) + "kill=" + str(kill) + super.toString();
    }
 }

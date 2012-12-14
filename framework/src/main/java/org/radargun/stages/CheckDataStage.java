@@ -18,6 +18,8 @@
  */
 package org.radargun.stages;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
@@ -254,26 +256,6 @@ public class CheckDataStage extends AbstractDistStage {
       return this.numEntries;
    }
 
-   public void setNumEntries(int entries) {
-      this.numEntries = entries;
-   }
-   
-   public void setEntrySize(int size) {
-      this.entrySize = size;
-   }
-   
-   /**
-    * The argument should be list like 1,2,3 which represents a polynome in number of slaves
-    * - the first member is multiplied by 1, second by number of slaves, third by square of
-    * number of slaves etc. 1,2,3 with 4 slaves would therefore result in 1 + 8 + 48 = 57
-    * extra entries. 
-    * 
-    * @param extra
-    */
-   public void setExtraEntries(String extra) {
-      extraEntries = extra;
-   }
-   
    private int getExtraEntries() {
       if (extraEntries == null) return 0;
       
@@ -290,53 +272,13 @@ public class CheckDataStage extends AbstractDistStage {
       }
       return sum;
    }
-   
-   /**
-    * Number of owners of each entry. If this number is negative it is used as its absolute
-    * value multiplied by the number of slaves (use -1 for full replication).
-    * 
-    * @param numOwners
-    */
-   public void setNumOwners(int numOwners) {
-      this.numOwners = numOwners;
-   }
 
-   public void setCheckThreads(int threads) {
-      this.checkThreads = threads;
-   }
-
-   public void setIgnoreSum(boolean ignore) {
-      ignoreSum = ignore;
-   }
-   
-   public void setDeleted(boolean deleted) {
-      this.deleted = deleted;
-   }
-   
    public boolean isDeleted() {
       return deleted;
    }
 
-   public void setLiveSlavesHint(int liveSlavesHint) {
-      this.liveSlavesHint = liveSlavesHint;
-   }
-
-   public void setLogChecksCount(int logChecksCount) {
-      this.logChecksCount = logChecksCount;
-   }
-
    public int getLogChecksCount() {
       return logChecksCount;
-   }
-
-   public String attributesToString() {
-      return String.format("numEntries=%d, entrySize=%d, extraEntries=%s, numOwners=%d, checkThreads=%d, %s",
-            numEntries, entrySize, extraEntries, numOwners, checkThreads, super.toString());
-   }
-   
-   @Override
-   public String toString() {
-      return "CheckDataStage(" + attributesToString();
    }
 
    protected static class CheckResult implements Serializable {

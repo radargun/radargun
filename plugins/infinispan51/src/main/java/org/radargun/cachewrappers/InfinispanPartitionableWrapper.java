@@ -27,7 +27,6 @@ import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
 import org.radargun.features.Partitionable;
 import org.radargun.protocols.SLAVE_PARTITION;
-import org.radargun.stages.helpers.ParseHelper;
 
 import java.io.IOException;
 import java.util.List;
@@ -88,7 +87,7 @@ public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper im
        */
       @Override
       protected void startJGroupsChannelIfNeeded() {
-         log.trace("My index is " + mySlaveIndex + " and these slaves should be reachable: " + ParseHelper.toString(initiallyReachable, "undefined"));
+         log.trace("My index is " + mySlaveIndex + " and these slaves should be reachable: " + initiallyReachable);
          if (mySlaveIndex >= 0 && initiallyReachable != null) {
             List<JChannel> channels = getChannels((JChannel) this.channel, true);
             log.trace("Found " + channels.size() + " channels");

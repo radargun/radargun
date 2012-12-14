@@ -1,5 +1,7 @@
 package org.radargun.config;
 
+import java.lang.reflect.Type;
+
 /**
  * Interface that converts string representation of a collection of objects into java.util.Collection
  *
@@ -7,31 +9,13 @@ package org.radargun.config;
  * @since 4.0
  */
 public interface Converter<T> {
-   public T convert(String string);
+   public T convert(String string, Type type);
    public String convertToString(T value);
 
    /**
     * @return Regexp pattern of allowed input strings
+    * @param type
     */
-   public String allowedPattern();
+   public String allowedPattern(Type type);
 
-   /**
-    * This is a placeholder because Property annotation does not allow null default value for converter.
-    */
-   public static final class DefaultConverter implements Converter<Object> {
-      @Override
-      public Object convert(String string) {
-         throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public String convertToString(Object value) {
-         throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public String allowedPattern() {
-         throw new UnsupportedOperationException();
-      }
-   }
 }

@@ -201,18 +201,6 @@ public class ClusterValidationStage extends AbstractDistStage {
       return null;
    }
 
-   public void setPartialReplication(boolean partialReplication) {
-      this.partialReplication = partialReplication;
-   }
-
-   public void setReplicationTryCount(int replicationTryCount) {
-      this.replicationTryCount = replicationTryCount;
-   }
-
-   public void setReplicationTimeSleep(int replicationTimeSleep) {
-      this.replicationTimeSleep = replicationTimeSleep;
-   }
-   
    public Collection<Integer> getSlaves() {
       if (slaves == null) {
          Collection<Integer> list = new ArrayList<Integer>();
@@ -226,15 +214,5 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    private String key(int slaveIndex) {
       return KEY + slaveIndex;
-   }
-
-
-   @Override
-   public String toString() {
-      return "ClusterValidationStage {" +
-            "partialReplication=" + partialReplication +
-            ", replicationTryCount=" + replicationTryCount +
-            ", replicationTimeSleep=" + replicationTimeSleep +
-            ", wrapper=" + wrapper + ", " + super.toString();
    }
 }

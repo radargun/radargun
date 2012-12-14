@@ -359,45 +359,11 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
    private String humanReadableTime(long aTime) {
       return DATEFORMAT.format(new Date(aTime));
    }
-   
-   
+
    private interface StatGetter {
       String getStat(Stats cell);
    }
 
-   public void setTargetDir(String targetDir) {
-      this.targetDir = targetDir;
-   }
-
-   public void setChartHeight(int chartHeight) {
-      this.chartHeight = chartHeight;
-   }
-
-   public void setChartWidth(int chartWidth) {
-      this.chartWidth = chartWidth;
-   }
-
-   public void setGenerateIntervalTimeData(boolean generateIntervalTimeData) {
-      this.generateIntervalTimeData = generateIntervalTimeData;
-   }
-   
-   public void setIgnore(String list) {
-      StringTokenizer tokenizer = new StringTokenizer(list, ",");
-      Set<Integer> ignored = new HashSet<Integer>();
-      try {
-         while (tokenizer.hasMoreTokens()) {         
-            ignored.add(Integer.parseInt(tokenizer.nextToken().trim()));
-         }
-         this.ignore = ignored;
-      } catch (NumberFormatException e) {
-         log.error("Failed to parse ignore list: " + list);
-      }
-   }
-   
-   
-   
-   
-   
    private void generateTotalThroughputCsvFromThroughputCsv(String from, String to){
 
 	   try{

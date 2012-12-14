@@ -27,7 +27,7 @@ public class KillStage extends AbstractDistStage {
 
    @Property(doc = "Instead of specifying concrete slaves we may choose a victim based on his role in the cluster. " +
          "Supported roles are " + RoleHelper.SUPPORTED_ROLES + ". By default no role is specified.")
-   private String role;
+   private RoleHelper.Role role;
 
    @Property(converter = TimeConverter.class, doc = "If this value is positive the stage will spawn a thread which " +
          "will kill the node after the delay. The stage will not wait for anything. By default the kill is immediate " +
@@ -66,26 +66,5 @@ public class KillStage extends AbstractDistStage {
          log.trace("Ignoring kill request, not targeted for this slave");
       }
       return ack;
-   }
-
-   @Override
-   public String toString() {
-      return "KillStage {tearDown=" + tearDown + ", " + super.toString();
-   }
-
-   public void setTearDown(boolean tearDown) {
-      this.tearDown = tearDown;
-   }
-   
-   public void setAsync(boolean async) {
-      this.async = async;
-   }
-   
-   public void setRole(String role) {
-      this.role = role;
-   }
-   
-   public void setDelayExecution(long milliseconds) {
-      this.delayExecution = milliseconds;
    }
 }

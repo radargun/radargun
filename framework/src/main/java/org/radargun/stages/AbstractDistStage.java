@@ -7,7 +7,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.MasterConfig;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.helpers.ParseHelper;
 import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.ClassLoadHelper;
@@ -22,7 +21,7 @@ import java.util.List;
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Stage(doc = "")
-public abstract class AbstractDistStage implements DistStage {
+public abstract class AbstractDistStage extends AbstractStage implements DistStage {
 
    protected Log log = LogFactory.getLog(getClass());
    private static final String PREV_PRODUCT = "AbstractDistStage.previousProduct";
@@ -39,7 +38,7 @@ public abstract class AbstractDistStage implements DistStage {
    private boolean useSmartClassLoading = true;
 
    @Property(doc = "Should the benchmark fail if one of the slaves sends error acknowledgement? Default is false.")
-   protected boolean exitBenchmarkOnSlaveFailure = false;
+   private boolean exitBenchmarkOnSlaveFailure = false;
 
    @Property(doc = "If set to true the stage should be run on maxSlaves (applies to scaling benchmarks). Default is false.")
    private boolean runOnAllSlaves;
@@ -66,11 +65,6 @@ public abstract class AbstractDistStage implements DistStage {
       this.productName = masterState.nameOfTheCurrentBenchmark();      
    }
 
-   public void setRunOnAllSlaves(boolean runOnAllSlaves) {
-      this.runOnAllSlaves = runOnAllSlaves;
-   }
-
-
    public boolean isRunOnAllSlaves() {
       return runOnAllSlaves;
    }
@@ -88,11 +82,7 @@ public abstract class AbstractDistStage implements DistStage {
    }
 
    public DistStage clone() {
-      try {
-         return (DistStage) super.clone();
-      } catch (CloneNotSupportedException e) {
-         throw new IllegalStateException(e);
-      }
+       return (DistStage) super.clone();
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
@@ -135,20 +125,6 @@ public abstract class AbstractDistStage implements DistStage {
 
    public int getSlaveIndex() {
       return slaveIndex;
-   }
-
-   @Override
-   public String toString() {
-      return String.format("productName='%s', useSmartClassLoading=%s, slaveIndex=%d, activeSlavesCount=%d, totalSlavesCount=%d, slaves=%s}",
-            productName, useSmartClassLoading, slaveIndex, activeSlavesCount, totalSlavesCount, slaves);
-   }
-
-   public void setSlaves(String slaves) {
-      this.slaves = ParseHelper.parseList(slaves, "slaves", log);
-   }
-
-   public void setUseSmartClassLoading(boolean useSmartClassLoading) {
-      this.useSmartClassLoading = useSmartClassLoading;
    }
 
    protected Object createInstance(String classFqn) throws Exception {
