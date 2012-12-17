@@ -12,11 +12,11 @@ public interface CacheWrapperStressor {
     * Performs operations against the given wrapper and returns the results of these operations as a map. The map will be
     * further used for report generation.
     */
-   public Map<String, String> stress(CacheWrapper wrapper);
+   Map<String, String> stress(CacheWrapper wrapper);
 
-   public void destroy() throws Exception;
+   void destroy() throws Exception;
 
-   public boolean isSysMonitorEnabled();
+   boolean isSysMonitorEnabled();
 
-   public void setSysMonitorEnabled(boolean enabled);
+   void setSysMonitorEnabled(boolean enabled);
 }

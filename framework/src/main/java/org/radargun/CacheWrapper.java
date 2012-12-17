@@ -7,7 +7,7 @@ import org.radargun.utils.TypedProperties;
  * CacheWrappers wrap caching products to provide RadarGun with a standard way of
  * accessing and manipulating a cache.
  *
- * @author Manik Surtani (manik@surtani.org)
+ * @author Manik Surtani
  */
 public interface CacheWrapper
 {

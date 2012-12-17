@@ -10,7 +10,7 @@ import org.radargun.state.MasterState;
  */
 public interface MasterStage extends Stage {
 
-   public void init(MasterState masterState);
+   void init(MasterState masterState);
 
-   public boolean execute() throws Exception;
+   boolean execute() throws Exception;
 }

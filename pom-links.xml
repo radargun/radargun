@@ -19,6 +19,7 @@
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
       <module>plugins/ehcache25</module>
+      <module>plugins/ehcache26</module>
       <module>plugins/terracotta3</module>
       <module>plugins/chm</module>
    </modules>
@@ -200,6 +201,7 @@
 				               <arg value="jbosscache2" />
 				               <arg value="jbosscache3" />
 				               <arg value="ehcache25" />
+                           <arg value="ehcache25" />
 				               <arg value="terracota3" />
 				               <arg value="chm" />
 				               <arg value="coherence3" />				               

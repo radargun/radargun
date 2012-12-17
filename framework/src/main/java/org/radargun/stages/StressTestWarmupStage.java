@@ -12,7 +12,7 @@ import java.util.Set;
  * The warmup stage for stress test benchmarks.  This ensures the same access paths are used for the warmup and the
  * actual benchmark.
  *
- * @author Manik Surtani &lt;manik@jboss.org&gt;
+ * @author Manik Surtani
  */
 @Stage(doc = "Warmup stage for stress test benchmarks.")
 public class StressTestWarmupStage extends StressTestStage {

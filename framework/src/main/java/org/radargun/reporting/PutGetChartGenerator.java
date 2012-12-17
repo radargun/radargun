@@ -22,7 +22,7 @@ import java.util.StringTokenizer;
 /**
  * Generates average and total throughput.  Used for parsing reports generated with a ClusterReportGenerator.
  *
- * @author Manik Surtani (<a href="mailto:manik@jboss.org">manik@jboss.org</a>)
+ * @author Manik Surtani
  */
 public class PutGetChartGenerator extends AbstractChartGen {
    private DefaultCategoryDataset putData, getData;

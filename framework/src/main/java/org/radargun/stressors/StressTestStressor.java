@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class StressTestStressor extends AbstractCacheWrapperStressor {
 
-   private static Log log = LogFactory.getLog(StressTestStressor.class);
+   private static final Log log = LogFactory.getLog(StressTestStressor.class);
    private static final double NANOSECS_IN_SEC = 1000000000.0;
 
    private int opsCountStatusLog = 5000;
@@ -72,9 +72,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    private KeyGenerator keyGenerator;
 
-
    private CacheWrapper cacheWrapper;
-   private static Random r = new Random();
+   private static final Random r = new Random();
    private volatile long startNanos;
    private volatile CountDownLatch startPoint;
    private volatile CountDownLatch endPoint;

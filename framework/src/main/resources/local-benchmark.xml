@@ -10,10 +10,17 @@
    </benchmark>
 
    <products>
-      <infinispan4>
-         <config name="local/repeatable-read.xml"/>
-         <config name="local/read-committed.xml"/>
-      </infinispan4>
+      <infinispan50>
+         <config name="local-config.xml"/>
+      </infinispan50>
+      <infinispan51>
+         <config name="local-config.xml"/>
+      </infinispan51>
+      <infinispan52>
+         <config name="local-config.xml"/>
+      </infinispan52>
+
+      <!--
       <jbosscache3>
          <config name="mvcc/mvcc-local-RR.xml"/>
          <config name="mvcc/mvcc-local-RC.xml"/>
@@ -21,10 +28,12 @@
       <ehcache25>
          <config name="ehcache-local.xml"/>
       </ehcache25>
+      -->
    </products>
 
 
    <reports>
+      <!--
       <report name="repeatable-read">
          <item product="infinispan4" config="local/repeatable-read.xml"/>
          <item product="jbosscache3" config="mvcc/mvcc-local-RR.xml"/>
@@ -35,6 +44,7 @@
          <item product="jbosscache3" config="mvcc/mvcc-local-RC.xml"/>
          <item product="ehcache25" config="ehcache-local.xml"/>
       </report>
+      -->
       <report name="all_included" includeAll="true"/>
    </reports>
 </local-bench-config>

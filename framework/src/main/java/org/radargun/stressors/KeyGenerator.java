@@ -1,7 +1,7 @@
 package org.radargun.stressors;
 
 /**
- * Used for generating key used by {@link StressTestStressor}. All implementations must have an default/no-arg public
+ * Used for generating key used by {@link PutGetStressor}. All implementations must have an default/no-arg public
  * constructor.
  * <p/>
  * Concurrency: methods of this class might be called from multiple threads concurrently.
@@ -13,12 +13,12 @@ public interface KeyGenerator {
    /**
     * Called for distributed benchmarks.
     */
-   public Object generateKey(int nodeIndex, int threadIndex, int keyIndex);
+   Object generateKey(int nodeIndex, int threadIndex, int keyIndex);
 
    /**
     * Called for local benchmarks.
     */
-   public Object generateKey(int threadIndex, int keyIndex);
+   Object generateKey(int threadIndex, int keyIndex);
 
    /**
     * Called for benchmarks with shared attributes
@@ -26,5 +26,5 @@ public interface KeyGenerator {
     * @param keyIndex
     * @return
     */
-   public Object generateKey(int keyIndex);
+   Object generateKey(int keyIndex);
 }

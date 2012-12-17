@@ -2,7 +2,6 @@ package org.radargun.reporting;
 
 import org.radargun.stages.GenerateChartStage;
 
-import java.io.IOException;
 import java.util.StringTokenizer;
 
 /**
@@ -15,7 +14,7 @@ import java.util.StringTokenizer;
  * this with no params will generate some help.
  * <p/>
  *
- * @author Manik Surtani (<a href="mailto:manik@jboss.org">manik@jboss.org</a>)
+ * @author Manik Surtani
  */
 public class ChartGenerator {
    private static void help() {

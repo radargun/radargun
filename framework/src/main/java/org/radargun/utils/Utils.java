@@ -168,7 +168,7 @@ public class Utils {
    }
 
    public static String getCacheWrapperFqnClass(String productName) {
-      return Utils.getCacheProviderProperty(productName, "org.radargun.wrapper");
+      return getCacheProviderProperty(productName, "org.radargun.wrapper");
    }
 
    public static File createOrReplaceFile(File parentDir, String actualFileName) throws IOException {
@@ -257,7 +257,7 @@ public class Utils {
    }
    
    public static long string2Millis(String duration) {
-      long durationMillis = 0;
+      long durationMillis;
       try {
          durationMillis = Long.parseLong(duration);
       } catch (NumberFormatException nfe) {

@@ -31,6 +31,7 @@ public class LocalBenchmark {
 
    private static final String LOCAL_BENCHMARK_CSV = "local_benchmark.csv";
    private static final String REPORTS_DIR = "reports";
+   private static final boolean SKIP_FREE_MEMORY_CHECK = Boolean.getBoolean("radargun.skip_free_memory_check");
 
    private List<CacheWrapperStressor> stressors = new ArrayList<CacheWrapperStressor>();
    private LinkedHashMap<String, List<Properties>> product2Config = new LinkedHashMap<String, List<Properties>>();
@@ -125,7 +126,7 @@ public class LocalBenchmark {
    }
 
    private boolean freeMemoryOkay() {
-      return freeMememory() + 0.1 * freeMememory() >= initialFreeMemory;
+      return !SKIP_FREE_MEMORY_CHECK && (freeMememory() + 0.1 * freeMememory() >= initialFreeMemory);
    }
 
    private void createOutputFile() throws IOException {

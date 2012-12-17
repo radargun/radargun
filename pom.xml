@@ -19,6 +19,7 @@
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
       <module>plugins/ehcache25</module>
+      <module>plugins/ehcache26</module>
       <module>plugins/terracotta3</module>
       <module>plugins/chm</module>
    </modules>
@@ -169,9 +170,10 @@
 				               <arg value="jbosscache2" />
 				               <arg value="jbosscache3" />
 				               <arg value="ehcache25" />
+                           <arg value="ehcache25" />
 				               <arg value="terracota3" />
 				               <arg value="chm" />
-				               <arg value="coherence" />				               
+				               <arg value="coherence3" />
 				               <arg value="jdg60" />
 				               <arg value="jdg61" />
 			               </java>
@@ -184,26 +186,25 @@
                            </fileset>
                         </copy>
 
+                        <copy todir="${distribution.artifact}/plugins/infinispan50">
+                           <fileset dir="plugins/infinispan50/target/distribution/plugin-infinispan50-bin/plugin-infinispan50">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
                         <copy todir="${distribution.artifact}/plugins/infinispan51">
                            <fileset dir="plugins/infinispan51/target/distribution/plugin-infinispan51-bin/plugin-infinispan51">
                               <include name="**/*" />
                            </fileset>
                         </copy>
 
-                        <copy todir="${distribution.artifact}/plugins/infinispan50">
-                           <fileset dir="plugins/infinispan50/target/distribution/plugin-infinispan50-bin/plugin-infinispan50">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-                        
                         <copy todir="${distribution.artifact}/plugins/infinispan52">
                            <fileset dir="plugins/infinispan52/target/distribution/plugin-infinispan52-bin/plugin-infinispan52">
                               <include name="**/*" />
                            </fileset>
                         </copy>
                         
-
-                         <copy todir="${distribution.artifact}/plugins/jgroups">
+                        <copy todir="${distribution.artifact}/plugins/jgroups">
                            <fileset dir="plugins/jgroups/target/distribution/plugin-jgroups-bin/plugin-jgroups">
                               <include name="**/*" />
                            </fileset>
@@ -225,7 +226,13 @@
                            <fileset dir="plugins/ehcache25/target/distribution/plugin-ehcache25-bin/plugin-ehcache25">
                               <include name="**/*" />
                            </fileset>
-                        </copy>                        
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/ehcache26">
+                           <fileset dir="plugins/ehcache26/target/distribution/plugin-ehcache26-bin/plugin-ehcache26">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
 
                         <copy todir="${distribution.artifact}/plugins/terracotta3">
                            <fileset dir="plugins/terracotta3/target/distribution/plugin-terracotta3-bin/plugin-terracotta3">
