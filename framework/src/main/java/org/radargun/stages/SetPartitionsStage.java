@@ -73,22 +73,6 @@ public class SetPartitionsStage extends AbstractDistStage {
       super.initOnMaster(masterState, slaveIndex);
    }
 
-   @Override
-   public String toString() {
-      StringBuilder sb = new StringBuilder();
-      sb.append("SetPartitionsStage {partitions=");
-      for (Set<Integer> partition : partitions) {
-         sb.append('(');
-         for (int slave : partition) {
-            sb.append(slave);
-            sb.append(", ");
-         }
-         sb.append("), ");
-      }      
-      sb.append(super.toString());
-      return sb.toString();
-   }
-
    public static class UniqueCheckerConverter extends DefaultConverter {
       @Override
       public Object convert(String string, Type type) {
