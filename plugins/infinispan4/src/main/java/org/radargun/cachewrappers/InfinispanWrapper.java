@@ -40,6 +40,7 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    private static final String DEFAULT_CACHE_NAME = "testCache";
+   private String cacheName;
 
    protected final Log log = LogFactory.getLog(getClass());
    private final boolean trace = log.isTraceEnabled();
@@ -48,7 +49,6 @@ public class InfinispanWrapper implements CacheWrapper {
    protected TransactionManager tm;
    protected volatile State state = State.STOPPED;
    protected ReentrantLock stateLock = new ReentrantLock();
-   protected Thread startingThread;
    protected String config;
    private volatile boolean enlistExtraXAResource;
    private Cache<Object, Object> cache;
@@ -62,7 +62,6 @@ public class InfinispanWrapper implements CacheWrapper {
             
             stateLock.lock();
             state = State.STARTED;
-            startingThread = null;
             stateLock.unlock();
 
             postSetUpInternal(confAttributes);
@@ -73,7 +72,6 @@ public class InfinispanWrapper implements CacheWrapper {
             stateLock.lock();
          }
          state = State.FAILED;
-         startingThread = null;
          throw e;
       } finally {
          if (stateLock.isHeldByCurrentThread()) {
@@ -99,7 +97,7 @@ public class InfinispanWrapper implements CacheWrapper {
    
    protected void setUpCache(TypedProperties confAttributes, int nodeIndex) throws Exception {     
       String configFile = getConfigFile(confAttributes);
-      String cacheName = getCacheName(confAttributes);
+      cacheName = getCacheName(confAttributes);
       
       log.trace("Using config file: " + configFile + " and cache name: " + cacheName);
 
@@ -129,7 +127,7 @@ public class InfinispanWrapper implements CacheWrapper {
    
    public void tearDown() throws Exception {     
       try {
-         if (beginStop(false)) {
+         if (beginStop()) {
             List<Address> addressList = cacheManager.getMembers();
             cacheManager.stop();         
             log.info("Stopped, previous view is " + addressList);
@@ -168,7 +166,6 @@ public class InfinispanWrapper implements CacheWrapper {
             log.info("Wrapper already started");
          } else if (state == State.STOPPED) {
             state = State.STARTING;
-            startingThread = Thread.currentThread();
             return true;
          }
          return false;
@@ -179,13 +176,9 @@ public class InfinispanWrapper implements CacheWrapper {
       }
    }
 
-   protected boolean beginStop(boolean interrupt) throws InterruptedException {
+   protected boolean beginStop() throws InterruptedException {
       try {
          stateLock.lock();
-         if (interrupt && startingThread != null) {
-            log.info("Interrupting the starting thread");
-            startingThread.interrupt();
-         }
          while (state == State.STARTING) {
             stateLock.unlock();
             log.info("Waiting for the wrapper to start");
@@ -349,6 +342,10 @@ public class InfinispanWrapper implements CacheWrapper {
 
    public void setEnlistExtraXAResource(boolean enlistExtraXAResource) {
       this.enlistExtraXAResource = enlistExtraXAResource;
+   }
+   
+   protected String getCacheName() {
+	   return cacheName;
    }
 
 }
