@@ -3,6 +3,7 @@ package org.radargun.cachewrappers;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
+import net.sf.ehcache.Status;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
@@ -57,6 +58,11 @@ public class EHCacheWrapper implements CacheWrapper {
       manager.shutdown();
    }
 
+   @Override
+   public boolean isRunning() {
+      return manager.getStatus() == Status.STATUS_ALIVE;
+   }
+
    public void putSerializable(Serializable key, Serializable value) throws Exception {
       Element element = new Element(key, value);
       cache.put(element);
@@ -79,6 +85,11 @@ public class EHCacheWrapper implements CacheWrapper {
       if (s instanceof Element) {
          return ((Element) s).getValue();
       } else return s;
+   }
+
+   @Override
+   public Object remove(String bucket, Object key) throws Exception {
+      return cache.remove(key);
    }
 
    public int getNumMembers() {
@@ -106,7 +117,12 @@ public class EHCacheWrapper implements CacheWrapper {
    }
 
    @Override
-   public int size() {
+   public int getLocalSize() {
       return cache.getKeys().size();
+   }
+
+   @Override
+   public int getTotalSize() {
+      return -1;
    }
 }
