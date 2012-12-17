@@ -1,5 +1,8 @@
 package org.radargun.stages;
 
+import java.util.Map;
+import java.util.TreeSet;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
@@ -48,6 +51,16 @@ public class MapReduceStage extends AbstractDistStage {
 				
 			} else {
 				result.setErrorMessage("Map/Reduce tasks are not supported by this cache");
+			}
+		}
+		
+		if(result.getPayload() != null) {
+			@SuppressWarnings("unchecked")
+			Map<String, Integer> payload = (Map<String, Integer>) result.getPayload();
+			
+			log.info("Word count executed against '" + payload.keySet().size() + "' words.");
+			for (String key : new TreeSet<String>(payload.keySet())) {
+				log.info("Word : '" + key + "'; Count: " + payload.get(key));
 			}
 		}
 		

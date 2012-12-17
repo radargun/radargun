@@ -4,7 +4,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
@@ -25,7 +28,7 @@ public class LoadFileStage extends AbstractDistStage {
 	private String filePath;
 
 	@Property(doc = "The size of the values to put into the cache from the contents"
-			+ " of the file. The default size is 1MB (1024 * 1024)")
+			+ " of the file. The default size is 8MB (1024 * 1024) * char size")
 	private int valueSize = 1024 * 1024;
 
 	@Property(doc = "The name of the bucket where keys are written. The default is null")
@@ -41,8 +44,9 @@ public class LoadFileStage extends AbstractDistStage {
 			result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
 		} else {
 			cacheWrapper = slaveState.getCacheWrapper();
-
+			Charset charset = Charset.defaultCharset();  
 			FileChannel theFile = null;
+			
 			try {
 				theFile = new FileInputStream(filePath).getChannel();
 				theFile.position(fileOffset);
@@ -52,11 +56,15 @@ public class LoadFileStage extends AbstractDistStage {
 					String key = Integer.toString(getSlaveIndex()) + "-" + Long.toString(theFile.position());
 					if (theFile.read(buffer) > 0) {
 						log.info("Writing to cache key: " + key + " at position " + theFile.position());
-						cacheWrapper.put(bucket, key, buffer.asCharBuffer().toString());
+						buffer.rewind();
+				        CharsetDecoder decoder = charset.newDecoder();  
+				        CharBuffer charBuffer = decoder.decode(buffer); 
+						cacheWrapper.put(bucket, key, charBuffer.toString());
 						theFile.position(theFile.position()
 								+ (valueSize * totalWriters));
 					} else {
 						theFile.close();
+						theFile = null;
 						break;
 					}
 				}

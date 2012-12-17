@@ -17,7 +17,13 @@
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
-         <version>5.1.7.Final-redhat-1</version>
+         <version>5.1.8.Final</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-distexec-demo</artifactId>
+         <version>5.1.8.Final</version>
       </dependency>
 
       <dependency>
