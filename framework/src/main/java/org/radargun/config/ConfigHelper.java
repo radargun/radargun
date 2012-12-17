@@ -46,7 +46,11 @@ public class ConfigHelper {
 
          Field field = properties.get(propName);
          if (field != null) {
-            Class<? extends Converter> converterClass = field.getAnnotation(Property.class).converter();
+            Property property = field.getAnnotation(Property.class);
+            if (property.readonly()) {
+               throw new IllegalArgumentException("Property " + propName + " on class [" + objectClass + "] is readonly and therefore cannot be set!");
+            }
+            Class<? extends Converter> converterClass = property.converter();
             try {
                Converter converter = converterClass.newInstance();
                field.setAccessible(true);
@@ -64,7 +68,7 @@ public class ConfigHelper {
          }
 
          if (failOnMissingSetter) {
-            throw new RuntimeException("Couldn't find a property for parameter " + propName + " on class [" + objectClass + "]");
+            throw new IllegalArgumentException("Couldn't find a property for parameter " + propName + " on class [" + objectClass + "]");
          }
       }
    }
