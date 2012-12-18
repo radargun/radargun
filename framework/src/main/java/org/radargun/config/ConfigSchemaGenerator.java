@@ -1,7 +1,6 @@
 package org.radargun.config;
 
 import org.radargun.Stage;
-import org.radargun.stages.AbstractStage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -156,15 +155,7 @@ public class ConfigSchemaGenerator {
 
    private static void generateStageDefinitions(Document doc, Element schema, Element[] parents) {
       Set<Class> generatedStages = new HashSet<Class>();
-      for (String stageName : getStageNames()) {
-         Class stage;
-         try {
-            stage = Class.forName("org.radargun.stages." + stageName + "Stage");
-            if (generatedStages.contains(stage)) continue;
-         } catch (ClassNotFoundException e) {
-            System.err.println("Cannot load class for stage " + stageName);
-            continue;
-         }
+      for (Class<?> stage : StageHelper.getStagesFromJar(stageJarFile).values()) {
          generateStage(doc, schema, parents, stage, generatedStages);
       }
    }
@@ -178,18 +169,28 @@ public class ConfigSchemaGenerator {
       org.radargun.config.Stage stageAnnotation = (org.radargun.config.Stage)stage.getAnnotation(org.radargun.config.Stage.class);
       if (stageAnnotation == null) return; // not a proper stage
 
-      String stageName = AbstractStage.getStageName(stage);
+      String stageName = StageHelper.getStageName(stage);
+      String stageDocText = stageAnnotation.doc();
       Element stageType = createComplexType(doc, schema, stageName,
-            hasParentStage ? RG_PREFIX + AbstractStage.getStageName(stage.getSuperclass()) : null,
+            hasParentStage ? RG_PREFIX + StageHelper.getStageName(stage.getSuperclass()) : null,
             Modifier.isAbstract(stage.getModifiers()),
-            stageAnnotation.doc());
+            stageDocText);
       for (Element parent : parents) {
          createReference(doc, parent, stageName, RG_PREFIX + stageName);
+      }
+      if (!stageAnnotation.deprecatedName().equals(org.radargun.config.Stage.NO_DEPRECATED_NAME)) {
+         for (Element parent : parents) {
+            createReference(doc, parent, stageAnnotation.deprecatedName(), RG_PREFIX + stageName);
+         }
       }
       for (Map.Entry<String, Field> property : PropertyHelper.getDeclaredProperties(stage).entrySet()) {
          Property propertyAnnotation = property.getValue().getAnnotation(Property.class);
          if (propertyAnnotation.readonly()) continue; // cannot be configured
-         addAttribute(doc, stageType, property.getKey(), propertyAnnotation.doc(), !propertyAnnotation.optional());
+         String propertyDocText = propertyAnnotation.doc();
+         if (property.getKey().equals(propertyAnnotation.deprecatedName())) {
+            propertyDocText = "*DEPRECATED* " + propertyDocText;
+         }
+         addAttribute(doc, stageType, property.getKey(), propertyDocText, !propertyAnnotation.optional());
       }
       generatedStages.add(stage);
    }

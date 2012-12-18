@@ -157,8 +157,9 @@
   			               <echo message="Generating XSD schema" />
 			               <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true">
 				               <classpath>
-					               <pathelement location="framework/target/distribution/radargun-framework-bin/radargun-framework/lib/radargun-framework-1.1.0-SNAPSHOT.jar" />
-					               <pathelement location="framework/target/distribution/radargun-framework-bin/radargun-framework/lib/commons-logging-1.1.1.jar" />
+							<fileset dir="framework/target/distribution/radargun-framework-bin/radargun-framework/lib">
+								<include name="*.jar"/>
+							</fileset>
 				               </classpath>
 				               <arg value="framework/src/main/resources" />
 				               <arg value="framework/target/distribution/radargun-framework-bin/radargun-framework/lib/radargun-framework-1.1.0-SNAPSHOT.jar" />

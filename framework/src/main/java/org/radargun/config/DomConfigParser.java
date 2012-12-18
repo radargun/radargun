@@ -199,8 +199,7 @@ public class DomConfigParser extends ConfigParser {
             }
          }         
       } else {
-         String stageShortName = element.getNodeName();      
-         Stage st = JaxbConfigParser.getStage(stageShortName + "Stage");
+         Stage st = StageHelper.getStage(element.getNodeName());
          prototype.addStage(st);
          NamedNodeMap attributes = element.getAttributes();
          Map<String, String> attrToSet = new HashMap<String, String>();

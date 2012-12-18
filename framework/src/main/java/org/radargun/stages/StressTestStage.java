@@ -21,7 +21,8 @@ import static org.radargun.utils.Utils.numberFormat;
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-@Stage(doc = "Benchmark where several client threads access cache limited by time or number of requests.")
+@Stage(doc = "Benchmark where several client threads access cache limited by time or number of requests.",
+      deprecatedName = "WebSessionBenchmark")
 public class StressTestStage extends AbstractDistStage {
 
    private static final String SIZE_INFO = "SIZE_INFO";
@@ -32,19 +33,20 @@ public class StressTestStage extends AbstractDistStage {
    protected int opsCountStatusLog = 5000;
 
    @Property(doc = "Total number of request to be made against this session: reads + writes. If duration " +
-         "is specified this value is ignored. Default is 50000.")
+         "is specified this value is ignored. Default is 50000.", deprecatedName = "numberOfRequests")
    protected int numRequests = 50000;
 
-   @Property(doc = "Number of key-value entries per each client thread which should be used. Default is 100.")
+   @Property(doc = "Number of key-value entries per each client thread which should be used. Default is 100.",
+         deprecatedName = "numberOfAttributes")
    protected int numEntries = 100;
 
-   @Property(doc = "Size of the value in bytes. Default is 1000.")
+   @Property(doc = "Size of the value in bytes. Default is 1000.", deprecatedName = "sizeOfAnAttribute")
    protected int entrySize = 1000;
 
    @Property(doc = "Ratio of writes = PUT requests (percentage). Default is 20%")
    protected int writePercentage = 20;
 
-   @Property(doc = "The number of threads that will work on this slave. Default is 10.")
+   @Property(doc = "The number of threads that will work on this slave. Default is 10.", deprecatedName = "numOfThreads")
    protected int numThreads = 10;
 
    @Property(doc = "Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.")

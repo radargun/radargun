@@ -46,6 +46,9 @@ public class PropertyHelper {
          Property property = field.getAnnotation(Property.class);
          if (property != null) {
             properties.put(getPropertyName(field, property), field);
+            if (!property.deprecatedName().equals(Property.NO_DEPRECATED_NAME)) {
+               properties.put(property.deprecatedName(), field);
+            }
          }
       }
    }

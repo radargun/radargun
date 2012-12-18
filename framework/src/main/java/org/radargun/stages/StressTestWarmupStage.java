@@ -14,7 +14,7 @@ import java.util.Set;
  *
  * @author Manik Surtani
  */
-@Stage(doc = "Warmup stage for stress test benchmarks.")
+@Stage(doc = "Warmup stage for stress test benchmarks.", deprecatedName = "WebSessionWarmup")
 public class StressTestWarmupStage extends StressTestStage {
 
    private static final Set<String> WARMED_UP_CONFIGS = new HashSet<String>(2);
