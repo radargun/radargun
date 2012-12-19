@@ -128,7 +128,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       }
 
       Map<String, String> results = new LinkedHashMap<String, String>();
-      results.put("DURATION", str(duration));
+      results.put("DURATION", str(transactionDuration));
       double requestPerSec = (reads + writes) / ((duration / numOfThreads) / 1000000000.0);
       results.put("REQ_PER_SEC", str(requestPerSec));
       results.put("READS_PER_SEC", str(reads / ((readsDurations / numOfThreads) / 1000000000.0)));
@@ -137,7 +137,7 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
       results.put("WRITE_COUNT", str(writes));
       results.put("FAILURES", str(failures));
       if (useTransactions) {
-         double txPerSec = txCount.get() / ((transactionDuration / numOfThreads) / 1000.0);
+         double txPerSec = txCount.get() / ((transactionDuration / numOfThreads) / 1000000000.0);
          results.put("TX_PER_SEC", str(txPerSec));
       }
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
@@ -226,46 +226,22 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
             i++;
             completion.logProgress(i, result, threadIndex);
          }
+         
+         log.info("Open Transactions: " + txNotCompleted);
 
          if (txNotCompleted) {
-            long start = System.nanoTime();
-            completeTransaction(-1, true);
-            transactionDuration += System.nanoTime() - start;
+            long txEndDuration = endTransaction();
+            transactionDuration += txEndDuration;
          }
-      }
-
-      private long startTx(int iteration) {
-         long start = System.nanoTime();
-         boolean txStarted = startTransaction(iteration);
-         if (txStarted)
-        	 txNotCompleted = true;
-         long txStartTime = 0;
-         if (txStarted) { //if a transaction has been started add the starting time
-            txStartTime = System.nanoTime() - start;
-            transactionDuration += txStartTime;
-         }
-         return txStartTime;
-      }
-
-      private long endTx(int iteration, long operationDuration) {
-         transactionDuration += operationDuration;
-         long start = System.nanoTime();
-         //if we commit the transaction add the time needed for transaction commit as well
-         long txEndTime = 0;
-         boolean txEnded = completeTransaction(iteration, false);
-         if (txEnded) {
-            txEndTime = System.nanoTime() - start;
-            txNotCompleted = false;
-            transactionDuration += txEndTime;
-         }
-         return txEndTime;
       }
 
       private Object doRead(Object key, int iteration) {
-         long txOverhead = 0;
-         if (useTransactions) txOverhead = startTx(iteration);
-
          Object result = null;
+         long startTxDuration = 0;
+         if (useTransactions && shouldStartTransaction(iteration)) {
+            startTxDuration += startTransaction();
+            txNotCompleted = true;
+         }
          long start = System.nanoTime();
          try {
             result = cacheWrapper.get(bucketId, key);
@@ -274,18 +250,24 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
             nrFailures++;
          }
          long operationDuration = System.nanoTime() - start;
-
-         if (useTransactions) txOverhead += endTx(iteration, operationDuration);
+         long endTxDuration = 0;
+         if (useTransactions && shouldEndTransaction(iteration)) {
+            endTxDuration += endTransaction();
+            txNotCompleted = false;
+         }
          readDuration += operationDuration;
-         if (useTransactions) readDuration += txOverhead;
+         transactionDuration += startTxDuration;
+         transactionDuration += operationDuration;
+         transactionDuration += endTxDuration;
          reads++;
          return result;
       }
 
       private void doWrite(Object key, Object payload, int iteration) {
-         long txOverhead = 0;
-         if (useTransactions) txOverhead = startTx(iteration);
-
+         long startTxDuration = 0;
+         if (useTransactions && shouldStartTransaction(iteration))
+            startTxDuration += startTransaction();
+            txNotCompleted = true;
          long start = System.nanoTime();
          try {
             cacheWrapper.put(bucketId, key, payload);
@@ -294,10 +276,15 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
             nrFailures++;
          }
          long operationDuration = System.nanoTime() - start;
-
-         if (useTransactions) txOverhead += endTx(iteration, operationDuration);
+         long endTxDuration = 0;
+         if (useTransactions && shouldEndTransaction(iteration)) {
+            endTxDuration += endTransaction();
+            txNotCompleted = false;
+         }
          writeDuration += operationDuration;
-         if (useTransactions) writeDuration += txOverhead;
+         transactionDuration += startTxDuration;
+         transactionDuration += operationDuration;
+         transactionDuration += endTxDuration;
          writes++;
       }
 
@@ -334,27 +321,39 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
          return transactionDuration;
       }
    }
-
-   private boolean startTransaction(int i) {
+   
+   private boolean shouldStartTransaction(int i) {
       if ((i % transactionSize) == 0) {
-         cacheWrapper.startTransaction();
          return true;
       }
       return false;
    }
 
-   private boolean completeTransaction(int i, boolean force) {
-      if ((((i + 1) % transactionSize) == 0) || force) {
-         try {
-            cacheWrapper.endTransaction(commitTransactions);
-         } catch (Exception e) {
-            log.error("Issues committing the transaction", e);
-            throw new RuntimeException(e);
-         }
-         txCount.incrementAndGet();
-         return true;
+   private long startTransaction() {
+      long start = System.nanoTime();
+      cacheWrapper.startTransaction();
+      long txStartTime = System.nanoTime() - start;
+      return txStartTime;
+   }
+   
+	private boolean shouldEndTransaction(int i) {
+	   if (((i + 1) % transactionSize) == 0) {
+			return true;
+		}
+		return false;
+	}
+
+   private long endTransaction() {
+      long start = System.nanoTime();
+      try {
+         cacheWrapper.endTransaction(commitTransactions);
+      } catch (Exception e) {
+         log.error("Issues committing the transaction", e);
+         throw new RuntimeException(e);
       }
-      return false;
+      long txEndTime = System.nanoTime() - start;
+      txCount.incrementAndGet();
+      return txEndTime;
    }
 
    private String str(Object o) {
