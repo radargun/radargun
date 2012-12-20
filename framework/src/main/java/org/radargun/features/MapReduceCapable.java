@@ -27,7 +27,7 @@ public interface MapReduceCapable extends CacheWrapper {
 	
    /**
     * 
-    * This method executes a Map/Reduce task against all of the keys in the
+    * This method executes a MapReduce task against all of the keys in the
     * cache using the specified Mapper and Reducer classes.
     * 
     * @param classLoadHelper a <code>ClassLoadHelper</code> used to instantiate

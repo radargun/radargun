@@ -28,14 +28,12 @@ import org.radargun.features.MapReduceCapable;
 import org.radargun.utils.Utils;
 
 /**
- * Executes a Map/Reduce Task against the cache.
+ * Executes a MapReduce Task against the cache.
  * 
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
-@Stage(doc = "Stage which executes a Map/Reduce Task against all keys in the cache.")
+@Stage(doc = "Stage which executes a MapReduce Task against all keys in the cache.")
 public class MapReduceStage extends AbstractDistStage {
-
-   private CacheWrapper cacheWrapper;
 
    @Property(optional = false, doc = "Fully qualified class name of the "
          + "org.infinispan.distexec.mapreduce.Mapper implementation to execute.")
@@ -48,41 +46,35 @@ public class MapReduceStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = newDefaultStageAck();
-      cacheWrapper = slaveState.getCacheWrapper();
+      CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
       Map<Object, Object> payload = null;
 
       if (cacheWrapper == null) {
          result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
       } else {
          if (getSlaveIndex() == 0) {
-            if (slaveState.getCacheWrapper() instanceof MapReduceCapable) {
-               if (mapperFqn == null) {
+            if (cacheWrapper instanceof MapReduceCapable) {
+               if (mapperFqn != null && reducerFqn != null) {
+                  long start = System.currentTimeMillis();
+                  payload = ((MapReduceCapable) cacheWrapper).executeMapReduceTask(classLoadHelper, mapperFqn,
+                        reducerFqn);
+                  log.info("MapReduce task completed in " + Utils.prettyPrintMillis(System.currentTimeMillis() - start));
+                  log.info("Result map contains '" + payload.keySet().size() + "' keys.");
+                  result.setPayload(payload);
+               } else {
                   result.setError(true);
-                  result.setErrorMessage("No mapper class specified.");
-                  return result;
+                  result.setErrorMessage("Both the mapper and reducer class must be specified.");
                }
-
-               if (reducerFqn == null) {
-                  result.setError(true);
-                  result.setErrorMessage("No reducer class specified.");
-                  return result;
-               }
-
-               long start = System.currentTimeMillis();
-               payload = ((MapReduceCapable) cacheWrapper).executeMapReduceTask(classLoadHelper, mapperFqn, reducerFqn);
-               log.info("MapReduce task completed in " + Utils.prettyPrintMillis(System.currentTimeMillis() - start));
-               log.info("Result map contains '" + payload.keySet().size() + "' keys.");
-
             } else {
-               result.setErrorMessage("Map/Reduce tasks are not supported by this cache");
+               result.setError(true);
+               result.setErrorMessage("MapReduce tasks are not supported by this cache");
             }
          }
 
-         result.setPayload(payload);
       }
       return result;
    }
-   
+
    public String getMapperFqn() {
       return mapperFqn;
    }

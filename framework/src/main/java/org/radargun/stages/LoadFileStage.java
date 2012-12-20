@@ -41,7 +41,6 @@ import org.radargun.config.Stage;
  */
 @Stage(doc = "Loads the contents of a file into the cache.")
 public class LoadFileStage extends AbstractDistStage {
-	private CacheWrapper cacheWrapper;
 
 	@Property(optional = false, doc = "Full pathname to the file.")
 	private String filePath;
@@ -52,22 +51,21 @@ public class LoadFileStage extends AbstractDistStage {
 
 	@Property(doc = "The name of the bucket where keys are written. The default is null")
 	private String bucket = null;
-	
-	private long putCount = 0;
 
 	@Override
 	public DistStageAck executeOnSlave() {
 		DefaultDistStageAck result = newDefaultStageAck();
 		int totalWriters = getActiveSlaveCount();
 		long fileOffset = valueSize * getSlaveIndex();// index starts at 0
+		CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
 
-		if (slaveState.getCacheWrapper() == null) {
+		if (cacheWrapper == null) {
 			result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
 		} else {
-			cacheWrapper = slaveState.getCacheWrapper();
 			Charset charset = Charset.defaultCharset();  
 			FileChannel theFile = null;
          long totalBytesRead = 0;
+         long putCount = 0;
 			
 			try {
 				theFile = new FileInputStream(filePath).getChannel();
