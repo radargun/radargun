@@ -42,7 +42,7 @@ public class ClientStressTestStage extends StressTestStage {
    private int increment = 1;
    
    @Override   
-   protected Map<String, String> doWork() {
+   protected Map<String, Object> doWork() {
       log.info("Starting " + getClass().getSimpleName() + ": " + this);
       ClientStressTestStressor putGetStressor = new ClientStressTestStressor();
       putGetStressor.setNodeIndex(getSlaveIndex());

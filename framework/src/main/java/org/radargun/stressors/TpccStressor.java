@@ -1,5 +1,15 @@
 package org.radargun.stressors;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
@@ -11,16 +21,6 @@ import org.radargun.tpcc.transaction.OrderStatusTransaction;
 import org.radargun.tpcc.transaction.PaymentTransaction;
 import org.radargun.tpcc.transaction.TpccTransaction;
 import org.radargun.utils.Utils;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -78,7 +78,7 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
    private Producer[] producers;
 
 
-   public Map<String, String> stress(CacheWrapper wrapper) {
+   public Map<String, Object> stress(CacheWrapper wrapper) {
       this.cacheWrapper = wrapper;
 
       initializeToolsParameters();
@@ -132,7 +132,7 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
 
    }
 
-   private Map<String, String> processResults(List<Stressor> stressors) {
+   private Map<String, Object> processResults(List<Stressor> stressors) {
 
       long duration = 0;
 
@@ -234,10 +234,10 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
       newOrderInQueueTimes = newOrderInQueueTimes / 1000;//nanosec to microsec
       paymentInQueueTimes = paymentInQueueTimes / 1000;//nanosec to microsec
 
-      Map<String, String> results = new LinkedHashMap<String, String>();
-      results.put("DURATION (msec)", str((duration / this.numOfThreads)));
+      Map<String, Object> results = new LinkedHashMap<String, Object>();
+      results.put("DURATION (msec)", (duration / this.numOfThreads));
       double requestPerSec = (reads + writes) / ((duration / numOfThreads) / 1000.0);
-      results.put("REQ_PER_SEC", str(requestPerSec));
+      results.put("REQ_PER_SEC", requestPerSec);
 
       double wrtPerSec = 0;
       double rdPerSec = 0;
@@ -245,118 +245,118 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
       double paymentPerSec = 0;
 
       if (readsDurations + writesDurations == 0)
-         results.put("READS_PER_SEC", str(0));
+         results.put("READS_PER_SEC", 0);
       else {
          rdPerSec = reads / (((readsDurations + writesDurations) / numOfThreads) / 1000000.0);
-         results.put("READS_PER_SEC", str(rdPerSec));
+         results.put("READS_PER_SEC", rdPerSec);
       }
 
       if (writesDurations + readsDurations == 0)
-         results.put("WRITES_PER_SEC", str(0));
+         results.put("WRITES_PER_SEC", 0);
       else {
          wrtPerSec = writes / (((writesDurations + readsDurations) / numOfThreads) / 1000000.0);
-         results.put("WRITES_PER_SEC", str(wrtPerSec));
+         results.put("WRITES_PER_SEC", wrtPerSec);
       }
 
       if (writesDurations + readsDurations == 0)
-         results.put("NEW_ORDER_PER_SEC", str(0));
+         results.put("NEW_ORDER_PER_SEC", 0);
       else {
          newOrderPerSec = newOrderTransactions / (((writesDurations + readsDurations) / numOfThreads) / 1000000.0);
 
-         results.put("NEW_ORDER_PER_SEC", str(newOrderPerSec));
+         results.put("NEW_ORDER_PER_SEC", newOrderPerSec);
       }
       if (writesDurations + readsDurations == 0)
-         results.put("PAYMENT_PER_SEC", str(0));
+         results.put("PAYMENT_PER_SEC", 0);
       else {
          paymentPerSec = paymentTransactions / (((writesDurations + readsDurations) / numOfThreads) / 1000000.0);
 
-         results.put("PAYMENT_PER_SEC", str(paymentPerSec));
+         results.put("PAYMENT_PER_SEC", paymentPerSec);
       }
 
-      results.put("READ_COUNT", str(reads));
-      results.put("WRITE_COUNT", str(writes));
-      results.put("NEW_ORDER_COUNT", str(newOrderTransactions));
-      results.put("PAYMENT_COUNT", str(paymentTransactions));
-      results.put("FAILURES", str(failures));
-      results.put("APPLICATION_FAILURES", str(appFailures));
-      results.put("WRITE_FAILURES", str(wrFailures));
-      results.put("NEW_ORDER_FAILURES", str(newOrderFailures));
-      results.put("PAYMENT_FAILURES", str(paymentFailures));
-      results.put("READ_FAILURES", str(rdFailures));
+      results.put("READ_COUNT", reads);
+      results.put("WRITE_COUNT", writes);
+      results.put("NEW_ORDER_COUNT", newOrderTransactions);
+      results.put("PAYMENT_COUNT", paymentTransactions);
+      results.put("FAILURES", failures);
+      results.put("APPLICATION_FAILURES", appFailures);
+      results.put("WRITE_FAILURES", wrFailures);
+      results.put("NEW_ORDER_FAILURES", newOrderFailures);
+      results.put("PAYMENT_FAILURES", paymentFailures);
+      results.put("READ_FAILURES", rdFailures);
 
       if ((reads + writes) != 0)
-         results.put("AVG_SUCCESSFUL_DURATION (usec)", str((successful_writesDurations + successful_readsDurations) / (reads + writes)));
+         results.put("AVG_SUCCESSFUL_DURATION (usec)", (successful_writesDurations + successful_readsDurations) / (reads + writes));
       else
-         results.put("AVG_SUCCESSFUL_DURATION (usec)", str(0));
+         results.put("AVG_SUCCESSFUL_DURATION (usec)", 0);
 
 
       if (reads != 0)
-         results.put("AVG_SUCCESSFUL_READ_DURATION (usec)", str(successful_readsDurations / reads));
+         results.put("AVG_SUCCESSFUL_READ_DURATION (usec)", successful_readsDurations / reads);
       else
-         results.put("AVG_SUCCESSFUL_READ_DURATION (usec)", str(0));
+         results.put("AVG_SUCCESSFUL_READ_DURATION (usec)", 0);
 
 
       if (writes != 0)
-         results.put("AVG_SUCCESSFUL_WRITE_DURATION (usec)", str(successful_writesDurations / writes));
+         results.put("AVG_SUCCESSFUL_WRITE_DURATION (usec)", successful_writesDurations / writes);
       else
-         results.put("AVG_SUCCESSFUL_WRITE_DURATION (usec)", str(0));
+         results.put("AVG_SUCCESSFUL_WRITE_DURATION (usec)", 0);
 
 
       if (writes != 0) {
-         results.put("AVG_SUCCESSFUL_COMMIT_WRITE_DURATION (usec)", str((successful_commitWriteDurations / writes)));
+         results.put("AVG_SUCCESSFUL_COMMIT_WRITE_DURATION (usec)", (successful_commitWriteDurations / writes));
       } else {
-         results.put("AVG_SUCCESSFUL_COMMIT_WRITE_DURATION (usec)", str(0));
+         results.put("AVG_SUCCESSFUL_COMMIT_WRITE_DURATION (usec)", 0);
       }
 
       if (nrWrFailuresOnCommit != 0) {
-         results.put("AVG_ABORTED_COMMIT_WRITE_DURATION (usec)", str((aborted_commitWriteDurations / nrWrFailuresOnCommit)));
+         results.put("AVG_ABORTED_COMMIT_WRITE_DURATION (usec)", (aborted_commitWriteDurations / nrWrFailuresOnCommit));
       } else {
-         results.put("AVG_ABORTED_COMMIT_WRITE_DURATION (usec)", str(0));
+         results.put("AVG_ABORTED_COMMIT_WRITE_DURATION (usec)", 0);
       }
 
 
       if (writes + nrWrFailuresOnCommit != 0) {
-         results.put("AVG_COMMIT_WRITE_DURATION (usec)", str((commitWriteDurations / (writes + nrWrFailuresOnCommit))));
+         results.put("AVG_COMMIT_WRITE_DURATION (usec)", (commitWriteDurations / (writes + nrWrFailuresOnCommit)));
       } else {
-         results.put("AVG_COMMIT_WRITE_DURATION (usec)", str(0));
+         results.put("AVG_COMMIT_WRITE_DURATION (usec)", 0);
       }
 
       if ((reads + rdFailures) != 0)
-         results.put("AVG_RD_SERVICE_TIME (usec)", str(readServiceTimes / (reads + rdFailures)));
+         results.put("AVG_RD_SERVICE_TIME (usec)", readServiceTimes / (reads + rdFailures));
       else
-         results.put("AVG_RD_SERVICE_TIME (usec)", str(0));
+         results.put("AVG_RD_SERVICE_TIME (usec)", 0);
 
       if ((writes + wrFailures) != 0)
-         results.put("AVG_WR_SERVICE_TIME (usec)", str(writeServiceTimes / (writes + wrFailures)));
+         results.put("AVG_WR_SERVICE_TIME (usec)", writeServiceTimes / (writes + wrFailures));
       else
-         results.put("AVG_WR_SERVICE_TIME (usec)", str(0));
+         results.put("AVG_WR_SERVICE_TIME (usec)", 0);
 
       if ((newOrderTransactions + newOrderFailures) != 0)
-         results.put("AVG_NEW_ORDER_SERVICE_TIME (usec)", str(newOrderServiceTimes / (newOrderTransactions + newOrderFailures)));
+         results.put("AVG_NEW_ORDER_SERVICE_TIME (usec)", newOrderServiceTimes / (newOrderTransactions + newOrderFailures));
       else
-         results.put("AVG_NEW_ORDER_SERVICE_TIME (usec)", str(0));
+         results.put("AVG_NEW_ORDER_SERVICE_TIME (usec)", 0);
 
       if ((paymentTransactions + paymentFailures) != 0)
-         results.put("AVG_PAYMENT_SERVICE_TIME (usec)", str(paymentServiceTimes / (paymentTransactions + paymentFailures)));
+         results.put("AVG_PAYMENT_SERVICE_TIME (usec)", paymentServiceTimes / (paymentTransactions + paymentFailures));
       else
-         results.put("AVG_PAYMENT_SERVICE_TIME (usec)", str(0));
+         results.put("AVG_PAYMENT_SERVICE_TIME (usec)", 0);
 
       if (numWritesDequeued != 0)
-         results.put("AVG_WR_INQUEUE_TIME (usec)", str(writeInQueueTimes / numWritesDequeued));
+         results.put("AVG_WR_INQUEUE_TIME (usec)", writeInQueueTimes / numWritesDequeued);
       else
-         results.put("AVG_WR_INQUEUE_TIME (usec)", str(0));
+         results.put("AVG_WR_INQUEUE_TIME (usec)", 0);
       if (numReadsDequeued != 0)
-         results.put("AVG_RD_INQUEUE_TIME (usec)", str(readInQueueTimes / numReadsDequeued));
+         results.put("AVG_RD_INQUEUE_TIME (usec)", readInQueueTimes / numReadsDequeued);
       else
-         results.put("AVG_RD_INQUEUE_TIME (usec)", str(0));
+         results.put("AVG_RD_INQUEUE_TIME (usec)", 0);
       if (numNewOrderDequeued != 0)
-         results.put("AVG_NEW_ORDER_INQUEUE_TIME (usec)", str(newOrderInQueueTimes / numNewOrderDequeued));
+         results.put("AVG_NEW_ORDER_INQUEUE_TIME (usec)", newOrderInQueueTimes / numNewOrderDequeued);
       else
-         results.put("AVG_NEW_ORDER_INQUEUE_TIME (usec)", str(0));
+         results.put("AVG_NEW_ORDER_INQUEUE_TIME (usec)", 0);
       if (numPaymentDequeued != 0)
-         results.put("AVG_PAYMENT_INQUEUE_TIME (usec)", str(paymentInQueueTimes / numPaymentDequeued));
+         results.put("AVG_PAYMENT_INQUEUE_TIME (usec)", paymentInQueueTimes / numPaymentDequeued);
       else
-         results.put("AVG_PAYMENT_INQUEUE_TIME (usec)", str(0));
+         results.put("AVG_PAYMENT_INQUEUE_TIME (usec)", 0);
 
 
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
@@ -705,10 +705,6 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
          this.transactionType = transactionType;
       }
 
-   }
-
-   private String str(Object o) {
-      return String.valueOf(o);
    }
 
    public void setNumThreads(int numOfThreads) {

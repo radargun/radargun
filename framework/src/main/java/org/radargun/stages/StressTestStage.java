@@ -1,5 +1,12 @@
 package org.radargun.stages;
 
+import static java.lang.Double.parseDouble;
+import static org.radargun.utils.Utils.numberFormat;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
@@ -8,13 +15,6 @@ import org.radargun.config.TimeConverter;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.StressTestStressor;
 import org.radargun.stressors.StringKeyGenerator;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static java.lang.Double.parseDouble;
-import static org.radargun.utils.Utils.numberFormat;
 
 /**
  * Simulates the work with a distributed web sessions.
@@ -72,7 +72,7 @@ public class StressTestStage extends AbstractDistStage {
 
    protected CacheWrapper cacheWrapper;
 
-   protected Map<String, String> doWork() {
+   protected Map<String, Object> doWork() {
       log.info("Starting "+getClass().getSimpleName()+": " + this);
       StressTestStressor stressTestStressor = new StressTestStressor();
       stressTestStressor.setNodeIndex(getSlaveIndex());
@@ -104,7 +104,7 @@ public class StressTestStage extends AbstractDistStage {
       }
 
       try {
-         Map<String, String> results = doWork();
+         Map<String, Object> results = doWork();
          String sizeInfo = generateSizeInfo();
          log.info(sizeInfo);
          results.put(SIZE_INFO, sizeInfo);

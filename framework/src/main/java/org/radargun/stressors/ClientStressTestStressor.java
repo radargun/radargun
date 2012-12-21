@@ -18,13 +18,13 @@
  */
 package org.radargun.stressors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.radargun.CacheWrapper;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.radargun.CacheWrapper;
 
 public class ClientStressTestStressor extends StressTestStressor {
    private static Log log = LogFactory.getLog(ClientStressTestStressor.class);
@@ -34,14 +34,14 @@ public class ClientStressTestStressor extends StressTestStressor {
    private int increment = 1;
    private double requestPerSec = 0;
    
-   public Map<String, String> stress(CacheWrapper wrapper) {
+   public Map<String, Object> stress(CacheWrapper wrapper) {
       init(wrapper);
       log.info("Client stress test with " + initThreads + " - " + maxThreads + " (increment " + increment + ")");
       
       int iterations = (maxThreads + increment - 1 - initThreads) / increment + 1;
       
            
-      Map<String, String> results = new LinkedHashMap<String, String>();
+      Map<String, Object> results = new LinkedHashMap<String, Object>();
       int iteration = 0;
       for (int threads = initThreads; threads <= maxThreads; threads += increment, iteration++) {
          log.info("Starting iteration " + iteration + " with " + threads);
@@ -65,13 +65,13 @@ public class ClientStressTestStressor extends StressTestStressor {
          }
          processResults(String.format("%03d", iteration), results);
       }
-      results.put("REQ_PER_SEC", str(requestPerSec));
+      results.put("REQ_PER_SEC", requestPerSec);
       
       finishOperations();      
       return results;
    }
    
-   protected Map<String, String> processResults(String iteration, Map<String, String> results) {
+   protected Map<String, Object> processResults(String iteration, Map<String, Object> results) {
       long duration = 0;
       long transactionDuration = 0;
       int reads = 0;
@@ -91,25 +91,25 @@ public class ClientStressTestStressor extends StressTestStressor {
          failures += stressor.getNrFailures();
       }
             
-      results.put(iteration  + ".DURATION", str(duration));
+      results.put(iteration  + ".DURATION", duration);
       double requestPerSec = (reads + writes) / ((duration / super.getNumThreads()) / 1000000000.0);
-      results.put(iteration  + ".REQ_PER_SEC", str(requestPerSec));
+      results.put(iteration  + ".REQ_PER_SEC", requestPerSec);
       if (reads > 0) {
-         results.put(iteration  + ".READS_PER_SEC", str(reads / ((readsDurations / super.getNumThreads()) / 1000000000.0)));
+         results.put(iteration  + ".READS_PER_SEC", reads / ((readsDurations / super.getNumThreads()) / 1000000000.0));
       } else {
-         results.put(iteration + ".READS_PER_SEC", str(0));
+         results.put(iteration + ".READS_PER_SEC", 0);
       }
       if (writes > 0) {
-         results.put(iteration  + ".WRITES_PER_SEC", str(writes / ((writesDurations / super.getNumThreads()) / 1000000000.0)));
+         results.put(iteration  + ".WRITES_PER_SEC", writes / ((writesDurations / super.getNumThreads()) / 1000000000.0));
       } else {
-         results.put(iteration  + ".WRITES_PER_SEC", str(0));
+         results.put(iteration  + ".WRITES_PER_SEC", 0);
       }
-      results.put(iteration  + ".READ_COUNT", str(reads));
-      results.put(iteration  + ".WRITE_COUNT", str(writes));
-      results.put(iteration  + ".FAILURES", str(failures));
+      results.put(iteration  + ".READ_COUNT", reads);
+      results.put(iteration  + ".WRITE_COUNT", writes);
+      results.put(iteration  + ".FAILURES", failures);
       if (isUseTransactions()) {
          double txPerSec = getTxCount() / ((transactionDuration / super.getNumThreads()) / 1000.0);
-         results.put(iteration  + ".TX_PER_SEC", str(txPerSec));
+         results.put(iteration  + ".TX_PER_SEC", txPerSec);
       }
       
       this.requestPerSec = Math.max(this.requestPerSec, requestPerSec);

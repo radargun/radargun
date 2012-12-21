@@ -1,18 +1,18 @@
 package org.radargun.stages;
 
+import static java.lang.Double.parseDouble;
+import static org.radargun.utils.Utils.numberFormat;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.TpccStressor;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static java.lang.Double.parseDouble;
-import static org.radargun.utils.Utils.numberFormat;
 
 /**
  * Simulate the activities found in complex OLTP application environments.
@@ -71,7 +71,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       tpccStressor.setOrderStatusWeight(this.orderStatusWeight);
 
       try {
-         Map<String, String> results = tpccStressor.stress(cacheWrapper);
+         Map<String, Object> results = tpccStressor.stress(cacheWrapper);
          String sizeInfo = "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + super.getActiveSlaveCount() + ", nodeIndex:" + super.getSlaveIndex() + ", cacheSize: " + cacheWrapper.getLocalSize();
          log.info(sizeInfo);
          results.put(SIZE_INFO, sizeInfo);

@@ -1,14 +1,18 @@
 package org.radargun.stressors;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.utils.Utils;
-
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * On multiple threads executes put and get operations against the CacheWrapper, and returns the result as an Map.
@@ -78,6 +82,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    private volatile CountDownLatch startPoint;
    private volatile CountDownLatch endPoint;
    private volatile CountDownLatch cleanUpPoint;
+   private volatile CountDownLatch keyInitPoint;
    private volatile StressorCompletion completion;
    private volatile boolean finished = false;
    private volatile boolean terminated = false;
@@ -87,10 +92,21 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    protected void init(CacheWrapper wrapper) {
       this.cacheWrapper = wrapper;
       startNanos = System.nanoTime();
-      log.info("Executing: " + this.toString());      
+      log.info("Executing: " + this.toString());
+      if (isSharedKeys()) {
+         KeyGenerator keyGenerator = getKeyGenerator();
+         for (int i = 0; i < numEntries; ++i) {
+            try {
+               wrapper.put(null, keyGenerator.generateKey(i), generateRandomBytes(entrySize));
+            } catch (Exception e) {
+               log.error("Failed to insert shared key " + i, e);
+            }
+         }
+         log.info("Shared keys loaded.");
+      }
    }
    
-   public Map<String, String> stress(CacheWrapper wrapper) {
+   public Map<String, Object> stress(CacheWrapper wrapper) {
       init(wrapper);
       StressorCompletion completion;
       if (durationMillis > 0) {
@@ -106,7 +122,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          throw new RuntimeException(e);
       }
       
-      Map<String, String> results = processResults();
+      Map<String, Object> results = processResults();
       finishOperations();
       return results;
    }
@@ -120,7 +136,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       return terminated;
    }
 
-   private Map<String, String> processResults() {
+   private Map<String, Object> processResults() {
       long duration = 0;
       long transactionDuration = 0;
       int reads = 0;
@@ -140,26 +156,26 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          failures += stressor.nrFailures;
       }
 
-      Map<String, String> results = new LinkedHashMap<String, String>();
-      results.put("DURATION", str(duration));
+      Map<String, Object> results = new LinkedHashMap<String, Object>();
+      results.put("DURATION", duration);
       double requestPerSec = (reads + writes) / ((duration / numThreads) / NANOSECS_IN_SEC);
-      results.put("REQ_PER_SEC", str(requestPerSec));
+      results.put("REQ_PER_SEC", requestPerSec);
       if (reads > 0) {
-         results.put("READS_PER_SEC", str(reads / ((readsDurations / numThreads) / NANOSECS_IN_SEC)));
+         results.put("READS_PER_SEC", reads / ((readsDurations / numThreads) / NANOSECS_IN_SEC));
       } else {
-         results.put("READS_PER_SEC", str(0));
+         results.put("READS_PER_SEC", 0);
       }
       if (writes > 0) {
-         results.put("WRITES_PER_SEC", str(writes / ((writesDurations / numThreads) / NANOSECS_IN_SEC)));
+         results.put("WRITES_PER_SEC", writes / ((writesDurations / numThreads) / NANOSECS_IN_SEC));
       } else {
-         results.put("WRITES_PER_SEC", str(0));
+         results.put("WRITES_PER_SEC", 0);
       }
-      results.put("READ_COUNT", str(reads));
-      results.put("WRITE_COUNT", str(writes));
-      results.put("FAILURES", str(failures));
+      results.put("READ_COUNT", reads);
+      results.put("WRITE_COUNT", writes);
+      results.put("FAILURES", failures);
       if (useTransactions) {
          double txPerSec = getTxCount() / ((transactionDuration / numThreads) / NANOSECS_IN_SEC);
-         results.put("TX_PER_SEC", str(txPerSec));
+         results.put("TX_PER_SEC", txPerSec);
       }
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
                      ". Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
@@ -173,13 +189,14 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       }
       cleanUpPoint = new CountDownLatch(1);
       endPoint = new CountDownLatch(numThreads);
+      keyInitPoint = new CountDownLatch(numThreads - stressors.size());
       for (int threadIndex = stressors.size(); threadIndex < numThreads; threadIndex++) {
          Stressor stressor = new Stressor(threadIndex);
-         stressor.initialiseKeys();
          stressors.add(stressor);
          stressor.start();
       }
       log.info("Cache wrapper info is: " + cacheWrapper.getInfo());
+      keyInitPoint.await();
       startPoint.countDown();
       log.info("Started " + stressors.size() + " stressor threads.");
             
@@ -238,6 +255,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       @Override
       public void run() {
          try {
+            initialiseKeys();
+            keyInitPoint.countDown();
             do {
                try {
                   runInternal();
@@ -371,7 +390,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                   key = getKeyGenerator().generateKey(nodeIndex, threadIndex, keyIndex);
                }
                pooledKeys.add(key);
-               cacheWrapper.put(this.bucketId, key, generateRandomBytes(entrySize));
+               if (!isSharedKeys()) { // shared keys are inserted just once
+                  cacheWrapper.put(this.bucketId, key, generateRandomBytes(entrySize));
+               }
             } catch (Throwable e) {
                log.warn("Error while initializing the session: ", e);
             }
@@ -439,10 +460,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          return true;
       }
       return false;
-   }
-
-   protected static String str(Object o) {
-      return String.valueOf(o);
    }
 
    protected int getTxCount() {

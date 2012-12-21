@@ -12,7 +12,7 @@ public interface CacheWrapperStressor {
     * Performs operations against the given wrapper and returns the results of these operations as a map. The map will be
     * further used for report generation.
     */
-   Map<String, String> stress(CacheWrapper wrapper);
+   Map<String, Object> stress(CacheWrapper wrapper);
 
    void destroy() throws Exception;
 

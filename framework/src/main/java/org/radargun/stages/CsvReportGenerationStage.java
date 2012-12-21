@@ -1,13 +1,20 @@
 package org.radargun.stages;
 
-import org.radargun.config.Property;
-import org.radargun.config.Stage;
-import org.radargun.utils.Utils;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.utils.Utils;
 
 /**
  * Stage that generates reports of StressTest (or TpccBenchmark) in CSV format
@@ -25,6 +32,9 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
 
    @Property(doc = "Slaves whose results will be ignored.")
    private Set<Integer> ignore;
+
+   @Property(doc = "Adds a line with average results. Default is false.")
+   private boolean computeAverage;
 
    private String separator = ",";
 
@@ -70,48 +80,83 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       headerRow.addAll(columns);
       writeRowToFile(headerRow);
 
-      List<Integer> slaveIndexes = new ArrayList<Integer>(results.keySet());
-      Collections.sort(slaveIndexes);
+      List<Integer> slaveIndices = new ArrayList<Integer>(results.keySet());
+      Collections.sort(slaveIndices);
 
-      List<String> dataRow = new ArrayList<String>();
-      for (Integer i : slaveIndexes) {
+      Map<String, Object> sum = new HashMap<String, Object>();
+      for (Integer i : slaveIndices) {
          Map<String, Object> reportPerSlave = results.get(i);
          if (reportPerSlave == null)
             throw new IllegalStateException("Missing report for slave index: " + i);
-         for (String iteration : iterations) {
-            dataRow.add(String.valueOf(i));//add the slave index first
-            dataRow.add(iteration);               
-            addData(reportPerSlave, columns, iteration + '.', dataRow);
-            writeRowToFile(dataRow);
-            dataRow.clear();
-         }
-         boolean hasDataOutOfIteration = iterations.isEmpty();
-         for (String column : columns) {
-            if (reportPerSlave.containsKey(column)) {
-               hasDataOutOfIteration = true;
-               break;
+         writeReport(reportPerSlave, String.valueOf(i), iterations, columns, sum);
+      }
+      if (computeAverage) {
+         Map<String, Object> average = new HashMap<String, Object>();
+         for (Map.Entry<String, Object> entry : sum.entrySet()) {
+            if (entry.getValue() instanceof Integer) {
+               average.put(entry.getKey(), (Integer) entry.getValue() / slaveIndices.size());
+            } else if (entry.getValue() instanceof Double) {
+               average.put(entry.getKey(), (Double) entry.getValue() / slaveIndices.size());
+            } else if (entry.getValue() instanceof Long) {
+               average.put(entry.getKey(), (Long) entry.getValue() / slaveIndices.size());
             }
          }
-         if (hasDataOutOfIteration) {
-            dataRow.add(String.valueOf(i));//add the slave index first
-            if (!iterations.isEmpty()) {
-               dataRow.add("");
-            }
-            addData(reportPerSlave, columns, "", dataRow);
-            writeRowToFile(dataRow);
-            dataRow.clear();
-         }
+         writeReport(average, "AVG", iterations, columns, null);
       }
 
       closeFile();
    }
 
-   private void addData(Map<String, Object> reportPerSlave, SortedSet<String> columns, String prefix, List<String> dataRow) {
+   private void writeReport(Map<String, Object> report, String slaveIndex, SortedSet<String> iterations, SortedSet<String> columns, Map<String, Object> sum) throws IOException {
+      List<String> dataRow = new ArrayList<String>();
+      for (String iteration : iterations) {
+         dataRow.add(slaveIndex);//add the slave index first
+         dataRow.add(iteration);
+         addData(report, columns, iteration + '.', dataRow, sum);
+         writeRowToFile(dataRow);
+         dataRow.clear();
+      }
+      boolean hasDataOutOfIteration = iterations.isEmpty();
       for (String column : columns) {
-         Object data = reportPerSlave.get(prefix + column);
+         if (report.containsKey(column)) {
+            hasDataOutOfIteration = true;
+            break;
+         }
+      }
+      if (hasDataOutOfIteration) {
+         dataRow.add(slaveIndex);//add the slave index first
+         if (!iterations.isEmpty()) {
+            dataRow.add("");
+         }
+         addData(report, columns, "", dataRow, sum);
+         writeRowToFile(dataRow);
+         dataRow.clear();
+      }
+   }
+
+   private void addData(Map<String, Object> reportPerSlave, SortedSet<String> columns, String prefix, List<String> dataRow, Map<String, Object> sum) {
+      for (String column : columns) {
+         String key = prefix + column;
+         Object data = reportPerSlave.get(key);
          //if (data == null)
          //   throw new IllegalStateException("Missing data for header: " + header + " from slave " + i + ". Report for this slave is: " + reportPerSlave);
          dataRow.add(data == null ? "" : String.valueOf(data));
+         if (sum != null && computeAverage) {
+            Object oldSum = sum.get(key);
+            if (oldSum == null) {
+               sum.put(key, data);
+            } else {
+               if (oldSum instanceof Integer && data instanceof Integer) {
+                  sum.put(key, (Integer) oldSum + (Integer) data);
+               } else if (oldSum instanceof Long && data instanceof Long) {
+                  sum.put(key, (Long) oldSum + (Long) data);
+               } else if (oldSum instanceof Double && data instanceof Double) {
+                  sum.put(key, (Double) oldSum + (Double) data);
+               } else {
+                  sum.put(key, "");
+               }
+            }
+         }
       }
    }
 

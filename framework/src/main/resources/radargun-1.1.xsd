@@ -572,6 +572,11 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractMaster">
+            <attribute name="computeAverage" type="string">
+               <annotation>
+                  <documentation>Adds a line with average results. Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="ignore" type="string">
                <annotation>
                   <documentation>Slaves whose results will be ignored.</documentation>

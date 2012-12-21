@@ -90,12 +90,16 @@ public class BackgroundStats {
          return;
       }
       stressorThreads = new StressorThread[numThreads];
-      RangeHelper.Range slaveKeyRange = RangeHelper.divideRange(numEntries, numSlaves, slaveIndex);
-      for (int i = 0; i < stressorThreads.length; i++) {
-         RangeHelper.Range threadKeyRange = RangeHelper.divideRange(slaveKeyRange.getSize(), numThreads, i);
-         stressorThreads[i] = new StressorThread(slaveKeyRange.getStart() + threadKeyRange.getStart(),
-            slaveKeyRange.getStart() + threadKeyRange.getEnd(), i);
-         stressorThreads[i].start();
+      if (numThreads > 0) {
+         RangeHelper.Range slaveKeyRange = RangeHelper.divideRange(numEntries, numSlaves, slaveIndex);
+         for (int i = 0; i < stressorThreads.length; i++) {
+            RangeHelper.Range threadKeyRange = RangeHelper.divideRange(slaveKeyRange.getSize(), numThreads, i);
+            stressorThreads[i] = new StressorThread(slaveKeyRange.getStart() + threadKeyRange.getStart(),
+               slaveKeyRange.getStart() + threadKeyRange.getEnd(), i);
+            stressorThreads[i].start();
+         }
+      } else {
+         log.warn("Stressor thread number set to 0!");
       }
       sizeThread = new SizeThread();
       sizeThread.start();

@@ -1,15 +1,5 @@
 package org.radargun.local;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.radargun.CacheWrapper;
-import org.radargun.CacheWrapperStressor;
-import org.radargun.ShutDownHook;
-import org.radargun.reporting.LocalSystemMonitorChart;
-import org.radargun.sysmonitor.LocalJmxMonitor;
-import org.radargun.utils.TypedProperties;
-import org.radargun.utils.Utils;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -21,6 +11,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.radargun.CacheWrapper;
+import org.radargun.CacheWrapperStressor;
+import org.radargun.ShutDownHook;
+import org.radargun.reporting.LocalSystemMonitorChart;
+import org.radargun.sysmonitor.LocalJmxMonitor;
+import org.radargun.utils.TypedProperties;
+import org.radargun.utils.Utils;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -58,7 +58,7 @@ public class LocalBenchmark {
             try {
                wrapper.setUp(config, true, -1, new TypedProperties(configProps));
 
-               Map<String, String> results = null;
+               Map<String, Object> results = null;
                for (CacheWrapperStressor stressor : stressors) {
                   LocalJmxMonitor monitor = null;
                   if (stressor.isSysMonitorEnabled()) {
@@ -150,7 +150,7 @@ public class LocalBenchmark {
 
    }
 
-   private void generateReport(Map<String, String> results, String product, String config) throws IOException {
+   private void generateReport(Map<String, Object> results, String product, String config) throws IOException {
       generateHeader(results);
       StringBuilder line = new StringBuilder();
       line.append(product).append(",").append(config);
@@ -159,15 +159,15 @@ public class LocalBenchmark {
       }
       writeLine(line.toString());
       for (ReportDesc reportDesc : reportDescs) {
-         long readsPerSec = (long) Double.parseDouble(results.get("READS_PER_SEC"));
-         long noReads = Long.parseLong(results.get("READ_COUNT"));
-         long writesPerSec = (long) Double.parseDouble(results.get("WRITES_PER_SEC"));
-         long noWrites = Long.parseLong(results.get("WRITE_COUNT"));
+         long readsPerSec = (long) (double) (Double) results.get("READS_PER_SEC");
+         long noReads = (Long) results.get("READ_COUNT");
+         long writesPerSec = (long) (double) (Double) results.get("WRITES_PER_SEC");
+         long noWrites = (Long) results.get("WRITE_COUNT");
          reportDesc.updateData(product, config, readsPerSec, noReads, writesPerSec, noWrites);
       }
    }
 
-   private void generateHeader(Map<String, String> results) throws FileNotFoundException {
+   private void generateHeader(Map<String, Object> results) throws FileNotFoundException {
       if (!headerGenerted) {
          StringBuilder header = new StringBuilder();
          header.append("PRODUCT, CONFIG");

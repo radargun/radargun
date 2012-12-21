@@ -1,13 +1,10 @@
 package org.radargun.stressors;
 
 import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
-import org.radargun.CacheWrapperStressor;
 import org.radargun.stages.TpccPopulationStage;
 import org.radargun.tpcc.TpccPopulation;
 import org.radargun.tpcc.TpccTools;
@@ -35,7 +32,7 @@ public class TpccPopulationStressor extends AbstractCacheWrapperStressor {
 
    private CacheWrapper wrapper;
 
-   public Map<String, String> stress(CacheWrapper wrapper) {
+   public Map<String, Object> stress(CacheWrapper wrapper) {
       if (wrapper == null) {
          throw new IllegalStateException("Null wrapper not allowed");
       }

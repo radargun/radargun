@@ -1,13 +1,13 @@
 package org.radargun.stressors;
 
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.stages.WarmupStage;
-
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Do <code>operationCount</code> puts and  <code>operationCount</code> gets on the cache wrapper.
@@ -32,7 +32,7 @@ public class WarmupStressor extends AbstractCacheWrapperStressor {
    
    private int keysPerThread = 50;
 
-   public Map<String, String> stress(CacheWrapper wrapper) {
+   public Map<String, Object> stress(CacheWrapper wrapper) {
       if (bucket == null || keyPrefix == null) {
          throw new IllegalStateException("Both bucket and key prefix must be set before starting to stress.");
       }
