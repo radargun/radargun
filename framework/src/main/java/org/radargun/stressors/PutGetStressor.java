@@ -265,9 +265,10 @@ public class PutGetStressor extends AbstractCacheWrapperStressor {
 
       private void doWrite(Object key, Object payload, int iteration) {
          long startTxDuration = 0;
-         if (useTransactions && shouldStartTransaction(iteration))
+         if (useTransactions && shouldStartTransaction(iteration)) {
             startTxDuration += startTransaction();
             txNotCompleted = true;
+         }
          long start = System.nanoTime();
          try {
             cacheWrapper.put(bucketId, key, payload);
