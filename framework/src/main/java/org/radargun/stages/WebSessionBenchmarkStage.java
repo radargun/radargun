@@ -52,6 +52,8 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
     * the number of threads that will work on this slave
     */
    private int numOfThreads = 10;
+   
+   private boolean cacheInitialKeys = true;
 
    private boolean reportNanos = false;
 
@@ -75,6 +77,7 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
       putGetStressor.setNumberOfAttributes(numberOfAttributes);
       putGetStressor.setNumberOfRequests(numberOfRequests);
       putGetStressor.setNumOfThreads(numOfThreads);
+      putGetStressor.setCacheInitialKeys(cacheInitialKeys);
       putGetStressor.setOpsCountStatusLog(opsCountStatusLog);
       putGetStressor.setSizeOfAnAttribute(sizeOfAnAttribute);
       putGetStressor.setWritePercentage(writePercentage);
@@ -167,6 +170,10 @@ public class WebSessionBenchmarkStage extends AbstractDistStage {
 
    public void setNumOfThreads(int numOfThreads) {
       this.numOfThreads = numOfThreads;
+   }
+   
+   public void setCacheInitialKeys(boolean cacheInitialKeys) {
+      this.cacheInitialKeys = cacheInitialKeys;
    }
 
    public void setReportNanos(boolean reportNanos) {

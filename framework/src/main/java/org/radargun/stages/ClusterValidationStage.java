@@ -32,6 +32,7 @@ public class ClusterValidationStage extends AbstractDistStage {
    private boolean isPartialReplication = false;
    private int replicationTryCount = 60;
    private int replicationTimeSleep = 2000;
+   private boolean useTransactions = false;
 
 
    private CacheWrapper wrapper;
@@ -120,7 +121,9 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCount = 0;
       while (tryCount < 5) {
          try {
+        	if (useTransactions) wrapper.startTransaction();
             wrapper.put(nodeBucket(getSlaveIndex()), key(getSlaveIndex()), "true");
+            if (useTransactions) wrapper.endTransaction(true);
             return;
          } catch (Throwable e) {
             log.warn("Error while trying to put data: ", e);
@@ -175,7 +178,10 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCont = 0;
       while (tryCont < 5) {
          try {
-            return wrapper.getReplicatedData(nodeBucket(i), key(i));
+        	if (useTransactions) wrapper.startTransaction();
+            Object result = wrapper.getReplicatedData(nodeBucket(i), key(i));
+            if (useTransactions) wrapper.endTransaction(true);
+            return result;
          } catch (Throwable e) {
             tryCont++;
          }
@@ -193,6 +199,10 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    public void setReplicationTimeSleep(int replicationTimeSleep) {
       this.replicationTimeSleep = replicationTimeSleep;
+   }
+   
+   public void setUseTransactions(boolean useTransactions) {
+      this.useTransactions = useTransactions;
    }
 
    private String key(int slaveIndex) {
