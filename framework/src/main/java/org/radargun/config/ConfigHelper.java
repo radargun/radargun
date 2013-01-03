@@ -1,13 +1,13 @@
 package org.radargun.config;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.w3c.dom.Element;
-
 import java.lang.reflect.Field;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Stack;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Element;
 
 /**
  * Contains various configuration helper methods needed by different parsers.
@@ -118,7 +118,10 @@ public class ConfigHelper {
    private static String eval(Stack<String> stack, String expression) {
       while (true) {
          int next;
-         if (expression.startsWith("+")) {
+         if (expression.startsWith("++")) {
+            stack.push(concat(stack.pop(), stack.pop()));
+            next = 2;
+         } else if (expression.startsWith("+")) {
             stack.push(plus(stack.pop(), stack.pop()));
             next = 1;
          } else if (expression.startsWith("-")) {
@@ -132,9 +135,6 @@ public class ConfigHelper {
             next = 2;
          } else if (expression.startsWith(",")) {
             stack.push(add(stack.pop(), stack.pop()));
-            next = 1;
-         } else if (expression.startsWith("++")) {
-            stack.push(concat(stack.pop(), stack.pop()));
             next = 1;
          } else {
             next = 0;
