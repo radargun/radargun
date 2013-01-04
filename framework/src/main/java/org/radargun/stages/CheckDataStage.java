@@ -18,16 +18,6 @@
  */
 package org.radargun.stages;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.radargun.CacheWrapper;
-import org.radargun.DistStageAck;
-import org.radargun.config.Property;
-import org.radargun.config.Stage;
-import org.radargun.stages.helpers.RangeHelper;
-import org.radargun.state.MasterState;
-import org.radargun.stressors.BackgroundStats;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,10 +26,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.radargun.CacheWrapper;
+import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.stages.helpers.Range;
+import org.radargun.state.MasterState;
+import org.radargun.stressors.BackgroundOpsManager;
+
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Stage(doc = "Stage for checking presence or absence of data uploaded by BackgroundStats")
+@Stage(doc = "Stage for checking presence or absence of data uploaded by BackgroundStressors")
 public class CheckDataStage extends AbstractDistStage {
 
    @Property(optional = false, doc = "Number of entries with key in form key{number} in the cache.")
@@ -92,7 +90,7 @@ public class CheckDataStage extends AbstractDistStage {
             ExecutorService executor = Executors.newFixedThreadPool(checkThreads);
             List<Callable<CheckResult>> tasks = new ArrayList<Callable<CheckResult>>();
             for (int i = 0; i < checkThreads; ++i) {
-               RangeHelper.Range range = RangeHelper.divideRange(numEntries, checkThreads, i);
+               Range range = Range.divideRange(numEntries, checkThreads, i);
                tasks.add(new CheckRangeTask(range.getStart(), range.getEnd()));
             }
             for (Future<CheckResult> future : executor.invokeAll(tasks)) {
@@ -180,8 +178,8 @@ public class CheckDataStage extends AbstractDistStage {
       CacheWrapper wrapper = slaveState.getCacheWrapper();
       int checked = 0;
       CheckResult result = new CheckResult();
-      BackgroundStats bgStats = (BackgroundStats) slaveState.get(BackgroundStats.NAME);
-      String bucketId = BackgroundStats.NAME;
+      BackgroundOpsManager bgStats = (BackgroundOpsManager) slaveState.get(BackgroundOpsManager.NAME);
+      String bucketId = BackgroundOpsManager.NAME;
       if (bgStats != null) bucketId = bgStats.getBucketId();
       for (int i = from; i < to; ++i, ++checked) {
          if (checked % logChecksCount == 0) {

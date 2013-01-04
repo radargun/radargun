@@ -15,11 +15,13 @@
                         <element name="Repeat" type="rg:repeat"/>
                         <element name="Abstract" type="rg:Abstract"/>
                         <element name="AbstractDist" type="rg:AbstractDist"/>
+                        <element name="StopBackgroundStressors" type="rg:StopBackgroundStressors"/>
                         <element name="StressTest" type="rg:StressTest"/>
                         <element name="WebSessionBenchmark" type="rg:StressTest"/>
                         <element name="StressTestWarmup" type="rg:StressTestWarmup"/>
                         <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
                         <element name="ClientStressTest" type="rg:ClientStressTest"/>
+                        <element name="StopBackgroundStatistics" type="rg:StopBackgroundStatistics"/>
                         <element name="AbstractMaster" type="rg:AbstractMaster"/>
                         <element name="Kill" type="rg:Kill"/>
                         <element name="CheckTopology" type="rg:CheckTopology"/>
@@ -27,9 +29,9 @@
                         <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
                         <element name="SetLogLevel" type="rg:SetLogLevel"/>
                         <element name="XSReplLoad" type="rg:XSReplLoad"/>
-                        <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
                         <element name="AbstractStart" type="rg:AbstractStart"/>
                         <element name="StartCluster" type="rg:StartCluster"/>
+                        <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
                         <element name="GenerateChart" type="rg:GenerateChart"/>
                         <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
                         <element name="CheckData" type="rg:CheckData"/>
@@ -39,18 +41,18 @@
                         <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
                         <element name="XSReplCheck" type="rg:XSReplCheck"/>
                         <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
-                        <element name="StopBackgroundStats" type="rg:StopBackgroundStats"/>
-                        <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
                         <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
+                        <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
                         <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
                         <element name="ClearCluster" type="rg:ClearCluster"/>
                         <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
-                        <element name="StartBackgroundStats" type="rg:StartBackgroundStats"/>
+                        <element name="StartBackgroundStatistics" type="rg:StartBackgroundStatistics"/>
                         <element name="SingleTXLoad" type="rg:SingleTXLoad"/>
                         <element name="Sleep" type="rg:Sleep"/>
                         <element name="JProfiler" type="rg:JProfiler"/>
                         <element name="SetPartitions" type="rg:SetPartitions"/>
                         <element name="SingleTXCheck" type="rg:SingleTXCheck"/>
+                        <element name="StartBackgroundStressors" type="rg:StartBackgroundStressors"/>
                      </choice>
                   </sequence>
                   <attribute name="initSize" type="string"/>
@@ -110,11 +112,13 @@
             <element name="Repeat" type="rg:repeat"/>
             <element name="Abstract" type="rg:Abstract"/>
             <element name="AbstractDist" type="rg:AbstractDist"/>
+            <element name="StopBackgroundStressors" type="rg:StopBackgroundStressors"/>
             <element name="StressTest" type="rg:StressTest"/>
             <element name="WebSessionBenchmark" type="rg:StressTest"/>
             <element name="StressTestWarmup" type="rg:StressTestWarmup"/>
             <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
             <element name="ClientStressTest" type="rg:ClientStressTest"/>
+            <element name="StopBackgroundStatistics" type="rg:StopBackgroundStatistics"/>
             <element name="AbstractMaster" type="rg:AbstractMaster"/>
             <element name="Kill" type="rg:Kill"/>
             <element name="CheckTopology" type="rg:CheckTopology"/>
@@ -122,9 +126,9 @@
             <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
             <element name="SetLogLevel" type="rg:SetLogLevel"/>
             <element name="XSReplLoad" type="rg:XSReplLoad"/>
-            <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
             <element name="AbstractStart" type="rg:AbstractStart"/>
             <element name="StartCluster" type="rg:StartCluster"/>
+            <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
             <element name="GenerateChart" type="rg:GenerateChart"/>
             <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
             <element name="CheckData" type="rg:CheckData"/>
@@ -134,18 +138,18 @@
             <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
             <element name="XSReplCheck" type="rg:XSReplCheck"/>
             <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
-            <element name="StopBackgroundStats" type="rg:StopBackgroundStats"/>
-            <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
             <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
+            <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
             <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
             <element name="ClearCluster" type="rg:ClearCluster"/>
             <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
-            <element name="StartBackgroundStats" type="rg:StartBackgroundStats"/>
+            <element name="StartBackgroundStatistics" type="rg:StartBackgroundStatistics"/>
             <element name="SingleTXLoad" type="rg:SingleTXLoad"/>
             <element name="Sleep" type="rg:Sleep"/>
             <element name="JProfiler" type="rg:JProfiler"/>
             <element name="SetPartitions" type="rg:SetPartitions"/>
             <element name="SingleTXCheck" type="rg:SingleTXCheck"/>
+            <element name="StartBackgroundStressors" type="rg:StartBackgroundStressors"/>
          </choice>
       </sequence>
       <attribute name="times" type="string"/>
@@ -186,6 +190,14 @@
                </annotation>
             </attribute>
          </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="StopBackgroundStressors">
+      <annotation>
+         <documentation>Stop BackgroundStressors.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
       </complexContent>
    </complexType>
    <complexType name="StressTest">
@@ -307,6 +319,14 @@
                </annotation>
             </attribute>
          </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="StopBackgroundStatistics">
+      <annotation>
+         <documentation>Stop BackgroundStatistics and return collected statistics to master.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
       </complexContent>
    </complexType>
    <complexType abstract="true" name="AbstractMaster">
@@ -460,40 +480,6 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="StackTraceWatchdog">
-      <annotation>
-         <documentation>Debug usage only. Periodically check for all thread stack traces and print them out.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="asyncLogging" type="string">
-               <annotation>
-                  <documentation>If set to true the watchdog will not use standard logging for output but will push the output to queue consumed (logged) by another thread. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="mask" type="string">
-               <annotation>
-                  <documentation>If set, only those threads which have this mask in the name will be checked. Default is not set.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="onlyStuck" type="string">
-               <annotation>
-                  <documentation>By default the check will print out only those threads which appear to be stuck. If this is set to false all threads will be printed out. Default is true.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="period" type="string">
-               <annotation>
-                  <documentation>The delay between consecutive checks. Default is 10 seconds.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="shortStack" type="string">
-               <annotation>
-                  <documentation>Threads with stack lower or equal to this value are never printed (because usually such threads are parked in thread pools). Default is 10.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
    <complexType abstract="true" name="AbstractStart">
       <annotation>
          <documentation/>
@@ -547,6 +533,40 @@
          </extension>
       </complexContent>
    </complexType>
+   <complexType name="StackTraceWatchdog">
+      <annotation>
+         <documentation>Debug usage only. Periodically check for all thread stack traces and print them out.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="asyncLogging" type="string">
+               <annotation>
+                  <documentation>If set to true the watchdog will not use standard logging for output but will push the output to queue consumed (logged) by another thread. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="mask" type="string">
+               <annotation>
+                  <documentation>If set, only those threads which have this mask in the name will be checked. Default is not set.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="onlyStuck" type="string">
+               <annotation>
+                  <documentation>By default the check will print out only those threads which appear to be stuck. If this is set to false all threads will be printed out. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="period" type="string">
+               <annotation>
+                  <documentation>The delay between consecutive checks. Default is 10 seconds.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="shortStack" type="string">
+               <annotation>
+                  <documentation>Threads with stack lower or equal to this value are never printed (because usually such threads are parked in thread pools). Default is 10.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
    <complexType name="GenerateChart">
       <annotation>
          <documentation>Stage that generates a chart from a set of csv files.</documentation>
@@ -592,7 +612,7 @@
    </complexType>
    <complexType name="CheckData">
       <annotation>
-         <documentation>Stage for checking presence or absence of data uploaded by BackgroundStats</documentation>
+         <documentation>Stage for checking presence or absence of data uploaded by BackgroundStressors</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
@@ -808,12 +828,23 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="StopBackgroundStats">
+   <complexType name="DestroyWrapper">
       <annotation>
-         <documentation>Stop BackgroundStats and return collected statistics to master.</documentation>
+         <documentation>Distributed stage that will stop the cache wrapper on each slave.</documentation>
       </annotation>
       <complexContent>
-         <extension base="rg:AbstractDist"/>
+         <extension base="rg:AbstractDist">
+            <attribute name="enforceMemoryThrashHold" type="string">
+               <annotation>
+                  <documentation>Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="memoryThreshold" type="string">
+               <annotation>
+                  <documentation>If the free memory after wrapper destroy and System.gc() is below percentage specified in this property the benchmark will stop. Default is 95.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
       </complexContent>
    </complexType>
    <complexType name="TpccBenchmark">
@@ -845,25 +876,6 @@
             <attribute name="perThreadSimulTime" type="string">
                <annotation>
                   <documentation>Total time (in seconds) of simulation for each stressor thread. Default is 180.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="DestroyWrapper">
-      <annotation>
-         <documentation>Distributed stage that will stop the cache wrapper on each slave.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="enforceMemoryThrashHold" type="string">
-               <annotation>
-                  <documentation>Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="memoryThreshold" type="string">
-               <annotation>
-                  <documentation>If the free memory after wrapper destroy and System.gc() is below percentage specified in this property the benchmark will stop. Default is 95.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -908,7 +920,7 @@
    </complexType>
    <complexType name="ReportBackgroundStats">
       <annotation>
-         <documentation>Generates reports from BackgroundStats results.</documentation>
+         <documentation>Generates reports from BackgroundStatistics results.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractMaster">
@@ -940,80 +952,15 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="StartBackgroundStats">
+   <complexType name="StartBackgroundStatistics">
       <annotation>
-         <documentation>Start stressor threads or statistics threads.</documentation>
+         <documentation>Starts collection of statistics from background threads and cache size.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="bucketId" type="string">
-               <annotation>
-                  <documentation>Bucket where the entries should be inserted. Default is </documentation>
-               </annotation>
-            </attribute>
-            <attribute name="delayBetweenRequests" type="string">
-               <annotation>
-                  <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="entrySize" type="string">
-               <annotation>
-                  <documentation>Size of value used in the entry. Default is 1024 bytes.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="gets" type="string">
-               <annotation>
-                  <documentation>Ratio of GET requests. Default is 2.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="loadDataForDeadSlaves" type="string">
-               <annotation>
-                  <documentation>List of slaves whose data should be loaded by other threads because these slaves are not alive. Default is empty.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="numEntries" type="string">
-               <annotation>
-                  <documentation>Amount of entries (key-value pairs) inserted into the cache. Default is 1024.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="numThreads" type="string">
-               <annotation>
-                  <documentation>Number of stressor threads. Default is 10.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="puts" type="string">
-               <annotation>
-                  <documentation>Ratio of PUT requests. Default is 1.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="removes" type="string">
-               <annotation>
-                  <documentation>Ratio of REMOVE requests. Default is 0.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="startStats" type="string">
-               <annotation>
-                  <documentation>Should the statistic thread be started? Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="startStressors" type="string">
-               <annotation>
-                  <documentation>Should the stressor threads be started? Default is false.</documentation>
-               </annotation>
-            </attribute>
             <attribute name="statsIterationDuration" type="string">
                <annotation>
                   <documentation>Delay between statistics snapshots. Default is 5 seconds.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="transactionSize" type="string">
-               <annotation>
-                  <documentation>Amount of request wrapped into single transaction. By default transactions are not used (explicitely).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="waitUntilLoaded" type="string">
-               <annotation>
-                  <documentation>Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -1135,6 +1082,70 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="transactionSize" type="string">
                <annotation>
                   <documentation>Expected size of the transcation.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="StartBackgroundStressors">
+      <annotation>
+         <documentation>Starts background stressor threads.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="bucketId" type="string">
+               <annotation>
+                  <documentation>Bucket where the entries should be inserted. Default is </documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delayBetweenRequests" type="string">
+               <annotation>
+                  <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="entrySize" type="string">
+               <annotation>
+                  <documentation>Size of value used in the entry. Default is 1024 bytes.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="gets" type="string">
+               <annotation>
+                  <documentation>Ratio of GET requests. Default is 2.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="loadDataForDeadSlaves" type="string">
+               <annotation>
+                  <documentation>List of slaves whose data should be loaded by other threads because these slaves are not alive. Default is empty.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="numEntries" type="string">
+               <annotation>
+                  <documentation>Amount of entries (key-value pairs) inserted into the cache. Default is 1024.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="numThreads" type="string">
+               <annotation>
+                  <documentation>Number of stressor threads. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="puts" type="string">
+               <annotation>
+                  <documentation>Ratio of PUT requests. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="removes" type="string">
+               <annotation>
+                  <documentation>Ratio of REMOVE requests. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="transactionSize" type="string">
+               <annotation>
+                  <documentation>Amount of request wrapped into single transaction. By default transactions are not used (explicitely).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="waitUntilLoaded" type="string">
+               <annotation>
+                  <documentation>Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</documentation>
                </annotation>
             </attribute>
          </extension>

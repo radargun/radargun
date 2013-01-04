@@ -28,7 +28,7 @@ import org.radargun.features.Partitionable;
 import org.radargun.features.XSReplicating;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
-import org.radargun.stressors.BackgroundStats;
+import org.radargun.stressors.BackgroundOpsManager;
 import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
@@ -94,7 +94,7 @@ public class StartHelper {
          }
          if (wrapper.isRunning()) {
             // here is a race so this is rather an optimization
-            BackgroundStats.afterCacheWrapperStart(slaveState);
+            BackgroundOpsManager.afterCacheWrapperStart(slaveState);
          }
       } catch (Exception e) {
          log.error("Issues while instantiating/starting cache wrapper", e);

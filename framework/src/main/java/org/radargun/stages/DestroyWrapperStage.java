@@ -1,17 +1,19 @@
 package org.radargun.stages;
 
+import static org.radargun.utils.Utils.getFreeMemoryKb;
+import static org.radargun.utils.Utils.memString;
+import static org.radargun.utils.Utils.printMemoryFootprint;
+
+import java.util.List;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.Slave;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
-import org.radargun.stressors.BackgroundStats;
+import org.radargun.stressors.BackgroundOpsManager;
 import org.radargun.utils.Utils;
-
-import java.util.List;
-
-import static org.radargun.utils.Utils.*;
 
 /**
  * Distributed stage that will stop the cache wrapper on each slave.
@@ -45,7 +47,7 @@ public class DestroyWrapperStage extends AbstractDistStage {
       try {
          CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
          if (cacheWrapper != null) {
-            BackgroundStats.beforeCacheWrapperDestroy(slaveState);
+            BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState);
             cacheWrapper.tearDown();
             for (int i = 0; i < 120; i++) {
                if (cacheWrapper.getNumMembers() <= 0) break; //negative value might be returned by impl that do not support this method

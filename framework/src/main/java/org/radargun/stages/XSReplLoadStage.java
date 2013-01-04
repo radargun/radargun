@@ -4,7 +4,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.features.XSReplicating;
-import org.radargun.stages.helpers.RangeHelper;
+import org.radargun.stages.helpers.Range;
 import org.radargun.state.MasterState;
 
 /**
@@ -45,7 +45,7 @@ public class XSReplLoadStage extends AbstractDistStage {
       }
       XSReplicating wrapper = (XSReplicating) slaveState.getCacheWrapper();
       String cacheName = wrapper.getMainCache();
-      RangeHelper.Range myRange = RangeHelper.divideRange(numEntries, wrapper.getSlaves().size(), wrapper.getSlaves().indexOf(getSlaveIndex()));
+      Range myRange = Range.divideRange(numEntries, wrapper.getSlaves().size(), wrapper.getSlaves().indexOf(getSlaveIndex()));
       for (int i = myRange.getStart(); i < myRange.getEnd(); ++i) {
          try {
             if (!delete) {
