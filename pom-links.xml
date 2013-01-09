@@ -202,7 +202,7 @@
 				               <arg value="jbosscache2" />
 				               <arg value="jbosscache3" />
 				               <arg value="ehcache25" />
-                           <arg value="ehcache25" />
+                           		       <arg value="ehcache26" />
 				               <arg value="terracota3" />
 				               <arg value="chm" />
 				               <arg value="coherence3" />				               
