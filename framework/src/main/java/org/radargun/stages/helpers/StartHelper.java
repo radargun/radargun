@@ -20,10 +20,13 @@ package org.radargun.stages.helpers;
 
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.config.DefaultConverter;
 import org.radargun.features.Partitionable;
 import org.radargun.features.XSReplicating;
 import org.radargun.stages.DefaultDistStageAck;
@@ -56,6 +59,7 @@ public class StartHelper {
          ClusterValidation clusterValidation, Set<Integer> reachable, ClassLoadHelper classLoadHelper, DefaultDistStageAck ack) {
       CacheWrapper wrapper = null;
       try {
+         confAttributes = pickForSite(confAttributes, slaveIndex);
          String plugin = getPluginWrapperClass(productName, confAttributes);         
          wrapper = (CacheWrapper) classLoadHelper.createInstance(plugin);
          if (wrapper instanceof Partitionable) {
@@ -108,7 +112,46 @@ public class StartHelper {
          }
       }
    }
-   
+
+   private static TypedProperties pickForSite(TypedProperties confAttributes, int slaveIndex) {
+      Pattern slavesPattern = Pattern.compile("site\\[(\\d*)\\].slaves");
+      Matcher m;
+      int mySiteIndex = -1;
+      TypedProperties properties = new TypedProperties();
+      for (String property : confAttributes.stringPropertyNames()) {
+         if ((m = slavesPattern.matcher(property)).matches()) {
+            String value = confAttributes.getProperty(property);
+            List<Integer> slaves = (List<Integer>) DefaultConverter.staticConvert(value, DefaultConverter.parametrized(List.class, Integer.class));
+            properties.setProperty("slaves", value);
+            if (slaves.contains(slaveIndex)) {
+               if (mySiteIndex >= 0) throw new IllegalArgumentException("Slave set up in multiple sites!");
+               try {
+                  mySiteIndex = Integer.parseInt(m.group(1));
+               } catch (NumberFormatException e) {
+                  log.debug("Cannot parse site index from " + property);
+               }
+            }
+         } else if (!property.startsWith("site[")) {
+            properties.setProperty(property, confAttributes.getProperty(property));
+         }
+      }
+      // site properties override global ones
+      if (mySiteIndex >= 0) {
+         properties.setProperty("siteIndex", String.valueOf(mySiteIndex));
+         String prefix = "site[" + mySiteIndex + "].";
+         for (String property: confAttributes.stringPropertyNames()) {
+            if (property.startsWith(prefix)) {
+               if (property.equalsIgnoreCase(prefix + "name")) {
+                  properties.setProperty("siteName", confAttributes.getProperty(prefix + "name"));
+               } else {
+                  properties.setProperty(property.substring(prefix.length()), confAttributes.getProperty(property));
+               }
+            }
+         }
+      }
+      return properties;
+   }
+
    private static String getPluginWrapperClass(String productName, TypedProperties confAttributes) {
       if (confAttributes.getProperty("wrapper") != null) {
          return confAttributes.getProperty("wrapper");

@@ -18,6 +18,15 @@
  */
 package org.radargun.cachewrappers;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.infinispan.Cache;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
@@ -30,13 +39,6 @@ import org.radargun.config.DefaultConverter;
 import org.radargun.features.XSReplicating;
 import org.radargun.utils.TypedProperties;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implements XSReplicating {
    
    private Cache<Object, Object> mainCache;
@@ -44,36 +46,29 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
    
    @Override
    protected void setUpCache(TypedProperties confAttributes, int nodeIndex) throws Exception {
-      Pattern slavesPattern = Pattern.compile("site\\[(\\d*)\\].slaves");
-      Matcher m;
-      int mySiteIndex = -1;
-      for (String property : confAttributes.stringPropertyNames()) {
-         if ((m = slavesPattern.matcher(property)).matches()) {
-            String value = confAttributes.getProperty(property);
-            slaves = (List<Integer>) DefaultConverter.staticConvert(value, DefaultConverter.parametrized(List.class, Integer.class));
-            if (slaves.contains(nodeIndex)) {
-               try {
-                  mySiteIndex = Integer.parseInt(m.group(1));
-                  this.slaves = slaves;
-                  break;
-               } catch (NumberFormatException e) {
-                  log.debug("Cannot parse site index from " + property);
-               }
-            }
+      String slaves = confAttributes.getProperty("slaves");
+      if (slaves != null && !slaves.isEmpty()) {
+         this.slaves = (List<Integer>) DefaultConverter.staticConvert(slaves, DefaultConverter.parametrized(List.class, Integer.class));
+      }
+      String siteIndexString = confAttributes.getProperty("siteIndex");
+      int siteIndex = -1;
+      if (siteIndexString != null && !siteIndexString.isEmpty()) {
+         try {
+            siteIndex = Integer.parseInt(siteIndexString);
+         } catch (NumberFormatException unused) {
+            log.warn("Failed to parse site index");
          }
       }
 
       String configFile, mainCacheName;
-      if (mySiteIndex < 0) {
+      if (siteIndex < 0) {
          log.info("Cannot find any site for slave index " + nodeIndex);
-         configFile = getConfigFile(confAttributes);
-         mainCacheName = getCacheName(confAttributes);
+
       } else {
-         String siteName = confAttributes.getProperty("site[" + mySiteIndex + "].name", "site[" + mySiteIndex + "]");
-         log.info("Slave " + nodeIndex + " will use site " + siteName);
-         configFile = confAttributes.getProperty("site[" + mySiteIndex + "].config");
-         mainCacheName = confAttributes.getProperty("site[" + mySiteIndex + "].cache");
+         log.info("Slave " + nodeIndex + " will use site " + confAttributes.getProperty("siteName", "site[" + siteIndex + "]"));
       }
+      configFile = getConfigFile(confAttributes);
+      mainCacheName = getCacheName(confAttributes);
 
       log.trace("Using config file: " + configFile + " and cache name: " + mainCacheName);
 

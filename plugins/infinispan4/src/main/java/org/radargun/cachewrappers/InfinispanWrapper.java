@@ -90,7 +90,10 @@ public class InfinispanWrapper implements CacheWrapper {
    }
 
    protected String getConfigFile(TypedProperties confAttributes) {
-      return confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
+      // yes, backward compatibility and compatibility with sites
+      if (confAttributes.containsKey("config")) return confAttributes.getProperty("config");
+      if (confAttributes.containsKey("file")) return confAttributes.getProperty("file");
+      return config;
    }
    
    protected String getCacheName(TypedProperties confAttributes) {

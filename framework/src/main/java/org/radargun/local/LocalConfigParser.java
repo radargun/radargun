@@ -1,5 +1,13 @@
 package org.radargun.local;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapperStressor;
@@ -10,14 +18,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -79,7 +79,8 @@ public class LocalConfigParser {
 
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
                Element configEl = (Element) configs.item(configIndex);
-               Properties configAttrs = DomConfigParser.getAttributes(configEl, "");
+               Properties configAttrs = new Properties();
+               DomConfigParser.addDirectAttributes(configAttrs, configEl, "");
                configNames.add(configAttrs);
                all.add(new ReportItem(productName, configAttrs.getProperty("name")));
             }

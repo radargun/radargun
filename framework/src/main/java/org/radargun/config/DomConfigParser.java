@@ -1,22 +1,22 @@
 package org.radargun.config;
 
-import org.radargun.utils.TypedProperties;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Node;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Attr;
-import org.radargun.stages.AbstractStartStage;
-import org.radargun.stages.GenerateChartStage;
-import org.radargun.Master;
-import org.radargun.Stage;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Properties;
+import org.radargun.Master;
+import org.radargun.Stage;
+import org.radargun.stages.AbstractStartStage;
+import org.radargun.stages.GenerateChartStage;
+import org.radargun.utils.TypedProperties;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -96,7 +96,11 @@ public class DomConfigParser extends ConfigParser {
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
                Element configEl = (Element) configs.item(configIndex);
                String configName = configEl.getAttribute("name");
-               Properties configAttributes = getAttributes(configEl, "");
+
+               Properties configAttributes = new Properties();
+               addDirectAttributes(configAttributes, configEl, ""); // parse own
+               addWrapperAttributes(configAttributes, configEl, "");
+               addSitesAttributes(configAttributes, configEl);
 
                ScalingBenchmarkConfig clone = prototype.clone();
                clone.setProductName(productName);
@@ -110,23 +114,56 @@ public class DomConfigParser extends ConfigParser {
       }
    }
 
-   public static Properties getAttributes(Element configEl, String prefix) {
-      NamedNodeMap attributes = configEl.getAttributes();
-      Properties configAttributes = new Properties();
+   public static void addDirectAttributes(Properties properties, Element element, String prefix) {
+      NamedNodeMap attributes = element.getAttributes();
       for (int j = 0; j < attributes.getLength(); j++) {
          String name = attributes.item(j).getNodeName();
          String value = attributes.item(j).getNodeValue();
-         configAttributes.put(prefix + name, value);
+         properties.put(prefix + name, value);
       }
-      NodeList childList = configEl.getChildNodes();
+   }
+
+   public static void addWrapperAttributes(Properties properties, Element element, String prefix) {
+      NodeList childList = element.getChildNodes();
       for (int i = 0; i < childList.getLength(); ++i) {
          if (childList.item(i) instanceof Element) {
             Element child = (Element) childList.item(i);
-            Properties childAttributes = getAttributes(child, child.getNodeName() + "[" + i + "].");
-            configAttributes.putAll(childAttributes);
+            if (child.getNodeName().equalsIgnoreCase("wrapper")) {
+               String wrapperClass = child.getAttribute("class");
+               if (wrapperClass != null && !wrapperClass.isEmpty()) {
+                  properties.setProperty(prefix + "wrapper", wrapperClass);
+               }
+               NodeList wrapperProps = child.getChildNodes();
+               for (int j = 0; j < wrapperProps.getLength(); ++j) {
+                  if (wrapperProps.item(j) instanceof Element) {
+                     Element prop = (Element) wrapperProps.item(j);
+                     if (!prop.getNodeName().equalsIgnoreCase("property")) {
+                        throw new IllegalArgumentException();
+                     }
+                     String name = prop.getAttribute("name");
+                     String value = prop.getAttribute("value");
+                     if (name == null || name.isEmpty()) throw new IllegalArgumentException();
+                     properties.setProperty(prefix + name, value);
+                  }
+               }
+            }
          }
       }
-      return configAttributes;
+   }
+
+   public static void addSitesAttributes(Properties properties, Element configEl) {
+      NodeList childList = configEl.getChildNodes();
+      int siteIndex = 0;
+      for (int i = 0; i < childList.getLength(); ++i) {
+         if (childList.item(i) instanceof Element) {
+            Element child = (Element) childList.item(i);
+            if (child.getNodeName().equalsIgnoreCase("site")) {
+               addDirectAttributes(properties, child, "site[" + siteIndex + "].");
+               addWrapperAttributes(properties, child, "site[" + siteIndex + "].");
+               siteIndex++;
+            }
+         }
+      }
    }
 
    private MasterConfig parseMaster(Element configRoot, ScalingBenchmarkConfig prototype) {

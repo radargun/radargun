@@ -1,23 +1,35 @@
 package org.radargun.config;
 
-import org.radargun.Stage;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import org.radargun.Stage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * @author Radim Vansa <rvansa@redhat.com>
@@ -126,8 +138,20 @@ public class ConfigSchemaGenerator {
       addAttribute(doc, configComplex, "file", null, false);
       addAttribute(doc, configComplex, "cache", null, false);
       addAttribute(doc, configComplex, "wrapper", null, false);
-      addAttribute(doc, configComplex, "explicitLocking", null, false); //TODO: this is wrapper-specific
+      Element wrapperType = createComplexType(doc, schema, "wrapper", null, false, null);
+      Element wrapperSequence = createSequence(doc, wrapperType);
+      Element wrapperProperty = createComplexElement(doc, wrapperSequence, "property", 0, -1);
+      addAttribute(doc, wrapperProperty, "name", null, true);
+      addAttribute(doc, wrapperProperty, "value", null, true);
+      addAttribute(doc, wrapperType, "class", null, false);
+      Element wrapper = createReference(doc, configSequence, "wrapper", RG_PREFIX + "wrapper");
+      wrapper.setAttribute(XS_MIN_OCCURS, "0");
+      wrapper.setAttribute(XS_MAX_OCCURS, "1");
       Element siteComplex = createComplexElement(doc, configSequence, "site", 0, -1);
+      Element siteSequence = createSequence(doc, siteComplex);
+      wrapper = createReference(doc, siteSequence, "wrapper", RG_PREFIX + "wrapper");
+      wrapper.setAttribute(XS_MIN_OCCURS, "0");
+      wrapper.setAttribute(XS_MAX_OCCURS, "1");
       addAttribute(doc, siteComplex, "name", null, false);
       addAttribute(doc, siteComplex, "config", null, false);
       addAttribute(doc, siteComplex, "slaves", null, false);
