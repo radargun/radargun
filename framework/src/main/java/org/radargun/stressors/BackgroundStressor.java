@@ -191,7 +191,8 @@ class BackgroundStressor extends Thread {
    }
 
    public BackgroundStatistics getStatsSnapshot(boolean reset, long time) {
-      return threadStats.snapshot(reset,  time);
+      BackgroundStatistics snapshot = threadStats.snapshot(reset,  time);
+      return snapshot;
    }
 
    public void setLoaded(boolean loaded) {

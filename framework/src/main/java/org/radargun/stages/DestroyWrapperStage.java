@@ -47,7 +47,7 @@ public class DestroyWrapperStage extends AbstractDistStage {
       try {
          CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
          if (cacheWrapper != null) {
-            BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState);
+            BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, true);
             cacheWrapper.tearDown();
             for (int i = 0; i < 120; i++) {
                if (cacheWrapper.getNumMembers() <= 0) break; //negative value might be returned by impl that do not support this method

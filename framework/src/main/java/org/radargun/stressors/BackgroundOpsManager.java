@@ -332,10 +332,13 @@ public class BackgroundOpsManager {
       }
    }
 
-   public static void beforeCacheWrapperDestroy(SlaveState slaveState) {
+   public static void beforeCacheWrapperDestroy(SlaveState slaveState, boolean destroyAll) {
       BackgroundOpsManager instance = getInstance(slaveState);
       if (instance != null) {
          instance.stopStressors();
+      }
+      if (destroyAll) {
+         instance.destroy();
       }
    }
 

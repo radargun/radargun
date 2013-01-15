@@ -37,6 +37,11 @@ public class BackgroundStatistics implements Serializable {
          responseTimeSum += other.responseTimeSum;
          errors += other.errors;
       }
+
+      public String toString() {
+         return String.format("requests=%d, responseTimeMax=%d, responseTimeSum=%d, errors=%d",
+                              requests, responseTimeMax, responseTimeSum, errors);
+      }
    }
 
    protected OperationStats putStats = new OperationStats();
@@ -60,6 +65,12 @@ public class BackgroundStatistics implements Serializable {
       intervalEndTime = intervalBeginTime;
    }
 
+   @Override
+   public String toString() {
+      return String.format("Stats(nodeUp=%s, snapshot=%s, interval=%d-%d, cacheSize=%d, putStats=[%s], getStats=[%s, nullGet=%d], removeStats=[%s])",
+                           nodeUp, snapshot, intervalBeginTime, intervalEndTime, cacheSize, putStats, getStats, requestsNullGet, removeStats);
+   }
+
    public boolean isNodeUp() {
       return nodeUp;
    }
@@ -67,6 +78,9 @@ public class BackgroundStatistics implements Serializable {
    public synchronized void registerRequest(long responseTime, BackgroundOpsManager.Operation operation, boolean isNull) {
       ensureNotSnapshot();
       OperationStats stats = getOperationStats(operation);
+      stats.requests++;
+      stats.responseTimeMax = Math.max(stats.responseTimeMax, responseTime);
+      stats.responseTimeSum += responseTime;
       if (isNull) {
          requestsNullGet++;
       }
@@ -219,11 +233,6 @@ public class BackgroundStatistics implements Serializable {
       } else {
          return ((double) getNumberOfRequests()) * ((double) 1000) / ((double) getDuration());
       }
-   }
-
-   @Override
-   public String toString() {
-      return "Stats(reqs=" + getNumberOfRequests() + ")";
    }
 
    public int getCacheSize() {

@@ -46,7 +46,7 @@ public class KillHelper {
       try {
          CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
          if (cacheWrapper != null) {
-            BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState);
+            BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, false);
             if (tearDown) {
                log.info("Tearing down cache wrapper.");
                cacheWrapper.tearDown();
@@ -66,7 +66,7 @@ public class KillHelper {
          }
          slaveState.setCacheWrapper(null);
          // in case of concurrent start and kill the stats could be still running
-         BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState);
+         BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, false);
       } catch (Exception e) {
          log.error("Error while killing slave", e);
          if (ack != null) {
