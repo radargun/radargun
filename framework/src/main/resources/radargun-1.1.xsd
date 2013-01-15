@@ -241,6 +241,11 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
+            <attribute name="cacheSpecificKeyGenerator" type="string">
+               <annotation>
+                  <documentation>Specifies whether the key generator is produced by a cache wrapper and therefore is product-specific. Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="commitTransactions" type="string">
                <annotation>
                   <documentation>Specifies whether the transactions should be committed (true) or rolled back (false). Default is true</documentation>

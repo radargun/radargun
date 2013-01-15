@@ -81,9 +81,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    private AtomicInteger txCount = new AtomicInteger(0);
 
-   private KeyGenerator keyGenerator;
+   protected KeyGenerator keyGenerator;
 
-   private CacheWrapper cacheWrapper;
+   protected CacheWrapper cacheWrapper;
    private ArrayList<Object> sharedKeysPool = null;
    private static final Random r = new Random();
    private volatile long startNanos;
@@ -566,6 +566,10 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    public void setNumEntries(int numberOfKeys) {
       this.numEntries = numberOfKeys;
+   }
+
+   public int getNumEntries() {
+      return numEntries;
    }
 
    public void setEntrySize(int sizeOfValue) {

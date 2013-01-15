@@ -24,7 +24,7 @@ import org.infinispan.Cache;
 import org.infinispan.transaction.LockingMode;
 import org.radargun.utils.TypedProperties;
 
-public class InfinispanExplicitLockingWrapper extends InfinispanWrapper {
+public class InfinispanExplicitLockingWrapper extends InfinispanKeyAffinityWrapper {
 
    private boolean isExplicitLocking;
    
