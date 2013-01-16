@@ -30,6 +30,7 @@ import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.features.Debugable;
 import org.radargun.stages.helpers.Range;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.BackgroundOpsManager;
@@ -71,6 +72,13 @@ public class CheckDataStage extends AbstractDistStage {
 
    @Property(doc = "Number of queries after which a DEBUG log message is printed. Default is 10000.")
    private int logChecksCount = 10000;
+
+   @Property(doc = "If the GET request results in null response, call wrapper-specific functions to show debug info. " +
+         "Default is false.")
+   private boolean debugNull = false;
+
+   @Property(doc = "If entry is null, fail immediatelly. Default is false.")
+   private boolean failOnNull = false;
     
    @Override
    public DistStageAck executeOnSlave() {
@@ -176,14 +184,13 @@ public class CheckDataStage extends AbstractDistStage {
    
    protected CheckResult checkRange(int from, int to) {
       CacheWrapper wrapper = slaveState.getCacheWrapper();
-      int checked = 0;
       CheckResult result = new CheckResult();
       BackgroundOpsManager bgStats = (BackgroundOpsManager) slaveState.get(BackgroundOpsManager.NAME);
       String bucketId = BackgroundOpsManager.NAME;
       if (bgStats != null) bucketId = bgStats.getBucketId();
-      for (int i = from; i < to; ++i, ++checked) {
-         if (checked % logChecksCount == 0) {
-            log.debug("Checked " + checked + " entries, so far " + result);
+      for (int i = from; i < to; ++i, ++result.checked) {
+         if (result.checked % logChecksCount == 0) {
+            log.debug("Checked " + result.checked + " entries, so far " + result);
          }
          try {
             Object value = wrapper.get(bucketId, "key" + i);
@@ -191,8 +198,19 @@ public class CheckDataStage extends AbstractDistStage {
                if (value != null && value instanceof byte[] && (entrySize <= 0 || ((byte[]) value).length == entrySize)) {
                   result.found++;
                } else {
-                  if (value == null) result.nullValues++;
-                  else result.invalidValues++;
+                  if (value == null) {
+                     result.nullValues++;
+                     if (debugNull && wrapper instanceof Debugable) {
+                        ((Debugable) wrapper).debugInfo(bucketId);
+                        ((Debugable) wrapper).debugKey(bucketId, "key" + i);
+                     }
+                     if (failOnNull) {
+                        result.checked++;
+                        break;
+                     }
+                  } else {
+                     result.invalidValues++;
+                  }
                   if (log.isTraceEnabled()) {
                      log.trace("Key" + i + " has unexpected value " + value);
                   }
@@ -216,7 +234,7 @@ public class CheckDataStage extends AbstractDistStage {
       }
       return result;
    }
-   
+
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
       boolean success = super.processAckOnMaster(acks, masterState);
@@ -280,6 +298,7 @@ public class CheckDataStage extends AbstractDistStage {
    }
 
    protected static class CheckResult implements Serializable {
+      public long checked;
       public long found;
       public long nullValues;
       public long invalidValues;
@@ -287,6 +306,7 @@ public class CheckDataStage extends AbstractDistStage {
 
       public void merge(CheckResult value) {
          if (value == null) return;
+         checked += value.checked;
          found += value.found;
          nullValues += value.nullValues;
          invalidValues += value.invalidValues;
@@ -295,7 +315,8 @@ public class CheckDataStage extends AbstractDistStage {
 
       @Override
       public String toString() {
-         return String.format("[found=%d, nullValues=%d, invalidValues=%d, exceptions=%d]", found, nullValues, invalidValues, exceptions);
+         return String.format("[checked=%d, found=%d, nullValues=%d, invalidValues=%d, exceptions=%d]",
+                              checked, found, nullValues, invalidValues, exceptions);
       }
    }
    

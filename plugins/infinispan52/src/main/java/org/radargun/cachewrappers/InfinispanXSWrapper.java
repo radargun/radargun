@@ -30,6 +30,8 @@ import java.util.Set;
 import org.infinispan.Cache;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
+import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.distribution.DistributionManager;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.util.FileLookupFactory;
 import org.jgroups.JChannel;
@@ -185,5 +187,35 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
       for (String cache : cacheManager.getCacheNames()) {
          cacheManager.getCache(cache, false).clear();
       }
+   }
+
+   @Override
+   protected String getKeyInfo(String bucket, Object key) {
+      DistributionManager dm = getCache(bucket).getAdvancedCache().getDistributionManager();
+      return super.getKeyInfo(bucket, key) + ", segmentId=" + dm.getConsistentHash().getSegment(key);
+   }
+
+   @Override
+   protected String getCHInfo(DistributionManager dm) {
+      StringBuilder sb = new StringBuilder(1000);
+      sb.append("\nWrite CH: ").append(dm.getWriteConsistentHash());
+      sb.append("\nRead CH: ").append(dm.getReadConsistentHash());
+      return sb.toString();
+   }
+
+   @Override
+   protected String toString(InternalCacheEntry ice) {
+      if (ice == null) return null;
+      StringBuilder sb = new StringBuilder(256);
+      sb.append(ice.getClass().getSimpleName());
+      sb.append("[key=").append(ice.getKey()).append(", value=").append(ice.getValue());
+      sb.append(", created=").append(ice.getCreated()).append(", isCreated=").append(ice.isCreated());
+      sb.append(", lastUsed=").append(ice.getLastUsed()).append(", isChanged=").append(ice.isChanged());
+      sb.append(", expires=").append(ice.getExpiryTime()).append(", isExpired=").append(ice.isExpired());
+      sb.append(", canExpire=").append(ice.canExpire()).append(", isEvicted=").append(ice.isEvicted());
+      sb.append(", isRemoved=").append(ice.isRemoved()).append(", isValid=").append(ice.isValid());
+      sb.append(", lifespan=").append(ice.getLifespan()).append(", maxIdle=").append(ice.getMaxIdle());
+      sb.append(", version=").append(ice.getVersion()).append(", lockPlaceholder=").append(ice.isLockPlaceholder());
+      return sb.append(']').toString();
    }
 }

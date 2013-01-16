@@ -1,29 +1,39 @@
 package org.radargun.cachewrappers;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
+
 import com.arjuna.ats.arjuna.common.arjPropertyManager;
 import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.infinispan.Cache;
+import org.infinispan.container.DataContainer;
+import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.context.Flag;
+import org.infinispan.distribution.DataLocality;
+import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
 import org.radargun.CacheWrapper;
+import org.radargun.features.Debugable;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
-import java.io.IOException;
-import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
-
-import static java.util.concurrent.TimeUnit.MINUTES;
-
-public class InfinispanWrapper implements CacheWrapper {
+public class InfinispanWrapper implements CacheWrapper, Debugable {
 
    enum State {
       STOPPED,
@@ -354,4 +364,119 @@ public class InfinispanWrapper implements CacheWrapper {
       this.enlistExtraXAResource = enlistExtraXAResource;
    }
 
+   protected String[] getDebugKeyPackages() {
+      return new String[] { "org.infinispan", "org.jgroups" };
+   }
+
+   protected String[] getDebugKeyClassesTraceFix() {
+      return new String[] { "org.infinispan.container.EntryFactoryImpl" };
+   }
+
+   private void setTraceField(ComponentRegistry registry, String clazzName, boolean value) {
+      /* Use -XX:+UnlockDiagnosticVMOptions -XX:CompileCommand=exclude,my/package/MyClass,myMethod */
+      try {
+         Class<?> clazz = Class.forName(clazzName);
+         Field traceField = clazz.getDeclaredField("trace");
+         traceField.setAccessible(true);
+         Field modifiers = Field.class.getDeclaredField("modifiers");
+         modifiers.setAccessible(true);
+         modifiers.setInt(traceField, traceField.getModifiers() & ~Modifier.FINAL);
+         if (Modifier.isStatic(traceField.getModifiers())) {
+            traceField.setBoolean(null, value);
+         } else {
+            // if this is instance-variable, try to get instance from registry
+            Object component = null;
+            component = registry.getComponent(clazz);
+            if (component == null) {
+               Class<?>[] ifaces = clazz.getInterfaces();
+               if (ifaces.length > 0) {
+                  component = registry.getComponent(ifaces[0]);
+               }
+            }
+            if (component == null) {
+               log.warn("No instance can be found for " + clazzName);
+            } else if (!clazz.isAssignableFrom(component.getClass())) {
+               log.warn("The actual instance is not " + clazzName + ", it is " + component.getClass().getName());
+            } else {
+               traceField.setBoolean(component, value);
+            }
+         }
+      } catch (ClassNotFoundException e) {
+         log.warn("Failed to set " + clazzName + "trace=" + value + " (cannot load class)", e);
+      } catch (NoSuchFieldException e) {
+         log.warn("Failed to set " + clazzName + "trace=" + value + " (cannot find field)", e);
+      } catch (SecurityException e) {
+         log.warn("Failed to set " + clazzName + "trace=" + value + " (cannot access field)", e);
+      } catch (IllegalAccessException e) {
+         log.warn("Failed to set " + clazzName + "trace=" + value + " (cannot write field)", e);
+      } catch (Throwable e) {
+         log.warn("Failed to set " + clazzName + "trace=" + value, e);
+      }
+   }
+
+   @Override
+   public void debugKey(String bucket, String key) {
+      log.debug(getKeyInfo(bucket, key));
+      List<Level> levels = new ArrayList<Level>();
+      String[] debugPackages = getDebugKeyPackages();
+      ComponentRegistry componentRegistry = getCache(bucket).getAdvancedCache().getComponentRegistry();
+      try {
+         for (String pkg : debugPackages) {
+            Logger logger = Logger.getLogger(pkg);
+            levels.add(logger.getLevel());
+            logger.setLevel(Level.TRACE);
+         }
+         for (String clazz : getDebugKeyClassesTraceFix()) {
+            setTraceField(componentRegistry, clazz, true);
+         }
+         getCache(bucket).get(key);
+      } finally {
+         int i = 0;
+         for (Level l : levels) {
+            Logger.getLogger(debugPackages[i]).setLevel(l);
+            ++i;
+         }
+         for (String clazz : getDebugKeyClassesTraceFix()) {
+            setTraceField(componentRegistry, clazz, false);
+         }
+      }
+   }
+
+   protected String getKeyInfo(String bucket, Object key) {
+      DistributionManager dm = getCache(bucket).getAdvancedCache().getDistributionManager();
+      DataContainer container = getCache(bucket).getAdvancedCache().getDataContainer();
+      StringBuilder sb = new StringBuilder(256);
+      sb.append(String.format("Debug info for key %s %s: owners=", bucket, key));
+      for (Address owner : dm.locate(key)) {
+         sb.append(owner).append(", ");
+      }
+      DataLocality locality = dm.getLocality(key);
+      sb.append("local=").append(locality.isLocal()).append(", uncertain=").append(locality.isUncertain());
+      sb.append(", container.").append(key).append('=').append(toString(container.get(key)));
+      return sb.toString();
+   }
+
+   protected String toString(InternalCacheEntry ice) {
+      if (ice == null) return null;
+      StringBuilder sb = new StringBuilder(256);
+      sb.append(ice.getClass().getSimpleName());
+      sb.append("[key=").append(ice.getKey()).append(", value=").append(ice.getValue());
+      return sb.append(']').toString();
+   }
+
+   @Override
+   public void debugInfo(String bucket) {
+      DistributionManager dm = getCache(bucket).getAdvancedCache().getDistributionManager();
+      DataContainer container = getCache(bucket).getAdvancedCache().getDataContainer();
+      StringBuilder sb = new StringBuilder(256);
+      sb.append("Debug info for ").append(bucket).append(": joinComplete=").append(dm.isJoinComplete());
+      sb.append(", rehashInProgress=").append(dm.isRehashInProgress());
+      sb.append(", numEntries=").append(container.size());
+      sb.append(getCHInfo(dm));
+      log.debug(sb.toString());
+   }
+
+   protected String getCHInfo(DistributionManager dm) {
+      return "\nCH: " + dm.getConsistentHash();
+   }
 }

@@ -621,6 +621,11 @@
                   <documentation>Number of thread per node which check data validity. Default is 1.</documentation>
                </annotation>
             </attribute>
+            <attribute name="debugNull" type="string">
+               <annotation>
+                  <documentation>If the GET request results in null response, call wrapper-specific functions to show debug info. Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="deleted" type="string">
                <annotation>
                   <documentation>If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.</documentation>
@@ -634,6 +639,11 @@
             <attribute name="extraEntries" type="string">
                <annotation>
                   <documentation>Entries that have not the form key{number} but occur in the cluster. This string specifies a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries.Defaults to 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="failOnNull" type="string">
+               <annotation>
+                  <documentation>If entry is null, fail immediatelly. Default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="ignoreSum" type="string">
