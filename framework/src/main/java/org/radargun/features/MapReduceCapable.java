@@ -24,22 +24,51 @@ import org.radargun.CacheWrapper;
 import org.radargun.utils.ClassLoadHelper;
 
 public interface MapReduceCapable extends CacheWrapper {
-	
+
    /**
     * 
-    * This method executes a MapReduce task against all of the keys in the
-    * cache using the specified Mapper and Reducer classes.
+    * This method executes a MapReduce task against all of the keys in the cache using the specified
+    * Mapper and Reducer classes.
     * 
-    * @param classLoadHelper a <code>ClassLoadHelper</code> used to instantiate
-    *                        the Mapper and Reducer classes
-    * @param mapperFqn the fully qualified class name for the 
-    *                  org.infinispan.distexec.mapreduce.Mapper implementation
-    * @param reducerFqn the fully qualified class name for the 
-    *                   org.infinispan.distexec.mapreduce.Reducer implementation
-    * @return a Map where each key is an output key and value is reduced value 
-    *         for that output key
+    * @param classLoadHelper
+    *           a <code>ClassLoadHelper</code> used to instantiate the classes
+    * 
+    * @param mapperFqn
+    *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Mapper
+    *           implementation. The implementation must have a no argument constructor.
+    * 
+    * @param reducerFqn
+    *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Reducer
+    *           implementation. The implementation must have a no argument constructor.
+    * 
+    * @param collatorFqn
+    *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Collator
+    *           implementation. The implementation must have a no argument constructor.
+    * 
+    * @return the collated result
     */
-	public Map<Object, Object> executeMapReduceTask(ClassLoadHelper classLoadHelper, 
-			String mapperFqn, String reducerFqn);
+   public Object executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn,
+         String collatorFqn);
+
+   /**
+    * 
+    * This method executes a MapReduce task against all of the keys in the cache using the specified
+    * Mapper and Reducer classes.
+    * 
+    * @param classLoadHelper
+    *           a <code>ClassLoadHelper</code> used to instantiate the classes
+    * 
+    * @param mapperFqn
+    *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Mapper
+    *           implementation. The implementation must have a no argument constructor.
+    * 
+    * @param reducerFqn
+    *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Reducer
+    *           implementation. The implementation must have a no argument constructor.
+    * 
+    * @return a Map where each key is an output key and value is reduced value for that output key
+    */
+   @SuppressWarnings("rawtypes")
+   public Map executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn);
 
 }

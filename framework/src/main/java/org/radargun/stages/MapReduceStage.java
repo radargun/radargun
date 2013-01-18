@@ -43,11 +43,17 @@ public class MapReduceStage extends AbstractDistStage {
          + "org.infinispan.distexec.mapreduce.Reducer implementation to execute.")
    private String reducerFqn;
 
+   @Property(optional = true, doc = "Fully qualified class name of the "
+         + "org.infinispan.distexec.mapreduce.Collator implementation to execute. " + "The default is null.")
+   private String collatorFqn = null;
+
+   @SuppressWarnings("rawtypes")
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = newDefaultStageAck();
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-      Map<Object, Object> payload = null;
+      Map payloadMap = null;
+      Object payloadObject = null;
 
       if (cacheWrapper == null) {
          result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
@@ -55,12 +61,27 @@ public class MapReduceStage extends AbstractDistStage {
          if (getSlaveIndex() == 0) {
             if (cacheWrapper instanceof MapReduceCapable) {
                if (mapperFqn != null && reducerFqn != null) {
-                  long start = System.currentTimeMillis();
-                  payload = ((MapReduceCapable) cacheWrapper).executeMapReduceTask(classLoadHelper, mapperFqn,
-                        reducerFqn);
-                  log.info("MapReduce task completed in " + Utils.prettyPrintMillis(System.currentTimeMillis() - start));
-                  log.info("Result map contains '" + payload.keySet().size() + "' keys.");
-                  result.setPayload(payload);
+                  log.info("--------------------");
+                  if (collatorFqn != null) {
+                     long start = System.currentTimeMillis();
+                     payloadObject = ((MapReduceCapable) cacheWrapper).executeMapReduceTask(classLoadHelper, mapperFqn,
+                           reducerFqn, collatorFqn);
+                     log.info("MapReduce task with Collator completed in "
+                           + Utils.prettyPrintMillis(System.currentTimeMillis() - start));
+                     result.setPayload(payloadObject);
+                  } else {
+                     long start = System.currentTimeMillis();
+                     payloadMap = ((MapReduceCapable) cacheWrapper).executeMapReduceTask(classLoadHelper, mapperFqn,
+                           reducerFqn);
+                     log.info("MapReduce task completed in "
+                           + Utils.prettyPrintMillis(System.currentTimeMillis() - start));
+                     log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
+                     result.setPayload(payloadMap);
+                  }
+                  log.info(getActiveSlaveCount() + " nodes were used to execute across " + cacheWrapper.getLocalSize()
+                        + " keys in the cache");
+                  log.info(cacheWrapper.getInfo());
+                  log.info("--------------------");
                } else {
                   result.setError(true);
                   result.setErrorMessage("Both the mapper and reducer class must be specified.");
@@ -89,6 +110,14 @@ public class MapReduceStage extends AbstractDistStage {
 
    public void setReducerFqn(String reducerFqn) {
       this.reducerFqn = reducerFqn;
+   }
+
+   public String getCollatorFqn() {
+      return collatorFqn;
+   }
+
+   public void setCollatorFqn(String collatorFqn) {
+      this.collatorFqn = collatorFqn;
    }
 
 }
