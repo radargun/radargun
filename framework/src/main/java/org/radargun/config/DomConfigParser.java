@@ -217,7 +217,7 @@ public class DomConfigParser extends ConfigParser {
          }
          int from = 0, to = 1, inc = 1;
          if (!timesStr.isEmpty()) {
-            to = parseRepeatArg(timesStr, "times", repeatName);            
+            to = parseRepeatArg(timesStr, "times", repeatName) - 1;
          } else {
             from = parseRepeatArg(fromStr, "from", repeatName);
             to = parseRepeatArg(toStr, "to", repeatName);
@@ -226,7 +226,7 @@ public class DomConfigParser extends ConfigParser {
             }
          }                  
          NodeList childNodes = element.getChildNodes();
-         for (int counter = from; counter < to; counter += inc) {
+         for (int counter = from; counter <= to; counter += inc) {
             System.getProperties().setProperty("repeat." + (repeatName.isEmpty() ? "counter" : repeatName + ".counter"), String.valueOf(counter));
             for (int i = 0; i < childNodes.getLength(); i++) {
                Node child = childNodes.item(i);
