@@ -21,12 +21,6 @@
       </dependency>
 
       <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-distexec-demo</artifactId>
-         <version>5.1.8.Final</version>
-      </dependency>
-
-      <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>plugin-infinispan4</artifactId>
          <version>1.1.0-SNAPSHOT</version>
