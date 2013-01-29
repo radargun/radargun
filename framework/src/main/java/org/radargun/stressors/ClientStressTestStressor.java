@@ -33,7 +33,7 @@ public class ClientStressTestStressor extends StressTestStressor {
    private int maxThreads = 10;
    private int increment = 1;
    private double requestPerSec = 0;
-   
+
    public Map<String, Object> stress(CacheWrapper wrapper) {
       init(wrapper);
       log.info("Client stress test with " + initThreads + " - " + maxThreads + " (increment " + increment + ")");
@@ -72,47 +72,25 @@ public class ClientStressTestStressor extends StressTestStressor {
    }
    
    protected Map<String, Object> processResults(String iteration, Map<String, Object> results) {
-      long duration = 0;
-      long transactionDuration = 0;
-      int reads = 0;
-      int writes = 0;
-      int failures = 0;
-      long readsDurations = 0;
-      long writesDurations = 0;
-
+      Statistics stats = new Statistics();
       for (Stressor stressor : stressors) {
-         duration += stressor.totalDuration();
-         readsDurations += stressor.getReadDuration();
-         writesDurations += stressor.getWriteDuration();
-         transactionDuration += stressor.getTransactionsDuration();
-
-         reads += stressor.getReads();
-         writes += stressor.getWrites();
-         failures += stressor.getNrFailures();
+         stats.merge(stressor.stats);
       }
             
-      results.put(iteration  + ".DURATION", duration);
-      double requestPerSec = (reads + writes) / ((duration / super.getNumThreads()) / 1000000000.0);
-      results.put(iteration  + ".REQ_PER_SEC", requestPerSec);
-      if (reads > 0) {
-         results.put(iteration  + ".READS_PER_SEC", reads / ((readsDurations / super.getNumThreads()) / 1000000000.0));
-      } else {
-         results.put(iteration + ".READS_PER_SEC", 0);
-      }
-      if (writes > 0) {
-         results.put(iteration  + ".WRITES_PER_SEC", writes / ((writesDurations / super.getNumThreads()) / 1000000000.0));
-      } else {
-         results.put(iteration  + ".WRITES_PER_SEC", 0);
-      }
-      results.put(iteration  + ".READ_COUNT", reads);
-      results.put(iteration  + ".WRITE_COUNT", writes);
-      results.put(iteration  + ".FAILURES", failures);
+      results.put(iteration  + ".DURATION", stats.getResponseTimeSum() / Statistics.NS_IN_SEC);
+      results.put(iteration  + ".REQ_PER_SEC", stats.getOperationsPerSecond());
+      results.put(iteration  + ".READS_PER_SEC", stats.getReadsPerSecond(true));
+      results.put(iteration  + ".READS_PER_SEC_NET", stats.getReadsPerSecond(false));
+      results.put(iteration  + ".WRITES_PER_SEC", stats.getWritesPerSecond(true));
+      results.put(iteration  + ".WRITES_PER_SEC_NET", stats.getWritesPerSecond(false));
+      results.put(iteration  + ".READ_COUNT", stats.getNumReads());
+      results.put(iteration  + ".WRITE_COUNT", stats.getNumWrites());
+      results.put(iteration  + ".FAILURES", stats.getNumErrors());
       if (isUseTransactions()) {
-         double txPerSec = getTxCount() / ((transactionDuration / super.getNumThreads()) / 1000.0);
-         results.put(iteration  + ".TX_PER_SEC", txPerSec);
+         results.put(iteration  + ".TX_PER_SEC", stats.getTransactionsPerSecond());
       }
       
-      this.requestPerSec = Math.max(this.requestPerSec, requestPerSec);
+      requestPerSec = Math.max(requestPerSec, stats.getOperationsPerSecond());
       return results;
    }
          

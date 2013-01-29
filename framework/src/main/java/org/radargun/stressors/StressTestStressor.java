@@ -22,7 +22,6 @@ import org.radargun.utils.Utils;
 public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    private static final Log log = LogFactory.getLog(StressTestStressor.class);
-   private static final double NANOSECS_IN_SEC = 1000000000.0;
 
    private int opsCountStatusLog = 5000;
 
@@ -137,47 +136,27 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    }
 
    private Map<String, Object> processResults() {
-      long duration = 0;
-      long transactionDuration = 0;
-      int reads = 0;
-      int writes = 0;
-      int failures = 0;
-      long readsDurations = 0;
-      long writesDurations = 0;
+      Statistics stats = new Statistics();
 
       for (Stressor stressor : stressors) {
-         duration += stressor.totalDuration();
-         readsDurations += stressor.readDuration;
-         writesDurations += stressor.writeDuration;
-         transactionDuration += stressor.getTransactionsDuration();
-
-         reads += stressor.reads;
-         writes += stressor.writes;
-         failures += stressor.nrFailures;
+         stats.merge(stressor.stats);
       }
 
       Map<String, Object> results = new LinkedHashMap<String, Object>();
-      results.put("DURATION", duration);
-      double requestPerSec = (reads + writes) / ((duration / numThreads) / NANOSECS_IN_SEC);
-      results.put("REQ_PER_SEC", requestPerSec);
-      if (reads > 0) {
-         results.put("READS_PER_SEC", reads / ((readsDurations / numThreads) / NANOSECS_IN_SEC));
-      } else {
-         results.put("READS_PER_SEC", 0);
-      }
-      if (writes > 0) {
-         results.put("WRITES_PER_SEC", writes / ((writesDurations / numThreads) / NANOSECS_IN_SEC));
-      } else {
-         results.put("WRITES_PER_SEC", 0);
-      }
-      results.put("READ_COUNT", reads);
-      results.put("WRITE_COUNT", writes);
-      results.put("FAILURES", failures);
+      results.put("DURATION", stats.getResponseTimeSum() + stats.getTxOverheadSum());
+      results.put("REQ_PER_SEC", numThreads * stats.getOperationsPerSecond());
+      results.put("READS_PER_SEC", numThreads * stats.getReadsPerSecond(true));
+      results.put("READS_PER_SEC_NET", numThreads * stats.getReadsPerSecond(false));
+      results.put("WRITES_PER_SEC", numThreads * stats.getWritesPerSecond(true));
+      results.put("WRITES_PER_SEC_NET", numThreads * stats.getWritesPerSecond(false));
+      results.put("READ_COUNT", stats.getNumReads());
+      results.put("WRITE_COUNT", stats.getNumWrites());
+      results.put("FAILURES", stats.getNumErrors());
       if (useTransactions) {
-         double txPerSec = getTxCount() / ((transactionDuration / numThreads) / NANOSECS_IN_SEC);
-         results.put("TX_PER_SEC", txPerSec);
+         results.put("TX_COUNT", stats.getNumTransactions());
+         results.put("TX_PER_SEC", numThreads * stats.getTransactionsPerSecond());
       }
-      log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
+      log.info("Finished generating report. Nr of failed operations on this node is: " + stats.getNumErrors() +
                      ". Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
       return results;
    }
@@ -237,14 +216,10 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       private ArrayList<Object> pooledKeys = new ArrayList<Object>(numEntries);
 
       private int threadIndex;
-      private int nrFailures;
-      private long readDuration = 0;
-      private long writeDuration = 0;
-      private long transactionDuration = 0;
-      private long reads;
-      private long writes;
       private final String bucketId;
       boolean txNotCompleted = false;
+      long transactionDuration = 0;
+      public Statistics stats = new Statistics();
 
       public Stressor(int threadIndex) {
          super("Stressor-" + threadIndex);         
@@ -294,9 +269,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             Object result = null;
 
             if (randomAction < readPercentage) {
-               result = doRead(key, i);
+               result = makeRequest(key, i, Operation.GET, null);
             } else {
-               doWrite(key, generateRandomBytes(entrySize), i);
+               makeRequest(key, i, Operation.PUT, generateRandomBytes(entrySize));
             }
 
             i++;
@@ -304,78 +279,70 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          }
 
          if (txNotCompleted) {
-            long start = System.nanoTime();
-            completeTransaction(-1, true);
-            transactionDuration += System.nanoTime() - start;
+            try {
+               long endTxTime = endTransaction();
+               stats.registerRequest(transactionDuration + endTxTime, 0, Operation.TRANSACTION, false);
+            } catch (TransactionException e) {
+               stats.registerError(transactionDuration + e.getOperationDuration(), 0, Operation.TRANSACTION);
+            }
+            transactionDuration = 0;
          }
       }
 
-      private long startTx(int iteration) {
-         long start = System.nanoTime();
-         txNotCompleted = startTransaction(iteration);
-         long txStartTime = 0;
-         if (txNotCompleted) { //if a transaction has been started add the starting time
-            txStartTime = System.nanoTime() - start;
-            transactionDuration += txStartTime;
+      private Object makeRequest(Object key, int iteration, Operation operation, Object payload) {
+         long startTxTime = 0;
+         if (useTransactions && shouldStartTransaction(iteration)) {
+            try {
+               startTxTime = startTransaction();
+               transactionDuration = startTxTime;
+               txNotCompleted = true;
+            } catch (TransactionException e) {
+               stats.registerError(e.getOperationDuration(), 0, Operation.TRANSACTION);
+               return null;
+            }
          }
-         return txStartTime;
-      }
-
-      private long endTx(int iteration, long operationDuration) {
-         transactionDuration += operationDuration;
-         long start = System.nanoTime();
-         //if we commit the transaction add the time needed for transaction commit as well
-         long txEndTime = 0;
-         if (completeTransaction(iteration, false)) {
-            txEndTime = System.nanoTime() - start;
-            txNotCompleted = false;
-            transactionDuration += txEndTime;
-         }
-         return txEndTime;
-      }
-
-      private Object doRead(Object key, int iteration) {
-         long txOverhead = 0;
-         if (useTransactions) txOverhead = startTx(iteration);
 
          Object result = null;
+         boolean successfull;
          long start = System.nanoTime();
+         long operationDuration;
          try {
-            result = cacheWrapper.get(bucketId, key);
+            switch (operation) {
+               case GET:
+                  result = cacheWrapper.get(bucketId, key);
+                  break;
+               case PUT:
+                  cacheWrapper.put(bucketId, key, payload);
+                  break;
+               default:
+                  throw new IllegalArgumentException();
+            }
+            operationDuration = System.nanoTime() - start;
+            successfull = true;
          } catch (Exception e) {
+            operationDuration = System.nanoTime() - start;
             log.warn(e);
-            nrFailures++;
+            successfull = false;
          }
-         long operationDuration = System.nanoTime() - start;
+         transactionDuration += operationDuration;
 
-         if (useTransactions) txOverhead += endTx(iteration, operationDuration);
-         readDuration += operationDuration;
-         if (useTransactions) readDuration += txOverhead;
-         reads++;
+         long endTxTime = 0;
+         if (useTransactions && shouldEndTransaction(iteration)) {
+            try {
+               endTxTime = endTransaction();
+               stats.registerRequest(transactionDuration + endTxTime, 0, Operation.TRANSACTION, false);
+               txNotCompleted = false;
+            } catch (TransactionException e) {
+               endTxTime = e.getOperationDuration();
+               stats.registerError(transactionDuration + endTxTime, 0, Operation.TRANSACTION);
+            }
+         }
+         if (successfull) {
+            stats.registerRequest(operationDuration, startTxTime + endTxTime, operation, result == null);
+         } else {
+            stats.registerError(operationDuration, startTxTime + endTxTime, operation);
+         }
          return result;
-      }
-
-      private void doWrite(Object key, Object payload, int iteration) {
-         long txOverhead = 0;
-         if (useTransactions) txOverhead = startTx(iteration);
-
-         long start = System.nanoTime();
-         try {
-            cacheWrapper.put(bucketId, key, payload);
-         } catch (Exception e) {
-            log.warn(e);
-            nrFailures++;
-         }
-         long operationDuration = System.nanoTime() - start;
-
-         if (useTransactions) txOverhead += endTx(iteration, operationDuration);
-         writeDuration += operationDuration;
-         if (useTransactions) writeDuration += txOverhead;
-         writes++;
-      }
-
-      public long totalDuration() {
-         return readDuration + writeDuration;
       }
 
       public void initialiseKeys() {
@@ -403,63 +370,54 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          return pooledKeys.get(keyIndex);
       }
 
-      public long getTransactionsDuration() {
-         return transactionDuration;
-      }
-
-      public int getNrFailures() {
-         return nrFailures;
-      }
-
-      public long getReadDuration() {
-         return readDuration;
-      }
-
-      public long getWriteDuration() {
-         return writeDuration;
-      }
-
-      public long getReads() {
-         return reads;
-      }
-
-      public long getWrites() {
-         return writes;
-      }
-      
       private void clean() {
-         nrFailures = 0;
-         readDuration = 0;
-         writeDuration = 0;
-         transactionDuration = 0;
-         reads = 0;
-         writes = 0;
+         stats = new Statistics();
       }
-   }
 
-   private boolean startTransaction(int i) {
-      if ((i % transactionSize) == 0) {
+      private class TransactionException extends Exception {
+         private final long operationDuration;
+
+         public TransactionException(long duration, Exception cause) {
+            super(cause);
+            this.operationDuration = duration;
+         }
+
+         public long getOperationDuration() {
+            return operationDuration;
+         }
+      }
+
+      private long startTransaction() throws TransactionException {
+         long start = System.nanoTime();
          try {
             cacheWrapper.startTransaction();
          } catch (Exception e) {
-            log.error("Cannot start transaction");
+            long time = System.nanoTime() - start;
+            log.error("Failed to start transaction", e);
+            throw new TransactionException(time, e);
          }
-         return true;
+         return System.nanoTime() - start;
       }
-      return false;
-   }
 
-   private boolean completeTransaction(int i, boolean force) {
-      if ((((i + 1) % transactionSize) == 0) || force) {
+      private long endTransaction() throws TransactionException {
+         long start = System.nanoTime();
          try {
             cacheWrapper.endTransaction(commitTransactions);
          } catch (Exception e) {
-            log.error("Issues committing the transaction", e);
+            long time = System.nanoTime() - start;
+            log.error("Failed to end transaction", e);
+            throw new TransactionException(time, e);
          }
-         txCount.incrementAndGet();
-         return true;
+         return System.nanoTime() - start;
       }
-      return false;
+   }
+
+   private boolean shouldStartTransaction(int i) {
+      return (i % transactionSize) == 0;
+   }
+
+   private boolean shouldEndTransaction(int i) {
+      return ((i + 1) % transactionSize) == 0;
    }
 
    protected int getTxCount() {

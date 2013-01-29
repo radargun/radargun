@@ -25,10 +25,6 @@ public class BackgroundOpsManager {
     */
    public static final String NAME = "BackgroundOpsManager";
 
-   public enum Operation {
-      GET, PUT, REMOVE
-   }
-   
    private static Logger log = Logger.getLogger(BackgroundOpsManager.class);
 
    private int puts;
@@ -46,7 +42,7 @@ public class BackgroundOpsManager {
    private volatile boolean stressorsRunning = false;
    private int numSlaves;
    private int slaveIndex;
-   private List<BackgroundStatistics> stats;
+   private List<Statistics> stats;
    private BackgroundStatsThread backgroundStatsThread;
    private long statsIteration;
    private boolean loaded = false;
@@ -102,13 +98,13 @@ public class BackgroundOpsManager {
    private BackgroundOpsManager() {
    }
 
-   public BackgroundOpsManager.Operation getOperation(Random rand) {
+   public Operation getOperation(Random rand) {
       int r = rand.nextInt(operations);
       if (r < gets) {
-         return BackgroundOpsManager.Operation.GET;
+         return Operation.GET;
       } else if (r < gets + puts) {
-         return BackgroundOpsManager.Operation.PUT;
-      } else return BackgroundOpsManager.Operation.REMOVE;
+         return Operation.PUT;
+      } else return Operation.REMOVE;
    }
 
    public synchronized void startStressors() {
@@ -215,7 +211,7 @@ public class BackgroundOpsManager {
 
    public synchronized void startStats() {
       if (stats == null) {
-         stats = new ArrayList<BackgroundStatistics>();
+         stats = new ArrayList<Statistics>();
       }
       if (sizeThread == null) {
          sizeThread = new SizeThread();
@@ -227,7 +223,7 @@ public class BackgroundOpsManager {
       }
    }
 
-   public synchronized List<BackgroundStatistics> stopStats() {
+   public synchronized List<Statistics> stopStats() {
       if (backgroundStatsThread == null || stats == null) {
          throw new IllegalStateException("Stat thread not running");
       }
@@ -239,14 +235,14 @@ public class BackgroundOpsManager {
       } catch (InterruptedException e) {
          log.error("Interrupted while waiting for stat thread to end.");
       }
-      List<BackgroundStatistics> statsToReturn = stats;
+      List<Statistics> statsToReturn = stats;
       stats = null;
       return statsToReturn;
    }
 
    private class BackgroundStatsThread extends Thread {
 
-      private BackgroundStatistics nodeDownStats = new BackgroundStatistics(false);
+      private SynchronizedStatistics nodeDownStats = new SynchronizedStatistics(false);
 
       public BackgroundStatsThread() {
          super("BackgroundStatsThread");
@@ -264,15 +260,15 @@ public class BackgroundOpsManager {
          }
       }
 
-      private BackgroundStatistics gatherStats() {
+      private SynchronizedStatistics gatherStats() {
          long now = System.currentTimeMillis();
          if (!stressorsRunning) {
             return nodeDownStats.snapshot(true, now);
          } else {
             nodeDownStats.reset(now); // we need to reset should we need them in next round
-            BackgroundStatistics r = null;
+            SynchronizedStatistics r = null;
             for (int i = 0; i < stressorThreads.length; i++) {
-               BackgroundStatistics threadStats = stressorThreads[i].getStatsSnapshot(true, now);
+               SynchronizedStatistics threadStats = stressorThreads[i].getStatsSnapshot(true, now);
                if (r == null) {
                   r = threadStats;
                } else {
@@ -336,9 +332,9 @@ public class BackgroundOpsManager {
       BackgroundOpsManager instance = getInstance(slaveState);
       if (instance != null) {
          instance.stopStressors();
-      }
-      if (destroyAll) {
-         instance.destroy();
+         if (destroyAll) {
+            instance.destroy();
+         }
       }
    }
 

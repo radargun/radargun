@@ -323,7 +323,7 @@
    </complexType>
    <complexType name="StopBackgroundStatistics">
       <annotation>
-         <documentation>Stop BackgroundStatistics and return collected statistics to master.</documentation>
+         <documentation>Stop Statistics and return collected statistics to master.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist"/>
@@ -930,7 +930,7 @@
    </complexType>
    <complexType name="ReportBackgroundStats">
       <annotation>
-         <documentation>Generates reports from BackgroundStatistics.</documentation>
+         <documentation>Generates reports from Statistics.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractMaster">

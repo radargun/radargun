@@ -8,7 +8,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.BackgroundOpsManager;
-import org.radargun.stressors.BackgroundStatistics;
+import org.radargun.stressors.Statistics;
 
 /**
  * // TODO: Document this
@@ -16,7 +16,7 @@ import org.radargun.stressors.BackgroundStatistics;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  * @since 1/4/13
  */
-@Stage(doc = "Stop BackgroundStatistics and return collected statistics to master.")
+@Stage(doc = "Stop Statistics and return collected statistics to master.")
 public class StopBackgroundStatisticsStage extends AbstractDistStage {
 
    @Override
@@ -41,10 +41,10 @@ public class StopBackgroundStatisticsStage extends AbstractDistStage {
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
-      Map<Integer, List<BackgroundStatistics>> result = new HashMap<Integer, List<BackgroundStatistics>>();
+      Map<Integer, List<Statistics>> result = new HashMap<Integer, List<Statistics>>();
       for (DistStageAck ack : acks) {
          DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-         result.put(dack.getSlaveIndex(), (List<BackgroundStatistics>) dack.getPayload());
+         result.put(dack.getSlaveIndex(), (List<Statistics>) dack.getPayload());
          if (dack.isError()) {
             return false;
          }

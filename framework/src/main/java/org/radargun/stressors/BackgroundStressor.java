@@ -20,7 +20,7 @@ class BackgroundStressor extends Thread {
 
    private Random rand = new Random();
    private long lastOpStartTime;
-   private BackgroundStatistics threadStats = new BackgroundStatistics();
+   private SynchronizedStatistics threadStats = new SynchronizedStatistics();
    private int keyRangeStart;
    private int keyRangeEnd;
    private List<Range> deadSlavesRanges;
@@ -100,16 +100,16 @@ class BackgroundStressor extends Thread {
    }
 
    private void resetLastOpTime() {
-      lastOpStartTime = System.currentTimeMillis();
+      lastOpStartTime = System.nanoTime();
    }
 
    private long lastOpTime() {
-      return System.currentTimeMillis() - lastOpStartTime;
+      return System.nanoTime() - lastOpStartTime;
    }
 
    private void makeRequest() throws InterruptedException {
       String key = null;
-      BackgroundOpsManager.Operation operation = backgroundOpsManager.getOperation(rand);
+      Operation operation = backgroundOpsManager.getOperation(rand);
       CacheWrapper cacheWrapper = backgroundOpsManager.getCacheWrapper();
       try {
          key = key(currentKey++);
@@ -126,15 +126,15 @@ class BackgroundStressor extends Thread {
          {
          case GET:
             result = cacheWrapper.get(backgroundOpsManager.getBucketId(), key);
-            threadStats.registerRequest(lastOpTime(), operation, result == null);
+            threadStats.registerRequest(lastOpTime(), 0, operation, result == null);
             break;
          case PUT:
             cacheWrapper.put(backgroundOpsManager.getBucketId(), key, generateRandomEntry(backgroundOpsManager.getEntrySize()));
-            threadStats.registerRequest(lastOpTime(), operation, false);
+            threadStats.registerRequest(lastOpTime(), 0, operation, false);
             break;
          case REMOVE:
             result = cacheWrapper.remove(backgroundOpsManager.getBucketId(), key);
-            threadStats.registerRequest(lastOpTime(), operation, result == null);
+            threadStats.registerRequest(lastOpTime(), 0, operation, result == null);
             break;
          }
          if (transactionSize != -1) {
@@ -161,7 +161,7 @@ class BackgroundStressor extends Thread {
             }
             remainingTxOps = backgroundOpsManager.getTransactionSize();
          }
-         threadStats.registerError(lastOpTime(), operation);
+         threadStats.registerError(lastOpTime(), 0, operation);
       }
    }
 
@@ -190,8 +190,8 @@ class BackgroundStressor extends Thread {
       terminate = true;
    }
 
-   public BackgroundStatistics getStatsSnapshot(boolean reset, long time) {
-      BackgroundStatistics snapshot = threadStats.snapshot(reset,  time);
+   public SynchronizedStatistics getStatsSnapshot(boolean reset, long time) {
+      SynchronizedStatistics snapshot = threadStats.snapshot(reset,  time);
       return snapshot;
    }
 

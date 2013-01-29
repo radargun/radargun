@@ -11,15 +11,45 @@ import java.util.List;
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
 * @since 1/3/13
 */
-public class BackgroundStatistics implements Serializable {
+public class Statistics implements Serializable {
 
+   public static final long NS_IN_SEC = 1000 * 1000 * 1000;
+   public static final long NS_IN_MS = 1000 * 1000;
    protected boolean nodeUp = true;
-   protected boolean snapshot = false;
+
+   public double getOperationsPerSecond() {
+      return NS_IN_SEC * getNumberOfRequests() / getResponseTimeSum();
+   }
+
+   public double getReadsPerSecond(boolean includeOverhead) {
+      return getStats.getPerSecond(includeOverhead);
+   }
+
+   public double getWritesPerSecond(boolean includeOverhead) {
+      return putStats.getPerSecond(includeOverhead);
+   }
+
+   public double getTransactionsPerSecond() {
+      return txStats.getPerSecond(false);
+   }
+
+   public long getNumReads() {
+      return getStats.requests;
+   }
+
+   public long getNumWrites() {
+      return putStats.requests;
+   }
+
+   public long getNumTransactions() {
+      return txStats.requests;
+   }
 
    protected static class OperationStats implements Serializable {
       public long requests;
       public long responseTimeMax = Long.MIN_VALUE;
       public long responseTimeSum;
+      public long txOverhead;
       public long errors;
 
       public OperationStats copy() {
@@ -27,6 +57,7 @@ public class BackgroundStatistics implements Serializable {
          copy.requests = requests;
          copy.responseTimeMax = responseTimeMax;
          copy.responseTimeSum = responseTimeSum;
+         copy.txOverhead = txOverhead;
          copy.errors = errors;
          return copy;
       }
@@ -35,18 +66,25 @@ public class BackgroundStatistics implements Serializable {
          requests += other.requests;
          responseTimeMax = Math.max(responseTimeMax, other.responseTimeMax);
          responseTimeSum += other.responseTimeSum;
+         txOverhead += other.txOverhead;
          errors += other.errors;
       }
 
+      public double getPerSecond(boolean includeOverhead) {
+         if (responseTimeSum == 0) return 0;
+         return NS_IN_SEC * requests / (double) (responseTimeSum + (includeOverhead ? txOverhead : 0));
+      }
+
       public String toString() {
-         return String.format("requests=%d, responseTimeMax=%d, responseTimeSum=%d, errors=%d",
-                              requests, responseTimeMax, responseTimeSum, errors);
+         return String.format("requests=%d, responseTimeMax=%d, responseTimeSum=%d, errors=%d, txOverhead=%d",
+                              requests, responseTimeMax, responseTimeSum, errors, txOverhead);
       }
    }
 
    protected OperationStats putStats = new OperationStats();
    protected OperationStats getStats = new OperationStats();
    protected OperationStats removeStats = new OperationStats();
+   protected OperationStats txStats = new OperationStats();
 
    protected long requestsNullGet;
 
@@ -55,38 +93,41 @@ public class BackgroundStatistics implements Serializable {
 
    protected int cacheSize;
 
-   public BackgroundStatistics(boolean nodeUp) {
+   public Statistics(boolean nodeUp) {
       this.nodeUp = nodeUp;
    }
 
-   public BackgroundStatistics() {
-      super();
-      intervalBeginTime = System.currentTimeMillis();
+   public Statistics() {
+      intervalBeginTime = System.nanoTime();
       intervalEndTime = intervalBeginTime;
+   }
+
+   protected Statistics create() {
+      return new Statistics();
    }
 
    @Override
    public String toString() {
-      return String.format("Stats(nodeUp=%s, snapshot=%s, interval=%d-%d, cacheSize=%d, putStats=[%s], getStats=[%s, nullGet=%d], removeStats=[%s])",
-                           nodeUp, snapshot, intervalBeginTime, intervalEndTime, cacheSize, putStats, getStats, requestsNullGet, removeStats);
+      return String.format("Stats(nodeUp=%s, interval=%d-%d, cacheSize=%d, putStats=[%s], getStats=[%s, nullGet=%d], removeStats=[%s], transactionStats=[%s])",
+                           nodeUp, intervalBeginTime, intervalEndTime, cacheSize, putStats, getStats, requestsNullGet, removeStats, txStats);
    }
 
    public boolean isNodeUp() {
       return nodeUp;
    }
 
-   public synchronized void registerRequest(long responseTime, BackgroundOpsManager.Operation operation, boolean isNull) {
-      ensureNotSnapshot();
+   public void registerRequest(long responseTime, long txOverhead, Operation operation, boolean isNull) {
       OperationStats stats = getOperationStats(operation);
       stats.requests++;
       stats.responseTimeMax = Math.max(stats.responseTimeMax, responseTime);
       stats.responseTimeSum += responseTime;
+      stats.txOverhead += txOverhead;
       if (isNull) {
          requestsNullGet++;
       }
    }
 
-   private OperationStats getOperationStats(BackgroundOpsManager.Operation operation) {
+   private OperationStats getOperationStats(Operation operation) {
       switch (operation) {
          case GET:
             return getStats;
@@ -94,59 +135,46 @@ public class BackgroundStatistics implements Serializable {
             return putStats;
          case REMOVE:
             return removeStats;
+         case TRANSACTION:
+            return txStats;
          default:
             throw new IllegalArgumentException();
       }
    }
 
-   public synchronized void registerError(long responseTime, BackgroundOpsManager.Operation operation) {
+   public void registerError(long responseTime, long txOverhead, Operation operation) {
       OperationStats stats = getOperationStats(operation);
       stats.requests++;
       stats.responseTimeSum += responseTime;
       stats.responseTimeMax = Math.max(stats.responseTimeMax, responseTime);
+      stats.txOverhead += txOverhead;
       stats.errors++;
    }
 
-   public synchronized void reset(long time) {
-      ensureNotSnapshot();
+   public void reset(long time) {
       intervalBeginTime = time;
       intervalEndTime = intervalBeginTime;
       putStats = new OperationStats();
       getStats = new OperationStats();
       removeStats = new OperationStats();
+      txStats = new OperationStats();
       requestsNullGet = 0;
    }
 
-   public synchronized BackgroundStatistics snapshot(boolean reset, long time) {
-      ensureNotSnapshot();
-      BackgroundStatistics result = new BackgroundStatistics();
-
-      fillCopy(result);
-
-      result.intervalEndTime = time;
-      result.snapshot = true;
-      result.nodeUp = nodeUp;
-      if (reset) {
-         reset(time);
-      }
-      return result;
-   }
-
-   public synchronized BackgroundStatistics copy() {
-      BackgroundStatistics result = new BackgroundStatistics();
+   public Statistics copy() {
+      Statistics result = create();
       fillCopy(result);
       return result;
    }
 
-   protected void fillCopy(BackgroundStatistics result) {
-      result.snapshot = snapshot;
-
+   protected void fillCopy(Statistics result) {
       result.intervalBeginTime = intervalBeginTime;
       result.intervalEndTime = intervalEndTime;
 
       result.putStats = putStats.copy();
       result.getStats = getStats.copy();
       result.removeStats = removeStats.copy();
+      result.txStats = txStats.copy();
       result.requestsNullGet = requestsNullGet;
    }
 
@@ -156,58 +184,45 @@ public class BackgroundStatistics implements Serializable {
     *
     * @param otherStats
     */
-   public synchronized void merge(BackgroundStatistics otherStats) {
-      ensureSnapshot();
-      otherStats.ensureSnapshot();
+   public void merge(Statistics otherStats) {
       intervalBeginTime = Math.min(otherStats.intervalBeginTime, intervalBeginTime);
       intervalEndTime = Math.max(otherStats.intervalEndTime, intervalEndTime);
       putStats.merge(otherStats.putStats);
       getStats.merge(otherStats.getStats);
       removeStats.merge(otherStats.removeStats);
+      txStats.merge(otherStats.txStats);
       requestsNullGet += otherStats.requestsNullGet;
    }
 
-   public synchronized static BackgroundStatistics merge(Collection<BackgroundStatistics> set) {
+   public static Statistics merge(Collection<Statistics> set) {
       if (set.size() == 0) {
          return null;
       }
-      Iterator<BackgroundStatistics> elems = set.iterator();
-      BackgroundStatistics res = elems.next().copy();
+      Iterator<Statistics> elems = set.iterator();
+      Statistics res = elems.next().copy();
       while (elems.hasNext()) {
          res.merge(elems.next());
       }
       return res;
    }
 
-   public boolean isSnapshot() {
-      return snapshot;
-   }
-
-   protected void ensureSnapshot() {
-      if (!snapshot) {
-         throw new RuntimeException("this operation can be performed only on snapshot");
-      }
-   }
-
-   protected void ensureNotSnapshot() {
-      if (snapshot) {
-         throw new RuntimeException("this operation cannot be performed on snapshot");
-      }
-   }
-
    public long getNumErrors() {
       return putStats.errors + getStats.errors + removeStats.errors;
    }
 
-   public synchronized long getNumberOfRequests() {
+   public long getNumberOfRequests() {
       return putStats.requests + getStats.requests + removeStats.requests;
    }
 
-   private long getResponseTimeSum() {
+   public long getResponseTimeSum() {
       return putStats.responseTimeSum + getStats.responseTimeSum + removeStats.responseTimeSum;
    }
 
-   public synchronized double getAvgResponseTime() {
+   public long getTxOverheadSum() {
+      return putStats.txOverhead + getStats.txOverhead + removeStats.txOverhead;
+   }
+
+   public double getAvgResponseTime() {
       if (getNumberOfRequests() == 0) {
          return Double.NaN;
       } else {
@@ -215,23 +230,26 @@ public class BackgroundStatistics implements Serializable {
       }
    }
 
-   public synchronized long getDuration() {
-      return intervalEndTime - intervalBeginTime;
+   /* In nanoseconds */
+   public long getDuration() {
+      return (intervalEndTime - intervalBeginTime) * NS_IN_MS;
    }
 
-   public synchronized long getIntervalBeginTime() {
+   /* In milliseconds since epoch */
+   public long getIntervalBeginTime() {
       return intervalBeginTime;
    }
 
-   public synchronized long getIntervalEndTime() {
+   /* In milliseconds since epoch */
+   public long getIntervalEndTime() {
       return intervalEndTime;
    }
 
-   public synchronized double getThroughput() {
+   public double getThroughput() {
       if (getDuration() == 0) {
          return Double.NaN;
       } else {
-         return ((double) getNumberOfRequests()) * ((double) 1000) / ((double) getDuration());
+         return ((double) getNumberOfRequests()) * ((double) NS_IN_SEC) / ((double) getDuration());
       }
    }
 
@@ -239,13 +257,13 @@ public class BackgroundStatistics implements Serializable {
       return cacheSize;
    }
 
-   public static double getCacheSizeMaxRelativeDeviation(List<BackgroundStatistics> stats) {
+   public static double getCacheSizeMaxRelativeDeviation(List<Statistics> stats) {
       if (stats.isEmpty() || stats.size() == 1) {
          return 0;
       }
       double sum = 0;
       int cnt = 0;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          if (s.isNodeUp() && s.cacheSize != -1) {
             sum += (double) s.cacheSize;
             cnt++;
@@ -253,7 +271,7 @@ public class BackgroundStatistics implements Serializable {
       }
       double avg = sum / ((double) cnt);
       double maxDev = -1;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          if (s.isNodeUp() && s.cacheSize != -1) {
             double dev = Math.abs(avg - ((double) s.cacheSize));
             if (dev > maxDev) {
@@ -268,9 +286,9 @@ public class BackgroundStatistics implements Serializable {
       return requestsNullGet;
    }
 
-   public static long getIntervalBeginMin(List<BackgroundStatistics> stats) {
+   public static long getIntervalBeginMin(List<Statistics> stats) {
       long ret = Long.MAX_VALUE;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          if (s.intervalBeginTime < ret) {
             ret = s.intervalBeginTime;
          }
@@ -278,9 +296,9 @@ public class BackgroundStatistics implements Serializable {
       return ret;
    }
 
-   public static long getIntervalBeginMax(List<BackgroundStatistics> stats) {
+   public static long getIntervalBeginMax(List<Statistics> stats) {
       long ret = Long.MIN_VALUE;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          if (s.intervalBeginTime > ret) {
             ret = s.intervalBeginTime;
          }
@@ -288,9 +306,9 @@ public class BackgroundStatistics implements Serializable {
       return ret;
    }
 
-   public static long getIntervalEndMin(List<BackgroundStatistics> stats) {
+   public static long getIntervalEndMin(List<Statistics> stats) {
       long ret = Long.MAX_VALUE;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          if (s.intervalEndTime < ret) {
             ret = s.intervalEndTime;
          }
@@ -298,9 +316,9 @@ public class BackgroundStatistics implements Serializable {
       return ret;
    }
 
-   public static long getIntervalEndMax(List<BackgroundStatistics> stats) {
+   public static long getIntervalEndMax(List<Statistics> stats) {
       long ret = Long.MIN_VALUE;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          if (s.intervalEndTime > ret) {
             ret = s.intervalEndTime;
          }
@@ -308,31 +326,31 @@ public class BackgroundStatistics implements Serializable {
       return ret;
    }
 
-   public static double getTotalThroughput(List<BackgroundStatistics> stats) {
+   public static double getTotalThroughput(List<Statistics> stats) {
       double ret = 0;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          ret += s.getThroughput();
       }
       return ret;
    }
 
-   public static double getAvgThroughput(List<BackgroundStatistics> stats) {
+   public static double getAvgThroughput(List<Statistics> stats) {
       return getTotalThroughput(stats) / ((double) stats.size());
    }
 
-   public static double getAvgRespTime(List<BackgroundStatistics> stats) {
+   public static double getAvgRespTime(List<Statistics> stats) {
       long responseTimeSum = 0;
       long numRequests = 0;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          responseTimeSum += s.getResponseTimeSum();
          numRequests += s.getNumberOfRequests();
       }
       return ((double) responseTimeSum) / ((double) numRequests);
    }
 
-   public static long getMaxRespTime(List<BackgroundStatistics> stats) {
+   public static long getMaxRespTime(List<Statistics> stats) {
       long ret = Long.MIN_VALUE;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          ret = Math.max(ret, s.getStats.responseTimeMax);
          ret = Math.max(ret, s.putStats.responseTimeMax);
          ret = Math.max(ret, s.removeStats.responseTimeMax);
@@ -340,25 +358,25 @@ public class BackgroundStatistics implements Serializable {
       return ret;
    }
 
-   public static long getTotalCacheSize(List<BackgroundStatistics> stats) {
+   public static long getTotalCacheSize(List<Statistics> stats) {
       long ret = 0;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          ret += s.getCacheSize();
       }
       return ret;
    }
 
-   public static long getTotalErrors(List<BackgroundStatistics> stats) {
+   public static long getTotalErrors(List<Statistics> stats) {
       long ret = 0;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          ret += s.getNumErrors();
       }
       return ret;
    }
 
-   public static long getTotalNullRequests(List<BackgroundStatistics> stats) {
+   public static long getTotalNullRequests(List<Statistics> stats) {
       long ret = 0;
-      for (BackgroundStatistics s : stats) {
+      for (Statistics s : stats) {
          ret += s.getRequestsNullGet();
       }
       return ret;
