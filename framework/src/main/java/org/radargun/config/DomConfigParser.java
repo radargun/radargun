@@ -191,7 +191,19 @@ public class DomConfigParser extends ConfigParser {
       Element benchmarkEl = (Element) configRoot.getElementsByTagName("benchmark").item(0);
       prototype.setInitSize(ConfigHelper.getIntAttribute(benchmarkEl, "initSize"));
       prototype.setMaxSize(ConfigHelper.getIntAttribute(benchmarkEl, "maxSize"));
-      prototype.setIncrement(ConfigHelper.getIntAttribute(benchmarkEl, "increment"));
+      String inc = ConfigHelper.getStrAttribute(benchmarkEl, "increment").trim();
+      ScalingBenchmarkConfig.IncrementMethod incMethod = ScalingBenchmarkConfig.IncrementMethod.ADD;
+      int incCount = 0;
+      if (inc.startsWith("*")) {
+         inc = inc.substring(1).trim();
+         incMethod = ScalingBenchmarkConfig.IncrementMethod.MULTIPLY;
+      }
+      try {
+         incCount = Integer.parseInt(inc);
+      } catch (NumberFormatException e) {
+         throw new IllegalArgumentException("Cannot parse increment!", e);
+      }
+      prototype.setIncrement(incCount, incMethod);
 
       NodeList childNodes = benchmarkEl.getChildNodes();
       for (int i = 0; i < childNodes.getLength(); i++) {

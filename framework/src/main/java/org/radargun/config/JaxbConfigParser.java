@@ -1,5 +1,14 @@
 package org.radargun.config;
 
+import java.io.File;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.Master;
@@ -8,15 +17,6 @@ import org.radargun.config.jaxb.FixedSizeBenchmark;
 import org.radargun.config.jaxb.Property;
 import org.radargun.config.jaxb.ScalingBenchmark;
 import org.radargun.config.jaxb.Stage;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Unmarshaller;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.io.File;
 
 /**
  * Helper class for assembling JAXB configs. 
@@ -47,7 +47,7 @@ public class JaxbConfigParser extends ConfigParser {
          sbc.setConfigName(sb.getConfigName());
          sbc.setInitSize(toInt(sb.getInitSize()));
          sbc.setMaxSize(toInt(sb.getMaxSize()));
-         sbc.setIncrement(toInt(sb.getIncrement()));
+         sbc.setIncrement(toInt(sb.getIncrement()), ScalingBenchmarkConfig.IncrementMethod.ADD);
 
          List<Stage> benchmarkStagesFromXml = sb.getBenchmarkStages().getStage();
          sbc.setStages(processStages(benchmarkStagesFromXml));

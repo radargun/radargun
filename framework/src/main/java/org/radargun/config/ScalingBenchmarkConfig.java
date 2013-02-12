@@ -1,13 +1,11 @@
 package org.radargun.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-
 import org.radargun.Stage;
-
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * A scaling benchmark is one that executes on an increasing number of slaves. E.g. considering the {@link
@@ -17,6 +15,11 @@ import java.util.ArrayList;
  * @author Mircea.Markus@jboss.com
  */
 public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
+
+   public enum IncrementMethod {
+      ADD,
+      MULTIPLY
+   }
 
    // For Apache/commons/logging Log doesn't need to be static.
    protected Log log = LogFactory.getLog(ScalingBenchmarkConfig.class);
@@ -32,6 +35,7 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
 
    //optional
    private int increment = 1;
+   private IncrementMethod incrementMethod = IncrementMethod.ADD;
 
    public int getInitSize() {
       return initSize;
@@ -45,8 +49,9 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
       return increment;
    }
 
-   public void setIncrement(int increment) {
+   public void setIncrement(int increment, IncrementMethod method) {
       this.increment = increment;
+      this.incrementMethod = method;
    }
 
    public void validate() {
@@ -68,16 +73,26 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
 
    private void initialize() {
       if (!initialized) {
-         log.info("Initializing.  Starting with " + initSize + " nodes, up to "+ getMaxSize() + " nodes, incrementing by " + increment);
-         for (int i = initSize; i <= getMaxSize(); i+=increment) {
-            log.info("Initializing configuration with " + i + " nodes");
+         log.info("Initializing.  Starting with " + initSize + " nodes, up to "+ getMaxSize() + " nodes, incrementing "
+               + (incrementMethod == IncrementMethod.ADD ? "by " : "times ") + increment);
+         for (int size = initSize; size <= getMaxSize(); ) {
+            log.info("Initializing configuration with " + size + " nodes");
             FixedSizeBenchmarkConfig conf = new FixedSizeBenchmarkConfig();
             conf.setMaxSize(getMaxSize());
             conf.stages = cloneStages(this.stages);
-            conf.setSize(i);
+            conf.setSize(size);
             conf.setConfigName(super.configName);
             conf.setProductName(super.productName);
             fixedBenchmarks.add(conf);
+            if (increment == 0) break;
+            switch (incrementMethod) {
+               case ADD:
+                  size += increment;
+                  break;
+               case MULTIPLY:
+                  size *= increment;
+                  break;
+            }
          }
          initialized = true;
          log.info("Number of cluster topologies on which benchmark will be executed is " + fixedBenchmarks.size());
