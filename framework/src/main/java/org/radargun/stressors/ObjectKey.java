@@ -14,15 +14,15 @@ public class ObjectKey implements Externalizable {
 
    private int threadIndex;
 
-   private int keyIndex;
+   private long keyIndex;
 
-   public ObjectKey(int nodeIndex, int threadIndex, int keyIndex) {
+   public ObjectKey(int nodeIndex, int threadIndex, long keyIndex) {
       this.nodeIndex = nodeIndex;
       this.threadIndex = threadIndex;
       this.keyIndex = keyIndex;
    }
 
-   public ObjectKey(int threadIndex, int keyIndex) {
+   public ObjectKey(int threadIndex, long keyIndex) {
       this.threadIndex = threadIndex;
       this.keyIndex = keyIndex;
    }
@@ -31,14 +31,14 @@ public class ObjectKey implements Externalizable {
    public void writeExternal(ObjectOutput objectOutput) throws IOException {
       objectOutput.writeInt(nodeIndex);
       objectOutput.writeInt(threadIndex);
-      objectOutput.writeInt(keyIndex);
+      objectOutput.writeLong(keyIndex);
    }
 
    @Override
    public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
       this.nodeIndex = objectInput.readInt();
       this.threadIndex = objectInput.readInt();
-      this.keyIndex = objectInput.readInt();
+      this.keyIndex = objectInput.readLong();
    }
 
    @Override
@@ -68,7 +68,7 @@ public class ObjectKey implements Externalizable {
    public int hashCode() {
       int result = nodeIndex;
       result = 31 * result + threadIndex;
-      result = 31 * result + keyIndex;
+      result = 31 * result + (int) keyIndex;
       return result;
    }
 
@@ -80,14 +80,14 @@ public class ObjectKey implements Externalizable {
       return threadIndex;
    }
 
-   public int getKeyIndex() {
+   public long getKeyIndex() {
       return keyIndex;
    }
 
    /**
     * This is an index that uniquely identifies this key in the cluster.
     */
-   public int getKeyIndexInCluster(int threadCountPerNode, int keysPerThread) {
+   public long getKeyIndexInCluster(int threadCountPerNode, int keysPerThread) {
       return nodeIndex * threadCountPerNode * keysPerThread
             + threadIndex * keysPerThread
             + keyIndex;

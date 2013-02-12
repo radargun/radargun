@@ -18,7 +18,9 @@ public class Statistics implements Serializable {
    protected boolean nodeUp = true;
 
    public double getOperationsPerSecond() {
-      return NS_IN_SEC * getNumberOfRequests() / getResponseTimeSum();
+      long respSum = getResponseTimeSum();
+      if (respSum == 0) return 0;
+      return NS_IN_SEC * getNumberOfRequests() / respSum;
    }
 
    public double getReadsPerSecond(boolean includeOverhead) {
@@ -27,6 +29,10 @@ public class Statistics implements Serializable {
 
    public double getWritesPerSecond(boolean includeOverhead) {
       return putStats.getPerSecond(includeOverhead);
+   }
+
+   public double getRemovesPerSecond(boolean includeOverhead) {
+      return removeStats.getPerSecond(includeOverhead);
    }
 
    public double getTransactionsPerSecond() {
@@ -39,6 +45,10 @@ public class Statistics implements Serializable {
 
    public long getNumWrites() {
       return putStats.requests;
+   }
+
+   public long getNumRemoves() {
+      return removeStats.requests;
    }
 
    public long getNumTransactions() {

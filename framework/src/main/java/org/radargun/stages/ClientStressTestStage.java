@@ -18,11 +18,11 @@
  */
 package org.radargun.stages;
 
+import java.util.Map;
+
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stressors.ClientStressTestStressor;
-
-import java.util.Map;
 
 /**
  * Repeats the StressTest logic with variable amount of threads.
@@ -45,7 +45,7 @@ public class ClientStressTestStage extends StressTestStage {
    protected Map<String, Object> doWork() {
       log.info("Starting " + getClass().getSimpleName() + ": " + this);
       ClientStressTestStressor putGetStressor = new ClientStressTestStressor();
-      putGetStressor.setNodeIndex(getSlaveIndex());
+      putGetStressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
       putGetStressor.setNumEntries(numEntries);
       putGetStressor.setNumRequests(numRequests);
       putGetStressor.setInitThreads(initThreads);
@@ -59,6 +59,8 @@ public class ClientStressTestStage extends StressTestStage {
       putGetStressor.setCommitTransactions(commitTransactions);
       putGetStressor.setTransactionSize(transactionSize);
       putGetStressor.setDurationMillis(duration);
+      putGetStressor.setSharedKeys(sharedKeys);
+      putGetStressor.setFixedKeys(fixedKeys);
       return putGetStressor.stress(cacheWrapper);
    }
 }

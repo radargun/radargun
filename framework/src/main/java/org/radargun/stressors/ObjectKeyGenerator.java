@@ -6,7 +6,7 @@ package org.radargun.stressors;
 public class ObjectKeyGenerator implements KeyGenerator {
 
    @Override
-   public Object generateKey(int nodeIndex, int threadIndex, int keyIndex) {
+   public Object generateKey(int nodeIndex, int threadIndex, long keyIndex) {
       return new ObjectKey(nodeIndex, threadIndex, keyIndex);
    }
 

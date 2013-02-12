@@ -70,12 +70,15 @@ public class StressTestStage extends AbstractDistStage {
          "used by all threads. Default is false.")
    protected boolean sharedKeys = false;
 
+   @Property(doc = "The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.")
+   protected boolean fixedKeys = true;
+
    protected CacheWrapper cacheWrapper;
 
    protected Map<String, Object> doWork() {
       log.info("Starting "+getClass().getSimpleName()+": " + this);
       StressTestStressor stressTestStressor = new StressTestStressor();
-      stressTestStressor.setNodeIndex(getSlaveIndex());
+      stressTestStressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
       stressTestStressor.setNumEntries(numEntries);
       stressTestStressor.setNumRequests(numRequests);
       stressTestStressor.setNumThreads(numThreads);
@@ -88,6 +91,7 @@ public class StressTestStage extends AbstractDistStage {
       stressTestStressor.setTransactionSize(transactionSize);
       stressTestStressor.setDurationMillis(duration);
       stressTestStressor.setSharedKeys(sharedKeys);
+      stressTestStressor.setFixedKeys(fixedKeys);
       return stressTestStressor.stress(cacheWrapper);
    }
    

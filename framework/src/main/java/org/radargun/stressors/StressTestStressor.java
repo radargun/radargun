@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,11 +51,12 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
     */
    private long durationMillis = -1;
 
-
    /**
     * the number of threads that will work on this cache wrapper.
     */
    private int numThreads = 10;
+
+   private int numNodes = 1;
 
    /**
     * This node's index in the Radargun cluster.  -1 is used for local benchmarks.
@@ -67,7 +69,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    private boolean commitTransactions = true;
 
-   private boolean sharedKeys;
+   private boolean sharedKeys = false;
+
+   private boolean fixedKeys = true;
 
    private AtomicInteger txCount = new AtomicInteger(0);
 
@@ -76,6 +80,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    private KeyGenerator keyGenerator;
 
    private CacheWrapper cacheWrapper;
+   private ArrayList<Object> sharedKeysPool = null;
    private static final Random r = new Random();
    private volatile long startNanos;
    private volatile CountDownLatch startPoint;
@@ -92,17 +97,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       this.cacheWrapper = wrapper;
       startNanos = System.nanoTime();
       log.info("Executing: " + this.toString());
-      if (isSharedKeys()) {
-         KeyGenerator keyGenerator = getKeyGenerator();
-         for (int i = 0; i < numEntries; ++i) {
-            try {
-               wrapper.put(null, keyGenerator.generateKey(i), generateRandomBytes(entrySize));
-            } catch (Exception e) {
-               log.error("Failed to insert shared key " + i, e);
-            }
-         }
-         log.info("Shared keys loaded.");
-      }
    }
    
    public Map<String, Object> stress(CacheWrapper wrapper) {
@@ -149,8 +143,15 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       results.put("READS_PER_SEC_NET", numThreads * stats.getReadsPerSecond(false));
       results.put("WRITES_PER_SEC", numThreads * stats.getWritesPerSecond(true));
       results.put("WRITES_PER_SEC_NET", numThreads * stats.getWritesPerSecond(false));
+      if (stats.getNumRemoves() > 0) {
+         results.put("REMOVES_PER_SEC", numThreads * stats.getRemovesPerSecond(true));
+         results.put("REMOVES_PER_SEC_NET", numThreads * stats.getRemovesPerSecond(false));
+      }
       results.put("READ_COUNT", stats.getNumReads());
       results.put("WRITE_COUNT", stats.getNumWrites());
+      if (stats.getNumRemoves() > 0) {
+         results.put("REMOVE_COUNT", stats.getNumRemoves());
+      }
       results.put("FAILURES", stats.getNumErrors());
       if (useTransactions) {
          results.put("TX_COUNT", stats.getNumTransactions());
@@ -161,7 +162,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       return results;
    }
 
-   protected void executeOperations() throws Exception {      
+   protected void executeOperations() throws Exception {
       startPoint = new CountDownLatch(1);
       if (cleanUpPoint != null) {
          cleanUpPoint.countDown();
@@ -170,7 +171,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       endPoint = new CountDownLatch(numThreads);
       keyInitPoint = new CountDownLatch(numThreads - stressors.size());
       for (int threadIndex = stressors.size(); threadIndex < numThreads; threadIndex++) {
-         Stressor stressor = new Stressor(threadIndex);
+         Stressor stressor = new Stressor(threadIndex, getLogic());
          stressors.add(stressor);
          stressor.start();
       }
@@ -178,7 +179,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       keyInitPoint.await();
       startPoint.countDown();
       log.info("Started " + stressors.size() + " stressor threads.");
-            
+
       endPoint.await();
    }
    
@@ -203,34 +204,193 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       return nodeIndex == -1;
    }
 
-   public void setSharedKeys(boolean sharedAttributes) {
-      this.sharedKeys = sharedAttributes;
+   public void setSharedKeys(boolean sharedKeys) {
+      this.sharedKeys = sharedKeys;
    }
 
-   public boolean isSharedKeys() {
-      return sharedKeys;
+   public void setFixedKeys(boolean fixedKeys) {
+      this.fixedKeys = fixedKeys;
+   }
+
+   public OperationLogic getLogic() {
+      if (sharedKeys && !fixedKeys) {
+         throw new IllegalArgumentException("Cannot use both shared and non-fixed keys - not implemented");
+      } else if (!fixedKeys) {
+         return new ChangingSetOperationLogic();
+      } else if (sharedKeys) {
+         if (sharedKeysPool == null) {
+            sharedKeysPool = new ArrayList<Object>();
+         }
+         return new FixedSetSharedOperationLogic(sharedKeysPool);
+      } else {
+         return new FixedSetPerThreadOperationLogic();
+      }
+   }
+
+   protected interface OperationLogic {
+      void init(String bucketId, int threadIndex);
+      Object run(Stressor stressor, int iteration);
+   }
+
+   protected abstract class FixedSetOperationLogic implements OperationLogic {
+      private Random r = new Random();
+
+      @Override
+      public Object run(Stressor stressor, int iteration) {
+         int randomAction = r.nextInt(100);
+         int randomKeyInt = r.nextInt(numEntries - 1);
+         Object key = getKey(randomKeyInt);
+
+         if (randomAction < writePercentage) {
+            return stressor.makeRequest(key, iteration, Operation.PUT, generateRandomBytes(entrySize));
+         } else {
+            return stressor.makeRequest(key, iteration, Operation.GET, null);
+         }
+      }
+
+      public abstract Object getKey(int keyId);
+   }
+
+   protected class FixedSetPerThreadOperationLogic extends FixedSetOperationLogic {
+      private ArrayList<Object> pooledKeys = new ArrayList<Object>(numEntries);
+
+      @Override
+      public void init(String bucketId, int threadIndex) {
+         KeyGenerator keyGenerator = getKeyGenerator();
+         for (int keyIndex = 0; keyIndex < numEntries; keyIndex++) {
+            Object key = null;
+            try {
+               if (isLocalBenchmark()) {
+                  key = keyGenerator.generateKey(threadIndex, keyIndex);
+               } else {
+                  key = keyGenerator.generateKey(nodeIndex, threadIndex, keyIndex);
+               }
+               cacheWrapper.put(bucketId, key, generateRandomBytes(entrySize));
+               pooledKeys.add(key);
+            } catch (Throwable e) {
+               log.warn("Failed to insert key " + key, e);
+            }
+         }
+      }
+
+      public Object getKey(int keyId) {
+         return pooledKeys.get(keyId);
+      }
+   }
+
+   protected class FixedSetSharedOperationLogic extends FixedSetOperationLogic {
+
+      private ArrayList<Object> sharedKeys;
+
+      public FixedSetSharedOperationLogic(ArrayList<Object> sharedKeys) {
+         this.sharedKeys = sharedKeys;
+      }
+
+      @Override
+      public Object getKey(int keyId) {
+         return sharedKeys.get(keyId);
+      }
+
+      @Override
+      public void init(String bucketId, int threadIndex) {
+         KeyGenerator keyGenerator = getKeyGenerator();
+         // no point in doing this in parallel, too much overhead in synchronization
+         if (threadIndex == 0) {
+            sharedKeys.clear();
+            for (int keyIndex = 0; keyIndex < numEntries; ++keyIndex) {
+               sharedKeys.add(keyGenerator.generateKey(keyIndex));
+            }
+         }
+         int totalThreads = numThreads * numNodes;
+         for (int keyIndex = threadIndex + nodeIndex * numThreads; keyIndex < numEntries; keyIndex += totalThreads) {
+            try {
+               cacheWrapper.put(null, keyGenerator.generateKey(keyIndex), generateRandomBytes(entrySize));
+            } catch (Exception e) {
+               log.error("Failed to insert shared key " + keyIndex, e);
+            }
+         }
+      }
+   }
+
+   private static class KeyWithRemovalTime implements Comparable<KeyWithRemovalTime> {
+      public Object key;
+      public long removeTimestamp;
+
+      public KeyWithRemovalTime(Object key, long removeTimestamp) {
+         this.key = key;
+         this.removeTimestamp = removeTimestamp;
+      }
+
+      @Override
+      public int compareTo(KeyWithRemovalTime o) {
+         return o.removeTimestamp == removeTimestamp ? 0 : removeTimestamp < o.removeTimestamp ? -1 : 1;
+      }
+   }
+
+   protected class ChangingSetOperationLogic implements OperationLogic {
+      private TreeSet<KeyWithRemovalTime> scheduledKeys = new TreeSet<KeyWithRemovalTime>();
+      private Random r = new Random();
+      private int threadIndex;
+      private long nextKey = 0;
+
+      @Override
+      public void init(String bucketId, int threadIndex) {
+         this.threadIndex = threadIndex;
+      }
+
+      @Override
+      public Object run(Stressor stressor, int iteration) {
+         long timestamp = System.currentTimeMillis();
+         if (!scheduledKeys.isEmpty() && scheduledKeys.first().removeTimestamp <= timestamp) {
+            return stressor.makeRequest(scheduledKeys.pollFirst().key, iteration, Operation.REMOVE, null);
+         } else if (r.nextInt(100) >= writePercentage && scheduledKeys.size() > 0) {
+            // we cannot get random access to PriorityQueue and there is no SortedList or another appropriate structure
+            return stressor.makeRequest(getRandomKey(timestamp), iteration, Operation.GET, null);
+         } else {
+            Object key;
+            if (scheduledKeys.size() < numEntries) {
+               key = getKeyGenerator().generateKey(nodeIndex, threadIndex, nextKey++);
+               KeyWithRemovalTime pair = new KeyWithRemovalTime(key, getRandomTimestamp(timestamp));
+               scheduledKeys.add(pair);
+            } else {
+               key = getRandomKey(timestamp);
+            }
+            return stressor.makeRequest(key, iteration, Operation.PUT, generateRandomBytes(entrySize));
+         }
+      }
+
+      private long getRandomTimestamp(long current) {
+         // ~sqrt probability for 1 - maxRoot^2
+         final int maxRoot = 100;
+         int rand = r.nextInt(maxRoot);
+         return current + rand * rand + r.nextInt(2*maxRoot - 2) + 1;
+      }
+
+      private Object getRandomKey(long timestamp) {
+         KeyWithRemovalTime pair = scheduledKeys.floor(new KeyWithRemovalTime(null, getRandomTimestamp(timestamp)));
+         return pair == null ? scheduledKeys.first().key : pair.key;
+      }
    }
 
    protected class Stressor extends Thread {
-
-      private ArrayList<Object> pooledKeys = new ArrayList<Object>(numEntries);
-
       private int threadIndex;
       private final String bucketId;
       boolean txNotCompleted = false;
       long transactionDuration = 0;
       public Statistics stats = new Statistics();
+      private OperationLogic logic;
 
-      public Stressor(int threadIndex) {
+      public Stressor(int threadIndex, OperationLogic logic) {
          super("Stressor-" + threadIndex);         
          this.threadIndex = threadIndex;
+         this.logic = logic;
          this.bucketId = isLocalBenchmark() ? String.valueOf(threadIndex) : nodeIndex + "_" + threadIndex;
       }
 
       @Override
       public void run() {
          try {
-            initialiseKeys();
+            logic.init(bucketId, threadIndex);
             keyInitPoint.countDown();
             do {
                try {
@@ -250,10 +410,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       }
       
       private void runInternal() {
-         int readPercentage = 100 - writePercentage;
-         Random r = new Random();
-         int randomAction;
-         int randomKeyInt;
          try {
             startPoint.await();
             log.trace("Starting thread: " + getName());
@@ -263,17 +419,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
          int i = 0;
          while (completion.moreToRun()) {
-            randomAction = r.nextInt(100);
-            randomKeyInt = r.nextInt(numEntries - 1);
-            Object key = getKey(randomKeyInt);
-            Object result = null;
-
-            if (randomAction < readPercentage) {
-               result = makeRequest(key, i, Operation.GET, null);
-            } else {
-               makeRequest(key, i, Operation.PUT, generateRandomBytes(entrySize));
-            }
-
+            Object result = logic.run(this, i);
             i++;
             completion.logProgress(i, result, threadIndex);
          }
@@ -289,7 +435,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          }
       }
 
-      private Object makeRequest(Object key, int iteration, Operation operation, Object payload) {
+      public Object makeRequest(Object key, int iteration, Operation operation, Object payload) {
          long startTxTime = 0;
          if (useTransactions && shouldStartTransaction(iteration)) {
             try {
@@ -313,6 +459,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                   break;
                case PUT:
                   cacheWrapper.put(bucketId, key, payload);
+                  break;
+               case REMOVE:
+                  result = cacheWrapper.remove(bucketId, key);
                   break;
                default:
                   throw new IllegalArgumentException();
@@ -343,31 +492,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             stats.registerError(operationDuration, startTxTime + endTxTime, operation);
          }
          return result;
-      }
-
-      public void initialiseKeys() {
-         for (int keyIndex = 0; keyIndex < numEntries; keyIndex++) {
-            try {
-               Object key;
-               if (isSharedKeys()) {
-                  key = getKeyGenerator().generateKey(keyIndex);
-               } else if (isLocalBenchmark()) {
-                  key = getKeyGenerator().generateKey(threadIndex, keyIndex);
-               } else {
-                  key = getKeyGenerator().generateKey(nodeIndex, threadIndex, keyIndex);
-               }
-               pooledKeys.add(key);
-               if (!isSharedKeys()) { // shared keys are inserted just once
-                  cacheWrapper.put(this.bucketId, key, generateRandomBytes(entrySize));
-               }
-            } catch (Throwable e) {
-               log.warn("Error while initializing the session: ", e);
-            }
-         }
-      }
-
-      public Object getKey(int keyIndex) {
-         return pooledKeys.get(keyIndex);
       }
 
       private void clean() {
@@ -466,8 +590,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       return nodeIndex;
    }
 
-   public void setNodeIndex(int nodeIndex) {
+   public void setNodeIndex(int nodeIndex, int numNodes) {
       this.nodeIndex = nodeIndex;
+      this.numNodes = numNodes;
    }
 
    public String getKeyGeneratorClass() {

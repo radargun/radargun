@@ -53,8 +53,8 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
       Set<Address> caches = existing.getCaches();
       int clusterSize = caches.size();
 
-      int keyIndexInCluster = getSequenceNumber((ObjectKey) key);
-      int firstIndex = keyIndexInCluster % caches.size();
+      long keyIndexInCluster = getSequenceNumber((ObjectKey) key);
+      int firstIndex = (int)(keyIndexInCluster % caches.size());
 
       List<Address> result = new ArrayList<Address>();
 
@@ -70,7 +70,7 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
       return Collections.unmodifiableList(result);
    }
 
-   private int getSequenceNumber(ObjectKey key) {
+   private long getSequenceNumber(ObjectKey key) {
       return key.getKeyIndexInCluster(threadCountPerNode, keysPerThread);
    }
 

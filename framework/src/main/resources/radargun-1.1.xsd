@@ -221,6 +221,11 @@
                   <documentation>Size of the value in bytes. Default is 1000.</documentation>
                </annotation>
             </attribute>
+            <attribute name="fixedKeys" type="string">
+               <annotation>
+                  <documentation>The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="keyGeneratorClass" type="string">
                <annotation>
                   <documentation>Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.</documentation>
