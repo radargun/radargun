@@ -1,10 +1,9 @@
 package org.radargun.sysmonitor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import static java.lang.management.ManagementFactory.GARBAGE_COLLECTOR_MXBEAN_DOMAIN_TYPE;
+import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
 
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
+import java.io.Serializable;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
@@ -12,64 +11,72 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static java.lang.management.ManagementFactory.GARBAGE_COLLECTOR_MXBEAN_DOMAIN_TYPE;
-import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author Galder Zamarreno
-*/
-public class GcMonitor extends AbstractActivityMonitor {
+ */
+public class GcMonitor extends AbstractActivityMonitor implements Serializable {
+
+   /** The serialVersionUID */
+   private static final long serialVersionUID = 8983759071129628827L;
 
    private static Log log = LogFactory.getLog(GcMonitor.class);
 
-   final MBeanServerConnection con;
-   final int procCount;
-   final long cpuTimeMultiplier;
-   List<GarbageCollectorMXBean> gcMbeans;
+   boolean running = true;
+
    long gcTime;
    long prevGcTime;
    long upTime;
    long prevUpTime;
 
-   GcMonitor(MBeanServerConnection con) throws Exception {
-      this.con = con;
-      OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(con,
-                                                                          ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
-      procCount = os.getAvailableProcessors();
-      cpuTimeMultiplier = getCpuMultiplier(con);
+   public void stop() {
+      running = false;
    }
 
    public void run() {
-      try {
-         prevUpTime = upTime;
-         prevGcTime = gcTime;
+      if (running) {
+         try {
+            prevUpTime = upTime;
+            prevGcTime = gcTime;
+            MBeanServerConnection con = ManagementFactory.getPlatformMBeanServer();
+            if (con == null)
+               throw new IllegalStateException("PlatformMBeanServer not started!");
 
-         gcMbeans = getGarbageCollectorMXBeans();
-         gcTime = -1;
-         for (GarbageCollectorMXBean gcBean : gcMbeans)
-            gcTime += gcBean.getCollectionTime();
+            OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(con,
+                  ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+            int procCount = os.getAvailableProcessors();
 
-         long processGcTime = gcTime * 1000000 / procCount;
-         long prevProcessGcTime = prevGcTime * 1000000 / procCount;
-         long processGcTimeDiff = processGcTime - prevProcessGcTime;
+            List<GarbageCollectorMXBean> gcMbeans = getGarbageCollectorMXBeans(con);
+            gcTime = -1;
+            for (GarbageCollectorMXBean gcBean : gcMbeans)
+               gcTime += gcBean.getCollectionTime();
 
-         Long jmxUpTime = (Long) con.getAttribute(RUNTIME_NAME, PROCESS_UP_TIME);
-         upTime = jmxUpTime;
-         long upTimeDiff = (upTime * 1000000) - (prevUpTime * 1000000);
+            long processGcTime = gcTime * 1000000 / procCount;
+            long prevProcessGcTime = prevGcTime * 1000000 / procCount;
+            long processGcTimeDiff = processGcTime - prevProcessGcTime;
 
-         long gcUsage = upTimeDiff > 0 ? Math.min((long)
-                                                        (1000 * (float) processGcTimeDiff / (float) upTimeDiff), 1000) : 0;
+            Long jmxUpTime = (Long) con.getAttribute(RUNTIME_NAME, PROCESS_UP_TIME);
+            upTime = jmxUpTime;
+            long upTimeDiff = (upTime * 1000000) - (prevUpTime * 1000000);
 
-         addMeasurementAsPercentage(gcUsage);
+            long gcUsage = upTimeDiff > 0 ? Math.min((long) (1000 * (float) processGcTimeDiff / (float) upTimeDiff),
+                  1000) : 0;
 
+            addMeasurementAsPercentage(gcUsage);
 
-         log.trace("GC activity: " + formatPercent(gcUsage * 0.1d));
-      } catch (Exception e) {
-         log.error(e.getMessage(), e);
+            log.trace("GC activity: " + formatPercent(gcUsage * 0.1d));
+         } catch (Exception e) {
+            log.error(e.getMessage(), e);
+         }
       }
    }
 
-   private List<GarbageCollectorMXBean> getGarbageCollectorMXBeans() throws Exception {
+   private List<GarbageCollectorMXBean> getGarbageCollectorMXBeans(MBeanServerConnection con) throws Exception {
       List<GarbageCollectorMXBean> gcMbeans = null;
       // TODO: List changes, so can't really cache apparently, but how performant is this?
       if (con != null) {

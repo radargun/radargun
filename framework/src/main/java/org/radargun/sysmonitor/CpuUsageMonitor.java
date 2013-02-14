@@ -1,23 +1,27 @@
 package org.radargun.sysmonitor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.management.MBeanServerConnection;
+import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 
+import javax.management.MBeanServerConnection;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @author Galder Zamarreno
-*/
-public class CpuUsageMonitor extends AbstractActivityMonitor {
+ */
+public class CpuUsageMonitor extends AbstractActivityMonitor implements Serializable {
+
+   /** The serialVersionUID */
+   private static final long serialVersionUID = 6632071089421842090L;
 
    private static Log log = LogFactory.getLog(CpuUsageMonitor.class);
    static final String PROCESS_CPU_TIME_ATTR = "ProcessCpuTime";
 
-   final MBeanServerConnection con;
-   final long cpuTimeMultiplier;
-   final int procCount;
+   boolean running = true;
+
    long cpuTime;
    long prevCpuTime;
    long upTime;
@@ -28,36 +32,42 @@ public class CpuUsageMonitor extends AbstractActivityMonitor {
       PERCENT_FORMATTER.setMaximumIntegerDigits(3);
    }
 
-   CpuUsageMonitor(MBeanServerConnection con) throws Exception {
-      this.con = con;
-      this.cpuTimeMultiplier = getCpuMultiplier(con);
-      OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(con,
-                                                                          ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
-      procCount = os.getAvailableProcessors();
+   public void stop() {
+      running = false;
    }
 
    public void run() {
-      try {
-         prevCpuTime = cpuTime;
-         prevUpTime = upTime;
+      if (running) {
+         try {
+            prevCpuTime = cpuTime;
+            prevUpTime = upTime;
 
-         Long jmxCpuTime = (Long) con.getAttribute(OS_NAME, PROCESS_CPU_TIME_ATTR);
-         cpuTime = jmxCpuTime * cpuTimeMultiplier;
-         Long jmxUpTime = (Long) con.getAttribute(RUNTIME_NAME, PROCESS_UP_TIME);
-         upTime = jmxUpTime;
-         long upTimeDiff = (upTime * 1000000) - (prevUpTime * 1000000);
+            MBeanServerConnection con = ManagementFactory.getPlatformMBeanServer();
+            if (con == null)
+               throw new IllegalStateException("PlatformMBeanServer not started!");
 
-         long procTimeDiff = (cpuTime / procCount) - (prevCpuTime / procCount);
+            long cpuTimeMultiplier = getCpuMultiplier(con);
+            OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(con,
+                  ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+            int procCount = os.getAvailableProcessors();
 
-         long cpuUsage = upTimeDiff > 0 ? Math.min((long)
-                                                         (1000 * (float) procTimeDiff / (float) upTimeDiff), 1000) : 0;
+            Long jmxCpuTime = (Long) con.getAttribute(OS_NAME, PROCESS_CPU_TIME_ATTR);
+            cpuTime = jmxCpuTime * cpuTimeMultiplier;
+            Long jmxUpTime = (Long) con.getAttribute(RUNTIME_NAME, PROCESS_UP_TIME);
+            upTime = jmxUpTime;
+            long upTimeDiff = (upTime * 1000000) - (prevUpTime * 1000000);
 
+            long procTimeDiff = (cpuTime / procCount) - (prevCpuTime / procCount);
 
-         addMeasurementAsPercentage(cpuUsage);
+            long cpuUsage = upTimeDiff > 0 ? Math.min((long) (1000 * (float) procTimeDiff / (float) upTimeDiff), 1000)
+                  : 0;
 
-         log.trace("Cpu usage: " + formatPercent(cpuUsage * 0.1d));
-      } catch (Exception e) {
-         log.error("Exception!", e);
+            addMeasurementAsPercentage(cpuUsage);
+
+            log.trace("Cpu usage: " + formatPercent(cpuUsage * 0.1d));
+         } catch (Exception e) {
+            log.error("Exception!", e);
+         }
       }
    }
 }
