@@ -87,7 +87,7 @@ public class LineReportGenerator {
    public static void generate(ClusterReport report, String reportDir, String fileName) throws IOException {
       File root = new File(reportDir);
       if (!root.exists()) {
-         if (root.mkdirs()) {
+         if (!root.mkdirs()) {
             log.warn("Could not create root dir : " + root.getAbsolutePath() + " This might result in reports not being generated");
          } else {
             log.info("Created root file: " + root);
