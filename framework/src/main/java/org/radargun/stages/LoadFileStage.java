@@ -94,6 +94,7 @@ public class LoadFileStage extends AbstractDistStage {
             }
             log.info("--------------------");
             log.info("Size of file '" + filePath + "' is " + fileSize + " bytes");
+            log.info("Value size is '" + valueSize + "' which will produce " + fileSize/valueSize + " keys");
             log.info("Slave " + getSlaveIndex() + " wrote " + putCount + " values to the cache with a total size of "
                   + totalBytesRead + " bytes");
             log.info("--------------------");

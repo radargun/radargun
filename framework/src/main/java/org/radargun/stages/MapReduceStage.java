@@ -78,8 +78,8 @@ public class MapReduceStage extends AbstractDistStage {
                      log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
                      result.setPayload(payloadMap);
                   }
-                  log.info(getActiveSlaveCount() + " nodes were used to execute across " + cacheWrapper.getLocalSize()
-                        + " keys in the cache");
+                  log.info(cacheWrapper.getNumMembers() + " nodes were used. " + cacheWrapper.getLocalSize()
+                        + " entries on this node");
                   log.info(cacheWrapper.getInfo());
                   log.info("--------------------");
                } else {
@@ -91,7 +91,6 @@ public class MapReduceStage extends AbstractDistStage {
                result.setErrorMessage("MapReduce tasks are not supported by this cache");
             }
          }
-
       }
       return result;
    }
