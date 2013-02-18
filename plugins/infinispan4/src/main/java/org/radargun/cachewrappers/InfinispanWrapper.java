@@ -50,6 +50,7 @@ public class InfinispanWrapper implements CacheWrapper, Debugable {
    }
 
    private static final String DEFAULT_CACHE_NAME = "testCache";
+   private String cacheName;
 
    protected final Log log = LogFactory.getLog(getClass());
    private final boolean trace = log.isTraceEnabled();
@@ -67,6 +68,7 @@ public class InfinispanWrapper implements CacheWrapper, Debugable {
       this.config = config;
       try {
          if (beginStart()) {
+            cacheName = getCacheName(confAttributes);
             setUpCache(confAttributes, nodeIndex);
             setUpTransactionManager();
             
@@ -362,6 +364,10 @@ public class InfinispanWrapper implements CacheWrapper, Debugable {
 
    public void setEnlistExtraXAResource(boolean enlistExtraXAResource) {
       this.enlistExtraXAResource = enlistExtraXAResource;
+   }
+   
+   public String getCacheName() {
+      return cacheName;
    }
 
    protected String[] getDebugKeyPackages() {

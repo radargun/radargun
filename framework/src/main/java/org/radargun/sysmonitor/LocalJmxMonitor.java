@@ -1,16 +1,17 @@
 package org.radargun.sysmonitor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import static javax.management.remote.JMXConnectorFactory.connect;
 
-import javax.management.MBeanServerConnection;
-import javax.management.remote.JMXServiceURL;
-import java.lang.management.ManagementFactory;
+import java.io.Serializable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static javax.management.remote.JMXConnectorFactory.connect;
+import javax.management.MBeanServerConnection;
+import javax.management.remote.JMXServiceURL;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 
 /**
@@ -24,8 +25,11 @@ import static javax.management.remote.JMXConnectorFactory.connect;
  *
  * @author Galder Zamarreno
  */
-public class LocalJmxMonitor {
+public class LocalJmxMonitor implements Serializable {
 
+   /** The serialVersionUID */
+   private static final long serialVersionUID = 2530981300271084693L;
+   
    private String productName;
    private String configName;
 
@@ -51,8 +55,9 @@ public class LocalJmxMonitor {
    private volatile CpuUsageMonitor cpuMonitor;
    private volatile MemoryUsageMonitor memoryMonitor;
    private volatile GcMonitor gcMonitor;
+//   private MBeanServerConnection con;
 
-   final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
+   ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
 
    //todo remove these lines once remote connection is available..
    public static void main(String[] args) throws Exception {
@@ -72,15 +77,11 @@ public class LocalJmxMonitor {
    public void startMonitoringLocal() {
 
       try {
-         final MBeanServerConnection con = ManagementFactory.getPlatformMBeanServer();
-         if (con == null)
-            throw new IllegalStateException("PlatformMBeanServer not started!");
-
-         cpuMonitor = new CpuUsageMonitor(con);
+         cpuMonitor = new CpuUsageMonitor();
          exec.scheduleAtFixedRate(cpuMonitor, 0, 1000, TimeUnit.MILLISECONDS);
-         memoryMonitor = new MemoryUsageMonitor(con);
+         memoryMonitor = new MemoryUsageMonitor();
          exec.scheduleAtFixedRate(memoryMonitor, 300, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
-         gcMonitor = new GcMonitor(con);
+         gcMonitor = new GcMonitor();
          exec.scheduleAtFixedRate(gcMonitor, 600, 1000, TimeUnit.MILLISECONDS);
       } catch (Exception e) {
          log.error(e.getMessage(), e);
@@ -100,9 +101,15 @@ public class LocalJmxMonitor {
    }
 
    public void stopMonitoringLocal() {
+      cpuMonitor.stop();
+      memoryMonitor.stop();
+      gcMonitor.stop();
       exec.shutdownNow();
-      log.trace("Cpu measurements = " + cpuMonitor.getMeasurementCount() + ", memory measurements = "
-                      + memoryMonitor.getMeasurementCount() + ", gc measurements = " + gcMonitor.getMeasurementCount());
+      this.exec = null;
+//      log.trace("Cpu measurements = " + cpuMonitor.getMeasurementCount() + ", memory measurements = "
+//            + memoryMonitor.getMeasurementCount() + ", gc measurements = " + gcMonitor.getMeasurementCount());
+      log.info("Cpu measurements = " + cpuMonitor.getMeasurementCount() + ", memory measurements = "
+            + memoryMonitor.getMeasurementCount() + ", gc measurements = " + gcMonitor.getMeasurementCount());
    }
 
    static class CpuIntensiveTask extends Thread {

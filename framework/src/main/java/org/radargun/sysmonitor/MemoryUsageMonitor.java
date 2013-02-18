@@ -1,10 +1,6 @@
 package org.radargun.sysmonitor;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.management.MBeanServerConnection;
-import java.io.IOException;
+import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
@@ -13,16 +9,24 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.management.MBeanServerConnection;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @author Galder Zamarreno
-*/
-public class MemoryUsageMonitor extends AbstractActivityMonitor {
+ */
+public class MemoryUsageMonitor extends AbstractActivityMonitor implements Serializable {
+
+   /** The serialVersionUID */
+   private static final long serialVersionUID = 2763306122547969008L;
 
    private static Log log = LogFactory.getLog(MemoryUsageMonitor.class);
 
+   boolean running = true;
+
    static final NumberFormat DECIMAL_FORMATTER = NumberFormat.getNumberInstance();
-   final MBeanServerConnection con;
-   final MemoryMXBean memMbean;
    long genUsed;
    long genCapacity;
    long genMaxCapacity;
@@ -32,25 +36,31 @@ public class MemoryUsageMonitor extends AbstractActivityMonitor {
       DECIMAL_FORMATTER.setMaximumFractionDigits(2);
    }
 
-   MemoryUsageMonitor(MBeanServerConnection con) throws IOException {
-      this.con = con;
-      this.memMbean = ManagementFactory.newPlatformMXBeanProxy(con,
-                                                               ManagementFactory.MEMORY_MXBEAN_NAME, MemoryMXBean.class);
+   public void stop() {
+      running = false;
    }
 
    public void run() {
-      try {
-         MemoryUsage mem = memMbean.getHeapMemoryUsage();
-         genUsed = mem.getUsed();
-         genCapacity = mem.getCommitted();
-         genMaxCapacity = mem.getMax();
+      if (running) {
+         try {
+            MBeanServerConnection con = ManagementFactory.getPlatformMBeanServer();
+            if (con == null)
+               throw new IllegalStateException("PlatformMBeanServer not started!");
 
-         addMeasurement(new BigDecimal(genUsed));
+            MemoryMXBean memMbean = ManagementFactory.newPlatformMXBeanProxy(con, ManagementFactory.MEMORY_MXBEAN_NAME,
+                  MemoryMXBean.class);
+            MemoryUsage mem = memMbean.getHeapMemoryUsage();
+            genUsed = mem.getUsed();
+            genCapacity = mem.getCommitted();
+            genMaxCapacity = mem.getMax();
 
-         log.trace("Memory usage: used=" + formatDecimal(genUsed) + " B, size=" + formatDecimal(genCapacity) +
-                         " B, max=" + formatDecimal(genMaxCapacity));
-      } catch (Exception e) {
-         log.error(e);
+            addMeasurement(new BigDecimal(genUsed));
+
+            log.trace("Memory usage: used=" + formatDecimal(genUsed) + " B, size=" + formatDecimal(genCapacity)
+                  + " B, max=" + formatDecimal(genMaxCapacity));
+         } catch (Exception e) {
+            log.error(e);
+         }
       }
    }
 
@@ -61,7 +71,7 @@ public class MemoryUsageMonitor extends AbstractActivityMonitor {
    public void convertToMb() {
       List<BigDecimal> mbs = new ArrayList<BigDecimal>(measurements.size());
       for (BigDecimal v : measurements) {
-         mbs.add(v.divide(new BigDecimal(1024*1024)));
+         mbs.add(v.divide(new BigDecimal(1024 * 1024)));
       }
       measurements.clear();
       measurements.addAll(mbs);

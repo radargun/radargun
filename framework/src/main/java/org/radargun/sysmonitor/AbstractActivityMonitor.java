@@ -4,6 +4,8 @@ import javax.management.AttributeNotFoundException;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
+import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -17,7 +19,7 @@ import java.util.Map;
 /**
  * @author Mircea Markus <mircea.markus@gmail.com>
  */
-public abstract class AbstractActivityMonitor implements Runnable {
+public abstract class AbstractActivityMonitor implements Runnable, Serializable {
 
    static final ObjectName OS_NAME = getOSName();
 
