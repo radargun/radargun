@@ -28,11 +28,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.infinispan.Cache;
+import org.infinispan.configuration.cache.TransactionConfiguration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.transaction.TransactionMode;
 import org.infinispan.util.FileLookupFactory;
 import org.jgroups.JChannel;
 import org.jgroups.protocols.relay.RELAY2;
@@ -113,6 +115,10 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
          list = new ArrayList<JChannel>();
          list.add(parentChannel);
       }
+      if (list.size() == 0) {
+         log.info("No JGroups channels available");
+         return list;
+      }
       RELAY2 relay = (RELAY2) list.get(0).getProtocolStack().findProtocol(RELAY2.class);
       if (relay != null) {
          try {
@@ -144,7 +150,7 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
             log.error("Failed to get channel from RELAY2 protocol", e);
          }
       } else {
-         log.warn("No RELAY2 protocol in XS wrapper!");
+         log.info("No RELAY2 protocol in XS wrapper");
       }
       return list;
    }
@@ -185,7 +191,21 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
    @Override
    public void empty() {
       for (String cache : cacheManager.getCacheNames()) {
-         cacheManager.getCache(cache, false).clear();
+         TransactionConfiguration txConfig = cacheManager.getCacheConfiguration(cache).transaction();
+         boolean needsTx = (txConfig != null && txConfig.transactionMode() == TransactionMode.TRANSACTIONAL && !txConfig.autoCommit());
+         Cache<Object, Object> c = cacheManager.getCache(cache, false);
+         if (c == null) continue;
+         try {
+            if (needsTx) {
+               c.getAdvancedCache().getTransactionManager().begin();
+            }
+            c.clear();
+            if (needsTx) {
+               c.getAdvancedCache().getTransactionManager().commit();
+            }
+         } catch (Exception e) {
+            throw new RuntimeException("Failed to clear cache " + cache, e);
+         }
       }
    }
 

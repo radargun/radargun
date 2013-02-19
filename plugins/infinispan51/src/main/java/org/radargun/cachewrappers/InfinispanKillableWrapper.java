@@ -1,5 +1,12 @@
 package org.radargun.cachewrappers;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.configuration.cache.ClusteringConfiguration;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
@@ -16,11 +23,6 @@ import org.jgroups.stack.ProtocolStack;
 import org.radargun.features.Killable;
 import org.radargun.features.TopologyAware;
 import org.radargun.utils.TypedProperties;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
 
 /**
  * 
@@ -155,6 +157,16 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
          notReadyMessage("Cache manager is not ready", failOnNotReady);
          Thread.yield();
       }
+      // For local caches it has there is no transport - check that we have at least one clustered cache
+      boolean hasClustered = cacheManager.getDefaultConfiguration().getCacheMode().isClustered();
+      for (String cacheName : cacheManager.getCacheNames()) {
+         ClusteringConfiguration clustering = cacheManager.getCacheConfiguration(cacheName).clustering();
+         if (clustering != null && clustering.cacheMode() != CacheMode.LOCAL) {
+            hasClustered = true;
+            break;
+         }
+      }
+      if (!hasClustered) return list;
       for (;;) {
          transport = (JGroupsTransport) ((DefaultCacheManager) cacheManager).getTransport();
          if (transport != null) break;
