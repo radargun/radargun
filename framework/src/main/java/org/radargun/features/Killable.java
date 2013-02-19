@@ -4,7 +4,7 @@ import org.radargun.CacheWrapper;
 
 /**
  * 
- * Additional CacheWrapper feature, allows simulation of abrupt cache shutdown (node crash).
+ * Allows simulation of abrupt cache shutdown (node crash).
  * 
  * @author Michal Linhard <mlinhard@redhat.com>
  */

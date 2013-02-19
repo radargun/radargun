@@ -23,9 +23,30 @@ import java.util.List;
 
 import org.radargun.CacheWrapper;
 
+/**
+ * Cache wrapper that is able of cross-site replication and, therefore, carries
+ * multiple caches (then accessed directly using the bucket argument in other operations)
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 public interface XSReplicating extends CacheWrapper {
+   /**
+    * @return Name of the cache where we execute the common operations. Null can be used as bucket to access this cache.
+    */
    String getMainCache();
+
+   /**
+    * @return Names of the other caches which should be read-only, because these are filled from different site.
+    */
    Collection<String> getBackupCaches();
+
+   /**
+    * @return Slaves which are in the same site as this slave
+    */
    List<Integer> getSlaves();
+
+   /**
+    * @return True if this slave directly routes traffic into other sites.
+    */
    boolean isBridge();
 }
