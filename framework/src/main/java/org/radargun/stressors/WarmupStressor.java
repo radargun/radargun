@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.config.Property;
+import org.radargun.config.Stressor;
 import org.radargun.stages.WarmupStage;
 
 /**
@@ -16,20 +18,26 @@ import org.radargun.stages.WarmupStage;
  * @deprecated this should be replaced with the {@link StressTestStressor}. This is because that warmup mimics better the
  * access pattern of the the {@link StressTestStressor}, especially in the case of transactions.
  */
+@Stressor(doc = "Deprecated warmup stressor.")
 public class WarmupStressor extends AbstractCacheWrapperStressor {
 
    private static Log log = LogFactory.getLog(WarmupStage.class);
 
+   @Property(doc = "After how many operations should be log written. Default is 10000.")
    private int operationCount = 10000;
 
+   @Property(doc = "Bucket into which the entries will be written. Default is WarmupStressor_BUCKET.")
    private String bucket = "WarmupStressor_BUCKET";
 
+   @Property(doc = "Prefix for the keys. Default is WarmupStressor_KEY")
    private String keyPrefix = "WarmupStressor_KEY";
 
    private CacheWrapper wrapper;
 
+   @Property(doc = "Number of threads used for the warmup. Default is 5.")
    private int numThreads = 5;
-   
+
+   @Property(doc = "Number of keys each thread will operate on. Default is 50.")
    private int keysPerThread = 50;
 
    public Map<String, Object> stress(CacheWrapper wrapper) {
@@ -116,10 +124,6 @@ public class WarmupStressor extends AbstractCacheWrapperStressor {
    public void setNumThreads(int numThreads) {
       if (numThreads <=0) throw new IllegalStateException("Invalid num of threads:" + numThreads);
       this.numThreads = numThreads;
-   }
-
-   public void setKeysPerThread(int keysPerThread) {
-      this.keysPerThread = keysPerThread;
    }
 
    @Override

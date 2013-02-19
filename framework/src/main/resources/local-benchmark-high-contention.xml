@@ -3,18 +3,18 @@
    <benchmark>
       <Warmup operationCount="5000000"/>
       <!-- HIGH contention.  100 threads working on 25 keys. -->
-      <PutGet numberOfRequests="10000000" opsCountStatusLog="100000" numOfThreads="100" sysMonitorEnabled="true" numberOfKeys="25"/>
+      <StressTest numRequests="10000000" opsCountStatusLog="100000" numThreads="100" sysMonitorEnabled="true" numEntries="25" sharedKeys="true"/>
    </benchmark>
 
    <products>
       <infinispan50>
-         <config name="local-config.xml"/>
+         <config name="local-config.xml" cache="x"/>
       </infinispan50>
       <infinispan51>
-         <config name="local-config.xml"/>
+         <config name="local-config.xml" cache="x"/>
       </infinispan51>
       <infinispan52>
-         <config name="local-config.xml"/>
+         <config name="local-config.xml" cache="x"/>
       </infinispan52>
    </products>
 

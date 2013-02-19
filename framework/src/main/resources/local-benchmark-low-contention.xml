@@ -2,19 +2,19 @@
 
    <benchmark>
       <Warmup operationCount="5000000"/>
-      <!-- LOW contention.  25 threads working on 1 million keys. -->
-      <PutGet numberOfRequests="10000000" opsCountStatusLog="100000" numOfThreads="25" sysMonitorEnabled="true" numberOfKeys="1000000"/>
+      <!-- LOW contention.  25 threads working on 100,000 million keys. -->
+      <StressTest numRequests="10000000" opsCountStatusLog="100000" numThreads="25" sysMonitorEnabled="true" numEntries="100000" sharedKeys="true"/>
    </benchmark>
 
    <products>
       <infinispan50>
-         <config name="local-config.xml"/>
+         <config name="local-config.xml" cache="x"/>
       </infinispan50>
       <infinispan51>
-         <config name="local-config.xml"/>
+         <config name="local-config.xml" cache="x"/>
       </infinispan51>
       <infinispan52>
-         <config name="local-config.xml"/>
+         <config name="local-config.xml" cache="x"/>
       </infinispan52>
    </products>
 

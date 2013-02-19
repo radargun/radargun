@@ -13,6 +13,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.config.Property;
+import org.radargun.config.Stressor;
+import org.radargun.config.TimeConverter;
 import org.radargun.utils.Utils;
 
 /**
@@ -20,42 +23,55 @@ import org.radargun.utils.Utils;
  *
  * @author Mircea.Markus@jboss.com
  */
+@Stressor(doc = "Executes put and get operations agains the cache wrapper.")
 public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    private static final Log log = LogFactory.getLog(StressTestStressor.class);
 
+   @Property(doc = "After how many operations should be log written. Default is 5000.")
    private int opsCountStatusLog = 5000;
 
-   /**
-    * total number of operation to be made against cache wrapper: reads + writes
-    */
+   @Property(doc = "Total number of operation to be made against cache wrapper: reads + writes. Default is 50000.")
    private int numRequests = 50000;
 
-   /**
-    * for each there will be created fixed number of keys. All the GETs and PUTs are performed on these keys only.
-    */
+   @Property(doc = "Number of keys on which all the GETs and PUTs are performed. Default is 100.")
    private int numEntries = 100;
 
-   /**
-    * Each key will be a byte[] of this size.
-    */
+   @Property(doc = "Size of the entry in bytes. Default is 1000.")
    private int entrySize = 1000;
 
-   /**
-    * Out of the total number of operations, this defines the frequency of writes (percentage).
-    */
+   @Property(doc = "The frequency of writes (percentage). Default is 20%")
    private int writePercentage = 20;
 
-   /**
-    * Negative values means duration is not enabled.
-    */
+   @Property(doc = "Duration of the test. By default the duration depends on number of requests.", converter = TimeConverter.class)
    private long durationMillis = -1;
 
-   /**
-    * the number of threads that will work on this cache wrapper.
-    */
+   @Property(doc = "The number of threads that will work on this cache wrapper. Default is 10.")
    private int numThreads = 10;
 
+   @Property(doc = "Number of requests in one transaction. By default transactions are off.")
+   private int transactionSize = 1;
+
+   @Property(doc = "Should the test use transactions? Default is false.")
+   private boolean useTransactions = false;
+
+   @Property(doc = "If this is set to true, transactions are committed in the end. Otherwise these are rolled back. Default is true.")
+   private boolean commitTransactions = true;
+
+   @Property(doc = "By default each client thread operates on his private set of keys. Setting this to true " +
+         "introduces contention between the threads, the numThreads property says total amount of entries that are " +
+         "used by all threads. Default is false.")
+   protected boolean sharedKeys = false;
+
+   @Property(doc = "The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.")
+   protected boolean fixedKeys = true;
+
+   @Property(doc = "Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.")
+   private String keyGeneratorClass = StringKeyGenerator.class.getName();
+
+   /**
+    * Number of slaves that participate in this test
+    */
    private int numNodes = 1;
 
    /**
@@ -63,19 +79,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
     */
    private int nodeIndex = -1;
 
-   private int transactionSize = 1;
-
-   private boolean useTransactions = false;
-
-   private boolean commitTransactions = true;
-
-   private boolean sharedKeys = false;
-
-   private boolean fixedKeys = true;
-
    private AtomicInteger txCount = new AtomicInteger(0);
-
-   private String keyGeneratorClass = StringKeyGenerator.class.getName();
 
    private KeyGenerator keyGenerator;
 

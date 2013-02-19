@@ -5,6 +5,8 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.config.Property;
+import org.radargun.config.Stressor;
 import org.radargun.stages.TpccPopulationStage;
 import org.radargun.tpcc.TpccPopulation;
 import org.radargun.tpcc.TpccTools;
@@ -14,16 +16,21 @@ import org.radargun.tpcc.TpccTools;
  *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
+@Stressor(doc = "Populate numWarehouses Warehouses in cache")
 public class TpccPopulationStressor extends AbstractCacheWrapperStressor {
 
    private static Log log = LogFactory.getLog(TpccPopulationStage.class);
 
+   @Property(doc = "How many warehouses should be populated.", optional = false)
    private int numWarehouses;
 
+   @Property(doc = "Mask used to generate non-uniformly distributed random customer last names. Default is 255.")
    private long cLastMask = 255L;
 
+   @Property(doc = "Mask used to generate non-uniformly distributed random item numbers. Default is 8191.")
    private long olIdMask = 8191L;
 
+   @Property(doc = "Mask used to generate non-uniformly distributed random customer numbers. Default is 1023.")
    private long cIdMask = 1023L;
 
    private int slaveIndex;

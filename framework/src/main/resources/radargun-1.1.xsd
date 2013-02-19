@@ -15,20 +15,24 @@
                         <element name="Repeat" type="rg:repeat"/>
                         <element name="Abstract" type="rg:Abstract"/>
                         <element name="AbstractDist" type="rg:AbstractDist"/>
+                        <element name="MapReduce" type="rg:MapReduce"/>
                         <element name="StopBackgroundStressors" type="rg:StopBackgroundStressors"/>
                         <element name="StressTest" type="rg:StressTest"/>
                         <element name="WebSessionBenchmark" type="rg:StressTest"/>
                         <element name="StressTestWarmup" type="rg:StressTestWarmup"/>
                         <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
                         <element name="ClientStressTest" type="rg:ClientStressTest"/>
+                        <element name="StopJVMMonitor" type="rg:StopJVMMonitor"/>
                         <element name="StopBackgroundStatistics" type="rg:StopBackgroundStatistics"/>
                         <element name="AbstractMaster" type="rg:AbstractMaster"/>
                         <element name="Kill" type="rg:Kill"/>
                         <element name="CheckTopology" type="rg:CheckTopology"/>
                         <element name="Check" type="rg:Check"/>
                         <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
+                        <element name="LoadFile" type="rg:LoadFile"/>
                         <element name="SetLogLevel" type="rg:SetLogLevel"/>
                         <element name="XSReplLoad" type="rg:XSReplLoad"/>
+                        <element name="StartJVMMonitor" type="rg:StartJVMMonitor"/>
                         <element name="AbstractStart" type="rg:AbstractStart"/>
                         <element name="StartCluster" type="rg:StartCluster"/>
                         <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
@@ -41,6 +45,7 @@
                         <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
                         <element name="XSReplCheck" type="rg:XSReplCheck"/>
                         <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
+                        <element name="ReportJVMMonitor" type="rg:ReportJVMMonitor"/>
                         <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
                         <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
                         <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
@@ -112,20 +117,24 @@
             <element name="Repeat" type="rg:repeat"/>
             <element name="Abstract" type="rg:Abstract"/>
             <element name="AbstractDist" type="rg:AbstractDist"/>
+            <element name="MapReduce" type="rg:MapReduce"/>
             <element name="StopBackgroundStressors" type="rg:StopBackgroundStressors"/>
             <element name="StressTest" type="rg:StressTest"/>
             <element name="WebSessionBenchmark" type="rg:StressTest"/>
             <element name="StressTestWarmup" type="rg:StressTestWarmup"/>
             <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
             <element name="ClientStressTest" type="rg:ClientStressTest"/>
+            <element name="StopJVMMonitor" type="rg:StopJVMMonitor"/>
             <element name="StopBackgroundStatistics" type="rg:StopBackgroundStatistics"/>
             <element name="AbstractMaster" type="rg:AbstractMaster"/>
             <element name="Kill" type="rg:Kill"/>
             <element name="CheckTopology" type="rg:CheckTopology"/>
             <element name="Check" type="rg:Check"/>
             <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
+            <element name="LoadFile" type="rg:LoadFile"/>
             <element name="SetLogLevel" type="rg:SetLogLevel"/>
             <element name="XSReplLoad" type="rg:XSReplLoad"/>
+            <element name="StartJVMMonitor" type="rg:StartJVMMonitor"/>
             <element name="AbstractStart" type="rg:AbstractStart"/>
             <element name="StartCluster" type="rg:StartCluster"/>
             <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
@@ -138,6 +147,7 @@
             <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
             <element name="XSReplCheck" type="rg:XSReplCheck"/>
             <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
+            <element name="ReportJVMMonitor" type="rg:ReportJVMMonitor"/>
             <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
             <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
             <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
@@ -187,6 +197,30 @@
             <attribute name="useSmartClassLoading" type="string">
                <annotation>
                   <documentation>Smart class loading loads libraries specific for the product. Default is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="MapReduce">
+      <annotation>
+         <documentation>Stage which executes a MapReduce Task against all keys in the cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="collatorFqn" type="string">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="mapperFqn" type="string">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Mapper implementation to execute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reducerFqn" type="string">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to execute.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -326,6 +360,14 @@
          </extension>
       </complexContent>
    </complexType>
+   <complexType name="StopJVMMonitor">
+      <annotation>
+         <documentation>Stop collecting JVM statistics on each slave node and return collected statistics to the master node.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
+      </complexContent>
+   </complexType>
    <complexType name="StopBackgroundStatistics">
       <annotation>
          <documentation>Stop Statistics and return collected statistics to master.</documentation>
@@ -437,6 +479,30 @@
          </extension>
       </complexContent>
    </complexType>
+   <complexType name="LoadFile">
+      <annotation>
+         <documentation>Loads the contents of a file into the cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="bucket" type="string">
+               <annotation>
+                  <documentation>The name of the bucket where keys are written. The default is null</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="filePath" type="string">
+               <annotation>
+                  <documentation>Full pathname to the file.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="valueSize" type="string">
+               <annotation>
+                  <documentation>The size of the values to put into the cache from the contents of the file. The default size is 1MB (1024 * 1024)</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
    <complexType name="SetLogLevel">
       <annotation>
          <documentation>Debugging stage: changes log priorities</documentation>
@@ -483,6 +549,14 @@
                </annotation>
             </attribute>
          </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="StartJVMMonitor">
+      <annotation>
+         <documentation>Starts collecting JVM statistics locally on each slave node.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
       </complexContent>
    </complexType>
    <complexType abstract="true" name="AbstractStart">
@@ -841,6 +915,14 @@
                </annotation>
             </attribute>
          </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="ReportJVMMonitor">
+      <annotation>
+         <documentation>Generate charts for JVM statistics on each slave node.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractMaster"/>
       </complexContent>
    </complexType>
    <complexType name="DestroyWrapper">

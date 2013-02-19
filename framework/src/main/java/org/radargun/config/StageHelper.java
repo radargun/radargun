@@ -1,16 +1,14 @@
 package org.radargun.config;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.net.URL;
-import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * Instantiates stages based on annotations
@@ -24,52 +22,29 @@ public class StageHelper {
    private static Map<String, Class<? extends org.radargun.Stage>> stages;
 
    static {
-      URL jarFile = StageHelper.class.getProtectionDomain().getCodeSource().getLocation();
-      stages = getStagesFromJar(jarFile.getPath());
+      stages = getStagesFromJar(AnnotatedHelper.getJAR(StageHelper.class).getPath());
    }
 
    public static Map<String, Class<? extends org.radargun.Stage>> getStagesFromJar(String path) {
       System.err.println("Loading JARS from " + path);
+      List<Class<? extends org.radargun.Stage>> list = AnnotatedHelper.getClassesFromJar(path, org.radargun.Stage.class, Stage.class);
       Map<String, Class<? extends org.radargun.Stage>> stages = new HashMap<String, Class<? extends org.radargun.Stage>>();
-      try {
-         ZipInputStream inputStream = new ZipInputStream(new FileInputStream(path));
-         for(;;) {
-            ZipEntry entry = inputStream.getNextEntry();
-            if (entry == null) break;
-            if (!entry.getName().endsWith(".class")) continue;
-            String className = entry.getName().replace('/', '.').substring(0, entry.getName().length() - 6);
-            try {
-               Class<?> clazz = Class.forName(className);
-               Stage stageAnnotation = clazz.getAnnotation(Stage.class);
-               if (stageAnnotation != null) {
-                  if (!org.radargun.Stage.class.isAssignableFrom(clazz)) {
-                     log.warn("Non-stage marked as stage: " + clazz.getName());
-                     continue;
-                  }
-                  Class<? extends org.radargun.Stage> stageClass = (Class<? extends org.radargun.Stage>) clazz;
-                  String stageName;
-                  if (!stageAnnotation.name().equals(Stage.CLASS_NAME_WITHOUT_STAGE)) {
-                     stageName = stageAnnotation.name();
-                  } else {
-                     if (!stageClass.getSimpleName().endsWith("Stage")) {
-                        log.error("Stage does not keep the conventional name *Stage");
-                        continue;
-                     }
-                     stageName = stageClass.getSimpleName().substring(0, stageClass.getSimpleName().length() - 5);
-                  }
-                  stages.put(stageName, stageClass);
-                  if (!stageAnnotation.deprecatedName().equals(Stage.NO_DEPRECATED_NAME)) {
-                     stages.put(stageAnnotation.deprecatedName(), stageClass);
-                  }
-               }
-            } catch (ClassNotFoundException e) {
-               log.warn("Cannot instantiate class " + className);
+      for (Class<? extends org.radargun.Stage> clazz : list) {
+         Stage annotation = clazz.getAnnotation(Stage.class);
+         String name;
+         if (!annotation.name().equals(Stage.CLASS_NAME_WITHOUT_STAGE)) {
+            name = annotation.name();
+         } else {
+            if (!clazz.getSimpleName().endsWith("Stage")) {
+               log.error("Stage does not keep the conventional name *Stage");
+               continue;
             }
+            name = clazz.getSimpleName().substring(0, clazz.getSimpleName().length() - 5);
          }
-      } catch (FileNotFoundException e) {
-         log.error("Cannot load executed JAR file '" + path + "'to find stages.");
-      } catch (IOException e) {
-         log.error("Cannot open/read JAR '" + path + "'");
+         stages.put(name, clazz);
+         if (!annotation.deprecatedName().equals(Stage.NO_DEPRECATED_NAME)) {
+            stages.put(annotation.deprecatedName(), clazz);
+         }
       }
       return stages;
    }

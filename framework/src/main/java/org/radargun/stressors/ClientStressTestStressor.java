@@ -25,12 +25,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.config.Property;
+import org.radargun.config.Stressor;
 
+@Stressor(doc = "Repeats the StressTestStressor logic with increasing amount of client threads.")
 public class ClientStressTestStressor extends StressTestStressor {
    private static Log log = LogFactory.getLog(ClientStressTestStressor.class);
-     
+
+   @Property(doc = "Initial number of threads. Default is 1.")
    private int initThreads = 1;
+
+   @Property(doc = "Maximum number of threads. Default is 10.")
    private int maxThreads = 10;
+
+   @Property(doc = "Number of threads by which the actual number of threads will be incremented. Default is 1.")
    private int increment = 1;
    private double requestPerSec = 0;
 

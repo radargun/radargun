@@ -13,6 +13,7 @@ import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapperStressor;
 import org.radargun.config.ConfigHelper;
 import org.radargun.config.DomConfigParser;
+import org.radargun.config.StressorHelper;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -53,8 +54,7 @@ public class LocalConfigParser {
          Node node = benchmark.getChildNodes().item(i);
          if (node instanceof Element) {
             Element nodeEl = (Element) node;
-            String stressorName = "org.radargun.stressors." + nodeEl.getNodeName() + "Stressor";
-            CacheWrapperStressor stressor = (CacheWrapperStressor) Class.forName(stressorName).newInstance();
+            CacheWrapperStressor stressor = StressorHelper.getStressor(nodeEl.getNodeName());
             Map<String, String> attrValues = new HashMap<String, String>();
             for (int j = 0; j < nodeEl.getAttributes().getLength(); j++) {
                Attr attr = (Attr) nodeEl.getAttributes().item(j);

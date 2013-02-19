@@ -13,6 +13,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.config.Property;
+import org.radargun.config.Stressor;
 import org.radargun.tpcc.ElementNotFoundException;
 import org.radargun.tpcc.TpccTerminal;
 import org.radargun.tpcc.TpccTools;
@@ -29,14 +31,25 @@ import org.radargun.utils.Utils;
  *
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
  */
+@Stressor(doc = "Executes implementations of TPC-C Transaction Profiles against the CacheWrapper")
 public class TpccStressor extends AbstractCacheWrapperStressor {
 
    private static Log log = LogFactory.getLog(TpccStressor.class);
 
-   /**
-    * the number of threads that will work on this cache wrapper.
-    */
+   @Property(doc = "The number of threads that will work on this cache wrapper. Default is 10.")
    private int numOfThreads = 10;
+
+   @Property(doc = "Total time (in seconds) of simulation for each stressor thread. Default is 30.")
+   private long perThreadSimulTime = 30L;
+
+   @Property(doc = "Average arrival rate of the transactions to the system. Default is 0.")
+   private double arrivalRate = 0.0D;
+
+   @Property(doc = "Percentage of Payment transactions. Default is 45.")
+   private double paymentWeight = 45.0D;
+
+   @Property(doc = "Percentage of Order Status transactions. Default is 5.")
+   private double orderStatusWeight = 5.0D;
 
    /**
     * this node's index in the Radargun cluster.  -1 is used for local benchmarks.
@@ -47,26 +60,6 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
     * the number of nodes in the Radargun cluster.
     */
    private int numSlaves = 0;
-
-   /**
-    * total time (in seconds) of simulation for each stressor thread
-    */
-   private long perThreadSimulTime = 30L;
-
-   /**
-    * average arrival rate of the transactions to the system
-    */
-   private double arrivalRate = 0.0D;
-
-   /**
-    * percentage of Payment transactions
-    */
-   private double paymentWeight = 45.0D;
-
-   /**
-    * percentage of Order Status transactions
-    */
-   private double orderStatusWeight = 5.0D;
 
    private CacheWrapper cacheWrapper;
    private static Random r = new Random();

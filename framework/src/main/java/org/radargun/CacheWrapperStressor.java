@@ -17,6 +17,4 @@ public interface CacheWrapperStressor {
    void destroy() throws Exception;
 
    boolean isSysMonitorEnabled();
-
-   void setSysMonitorEnabled(boolean enabled);
 }
