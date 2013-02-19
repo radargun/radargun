@@ -1,4 +1,4 @@
-<bench-config>
+<bench-config xmlns="urn:radargun:benchmark:1.1">
 
 	<master bindAddress="${127.0.0.1:master.address}" port="${2103:master.port}" />
 
@@ -7,13 +7,15 @@
 		<StartCluster staggerSlaveStartup="true"
 			delayAfterFirstSlaveStarts="5000" delayBetweenStartingSlaves="500" />
 		<ClusterValidation partialReplication="false" />
-		<StartBackgroundStats numThreads="10" numEntries="1000" entrySize="1024" puts="1" gets="2" statsIterationDuration="1000" delayBetweenRequests="100"/>
+		<StartBackgroundStressors numThreads="10" numEntries="1000" entrySize="1024" puts="1" gets="2" delayBetweenRequests="100"/>
+      <StartBackgroundStatistics statsIterationDuration="1000"/>
 		<Sleep time="10000" />
 		<Kill slaves="1" />
 		<Sleep time="10000" />
 		<StartCluster slaves="1" staggerSlaveStartup="false" />
 		<Sleep time="10000" />
-		<StopBackgroundStats />
+		<StopBackgroundStatistics />
+      <StopBackgroundStressors />
 		<ReportBackgroundStats />
 	</benchmark>
 
