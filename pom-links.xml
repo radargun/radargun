@@ -15,6 +15,7 @@
       <module>plugins/infinispan50</module>
       <module>plugins/infinispan51</module>
       <module>plugins/infinispan52</module>
+      <module>plugins/infinispan53</module>
       <module>plugins/jgroups</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
@@ -198,11 +199,12 @@
 				               <arg value="infinispan50" />
 				               <arg value="infinispan51" />
 				               <arg value="infinispan52" />
+                           <arg value="infinispan53" />
 				               <arg value="jgroups" />
 				               <arg value="jbosscache2" />
 				               <arg value="jbosscache3" />
 				               <arg value="ehcache25" />
-                           		       <arg value="ehcache26" />
+                           <arg value="ehcache26" />
 				               <arg value="terracota3" />
 				               <arg value="chm" />
 				               <arg value="coherence3" />				               
@@ -274,7 +276,23 @@
                         <exec executable="bash" failonerror="true">
                            <arg value="-c"/>
                            <arg value="for FILE in `ls plugins/infinispan52/target/distribution/plugin-infinispan52-bin/plugin-infinispan52/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/infinispan52/lib/; done;"/>
-                        </exec>                       
+                        </exec>
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan53">
+                           <fileset dir="plugins/infinispan53/target/distribution/plugin-infinispan53-bin/plugin-infinispan53">
+                              <include name="**/*" />
+                              <exclude name="**/*.jar" />
+                           </fileset>
+                        </copy>
+                        <copy todir="${distribution.artifact}/plugin-dependencies">
+                           <fileset dir="plugins/infinispan53/target/distribution/plugin-infinispan53-bin/plugin-infinispan53/lib">
+                              <include name="*.jar" />
+                           </fileset>
+                        </copy>
+                        <exec executable="bash" failonerror="true">
+                           <arg value="-c"/>
+                           <arg value="for FILE in `ls plugins/infinispan53/target/distribution/plugin-infinispan53-bin/plugin-infinispan53/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/infinispan53/lib/; done;"/>
+                        </exec>
 
                         <copy todir="${distribution.artifact}/plugins/jgroups">
                            <fileset dir="plugins/jgroups/target/distribution/plugin-jgroups-bin/plugin-jgroups">
@@ -400,9 +418,6 @@
                               <include name="**/*.py" />
                            </fileset>
                         </chmod>
-                        <!--<zip destfile="${distribution.zipfile}" basedir="target/distribution" excludes="**/bin/**">
-                           <zipfileset dir="${distribution.artifact}/bin" filemode="755" prefix="${distribution.name}/bin" />
-                        </zip>-->
                         <exec executable="zip" failonerror="true" dir="target/distribution">
                            <arg value="-ry"/>
                            <arg value="${distribution.name}.zip"/>
