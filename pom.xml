@@ -15,6 +15,7 @@
       <module>plugins/infinispan50</module>
       <module>plugins/infinispan51</module>
       <module>plugins/infinispan52</module>
+      <module>plugins/infinispan53</module>
       <module>plugins/jgroups</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
@@ -167,11 +168,12 @@
 				               <arg value="infinispan50" />
 				               <arg value="infinispan51" />
 				               <arg value="infinispan52" />
+                           <arg value="infinispan53" />
 				               <arg value="jgroups" />
 				               <arg value="jbosscache2" />
 				               <arg value="jbosscache3" />
 				               <arg value="ehcache25" />
-                         		       <arg value="ehcache26" />
+                           <arg value="ehcache26" />
 				               <arg value="terracota3" />
 				               <arg value="chm" />
 				               <arg value="coherence3" />
@@ -201,6 +203,12 @@
 
                         <copy todir="${distribution.artifact}/plugins/infinispan52">
                            <fileset dir="plugins/infinispan52/target/distribution/plugin-infinispan52-bin/plugin-infinispan52">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan53">
+                           <fileset dir="plugins/infinispan53/target/distribution/plugin-infinispan53-bin/plugin-infinispan53">
                               <include name="**/*" />
                            </fileset>
                         </copy>
