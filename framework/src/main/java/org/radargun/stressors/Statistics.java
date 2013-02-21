@@ -20,7 +20,7 @@ public class Statistics implements Serializable {
    public double getOperationsPerSecond() {
       long respSum = getResponseTimeSum();
       if (respSum == 0) return 0;
-      return NS_IN_SEC * getNumberOfRequests() / respSum;
+      return (double) (NS_IN_SEC * getNumberOfRequests()) / (double) respSum;
    }
 
    public double getReadsPerSecond(boolean includeOverhead) {
