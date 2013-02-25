@@ -51,6 +51,8 @@ public class ClientStressTestStressor extends StressTestStressor {
            
       Map<String, Object> results = new LinkedHashMap<String, Object>();
       int iteration = 0;
+
+      if (!startOperations()) return results;
       for (int threads = initThreads; threads <= maxThreads; threads += increment, iteration++) {
          log.info("Starting iteration " + iteration + " with " + threads);
          
@@ -78,7 +80,7 @@ public class ClientStressTestStressor extends StressTestStressor {
       finishOperations();      
       return results;
    }
-   
+
    protected Map<String, Object> processResults(String iteration, int threads, Map<String, Object> results) {
       Statistics stats = new Statistics();
       for (Stressor stressor : stressors) {
