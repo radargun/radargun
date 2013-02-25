@@ -1,12 +1,12 @@
 package org.radargun.stressors;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeSet;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -87,10 +87,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    private ArrayList<Object> sharedKeysPool = null;
    private static final Random r = new Random();
    private volatile long startNanos;
-   private volatile CountDownLatch startPoint;
-   private volatile CountDownLatch endPoint;
-   private volatile CountDownLatch cleanUpPoint;
-   private volatile CountDownLatch keyInitPoint;
+   private PhaseSynchronizer synchronizer = new PhaseSynchronizer();
    private volatile StressorCompletion completion;
    private volatile boolean finished = false;
    private volatile boolean terminated = false;
@@ -113,6 +110,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       }
       setStressorCompletion(completion);
 
+      if (!startOperations()) return Collections.EMPTY_MAP;
       try {
          executeOperations();
       } catch (Exception e) {
@@ -122,6 +120,15 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       Map<String, Object> results = processResults();
       finishOperations();
       return results;
+   }
+
+   protected boolean startOperations() {
+      try {
+         synchronizer.masterPhaseStart();
+      } catch (InterruptedException e) {
+         return false;
+      }
+      return true;
    }
 
    public void destroy() throws Exception {
@@ -166,30 +173,27 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       return results;
    }
 
-   protected void executeOperations() throws Exception {
-      startPoint = new CountDownLatch(1);
-      if (cleanUpPoint != null) {
-         cleanUpPoint.countDown();
-      }
-      cleanUpPoint = new CountDownLatch(1);
-      endPoint = new CountDownLatch(numThreads);
-      keyInitPoint = new CountDownLatch(numThreads - stressors.size());
+   protected void executeOperations() throws InterruptedException {
+      synchronizer.setSlaveCount(numThreads);
       for (int threadIndex = stressors.size(); threadIndex < numThreads; threadIndex++) {
          Stressor stressor = new Stressor(threadIndex, getLogic());
          stressors.add(stressor);
          stressor.start();
       }
       log.info("Cache wrapper info is: " + cacheWrapper.getInfo());
-      keyInitPoint.await();
-      startPoint.countDown();
+      synchronizer.masterPhaseEnd();
+      // wait until all slaves have initialized keys
+      synchronizer.masterPhaseStart();
+      // nothing to do here
+      synchronizer.masterPhaseEnd();
       log.info("Started " + stressors.size() + " stressor threads.");
-
-      endPoint.await();
+      // wait until all threads have finished
+      synchronizer.masterPhaseStart();
    }
    
    protected void finishOperations() {
       finished = true;
-      cleanUpPoint.countDown();
+      synchronizer.masterPhaseEnd();
       for (Stressor s : stressors) {
          try {
             s.join();
@@ -260,6 +264,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
       @Override
       public void init(String bucketId, int threadIndex) {
+         if (pooledKeys.size() == numEntries) return;
          KeyGenerator keyGenerator = getKeyGenerator();
          for (int keyIndex = 0; keyIndex < numEntries; keyIndex++) {
             Object key = null;
@@ -297,6 +302,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
       @Override
       public void init(String bucketId, int threadIndex) {
+         if (sharedKeys.size() == numEntries) return;
          KeyGenerator keyGenerator = getKeyGenerator();
          // no point in doing this in parallel, too much overhead in synchronization
          if (threadIndex == 0) {
@@ -381,7 +387,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       private final String bucketId;
       boolean txNotCompleted = false;
       long transactionDuration = 0;
-      public Statistics stats = new Statistics();
+      public Statistics stats;
       private OperationLogic logic;
 
       public Stressor(int threadIndex, OperationLogic logic) {
@@ -394,33 +400,32 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       @Override
       public void run() {
          try {
-            logic.init(bucketId, threadIndex);
-            keyInitPoint.countDown();
-            do {
+            for (;;) {
+               synchronizer.slavePhaseStart();
+               if (finished) {
+                  synchronizer.slavePhaseEnd();
+                  break;
+               }
+               logic.init(bucketId, threadIndex);
+               stats = new Statistics();
+               synchronizer.slavePhaseEnd();
+               synchronizer.slavePhaseStart();
+               log.trace("Starting thread: " + getName());
                try {
                   runInternal();
                } catch (Exception e) {
                   terminated = true;
                   throw e;
                } finally {
-                  endPoint.countDown();
+                  synchronizer.slavePhaseEnd();
                }
-               cleanUpPoint.await();
-               clean();
-            } while (!finished);
+            }
          } catch (Exception e) {
             log.error("Unexpected error in stressor!", e);
          }
       }
       
       private void runInternal() {
-         try {
-            startPoint.await();
-            log.trace("Starting thread: " + getName());
-         } catch (InterruptedException e) {
-            log.warn(e);
-         }
-
          int i = 0;
          while (completion.moreToRun()) {
             Object result = logic.run(this, i);
@@ -496,10 +501,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             stats.registerError(operationDuration, startTxTime + endTxTime, operation);
          }
          return result;
-      }
-
-      private void clean() {
-         stats = new Statistics();
       }
 
       private class TransactionException extends Exception {

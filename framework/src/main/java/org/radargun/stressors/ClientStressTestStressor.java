@@ -51,6 +51,8 @@ public class ClientStressTestStressor extends StressTestStressor {
            
       Map<String, Object> results = new LinkedHashMap<String, Object>();
       int iteration = 0;
+
+      if (!startOperations()) return results;
       for (int threads = initThreads; threads <= maxThreads; threads += increment, iteration++) {
          log.info("Starting iteration " + iteration + " with " + threads);
          
@@ -71,26 +73,26 @@ public class ClientStressTestStressor extends StressTestStressor {
          if (isTerminated()) {
             break;
          }
-         processResults(String.format("%03d", iteration), results);
+         processResults(String.format("%03d", iteration), threads, results);
       }
       results.put("REQ_PER_SEC", requestPerSec);
       
       finishOperations();      
       return results;
    }
-   
-   protected Map<String, Object> processResults(String iteration, Map<String, Object> results) {
+
+   protected Map<String, Object> processResults(String iteration, int threads, Map<String, Object> results) {
       Statistics stats = new Statistics();
       for (Stressor stressor : stressors) {
          stats.merge(stressor.stats);
       }
             
-      results.put(iteration  + ".DURATION", stats.getResponseTimeSum() / Statistics.NS_IN_SEC);
-      results.put(iteration  + ".REQ_PER_SEC", stats.getOperationsPerSecond());
-      results.put(iteration  + ".READS_PER_SEC", stats.getReadsPerSecond(true));
-      results.put(iteration  + ".READS_PER_SEC_NET", stats.getReadsPerSecond(false));
-      results.put(iteration  + ".WRITES_PER_SEC", stats.getWritesPerSecond(true));
-      results.put(iteration  + ".WRITES_PER_SEC_NET", stats.getWritesPerSecond(false));
+      results.put(iteration  + ".DURATION", stats.getResponseTimeSum() + stats.getTxOverheadSum());
+      results.put(iteration  + ".REQ_PER_SEC", threads * stats.getOperationsPerSecond());
+      results.put(iteration  + ".READS_PER_SEC", threads * stats.getReadsPerSecond(true));
+      results.put(iteration  + ".READS_PER_SEC_NET", threads * stats.getReadsPerSecond(false));
+      results.put(iteration  + ".WRITES_PER_SEC", threads * stats.getWritesPerSecond(true));
+      results.put(iteration  + ".WRITES_PER_SEC_NET", threads * stats.getWritesPerSecond(false));
       results.put(iteration  + ".READ_COUNT", stats.getNumReads());
       results.put(iteration  + ".WRITE_COUNT", stats.getNumWrites());
       results.put(iteration  + ".FAILURES", stats.getNumErrors());
