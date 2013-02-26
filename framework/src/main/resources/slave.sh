@@ -34,7 +34,7 @@ help_and_exit() {
   echo ""
   echo "   -m        Master host and port. Optional, defaults to ${MASTER}. (this value is taken from ./conf/benchmark.xml)."
   echo ""
-  echo "   -p        Prefix to be appended to the generated log4j file (useful when running multiple nodes on the same machine). Optional."
+  echo "   -n        Name of this slave (used for log files and to select a slave configuration from environment.sh). Optional."
   echo ""
   echo "   -h        Displays this help screen"
   echo ""
@@ -51,8 +51,8 @@ do
       MASTER=$2
       shift
       ;;
-    "-p")
-      LOG4J_PREFIX=$2
+    "-n")
+      SLAVE_NAME=$2
       shift
       ;;
     "-h")
@@ -71,11 +71,20 @@ CONF="-master $MASTER"
 add_fwk_to_classpath
 set_env
 
+if [ -n $SLAVE_NAME ] ; then
+  LOG4J_PREFIX=$SLAVE_NAME
+
+  # The slave_BIND_ADDRESS variable may be defined in environment.sh
+  eval MY_BIND_ADDRESS=\$${SLAVE_NAME}_BIND_ADDRESS
+  if [ -n $MY_BIND_ADDRESS ] ; then
+    BIND_ADDRESS=$MY_BIND_ADDRESS
+  fi
+  echo Using bind address $BIND_ADDRESS
+fi
+
 D_VARS="-Djava.net.preferIPv4Stack=true -Dlog4j.file.prefix=${LOG4J_PREFIX} -Dbind.address=${BIND_ADDRESS} -Djgroups.bind_addr=${BIND_ADDRESS}"
 echo "${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF}" > stdout_slave_${LOG4J_PREFIX}.out
 echo "--------------------------------------------------------------------------------" >> stdout_slave_${LOG4J_PREFIX}.out
 nohup ${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} >> stdout_slave_${LOG4J_PREFIX}.out 2>&1 &
 echo "... done! Slave process started on host ${HOST_NAME}!"
 echo ""
-
-

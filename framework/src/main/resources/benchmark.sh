@@ -4,6 +4,7 @@
 if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DIRNAME/..; pwd` ; fi; export RADARGUN_HOME
 . ${RADARGUN_HOME}/bin/includes.sh
 
+set_env
 
 #### parse plugins we want to test
 SSH_USER=$USER
@@ -103,9 +104,15 @@ PID_OF_MASTER_PROCESS=$RADARGUN_MASTER_PID
 
 for slave in $SLAVES; do
   CMD="source ~/.bash_profile ; cd $WORKING_DIR"
-  CMD="$CMD ; bin/slave.sh -m ${MASTER} -p $slave"
+  CMD="$CMD ; bin/slave.sh -m ${MASTER} -n $slave"
 
-  TOEXEC="$REMOTE_CMD -l $SSH_USER $slave '$CMD'"
+  # The slave_SLAVE_ADDRESS variable may be defined in environment.sh
+  eval SLAVE_ADDRESS=\$${slave}_SLAVE_ADDRESS
+  if [ -z $SLAVE_ADDRESS ] ; then
+    SLAVE_ADDRESS=$slave
+  fi
+
+  TOEXEC="$REMOTE_CMD -l $SSH_USER $SLAVE_ADDRESS '$CMD'"
   echo "$TOEXEC"
   eval $TOEXEC
 done
