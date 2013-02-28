@@ -10,7 +10,11 @@ import org.radargun.sysmonitor.CpuUsageMonitor;
 import org.radargun.sysmonitor.GcMonitor;
 import org.radargun.sysmonitor.LocalJmxMonitor;
 import org.radargun.sysmonitor.MemoryUsageMonitor;
+import org.radargun.utils.Utils;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -23,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 public class LocalSystemMonitorChart {
 
    private static Log log = LogFactory.getLog(LocalSystemMonitorChart.class);
+   private StringBuilder reportCsvContent;
 
    final Map<String, LocalJmxMonitor> sysMonitors;
 
@@ -52,50 +57,86 @@ public class LocalSystemMonitorChart {
          sysMonitors.putAll(filter);
          reportPrefix = reportDesc.getReportName();
       } else {
-        reportPrefix = "All";
+         reportPrefix = "All";
       }
-      generateCpuAndGc();
+      generateCpu();
+      generateGc();
       generateMemory();
    }
 
    private void generateMemory() {
+      this.reportCsvContent = new StringBuilder().append("NODE,TIME,MEASUREMENT\n");
       ClusterReport lcr = new ClusterReport();
       lcr.init("Time(sec)", "Memory(Mb)", "Memory consumption", "");
       for (String s : sysMonitors.keySet()) {
          MemoryUsageMonitor memMonitor = sysMonitors.get(s).getMemoryMonitor();
          memMonitor.convertToMb();
-         populateGraph(lcr, s, memMonitor);
+         populateGraph(lcr, "mem-" + s, memMonitor);
       }
       generateReport(lcr, "memory_usage");
    }
 
-   private void generateCpuAndGc() {
+   private void generateCpu() {
+      this.reportCsvContent = new StringBuilder().append("NODE,TIME,MEASUREMENT\n");
       ClusterReport lcr = new ClusterReport();
-      lcr.init("Time(sec)", "CPU&GC", "CPU & GC Usage (%)", "");
+      lcr.init("Time(sec)", "CPU", "CPU Usage (%)", "");
       for (String s : sysMonitors.keySet()) {
          CpuUsageMonitor cpuMonitor = sysMonitors.get(s).getCpuMonitor();
          populateGraph(lcr, "cpu-" + s, cpuMonitor);
       }
+      generateReport(lcr, "cpu_usage");
+   }
+
+   private void generateGc() {
+      this.reportCsvContent = new StringBuilder().append("NODE,TIME,MEASUREMENT\n");
+      ClusterReport lcr = new ClusterReport();
+      lcr.init("Time(sec)", "GC", "GC Usage (%)", "");
       for (String s : sysMonitors.keySet()) {
          GcMonitor gcMonitor = sysMonitors.get(s).getGcMonitor();
          populateGraph(lcr, "gc-" + s, gcMonitor);
       }
-      generateReport(lcr, "cpu_gc_usage");
+      generateReport(lcr, "gc_usage");
    }
 
    private void populateGraph(ClusterReport lcr, String s, AbstractActivityMonitor activityMonitor) {
       int measuringFrequencySecs = (int) TimeUnit.MILLISECONDS.toSeconds(LocalJmxMonitor.MEASURING_FREQUENCY);
-      LinkedHashMap<Integer,BigDecimal> graphData = activityMonitor.formatForGraph(measuringFrequencySecs, 25);
+      LinkedHashMap<Integer, BigDecimal> graphData = activityMonitor.formatForGraph(measuringFrequencySecs, 25);
       for (Map.Entry<Integer, BigDecimal> e : graphData.entrySet()) {
          lcr.addCategory(s, e.getKey(), e.getValue());
+         reportCsvContent.append('\n').append(s + "," + e.getKey() + "," + e.getValue());
       }
    }
 
-   private void generateReport(ClusterReport lcr, String fileNameNoExtension) {      
+   private void generateReport(ClusterReport lcr, String fileNameNoExtension) {
       try {
+         createOutputFile(reportPrefix + "-" + fileNameNoExtension + ".csv", reportCsvContent);
          LineReportGenerator.generate(lcr, GenerateChartStage.REPORTS, reportPrefix + "-" + fileNameNoExtension);
+      } catch (IOException e1) {
+         log.error("Failed to write CSV file", e1);
       } catch (Exception e) {
          log.error(e.getMessage(), e);
+      }
+   }
+
+   private void createOutputFile(String fileName, StringBuilder reportCsvContent) throws IOException {
+      File parentDir = new File(GenerateChartStage.REPORTS);
+      if (!parentDir.exists()) {
+         if (!parentDir.mkdirs())
+            throw new RuntimeException(parentDir.getAbsolutePath() + " does not exist and could not be created!");
+      }
+
+      File reportFile = Utils.createOrReplaceFile(parentDir, fileName);
+      if (!reportFile.exists()) {
+         throw new IllegalStateException(reportFile.getAbsolutePath()
+               + " was deleted? Not allowed to delete report file during test run!");
+      }
+      PrintWriter writer = null;
+      try {
+         writer = new PrintWriter(reportFile);
+         writer.append(reportCsvContent.toString());
+      } finally {
+         if (writer != null)
+            writer.close();
       }
    }
 }
