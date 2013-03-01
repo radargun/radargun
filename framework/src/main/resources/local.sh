@@ -36,4 +36,7 @@ done
 
 add_fwk_to_classpath
 set_env
+
+sleep 2
+
 ${JAVA} ${JVM_OPTS} -XX:+HeapDumpOnOutOfMemoryError -classpath $CP -Dbind.address=${BIND_ADDRESS} org.radargun.local.LaunchLocal -config ${CONFIG}
