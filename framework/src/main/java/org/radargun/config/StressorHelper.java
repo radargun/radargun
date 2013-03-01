@@ -1,8 +1,8 @@
 package org.radargun.config;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,7 +22,7 @@ public class StressorHelper {
    static {
       List<Class<? extends CacheWrapperStressor>> list
             = AnnotatedHelper.getClassesFromJar(AnnotatedHelper.getJAR(StressorHelper.class).getPath(), CacheWrapperStressor.class, Stressor.class);
-      stressors = new HashMap<String, Class<? extends CacheWrapperStressor>>();
+      stressors = new TreeMap<String, Class<? extends CacheWrapperStressor>>();
       for (Class<? extends CacheWrapperStressor> clazz : list) {
          Stressor annotation = clazz.getAnnotation(Stressor.class);
          String stageName;
