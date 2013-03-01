@@ -13,6 +13,7 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.state.MasterState;
+import org.radargun.stressors.CacheSpecificKeyGenStressor;
 import org.radargun.stressors.StressTestStressor;
 import org.radargun.stressors.StringKeyGenerator;
 
@@ -73,11 +74,20 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.")
    protected boolean fixedKeys = true;
 
+   @Property(doc = "Specifies whether the key generator is produced by a cache wrapper and therefore is product-specific. Default is false.")
+   protected boolean cacheSpecificKeyGenerator = false;
+
    protected CacheWrapper cacheWrapper;
 
    protected Map<String, Object> doWork() {
       log.info("Starting "+getClass().getSimpleName()+": " + this);
-      StressTestStressor stressTestStressor = new StressTestStressor();
+      StressTestStressor stressTestStressor = null;
+      if (cacheSpecificKeyGenerator) {
+         stressTestStressor = new CacheSpecificKeyGenStressor();
+      } else {
+         stressTestStressor = new StressTestStressor();
+         stressTestStressor.setKeyGeneratorClass(keyGeneratorClass);
+      }
       stressTestStressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
       stressTestStressor.setNumEntries(numEntries);
       stressTestStressor.setNumRequests(numRequests);
@@ -85,7 +95,6 @@ public class StressTestStage extends AbstractDistStage {
       stressTestStressor.setOpsCountStatusLog(opsCountStatusLog);
       stressTestStressor.setEntrySize(entrySize);
       stressTestStressor.setWritePercentage(writePercentage);
-      stressTestStressor.setKeyGeneratorClass(keyGeneratorClass);
       stressTestStressor.setUseTransactions(useTransactions);
       stressTestStressor.setCommitTransactions(commitTransactions);
       stressTestStressor.setTransactionSize(transactionSize);
