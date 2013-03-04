@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
    <parent>
@@ -16,7 +17,23 @@
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
-         <version>5.2.1.Final-redhat-1</version>
+         <version>5.2.4.Final-redhat-1</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.jbossts</groupId>
+         <artifactId>jbossjta</artifactId>
+         <version>4.16.6.Final-redhat-1</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging-spi</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jfree</groupId>
+               <artifactId>jfreechart</artifactId>
+            </exclusion>            
+         </exclusions>
       </dependency>
 
       <dependency>
@@ -27,6 +44,10 @@
             <exclusion>
                <groupId>org.infinispan</groupId>
                <artifactId>infinispan-core</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jboss.jbossts</groupId>
+               <artifactId>jbossjta</artifactId>
             </exclusion>
          </exclusions>
       </dependency>
