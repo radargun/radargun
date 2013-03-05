@@ -20,6 +20,8 @@ import java.util.Map;
  * @author Mircea Markus <mircea.markus@gmail.com>
  */
 public abstract class AbstractActivityMonitor implements Runnable, Serializable {
+   
+   protected long firstMeasurementTime = -1;
 
    static final ObjectName OS_NAME = getOSName();
 
@@ -80,5 +82,13 @@ public abstract class AbstractActivityMonitor implements Runnable, Serializable 
 
    public Integer getMeasurementCount() {
       return measurements.size();
+   }
+
+   public List<BigDecimal> getMeasurements() {
+      return measurements;
+   }
+
+   public long getFirstMeasurementTime() {
+      return firstMeasurementTime;
    }
 }

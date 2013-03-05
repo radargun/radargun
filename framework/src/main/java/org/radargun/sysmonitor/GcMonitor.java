@@ -40,6 +40,9 @@ public class GcMonitor extends AbstractActivityMonitor implements Serializable {
 
    public void run() {
       if (running) {
+         if (this.firstMeasurementTime == -1) {
+            this.firstMeasurementTime = System.currentTimeMillis();
+         }
          try {
             prevUpTime = upTime;
             prevGcTime = gcTime;

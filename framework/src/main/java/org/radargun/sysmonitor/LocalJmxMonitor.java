@@ -32,7 +32,7 @@ public class LocalJmxMonitor implements Serializable {
    
    private String productName;
    private String configName;
-
+   
    public String getProductName() {
       return productName;
    }
@@ -75,14 +75,14 @@ public class LocalJmxMonitor implements Serializable {
    }
 
    public void startMonitoringLocal() {
-
+      
       try {
          cpuMonitor = new CpuUsageMonitor();
-         exec.scheduleAtFixedRate(cpuMonitor, 0, 1000, TimeUnit.MILLISECONDS);
+         exec.scheduleAtFixedRate(cpuMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
          memoryMonitor = new MemoryUsageMonitor();
-         exec.scheduleAtFixedRate(memoryMonitor, 300, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
+         exec.scheduleAtFixedRate(memoryMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
          gcMonitor = new GcMonitor();
-         exec.scheduleAtFixedRate(gcMonitor, 600, 1000, TimeUnit.MILLISECONDS);
+         exec.scheduleAtFixedRate(gcMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
       } catch (Exception e) {
          log.error(e.getMessage(), e);
       }
@@ -106,9 +106,7 @@ public class LocalJmxMonitor implements Serializable {
       gcMonitor.stop();
       exec.shutdownNow();
       this.exec = null;
-//      log.trace("Cpu measurements = " + cpuMonitor.getMeasurementCount() + ", memory measurements = "
-//            + memoryMonitor.getMeasurementCount() + ", gc measurements = " + gcMonitor.getMeasurementCount());
-      log.info("Cpu measurements = " + cpuMonitor.getMeasurementCount() + ", memory measurements = "
+      log.trace("Cpu measurements = " + cpuMonitor.getMeasurementCount() + ", memory measurements = "
             + memoryMonitor.getMeasurementCount() + ", gc measurements = " + gcMonitor.getMeasurementCount());
    }
 
