@@ -1,20 +1,17 @@
 package org.radargun.sysmonitor;
 
+import java.io.Serializable;
+import java.lang.management.ManagementFactory;
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+
 import javax.management.AttributeNotFoundException;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-
-import java.io.Serializable;
-import java.lang.management.ManagementFactory;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author Mircea Markus <mircea.markus@gmail.com>
@@ -75,46 +72,14 @@ public abstract class AbstractActivityMonitor implements Runnable, Serializable 
          map.put(x, y);
          x += interval;
       }
-      
-      //now calibrate...
-      x -= interval; //this is max X
-      if (x <= xCount || map.isEmpty()) {
-        return map;
-      }
-
-      int stepSize = x / xCount;
-
-      LinkedHashMap<Integer, BigDecimal> calibratedResult = new LinkedHashMap<Integer, BigDecimal>(xCount + 1);
-      Iterator<Map.Entry<Integer,BigDecimal>> it = map.entrySet().iterator();
-      Map.Entry<Integer, BigDecimal> current = it.next();
-
-      done:
-      for (int i = 0; i <= xCount; i++) {
-         BigDecimal total = new BigDecimal(0);
-         int count = 0;
-         int thisX = i * stepSize;
-         int thisStepMax = (i+1) * stepSize;
-         while (current.getKey() < thisStepMax) {
-            total = total.add(current.getValue());
-            count++;
-            if (!it.hasNext()) {
-               if (count != 0) {
-                  calibratedResult.put(thisX, total.divide(new BigDecimal(count), RoundingMode.HALF_EVEN));
-               }
-               break done;
-            } else {
-              current = it.next();
-            }
-         }
-         if (count == 0) throw new IllegalStateException("Cannot happen as xCount < x!");
-
-         calibratedResult.put(thisX, total.divide(new BigDecimal(count), RoundingMode.HALF_EVEN));
-      }
-
-      return calibratedResult;
+      return map;
    }
 
    public Integer getMeasurementCount() {
       return measurements.size();
+   }
+
+   public List<BigDecimal> getMeasurements() {
+      return measurements;
    }
 }
