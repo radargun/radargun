@@ -1,27 +1,22 @@
 package org.radargun.sysmonitor;
 
+import java.io.Serializable;
+import java.lang.management.ManagementFactory;
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+
 import javax.management.AttributeNotFoundException;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import java.io.Serializable;
-import java.lang.management.ManagementFactory;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  * @author Mircea Markus <mircea.markus@gmail.com>
  */
 public abstract class AbstractActivityMonitor implements Runnable, Serializable {
-   
-   protected long firstMeasurementTime = -1;
 
    static final ObjectName OS_NAME = getOSName();
 
@@ -69,7 +64,7 @@ public abstract class AbstractActivityMonitor implements Runnable, Serializable 
    protected void addMeasurementAsPercentage(long v) {
       addMeasurement(new BigDecimal(v).divide(new BigDecimal(10)));
    }
-   
+
    public LinkedHashMap<Integer, BigDecimal> formatForGraph(int interval, int xCount) {
       int x = 0;
       LinkedHashMap<Integer, BigDecimal> map = new LinkedHashMap<Integer, BigDecimal>(measurements.size());
@@ -86,9 +81,5 @@ public abstract class AbstractActivityMonitor implements Runnable, Serializable 
 
    public List<BigDecimal> getMeasurements() {
       return measurements;
-   }
-
-   public long getFirstMeasurementTime() {
-      return firstMeasurementTime;
    }
 }

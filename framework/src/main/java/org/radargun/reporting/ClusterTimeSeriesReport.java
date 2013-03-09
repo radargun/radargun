@@ -1,8 +1,8 @@
 package org.radargun.reporting;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -17,21 +17,9 @@ import org.radargun.sysmonitor.AbstractActivityMonitor;
  * 
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
-public class ClusterTimeSeriesReport {
+public class ClusterTimeSeriesReport extends AbstractClusterReport {
 
    private TimeSeriesCollection categorySet = new TimeSeriesCollection();
-   private String xLabel;
-   private String yLabel;
-   private String title;
-   private String subtitle;
-   private List<String> notes = new ArrayList<String>();
-
-   public void init(String xLabel, String yLabel, String title, String subtitle) {
-      this.xLabel = xLabel;
-      this.yLabel = yLabel;
-      this.title = title;
-      this.subtitle = subtitle;
-   }
 
    public void addSeries(TimeSeries newSeries) {
       this.categorySet.addSeries(newSeries);
@@ -47,38 +35,20 @@ public class ClusterTimeSeriesReport {
       RegularTimePeriod timeScale = null;
       for (BigDecimal value : measurements) {
          if (timeScale == null) {
-            timeScale = RegularTimePeriod.createInstance(Second.class, new Date(monitor.getFirstMeasurementTime()),
-                  TimeZone.getDefault());
+            Calendar date = new GregorianCalendar();
+            // reset hour, minutes, seconds and millis
+            date.set(Calendar.HOUR_OF_DAY, 0);
+            date.set(Calendar.MINUTE, 0);
+            date.set(Calendar.SECOND, 0);
+            date.set(Calendar.MILLISECOND, 0);
+            
+            timeScale = RegularTimePeriod.createInstance(Second.class, date.getTime(), TimeZone.getDefault());
             newSeries.add(timeScale, value);
          } else {
             newSeries.add(newSeries.getNextTimePeriod(), value);
          }
       }
       return newSeries;
-   }
-
-   public void addNote(String note) {
-      notes.add(note);
-   }
-
-   public String getTitle() {
-      return title;
-   }
-
-   public String getSubtitle() {
-      return subtitle;
-   }
-
-   public String getXLabel() {
-      return xLabel;
-   }
-
-   public String getYLabel() {
-      return yLabel;
-   }
-
-   public List<String> getNotes() {
-      return notes;
    }
 
    public TimeSeriesCollection getCategorySet() {

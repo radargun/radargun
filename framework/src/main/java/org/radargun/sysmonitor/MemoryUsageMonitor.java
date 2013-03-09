@@ -42,9 +42,6 @@ public class MemoryUsageMonitor extends AbstractActivityMonitor implements Seria
 
    public void run() {
       if (running) {
-         if (this.firstMeasurementTime == -1) {
-            this.firstMeasurementTime = System.currentTimeMillis();
-         }
          try {
             MBeanServerConnection con = ManagementFactory.getPlatformMBeanServer();
             if (con == null)

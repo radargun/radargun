@@ -110,6 +110,7 @@ public class LocalSystemMonitorChart {
          TimeSeriesDataItem tsdi = (TimeSeriesDataItem) item;
          reportCsvContent.append('\n').append(s + "," + tsdi.getPeriod() + "," + tsdi.getValue());
       }
+      reportCsvContent.append('\n');
       timeReport.addSeries(monitorData);
    }
 

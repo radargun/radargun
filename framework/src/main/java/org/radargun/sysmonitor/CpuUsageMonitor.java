@@ -38,9 +38,6 @@ public class CpuUsageMonitor extends AbstractActivityMonitor implements Serializ
 
    public void run() {
       if (running) {
-         if (this.firstMeasurementTime == -1) {
-            this.firstMeasurementTime = System.currentTimeMillis();
-         }
          try {
             prevCpuTime = cpuTime;
             prevUpTime = upTime;
