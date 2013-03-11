@@ -78,6 +78,12 @@ public interface CacheWrapper
    Object getReplicatedData(String bucket, String key) throws Exception;
 
    /**
+    * @param bucket
+    * @return True if transactional operations could be performed on this cache.
+    */
+   boolean isTransactional(String bucket);
+
+   /**
     * Starts a transaction against the cache node. All the put, get, empty invocations after this method returns will
     * take place in the scope of the transaction started. The transaction will be completed by invoking {@link #endTransaction(boolean)}.
     * @throws RuntimeException if a particular cache implementation does not support transactions it should throw a

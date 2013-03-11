@@ -84,7 +84,7 @@ public class ClientStressTestStressor extends StressTestStressor {
    protected Map<String, Object> processResults(String iteration, int threads, Map<String, Object> results) {
       Statistics stats = new Statistics();
       for (Stressor stressor : stressors) {
-         stats.merge(stressor.stats);
+         stats.merge(stressor.getStats());
       }
             
       results.put(iteration  + ".DURATION", stats.getResponseTimeSum() + stats.getTxOverheadSum());

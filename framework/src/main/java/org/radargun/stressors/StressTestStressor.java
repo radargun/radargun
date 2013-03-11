@@ -52,8 +52,10 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    @Property(doc = "Number of requests in one transaction. By default transactions are off.")
    private int transactionSize = 1;
 
-   @Property(doc = "Should the test use transactions? Default is false.")
-   private boolean useTransactions = false;
+   @Property(doc = "Specifies if the requests should be explicitely wrapped in transactions. By default" +
+         "the cachewrapper is queried whether it does support the transactions, if it does," +
+         "transactions are used, otherwise these are not.")
+   private Boolean useTransactions = false;
 
    @Property(doc = "If this is set to true, transactions are committed in the end. Otherwise these are rolled back. Default is true.")
    private boolean commitTransactions = true;
@@ -144,7 +146,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       Statistics stats = new Statistics();
 
       for (Stressor stressor : stressors) {
-         stats.merge(stressor.stats);
+         stats.merge(stressor.getStats());
       }
 
       Map<String, Object> results = new LinkedHashMap<String, Object>();
@@ -164,7 +166,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          results.put("REMOVE_COUNT", stats.getNumRemoves());
       }
       results.put("FAILURES", stats.getNumErrors());
-      if (useTransactions) {
+      if (isUseTransactions()) {
          results.put("TX_COUNT", stats.getNumTransactions());
          results.put("TX_PER_SEC", numThreads * stats.getTransactionsPerSecond());
       }
@@ -385,10 +387,11 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    protected class Stressor extends Thread {
       private int threadIndex;
       private final String bucketId;
-      boolean txNotCompleted = false;
-      long transactionDuration = 0;
-      public Statistics stats;
+      private boolean txNotCompleted = false;
+      private long transactionDuration = 0;
+      private Statistics stats;
       private OperationLogic logic;
+      private boolean useTransactions = isUseTransactions();
 
       public Stressor(int threadIndex, OperationLogic logic) {
          super("Stressor-" + threadIndex);         
@@ -501,6 +504,10 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             stats.registerError(operationDuration, startTxTime + endTxTime, operation);
          }
          return result;
+      }
+
+      public Statistics getStats() {
+         return stats;
       }
 
       private class TransactionException extends Exception {
@@ -631,10 +638,10 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    }
 
    public boolean isUseTransactions() {
-      return useTransactions;
+      return useTransactions == null ? cacheWrapper.isTransactional(null) : useTransactions;
    }
 
-   public void setUseTransactions(boolean useTransactions) {
+   public void setUseTransactions(Boolean useTransactions) {
       this.useTransactions = useTransactions;
    }
 
@@ -770,7 +777,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             ", numThreads=" + numThreads +
             ", cacheWrapper=" + cacheWrapper +
             ", nodeIndex=" + nodeIndex +
-            ", useTransactions=" + useTransactions +
+            ", useTransactions=" + isUseTransactions() +
             ", transactionSize=" + transactionSize +
             ", commitTransactions=" + commitTransactions +
             ", durationMillis=" + durationMillis +

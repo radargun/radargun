@@ -117,6 +117,11 @@ public class Coherence3Wrapper implements CacheWrapper {
       return get(bucket, key);
    }
 
+   @Override
+   public boolean isTransactional(String bucket) {
+      return false;
+   }
+
    public void startTransaction() {
       throw new UnsupportedOperationException("Does not support JTA!");
    }

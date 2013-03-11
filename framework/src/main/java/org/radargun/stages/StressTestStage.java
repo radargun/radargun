@@ -1,8 +1,5 @@
 package org.radargun.stages;
 
-import static java.lang.Double.parseDouble;
-import static org.radargun.utils.Utils.numberFormat;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +13,9 @@ import org.radargun.state.MasterState;
 import org.radargun.stressors.CacheSpecificKeyGenStressor;
 import org.radargun.stressors.StressTestStressor;
 import org.radargun.stressors.StringKeyGenerator;
+
+import static java.lang.Double.parseDouble;
+import static org.radargun.utils.Utils.numberFormat;
 
 /**
  * Simulates the work with a distributed web sessions.
@@ -53,8 +53,10 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.")
    protected String keyGeneratorClass = StringKeyGenerator.class.getName();
 
-   @Property(doc = "Specifies if the requests should be explicitely wrapped in transactions. Default is false.")
-   protected boolean useTransactions = false;
+   @Property(doc = "Specifies if the requests should be explicitely wrapped in transactions. By default" +
+         "the cachewrapper is queried whether it does support the transactions, if it does," +
+         "transactions are used, otherwise these are not.")
+   protected Boolean useTransactions = null;
 
    @Property(doc = "Specifies whether the transactions should be committed (true) or rolled back (false). " +
          "Default is true")

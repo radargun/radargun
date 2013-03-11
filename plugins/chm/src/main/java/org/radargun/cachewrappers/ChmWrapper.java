@@ -1,10 +1,9 @@
 package org.radargun.cachewrappers;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.radargun.CacheWrapper;
 import org.radargun.utils.TypedProperties;
-
-
-import java.util.concurrent.ConcurrentHashMap;
 
 public class ChmWrapper implements CacheWrapper {
 
@@ -52,6 +51,11 @@ public class ChmWrapper implements CacheWrapper {
    @Override
    public Object getReplicatedData(String bucket, String key) throws Exception {
       return null;
+   }
+
+   @Override
+   public boolean isTransactional(String bucket) {
+      return false;
    }
 
    public void startTransaction() {

@@ -108,6 +108,11 @@ public class EHCacheWrapper implements CacheWrapper {
       return o;
    }
 
+   @Override
+   public boolean isTransactional(String bucket) {
+      return false;
+   }
+
    public void startTransaction() {
       throw new UnsupportedOperationException("Does not support JTA!");
    }
