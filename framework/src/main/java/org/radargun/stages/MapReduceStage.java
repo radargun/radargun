@@ -44,8 +44,16 @@ public class MapReduceStage extends AbstractDistStage {
    private String reducerFqn;
 
    @Property(optional = true, doc = "Fully qualified class name of the "
-         + "org.infinispan.distexec.mapreduce.Collator implementation to execute. " + "The default is null.")
+         + "org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.")
    private String collatorFqn = null;
+
+   @Property(optional = true, doc = "Boolean value that determines if the " 
+            + "Reduce phase of the MapReduceTask is distributed. The default is true.")
+   private boolean distributeReducePhase = true;
+
+   @Property(optional = true, doc = "Boolean value that determines if the "
+            + "intermediate results of the MapReduceTask are shared. The default is true.")
+   private boolean useIntermediateSharedCache = true;
 
    @SuppressWarnings("rawtypes")
    @Override

@@ -23,7 +23,7 @@ import java.util.Map;
 import org.radargun.CacheWrapper;
 import org.radargun.utils.ClassLoadHelper;
 
-public interface MapReduceCapable extends CacheWrapper {
+public interface MapReduceCapable<KOut, VOut, R> extends CacheWrapper {
 
    /**
     * 
@@ -47,7 +47,7 @@ public interface MapReduceCapable extends CacheWrapper {
     * 
     * @return the collated result
     */
-   public Object executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn,
+   public R executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn,
          String collatorFqn);
 
    /**
@@ -68,7 +68,30 @@ public interface MapReduceCapable extends CacheWrapper {
     * 
     * @return a Map where each key is an output key and value is reduced value for that output key
     */
-   @SuppressWarnings("rawtypes")
-   public Map executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn);
+   public Map<KOut, VOut> executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn);
+
+   /**
+    * 
+    * This boolean determines if the Reduce phase of the MapReduceTask is distributed
+    * 
+    * @param distributedReduce
+    *           if true this task will use distributed reduce phase execution
+    * 
+    * @since Infinispan 5.2
+    */
+   public void setDistributeReducePhase(boolean distributeReducePhase);
+
+   /**
+    * 
+    * This boolean determines if intermediate results of the MapReduceTask are shared
+    * 
+    * @param useIntermediateSharedCache
+    *           if true this tasks will share intermediate value cache with other executing
+    *           MapReduceTasks on the grid. Otherwise, if false, this task will use its own
+    *           dedicated cache for intermediate values
+    * 
+    * @since Infinispan 5.2
+    */
+   public void setUseIntermediateSharedCache(boolean useIntermediateSharedCache);
 
 }

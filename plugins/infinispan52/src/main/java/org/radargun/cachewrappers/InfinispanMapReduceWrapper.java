@@ -31,12 +31,16 @@ import org.radargun.utils.ClassLoadHelper;
 public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends InfinispanKillableWrapper implements
       MapReduceCapable<KOut, VOut, R> {
 
+   private boolean distributeReducePhase;
+   private boolean useIntermediateSharedCache;
+
    @SuppressWarnings("unchecked")
    @Override
    public R executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn,
          String collatorFqn) {
       Cache<KIn, VIn> cache = cacheManager.getCache(getCacheName());
-      MapReduceTask<KIn, VIn, KOut, VOut> t = new MapReduceTask<KIn, VIn, KOut, VOut>(cache);
+      MapReduceTask<KIn, VIn, KOut, VOut> t = new MapReduceTask<KIn, VIn, KOut, VOut>(cache,
+            this.distributeReducePhase, this.useIntermediateSharedCache);
 
       Mapper<KIn, VIn, KOut, VOut> mapper = null;
       Reducer<KOut, VOut> reducer = null;
@@ -74,7 +78,8 @@ public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends Infinis
    @Override
    public Map<KOut, VOut> executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn) {
       Cache<KIn, VIn> cache = cacheManager.getCache(getCacheName());
-      MapReduceTask<KIn, VIn, KOut, VOut> t = new MapReduceTask<KIn, VIn, KOut, VOut>(cache);
+      MapReduceTask<KIn, VIn, KOut, VOut> t = new MapReduceTask<KIn, VIn, KOut, VOut>(cache,
+            this.distributeReducePhase, this.useIntermediateSharedCache);
 
       Mapper<KIn, VIn, KOut, VOut> mapper = null;
       Reducer<KOut, VOut> reducer = null;
@@ -104,11 +109,12 @@ public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends Infinis
 
    @Override
    public void setDistributeReducePhase(boolean distributeReducePhase) {
-      //Not used by Infinispan 5.1
+      this.distributeReducePhase = distributeReducePhase;
    }
 
    @Override
    public void setUseIntermediateSharedCache(boolean useIntermediateSharedCache) {
-      //Not used by Infinispan 5.1
+      this.useIntermediateSharedCache = useIntermediateSharedCache;
    }
+
 }
