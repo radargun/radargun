@@ -70,6 +70,8 @@ public class MapReduceStage extends AbstractDistStage {
             if (cacheWrapper instanceof MapReduceCapable) {
                if (mapperFqn != null && reducerFqn != null) {
                   log.info("--------------------");
+                  ((MapReduceCapable) cacheWrapper).setDistributeReducePhase(distributeReducePhase);
+                  ((MapReduceCapable) cacheWrapper).setUseIntermediateSharedCache(useIntermediateSharedCache);
                   if (collatorFqn != null) {
                      long start = System.currentTimeMillis();
                      payloadObject = ((MapReduceCapable) cacheWrapper).executeMapReduceTask(classLoadHelper, mapperFqn,
