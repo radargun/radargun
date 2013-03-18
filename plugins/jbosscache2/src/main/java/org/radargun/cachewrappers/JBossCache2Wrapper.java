@@ -84,6 +84,11 @@ public class JBossCache2Wrapper implements CacheWrapper
       return nodeData.getAttributes().get(key);
    }
 
+   @Override
+   public boolean isTransactional(String bucket) {
+      return true;
+   }
+
 
    public void startTransaction()
    {

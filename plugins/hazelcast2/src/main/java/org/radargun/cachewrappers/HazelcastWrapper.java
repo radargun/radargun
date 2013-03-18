@@ -96,6 +96,11 @@ public class HazelcastWrapper implements CacheWrapper {
    }
 
    @Override
+   public boolean isTransactional(String bucket) {
+      return true;
+   }
+
+   @Override
    public void startTransaction() {
       try {
          hazelcastInstance.getTransaction().begin();

@@ -1,10 +1,10 @@
 package org.radargun.cachewrappers;
 
-import org.radargun.CacheWrapper;
-import org.radargun.utils.TypedProperties;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.radargun.CacheWrapper;
+import org.radargun.utils.TypedProperties;
 
 /**
  * Cache wrapper for Terracotta 2.3.0
@@ -64,6 +64,11 @@ public class TerracottaWrapper implements CacheWrapper {
    @Override
    public Object getReplicatedData(String bucket, String key) throws Exception {
       return get(bucket, key);
+   }
+
+   @Override
+   public boolean isTransactional(String bucket) {
+      return false;
    }
 
    public void empty() throws Exception {

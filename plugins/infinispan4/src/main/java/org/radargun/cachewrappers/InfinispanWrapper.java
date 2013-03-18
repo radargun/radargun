@@ -485,4 +485,9 @@ public class InfinispanWrapper implements CacheWrapper, Debugable {
    protected String getCHInfo(DistributionManager dm) {
       return "\nCH: " + dm.getConsistentHash();
    }
+
+   @Override
+   public boolean isTransactional(String bucket) {
+      return tm != null;
+   }
 }
