@@ -114,6 +114,10 @@ public class JBossCache3Wrapper implements CacheWrapper
       return get(path, key);
    }
 
+   @Override
+   public boolean isTransactional(String bucket) {
+      return true;
+   }
 
    public void startTransaction()
    {
