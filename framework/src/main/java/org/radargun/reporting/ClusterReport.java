@@ -1,8 +1,5 @@
 package org.radargun.reporting;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -14,50 +11,13 @@ import org.jfree.data.category.DefaultCategoryDataset;
  *
  * @author Mircea.Markus@jboss.com
  */
-public class ClusterReport {
+public class ClusterReport extends AbstractClusterReport {
 
    private DefaultCategoryDataset categorySet = new DefaultCategoryDataset();
-   private String xLabel;
-   private String yLabel;
-   private String title;
-   private String subtitle;
-   private List<String> notes = new ArrayList<String>();
-      
-   public void init(String xLabel, String yLabel, String title, String subtitle) {
-      this.xLabel = xLabel;
-      this.yLabel = yLabel;
-      this.title = title;
-      this.subtitle = subtitle;
-   }
-
    public void addCategory(String rowKey, int columnKey, Number value) {
       this.categorySet.addValue(value, rowKey, columnKey);
    }
    
-   public void addNote(String note) {
-      notes.add(note);
-   }
-
-   public String getTitle() {
-      return title;
-   }
-
-   public String getSubtitle() {
-      return subtitle;
-   }
-
-   public String getXLabel() {
-      return xLabel;
-   }
-
-   public String getYLabel() {
-      return yLabel;
-   }
-   
-   public List<String> getNotes() {
-      return notes;
-   }
-
    public DefaultCategoryDataset getCategorySet() {
       return categorySet;
    }

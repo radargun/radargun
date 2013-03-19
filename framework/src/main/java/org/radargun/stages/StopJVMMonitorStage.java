@@ -38,11 +38,11 @@ public class StopJVMMonitorStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      LocalJmxMonitor monitor = (LocalJmxMonitor) slaveState.get(StartJVMMonitorStage.monitorKey);
+      LocalJmxMonitor monitor = (LocalJmxMonitor) slaveState.get(StartJVMMonitorStage.MONITOR_KEY);
       if (monitor != null) {
          monitor.stopMonitoringLocal();
          ack.setPayload(monitor);
-         slaveState.remove(StartJVMMonitorStage.monitorKey);
+         slaveState.remove(StartJVMMonitorStage.MONITOR_KEY);
       } else {
          ack.setError(true);
          ack.setErrorMessage("No JVMMonitor object found on slave: " + this.slaveIndex);
@@ -59,7 +59,7 @@ public class StopJVMMonitorStage extends AbstractDistStage {
          LocalJmxMonitor monitor = (LocalJmxMonitor) dack.getPayload();
          sysMonitors.put("slave-" + dack.getSlaveIndex(), monitor);
       }
-      masterState.put(StartJVMMonitorStage.monitorKey, sysMonitors);
+      masterState.put(StartJVMMonitorStage.MONITOR_KEY, sysMonitors);
       return true;
    }
 }

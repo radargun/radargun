@@ -15,49 +15,50 @@
                         <element name="Repeat" type="rg:repeat"/>
                         <element name="Abstract" type="rg:Abstract"/>
                         <element name="AbstractDist" type="rg:AbstractDist"/>
-                        <element name="MapReduce" type="rg:MapReduce"/>
-                        <element name="StopBackgroundStressors" type="rg:StopBackgroundStressors"/>
+                        <element name="AbstractMaster" type="rg:AbstractMaster"/>
+                        <element name="AbstractStart" type="rg:AbstractStart"/>
+                        <element name="Check" type="rg:Check"/>
+                        <element name="CheckData" type="rg:CheckData"/>
+                        <element name="CheckTopology" type="rg:CheckTopology"/>
+                        <element name="ClearCluster" type="rg:ClearCluster"/>
                         <element name="StressTest" type="rg:StressTest"/>
                         <element name="WebSessionBenchmark" type="rg:StressTest"/>
-                        <element name="StressTestWarmup" type="rg:StressTestWarmup"/>
-                        <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
                         <element name="ClientStressTest" type="rg:ClientStressTest"/>
-                        <element name="StopJVMMonitor" type="rg:StopJVMMonitor"/>
-                        <element name="StopBackgroundStatistics" type="rg:StopBackgroundStatistics"/>
-                        <element name="AbstractMaster" type="rg:AbstractMaster"/>
-                        <element name="Kill" type="rg:Kill"/>
-                        <element name="CheckTopology" type="rg:CheckTopology"/>
-                        <element name="Check" type="rg:Check"/>
-                        <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
-                        <element name="LoadFile" type="rg:LoadFile"/>
-                        <element name="SetLogLevel" type="rg:SetLogLevel"/>
-                        <element name="XSReplLoad" type="rg:XSReplLoad"/>
-                        <element name="StartJVMMonitor" type="rg:StartJVMMonitor"/>
-                        <element name="AbstractStart" type="rg:AbstractStart"/>
-                        <element name="StartCluster" type="rg:StartCluster"/>
-                        <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
-                        <element name="GenerateChart" type="rg:GenerateChart"/>
-                        <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
-                        <element name="CheckData" type="rg:CheckData"/>
-                        <element name="JMXClusterValidation" type="rg:JMXClusterValidation"/>
-                        <element name="TpccPopulation" type="rg:TpccPopulation"/>
                         <element name="ClusterValidation" type="rg:ClusterValidation"/>
-                        <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
-                        <element name="XSReplCheck" type="rg:XSReplCheck"/>
-                        <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
-                        <element name="ReportJVMMonitor" type="rg:ReportJVMMonitor"/>
+                        <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
                         <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
-                        <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
-                        <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
-                        <element name="ClearCluster" type="rg:ClearCluster"/>
-                        <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
-                        <element name="StartBackgroundStatistics" type="rg:StartBackgroundStatistics"/>
-                        <element name="SingleTXLoad" type="rg:SingleTXLoad"/>
-                        <element name="Sleep" type="rg:Sleep"/>
+                        <element name="GenerateChart" type="rg:GenerateChart"/>
+                        <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
+                        <element name="JMXClusterValidation" type="rg:JMXClusterValidation"/>
+                        <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
                         <element name="JProfiler" type="rg:JProfiler"/>
+                        <element name="Kill" type="rg:Kill"/>
+                        <element name="LoadFile" type="rg:LoadFile"/>
+                        <element name="MapReduce" type="rg:MapReduce"/>
+                        <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
+                        <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
+                        <element name="ReportJVMMonitor" type="rg:ReportJVMMonitor"/>
+                        <element name="SetLogLevel" type="rg:SetLogLevel"/>
                         <element name="SetPartitions" type="rg:SetPartitions"/>
                         <element name="SingleTXCheck" type="rg:SingleTXCheck"/>
+                        <element name="SingleTXLoad" type="rg:SingleTXLoad"/>
+                        <element name="Sleep" type="rg:Sleep"/>
+                        <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
+                        <element name="StartBackgroundStatistics" type="rg:StartBackgroundStatistics"/>
                         <element name="StartBackgroundStressors" type="rg:StartBackgroundStressors"/>
+                        <element name="StartCluster" type="rg:StartCluster"/>
+                        <element name="StartJVMMonitor" type="rg:StartJVMMonitor"/>
+                        <element name="StopBackgroundStatistics" type="rg:StopBackgroundStatistics"/>
+                        <element name="StopBackgroundStressors" type="rg:StopBackgroundStressors"/>
+                        <element name="StopJVMMonitor" type="rg:StopJVMMonitor"/>
+                        <element name="StressTestWarmup" type="rg:StressTestWarmup"/>
+                        <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
+                        <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
+                        <element name="TpccPopulation" type="rg:TpccPopulation"/>
+                        <element name="WaitForTopologyEvent" type="rg:WaitForTopologyEvent"/>
+                        <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
+                        <element name="XSReplCheck" type="rg:XSReplCheck"/>
+                        <element name="XSReplLoad" type="rg:XSReplLoad"/>
                      </choice>
                   </sequence>
                   <attribute name="initSize" type="string"/>
@@ -70,7 +71,6 @@
                   <sequence>
                      <choice maxOccurs="unbounded" minOccurs="1">
                         <element name="product" type="rg:product"/>
-                        <element name="hazelcast2" type="rg:hazelcast2"/>
                         <element name="infinispan4" type="rg:infinispan4"/>
                         <element name="infinispan50" type="rg:infinispan50"/>
                         <element name="infinispan51" type="rg:infinispan51"/>
@@ -119,49 +119,50 @@
             <element name="Repeat" type="rg:repeat"/>
             <element name="Abstract" type="rg:Abstract"/>
             <element name="AbstractDist" type="rg:AbstractDist"/>
-            <element name="MapReduce" type="rg:MapReduce"/>
-            <element name="StopBackgroundStressors" type="rg:StopBackgroundStressors"/>
+            <element name="AbstractMaster" type="rg:AbstractMaster"/>
+            <element name="AbstractStart" type="rg:AbstractStart"/>
+            <element name="Check" type="rg:Check"/>
+            <element name="CheckData" type="rg:CheckData"/>
+            <element name="CheckTopology" type="rg:CheckTopology"/>
+            <element name="ClearCluster" type="rg:ClearCluster"/>
             <element name="StressTest" type="rg:StressTest"/>
             <element name="WebSessionBenchmark" type="rg:StressTest"/>
-            <element name="StressTestWarmup" type="rg:StressTestWarmup"/>
-            <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
             <element name="ClientStressTest" type="rg:ClientStressTest"/>
-            <element name="StopJVMMonitor" type="rg:StopJVMMonitor"/>
-            <element name="StopBackgroundStatistics" type="rg:StopBackgroundStatistics"/>
-            <element name="AbstractMaster" type="rg:AbstractMaster"/>
-            <element name="Kill" type="rg:Kill"/>
-            <element name="CheckTopology" type="rg:CheckTopology"/>
-            <element name="Check" type="rg:Check"/>
-            <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
-            <element name="LoadFile" type="rg:LoadFile"/>
-            <element name="SetLogLevel" type="rg:SetLogLevel"/>
-            <element name="XSReplLoad" type="rg:XSReplLoad"/>
-            <element name="StartJVMMonitor" type="rg:StartJVMMonitor"/>
-            <element name="AbstractStart" type="rg:AbstractStart"/>
-            <element name="StartCluster" type="rg:StartCluster"/>
-            <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
-            <element name="GenerateChart" type="rg:GenerateChart"/>
-            <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
-            <element name="CheckData" type="rg:CheckData"/>
-            <element name="JMXClusterValidation" type="rg:JMXClusterValidation"/>
-            <element name="TpccPopulation" type="rg:TpccPopulation"/>
             <element name="ClusterValidation" type="rg:ClusterValidation"/>
-            <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
-            <element name="XSReplCheck" type="rg:XSReplCheck"/>
-            <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
-            <element name="ReportJVMMonitor" type="rg:ReportJVMMonitor"/>
+            <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
             <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
-            <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
-            <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
-            <element name="ClearCluster" type="rg:ClearCluster"/>
-            <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
-            <element name="StartBackgroundStatistics" type="rg:StartBackgroundStatistics"/>
-            <element name="SingleTXLoad" type="rg:SingleTXLoad"/>
-            <element name="Sleep" type="rg:Sleep"/>
+            <element name="GenerateChart" type="rg:GenerateChart"/>
+            <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
+            <element name="JMXClusterValidation" type="rg:JMXClusterValidation"/>
+            <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
             <element name="JProfiler" type="rg:JProfiler"/>
+            <element name="Kill" type="rg:Kill"/>
+            <element name="LoadFile" type="rg:LoadFile"/>
+            <element name="MapReduce" type="rg:MapReduce"/>
+            <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
+            <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
+            <element name="ReportJVMMonitor" type="rg:ReportJVMMonitor"/>
+            <element name="SetLogLevel" type="rg:SetLogLevel"/>
             <element name="SetPartitions" type="rg:SetPartitions"/>
             <element name="SingleTXCheck" type="rg:SingleTXCheck"/>
+            <element name="SingleTXLoad" type="rg:SingleTXLoad"/>
+            <element name="Sleep" type="rg:Sleep"/>
+            <element name="StackTraceWatchdog" type="rg:StackTraceWatchdog"/>
+            <element name="StartBackgroundStatistics" type="rg:StartBackgroundStatistics"/>
             <element name="StartBackgroundStressors" type="rg:StartBackgroundStressors"/>
+            <element name="StartCluster" type="rg:StartCluster"/>
+            <element name="StartJVMMonitor" type="rg:StartJVMMonitor"/>
+            <element name="StopBackgroundStatistics" type="rg:StopBackgroundStatistics"/>
+            <element name="StopBackgroundStressors" type="rg:StopBackgroundStressors"/>
+            <element name="StopJVMMonitor" type="rg:StopJVMMonitor"/>
+            <element name="StressTestWarmup" type="rg:StressTestWarmup"/>
+            <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
+            <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
+            <element name="TpccPopulation" type="rg:TpccPopulation"/>
+            <element name="WaitForTopologyEvent" type="rg:WaitForTopologyEvent"/>
+            <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
+            <element name="XSReplCheck" type="rg:XSReplCheck"/>
+            <element name="XSReplLoad" type="rg:XSReplLoad"/>
          </choice>
       </sequence>
       <attribute name="times" type="string"/>
@@ -204,33 +205,127 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="MapReduce">
+   <complexType abstract="true" name="AbstractMaster">
       <annotation>
-         <documentation>Stage which executes a MapReduce Task against all keys in the cache.</documentation>
+         <documentation/>
+      </annotation>
+      <complexContent>
+         <extension base="rg:Abstract"/>
+      </complexContent>
+   </complexType>
+   <complexType abstract="true" name="AbstractStart">
+      <annotation>
+         <documentation/>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="collatorFqn" type="string">
+            <attribute name="mayFailOn" type="string">
                <annotation>
-                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="mapperFqn" type="string">
-               <annotation>
-                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Mapper implementation to execute.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="reducerFqn" type="string">
-               <annotation>
-                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to execute.</documentation>
+                  <documentation>Set of slaves where the start may fail but this will not cause an error. Default is none.</documentation>
                </annotation>
             </attribute>
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="StopBackgroundStressors">
+   <complexType abstract="true" name="Check">
       <annotation>
-         <documentation>Stop BackgroundStressors.</documentation>
+         <documentation/>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
+      </complexContent>
+   </complexType>
+   <complexType name="CheckData">
+      <annotation>
+         <documentation>Stage for checking presence or absence of data uploaded by BackgroundStressors</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="checkThreads" type="string">
+               <annotation>
+                  <documentation>Number of thread per node which check data validity. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="debugNull" type="string">
+               <annotation>
+                  <documentation>If the GET request results in null response, call wrapper-specific functions to show debug info. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="deleted" type="string">
+               <annotation>
+                  <documentation>If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="entrySize" type="string">
+               <annotation>
+                  <documentation>Number of bytes carried in single entry.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="extraEntries" type="string">
+               <annotation>
+                  <documentation>Entries that have not the form key{number} but occur in the cluster. This string specifies a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries.Defaults to 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="failOnNull" type="string">
+               <annotation>
+                  <documentation>If entry is null, fail immediatelly. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="ignoreSum" type="string">
+               <annotation>
+                  <documentation>Usually the test checks that sum of local nodes = numOwners * numEntries + extraEntries.This option disables such behaviour. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="liveSlavesHint" type="string">
+               <annotation>
+                  <documentation>Hint how many slaves are currently alive - if set to &gt; 0 then the query for amount of entries inthis cache is postponed until the cache appears to be fully replicated. By default this is disabled.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="logChecksCount" type="string">
+               <annotation>
+                  <documentation>Number of queries after which a DEBUG log message is printed. Default is 10000.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="numEntries" type="string">
+               <annotation>
+                  <documentation>Number of entries with key in form key{number} in the cache.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="numOwners" type="string">
+               <annotation>
+                  <documentation>Number of owners of one key (primary + backups). If negative the number is multiplied by cluster size, therefore, -1 means full replication. Default is -1.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="CheckTopology">
+      <annotation>
+         <documentation>Controls which topology events have (not) happened recently</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="changed" type="string">
+               <annotation>
+                  <documentation>The check controls if this event has happened (true) or not happened (false). Defaults to true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="period" type="string">
+               <annotation>
+                  <documentation>The period in milliseconds which is checked. Default is infinite.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="type" type="string">
+               <annotation>
+                  <documentation>What does this stage control. Default is both DataRehashed and TopologyChanged events.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="ClearCluster">
+      <annotation>
+         <documentation>Removes all data from the cache</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist"/>
@@ -335,14 +430,6 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="StressTestWarmup">
-      <annotation>
-         <documentation>Warmup stage for stress test benchmarks.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:StressTest"/>
-      </complexContent>
-   </complexType>
    <complexType name="ClientStressTest">
       <annotation>
          <documentation>Repeats the StressTest logic with increasing amount of client threads.</documentation>
@@ -367,89 +454,90 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="StopJVMMonitor">
+   <complexType name="ClusterValidation">
       <annotation>
-         <documentation>Stop collecting JVM statistics on each slave node and return collected statistics to the master node.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist"/>
-      </complexContent>
-   </complexType>
-   <complexType name="StopBackgroundStatistics">
-      <annotation>
-         <documentation>Stop Statistics and return collected statistics to master.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist"/>
-      </complexContent>
-   </complexType>
-   <complexType abstract="true" name="AbstractMaster">
-      <annotation>
-         <documentation/>
-      </annotation>
-      <complexContent>
-         <extension base="rg:Abstract"/>
-      </complexContent>
-   </complexType>
-   <complexType name="Kill">
-      <annotation>
-         <documentation>Shutdowns or kills (simulates node crash) one or more nodes.</documentation>
+         <documentation>Verifies that the cluster is formed by injecting an entry into the cache and then reading it from other nodes.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="async" type="string">
+            <attribute name="partialReplication" type="string">
                <annotation>
-                  <documentation>If set to true the benchmark will not wait until the node is killed. Default is false.</documentation>
+                  <documentation>If set to true, then the slave will consider that the cluster is formed when one slave replicated the control entry. Otherwise the replication will only be considered successful if all slaves replicated the control value. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="delayExecution" type="string">
+            <attribute name="replicationTimeSleep" type="string">
                <annotation>
-                  <documentation>If this value is positive the stage will spawn a thread which will kill the node after the delay. The stage will not wait for anything. By default the kill is immediate and synchronous.</documentation>
+                  <documentation>Delay between attempts to retrieve the control entry.</documentation>
                </annotation>
             </attribute>
-            <attribute name="role" type="string">
+            <attribute name="replicationTryCount" type="string">
                <annotation>
-                  <documentation>Instead of specifying concrete slaves we may choose a victim based on his role in the cluster. Supported roles are [COORDINATOR, BRIDGE]. By default no role is specified.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="tearDown" type="string">
-               <annotation>
-                  <documentation>If set to true, the nodes should be shutdown. Default is false = simulate node crash.</documentation>
+                  <documentation>How many times we should try to retrieve the control entry.</documentation>
                </annotation>
             </attribute>
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="CheckTopology">
+   <complexType name="CsvReportGeneration">
       <annotation>
-         <documentation>Controls which topology events have (not) happened recently</documentation>
+         <documentation>Generates report in CSV format from the latest StressTest results</documentation>
       </annotation>
       <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="changed" type="string">
+         <extension base="rg:AbstractMaster">
+            <attribute name="computeAverage" type="string">
                <annotation>
-                  <documentation>The check controls if this event has happened (true) or not happened (false). Defaults to true.</documentation>
+                  <documentation>Adds a line with average results. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="period" type="string">
+            <attribute name="ignore" type="string">
                <annotation>
-                  <documentation>The period in milliseconds which is checked. Default is infinite.</documentation>
+                  <documentation>Slaves whose results will be ignored.</documentation>
                </annotation>
             </attribute>
-            <attribute name="type" type="string">
+            <attribute name="targetDir" type="string">
                <annotation>
-                  <documentation>What does this stage control. Default is both DataRehashed and TopologyChanged events.</documentation>
+                  <documentation>Directory into which will be report files written.</documentation>
                </annotation>
             </attribute>
          </extension>
       </complexContent>
    </complexType>
-   <complexType abstract="true" name="Check">
+   <complexType name="DestroyWrapper">
       <annotation>
-         <documentation/>
+         <documentation>Distributed stage that will stop the cache wrapper on each slave.</documentation>
       </annotation>
       <complexContent>
-         <extension base="rg:AbstractDist"/>
+         <extension base="rg:AbstractDist">
+            <attribute name="enforceMemoryThrashHold" type="string">
+               <annotation>
+                  <documentation>Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="memoryThreshold" type="string">
+               <annotation>
+                  <documentation>If the free memory after wrapper destroy and System.gc() is below percentage specified in this property the benchmark will stop. Default is 95.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="GenerateChart">
+      <annotation>
+         <documentation>Stage that generates a chart from a set of csv files.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractMaster">
+            <attribute name="csvFilesDirectory" type="string">
+               <annotation>
+                  <documentation>Path to directory where are the (input) CSV files. Default is 'reports'.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reportDirectory" type="string">
+               <annotation>
+                  <documentation>Path to directory where the report (output) should be generated. Default is 'reports'.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
       </complexContent>
    </complexType>
    <complexType name="IsolationLevelCheck">
@@ -481,280 +569,6 @@
             <attribute name="writers" type="string">
                <annotation>
                   <documentation>Number of concurrent threads that modify the value. Default is 2.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="LoadFile">
-      <annotation>
-         <documentation>Loads the contents of a file into the cache.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="bucket" type="string">
-               <annotation>
-                  <documentation>The name of the bucket where keys are written. The default is null</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="filePath" type="string">
-               <annotation>
-                  <documentation>Full pathname to the file.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="valueSize" type="string">
-               <annotation>
-                  <documentation>The size of the values to put into the cache from the contents of the file. The default size is 1MB (1024 * 1024)</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="SetLogLevel">
-      <annotation>
-         <documentation>Debugging stage: changes log priorities</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="package" type="string">
-               <annotation>
-                  <documentation>The package or class which should be affected.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="pop" type="string">
-               <annotation>
-                  <documentation>If set to true, instead of setting the priority directly just undo the last priority change. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="priority" type="string">
-               <annotation>
-                  <documentation>The new priority that should be used. No defaults.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="XSReplLoad">
-      <annotation>
-         <documentation>Loads data into the cache with input cache name encoded into the value.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="delete" type="string">
-               <annotation>
-                  <documentation>If set to true, the entries are removed instead of being inserted. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="numEntries" type="string">
-               <annotation>
-                  <documentation>Amount of entries that should be inserted into the cache.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="valuePostFix" type="string">
-               <annotation>
-                  <documentation>String encoded into the value so that the entry may be distinguished from entries loaded in different load stages. Default is empty string.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="StartJVMMonitor">
-      <annotation>
-         <documentation>Starts collecting JVM statistics locally on each slave node.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist"/>
-      </complexContent>
-   </complexType>
-   <complexType abstract="true" name="AbstractStart">
-      <annotation>
-         <documentation/>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="mayFailOn" type="string">
-               <annotation>
-                  <documentation>Set of slaves where the start may fail but this will not cause an error. Default is none.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="StartCluster">
-      <annotation>
-         <documentation>Starts cache wrappers on specified slaves</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractStart">
-            <attribute name="delayAfterFirstSlaveStarts" type="string">
-               <annotation>
-                  <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="delayBetweenStartingSlaves" type="string">
-               <annotation>
-                  <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="expectNumSlaves" type="string">
-               <annotation>
-                  <documentation>The number of slaves that should be up after all slaves are started. Applicable only with validateCluster=true. Default is all slaves in the cluster (in the same site in case of multi-site configuration).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="reachable" type="string">
-               <annotation>
-                  <documentation>Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="staggerSlaveStartup" type="string">
-               <annotation>
-                  <documentation>If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="validateCluster" type="string">
-               <annotation>
-                  <documentation>Specifies whether the cluster formation should be checked after cache wrapper startup. Default is true.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="StackTraceWatchdog">
-      <annotation>
-         <documentation>Debug usage only. Periodically check for all thread stack traces and print them out.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="asyncLogging" type="string">
-               <annotation>
-                  <documentation>If set to true the watchdog will not use standard logging for output but will push the output to queue consumed (logged) by another thread. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="mask" type="string">
-               <annotation>
-                  <documentation>If set, only those threads which have this mask in the name will be checked. Default is not set.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="onlyStuck" type="string">
-               <annotation>
-                  <documentation>By default the check will print out only those threads which appear to be stuck. If this is set to false all threads will be printed out. Default is true.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="period" type="string">
-               <annotation>
-                  <documentation>The delay between consecutive checks. Default is 10 seconds.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="shortStack" type="string">
-               <annotation>
-                  <documentation>Threads with stack lower or equal to this value are never printed (because usually such threads are parked in thread pools). Default is 10.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="GenerateChart">
-      <annotation>
-         <documentation>Stage that generates a chart from a set of csv files.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractMaster">
-            <attribute name="csvFilesDirectory" type="string">
-               <annotation>
-                  <documentation>Path to directory where are the (input) CSV files. Default is 'reports'.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="reportDirectory" type="string">
-               <annotation>
-                  <documentation>Path to directory where the report (output) should be generated. Default is 'reports'.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="CsvReportGeneration">
-      <annotation>
-         <documentation>Generates report in CSV format from the latest StressTest results</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractMaster">
-            <attribute name="computeAverage" type="string">
-               <annotation>
-                  <documentation>Adds a line with average results. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="ignore" type="string">
-               <annotation>
-                  <documentation>Slaves whose results will be ignored.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="targetDir" type="string">
-               <annotation>
-                  <documentation>Directory into which will be report files written.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="CheckData">
-      <annotation>
-         <documentation>Stage for checking presence or absence of data uploaded by BackgroundStressors</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="checkThreads" type="string">
-               <annotation>
-                  <documentation>Number of thread per node which check data validity. Default is 1.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="debugNull" type="string">
-               <annotation>
-                  <documentation>If the GET request results in null response, call wrapper-specific functions to show debug info. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="deleted" type="string">
-               <annotation>
-                  <documentation>If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="entrySize" type="string">
-               <annotation>
-                  <documentation>Number of bytes carried in single entry.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="extraEntries" type="string">
-               <annotation>
-                  <documentation>Entries that have not the form key{number} but occur in the cluster. This string specifies a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries.Defaults to 0.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="failOnNull" type="string">
-               <annotation>
-                  <documentation>If entry is null, fail immediatelly. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="ignoreSum" type="string">
-               <annotation>
-                  <documentation>Usually the test checks that sum of local nodes = numOwners * numEntries + extraEntries.This option disables such behaviour. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="liveSlavesHint" type="string">
-               <annotation>
-                  <documentation>Hint how many slaves are currently alive - if set to &gt; 0 then the query for amount of entries inthis cache is postponed until the cache appears to be fully replicated. By default this is disabled.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="logChecksCount" type="string">
-               <annotation>
-                  <documentation>Number of queries after which a DEBUG log message is printed. Default is 10000.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="numEntries" type="string">
-               <annotation>
-                  <documentation>Number of entries with key in form key{number} in the cache.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="numOwners" type="string">
-               <annotation>
-                  <documentation>Number of owners of one key (primary + backups). If negative the number is multiplied by cluster size, therefore, -1 means full replication. Default is -1.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -799,59 +613,6 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="TpccPopulation">
-      <annotation>
-         <documentation>This stage shuld be run before the TpccBenchmarkStage.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="cIdMask" type="string">
-               <annotation>
-                  <documentation>Mask used to generate non-uniformly distributed random customer numbers. Default is 1023.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="cLastMask" type="string">
-               <annotation>
-                  <documentation>Mask used to generate non-uniformly distributed random customer last names. Default is 255.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="numWarehouses" type="string">
-               <annotation>
-                  <documentation>Number of Warehouses. Default is 1.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="olIdMask" type="string">
-               <annotation>
-                  <documentation>Mask used to generate non-uniformly distributed random item numbers. Default is 8191.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="ClusterValidation">
-      <annotation>
-         <documentation>Verifies that the cluster is formed by injecting an entry into the cache and then reading it from other nodes.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="partialReplication" type="string">
-               <annotation>
-                  <documentation>If set to true, then the slave will consider that the cluster is formed when one slave replicated the control entry. Otherwise the replication will only be considered successful if all slaves replicated the control value. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="replicationTimeSleep" type="string">
-               <annotation>
-                  <documentation>Delay between attempts to retrieve the control entry.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="replicationTryCount" type="string">
-               <annotation>
-                  <documentation>How many times we should try to retrieve the control entry.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
    <complexType name="JMXClusterValidationPrepare">
       <annotation>
          <documentation>Collects configuration for JMXClusterValidationStage.</documentation>
@@ -886,100 +647,103 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="XSReplCheck">
+   <complexType name="JProfiler">
       <annotation>
-         <documentation>Checks data loaded in XSReplLoadStage.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:CheckData">
-            <attribute name="valuePostFix" type="string">
-               <annotation>
-                  <documentation>Postfix part of the value contents. Default is empty string.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="WriteSkewCheck">
-      <annotation>
-         <documentation>Stage checking the write skew detection in transactional caches.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:Check">
-            <attribute name="duration" type="string">
-               <annotation>
-                  <documentation>Duration of the test. Default is 1 minute.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="testNull" type="string">
-               <annotation>
-                  <documentation>Should write skew between null value and first value be tested? Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="threads" type="string">
-               <annotation>
-                  <documentation>Number of threads overwriting concurrently the entry. Default is 10.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="ReportJVMMonitor">
-      <annotation>
-         <documentation>Generate charts for JVM statistics on each slave node.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractMaster"/>
-      </complexContent>
-   </complexType>
-   <complexType name="DestroyWrapper">
-      <annotation>
-         <documentation>Distributed stage that will stop the cache wrapper on each slave.</documentation>
+         <documentation>Stage for invoking operations on JProfiler.
+Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=100,config=/path/to/configuration.xml"</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="enforceMemoryThrashHold" type="string">
+            <attribute name="operations" type="string">
                <annotation>
-                  <documentation>Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
+                  <documentation>Operations that should be invoked on the Controller</documentation>
                </annotation>
             </attribute>
-            <attribute name="memoryThreshold" type="string">
+            <attribute name="resetCPUStats" type="string">
                <annotation>
-                  <documentation>If the free memory after wrapper destroy and System.gc() is below percentage specified in this property the benchmark will stop. Default is 95.</documentation>
+                  <documentation>If true, any previously accumulated CPU profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_CPU_RECORDING and STOP_CPU_RECORDING. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="snapshotOutput" type="string">
+               <annotation>
+                  <documentation>Path where the snapshot should be written (for SAVE_SNAPSHOT).</documentation>
                </annotation>
             </attribute>
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="TpccBenchmark">
+   <complexType name="Kill">
       <annotation>
-         <documentation>Simulate the activities found in complex OLTP application environments.</documentation>
+         <documentation>Shutdowns or kills (simulates node crash) one or more nodes.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="arrivalRate" type="string">
+            <attribute name="async" type="string">
                <annotation>
-                  <documentation>Average arrival rate of the transactions to the system. Default is 0.</documentation>
+                  <documentation>If set to true the benchmark will not wait until the node is killed. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numThreads" type="string">
+            <attribute name="delayExecution" type="string">
                <annotation>
-                  <documentation>Number of threads that will work on this slave. Default is 10.</documentation>
+                  <documentation>If this value is positive the stage will spawn a thread which will kill the node after the delay. The stage will not wait for anything. By default the kill is immediate and synchronous.</documentation>
                </annotation>
             </attribute>
-            <attribute name="orderStatusWeight" type="string">
+            <attribute name="role" type="string">
                <annotation>
-                  <documentation>Percentage of Order Status transactions. Default is 5 %.</documentation>
+                  <documentation>Instead of specifying concrete slaves we may choose a victim based on his role in the cluster. Supported roles are [COORDINATOR, BRIDGE]. By default no role is specified.</documentation>
                </annotation>
             </attribute>
-            <attribute name="paymentWeight" type="string">
+            <attribute name="tearDown" type="string">
                <annotation>
-                  <documentation>Percentage of Payment transactions. Default is 45 %.</documentation>
+                  <documentation>If set to true, the nodes should be shutdown. Default is false = simulate node crash.</documentation>
                </annotation>
             </attribute>
-            <attribute name="perThreadSimulTime" type="string">
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="LoadFile">
+      <annotation>
+         <documentation>Loads the contents of a file into the cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="bucket" type="string">
                <annotation>
-                  <documentation>Total time (in seconds) of simulation for each stressor thread. Default is 180.</documentation>
+                  <documentation>The name of the bucket where keys are written. The default is null</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="filePath" type="string">
+               <annotation>
+                  <documentation>Full pathname to the file.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="valueSize" type="string">
+               <annotation>
+                  <documentation>The size of the values to put into the cache from the contents of the file. The default size is 1MB (1024 * 1024)</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="MapReduce">
+      <annotation>
+         <documentation>Stage which executes a MapReduce Task against all keys in the cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="collatorFqn" type="string">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="mapperFqn" type="string">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Mapper implementation to execute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reducerFqn" type="string">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to execute.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -1012,14 +776,6 @@
                </annotation>
             </attribute>
          </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="ClearCluster">
-      <annotation>
-         <documentation>Removes all data from the cache</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist"/>
       </complexContent>
    </complexType>
    <complexType name="ReportBackgroundStats">
@@ -1056,15 +812,76 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="StartBackgroundStatistics">
+   <complexType name="ReportJVMMonitor">
       <annotation>
-         <documentation>Starts collection of statistics from background threads and cache size.</documentation>
+         <documentation>Generate charts for JVM statistics on each slave node.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractMaster"/>
+      </complexContent>
+   </complexType>
+   <complexType name="SetLogLevel">
+      <annotation>
+         <documentation>Debugging stage: changes log priorities</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="statsIterationDuration" type="string">
+            <attribute name="package" type="string">
                <annotation>
-                  <documentation>Delay between statistics snapshots. Default is 5 seconds.</documentation>
+                  <documentation>The package or class which should be affected.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="pop" type="string">
+               <annotation>
+                  <documentation>If set to true, instead of setting the priority directly just undo the last priority change. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="priority" type="string">
+               <annotation>
+                  <documentation>The new priority that should be used. No defaults.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="SetPartitions">
+      <annotation>
+         <documentation>Partitions the cluster into several parts that cannot communicate.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="partitions" type="string">
+               <annotation>
+                  <documentation>Set of sets of partitions,e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="SingleTXCheck">
+      <annotation>
+         <documentation>Paired with SingleTXLoadStage. Checks that the previous stage had the expected result</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="commitSlave" type="string">
+               <annotation>
+                  <documentation>Indices of slaves which should have committed the transaction (others rolled back). Default is all committed.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="commitThread" type="string">
+               <annotation>
+                  <documentation>Indices of threads which should have committed the transaction (others rolled back). Default is all committed.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="deleted" type="string">
+               <annotation>
+                  <documentation>If this is set to true, REMOVE operation should have been executed. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="transactionSize" type="string">
+               <annotation>
+                  <documentation>Expected size of the transcation.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -1123,69 +940,49 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="JProfiler">
+   <complexType name="StackTraceWatchdog">
       <annotation>
-         <documentation>Stage for invoking operations on JProfiler.
-Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=100,config=/path/to/configuration.xml"</documentation>
+         <documentation>Debug usage only. Periodically check for all thread stack traces and print them out.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="operations" type="string">
+            <attribute name="asyncLogging" type="string">
                <annotation>
-                  <documentation>Operations that should be invoked on the Controller</documentation>
+                  <documentation>If set to true the watchdog will not use standard logging for output but will push the output to queue consumed (logged) by another thread. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="resetCPUStats" type="string">
+            <attribute name="mask" type="string">
                <annotation>
-                  <documentation>If true, any previously accumulated CPU profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_CPU_RECORDING and STOP_CPU_RECORDING. Default is false.</documentation>
+                  <documentation>If set, only those threads which have this mask in the name will be checked. Default is not set.</documentation>
                </annotation>
             </attribute>
-            <attribute name="snapshotOutput" type="string">
+            <attribute name="onlyStuck" type="string">
                <annotation>
-                  <documentation>Path where the snapshot should be written (for SAVE_SNAPSHOT).</documentation>
+                  <documentation>By default the check will print out only those threads which appear to be stuck. If this is set to false all threads will be printed out. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="period" type="string">
+               <annotation>
+                  <documentation>The delay between consecutive checks. Default is 10 seconds.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="shortStack" type="string">
+               <annotation>
+                  <documentation>Threads with stack lower or equal to this value are never printed (because usually such threads are parked in thread pools). Default is 10.</documentation>
                </annotation>
             </attribute>
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="SetPartitions">
+   <complexType name="StartBackgroundStatistics">
       <annotation>
-         <documentation>Partitions the cluster into several parts that cannot communicate.</documentation>
+         <documentation>Starts collection of statistics from background threads and cache size.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="partitions" type="string">
+            <attribute name="statsIterationDuration" type="string">
                <annotation>
-                  <documentation>Set of sets of partitions,e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="SingleTXCheck">
-      <annotation>
-         <documentation>Paired with SingleTXLoadStage. Checks that the previous stage had the expected result</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="commitSlave" type="string">
-               <annotation>
-                  <documentation>Indices of slaves which should have committed the transaction (others rolled back). Default is all committed.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="commitThread" type="string">
-               <annotation>
-                  <documentation>Indices of threads which should have committed the transaction (others rolled back). Default is all committed.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="deleted" type="string">
-               <annotation>
-                  <documentation>If this is set to true, REMOVE operation should have been executed. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="transactionSize" type="string">
-               <annotation>
-                  <documentation>Expected size of the transcation.</documentation>
+                  <documentation>Delay between statistics snapshots. Default is 5 seconds.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -1255,6 +1052,254 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <complexType name="StartCluster">
+      <annotation>
+         <documentation>Starts cache wrappers on specified slaves</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractStart">
+            <attribute name="delayAfterFirstSlaveStarts" type="string">
+               <annotation>
+                  <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delayBetweenStartingSlaves" type="string">
+               <annotation>
+                  <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="expectNumSlaves" type="string">
+               <annotation>
+                  <documentation>The number of slaves that should be up after all slaves are started. Applicable only with validateCluster=true. Default is all slaves in the cluster (in the same site in case of multi-site configuration).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reachable" type="string">
+               <annotation>
+                  <documentation>Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="staggerSlaveStartup" type="string">
+               <annotation>
+                  <documentation>If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="validateCluster" type="string">
+               <annotation>
+                  <documentation>Specifies whether the cluster formation should be checked after cache wrapper startup. Default is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="StartJVMMonitor">
+      <annotation>
+         <documentation>Starts collecting JVM statistics locally on each slave node.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
+      </complexContent>
+   </complexType>
+   <complexType name="StopBackgroundStatistics">
+      <annotation>
+         <documentation>Stop Statistics and return collected statistics to master.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
+      </complexContent>
+   </complexType>
+   <complexType name="StopBackgroundStressors">
+      <annotation>
+         <documentation>Stop BackgroundStressors.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
+      </complexContent>
+   </complexType>
+   <complexType name="StopJVMMonitor">
+      <annotation>
+         <documentation>Stop collecting JVM statistics on each slave node and return collected statistics to the master node.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
+      </complexContent>
+   </complexType>
+   <complexType name="StressTestWarmup">
+      <annotation>
+         <documentation>Warmup stage for stress test benchmarks.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:StressTest"/>
+      </complexContent>
+   </complexType>
+   <complexType name="TpccBenchmark">
+      <annotation>
+         <documentation>Simulate the activities found in complex OLTP application environments.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="arrivalRate" type="string">
+               <annotation>
+                  <documentation>Average arrival rate of the transactions to the system. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="numThreads" type="string">
+               <annotation>
+                  <documentation>Number of threads that will work on this slave. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="orderStatusWeight" type="string">
+               <annotation>
+                  <documentation>Percentage of Order Status transactions. Default is 5 %.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="paymentWeight" type="string">
+               <annotation>
+                  <documentation>Percentage of Payment transactions. Default is 45 %.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="perThreadSimulTime" type="string">
+               <annotation>
+                  <documentation>Total time (in seconds) of simulation for each stressor thread. Default is 180.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="TpccPopulation">
+      <annotation>
+         <documentation>This stage shuld be run before the TpccBenchmarkStage.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="cIdMask" type="string">
+               <annotation>
+                  <documentation>Mask used to generate non-uniformly distributed random customer numbers. Default is 1023.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="cLastMask" type="string">
+               <annotation>
+                  <documentation>Mask used to generate non-uniformly distributed random customer last names. Default is 255.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="numWarehouses" type="string">
+               <annotation>
+                  <documentation>Number of Warehouses. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="olIdMask" type="string">
+               <annotation>
+                  <documentation>Mask used to generate non-uniformly distributed random item numbers. Default is 8191.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="WaitForTopologyEvent">
+      <annotation>
+         <documentation>Waits until some event occurs. Note that the initial rehash is not recorded in this manner, therefore waiting for that will result in timeout.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="condition" type="string">
+               <annotation>
+                  <documentation>Condition we are waiting for. Default is END.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="maxMembers" type="string">
+               <annotation>
+                  <documentation>The maximum number of slaves that participated in this event. Default is indefinite.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="minMembers" type="string">
+               <annotation>
+                  <documentation>The minimum number of slaves that participated in this event. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="set" type="string">
+               <annotation>
+                  <documentation>Set last state before finishing. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="timeout" type="string">
+               <annotation>
+                  <documentation>How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="type" type="string">
+               <annotation>
+                  <documentation>Type of event we are detecting. Default is REHASH.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait" type="string">
+               <annotation>
+                  <documentation>Wait for the event to happen. Default is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="WriteSkewCheck">
+      <annotation>
+         <documentation>Stage checking the write skew detection in transactional caches.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:Check">
+            <attribute name="duration" type="string">
+               <annotation>
+                  <documentation>Duration of the test. Default is 1 minute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="testNull" type="string">
+               <annotation>
+                  <documentation>Should write skew between null value and first value be tested? Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="threads" type="string">
+               <annotation>
+                  <documentation>Number of threads overwriting concurrently the entry. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="XSReplCheck">
+      <annotation>
+         <documentation>Checks data loaded in XSReplLoadStage.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:CheckData">
+            <attribute name="valuePostFix" type="string">
+               <annotation>
+                  <documentation>Postfix part of the value contents. Default is empty string.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="XSReplLoad">
+      <annotation>
+         <documentation>Loads data into the cache with input cache name encoded into the value.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="delete" type="string">
+               <annotation>
+                  <documentation>If set to true, the entries are removed instead of being inserted. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="numEntries" type="string">
+               <annotation>
+                  <documentation>Amount of entries that should be inserted into the cache.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="valuePostFix" type="string">
+               <annotation>
+                  <documentation>String encoded into the value so that the entry may be distinguished from entries loaded in different load stages. Default is empty string.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
    <complexType abstract="true" name="abstractProduct">
       <sequence>
          <element maxOccurs="unbounded" minOccurs="1" name="config">
@@ -1297,11 +1342,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <extension base="rg:abstractProduct">
             <attribute name="name" type="string"/>
          </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="hazelcast2">
-      <complexContent>
-         <extension base="rg:abstractProduct"/>
       </complexContent>
    </complexType>
    <complexType name="infinispan4">
