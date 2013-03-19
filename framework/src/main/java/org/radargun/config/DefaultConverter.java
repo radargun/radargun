@@ -1,12 +1,20 @@
 package org.radargun.config;
 
-import org.radargun.utils.Tokenizer;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import org.radargun.utils.Tokenizer;
 
 /**
  * Default converter that can print or parse any common object
@@ -181,7 +189,7 @@ public class DefaultConverter implements Converter<Object> {
       StringBuilder innerCollection = null;
       int bracketLevel = 0;
       while (tokenizer.hasMoreTokens()) {
-         String token = tokenizer.nextToken();
+         String token = tokenizer.nextToken().trim();
          if (token.equals(",")) {
             if (innerCollection != null) innerCollection.append(token);
          } else if (token.equals("[")) {
@@ -221,16 +229,16 @@ public class DefaultConverter implements Converter<Object> {
       boolean generateRange = false;
       boolean firstToken = true;
       while (tokenizer.hasMoreTokens()) {
-         String token = tokenizer.nextToken();
+         String token = tokenizer.nextToken().trim();
          if (token.equals(",")) {
             if (firstToken) throw new IllegalArgumentException("Unexpected ',': " + string);
          } else if (token.equals("..")) {
             if (firstToken) throw new IllegalArgumentException("Unexpected '..': " + string);
             generateRange = true;
-         } else if (token.trim().isEmpty()) {
+         } else if (token.isEmpty()) {
             continue;
          } else {
-            int value = Integer.parseInt(token.trim());
+            int value = Integer.parseInt(token);
             if (generateRange) {
                if (lastNumber == null) throw new IllegalArgumentException("Cannot generate range: " + string);
                for (int i = lastNumber + 1; i <= value; ++i) {
