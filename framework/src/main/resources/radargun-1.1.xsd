@@ -419,7 +419,7 @@
             </attribute>
             <attribute name="useTransactions" type="string">
                <annotation>
-                  <documentation>Specifies if the requests should be explicitely wrapped in transactions. Default is false.</documentation>
+                  <documentation>Specifies if the requests should be explicitely wrapped in transactions. By defaultthe cachewrapper is queried whether it does support the transactions, if it does,transactions are used, otherwise these are not.</documentation>
                </annotation>
             </attribute>
             <attribute name="writePercentage" type="string">
