@@ -89,7 +89,6 @@ public class JBossCache2Wrapper implements CacheWrapper
       return true;
    }
 
-
    public void startTransaction()
    {
       try

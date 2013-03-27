@@ -29,11 +29,12 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
 import org.radargun.CacheWrapper;
+import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.Debugable;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
-public class InfinispanWrapper implements CacheWrapper, Debugable {
+public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperationsCapable {
 
    enum State {
       STOPPED,
@@ -53,7 +54,7 @@ public class InfinispanWrapper implements CacheWrapper, Debugable {
    private String cacheName;
 
    protected final Log log = LogFactory.getLog(getClass());
-   private final boolean trace = log.isTraceEnabled();
+   protected final boolean trace = log.isTraceEnabled();
 
    protected DefaultCacheManager cacheManager;
    protected TransactionManager tm;
@@ -253,6 +254,24 @@ public class InfinispanWrapper implements CacheWrapper, Debugable {
    public Object remove(String bucket, Object key) throws Exception {
       if (trace) log.trace("REMOVE key=" + key);
       return getCache(bucket).remove(key);
+   }
+
+   @Override
+   public boolean replace(String bucket, Object key, Object oldValue, Object newValue) throws Exception {
+      if (trace) log.trace("REPLACE key=" + key);
+      return getCache(bucket).replace(key, oldValue, newValue);
+   }
+
+   @Override
+   public Object putIfAbsent(String bucket, Object key, Object value) throws Exception {
+      if (trace) log.trace("PUT_IF_ABSENT key=" + key);
+      return getCache(bucket).putIfAbsent(key, value);
+   }
+
+   @Override
+   public boolean remove(String bucket, Object key, Object oldValue) throws Exception {
+      if (trace) log.trace("REMOVE_CONDITIONAL key=" + key);
+      return getCache(bucket).remove(key, oldValue);
    }
 
    @Override

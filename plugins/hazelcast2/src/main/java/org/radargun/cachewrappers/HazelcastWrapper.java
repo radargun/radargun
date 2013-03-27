@@ -1,17 +1,17 @@
 package org.radargun.cachewrappers;
 
+import java.io.InputStream;
+
+import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Transaction;
+import com.hazelcast.core.IMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.utils.TypedProperties;
-
-import java.io.InputStream;
-import java.util.Map;
 
 /**
  *
@@ -19,14 +19,14 @@ import java.util.Map;
  * @author Martin Gencur
  *
  */
-public class HazelcastWrapper implements CacheWrapper {
+public class HazelcastWrapper implements CacheWrapper, AtomicOperationsCapable {
 
    protected final Log log = LogFactory.getLog(getClass());
    private final boolean trace = log.isTraceEnabled();
 
    private static final String DEFAULT_MAP_NAME = "default";
    protected HazelcastInstance hazelcastInstance;
-   protected Map<Object, Object> hazelcastMap;
+   protected IMap<Object, Object> hazelcastMap;
 
    @Override
    public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
@@ -69,6 +69,21 @@ public class HazelcastWrapper implements CacheWrapper {
    public Object remove(String bucket, Object key) throws Exception {
       if (trace) log.trace("REMOVE key=" + key);
       return hazelcastMap.remove(key);
+   }
+
+   @Override
+   public boolean replace(String bucket, Object key, Object oldValue, Object newValue) throws Exception {
+      return hazelcastMap.replace(key, oldValue, newValue);
+   }
+
+   @Override
+   public Object putIfAbsent(String bucket, Object key, Object value) throws Exception {
+      return hazelcastMap.putIfAbsent(key, value);
+   }
+
+   @Override
+   public boolean remove(String bucket, Object key, Object oldValue) throws Exception {
+      return hazelcastMap.remove(key, oldValue);
    }
 
    @Override

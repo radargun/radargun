@@ -21,6 +21,7 @@ package org.radargun.stages;
 import java.util.Map;
 
 import org.radargun.config.Property;
+import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.stressors.ClientStressTestStressor;
 
@@ -44,23 +45,10 @@ public class ClientStressTestStage extends StressTestStage {
    @Override   
    protected Map<String, Object> doWork() {
       log.info("Starting " + getClass().getSimpleName() + ": " + this);
-      ClientStressTestStressor putGetStressor = new ClientStressTestStressor();
-      putGetStressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
-      putGetStressor.setNumEntries(numEntries);
-      putGetStressor.setNumRequests(numRequests);
-      putGetStressor.setInitThreads(initThreads);
-      putGetStressor.setMaxThreads(maxThreads);
-      putGetStressor.setIncrement(increment);
-      putGetStressor.setOpsCountStatusLog(opsCountStatusLog);
-      putGetStressor.setEntrySize(entrySize);
-      putGetStressor.setWritePercentage(writePercentage);
-      putGetStressor.setKeyGeneratorClass(keyGeneratorClass);
-      putGetStressor.setUseTransactions(useTransactions);
-      putGetStressor.setCommitTransactions(commitTransactions);
-      putGetStressor.setTransactionSize(transactionSize);
-      putGetStressor.setDurationMillis(duration);
-      putGetStressor.setSharedKeys(sharedKeys);
-      putGetStressor.setFixedKeys(fixedKeys);
-      return putGetStressor.stress(cacheWrapper);
+      ClientStressTestStressor stressor = new ClientStressTestStressor();
+      stressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
+      stressor.setDurationMillis(duration);
+      PropertyHelper.copyProperties(this, stressor);
+      return stressor.stress(cacheWrapper);
    }
 }
