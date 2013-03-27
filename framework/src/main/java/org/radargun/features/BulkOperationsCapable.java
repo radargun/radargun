@@ -22,8 +22,8 @@
 
 package org.radargun.features;
 
-import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import org.radargun.CacheWrapper;
 
@@ -33,7 +33,15 @@ import org.radargun.CacheWrapper;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface BulkOperationsCapable extends CacheWrapper {
-   Collection<Object> getAll(String bucket, Collection<Object> keys) throws Exception;
-   void putAll(String bucket, Map<Object, Object> entries) throws Exception;
-   Collection<Object> removeAll(String bucket, Collection<Object> keys) throws Exception;
+   Map<Object, Object> getAll(String bucket, Set<Object> keys, boolean preferAsync) throws Exception;
+   /**
+    * Returning previous entries from the cache is optional - if the cache
+    * is not capable of that it should return null.
+    */
+   Map<Object, Object> putAll(String bucket, Map<Object, Object> entries, boolean preferAsync) throws Exception;
+   /**
+    * Returning previous entries from the cache is optional - if the cache
+    * is not capable of that it should return null.
+    */
+   Map<Object, Object> removeAll(String bucket, Set<Object> keys, boolean preferAsync) throws Exception;
 }

@@ -8,6 +8,7 @@ package org.radargun.stressors;
 */
 public enum Operation {
    GET("READ"),
+   GET_NULL("READ_NULL"),
    PUT("WRITE"),
    REMOVE,
    REMOVE_VALID,
@@ -17,7 +18,11 @@ public enum Operation {
    REPLACE_VALID, /* the old value supplied is the correct one */
    REPLACE_INVALID, /* the old value is an incorrect one */
    GET_ALL,
+   GET_ALL_VIA_ASYNC,
    PUT_ALL,
+   PUT_ALL_VIA_ASYNC,
+   REMOVE_ALL,
+   REMOVE_ALL_VIA_ASYNC,
    TRANSACTION; /* stats for whole transaction */
 
    private String altName;

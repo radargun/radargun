@@ -405,6 +405,11 @@
                   <documentation>Number of operations after which a log entry should be written. Default is 5000.</documentation>
                </annotation>
             </attribute>
+            <attribute name="preferAsyncOperations" type="string">
+               <annotation>
+                  <documentation>When executing bulk operations, prefer version with multiple async operations over native implementation. Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="removePercentage" type="string">
                <annotation>
                   <documentation>The frequency of removes (percentage). Default is 0%</documentation>

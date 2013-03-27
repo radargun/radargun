@@ -53,28 +53,32 @@ public class SynchronizedStatistics extends Statistics {
       return result;
    }
 
-
-   public synchronized void registerRequest(long responseTime, Operation operation, boolean isNull) {
+   @Override
+   public synchronized void registerRequest(long responseTime, long txOverhead, Operation operation) {
       ensureNotSnapshot();
-      super.registerRequest(responseTime, 0, operation, isNull);
+      super.registerRequest(responseTime, 0, operation);
    }
 
-   public synchronized void registerError(long responseTime, Operation operation) {
+   @Override
+   public synchronized void registerError(long responseTime, long txOverhead, Operation operation) {
       ensureNotSnapshot();
       super.registerError(responseTime, 0, operation);
    }
 
+   @Override
    public synchronized void reset(long time) {
       ensureNotSnapshot();
       super.reset(time);
    }
 
+   @Override
    public synchronized SynchronizedStatistics copy() {
       SynchronizedStatistics copy = (SynchronizedStatistics) super.copy();
       copy.snapshot = snapshot;
       return copy;
    }
 
+   @Override
    public synchronized void merge(Statistics otherStats) {
       ensureSnapshot();
       if (otherStats instanceof SynchronizedStatistics) {
@@ -83,26 +87,32 @@ public class SynchronizedStatistics extends Statistics {
       super.merge(otherStats);
    }
 
+   @Override
    public synchronized long getNumberOfRequests() {
       return super.getNumberOfRequests();
    }
 
+   @Override
    public synchronized double getAvgResponseTime() {
       return super.getAvgResponseTime();
    }
 
+   @Override
    public synchronized long getDuration() {
       return super.getDuration();
    }
 
+   @Override
    public synchronized long getIntervalBeginTime() {
       return super.getIntervalBeginTime();
    }
 
+   @Override
    public synchronized long getIntervalEndTime() {
       return super.getIntervalEndTime();
    }
 
+   @Override
    public synchronized double getThroughput() {
       return super.getThroughput();
    }

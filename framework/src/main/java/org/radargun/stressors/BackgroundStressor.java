@@ -126,15 +126,16 @@ class BackgroundStressor extends Thread {
          {
          case GET:
             result = cacheWrapper.get(backgroundOpsManager.getBucketId(), key);
-            threadStats.registerRequest(lastOpTime(), 0, operation, result == null);
+            if (result == null) operation = Operation.GET_NULL;
+            threadStats.registerRequest(lastOpTime(), 0, operation);
             break;
          case PUT:
             cacheWrapper.put(backgroundOpsManager.getBucketId(), key, generateRandomEntry(backgroundOpsManager.getEntrySize()));
-            threadStats.registerRequest(lastOpTime(), 0, operation, false);
+            threadStats.registerRequest(lastOpTime(), 0, operation);
             break;
          case REMOVE:
-            result = cacheWrapper.remove(backgroundOpsManager.getBucketId(), key);
-            threadStats.registerRequest(lastOpTime(), 0, operation, result == null);
+            cacheWrapper.remove(backgroundOpsManager.getBucketId(), key);
+            threadStats.registerRequest(lastOpTime(), 0, operation);
             break;
          }
          if (transactionSize != -1) {
