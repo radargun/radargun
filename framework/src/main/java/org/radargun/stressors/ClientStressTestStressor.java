@@ -86,20 +86,7 @@ public class ClientStressTestStressor extends StressTestStressor {
       for (Stressor stressor : stressors) {
          stats.merge(stressor.getStats());
       }
-            
-      results.put(iteration  + ".DURATION", stats.getResponseTimeSum() + stats.getTxOverheadSum());
-      results.put(iteration  + ".REQ_PER_SEC", threads * stats.getOperationsPerSecond());
-      results.put(iteration  + ".READS_PER_SEC", threads * stats.getReadsPerSecond(true));
-      results.put(iteration  + ".READS_PER_SEC_NET", threads * stats.getReadsPerSecond(false));
-      results.put(iteration  + ".WRITES_PER_SEC", threads * stats.getWritesPerSecond(true));
-      results.put(iteration  + ".WRITES_PER_SEC_NET", threads * stats.getWritesPerSecond(false));
-      results.put(iteration  + ".READ_COUNT", stats.getNumReads());
-      results.put(iteration  + ".WRITE_COUNT", stats.getNumWrites());
-      results.put(iteration  + ".FAILURES", stats.getNumErrors());
-      if (isUseTransactions()) {
-         results.put(iteration  + ".TX_PER_SEC", stats.getTransactionsPerSecond());
-      }
-      
+      results.putAll(stats.getResultsMap(threads, iteration + "."));
       requestPerSec = Math.max(requestPerSec, stats.getOperationsPerSecond());
       return results;
    }

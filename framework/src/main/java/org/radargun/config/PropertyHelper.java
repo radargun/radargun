@@ -5,6 +5,9 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Helper for retrieving properties from the class
  *
@@ -12,6 +15,8 @@ import java.util.TreeMap;
  * @since 12/12/12
  */
 public class PropertyHelper {
+
+   private static Log log = LogFactory.getLog(PropertyHelper.class);
 
    public static Map<String, Field> getProperties(Class<?> clazz) {
       Map<String, Field> properties = new TreeMap<String, Field>();
@@ -49,6 +54,27 @@ public class PropertyHelper {
             if (!property.deprecatedName().equals(Property.NO_DEPRECATED_NAME)) {
                properties.put(property.deprecatedName(), field);
             }
+         }
+      }
+   }
+
+   public static void copyProperties(Object source, Object destination) {
+      Map<String, Field> sourceProperties = getProperties(source.getClass());
+      Map<String, Field> destProperties = getProperties(destination.getClass());
+      for (Map.Entry<String, Field> property : sourceProperties.entrySet()) {
+         Field destField = destProperties.get(property.getKey());
+         if (destField == null) {
+            log.trace("Property " + property.getKey() + " not found on destination, skipping");
+            continue;
+         }
+         property.getValue().setAccessible(true);
+         destField.setAccessible(true);
+         try {
+            destField.set(destination, property.getValue().get(source));
+         } catch (IllegalAccessException e) {
+            log.error(String.format("Failed to copy %s.%s (%s) to %s.%s (%s)",
+               source.getClass().getSimpleName(), property.getValue().getName(), source,
+               destination.getClass().getSimpleName(), destField.getName(), destination), e);
          }
       }
    }

@@ -7,6 +7,7 @@ import java.util.Map;
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
+import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.state.MasterState;
@@ -47,6 +48,12 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "Ratio of writes = PUT requests (percentage). Default is 20%")
    protected int writePercentage = 20;
 
+   @Property(doc = "The frequency of removes (percentage). Default is 0%")
+   private int removePercentage = 0;
+
+   @Property(doc = "In case we test replace performance, the frequency of replaces that should fail (percentage). Default is 40%")
+   private int replaceInvalidPercentage = 40;
+
    @Property(doc = "The number of threads that will work on this slave. Default is 10.", deprecatedName = "numOfThreads")
    protected int numThreads = 10;
 
@@ -65,6 +72,10 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "Number of requests in one transaction. Default is 1.")
    protected int transactionSize = 1;
 
+   @Property(doc = "Number of keys inserted/retrieved within one operation. Applicable only when the cache wrapper" +
+         "supports bulk operations. Default is 1 (no bulk operations).")
+   private int bulkSize = 1;
+
    @Property(converter = TimeConverter.class, doc = "Benchmark duration. This takes precedence over numRequests. By default switched off.")
    protected long duration = -1;
 
@@ -76,6 +87,9 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.")
    protected boolean fixedKeys = true;
 
+   @Property(doc = "If true, putIfAbsent and replace operations are used. Default is false.")
+   protected boolean useAtomics = false;
+
    @Property(doc = "Specifies whether the key generator is produced by a cache wrapper and therefore is product-specific. Default is false.")
    protected boolean cacheSpecificKeyGenerator = false;
 
@@ -83,27 +97,17 @@ public class StressTestStage extends AbstractDistStage {
 
    protected Map<String, Object> doWork() {
       log.info("Starting "+getClass().getSimpleName()+": " + this);
-      StressTestStressor stressTestStressor = null;
+      StressTestStressor stressor = null;
       if (cacheSpecificKeyGenerator) {
-         stressTestStressor = new CacheSpecificKeyGenStressor();
+         stressor = new CacheSpecificKeyGenStressor();
       } else {
-         stressTestStressor = new StressTestStressor();
-         stressTestStressor.setKeyGeneratorClass(keyGeneratorClass);
+         stressor = new StressTestStressor();
+         stressor.setKeyGeneratorClass(keyGeneratorClass);
       }
-      stressTestStressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
-      stressTestStressor.setNumEntries(numEntries);
-      stressTestStressor.setNumRequests(numRequests);
-      stressTestStressor.setNumThreads(numThreads);
-      stressTestStressor.setOpsCountStatusLog(opsCountStatusLog);
-      stressTestStressor.setEntrySize(entrySize);
-      stressTestStressor.setWritePercentage(writePercentage);
-      stressTestStressor.setUseTransactions(useTransactions);
-      stressTestStressor.setCommitTransactions(commitTransactions);
-      stressTestStressor.setTransactionSize(transactionSize);
-      stressTestStressor.setDurationMillis(duration);
-      stressTestStressor.setSharedKeys(sharedKeys);
-      stressTestStressor.setFixedKeys(fixedKeys);
-      return stressTestStressor.stress(cacheWrapper);
+      stressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
+      stressor.setDurationMillis(duration);
+      PropertyHelper.copyProperties(this, stressor);
+      return stressor.stress(cacheWrapper);
    }
    
    public DistStageAck executeOnSlave() {

@@ -55,7 +55,6 @@
                         <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
                         <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
                         <element name="TpccPopulation" type="rg:TpccPopulation"/>
-                        <element name="WaitForTopologyEvent" type="rg:WaitForTopologyEvent"/>
                         <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
                         <element name="XSReplCheck" type="rg:XSReplCheck"/>
                         <element name="XSReplLoad" type="rg:XSReplLoad"/>
@@ -160,7 +159,6 @@
             <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
             <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
             <element name="TpccPopulation" type="rg:TpccPopulation"/>
-            <element name="WaitForTopologyEvent" type="rg:WaitForTopologyEvent"/>
             <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
             <element name="XSReplCheck" type="rg:XSReplCheck"/>
             <element name="XSReplLoad" type="rg:XSReplLoad"/>
@@ -338,6 +336,11 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
+            <attribute name="bulkSize" type="string">
+               <annotation>
+                  <documentation>Number of keys inserted/retrieved within one operation. Applicable only when the cache wrappersupports bulk operations. Default is 1 (no bulk operations).</documentation>
+               </annotation>
+            </attribute>
             <attribute name="cacheSpecificKeyGenerator" type="string">
                <annotation>
                   <documentation>Specifies whether the key generator is produced by a cache wrapper and therefore is product-specific. Default is false.</documentation>
@@ -403,6 +406,16 @@
                   <documentation>Number of operations after which a log entry should be written. Default is 5000.</documentation>
                </annotation>
             </attribute>
+            <attribute name="removePercentage" type="string">
+               <annotation>
+                  <documentation>The frequency of removes (percentage). Default is 0%</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="replaceInvalidPercentage" type="string">
+               <annotation>
+                  <documentation>In case we test replace performance, the frequency of replaces that should fail (percentage). Default is 40%</documentation>
+               </annotation>
+            </attribute>
             <attribute name="sharedKeys" type="string">
                <annotation>
                   <documentation>By default each client thread operates on his private set of keys. Setting this to true introduces contention between the threads, the numThreads property says total amount of entries that are used by all threads. Default is false.</documentation>
@@ -416,6 +429,11 @@
             <attribute name="transactionSize" type="string">
                <annotation>
                   <documentation>Number of requests in one transaction. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="useAtomics" type="string">
+               <annotation>
+                  <documentation>If true, putIfAbsent and replace operations are used. Default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="useTransactions" type="string">
@@ -1200,50 +1218,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="olIdMask" type="string">
                <annotation>
                   <documentation>Mask used to generate non-uniformly distributed random item numbers. Default is 8191.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="WaitForTopologyEvent">
-      <annotation>
-         <documentation>Waits until some event occurs. Note that the initial rehash is not recorded in this manner, therefore waiting for that will result in timeout.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:AbstractDist">
-            <attribute name="condition" type="string">
-               <annotation>
-                  <documentation>Condition we are waiting for. Default is END.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="maxMembers" type="string">
-               <annotation>
-                  <documentation>The maximum number of slaves that participated in this event. Default is indefinite.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="minMembers" type="string">
-               <annotation>
-                  <documentation>The minimum number of slaves that participated in this event. Default is 0.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="set" type="string">
-               <annotation>
-                  <documentation>Set last state before finishing. Default is true.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="timeout" type="string">
-               <annotation>
-                  <documentation>How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="type" type="string">
-               <annotation>
-                  <documentation>Type of event we are detecting. Default is REHASH.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="wait" type="string">
-               <annotation>
-                  <documentation>Wait for the event to happen. Default is true.</documentation>
                </annotation>
             </attribute>
          </extension>

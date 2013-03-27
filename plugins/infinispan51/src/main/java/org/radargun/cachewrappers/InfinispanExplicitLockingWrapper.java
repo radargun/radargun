@@ -18,13 +18,19 @@
  */
 package org.radargun.cachewrappers;
 
-import javax.transaction.Status;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Future;
 
+import javax.transaction.Status;
 import org.infinispan.Cache;
 import org.infinispan.transaction.LockingMode;
+import org.radargun.features.BulkOperationsCapable;
 import org.radargun.utils.TypedProperties;
 
-public class InfinispanExplicitLockingWrapper extends InfinispanKeyAffinityWrapper {
+public class InfinispanExplicitLockingWrapper extends InfinispanKeyAffinityWrapper implements BulkOperationsCapable {
 
    private boolean isExplicitLocking;
    
@@ -84,11 +90,119 @@ public class InfinispanExplicitLockingWrapper extends InfinispanKeyAffinityWrapp
       return old;
    }
 
+   @Override
+   public boolean replace(String bucket, Object key, Object oldValue, Object newValue) throws Exception {
+      boolean shouldStopTransactionHere = false;
+      if (isExplicitLocking && !isClusterValidationRequest(bucket)) {
+         if (tm.getStatus() == Status.STATUS_NO_TRANSACTION) {
+            shouldStopTransactionHere = true;
+            startTransaction();
+         }
+         getCache(bucket).getAdvancedCache().lock(key);
+      }
+      boolean replaced = super.replace(bucket, key, oldValue, newValue);
+      if (shouldStopTransactionHere) {
+         endTransaction(true);
+      }
+      return replaced;
+   }
+
+   @Override
+   public Object putIfAbsent(String bucket, Object key, Object value) throws Exception {
+      boolean shouldStopTransactionHere = false;
+      if (isExplicitLocking && !isClusterValidationRequest(bucket)) {
+         if (tm.getStatus() == Status.STATUS_NO_TRANSACTION) {
+            shouldStopTransactionHere = true;
+            startTransaction();
+         }
+         getCache(bucket).getAdvancedCache().lock(key);
+      }
+      Object old = super.putIfAbsent(bucket, key, value);
+      if (shouldStopTransactionHere) {
+         endTransaction(true);
+      }
+      return old;
+   }
+
    protected boolean isClusterValidationRequest(String bucket) {
       return bucket.startsWith("clusterValidation") ? true : false;
    }
 
    public boolean isExplicitLockingEnabled() {
       return isExplicitLocking;
+   }
+
+   @Override
+   public Collection<Object> getAll(String bucket, Collection<Object> keys) throws Exception {
+      if (trace) {
+         StringBuilder sb = new StringBuilder("GET_ALL ");
+         for (Object key : keys) {
+            sb.append(key).append(", ");
+         }
+      }
+      Cache<Object, Object> cache = getCache(bucket);
+      List<Future<Object>> futures = new ArrayList<Future<Object>>(keys.size());
+      List<Object> values = new ArrayList<Object>(keys.size());
+      for (Object key : keys) {
+         futures.add(cache.getAsync(key));
+      }
+      for (Future<Object> future : futures) {
+         values.add(future.get());
+      }
+      return values;
+   }
+
+   @Override
+   public void putAll(String bucket, Map<Object, Object> entries) throws Exception {
+      if (trace) {
+         StringBuilder sb = new StringBuilder("PUT_ALL ");
+         for (Object key : entries.keySet()) {
+            sb.append(key).append(", ");
+         }
+      }
+      Cache<Object, Object> cache = getCache(bucket);
+      boolean shouldStopTransactionHere = false;
+      if (isExplicitLocking && !isClusterValidationRequest(bucket)) {
+         if (tm.getStatus() == Status.STATUS_NO_TRANSACTION) {
+            shouldStopTransactionHere = true;
+            startTransaction();
+         }
+         cache.getAdvancedCache().lock(entries.keySet());
+      }
+      cache.putAll(entries);
+      if (shouldStopTransactionHere) {
+         endTransaction(true);
+      }
+   }
+
+   @Override
+   public Collection<Object> removeAll(String bucket, Collection<Object> keys) throws Exception {
+      if (trace) {
+         StringBuilder sb = new StringBuilder("GET_ALL ");
+         for (Object key : keys) {
+            sb.append(key).append(", ");
+         }
+      }
+      Cache<Object, Object> cache = getCache(bucket);
+      boolean shouldStopTransactionHere = false;
+      if (isExplicitLocking && !isClusterValidationRequest(bucket)) {
+         if (tm.getStatus() == Status.STATUS_NO_TRANSACTION) {
+            shouldStopTransactionHere = true;
+            startTransaction();
+         }
+         cache.getAdvancedCache().lock(keys);
+      }
+      List<Future<Object>> futures = new ArrayList<Future<Object>>(keys.size());
+      List<Object> values = new ArrayList<Object>(keys.size());
+      for (Object key : keys) {
+         futures.add(cache.removeAsync(key));
+      }
+      for (Future<Object> future : futures) {
+         values.add(future.get());
+      }
+      if (shouldStopTransactionHere) {
+         endTransaction(true);
+      }
+      return values;
    }
 }

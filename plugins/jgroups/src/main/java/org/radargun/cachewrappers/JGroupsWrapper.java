@@ -148,12 +148,11 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    
    public Object remove(String bucket, Object key) throws Exception {
       throw new UnsupportedOperationException();
-   }   
+   }        
 
    public void empty() throws Exception {
       ; // no-op
    }
-
 
    public void viewAccepted(View new_view) {
       ArrayList<Address> members = new ArrayList<Address>(new_view.getMembers());
