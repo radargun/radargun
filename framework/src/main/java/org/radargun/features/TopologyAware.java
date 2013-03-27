@@ -37,7 +37,33 @@ public interface TopologyAware {
        * @return Date when this event finished or null if it has not finished yet.
        */
       public abstract Date getEnded();
-      
+
+      /**
+       * @return How many members were part of this when this event started.
+       */
+      public abstract int getMembersAtStart();
+
+      /**
+       * @return How many members were part of this when this event ended.
+       */
+      public abstract int getMembersAtEnd();
+
+      /**
+       * @return A deep copy of this event.
+       */
+      public abstract Event copy();
+
+      @Override
+      public boolean equals(Object o) {
+         if (o == null) return false;
+         if (!(o instanceof Event)) return false;
+         Event e = (Event) o;
+         return ((getStarted() == null && e.getStarted() == null)
+                       || (getStarted() != null && getStarted().equals(e.getStarted())))
+               && ((getEnded() == null && e.getEnded() == null)
+                       || (getEnded() != null && getEnded().equals(e.getEnded())));
+      }
+
       @Override
       public String toString() {
          return "[" + getStarted() + " - " + getEnded() + "]";

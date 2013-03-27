@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.ClusteringConfiguration;
+import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
@@ -138,8 +139,8 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
             stopDiscarding();
          }
       }
-      super.postSetUpInternal(confAttributes);
       getCache(null).addListener(new TopologyAwareListener());
+      super.postSetUpInternal(confAttributes);
    }
 
    protected List<JChannel> getChannels() {
@@ -255,22 +256,26 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
       @TopologyChanged
       public void onTopologyChanged(TopologyChangedEvent<?,?> e) {
          log.debug("Topology change " + (e.isPre() ? "started" : "finished"));
-         addEvent(topologyChanges, e.isPre());
+         int atStart = membersCount(e.getConsistentHashAtStart());
+         int atEnd = membersCount(e.getConsistentHashAtEnd());
+         addEvent(topologyChanges, e.isPre(), atStart, atEnd);
       }
       
       @DataRehashed
       public void onDataRehashed(DataRehashedEvent<?,?> e) {
          log.debug("Rehash " + (e.isPre() ? "started" : "finished"));
-         addEvent(hashChanges, e.isPre());
+         int atStart = e.getMembersAtStart().size();
+         int atEnd = e.getMembersAtEnd().size();
+         addEvent(hashChanges, e.isPre(), atStart, atEnd);
       }
 
-      private void addEvent(List<TopologyAware.Event> list, boolean isPre) {
+      private void addEvent(List<TopologyAware.Event> list, boolean isPre, int atStart, int atEnd) {
          if (isPre) {
-            list.add(new Event(false));
+            list.add(new Event(false, atStart, atEnd));
          } else {
             int size = list.size();
             if (size == 0 || list.get(size - 1).getEnded() != null) {
-               Event ev = new Event(true);                  
+               Event ev = new Event(true, atStart, atEnd);
                list.add(ev);
             } else {
                ((Event) list.get(size - 1)).setEnded();
@@ -279,15 +284,26 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
       }
       
       class Event extends TopologyAware.Event {
-         private Date started;
+         private final Date started;
          private Date ended;
-         
-         public Event(boolean finished) {
+         private final int atStart;
+         private final int atEnd;
+
+         private Event(Date started, Date ended, int atStart, int atEnd) {
+            this.started = started;
+            this.ended = ended;
+            this.atStart = atStart;
+            this.atEnd = atEnd;
+         }
+
+         public Event(boolean finished, int atStart, int atEnd) {
             if (finished) {
                this.started = this.ended = new Date();
             } else {
                this.started = new Date();
             }
+            this.atStart = atStart;
+            this.atEnd = atEnd;
          }
 
          @Override
@@ -303,7 +319,26 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
          @Override
          public Date getEnded() {
             return ended;
-         }      
+         }
+
+         @Override
+         public int getMembersAtStart() {
+            return atStart;
+         }
+
+         @Override
+         public int getMembersAtEnd() {
+            return atEnd;
+         }
+
+         @Override
+         public TopologyAware.Event copy() {
+            return new Event(started, ended, atStart, atEnd);
+         }
       }
+   }
+
+   protected int membersCount(ConsistentHash consistentHash) {
+      return consistentHash.getCaches().size();
    }
 }

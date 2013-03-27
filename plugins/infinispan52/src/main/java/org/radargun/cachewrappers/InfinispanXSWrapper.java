@@ -33,6 +33,7 @@ import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.DistributionManager;
+import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.transaction.TransactionMode;
 import org.infinispan.util.FileLookupFactory;
@@ -237,5 +238,10 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
       sb.append(", lifespan=").append(ice.getLifespan()).append(", maxIdle=").append(ice.getMaxIdle());
       sb.append(", version=").append(ice.getVersion()).append(", lockPlaceholder=").append(ice.isLockPlaceholder());
       return sb.append(']').toString();
+   }
+
+   @Override
+   protected int membersCount(ConsistentHash consistentHash) {
+      return consistentHash.getMembers().size();
    }
 }
