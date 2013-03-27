@@ -62,6 +62,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          "supports bulk operations. Default is 1 (no bulk operations).")
    private int bulkSize = 1;
 
+   @Property(doc = "When executing bulk operations, prefer version with multiple async operations over native implementation. Default is false.")
+   private boolean preferAsyncOperations = false;
+
    @Property(doc = "Specifies if the requests should be explicitely wrapped in transactions. By default" +
          "the cachewrapper is queried whether it does support the transactions, if it does," +
          "transactions are used, otherwise these are not.")
@@ -239,9 +242,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          if (bulkSize > 1 && bulkSize <= numEntries) {
             if (cacheWrapper instanceof BulkOperationsCapable) {
                if (sharedKeys) {
-                  return new BulkOperationLogic(new FixedSetSharedOperationLogic(sharedKeysPool));
+                  return new BulkOperationLogic(new FixedSetSharedOperationLogic(sharedKeysPool), preferAsyncOperations);
                } else {
-                  return new BulkOperationLogic(new FixedSetPerThreadOperationLogic());
+                  return new BulkOperationLogic(new FixedSetPerThreadOperationLogic(), preferAsyncOperations);
                }
             } else {
                throw new IllegalArgumentException("Cache wrapper " + cacheWrapper.toString() + " does not support bulk operations.");
@@ -395,10 +398,22 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    }
 
    protected class BulkOperationLogic implements OperationLogic {
-      private FixedSetOperationLogic initLogic;
+      private final FixedSetOperationLogic initLogic;
+      private final Operation putOperation;
+      private final Operation removeOperation;
+      private final Operation getOperation;
 
-      public BulkOperationLogic(FixedSetOperationLogic initLogic) {
+      public BulkOperationLogic(FixedSetOperationLogic initLogic, boolean preferAsyncOperations) {
          this.initLogic = initLogic;
+         if (preferAsyncOperations) {
+            putOperation = Operation.PUT_ALL_VIA_ASYNC;
+            removeOperation = Operation.REMOVE_ALL_VIA_ASYNC;
+            getOperation = Operation.GET_ALL_VIA_ASYNC;
+         } else {
+            putOperation = Operation.PUT_ALL;
+            removeOperation = Operation.REMOVE_ALL;
+            getOperation = Operation.GET_ALL;
+         }
       }
 
       @Override
@@ -418,7 +433,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                   ++i;
                }
             }
-            return stressor.makeRequest(iteration, Operation.PUT_ALL, map);
+            return stressor.makeRequest(iteration, putOperation, map);
          } else {
             Set<Object> set = new HashSet<Object>(bulkSize);
             for (int i = 0; i < bulkSize; ) {
@@ -428,7 +443,11 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                   ++i;
                }
             }
-            return stressor.makeRequest(iteration, Operation.GET_ALL, set);
+            if (randomAction < writePercentage + removePercentage) {
+               return stressor.makeRequest(iteration, removeOperation, set);
+            } else {
+               return stressor.makeRequest(iteration, getOperation, set);
+            }
          }
       }
    }
@@ -548,7 +567,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          if (txNotCompleted) {
             try {
                long endTxTime = endTransaction();
-               stats.registerRequest(transactionDuration + endTxTime, 0, Operation.TRANSACTION, false);
+               stats.registerRequest(transactionDuration + endTxTime, 0, Operation.TRANSACTION);
             } catch (TransactionException e) {
                stats.registerError(transactionDuration + e.getOperationDuration(), 0, Operation.TRANSACTION);
             }
@@ -576,7 +595,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          try {
             switch (operation) {
                case GET:
+               case GET_NULL:
                   result = cacheWrapper.get(bucketId, keysAndValues[0]);
+                  operation = (result != null ? Operation.GET : Operation.GET_NULL);
                   break;
                case PUT:
                   cacheWrapper.put(bucketId, keysAndValues[0], keysAndValues[1]);
@@ -604,11 +625,17 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                case REPLACE_INVALID:
                   successfull = !atomicCacheWrapper.replace(bucketId, keysAndValues[0], keysAndValues[1], keysAndValues[2]);
                   break;
-               case PUT_ALL:
-                  bulkCacheWrapper.putAll(bucketId, (Map<Object, Object>) keysAndValues[0]);
-                  break;
                case GET_ALL:
-                  result = bulkCacheWrapper.getAll(bucketId, (Collection<Object>) keysAndValues[0]);
+               case GET_ALL_VIA_ASYNC:
+                  result = bulkCacheWrapper.getAll(bucketId, (Set<Object>) keysAndValues[0], operation == Operation.GET_ALL_VIA_ASYNC);
+                  break;
+               case PUT_ALL:
+               case PUT_ALL_VIA_ASYNC:
+                  bulkCacheWrapper.putAll(bucketId, (Map<Object, Object>) keysAndValues[0], operation == Operation.PUT_ALL_VIA_ASYNC);
+                  break;
+               case REMOVE_ALL:
+               case REMOVE_ALL_VIA_ASYNC:
+                  result = bulkCacheWrapper.removeAll(bucketId, (Set<Object>) keysAndValues[0], operation == Operation.REMOVE_ALL_VIA_ASYNC);
                   break;
                default:
                   throw new IllegalArgumentException();
@@ -625,7 +652,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          if (useTransactions && shouldEndTransaction(iteration)) {
             try {
                endTxTime = endTransaction();
-               stats.registerRequest(transactionDuration + endTxTime, 0, Operation.TRANSACTION, false);
+               stats.registerRequest(transactionDuration + endTxTime, 0, Operation.TRANSACTION);
                txNotCompleted = false;
             } catch (TransactionException e) {
                endTxTime = e.getOperationDuration();
@@ -633,7 +660,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             }
          }
          if (successfull) {
-            stats.registerRequest(operationDuration, startTxTime + endTxTime, operation, result == null);
+            stats.registerRequest(operationDuration, startTxTime + endTxTime, operation);
          } else {
             stats.registerError(operationDuration, startTxTime + endTxTime, operation);
          }

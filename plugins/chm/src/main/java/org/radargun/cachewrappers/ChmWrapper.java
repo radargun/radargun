@@ -1,9 +1,8 @@
 package org.radargun.cachewrappers;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.radargun.CacheWrapper;
@@ -58,24 +57,25 @@ public class ChmWrapper implements CacheWrapper, BulkOperationsCapable, AtomicOp
    }
 
    @Override
-   public Collection<Object> getAll(String bucket, Collection<Object> keys) throws Exception {
-      List<Object> values = new ArrayList<Object>(keys.size());
+   public Map<Object, Object> getAll(String bucket, Set<Object> keys, boolean preferAsyncOperations) throws Exception {
+      Map<Object, Object> values = new HashMap<Object, Object>(keys.size());
       for (Object key : keys) {
-         values.add(chm.get(key));
+         values.put(key, chm.get(key));
       }
       return values;
    }
 
    @Override
-   public void putAll(String bucket, Map<Object, Object> entries) throws Exception {
+   public Map<Object, Object> putAll(String bucket, Map<Object, Object> entries, boolean preferAsyncOperations) throws Exception {
       chm.putAll(entries);
+      return null;
    }
 
    @Override
-   public Collection<Object> removeAll(String bucket, Collection<Object> keys) throws Exception {
-      List<Object> values = new ArrayList<Object>(keys.size());
+   public Map<Object, Object> removeAll(String bucket, Set<Object> keys, boolean preferAsyncOperations) throws Exception {
+      Map<Object, Object> values = new HashMap<Object, Object>(keys.size());
       for (Object key : keys) {
-         values.add(chm.remove(key));
+         values.put(key, chm.remove(key));
       }
       return values;
    }

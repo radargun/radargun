@@ -62,7 +62,6 @@ public class Statistics implements Serializable {
    }
 
    protected OperationStats[] operationStats;
-   protected long requestsNullGet;
 
    protected long intervalBeginTime;
    protected long intervalEndTime;
@@ -95,8 +94,8 @@ public class Statistics implements Serializable {
    @Override
    public String toString() {
       StringBuilder sb = new StringBuilder(
-            String.format("Stats(nodeUp=%s, interval=%d-%d, cacheSize=%d, nullGet=%d",
-                          nodeUp, intervalBeginTime, intervalEndTime, cacheSize, requestsNullGet));
+            String.format("Stats(nodeUp=%s, interval=%d-%d, cacheSize=%d",
+                          nodeUp, intervalBeginTime, intervalEndTime, cacheSize));
       Operation[] operations = Operation.values();
       for (int i = 0; i < operations.length; ++i) {
          sb.append(", ").append(operations[i].name()).append("=[").append(this.operationStats[i]).append("]");
@@ -109,15 +108,12 @@ public class Statistics implements Serializable {
       return nodeUp;
    }
 
-   public void registerRequest(long responseTime, long txOverhead, Operation operation, boolean isNull) {
+   public void registerRequest(long responseTime, long txOverhead, Operation operation) {
       OperationStats stats = getOperationStats(operation);
       stats.requests++;
       stats.responseTimeMax = Math.max(stats.responseTimeMax, responseTime);
       stats.responseTimeSum += responseTime;
       stats.txOverhead += txOverhead;
-      if (isNull) {
-         requestsNullGet++;
-      }
    }
 
    private OperationStats getOperationStats(Operation operation) {
@@ -139,7 +135,6 @@ public class Statistics implements Serializable {
       for (int i = 0; i < operationStats.length; ++i) {
          operationStats[i] = new OperationStats();
       }
-      requestsNullGet = 0;
    }
 
    public Statistics copy() {
@@ -156,7 +151,6 @@ public class Statistics implements Serializable {
       for (int i = 0; i < operationStats.length; ++i) {
          result.operationStats[i] = operationStats[i].copy();
       }
-      result.requestsNullGet = requestsNullGet;
    }
 
    /**
@@ -171,7 +165,6 @@ public class Statistics implements Serializable {
       for (int i = 0; i < operationStats.length; ++i) {
          operationStats[i].merge(otherStats.operationStats[i]);
       }
-      requestsNullGet += otherStats.requestsNullGet;
    }
 
    public static Statistics merge(Collection<Statistics> set) {
@@ -279,7 +272,7 @@ public class Statistics implements Serializable {
    }
 
    public long getRequestsNullGet() {
-      return requestsNullGet;
+      return operationStats[Operation.GET_NULL.ordinal()].requests;
    }
 
    public static long getIntervalBeginMin(List<Statistics> stats) {

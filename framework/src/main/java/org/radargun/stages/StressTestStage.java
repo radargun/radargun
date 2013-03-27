@@ -76,6 +76,9 @@ public class StressTestStage extends AbstractDistStage {
          "supports bulk operations. Default is 1 (no bulk operations).")
    private int bulkSize = 1;
 
+   @Property(doc = "When executing bulk operations, prefer version with multiple async operations over native implementation. Default is false.")
+   private boolean preferAsyncOperations = false;
+
    @Property(converter = TimeConverter.class, doc = "Benchmark duration. This takes precedence over numRequests. By default switched off.")
    protected long duration = -1;
 

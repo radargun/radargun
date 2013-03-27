@@ -8,10 +8,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.features.AtomicOperationsCapable;
+import org.radargun.features.BulkOperationsCapable;
 import org.radargun.utils.TypedProperties;
 
 import java.io.Serializable;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -22,7 +27,7 @@ import java.net.URL;
  *
  * @author Manik Surtani (manik@surtani.org)
  */
-public class EHCacheWrapper implements CacheWrapper, AtomicOperationsCapable {
+public class EHCacheWrapper implements CacheWrapper, AtomicOperationsCapable, BulkOperationsCapable {
    private CacheManager manager;
    private Ehcache cache;
    private Log log = LogFactory.getLog("org.radargun.cachewrappers.EHCacheWrapper");
@@ -151,5 +156,31 @@ public class EHCacheWrapper implements CacheWrapper, AtomicOperationsCapable {
    @Override
    public int getTotalSize() {
       return cache.getSize();
+   }
+
+   @Override
+   public Map<Object, Object> getAll(String bucket, Set<Object> keys, boolean preferAsync) throws Exception {
+      Map<Object, Object> map = new HashMap<Object, Object>();
+      Map<Object, Element> elements = cache.getAll(keys);
+      for (Element element : elements.values()) {
+         map.put(element.getObjectKey(), element.getObjectValue());
+      }
+      return map;
+   }
+
+   @Override
+   public Map<Object, Object> putAll(String bucket, Map<Object, Object> entries, boolean preferAsync) throws Exception {
+      ArrayList<Element> elements = new ArrayList<Element>(entries.size());
+      for (Map.Entry<Object, Object> entry : entries.entrySet()) {
+         elements.add(new Element(entry.getKey(), entry.getValue()));
+      }
+      cache.putAll(elements);
+      return null;
+   }
+
+   @Override
+   public Map<Object, Object> removeAll(String bucket, Set<Object> keys, boolean preferAsync) throws Exception {
+      cache.removeAll(keys);
+      return null;
    }
 }

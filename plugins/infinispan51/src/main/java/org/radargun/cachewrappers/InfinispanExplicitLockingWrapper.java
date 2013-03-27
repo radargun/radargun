@@ -20,8 +20,10 @@ package org.radargun.cachewrappers;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 
 import javax.transaction.Status;
@@ -133,7 +135,7 @@ public class InfinispanExplicitLockingWrapper extends InfinispanKeyAffinityWrapp
    }
 
    @Override
-   public Collection<Object> getAll(String bucket, Collection<Object> keys) throws Exception {
+   public Map<Object, Object> getAll(String bucket, Set<Object> keys, boolean preferAsyncOperations) throws Exception {
       if (trace) {
          StringBuilder sb = new StringBuilder("GET_ALL ");
          for (Object key : keys) {
@@ -141,19 +143,19 @@ public class InfinispanExplicitLockingWrapper extends InfinispanKeyAffinityWrapp
          }
       }
       Cache<Object, Object> cache = getCache(bucket);
-      List<Future<Object>> futures = new ArrayList<Future<Object>>(keys.size());
-      List<Object> values = new ArrayList<Object>(keys.size());
+      Map<Object, Future<Object>> futures = new HashMap<Object, Future<Object>>(keys.size());
+      Map<Object, Object> values = new HashMap<Object, Object>(keys.size());
       for (Object key : keys) {
-         futures.add(cache.getAsync(key));
+         futures.put(key, cache.getAsync(key));
       }
-      for (Future<Object> future : futures) {
-         values.add(future.get());
+      for (Map.Entry<Object, Future<Object>> entry : futures.entrySet()) {
+         values.put(entry.getKey(), entry.getValue().get());
       }
       return values;
    }
 
    @Override
-   public void putAll(String bucket, Map<Object, Object> entries) throws Exception {
+   public Map<Object, Object> putAll(String bucket, Map<Object, Object> entries, boolean preferAsyncOperations) throws Exception {
       if (trace) {
          StringBuilder sb = new StringBuilder("PUT_ALL ");
          for (Object key : entries.keySet()) {
@@ -169,14 +171,28 @@ public class InfinispanExplicitLockingWrapper extends InfinispanKeyAffinityWrapp
          }
          cache.getAdvancedCache().lock(entries.keySet());
       }
-      cache.putAll(entries);
+      Map<Object, Object> values;
+      if (preferAsyncOperations) {
+         Map<Object, Future<Object>> futures = new HashMap<Object, Future<Object>>(entries.size());
+         values = new HashMap<Object, Object>();
+         for (Map.Entry<Object, Object> entry : entries.entrySet()) {
+            futures.put(entry.getKey(), cache.putAsync(entry.getKey(), entry.getValue()));
+         }
+         for (Map.Entry<Object, Future<Object>> entry : futures.entrySet()) {
+            values.put(entry.getKey(), entry.getValue().get());
+         }
+      } else {
+         cache.putAll(entries);
+         values = null;
+      }
       if (shouldStopTransactionHere) {
          endTransaction(true);
       }
+      return values;
    }
 
    @Override
-   public Collection<Object> removeAll(String bucket, Collection<Object> keys) throws Exception {
+   public Map<Object, Object> removeAll(String bucket, Set<Object> keys, boolean preferAsyncOperations) throws Exception {
       if (trace) {
          StringBuilder sb = new StringBuilder("GET_ALL ");
          for (Object key : keys) {
@@ -192,13 +208,13 @@ public class InfinispanExplicitLockingWrapper extends InfinispanKeyAffinityWrapp
          }
          cache.getAdvancedCache().lock(keys);
       }
-      List<Future<Object>> futures = new ArrayList<Future<Object>>(keys.size());
-      List<Object> values = new ArrayList<Object>(keys.size());
+      Map<Object, Future<Object>> futures = new HashMap<Object, Future<Object>>(keys.size());
+      Map<Object, Object> values = new HashMap<Object, Object>();
       for (Object key : keys) {
-         futures.add(cache.removeAsync(key));
+         futures.put(key, cache.removeAsync(key));
       }
-      for (Future<Object> future : futures) {
-         values.add(future.get());
+      for (Map.Entry<Object, Future<Object>> entry : futures.entrySet()) {
+         values.put(entry.getKey(), entry.getValue().get());
       }
       if (shouldStopTransactionHere) {
          endTransaction(true);
