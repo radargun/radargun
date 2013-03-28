@@ -31,12 +31,14 @@ import org.radargun.utils.ClassLoadHelper;
 public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends InfinispanKillableWrapper implements
       MapReduceCapable<KOut, VOut, R> {
 
+   protected boolean distributeReducePhase;
+   protected boolean useIntermediateSharedCache;
+
    @SuppressWarnings("unchecked")
    @Override
    public R executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn,
          String collatorFqn) {
-      Cache<KIn, VIn> cache = cacheManager.getCache(getCacheName());
-      MapReduceTask<KIn, VIn, KOut, VOut> t = new MapReduceTask<KIn, VIn, KOut, VOut>(cache);
+      MapReduceTask<KIn, VIn, KOut, VOut> t = mapReduceTaskFactory();
 
       Mapper<KIn, VIn, KOut, VOut> mapper = null;
       Reducer<KOut, VOut> reducer = null;
@@ -73,8 +75,7 @@ public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends Infinis
    @SuppressWarnings("unchecked")
    @Override
    public Map<KOut, VOut> executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn) {
-      Cache<KIn, VIn> cache = cacheManager.getCache(getCacheName());
-      MapReduceTask<KIn, VIn, KOut, VOut> t = new MapReduceTask<KIn, VIn, KOut, VOut>(cache);
+      MapReduceTask<KIn, VIn, KOut, VOut> t = mapReduceTaskFactory();
 
       Mapper<KIn, VIn, KOut, VOut> mapper = null;
       Reducer<KOut, VOut> reducer = null;
@@ -103,12 +104,26 @@ public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends Infinis
    }
 
    @Override
-   public void setDistributeReducePhase(boolean distributeReducePhase) {
-      //Not used by Infinispan 5.1
+   public boolean setDistributeReducePhase(boolean distributeReducePhase) {
+      return false;
    }
 
    @Override
-   public void setUseIntermediateSharedCache(boolean useIntermediateSharedCache) {
-      //Not used by Infinispan 5.1
+   public boolean setUseIntermediateSharedCache(boolean useIntermediateSharedCache) {
+      return false;
+   }
+
+   /**
+    * 
+    * Factory method to create a MapReduceTask class. Infinispan 5.1 executed the reduce phase on a
+    * single node. Infinispan 5.2 added the option to distribute the reduce phase and share
+    * intermediate results. These options are controlled by the {@link #distributeReducePhase} and
+    * {@link #useIntermediateSharedCache} properties.
+    * 
+    * @return a MapReduceTask object that executes against on the default cache
+    */
+   protected MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTaskFactory() {
+      Cache<KIn, VIn> cache = cacheManager.getCache(getCacheName());
+      return new MapReduceTask<KIn, VIn, KOut, VOut>(cache);
    }
 }

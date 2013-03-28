@@ -76,10 +76,9 @@ public interface MapReduceCapable<KOut, VOut, R> extends CacheWrapper {
     * 
     * @param distributedReduce
     *           if true this task will use distributed reduce phase execution
-    * 
-    * @since Infinispan 5.2
+    * @return <code>true</code> if the CacheWrapper supports this flag, else <code>false</code>
     */
-   public void setDistributeReducePhase(boolean distributeReducePhase);
+   public boolean setDistributeReducePhase(boolean distributeReducePhase);
 
    /**
     * 
@@ -89,9 +88,8 @@ public interface MapReduceCapable<KOut, VOut, R> extends CacheWrapper {
     *           if true this tasks will share intermediate value cache with other executing
     *           MapReduceTasks on the grid. Otherwise, if false, this task will use its own
     *           dedicated cache for intermediate values
-    * 
-    * @since Infinispan 5.2
+    * @return <code>true</code> if the CacheWrapper supports this flag, else <code>false</code>
     */
-   public void setUseIntermediateSharedCache(boolean useIntermediateSharedCache);
+   public boolean setUseIntermediateSharedCache(boolean useIntermediateSharedCache);
 
 }
