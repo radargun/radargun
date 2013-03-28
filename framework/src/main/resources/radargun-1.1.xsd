@@ -55,6 +55,7 @@
                         <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
                         <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
                         <element name="TpccPopulation" type="rg:TpccPopulation"/>
+                        <element name="WaitForTopologyEvent" type="rg:WaitForTopologyEvent"/>
                         <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
                         <element name="XSReplCheck" type="rg:XSReplCheck"/>
                         <element name="XSReplLoad" type="rg:XSReplLoad"/>
@@ -159,6 +160,7 @@
             <element name="WebSessionWarmup" type="rg:StressTestWarmup"/>
             <element name="TpccBenchmark" type="rg:TpccBenchmark"/>
             <element name="TpccPopulation" type="rg:TpccPopulation"/>
+            <element name="WaitForTopologyEvent" type="rg:WaitForTopologyEvent"/>
             <element name="WriteSkewCheck" type="rg:WriteSkewCheck"/>
             <element name="XSReplCheck" type="rg:XSReplCheck"/>
             <element name="XSReplLoad" type="rg:XSReplLoad"/>
@@ -1188,6 +1190,50 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="olIdMask" type="string">
                <annotation>
                   <documentation>Mask used to generate non-uniformly distributed random item numbers. Default is 8191.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="WaitForTopologyEvent">
+      <annotation>
+         <documentation>Waits until some event occurs. Note that the initial rehash is not recorded in this manner, therefore waiting for that will result in timeout.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="condition" type="string">
+               <annotation>
+                  <documentation>Condition we are waiting for. Default is END.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="maxMembers" type="string">
+               <annotation>
+                  <documentation>The maximum number of slaves that participated in this event. Default is indefinite.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="minMembers" type="string">
+               <annotation>
+                  <documentation>The minimum number of slaves that participated in this event. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="set" type="string">
+               <annotation>
+                  <documentation>Set last state before finishing. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="timeout" type="string">
+               <annotation>
+                  <documentation>How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="type" type="string">
+               <annotation>
+                  <documentation>Type of event we are detecting. Default is REHASH.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait" type="string">
+               <annotation>
+                  <documentation>Wait for the event to happen. Default is true.</documentation>
                </annotation>
             </attribute>
          </extension>
