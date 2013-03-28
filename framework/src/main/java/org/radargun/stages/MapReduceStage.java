@@ -47,12 +47,12 @@ public class MapReduceStage extends AbstractDistStage {
          + "org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.")
    private String collatorFqn = null;
 
-   @Property(optional = true, doc = "Boolean value that determines if the " 
-            + "Reduce phase of the MapReduceTask is distributed. The default is true.")
+   @Property(optional = true, doc = "Boolean value that determines if the "
+         + "Reduce phase of the MapReduceTask is distributed. The default is true.")
    private boolean distributeReducePhase = true;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
-            + "intermediate results of the MapReduceTask are shared. The default is true.")
+         + "intermediate results of the MapReduceTask are shared. The default is true.")
    private boolean useIntermediateSharedCache = true;
 
    @SuppressWarnings("rawtypes")
@@ -70,8 +70,20 @@ public class MapReduceStage extends AbstractDistStage {
             if (cacheWrapper instanceof MapReduceCapable) {
                if (mapperFqn != null && reducerFqn != null) {
                   log.info("--------------------");
-                  ((MapReduceCapable) cacheWrapper).setDistributeReducePhase(distributeReducePhase);
-                  ((MapReduceCapable) cacheWrapper).setUseIntermediateSharedCache(useIntermediateSharedCache);
+                  if (((MapReduceCapable) cacheWrapper).setDistributeReducePhase(distributeReducePhase)) {
+                     log.info(cacheWrapper.getClass().getName()
+                           + " supports MapReduceCapable.setDistributeReducePhase()");
+                  } else {
+                     log.info(cacheWrapper.getClass().getName()
+                           + " does not support MapReduceCapable.setDistributeReducePhase()");
+                  }
+                  if (((MapReduceCapable) cacheWrapper).setUseIntermediateSharedCache(useIntermediateSharedCache)) {
+                     log.info(cacheWrapper.getClass().getName()
+                           + " supports MapReduceCapable.setUseIntermediateSharedCache()");
+                  } else {
+                     log.info(cacheWrapper.getClass().getName()
+                           + " does not support MapReduceCapable.setUseIntermediateSharedCache()");
+                  }
                   if (collatorFqn != null) {
                      long start = System.currentTimeMillis();
                      payloadObject = ((MapReduceCapable) cacheWrapper).executeMapReduceTask(classLoadHelper, mapperFqn,
