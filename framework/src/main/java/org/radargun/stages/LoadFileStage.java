@@ -18,6 +18,7 @@
  */
 package org.radargun.stages;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -26,11 +27,13 @@ import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
+import java.util.List;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.state.MasterState;
 
 /**
  * Loads the contents of the specified file into the cache using the specified sized values. All
@@ -52,6 +55,23 @@ public class LoadFileStage extends AbstractDistStage {
    private String bucket = null;
 
    @Override
+   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+      super.processAckOnMaster(acks, masterState);
+      long fileSize = new File(filePath).length();
+      log.info("--------------------");
+      log.info("Size of file '" + filePath + "' is " + fileSize + " bytes");
+      log.info("Value size is '" + valueSize + "' which will produce " + (int) Math.ceil((double) fileSize / valueSize)
+            + " keys");
+      for (DistStageAck ack : acks) {
+         long[] result = (long[]) ((DefaultDistStageAck) ack).getPayload();
+         log.info("Slave " + ((DefaultDistStageAck) ack).getSlaveIndex() + " wrote " + result[0]
+               + " values to the cache with a total size of " + result[1] + " bytes");
+      }
+      log.info("--------------------");
+      return true;
+   }
+
+   @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = newDefaultStageAck();
       int totalWriters = getActiveSlaveCount();
@@ -69,7 +89,7 @@ public class LoadFileStage extends AbstractDistStage {
          try {
             theFile = new FileInputStream(filePath).getChannel();
             theFile.position(fileOffset);
-            long fileSize = theFile.size();
+            //            long fileSize = theFile.size();
 
             while (true) {
                ByteBuffer buffer = ByteBuffer.allocate(valueSize);
@@ -92,12 +112,7 @@ public class LoadFileStage extends AbstractDistStage {
                   break;
                }
             }
-            log.info("--------------------");
-            log.info("Size of file '" + filePath + "' is " + fileSize + " bytes");
-            log.info("Value size is '" + valueSize + "' which will produce " + fileSize/valueSize + " keys");
-            log.info("Slave " + getSlaveIndex() + " wrote " + putCount + " values to the cache with a total size of "
-                  + totalBytesRead + " bytes");
-            log.info("--------------------");
+            result.setPayload(new long[] { putCount, totalBytesRead });
          } catch (FileNotFoundException e) {
             log.fatal("File not find at path: " + filePath, e);
             result.setError(true);
