@@ -89,7 +89,6 @@ public class LoadFileStage extends AbstractDistStage {
          try {
             theFile = new FileInputStream(filePath).getChannel();
             theFile.position(fileOffset);
-            //            long fileSize = theFile.size();
 
             while (true) {
                ByteBuffer buffer = ByteBuffer.allocate(valueSize);
