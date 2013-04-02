@@ -18,6 +18,8 @@
  */
 package org.radargun.stages;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.radargun.CacheWrapper;
@@ -25,6 +27,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.features.MapReduceCapable;
+import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
 
 /**
@@ -33,7 +36,9 @@ import org.radargun.utils.Utils;
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 @Stage(doc = "Stage which executes a MapReduce Task against all keys in the cache.")
-public class MapReduceStage extends AbstractDistStage {
+public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
+
+   private final String FIRST_SCALE_STAGE_KEY = "firstScalingStage";
 
    @Property(optional = false, doc = "Fully qualified class name of the "
          + "org.infinispan.distexec.mapreduce.Mapper implementation to execute.")
@@ -55,13 +60,38 @@ public class MapReduceStage extends AbstractDistStage {
          + "intermediate results of the MapReduceTask are shared. The default is true.")
    private boolean useIntermediateSharedCache = true;
 
-   @SuppressWarnings("rawtypes")
+   @Override
+   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+      super.processAckOnMaster(acks, masterState);
+      StringBuilder reportCsvContent = new StringBuilder();
+
+      if (masterState.get(FIRST_SCALE_STAGE_KEY) == null) {
+         masterState.put(FIRST_SCALE_STAGE_KEY, masterState.nameOfTheCurrentBenchmark());
+         reportCsvContent
+               .append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, DURATION_MSEC, KEY_COUNT_IN_RESULT_MAP\n");
+      }
+
+      for (DistStageAck ack : acks) {
+         DefaultDistStageAck dack = (DefaultDistStageAck) ack;
+         reportCsvContent.append((String) dack.getPayload()).append("\n");
+      }
+      reportCsvContent.append("\n");
+
+      try {
+         Utils.createOutputFile("mapreduce.csv", reportCsvContent.toString(), false);
+      } catch (IOException e) {
+         log.error("Failed to create report.", e);
+      }
+
+      return true;
+   }
+
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = newDefaultStageAck();
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-      Map payloadMap = null;
-      Object payloadObject = null;
+      Map<KOut, VOut> payloadMap = null;
+      R payloadObject = null;
 
       if (cacheWrapper == null) {
          result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
@@ -70,35 +100,42 @@ public class MapReduceStage extends AbstractDistStage {
             if (cacheWrapper instanceof MapReduceCapable) {
                if (mapperFqn != null && reducerFqn != null) {
                   log.info("--------------------");
-                  if (((MapReduceCapable) cacheWrapper).setDistributeReducePhase(distributeReducePhase)) {
+                  @SuppressWarnings("unchecked")
+                  MapReduceCapable<KOut, VOut, R> mapReduceCapable = (MapReduceCapable<KOut, VOut, R>) cacheWrapper;
+                  if (mapReduceCapable.setDistributeReducePhase(distributeReducePhase)) {
                      log.info(cacheWrapper.getClass().getName()
                            + " supports MapReduceCapable.setDistributeReducePhase()");
                   } else {
                      log.info(cacheWrapper.getClass().getName()
                            + " does not support MapReduceCapable.setDistributeReducePhase()");
                   }
-                  if (((MapReduceCapable) cacheWrapper).setUseIntermediateSharedCache(useIntermediateSharedCache)) {
+                  if (mapReduceCapable.setUseIntermediateSharedCache(useIntermediateSharedCache)) {
                      log.info(cacheWrapper.getClass().getName()
                            + " supports MapReduceCapable.setUseIntermediateSharedCache()");
                   } else {
                      log.info(cacheWrapper.getClass().getName()
                            + " does not support MapReduceCapable.setUseIntermediateSharedCache()");
                   }
+                  long durationMillis;
                   if (collatorFqn != null) {
                      long start = System.currentTimeMillis();
-                     payloadObject = ((MapReduceCapable) cacheWrapper).executeMapReduceTask(classLoadHelper, mapperFqn,
-                           reducerFqn, collatorFqn);
-                     log.info("MapReduce task with Collator completed in "
-                           + Utils.prettyPrintMillis(System.currentTimeMillis() - start));
-                     result.setPayload(payloadObject);
+                     payloadObject = mapReduceCapable.executeMapReduceTask(classLoadHelper, mapperFqn, reducerFqn,
+                           collatorFqn);
+                     durationMillis = System.currentTimeMillis() - start;
+                     log.info("MapReduce task with Collator completed in " + Utils.prettyPrintMillis(durationMillis));
+                     String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
+                           + cacheWrapper.getLocalSize() + ", " + durationMillis + ", -1";
+                     result.setPayload(payload);
                   } else {
                      long start = System.currentTimeMillis();
-                     payloadMap = ((MapReduceCapable) cacheWrapper).executeMapReduceTask(classLoadHelper, mapperFqn,
-                           reducerFqn);
-                     log.info("MapReduce task completed in "
-                           + Utils.prettyPrintMillis(System.currentTimeMillis() - start));
+                     payloadMap = mapReduceCapable.executeMapReduceTask(classLoadHelper, mapperFqn, reducerFqn);
+                     durationMillis = System.currentTimeMillis() - start;
+
+                     log.info("MapReduce task completed in " + Utils.prettyPrintMillis(durationMillis));
                      log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
-                     result.setPayload(payloadMap);
+                     String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
+                           + cacheWrapper.getLocalSize() + ", " + durationMillis + ", " + payloadMap.keySet().size();
+                     result.setPayload(payload);
                   }
                   log.info(cacheWrapper.getNumMembers() + " nodes were used. " + cacheWrapper.getLocalSize()
                         + " entries on this node");
@@ -112,6 +149,10 @@ public class MapReduceStage extends AbstractDistStage {
                result.setError(true);
                result.setErrorMessage("MapReduce tasks are not supported by this cache");
             }
+         } else {
+            String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
+                  + ", 0, -1";
+            result.setPayload(payload);
          }
       }
       return result;
@@ -140,5 +181,4 @@ public class MapReduceStage extends AbstractDistStage {
    public void setCollatorFqn(String collatorFqn) {
       this.collatorFqn = collatorFqn;
    }
-
 }

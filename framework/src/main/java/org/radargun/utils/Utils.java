@@ -2,9 +2,11 @@ package org.radargun.utils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.radargun.stages.GenerateChartStage;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URL;
@@ -278,4 +280,35 @@ public class Utils {
       }
       return durationMillis;
    }
+
+   public static void createOutputFile(String fileName, String fileContent) throws IOException {
+      createOutputFile(fileName, fileContent, true);
+   }
+
+   public static void createOutputFile(String fileName, String fileContent, boolean doBackup) throws IOException {
+      File parentDir = new File(GenerateChartStage.REPORTS);
+      if (!parentDir.exists()) {
+         if (!parentDir.mkdirs())
+            throw new RuntimeException(parentDir.getAbsolutePath() + " does not exist and could not be created!");
+      }
+
+      File reportFile = new File(parentDir, fileName);
+      if (!reportFile.exists() || doBackup) {
+         reportFile = Utils.createOrReplaceFile(parentDir, fileName);
+      }
+            
+      if (!reportFile.exists()) {
+         throw new IllegalStateException(reportFile.getAbsolutePath()
+               + " was deleted? Not allowed to delete report file during test run!");
+      }
+      FileWriter writer = null;
+      try {
+         writer = new FileWriter(reportFile, !doBackup);
+         writer.append(fileContent);
+      } finally {
+         if (writer != null)
+            writer.close();
+      }
+   }
+   
 }

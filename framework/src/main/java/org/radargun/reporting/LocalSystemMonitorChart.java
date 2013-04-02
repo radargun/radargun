@@ -1,8 +1,6 @@
 package org.radargun.reporting;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -116,7 +114,7 @@ public class LocalSystemMonitorChart {
 
    private void generateReport(ClusterTimeSeriesReport timeReport, String fileNameNoExtension) {
       try {
-         createOutputFile(reportPrefix + "-" + fileNameNoExtension + ".csv", reportCsvContent);
+         Utils.createOutputFile(reportPrefix + "-" + fileNameNoExtension + ".csv", reportCsvContent.toString());
          TimeSeriesReportGenerator.generate(timeReport, GenerateChartStage.REPORTS, reportPrefix + "-"
                + fileNameNoExtension);
       } catch (IOException e1) {
@@ -126,25 +124,4 @@ public class LocalSystemMonitorChart {
       }
    }
 
-   private void createOutputFile(String fileName, StringBuilder reportCsvContent) throws IOException {
-      File parentDir = new File(GenerateChartStage.REPORTS);
-      if (!parentDir.exists()) {
-         if (!parentDir.mkdirs())
-            throw new RuntimeException(parentDir.getAbsolutePath() + " does not exist and could not be created!");
-      }
-
-      File reportFile = Utils.createOrReplaceFile(parentDir, fileName);
-      if (!reportFile.exists()) {
-         throw new IllegalStateException(reportFile.getAbsolutePath()
-               + " was deleted? Not allowed to delete report file during test run!");
-      }
-      PrintWriter writer = null;
-      try {
-         writer = new PrintWriter(reportFile);
-         writer.append(reportCsvContent.toString());
-      } finally {
-         if (writer != null)
-            writer.close();
-      }
-   }
 }
