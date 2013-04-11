@@ -737,6 +737,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.</documentation>
                </annotation>
             </attribute>
+            <attribute name="distributeReducePhase" type="string">
+               <annotation>
+                  <documentation>Boolean value that determines if the Reduce phase of the MapReduceTask is distributed. The default is true.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="mapperFqn" type="string">
                <annotation>
                   <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Mapper implementation to execute.</documentation>
@@ -745,6 +750,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="reducerFqn" type="string">
                <annotation>
                   <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to execute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="useIntermediateSharedCache" type="string">
+               <annotation>
+                  <documentation>Boolean value that determines if the intermediate results of the MapReduceTask are shared. The default is true.</documentation>
                </annotation>
             </attribute>
          </extension>
