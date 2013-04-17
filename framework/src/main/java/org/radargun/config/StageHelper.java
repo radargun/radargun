@@ -110,6 +110,11 @@ public class StageHelper {
       return sb.append(" }").toString();
    }
 
+   public static boolean isStage(Class<?> stageClass) {
+      return stageClass != null && org.radargun.Stage.class.isAssignableFrom(stageClass)
+            && stageClass.isAnnotationPresent(Stage.class);
+   }
+
    public static String getStageName(Class<? extends org.radargun.Stage> clazz) {
       if (clazz == null) throw new IllegalArgumentException("Class cannot be null");
       Stage stageAnnotation = (Stage)clazz.getAnnotation(Stage.class);
