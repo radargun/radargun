@@ -1137,7 +1137,13 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <documentation>Starts collecting JVM statistics locally on each slave node.</documentation>
       </annotation>
       <complexContent>
-         <extension base="rg:AbstractDist"/>
+         <extension base="rg:AbstractDist">
+            <attribute name="interfaceName" type="string">
+               <annotation>
+                  <documentation>Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
       </complexContent>
    </complexType>
    <complexType name="StopBackgroundStatistics">

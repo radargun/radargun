@@ -17,6 +17,8 @@ import org.radargun.sysmonitor.CpuUsageMonitor;
 import org.radargun.sysmonitor.GcMonitor;
 import org.radargun.sysmonitor.LocalJmxMonitor;
 import org.radargun.sysmonitor.MemoryUsageMonitor;
+import org.radargun.sysmonitor.NetworkBytesInMonitor;
+import org.radargun.sysmonitor.NetworkBytesOutMonitor;
 import org.radargun.utils.Utils;
 
 /**
@@ -60,6 +62,7 @@ public class LocalSystemMonitorChart {
       generateCpu();
       generateGc();
       generateMemory();
+      generateNetwork();
    }
 
    private void generateMemory() {
@@ -100,6 +103,23 @@ public class LocalSystemMonitorChart {
          populateGraph(timeReport, "gc-" + s, gcMonitor);
       }
       generateReport(timeReport, "gc_usage");
+   }
+
+   private void generateNetwork() {
+      this.reportCsvContent = new StringBuilder().append("NODE,TIME,MEASUREMENT\n");
+      ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport();
+      timeReport.init("Time(sec)", "Network(bytes)", "Network traffic", "");
+      String[] sortedKeys = sysMonitors.keySet().toArray(new String[0]);
+      Arrays.sort(sortedKeys);
+      for (String s : sortedKeys) {
+         NetworkBytesInMonitor netInMonitor = sysMonitors.get(s).getNetworkBytesInMonitor();
+         populateGraph(timeReport, "network-inbound-" + s, netInMonitor);
+      }
+      for (String s : sortedKeys) {
+         NetworkBytesOutMonitor netOutMonitor = sysMonitors.get(s).getNetworkBytesOutMonitor();
+         populateGraph(timeReport, "network-outbound-" + s, netOutMonitor);
+      }
+      generateReport(timeReport, "network_usage");
    }
 
    private void populateGraph(ClusterTimeSeriesReport timeReport, String s, AbstractActivityMonitor activityMonitor) {

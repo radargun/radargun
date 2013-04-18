@@ -19,6 +19,7 @@
 package org.radargun.stages;
 
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.sysmonitor.LocalJmxMonitor;
@@ -38,6 +39,9 @@ public class StartJVMMonitorStage extends AbstractDistStage {
    private String productName;
    private String configName;
 
+   @Property(doc = "Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.")
+   private String interfaceName;
+
    @Override
    public void initOnMaster(MasterState masterState, int slaveIndex) {
       productName = masterState.nameOfTheCurrentBenchmark();
@@ -50,6 +54,9 @@ public class StartJVMMonitorStage extends AbstractDistStage {
       LocalJmxMonitor monitor = new LocalJmxMonitor();
       monitor.setProductName(productName);
       monitor.setConfigName(configName);
+      if (interfaceName != null) {
+         monitor.setInterfaceName(interfaceName);
+      }
       monitor.startMonitoringLocal();
       slaveState.put(MONITOR_KEY, monitor);
       return ack;
