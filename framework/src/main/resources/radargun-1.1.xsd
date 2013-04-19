@@ -665,14 +665,9 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>If true, any previously accumulated CPU profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_CPU_RECORDING and STOP_CPU_RECORDING. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="resetMemoryStats" type="string">
+            <attribute name="snapshotOutput" type="string">
                <annotation>
-                  <documentation>If true, any previously accumulated Memory profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_MEMORY_RECORDING and STOP_MEMORY_RECORDING. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="snapshotDirectory" type="string">
-               <annotation>
-                  <documentation>Directory where the snapshot should be written (for SAVE_SNAPSHOT).</documentation>
+                  <documentation>Path where the snapshot should be written (for SAVE_SNAPSHOT).</documentation>
                </annotation>
             </attribute>
          </extension>

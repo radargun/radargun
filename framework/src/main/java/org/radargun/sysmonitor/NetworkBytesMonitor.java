@@ -1,10 +1,27 @@
+/* 
+ * JBoss, Home of Professional Open Source
+ * Copyright 2012 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @author tags. All rights reserved.
+ * See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License, v. 2.1.
+ * This program is distributed in the hope that it will be useful, but WITHOUT A
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License,
+ * v.2.1 along with this distribution; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA  02110-1301, USA.
+ */
 package org.radargun.sysmonitor;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -13,6 +30,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
+ * Parse the /proc/net/dev file for a value on the specified network interface
+ * 
  * @author Alan Field
  */
 public class NetworkBytesMonitor extends AbstractActivityMonitor implements Serializable {
@@ -43,18 +62,17 @@ public class NetworkBytesMonitor extends AbstractActivityMonitor implements Seri
             inputStream = new FileInputStream("/proc/net/dev");
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
             try {
-               String line = br.readLine();
+               String line = br.readLine().trim();
                while (line != null) {
-                  String tline = line.trim();
-                  if (tline.startsWith(iface)) {
-                     String[] vals = tline.split(":")[1].trim().split("\\s+");
+                  if (line.startsWith(iface)) {
+                     String[] vals = line.split(":")[1].trim().split("\\s+");
                      this.addMeasurement(new BigDecimal(vals[valueIndex]));
                      break;
                   }
-                  line = br.readLine();
+                  line = br.readLine().trim();
                }
                br.close();
-            } catch(Exception e) {
+            } catch (Exception e) {
                log.error("Exception occurred while reading /proc/net/dev.", e);
             } finally {
                if (inputStream != null) {
