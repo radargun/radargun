@@ -39,6 +39,7 @@ import org.radargun.utils.Utils;
 public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
    private final String FIRST_SCALE_STAGE_KEY = "firstScalingStage";
+   private final String MAPREDUCE_RESULT_KEY = "mapreduceResult";
 
    @Property(optional = false, doc = "Fully qualified class name of the "
          + "org.infinispan.distexec.mapreduce.Mapper implementation to execute.")
@@ -126,16 +127,31 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                      String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
                            + cacheWrapper.getLocalSize() + ", " + durationMillis + ", -1";
                      result.setPayload(payload);
+                     try {
+                        cacheWrapper.put(null, MAPREDUCE_RESULT_KEY, payloadObject);
+                     } catch (Exception e) {
+                        log.error("Failed to put collated result object into cache", e);
+                     }
                   } else {
                      long start = System.currentTimeMillis();
                      payloadMap = mapReduceCapable.executeMapReduceTask(classLoadHelper, mapperFqn, reducerFqn);
                      durationMillis = System.currentTimeMillis() - start;
 
-                     log.info("MapReduce task completed in " + Utils.prettyPrintMillis(durationMillis));
-                     log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
-                     String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
-                           + cacheWrapper.getLocalSize() + ", " + durationMillis + ", " + payloadMap.keySet().size();
-                     result.setPayload(payload);
+                     if (payloadMap != null) {
+                        log.info("MapReduce task completed in " + Utils.prettyPrintMillis(durationMillis));
+                        log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
+                        String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
+                              + cacheWrapper.getLocalSize() + ", " + durationMillis + ", " + payloadMap.keySet().size();
+                        result.setPayload(payload);
+                        try {
+                           cacheWrapper.put(null, MAPREDUCE_RESULT_KEY, payloadMap);
+                        } catch (Exception e) {
+                           log.error("Failed to put result map into cache", e);
+                        }
+                     } else {
+                        result.setError(true);
+                        result.setErrorMessage("executeMapReduceTask() returned null");
+                     }
                   }
                   log.info(cacheWrapper.getNumMembers() + " nodes were used. " + cacheWrapper.getLocalSize()
                         + " entries on this node");
