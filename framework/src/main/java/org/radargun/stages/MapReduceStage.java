@@ -38,8 +38,9 @@ import org.radargun.utils.Utils;
 @Stage(doc = "Stage which executes a MapReduce Task against all keys in the cache.")
 public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
+   public static final String MAPREDUCE_RESULT_KEY = "mapreduceResult";
+
    private final String FIRST_SCALE_STAGE_KEY = "firstScalingStage";
-   private final String MAPREDUCE_RESULT_KEY = "mapreduceResult";
 
    @Property(optional = false, doc = "Fully qualified class name of the "
          + "org.infinispan.distexec.mapreduce.Mapper implementation to execute.")
