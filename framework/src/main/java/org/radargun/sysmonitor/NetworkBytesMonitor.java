@@ -35,6 +35,9 @@ import org.apache.commons.logging.LogFactory;
  * @author Alan Field
  */
 public class NetworkBytesMonitor extends AbstractActivityMonitor implements Serializable {
+   
+   public static int TRANSMIT_BYTES_INDEX = 8;
+   public static int RECEIVE_BYTES_INDEX = 0;
 
    /** The serialVersionUID */
    private static final long serialVersionUID = -260611570251145013L;
@@ -44,8 +47,13 @@ public class NetworkBytesMonitor extends AbstractActivityMonitor implements Seri
    boolean running = true;
    String iface;
    int valueIndex = -1;
+   BigDecimal initialValue;
 
-   public NetworkBytesMonitor(String iface, int valueIndex) {
+   public static NetworkBytesMonitor NetworkBytesMonitorFactory(String iface, int valueIndex) {
+      return new NetworkBytesMonitor(iface, valueIndex);
+   }
+   
+   private NetworkBytesMonitor(String iface, int valueIndex) {
       super();
       this.iface = iface;
       this.valueIndex = valueIndex;
@@ -66,7 +74,13 @@ public class NetworkBytesMonitor extends AbstractActivityMonitor implements Seri
                while (line != null) {
                   if (line.startsWith(iface)) {
                      String[] vals = line.split(":")[1].trim().split("\\s+");
-                     this.addMeasurement(new BigDecimal(vals[valueIndex]));
+                     // Start monitoring from zero and then increase
+                     if (initialValue == null) {
+                        initialValue = new BigDecimal(vals[valueIndex]);
+                        this.addMeasurement(new BigDecimal(0));
+                     } else {
+                        this.addMeasurement(new BigDecimal(vals[valueIndex]).subtract(initialValue));
+                     }
                      break;
                   }
                   line = br.readLine().trim();

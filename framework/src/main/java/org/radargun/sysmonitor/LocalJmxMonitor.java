@@ -76,8 +76,8 @@ public class LocalJmxMonitor implements Serializable {
    private volatile CpuUsageMonitor cpuMonitor;
    private volatile MemoryUsageMonitor memoryMonitor;
    private volatile GcMonitor gcMonitor;
-   private volatile NetworkBytesInMonitor netInMonitor;
-   private volatile NetworkBytesOutMonitor netOutMonitor;
+   private volatile NetworkBytesMonitor netInMonitor;
+   private volatile NetworkBytesMonitor netOutMonitor;
 
    ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
 
@@ -91,9 +91,9 @@ public class LocalJmxMonitor implements Serializable {
          gcMonitor = new GcMonitor();
          exec.scheduleAtFixedRate(gcMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
          if (interfaceName != null) {
-            netInMonitor = new NetworkBytesInMonitor(interfaceName);
+            netInMonitor = NetworkBytesMonitor.NetworkBytesMonitorFactory(interfaceName, NetworkBytesMonitor.RECEIVE_BYTES_INDEX);
             exec.scheduleAtFixedRate(netInMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
-            netOutMonitor = new NetworkBytesOutMonitor(interfaceName);
+            netOutMonitor = NetworkBytesMonitor.NetworkBytesMonitorFactory(interfaceName, NetworkBytesMonitor.TRANSMIT_BYTES_INDEX);
             exec.scheduleAtFixedRate(netOutMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
          }
       } catch (Exception e) {
@@ -113,11 +113,11 @@ public class LocalJmxMonitor implements Serializable {
       return gcMonitor;
    }
 
-   public NetworkBytesInMonitor getNetworkBytesInMonitor() {
+   public NetworkBytesMonitor getNetworkBytesInMonitor() {
       return netInMonitor;
    }
 
-   public NetworkBytesOutMonitor getNetworkBytesOutMonitor() {
+   public NetworkBytesMonitor getNetworkBytesOutMonitor() {
       return netOutMonitor;
    }
 
