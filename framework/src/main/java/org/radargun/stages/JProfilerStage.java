@@ -46,15 +46,20 @@ public class JProfilerStage extends AbstractDistStage {
    private String configName;
 
    public enum Operation {
-      NO_OPERATION(null, null), START_METHOD_STATS_RECORDING("startMethodStatsRecording", new String[] {}), STOP_METHOD_STATS_RECORDING(
-            "stopMethodStatsRecording", new String[] {}), START_CPU_RECORDING("startCPURecording",
-            new String[] { boolean.class.getName() }), STOP_CPU_RECORDING("stopCPURecording", new String[] {}), SAVE_SNAPSHOT(
-            "saveSnapshot", new String[] { String.class.getName() }), START_MEMORY_RECORDING("startAllocRecording",
-            new String[] { boolean.class.getName() }), STOP_MEMORY_RECORDING("stopAllocRecording", new String[] {}), START_MONITOR_RECORDING(
-            "startMonitorRecording", new String[] {}), STOP_MONITOR_RECORDING("stopMonitorRecording", new String[] {}), START_THREAD_RECORDING(
-            "startThreadProfiling", new String[] {}), STOP_THREAD_RECORDING("stopThreadProfiling", new String[] {}), START_VM_TELEMETRY_RECORDING(
-            "startVMTelemetryRecording", new String[] {}), STOP_VM_TELEMETRY_RECORDING("stopVMTelemetryRecording",
-            new String[] {});
+      NO_OPERATION(null, null), 
+      START_METHOD_STATS_RECORDING("startMethodStatsRecording", new String[] {}), 
+      STOP_METHOD_STATS_RECORDING("stopMethodStatsRecording", new String[] {}), 
+      START_CPU_RECORDING("startCPURecording", new String[] { boolean.class.getName() }), 
+      STOP_CPU_RECORDING("stopCPURecording", new String[] {}), 
+      SAVE_SNAPSHOT("saveSnapshot", new String[] { String.class.getName() }), 
+      START_MEMORY_RECORDING("startAllocRecording", new String[] { boolean.class.getName() }), 
+      STOP_MEMORY_RECORDING("stopAllocRecording", new String[] {}), 
+      START_MONITOR_RECORDING("startMonitorRecording", new String[] {}), 
+      STOP_MONITOR_RECORDING("stopMonitorRecording", new String[] {}), 
+      START_THREAD_RECORDING("startThreadProfiling", new String[] {}), 
+      STOP_THREAD_RECORDING("stopThreadProfiling", new String[] {}), 
+      START_VM_TELEMETRY_RECORDING("startVMTelemetryRecording", new String[] {}), 
+      STOP_VM_TELEMETRY_RECORDING("stopVMTelemetryRecording", new String[] {});
 
       private String name;
       private String[] signature;
