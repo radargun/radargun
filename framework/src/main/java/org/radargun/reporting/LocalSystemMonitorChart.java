@@ -28,6 +28,7 @@ public class LocalSystemMonitorChart {
    private static Log log = LogFactory.getLog(LocalSystemMonitorChart.class);
    private StringBuilder reportHeader;
    private ArrayList<String> reportStrings;
+   private boolean hasNetworkStatistics = false;
 
    final Map<String, LocalJmxMonitor> sysMonitors;
 
@@ -35,6 +36,7 @@ public class LocalSystemMonitorChart {
 
    public LocalSystemMonitorChart(Map<String, LocalJmxMonitor> sysMonitors) {
       this.sysMonitors = new TreeMap<String, LocalJmxMonitor>(sysMonitors);
+      hasNetworkStatistics = this.sysMonitors.values().iterator().next().getInterfaceName() != null;
    }
 
    public void generate(ReportDesc reportDesc) {
@@ -62,7 +64,9 @@ public class LocalSystemMonitorChart {
       generateCpu();
       generateGc();
       generateMemory();
-      generateNetwork();
+      if (hasNetworkStatistics) {
+         generateNetwork();
+      }
    }
 
    private void generateMemory() {
