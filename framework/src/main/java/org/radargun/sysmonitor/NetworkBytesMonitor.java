@@ -36,8 +36,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class NetworkBytesMonitor extends AbstractActivityMonitor implements Serializable {
    
-   public static int TRANSMIT_BYTES_INDEX = 8;
-   public static int RECEIVE_BYTES_INDEX = 0;
+   private static int TRANSMIT_BYTES_INDEX = 8;
+   private static int RECEIVE_BYTES_INDEX = 0;
 
    /** The serialVersionUID */
    private static final long serialVersionUID = -260611570251145013L;
@@ -49,10 +49,14 @@ public class NetworkBytesMonitor extends AbstractActivityMonitor implements Seri
    int valueIndex = -1;
    BigDecimal initialValue;
 
-   public static NetworkBytesMonitor NetworkBytesMonitorFactory(String iface, int valueIndex) {
-      return new NetworkBytesMonitor(iface, valueIndex);
+   public static NetworkBytesMonitor createReceiveMonitor(String iface) {
+      return new NetworkBytesMonitor(iface, RECEIVE_BYTES_INDEX);
    }
-   
+
+   public static NetworkBytesMonitor createTransmitMonitor(String iface) {
+      return new NetworkBytesMonitor(iface, TRANSMIT_BYTES_INDEX);
+   }
+
    private NetworkBytesMonitor(String iface, int valueIndex) {
       super();
       this.iface = iface;

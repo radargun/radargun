@@ -91,9 +91,9 @@ public class LocalJmxMonitor implements Serializable {
          gcMonitor = new GcMonitor();
          exec.scheduleAtFixedRate(gcMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
          if (interfaceName != null) {
-            netInMonitor = NetworkBytesMonitor.NetworkBytesMonitorFactory(interfaceName, NetworkBytesMonitor.RECEIVE_BYTES_INDEX);
+            netInMonitor = NetworkBytesMonitor.createReceiveMonitor(interfaceName);
             exec.scheduleAtFixedRate(netInMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
-            netOutMonitor = NetworkBytesMonitor.NetworkBytesMonitorFactory(interfaceName, NetworkBytesMonitor.TRANSMIT_BYTES_INDEX);
+            netOutMonitor = NetworkBytesMonitor.createTransmitMonitor(interfaceName);
             exec.scheduleAtFixedRate(netOutMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
          }
       } catch (Exception e) {
