@@ -1,9 +1,9 @@
 package org.radargun.reporting;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -17,6 +17,7 @@ import org.radargun.sysmonitor.CpuUsageMonitor;
 import org.radargun.sysmonitor.GcMonitor;
 import org.radargun.sysmonitor.LocalJmxMonitor;
 import org.radargun.sysmonitor.MemoryUsageMonitor;
+import org.radargun.sysmonitor.NetworkBytesMonitor;
 import org.radargun.utils.Utils;
 
 /**
@@ -25,14 +26,17 @@ import org.radargun.utils.Utils;
 public class LocalSystemMonitorChart {
 
    private static Log log = LogFactory.getLog(LocalSystemMonitorChart.class);
-   private StringBuilder reportCsvContent;
+   private StringBuilder reportHeader;
+   private ArrayList<String> reportStrings;
+   private boolean hasNetworkStatistics = false;
 
    final Map<String, LocalJmxMonitor> sysMonitors;
 
    String reportPrefix;
 
    public LocalSystemMonitorChart(Map<String, LocalJmxMonitor> sysMonitors) {
-      this.sysMonitors = new HashMap<String, LocalJmxMonitor>(sysMonitors);
+      this.sysMonitors = new TreeMap<String, LocalJmxMonitor>(sysMonitors);
+      hasNetworkStatistics = this.sysMonitors.values().iterator().next().getInterfaceName() != null;
    }
 
    public void generate(ReportDesc reportDesc) {
@@ -42,7 +46,7 @@ public class LocalSystemMonitorChart {
             log.info("No reports defined, not generating system monitor graphs.");
             return;
          }
-         Map<String, LocalJmxMonitor> filter = new HashMap<String, LocalJmxMonitor>();
+         Map<String, LocalJmxMonitor> filter = new TreeMap<String, LocalJmxMonitor>();
          for (ReportItem reportItem : reportDesc.getItems()) {
             for (Map.Entry<String, LocalJmxMonitor> e : sysMonitors.entrySet()) {
                LocalJmxMonitor m = e.getValue();
@@ -60,15 +64,18 @@ public class LocalSystemMonitorChart {
       generateCpu();
       generateGc();
       generateMemory();
+      if (hasNetworkStatistics) {
+         generateNetwork();
+      }
    }
 
    private void generateMemory() {
-      this.reportCsvContent = new StringBuilder().append("NODE,TIME,MEASUREMENT\n");
+      reportHeader = new StringBuilder("Second");
+      reportStrings = null;
       ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport();
       timeReport.init("Time(sec)", "Memory(Mb)", "Memory consumption", "");
-      String[] sortedKeys = sysMonitors.keySet().toArray(new String[0]);
-      Arrays.sort(sortedKeys);
-      for (String s : sortedKeys) {
+      for (String s : sysMonitors.keySet()) {
+         reportHeader.append(", mem-" + s);
          MemoryUsageMonitor memMonitor = sysMonitors.get(s).getMemoryMonitor();
          memMonitor.convertToMb();
          populateGraph(timeReport, "mem-" + s, memMonitor);
@@ -77,12 +84,12 @@ public class LocalSystemMonitorChart {
    }
 
    private void generateCpu() {
-      this.reportCsvContent = new StringBuilder().append("NODE,TIME,MEASUREMENT\n");
+      reportHeader = new StringBuilder("Second");
+      reportStrings = null;
       ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport();
       timeReport.init("Time(sec)", "CPU", "CPU Usage (%)", "");
-      String[] sortedKeys = sysMonitors.keySet().toArray(new String[0]);
-      Arrays.sort(sortedKeys);
-      for (String s : sortedKeys) {
+      for (String s : sysMonitors.keySet()) {
+         reportHeader.append(", cpu-" + s);
          CpuUsageMonitor cpuMonitor = sysMonitors.get(s).getCpuMonitor();
          populateGraph(timeReport, "cpu-" + s, cpuMonitor);
       }
@@ -90,31 +97,55 @@ public class LocalSystemMonitorChart {
    }
 
    private void generateGc() {
-      this.reportCsvContent = new StringBuilder().append("NODE,TIME,MEASUREMENT\n");
+      reportHeader = new StringBuilder("Second");
+      reportStrings = null;
       ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport();
       timeReport.init("Time(sec)", "GC", "GC Usage (%)", "");
-      String[] sortedKeys = sysMonitors.keySet().toArray(new String[0]);
-      Arrays.sort(sortedKeys);
-      for (String s : sortedKeys) {
+      for (String s : sysMonitors.keySet()) {
+         reportHeader.append(", gc-" + s);
          GcMonitor gcMonitor = sysMonitors.get(s).getGcMonitor();
          populateGraph(timeReport, "gc-" + s, gcMonitor);
       }
       generateReport(timeReport, "gc_usage");
    }
 
+   private void generateNetwork() {
+      reportHeader = new StringBuilder("Second");
+      reportStrings = null;
+      ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport();
+      timeReport.init("Time(sec)", "Network(bytes)", "Network traffic", "");
+      for (String s : sysMonitors.keySet()) {
+         reportHeader.append(", network-inbound-" + s + ", network-outbound-" + s);
+         NetworkBytesMonitor netInMonitor = sysMonitors.get(s).getNetworkBytesInMonitor();
+         populateGraph(timeReport, "network-inbound-" + s, netInMonitor);
+         NetworkBytesMonitor netOutMonitor = sysMonitors.get(s).getNetworkBytesOutMonitor();
+         populateGraph(timeReport, "network-outbound-" + s, netOutMonitor);
+      }
+      generateReport(timeReport, "network_usage");
+   }
+
    private void populateGraph(ClusterTimeSeriesReport timeReport, String s, AbstractActivityMonitor activityMonitor) {
       TimeSeries monitorData = timeReport.generateSeries(s, activityMonitor);
-      for (Object item : monitorData.getItems()) {
-         TimeSeriesDataItem tsdi = (TimeSeriesDataItem) item;
-         reportCsvContent.append('\n').append(s + "," + tsdi.getPeriod() + "," + tsdi.getValue());
+      int counter = 0;
+      if (reportStrings == null) {
+         reportStrings = new ArrayList<String>();
+         for (Object item : monitorData.getItems()) {
+            TimeSeriesDataItem tsdi = (TimeSeriesDataItem) item;
+            reportStrings.add(counter++ + "," + tsdi.getValue());
+         }
+      } else {
+         for (Object item : monitorData.getItems()) {
+            TimeSeriesDataItem tsdi = (TimeSeriesDataItem) item;
+            reportStrings.set(counter, reportStrings.get(counter) + "," + tsdi.getValue());
+            counter++;
+         }
       }
-      reportCsvContent.append('\n');
       timeReport.addSeries(monitorData);
    }
 
    private void generateReport(ClusterTimeSeriesReport timeReport, String fileNameNoExtension) {
       try {
-         Utils.createOutputFile(reportPrefix + "-" + fileNameNoExtension + ".csv", reportCsvContent.toString());
+         Utils.createOutputFile(reportPrefix + "-" + fileNameNoExtension + ".csv", generateReportCSV());
          TimeSeriesReportGenerator.generate(timeReport, GenerateChartStage.REPORTS, reportPrefix + "-"
                + fileNameNoExtension);
       } catch (IOException e1) {
@@ -122,6 +153,14 @@ public class LocalSystemMonitorChart {
       } catch (Exception e) {
          log.error(e.getMessage(), e);
       }
+   }
+
+   private String generateReportCSV() {
+      StringBuilder reportCsvContent = new StringBuilder(reportHeader + "\n");
+      for (String reportItem : reportStrings) {
+         reportCsvContent.append(reportItem + "\n");
+      }
+      return reportCsvContent.toString();
    }
 
 }
