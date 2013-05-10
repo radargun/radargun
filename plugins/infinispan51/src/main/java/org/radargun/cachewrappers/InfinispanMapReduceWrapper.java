@@ -27,12 +27,17 @@ import org.infinispan.distexec.mapreduce.Mapper;
 import org.infinispan.distexec.mapreduce.Reducer;
 import org.radargun.features.MapReduceCapable;
 import org.radargun.utils.ClassLoadHelper;
+import org.radargun.utils.Utils;
 
 public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends InfinispanKillableWrapper implements
       MapReduceCapable<KOut, VOut, R> {
 
    protected boolean distributeReducePhase;
    protected boolean useIntermediateSharedCache;
+
+   protected Map<String, String> mapperParameters;
+   protected Map<String, String> reducerParameters;
+   protected Map<String, String> collatorParameters;
 
    @SuppressWarnings("unchecked")
    @Override
@@ -50,23 +55,26 @@ public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends Infinis
          mapper = (Mapper<KIn, VIn, KOut, VOut>) classLoadHelper.createInstance(mapperFqn);
          t = t.mappedWith(mapper);
       } catch (Exception e) {
-         log.fatal("Could not instantiate Mapper class: " + mapperFqn, e);
+         throw (new IllegalArgumentException("Could not instantiate Mapper class: " + mapperFqn, e));
       }
 
       try {
          reducer = (Reducer<KOut, VOut>) classLoadHelper.createInstance(reducerFqn);
          t = t.reducedWith(reducer);
       } catch (Exception e) {
-         log.fatal("Could not instantiate Reducer class: " + reducerFqn, e);
+         throw (new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e));
       }
 
       try {
          collator = (Collator<KOut, VOut, R>) classLoadHelper.createInstance(collatorFqn);
       } catch (Exception e) {
-         log.fatal("Could not instantiate Collator class: " + collatorFqn, e);
+         throw (new IllegalArgumentException("Could not instantiate Collator class: " + collatorFqn, e));
       }
 
       if (mapper != null && reducer != null && collator != null) {
+         Utils.invokeMethodWithString(mapper, this.mapperParameters);
+         Utils.invokeMethodWithString(reducer, this.reducerParameters);
+         Utils.invokeMethodWithString(collator, this.collatorParameters);
          result = t.execute(collator);
       }
       return result;
@@ -86,17 +94,19 @@ public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends Infinis
          mapper = (Mapper<KIn, VIn, KOut, VOut>) classLoadHelper.createInstance(mapperFqn);
          t = t.mappedWith(mapper);
       } catch (Exception e) {
-         log.fatal("Could not instantiate Mapper class: " + mapperFqn, e);
+         throw (new IllegalArgumentException("Could not instantiate Mapper class: " + mapperFqn, e));
       }
 
       try {
          reducer = (Reducer<KOut, VOut>) classLoadHelper.createInstance(reducerFqn);
          t = t.reducedWith(reducer);
       } catch (Exception e) {
-         log.fatal("Could not instantiate Reducer class: " + reducerFqn, e);
+         throw (new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e));
       }
 
       if (mapper != null && reducer != null) {
+         Utils.invokeMethodWithString(mapper, this.mapperParameters);
+         Utils.invokeMethodWithString(reducer, this.reducerParameters);
          result = t.execute();
       }
 
@@ -126,4 +136,13 @@ public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends Infinis
       Cache<KIn, VIn> cache = cacheManager.getCache(getCacheName());
       return new MapReduceTask<KIn, VIn, KOut, VOut>(cache);
    }
+
+   @Override
+   public void setParameters(Map<String, String> mapperParameters, Map<String, String> reducerParameters,
+         Map<String, String> collatorParameters) {
+      this.mapperParameters = mapperParameters;
+      this.reducerParameters = reducerParameters;
+      this.collatorParameters = collatorParameters;
+   }
+
 }

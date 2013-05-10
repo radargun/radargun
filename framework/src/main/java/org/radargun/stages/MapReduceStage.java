@@ -46,13 +46,31 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          + "org.infinispan.distexec.mapreduce.Mapper implementation to execute.")
    private String mapperFqn;
 
+   @Property(optional = true, doc = "A String in the form of "
+         + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
+         + " invoking a method on the Mapper Object. The method"
+         + " must be public and take a String parameter. The default is null.")
+   private String mapperParams = null;
+
    @Property(optional = false, doc = "Fully qualified class name of the "
          + "org.infinispan.distexec.mapreduce.Reducer implementation to execute.")
    private String reducerFqn;
 
+   @Property(optional = true, doc = "A String in the form of "
+         + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
+         + " invoking a method on the Reducer Object. The method"
+         + " must be public and take a String parameter. The default is null.")
+   private String reducerParams = null;
+
    @Property(optional = true, doc = "Fully qualified class name of the "
          + "org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.")
    private String collatorFqn = null;
+
+   @Property(optional = true, doc = "A String in the form of "
+         + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
+         + " invoking a method on the Collator Object. The method"
+         + " must be public and take a String parameter. The default is null.")
+   private String collatorParams = null;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
          + "Reduce phase of the MapReduceTask is distributed. The default is true.")
@@ -104,6 +122,8 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                   log.info("--------------------");
                   @SuppressWarnings("unchecked")
                   MapReduceCapable<KOut, VOut, R> mapReduceCapable = (MapReduceCapable<KOut, VOut, R>) cacheWrapper;
+                  mapReduceCapable.setParameters(Utils.parseParams(mapperParams), Utils.parseParams(reducerParams),
+                        Utils.parseParams(collatorParams));
                   if (mapReduceCapable.setDistributeReducePhase(distributeReducePhase)) {
                      log.info(cacheWrapper.getClass().getName()
                            + " supports MapReduceCapable.setDistributeReducePhase()");
@@ -197,5 +217,45 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
    public void setCollatorFqn(String collatorFqn) {
       this.collatorFqn = collatorFqn;
+   }
+
+   public boolean isDistributeReducePhase() {
+      return distributeReducePhase;
+   }
+
+   public void setDistributeReducePhase(boolean distributeReducePhase) {
+      this.distributeReducePhase = distributeReducePhase;
+   }
+
+   public boolean isUseIntermediateSharedCache() {
+      return useIntermediateSharedCache;
+   }
+
+   public void setUseIntermediateSharedCache(boolean useIntermediateSharedCache) {
+      this.useIntermediateSharedCache = useIntermediateSharedCache;
+   }
+
+   public String getMapperParams() {
+      return mapperParams;
+   }
+
+   public void setMapperParams(String mapperParams) {
+      this.mapperParams = mapperParams;
+   }
+
+   public String getReducerParams() {
+      return reducerParams;
+   }
+
+   public void setReducerParams(String reducerParams) {
+      this.reducerParams = reducerParams;
+   }
+
+   public String getCollatorParams() {
+      return collatorParams;
+   }
+
+   public void setCollatorParams(String collatorParams) {
+      this.collatorParams = collatorParams;
    }
 }

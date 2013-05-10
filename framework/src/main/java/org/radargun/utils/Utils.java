@@ -9,13 +9,17 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -309,6 +313,49 @@ public class Utils {
          if (writer != null)
             writer.close();
       }
+   }
+
+   /**
+    * 
+    * Parse a string containing method names and String parameters. Multiple method names and
+    * parameters are separated by a ';'. Method names and parameters are separated by a ':'.
+    * 
+    * @return a Map with the method name as the key, and the String parameter as the value, or an
+    *         empty Map if <code>parameterString</code> is <code>null</code>
+    */
+   public static Map<String, String> parseParams(String parameterString) {
+      Map<String, String> result = new HashMap<String, String>();
+      if (parameterString != null) {
+         for (String propAndValue : parameterString.split(";")) {
+            String[] values = propAndValue.split(":");
+            result.put(values[0].trim(), values[1].trim());
+         }
+      }
+      return result;
+   }
+   
+   /**
+    * 
+    * Invoke a public method with a String argument on an Object
+    * 
+    * @param object
+    *           the Object where the method is invoked
+    * @param properties
+    *           a Map where the public method name is the key, and the String parameter is the value
+    * @return the modified Object, or <code>null</code> if the field can't be changed
+    */
+   public static Object invokeMethodWithString(Object object, Map<String, String> properties) {
+      Class<? extends Object> clazz = object.getClass();
+      for (Entry<String, String> entry : properties.entrySet()) {
+         try {
+            Method method = clazz.getDeclaredMethod(entry.getKey(), String.class);
+            method.invoke(object, entry.getValue());
+         } catch (Exception e) {
+            log.error("Error invoking method named " + entry.getKey() + " with value " + entry.getValue(), e);
+            return null;
+         }
+      }
+      return object;
    }
    
 }
