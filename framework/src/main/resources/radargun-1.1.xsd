@@ -28,6 +28,7 @@
                         <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
                         <element name="DataForQuery" type="rg:DataForQuery"/>
                         <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
+                        <element name="DistributedTask" type="rg:DistributedTask"/>
                         <element name="GenerateChart" type="rg:GenerateChart"/>
                         <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
                         <element name="JMXClusterValidation" type="rg:JMXClusterValidation"/>
@@ -135,6 +136,7 @@
             <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
             <element name="DataForQuery" type="rg:DataForQuery"/>
             <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
+            <element name="DistributedTask" type="rg:DistributedTask"/>
             <element name="GenerateChart" type="rg:GenerateChart"/>
             <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
             <element name="JMXClusterValidation" type="rg:JMXClusterValidation"/>
@@ -575,6 +577,40 @@
          </extension>
       </complexContent>
    </complexType>
+   <complexType name="DistributedTask">
+      <annotation>
+         <documentation>Stage which executes a MapReduce Task against all keys in the cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist">
+            <attribute name="distributedCallableFqn" type="string">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.DistributedCallable or java.util.concurrent.Callable implementation to execute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="distributedExecutionParams" type="string">
+               <annotation>
+                  <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the distributedCallableFqn Object. The method must be public and take a String parameter.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="executionPolicyName" type="string">
+               <annotation>
+                  <documentation>The name of one of the org.infinispan.distexec.DistributedTaskExecutionPolicy enums. The default is null.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="failoverPolicyFqn" type="string">
+               <annotation>
+                  <documentation>The fully qualified class name for a custom org.infinispan.distexec.DistributedTaskFailoverPolicy implementation. The default is null.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="nodeAddress" type="string">
+               <annotation>
+                  <documentation>The node address where the task will be executed. The default is null, and tasks will be executed against all nodes in the cluster.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
    <complexType name="GenerateChart">
       <annotation>
          <documentation>Stage that generates a chart from a set of csv files.</documentation>
@@ -795,6 +831,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.</documentation>
                </annotation>
             </attribute>
+            <attribute name="collatorParams" type="string">
+               <annotation>
+                  <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Collator Object. The method must be public and take a String parameter. The default is null.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="distributeReducePhase" type="string">
                <annotation>
                   <documentation>Boolean value that determines if the Reduce phase of the MapReduceTask is distributed. The default is true.</documentation>
@@ -805,9 +846,19 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Mapper implementation to execute.</documentation>
                </annotation>
             </attribute>
+            <attribute name="mapperParams" type="string">
+               <annotation>
+                  <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Mapper Object. The method must be public and take a String parameter. The default is null.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="reducerFqn" type="string">
                <annotation>
                   <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to execute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reducerParams" type="string">
+               <annotation>
+                  <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Reducer Object. The method must be public and take a String parameter. The default is null.</documentation>
                </annotation>
             </attribute>
             <attribute name="useIntermediateSharedCache" type="string">

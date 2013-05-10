@@ -92,4 +92,18 @@ public interface MapReduceCapable<KOut, VOut, R> extends CacheWrapper {
     */
    public boolean setUseIntermediateSharedCache(boolean useIntermediateSharedCache);
 
+   /**
+    * 
+    * This method allows the caller to provide parameters to the Mapper, Reducer, and Collator
+    * objects used in a MapReduce job. Each Map contains keys for each public method name, and values
+    * for each single String parameter for the method. If no parameters are needed, these can be
+    * set to an empty Map.
+    * 
+    * @param mapperParameters parameters for the Mapper object
+    * @param reducerParameters parameters for the Reducer object
+    * @param collatorParameters parameters for the Collator object
+    */
+   public void setParameters(Map<String, String> mapperParameters, Map<String, String> reducerParameters,
+         Map<String, String> collatorParameters);
+
 }
