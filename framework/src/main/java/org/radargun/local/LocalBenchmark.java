@@ -54,7 +54,7 @@ public class LocalBenchmark {
          for (Properties configProps : product.getValue()) {
             final String config = configProps.getProperty("name");
             log.info("Processing " + product.getKey() + "-" + config);
-            CacheWrapper wrapper = getCacheWrapper(product.getKey());
+            CacheWrapper wrapper = getCacheWrapper(product.getKey(), configProps.getProperty("wrapper"));
             try {
                wrapper.setUp(config, true, -1, new TypedProperties(configProps));
 
@@ -159,11 +159,13 @@ public class LocalBenchmark {
       }
       writeLine(line.toString());
       for (ReportDesc reportDesc : reportDescs) {
-         long readsPerSec = (long) (double) (Double) results.get("READS_PER_SEC");
-         long noReads = (Long) results.get("READ_COUNT");
-         long writesPerSec = (long) (double) (Double) results.get("WRITES_PER_SEC");
-         long noWrites = (Long) results.get("WRITE_COUNT");
-         reportDesc.updateData(product, config, readsPerSec, noReads, writesPerSec, noWrites);
+         if(results.get("READS_PER_SEC") != null && results.get("WRITE_COUNT") != null) {
+            long readsPerSec = (long) (double) (Double) results.get("READS_PER_SEC");
+            long noReads = (Long) results.get("READ_COUNT");
+            long writesPerSec = (long) (double) (Double) results.get("WRITES_PER_SEC");
+            long noWrites = (Long) results.get("WRITE_COUNT");
+            reportDesc.updateData(product, config, readsPerSec, noReads, writesPerSec, noWrites);
+         }
       }
    }
 
@@ -183,8 +185,11 @@ public class LocalBenchmark {
       reportCsvContent.append('\n').append(line);
    }
 
-   private CacheWrapper getCacheWrapper(String product) throws Exception {
-      String fqnClass = Utils.getCacheWrapperFqnClass(product);
+   private CacheWrapper getCacheWrapper(String product, String fqnClass) throws Exception {
+      if(fqnClass == null) {
+         fqnClass = Utils.getCacheWrapperFqnClass(product);
+      }
+
       URLClassLoader loader = Utils.buildProductSpecificClassLoader(product, getClass().getClassLoader());
       Thread.currentThread().setContextClassLoader(loader);
       return (CacheWrapper) loader.loadClass(fqnClass).newInstance();

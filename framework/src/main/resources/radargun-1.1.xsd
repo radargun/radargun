@@ -26,6 +26,7 @@
                         <element name="ClientStressTest" type="rg:ClientStressTest"/>
                         <element name="ClusterValidation" type="rg:ClusterValidation"/>
                         <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
+                        <element name="DataForQuery" type="rg:DataForQuery"/>
                         <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
                         <element name="GenerateChart" type="rg:GenerateChart"/>
                         <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
@@ -36,6 +37,7 @@
                         <element name="LoadFile" type="rg:LoadFile"/>
                         <element name="MapReduce" type="rg:MapReduce"/>
                         <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
+                        <element name="Query" type="rg:Query"/>
                         <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
                         <element name="ReportJVMMonitor" type="rg:ReportJVMMonitor"/>
                         <element name="SetLogLevel" type="rg:SetLogLevel"/>
@@ -131,6 +133,7 @@
             <element name="ClientStressTest" type="rg:ClientStressTest"/>
             <element name="ClusterValidation" type="rg:ClusterValidation"/>
             <element name="CsvReportGeneration" type="rg:CsvReportGeneration"/>
+            <element name="DataForQuery" type="rg:DataForQuery"/>
             <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
             <element name="GenerateChart" type="rg:GenerateChart"/>
             <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
@@ -141,6 +144,7 @@
             <element name="LoadFile" type="rg:LoadFile"/>
             <element name="MapReduce" type="rg:MapReduce"/>
             <element name="ParallelStartKill" type="rg:ParallelStartKill"/>
+            <element name="Query" type="rg:Query"/>
             <element name="ReportBackgroundStats" type="rg:ReportBackgroundStats"/>
             <element name="ReportJVMMonitor" type="rg:ReportJVMMonitor"/>
             <element name="SetLogLevel" type="rg:SetLogLevel"/>
@@ -528,6 +532,30 @@
          </extension>
       </complexContent>
    </complexType>
+   <complexType name="DataForQuery">
+      <annotation>
+         <documentation>Stage which executes puts/gets indexed entries against index enabled cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:StressTest">
+            <attribute name="dataPath" type="string">
+               <annotation>
+                  <documentation>Specifies the full path of the property file which contains different words for querying. No default value is provided. This property is mandatory.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="isWildCard" type="string">
+               <annotation>
+                  <documentation>Specifies whether the key generation should be done according to wildcard logic or no. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="propertyLength" type="string">
+               <annotation>
+                  <documentation>The length of the generated indexed entry. Default is 100.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
    <complexType name="DestroyWrapper">
       <annotation>
          <documentation>Distributed stage that will stop the cache wrapper on each slave.</documentation>
@@ -814,6 +842,30 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="start" type="string">
                <annotation>
                   <documentation>Set of slaves which should be started in this stage. Default is empty.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="Query">
+      <annotation>
+         <documentation>Stage which executes a Query using Infinispan-query API against all keys in the cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:StressTest">
+            <attribute name="isWildcardQuery" type="string">
+               <annotation>
+                  <documentation>Boolean variable which shows whether the keyword query should be done or wildcard.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="matching" type="string">
+               <annotation>
+                  <documentation>The matching string which should be used for querying.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="onField" type="string">
+               <annotation>
+                  <documentation>The name of the field for which the query should be executed.</documentation>
                </annotation>
             </attribute>
          </extension>

@@ -33,21 +33,23 @@ public class LocalChartGenerator {
    public void generateChart(String dir) throws Exception {
       long nrReads = 0;
       long nrWrites = 0;
-      for (ReportItem item : reportDesc.getItems()) {
-         getData.addValue(item.getReadsPerSec(), item.description(), "GET");
-         nrReads += item.getNoReads();
-         putData.addValue(item.getWritesPerSec(), item.description(), "PUT");
-         nrWrites += item.getNoWrites();
+      if(reportDesc.getItems().size() > 0) {
+         for (ReportItem item : reportDesc.getItems()) {
+            getData.addValue(item.getReadsPerSec(), item.description(), "GET");
+            nrReads += item.getNoReads();
+            putData.addValue(item.getWritesPerSec(), item.description(), "PUT");
+            nrWrites += item.getNoWrites();
+         }
+         File localGetFile = new File(dir, "local_gets_" + reportDesc.getReportName() + ".png");
+         Utils.backupFile(localGetFile);
+
+         ChartUtilities.saveChartAsPNG(localGetFile, createChart("Report: Comparing Cache GET (READ) performance", getData, (int) (nrReads / reportDesc.getItems().size()), "(GETS)"), 800, 800);
+
+         File localPutFile = new File(dir, "local_puts_" + reportDesc.getReportName() + ".png");
+         Utils.backupFile(localPutFile);
+
+         ChartUtilities.saveChartAsPNG(localPutFile, createChart("Report: Comparing Cache PUT (WRITE) performance", putData, (int) (nrWrites / reportDesc.getItems().size()), "(PUTS)"), 800, 800);
       }
-      File localGetFile = new File(dir, "local_gets_" + reportDesc.getReportName() + ".png");
-      Utils.backupFile(localGetFile);
-
-      ChartUtilities.saveChartAsPNG(localGetFile, createChart("Report: Comparing Cache GET (READ) performance", getData, (int) (nrReads / reportDesc.getItems().size()), "(GETS)"), 800, 800);
-
-      File localPutFile = new File(dir, "local_puts_" + reportDesc.getReportName() + ".png");
-      Utils.backupFile(localPutFile);
-
-      ChartUtilities.saveChartAsPNG(localPutFile, createChart("Report: Comparing Cache PUT (WRITE) performance", putData, (int) (nrWrites / reportDesc.getItems().size()), "(PUTS)"), 800, 800);
    }
 
    private JFreeChart createChart(String title, DefaultCategoryDataset data, int numOperations, String operation) {
