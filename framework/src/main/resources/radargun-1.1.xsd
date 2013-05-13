@@ -961,7 +961,13 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <documentation>Generate charts for JVM statistics on each slave node.</documentation>
       </annotation>
       <complexContent>
-         <extension base="rg:AbstractMaster"/>
+         <extension base="rg:AbstractMaster">
+            <attribute name="reportPrefix" type="string">
+               <annotation>
+                  <documentation>A prefix to add to the report name. Default is null.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
       </complexContent>
    </complexType>
    <complexType name="SetLogLevel">
