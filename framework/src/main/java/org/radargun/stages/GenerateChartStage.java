@@ -101,7 +101,9 @@ public class GenerateChartStage extends AbstractMasterStage {
          StringTokenizer tokenizer = new StringTokenizer(Utils.fileName2Config(f.getName()), "_");
          productName = tokenizer.nextToken();
          configName = tokenizer.nextToken();
-         clusterSize = Integer.parseInt(tokenizer.nextToken());
+         if(tokenizer.hasMoreTokens()) {
+            clusterSize = Integer.parseInt(tokenizer.nextToken());
+         }
       } catch (Throwable e) {
          String fileName = f == null ? null : f.getAbsolutePath();
          log.error("unexpected exception while parsing filename: " + fileName, e);

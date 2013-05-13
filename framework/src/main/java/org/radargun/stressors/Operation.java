@@ -23,6 +23,7 @@ public enum Operation {
    PUT_ALL_VIA_ASYNC,
    REMOVE_ALL,
    REMOVE_ALL_VIA_ASYNC,
+   QUERY,
    TRANSACTION; /* stats for whole transaction */
 
    private String altName;

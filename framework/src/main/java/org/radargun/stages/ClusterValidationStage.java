@@ -177,7 +177,7 @@ public class ClusterValidationStage extends AbstractDistStage {
             continue;
          }
          Object data = tryGet(i);
-         if (data == null || !"true".equals(data)) {
+         if (data == null || !"true".equals(data.toString())) {
             log.trace("Cache with index " + i + " did *NOT* replicate");
          } else {
             log.trace("Cache with index " + i + " replicated here ");

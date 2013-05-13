@@ -14,6 +14,7 @@ import org.radargun.config.TimeConverter;
 import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.BulkOperationsCapable;
 import org.radargun.utils.Utils;
+import org.radargun.features.Queryable;
 
 /**
  * On multiple threads executes put and get operations against the CacheWrapper, and returns the result as an Map.
@@ -167,7 +168,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       return terminated;
    }
 
-   private Map<String, Object> processResults() {
+   protected Map<String, Object> processResults() {
       Statistics stats = new Statistics();
 
       for (Stressor stressor : stressors) {
@@ -282,7 +283,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          Object key = getKey(randomKeyInt);
 
          if (randomAction < writePercentage) {
-            return stressor.makeRequest(iteration, Operation.PUT, key, generateRandomBytes(entrySize));
+            return stressor.makeRequest(iteration, Operation.PUT, key, generateValue(entrySize));
          } else if (randomAction < writePercentage + removePercentage) {
             return stressor.makeRequest(iteration, Operation.REMOVE, key);
          } else {
@@ -308,7 +309,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                } else {
                   key = keyGenerator.generateKey(nodeIndex, threadIndex, keyIndex);
                }
-               Object value = generateRandomBytes(entrySize);
+               Object value = generateValue(entrySize);
                cacheWrapper.put(bucketId, key, value);
                addPooledKey(key, value);
             } catch (Throwable e) {
@@ -353,7 +354,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          int totalThreads = numThreads * numNodes;
          for (int keyIndex = threadIndex + nodeIndex * numThreads; keyIndex < numEntries; keyIndex += totalThreads) {
             try {
-               cacheWrapper.put(null, keyGenerator.generateKey(keyIndex), generateRandomBytes(entrySize));
+               cacheWrapper.put(null, keyGenerator.generateKey(keyIndex), generateValue(entrySize));
             } catch (Exception e) {
                log.error("Failed to insert shared key " + keyIndex, e);
             }
@@ -370,7 +371,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          Object key = getKey(r.nextInt(numEntries - 1));
          Object lastValue = lastValues.get(key);
 
-         Object newValue = generateRandomBytes(entrySize);
+         Object newValue = generateValue(entrySize);
          int probability = 0;
          if (lastValue == null) {
             lastValues.put(key, newValue);
@@ -381,9 +382,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             lastValues.remove(key);
             return stressor.makeRequest(iteration, Operation.REMOVE_VALID, key, lastValue);
          } else if (randomAction < (probability += removeInvalidPercentage)) {
-            return stressor.makeRequest(iteration, Operation.REMOVE_INVALID, key, generateRandomBytes(entrySize));
+            return stressor.makeRequest(iteration, Operation.REMOVE_INVALID, key, generateValue(entrySize));
          } else if (randomAction < (probability += replaceInvalidPercentage)) {
-            return stressor.makeRequest(iteration, Operation.REPLACE_INVALID, key, generateRandomBytes(entrySize), newValue);
+            return stressor.makeRequest(iteration, Operation.REPLACE_INVALID, key, generateValue(entrySize), newValue);
          } else {
             lastValues.put(key, newValue);
             return stressor.makeRequest(iteration, Operation.REPLACE_VALID, key, lastValue, newValue);
@@ -429,7 +430,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             for (int i = 0; i < bulkSize;) {
                Object key = initLogic.getKey(r.nextInt(numEntries - 1));
                if (!map.containsKey(key)) {
-                  map.put(key, generateRandomBytes(entrySize));
+                  map.put(key, generateValue(entrySize));
                   ++i;
                }
             }
@@ -495,7 +496,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             } else {
                key = getRandomKey(timestamp);
             }
-            return stressor.makeRequest(iteration, Operation.PUT, key, generateRandomBytes(entrySize));
+            return stressor.makeRequest(iteration, Operation.PUT, key, generateValue(entrySize));
          }
       }
 
@@ -601,6 +602,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                   break;
                case PUT:
                   cacheWrapper.put(bucketId, keysAndValues[0], keysAndValues[1]);
+                  break;
+               case QUERY:
+                  result = ((Queryable) cacheWrapper).executeQuery((Map<String, Object>) keysAndValues[0]);
                   break;
                case REMOVE:
                   result = cacheWrapper.remove(bucketId, keysAndValues[0]);
@@ -757,7 +761,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       this.opsCountStatusLog = opsCountStatusLog;
    }
 
-   private Object generateRandomBytes(int size) {
+   protected Object generateValue(int size) {
       byte[] array = new byte[size];
       r.nextBytes(array);
       if (useAtomics) {
