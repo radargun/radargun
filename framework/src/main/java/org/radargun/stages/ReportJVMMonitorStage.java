@@ -20,6 +20,7 @@ package org.radargun.stages;
 
 import java.util.Map;
 
+import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.local.ReportDesc;
 import org.radargun.reporting.LocalSystemMonitorChart;
@@ -34,6 +35,9 @@ import org.radargun.sysmonitor.LocalJmxMonitor;
 @Stage(doc = "Generate charts for JVM statistics on each slave node.")
 public class ReportJVMMonitorStage extends AbstractMasterStage {
 
+   @Property(doc = "A prefix that will be added to the report name. Default is null.")
+   private String reportPrefix = null;
+
    @Override
    public boolean execute() throws Exception {
       @SuppressWarnings("unchecked")
@@ -43,8 +47,13 @@ public class ReportJVMMonitorStage extends AbstractMasterStage {
          ReportDesc reportDesc = new ReportDesc();
          LocalJmxMonitor monitor = sysMonitors.values().iterator().next();
          reportDesc.addReportItem(monitor.getProductName(), monitor.getConfigName());
-         reportDesc.setReportName(monitor.getProductName() + " (" + monitor.getConfigName() + ") on "
-               + sysMonitors.size() + " node(s)");
+         if (reportPrefix == null) {
+            reportDesc.setReportName(monitor.getProductName() + " (" + monitor.getConfigName() + ") on "
+                  + sysMonitors.size() + " node(s)");
+         } else {
+            reportDesc.setReportName(reportPrefix + "-" + monitor.getProductName() + " (" + monitor.getConfigName()
+                  + ") on " + sysMonitors.size() + " node(s)");
+         }
          new LocalSystemMonitorChart(sysMonitors).generate(reportDesc);
          masterState.remove(StartJVMMonitorStage.MONITOR_KEY);
          return true;
