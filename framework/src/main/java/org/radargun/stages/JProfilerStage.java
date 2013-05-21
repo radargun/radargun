@@ -27,7 +27,6 @@ import javax.management.ObjectName;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.MasterState;
 
 /**
  * Stage for invoking operations on JProfiler. Remember to set up JVM args:
@@ -43,7 +42,6 @@ public class JProfilerStage extends AbstractDistStage {
    public static final String JPROFILER6_CONTROLLER_OBJECT_NAME = "com.jprofiler.api.agent.mbean:type=Controller";
    public static final String JPROFILER7_CONTROLLER_OBJECT_NAME = "com.jprofiler.api.agent.mbean:type=RemoteController";
    private ObjectName objectName;
-   private String configName;
 
    public enum Operation {
       NO_OPERATION(null, null), 
@@ -115,11 +113,6 @@ public class JProfilerStage extends AbstractDistStage {
          }
       }
       return newDefaultStageAck();
-   }
-
-   @Override
-   public void initOnMaster(MasterState masterState, int slaveIndex) {
-      configName = masterState.configNameOfTheCurrentBenchmark();
    }
 
    private Object[] getParams(Operation operation) {

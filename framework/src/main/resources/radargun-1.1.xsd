@@ -1143,6 +1143,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.</documentation>
                </annotation>
             </attribute>
+            <attribute name="timeUnitName" type="string">
+               <annotation>
+                  <documentation>Specifies the frequency that statistics are collected. One of: SECONDS, MINUTES, or HOURS. The default is SECONDS.</documentation>
+               </annotation>
+            </attribute>
          </extension>
       </complexContent>
    </complexType>

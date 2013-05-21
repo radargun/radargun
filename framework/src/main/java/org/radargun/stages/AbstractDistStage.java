@@ -47,6 +47,7 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
    private int activeSlavesCount;
    private int totalSlavesCount;
    protected String productName;
+   protected String configName;
    protected ClassLoadHelper classLoadHelper;
 
    public void initOnSlave(SlaveState slaveState) {
@@ -63,6 +64,7 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
          setActiveSlavesCount(totalSlavesCount);
       }
       this.productName = masterState.nameOfTheCurrentBenchmark();      
+      this.configName = masterState.configNameOfTheCurrentBenchmark();
    }
 
    public boolean isRunOnAllSlaves() {
@@ -110,7 +112,7 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       for (DistStageAck ack: acks) {
          if (first) first = false;
          else processingDuration += ", ";
-         processingDuration += ack.getSlaveIndex() + ":" + Utils.prettyPrintMillis(ack.getDuration());
+         processingDuration += ack.getSlaveIndex() + " = " + Utils.prettyPrintMillis(ack.getDuration());
       }
       log.info("Received responses from all " + acks.size() + " slaves. " + processingDuration + "]");
    }

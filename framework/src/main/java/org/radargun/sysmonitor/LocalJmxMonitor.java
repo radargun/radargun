@@ -70,8 +70,18 @@ public class LocalJmxMonitor implements Serializable {
       this.interfaceName = interfaceName;
    }
 
+   public static TimeUnit getMeasuringUnit() {
+      return measuringUnit;
+   }
+
+   public static void setMeasuringUnit(TimeUnit measuringUnit) {
+      LocalJmxMonitor.measuringUnit = measuringUnit;
+      log.info("Gathering statistics every 1 " + measuringUnit.name());
+   }
+
    private static Log log = LogFactory.getLog(LocalJmxMonitor.class);
-   public static final int MEASURING_FREQUENCY = 1000;
+   private final int measuringFrequency = 1;
+   public static TimeUnit measuringUnit = TimeUnit.SECONDS;
 
    private volatile CpuUsageMonitor cpuMonitor;
    private volatile MemoryUsageMonitor memoryMonitor;
@@ -85,16 +95,16 @@ public class LocalJmxMonitor implements Serializable {
 
       try {
          cpuMonitor = new CpuUsageMonitor();
-         exec.scheduleAtFixedRate(cpuMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
+         exec.scheduleAtFixedRate(cpuMonitor, 0, measuringFrequency, measuringUnit);
          memoryMonitor = new MemoryUsageMonitor();
-         exec.scheduleAtFixedRate(memoryMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
+         exec.scheduleAtFixedRate(memoryMonitor, 0, measuringFrequency, measuringUnit);
          gcMonitor = new GcMonitor();
-         exec.scheduleAtFixedRate(gcMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
+         exec.scheduleAtFixedRate(gcMonitor, 0, measuringFrequency, measuringUnit);
          if (interfaceName != null) {
             netInMonitor = NetworkBytesMonitor.createReceiveMonitor(interfaceName);
-            exec.scheduleAtFixedRate(netInMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
+            exec.scheduleAtFixedRate(netInMonitor, 0, measuringFrequency, measuringUnit);
             netOutMonitor = NetworkBytesMonitor.createTransmitMonitor(interfaceName);
-            exec.scheduleAtFixedRate(netOutMonitor, 0, MEASURING_FREQUENCY, TimeUnit.MILLISECONDS);
+            exec.scheduleAtFixedRate(netOutMonitor, 0, measuringFrequency, measuringUnit);
          }
       } catch (Exception e) {
          log.error(e.getMessage(), e);

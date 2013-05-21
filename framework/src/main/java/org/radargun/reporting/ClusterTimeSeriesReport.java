@@ -5,12 +5,16 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
+import org.jfree.data.time.Hour;
+import org.jfree.data.time.Minute;
 import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.radargun.sysmonitor.AbstractActivityMonitor;
+import org.radargun.sysmonitor.LocalJmxMonitor;
 
 /**
  * Data object to hold the contents of a TimeSeries chart from an AbstractActivityMonitor object
@@ -26,12 +30,21 @@ public class ClusterTimeSeriesReport extends AbstractClusterReport {
    }
 
    public TimeSeries generateSeries(String seriesName, AbstractActivityMonitor monitor) {
-      TimeSeries newSeries = new TimeSeries(seriesName, Second.class);
+      Class<?> timePeriod = null;
+
+      if (LocalJmxMonitor.measuringUnit.equals(TimeUnit.SECONDS)) {
+         timePeriod = Second.class;
+      }
+      if (LocalJmxMonitor.measuringUnit.equals(TimeUnit.MINUTES)) {
+         timePeriod = Minute.class;
+      }
+      if (LocalJmxMonitor.measuringUnit.equals(TimeUnit.HOURS)) {
+         timePeriod = Hour.class;
+      }
+      TimeSeries newSeries = new TimeSeries(seriesName, timePeriod);
+
       List<BigDecimal> measurements = monitor.getMeasurements();
-      /*
-       * TODO: Current assumes measurements happen every second. Should really be based on
-       * LocalJmxMonitor.MEASURING_FREQUENCY, but they are the same right now.
-       */
+
       RegularTimePeriod timeScale = null;
       for (BigDecimal value : measurements) {
          if (timeScale == null) {
@@ -41,8 +54,8 @@ public class ClusterTimeSeriesReport extends AbstractClusterReport {
             date.set(Calendar.MINUTE, 0);
             date.set(Calendar.SECOND, 0);
             date.set(Calendar.MILLISECOND, 0);
-            
-            timeScale = RegularTimePeriod.createInstance(Second.class, date.getTime(), TimeZone.getDefault());
+
+            timeScale = RegularTimePeriod.createInstance(timePeriod, date.getTime(), TimeZone.getDefault());
             newSeries.add(timeScale, value);
          } else {
             newSeries.add(newSeries.getNextTimePeriod(), value);
