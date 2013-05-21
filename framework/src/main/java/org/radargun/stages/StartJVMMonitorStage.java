@@ -18,10 +18,11 @@
  */
 package org.radargun.stages;
 
+import java.util.concurrent.TimeUnit;
+
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.MasterState;
 import org.radargun.sysmonitor.LocalJmxMonitor;
 
 /**
@@ -36,29 +37,43 @@ import org.radargun.sysmonitor.LocalJmxMonitor;
 public class StartJVMMonitorStage extends AbstractDistStage {
 
    public static final String MONITOR_KEY = "JVMMonitor";
-   private String productName;
-   private String configName;
+   private TimeUnit timeUnit = TimeUnit.SECONDS;
 
-   @Property(doc = "Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.")
+   @Property(doc = "Specifies the network interface where statistics are gathered. "
+         + "If not specified, then statistics are not collected.")
    private String interfaceName;
 
-   @Override
-   public void initOnMaster(MasterState masterState, int slaveIndex) {
-      productName = masterState.nameOfTheCurrentBenchmark();
-      configName = masterState.configNameOfTheCurrentBenchmark();
-   }
+   @Property(doc = "Specifies the frequency that statistics are collected. "
+         + "One of: SECONDS, MINUTES, or HOURS. The default is SECONDS.")
+   private String timeUnitName = TimeUnit.SECONDS.name();
 
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
+      timeUnit = convertTimeUnitName(timeUnitName);
       LocalJmxMonitor monitor = new LocalJmxMonitor();
       monitor.setProductName(productName);
       monitor.setConfigName(configName);
       if (interfaceName != null) {
          monitor.setInterfaceName(interfaceName);
       }
+      LocalJmxMonitor.setMeasuringUnit(timeUnit);
       monitor.startMonitoringLocal();
       slaveState.put(MONITOR_KEY, monitor);
       return ack;
+   }
+   
+   private TimeUnit convertTimeUnitName(String name) {
+      TimeUnit result = null;
+      if (name.equals(TimeUnit.SECONDS.name())) {
+         result = TimeUnit.SECONDS;
+      }
+      if (name.equals(TimeUnit.MINUTES.name())) {
+         result = TimeUnit.MINUTES;
+      }
+      if (name.equals(TimeUnit.HOURS.name())) {
+         result = TimeUnit.HOURS;
+      }
+      return result;
    }
 }
