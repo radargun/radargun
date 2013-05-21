@@ -1,9 +1,5 @@
 package org.radargun.utils;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.radargun.stages.GenerateChartStage;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -17,6 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.radargun.stages.GenerateChartStage;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -287,9 +287,16 @@ public class Utils {
 
    public static void createOutputFile(String fileName, String fileContent, boolean doBackup) throws IOException {
       File parentDir = new File(GenerateChartStage.REPORTS);
-      if (!parentDir.exists()) {
-         if (!parentDir.mkdirs())
-            throw new RuntimeException(parentDir.getAbsolutePath() + " does not exist and could not be created!");
+      if (!parentDir.exists() && !parentDir.mkdirs()) {
+         // Try again
+         if (!parentDir.exists() && !parentDir.mkdirs()) {
+            log.error("Directory '" + parentDir.getAbsolutePath() + "' could not be created");
+            /*
+             * If parentDir is <code>null</code>, the file will still be created in the current
+             * directory
+             */
+            parentDir = null;
+         }
       }
 
       File reportFile = new File(parentDir, fileName);
@@ -300,6 +307,8 @@ public class Utils {
       if (!reportFile.exists()) {
          throw new IllegalStateException(reportFile.getAbsolutePath()
                + " was deleted? Not allowed to delete report file during test run!");
+      } else {
+         log.info("Report file '" + reportFile.getAbsolutePath() + "' created");
       }
       FileWriter writer = null;
       try {
