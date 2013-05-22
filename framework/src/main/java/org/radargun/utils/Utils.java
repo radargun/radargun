@@ -292,22 +292,18 @@ public class Utils {
    public static void createOutputFile(String fileName, String fileContent, boolean doBackup) throws IOException {
       File parentDir = new File(GenerateChartStage.REPORTS);
       if (!parentDir.exists() && !parentDir.mkdirs()) {
-         // Try again
-         if (!parentDir.exists() && !parentDir.mkdirs()) {
-            log.error("Directory '" + parentDir.getAbsolutePath() + "' could not be created");
-            /*
-             * If parentDir is <code>null</code>, the file will still be created in the current
-             * directory
-             */
-            parentDir = null;
-         }
+         log.error("Directory '" + parentDir.getAbsolutePath() + "' could not be created");
+         /*
+          * The file will be created in the Sytem tmp directory
+          */
+         parentDir = new File(System.getProperty("java.io.tmpdir"));
       }
 
       File reportFile = new File(parentDir, fileName);
       if (!reportFile.exists() || doBackup) {
          reportFile = Utils.createOrReplaceFile(parentDir, fileName);
       }
-            
+
       if (!reportFile.exists()) {
          throw new IllegalStateException(reportFile.getAbsolutePath()
                + " was deleted? Not allowed to delete report file during test run!");
