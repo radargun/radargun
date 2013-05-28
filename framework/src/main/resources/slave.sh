@@ -7,7 +7,7 @@ if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DI
 
 MASTER_HOST=""
 MASTER_PORT=""
-LOG4J_PREFIX=`hostname`
+LOG4J_PREFIX=`hostname`-$RANDOM
 
 
 default_master() {
@@ -71,7 +71,7 @@ CONF="-master $MASTER"
 add_fwk_to_classpath
 set_env
 
-if [ -n $SLAVE_NAME ] ; then
+if [ -n "$SLAVE_NAME" ] ; then
   LOG4J_PREFIX=$SLAVE_NAME
 
   # The slave_BIND_ADDRESS variable may be defined in environment.sh
@@ -86,5 +86,5 @@ D_VARS="-Djava.net.preferIPv4Stack=true -Dlog4j.file.prefix=${LOG4J_PREFIX} -Dbi
 echo "${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF}" > stdout_slave_${LOG4J_PREFIX}.out
 echo "--------------------------------------------------------------------------------" >> stdout_slave_${LOG4J_PREFIX}.out
 nohup ${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} >> stdout_slave_${LOG4J_PREFIX}.out 2>&1 &
-echo "... done! Slave process started on host ${HOST_NAME}!"
+echo "... done! Slave process started on host ${HOSTNAME}!"
 echo ""
