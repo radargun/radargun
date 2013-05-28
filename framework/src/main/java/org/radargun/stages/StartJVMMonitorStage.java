@@ -50,30 +50,20 @@ public class StartJVMMonitorStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      timeUnit = convertTimeUnitName(timeUnitName);
+      timeUnit = Enum.valueOf(TimeUnit.class, timeUnitName);
       LocalJmxMonitor monitor = new LocalJmxMonitor();
       monitor.setProductName(productName);
       monitor.setConfigName(configName);
       if (interfaceName != null) {
          monitor.setInterfaceName(interfaceName);
       }
-      LocalJmxMonitor.setMeasuringUnit(timeUnit);
+      if (timeUnit != null) {
+         monitor.setMeasuringUnit(timeUnit);
+      } else {
+         log.error("Failed to find time unit named " + timeUnitName);
+      }
       monitor.startMonitoringLocal();
       slaveState.put(MONITOR_KEY, monitor);
       return ack;
-   }
-   
-   private TimeUnit convertTimeUnitName(String name) {
-      TimeUnit result = null;
-      if (name.equals(TimeUnit.SECONDS.name())) {
-         result = TimeUnit.SECONDS;
-      }
-      if (name.equals(TimeUnit.MINUTES.name())) {
-         result = TimeUnit.MINUTES;
-      }
-      if (name.equals(TimeUnit.HOURS.name())) {
-         result = TimeUnit.HOURS;
-      }
-      return result;
    }
 }
