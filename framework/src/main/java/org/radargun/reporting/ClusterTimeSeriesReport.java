@@ -14,7 +14,6 @@ import org.jfree.data.time.Second;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.radargun.sysmonitor.AbstractActivityMonitor;
-import org.radargun.sysmonitor.LocalJmxMonitor;
 
 /**
  * Data object to hold the contents of a TimeSeries chart from an AbstractActivityMonitor object
@@ -24,6 +23,12 @@ import org.radargun.sysmonitor.LocalJmxMonitor;
 public class ClusterTimeSeriesReport extends AbstractClusterReport {
 
    private TimeSeriesCollection categorySet = new TimeSeriesCollection();
+   private TimeUnit chartTimeUnit = null;
+
+   public ClusterTimeSeriesReport(TimeUnit chartTimeUnit) {
+      super();
+      this.chartTimeUnit = chartTimeUnit;
+   }
 
    public void addSeries(TimeSeries newSeries) {
       this.categorySet.addSeries(newSeries);
@@ -32,13 +37,13 @@ public class ClusterTimeSeriesReport extends AbstractClusterReport {
    public TimeSeries generateSeries(String seriesName, AbstractActivityMonitor monitor) {
       Class<?> timePeriod = null;
 
-      if (LocalJmxMonitor.measuringUnit.equals(TimeUnit.SECONDS)) {
+      if (this.chartTimeUnit.equals(TimeUnit.SECONDS)) {
          timePeriod = Second.class;
       }
-      if (LocalJmxMonitor.measuringUnit.equals(TimeUnit.MINUTES)) {
+      if (this.chartTimeUnit.equals(TimeUnit.MINUTES)) {
          timePeriod = Minute.class;
       }
-      if (LocalJmxMonitor.measuringUnit.equals(TimeUnit.HOURS)) {
+      if (this.chartTimeUnit.equals(TimeUnit.HOURS)) {
          timePeriod = Hour.class;
       }
       TimeSeries newSeries = new TimeSeries(seriesName, timePeriod);

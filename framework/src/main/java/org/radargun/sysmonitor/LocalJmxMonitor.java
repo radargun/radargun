@@ -70,18 +70,18 @@ public class LocalJmxMonitor implements Serializable {
       this.interfaceName = interfaceName;
    }
 
-   public static TimeUnit getMeasuringUnit() {
+   public TimeUnit getMeasuringUnit() {
       return measuringUnit;
    }
 
-   public static void setMeasuringUnit(TimeUnit measuringUnit) {
-      LocalJmxMonitor.measuringUnit = measuringUnit;
+   public void setMeasuringUnit(TimeUnit measuringUnit) {
+      this.measuringUnit = measuringUnit;
       log.info("Gathering statistics every 1 " + measuringUnit.name());
    }
 
    private static Log log = LogFactory.getLog(LocalJmxMonitor.class);
    private final int measuringFrequency = 1;
-   public static TimeUnit measuringUnit = TimeUnit.SECONDS;
+   private TimeUnit measuringUnit = TimeUnit.SECONDS;
 
    private volatile CpuUsageMonitor cpuMonitor;
    private volatile MemoryUsageMonitor memoryMonitor;
