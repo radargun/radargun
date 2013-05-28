@@ -17,23 +17,23 @@
    </benchmark>
 
    <products>
+      <infinispan52>
+         <config name="repl-sync.xml"/>
+         <config name="dist-sync.xml"/>
+      </infinispan52>
       <jbosscache3>
          <config name="mvcc/mvcc-repl-sync.xml"/>
       </jbosscache3>
-      <infinispan4>
-         <config name="repl-sync.xml"/>
-         <config name="dist-sync.xml"/>
-      </infinispan4>
    </products>
 
    <reports>
       <report name="Replicated">
-         <item product="infinispan4" config="repl-sync.xml"/>
+         <item product="infinispan52" config="repl-sync.xml"/>
          <item product="jbosscache3" config="*"/>
       </report>
       <report name="DistVsRepl">
-         <item product="infinispan4" config="repl-sync.xml"/>
-         <item product="infinispan4" config="dist-sync.xml"/>
+         <item product="infinispan52" config="repl-sync.xml"/>
+         <item product="infinispan52" config="dist-sync.xml"/>
       </report>
       <report name="All" includeAll="true"/>
    </reports>
