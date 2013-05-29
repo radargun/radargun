@@ -46,6 +46,78 @@ public class LocalJmxMonitor implements Serializable {
    private String configName;
    private String interfaceName;
 
+   private static Log log = LogFactory.getLog(LocalJmxMonitor.class);
+   private int measuringFrequency = 1;
+   private TimeUnit measuringUnit = TimeUnit.SECONDS;
+
+   private volatile CpuUsageMonitor cpuMonitor;
+   private volatile MemoryUsageMonitor memoryMonitor;
+   private volatile GcMonitor gcMonitor;
+   private volatile NetworkBytesMonitor netInMonitor;
+   private volatile NetworkBytesMonitor netOutMonitor;
+
+   ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
+
+   public void startMonitoringLocal() {
+
+      log.info("Gathering statistics every " + measuringFrequency + " " + measuringUnit.name());
+      try {
+         cpuMonitor = new CpuUsageMonitor();
+         exec.scheduleAtFixedRate(cpuMonitor, 0, measuringFrequency, measuringUnit);
+         memoryMonitor = new MemoryUsageMonitor();
+         exec.scheduleAtFixedRate(memoryMonitor, 0, measuringFrequency, measuringUnit);
+         gcMonitor = new GcMonitor();
+         exec.scheduleAtFixedRate(gcMonitor, 0, measuringFrequency, measuringUnit);
+         if (interfaceName != null) {
+            netInMonitor = NetworkBytesMonitor.createReceiveMonitor(interfaceName);
+            exec.scheduleAtFixedRate(netInMonitor, 0, measuringFrequency, measuringUnit);
+            netOutMonitor = NetworkBytesMonitor.createTransmitMonitor(interfaceName);
+            exec.scheduleAtFixedRate(netOutMonitor, 0, measuringFrequency, measuringUnit);
+         }
+      } catch (Exception e) {
+         log.error(e.getMessage(), e);
+      }
+   }
+   
+   public void stopMonitoringLocal() {
+      cpuMonitor.stop();
+      memoryMonitor.stop();
+      gcMonitor.stop();
+      if (interfaceName != null) {
+         netInMonitor.stop();
+         netOutMonitor.stop();
+      }
+      exec.shutdownNow();
+      this.exec = null;
+      StringBuffer result = new StringBuffer("Cpu measurements = " + cpuMonitor.getMeasurementCount() + ", memory measurements = "
+            + memoryMonitor.getMeasurementCount() + ", gc measurements = " + gcMonitor.getMeasurementCount());
+      if (interfaceName != null) {
+         result.append(", network inbound measurements = " + netInMonitor.getMeasurementCount());
+         result.append(", network outbound measurements = " + netOutMonitor.getMeasurementCount());
+      }
+      log.trace(result.toString());
+   }
+
+   public CpuUsageMonitor getCpuMonitor() {
+      return cpuMonitor;
+   }
+
+   public MemoryUsageMonitor getMemoryMonitor() {
+      return memoryMonitor;
+   }
+
+   public GcMonitor getGcMonitor() {
+      return gcMonitor;
+   }
+
+   public NetworkBytesMonitor getNetworkBytesInMonitor() {
+      return netInMonitor;
+   }
+
+   public NetworkBytesMonitor getNetworkBytesOutMonitor() {
+      return netOutMonitor;
+   }
+
    public String getProductName() {
       return productName;
    }
@@ -76,77 +148,13 @@ public class LocalJmxMonitor implements Serializable {
 
    public void setMeasuringUnit(TimeUnit measuringUnit) {
       this.measuringUnit = measuringUnit;
-      log.info("Gathering statistics every 1 " + measuringUnit.name());
    }
 
-   private static Log log = LogFactory.getLog(LocalJmxMonitor.class);
-   private final int measuringFrequency = 1;
-   private TimeUnit measuringUnit = TimeUnit.SECONDS;
-
-   private volatile CpuUsageMonitor cpuMonitor;
-   private volatile MemoryUsageMonitor memoryMonitor;
-   private volatile GcMonitor gcMonitor;
-   private volatile NetworkBytesMonitor netInMonitor;
-   private volatile NetworkBytesMonitor netOutMonitor;
-
-   ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
-
-   public void startMonitoringLocal() {
-
-      try {
-         cpuMonitor = new CpuUsageMonitor();
-         exec.scheduleAtFixedRate(cpuMonitor, 0, measuringFrequency, measuringUnit);
-         memoryMonitor = new MemoryUsageMonitor();
-         exec.scheduleAtFixedRate(memoryMonitor, 0, measuringFrequency, measuringUnit);
-         gcMonitor = new GcMonitor();
-         exec.scheduleAtFixedRate(gcMonitor, 0, measuringFrequency, measuringUnit);
-         if (interfaceName != null) {
-            netInMonitor = NetworkBytesMonitor.createReceiveMonitor(interfaceName);
-            exec.scheduleAtFixedRate(netInMonitor, 0, measuringFrequency, measuringUnit);
-            netOutMonitor = NetworkBytesMonitor.createTransmitMonitor(interfaceName);
-            exec.scheduleAtFixedRate(netOutMonitor, 0, measuringFrequency, measuringUnit);
-         }
-      } catch (Exception e) {
-         log.error(e.getMessage(), e);
-      }
+   public int getMeasuringFrequency() {
+      return measuringFrequency;
    }
 
-   public CpuUsageMonitor getCpuMonitor() {
-      return cpuMonitor;
-   }
-
-   public MemoryUsageMonitor getMemoryMonitor() {
-      return memoryMonitor;
-   }
-
-   public GcMonitor getGcMonitor() {
-      return gcMonitor;
-   }
-
-   public NetworkBytesMonitor getNetworkBytesInMonitor() {
-      return netInMonitor;
-   }
-
-   public NetworkBytesMonitor getNetworkBytesOutMonitor() {
-      return netOutMonitor;
-   }
-
-   public void stopMonitoringLocal() {
-      cpuMonitor.stop();
-      memoryMonitor.stop();
-      gcMonitor.stop();
-      if (interfaceName != null) {
-         netInMonitor.stop();
-         netOutMonitor.stop();
-      }
-      exec.shutdownNow();
-      this.exec = null;
-      StringBuffer result = new StringBuffer("Cpu measurements = " + cpuMonitor.getMeasurementCount() + ", memory measurements = "
-            + memoryMonitor.getMeasurementCount() + ", gc measurements = " + gcMonitor.getMeasurementCount());
-      if (interfaceName != null) {
-         result.append(", network inbound measurements = " + netInMonitor.getMeasurementCount());
-         result.append(", network outbound measurements = " + netOutMonitor.getMeasurementCount());
-      }
-      log.trace(result.toString());
+   public void setMeasuringFrequency(int measuringFrequency) {
+      this.measuringFrequency = measuringFrequency;
    }
 }
