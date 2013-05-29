@@ -63,7 +63,6 @@ public class InfinispanDistributedTaskWrapper<K, V, T> extends InfinispanXSWrapp
          try {
             callable = (Callable<T>) classLoadHelper.createInstance(distributedCallableFqn);
             taskBuilder = des.createDistributedTaskBuilder(callable);
-//            callable = (Callable<T>) Utils.setPublicFieldStringValues(callable, params);
             callable = (Callable<T>) Utils.invokeMethodWithString(callable, params);
          } catch (Exception e1) {
             throw (new IllegalArgumentException("Could not instantiate '" + distributedCallableFqn + "' as a Callable",
@@ -73,7 +72,8 @@ public class InfinispanDistributedTaskWrapper<K, V, T> extends InfinispanXSWrapp
 
       if (callable != null) {
          if (executionPolicyName != null) {
-            DistributedTaskExecutionPolicy executionPolicy = findExecutionPolicy(executionPolicyName);
+            DistributedTaskExecutionPolicy executionPolicy = Enum.valueOf(DistributedTaskExecutionPolicy.class,
+                  executionPolicyName);
             if (executionPolicy == null) {
                log.error("No DistributedTaskExecutionPolicy found with name: " + executionPolicyName);
             } else {
@@ -107,23 +107,10 @@ public class InfinispanDistributedTaskWrapper<K, V, T> extends InfinispanXSWrapp
       return result;
    }
 
-   private DistributedTaskExecutionPolicy findExecutionPolicy(String executionPolicy) {
-      DistributedTaskExecutionPolicy result = null;
-      for (DistributedTaskExecutionPolicy dtep : DistributedTaskExecutionPolicy.values()) {
-         if (dtep.name().equals(executionPolicy)) {
-            result = dtep;
-            break;
-         }
-      }
-      return result;
-   }
-
    private Address findHostPhysicalAddress(String nodeAddress) {
       Address result = null;
       Transport t = cacheManager.getTransport();
-      if (t == null) {
-         result = cacheManager.getAddress();
-      } else {
+      if (t != null) {
          for (Address add : t.getPhysicalAddresses()) {
             if (add.toString().contains(nodeAddress)) {
                result = add;

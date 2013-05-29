@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
@@ -52,20 +53,17 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    private String distributedCallableFqn;
 
    @Property(optional = true, doc = "The name of one of the "
-         + "org.infinispan.distexec.DistributedTaskExecutionPolicy enums. " 
-         + "The default is null.")
+         + "org.infinispan.distexec.DistributedTaskExecutionPolicy enums. " + "The default is null.")
    private String executionPolicyName;
 
    @Property(optional = true, doc = "The fully qualified class name for a custom "
-         + "org.infinispan.distexec.DistributedTaskFailoverPolicy implementation. " 
-         + "The default is null.")
+         + "org.infinispan.distexec.DistributedTaskFailoverPolicy implementation. " + "The default is null.")
    private String failoverPolicyFqn = null;
 
    @Property(optional = true, doc = "The node address where the task will be "
-         + "executed. The default is null, and tasks will be executed against " 
-         + "all nodes in the cluster.")
+         + "executed. The default is null, and tasks will be executed against " + "all nodes in the cluster.")
    private String nodeAddress = null;
-   
+
    @Property(optional = true, doc = "A String in the form of "
          + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
          + " invoking a method on the distributedCallableFqn Object. The method"
@@ -79,7 +77,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
 
       if (masterState.get(FIRST_SCALE_STAGE_KEY) == null) {
          masterState.put(FIRST_SCALE_STAGE_KEY, masterState.nameOfTheCurrentBenchmark());
-         reportCsvContent.append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, DURATION_MSEC\n");
+         reportCsvContent.append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, DURATION_NANOSECONDS\n");
       }
 
       for (DistStageAck ack : acks) {
@@ -101,113 +99,80 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = newDefaultStageAck();
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-      List<Future<T>> futureList = null;
-      List<T> resultList = new ArrayList<T>();
+
+      if (distributedCallableFqn == null) {
+         result.setError(true);
+         result.setErrorMessage("The distributed task or callable class must be specified.");
+         return result;
+      }
 
       if (cacheWrapper == null) {
+         result.setError(true);
          result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
+         return result;
+      }
+
+      if (!(cacheWrapper instanceof DistributedTaskCapable)) {
+         result.setError(true);
+         result.setErrorMessage("Distributed Execution is not supported by this cache");
+         return result;
+      }
+
+      if (getSlaveIndex() == 0) {
+         result = executeTask(cacheWrapper);
       } else {
-         if (getSlaveIndex() == 0) {
-
-            if (cacheWrapper instanceof DistributedTaskCapable) {
-               if (distributedCallableFqn != null) {
-                  log.info("--------------------");
-                  @SuppressWarnings("unchecked")
-                  DistributedTaskCapable<K, V, T> distributedTaskCapable = (DistributedTaskCapable<K, V, T>) cacheWrapper;
-                  long durationMillis;
-                  long start = System.currentTimeMillis();
-                  futureList = distributedTaskCapable.executeDistributedTask(classLoadHelper, distributedCallableFqn,
-                        executionPolicyName, failoverPolicyFqn, nodeAddress,
-                        Utils.parseParams(distributedExecutionParams));
-                  if (futureList != null) {
-                     for (Future<T> future : futureList) {
-                        try {
-                           resultList.add(future.get());
-                        } catch (InterruptedException e) {
-                           result.setError(true);
-                           result.setErrorMessage("The distributed task was interrupted.");
-                           result.setRemoteException(e);
-                        } catch (ExecutionException e) {
-                           result.setError(true);
-                           result.setErrorMessage("An error occurred executing the distributed task.");
-                           result.setRemoteException(e);
-                        }
-                     }
-                  } else {
-                     result.setError(true);
-                     result.setErrorMessage("No future objects returned from executing the distributed task.");
-                  }
-                  durationMillis = System.currentTimeMillis() - start;
-
-                  log.info("Distributed Execution task completed in " + Utils.prettyPrintMillis(durationMillis));
-                  String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
-                        + cacheWrapper.getLocalSize() + ", " + durationMillis;
-                  result.setPayload(payload);
-                  log.info(cacheWrapper.getNumMembers() + " nodes were used. " + cacheWrapper.getLocalSize()
-                        + " entries on this node");
-                  log.info(cacheWrapper.getInfo());
-                  log.info("Distributed execution results:");
-                  log.info("--------------------");
-                  for (T t : resultList) {
-                     log.info(t.toString());
-                  }
-                  log.info("--------------------");
-               } else {
-                  result.setError(true);
-                  result.setErrorMessage("The distributed task or callable class must be specified.");
-               }
-            } else {
-               result.setError(true);
-               result.setErrorMessage("Distributed Execution is not supported by this cache");
-            }
-         } else {
-            String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
-                  + ", 0";
-            result.setPayload(payload);
-         }
-
+         String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
+               + ", 0";
+         result.setPayload(payload);
       }
       return result;
    }
 
-   public String getDistributedCallableFqn() {
-      return distributedCallableFqn;
-   }
+   private DefaultDistStageAck executeTask(CacheWrapper cacheWrapper) {
+      List<Future<T>> futureList = null;
+      List<T> resultList = new ArrayList<T>();
+      DefaultDistStageAck result = newDefaultStageAck();
 
-   public void setDistributedCallableFqn(String distributedCallableFqn) {
-      this.distributedCallableFqn = distributedCallableFqn;
-   }
+      log.info("--------------------");
+      @SuppressWarnings("unchecked")
+      DistributedTaskCapable<K, V, T> distributedTaskCapable = (DistributedTaskCapable<K, V, T>) cacheWrapper;
+      long durationNanos;
+      long start = System.nanoTime();
+      futureList = distributedTaskCapable.executeDistributedTask(classLoadHelper, distributedCallableFqn,
+            executionPolicyName, failoverPolicyFqn, nodeAddress, Utils.parseParams(distributedExecutionParams));
+      if (futureList == null) {
+         result.setError(true);
+         result.setErrorMessage("No future objects returned from executing the distributed task.");
+      } else {
+         for (Future<T> future : futureList) {
+            try {
+               resultList.add(future.get());
+            } catch (InterruptedException e) {
+               result.setError(true);
+               result.setErrorMessage("The distributed task was interrupted.");
+               result.setRemoteException(e);
+            } catch (ExecutionException e) {
+               result.setError(true);
+               result.setErrorMessage("An error occurred executing the distributed task.");
+               result.setRemoteException(e);
+            }
+         }
+      }
+      durationNanos = System.nanoTime() - start;
+      String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
+            + ", " + durationNanos;
+      result.setPayload(payload);
 
-   public String getExecutionPolicyName() {
-      return executionPolicyName;
+      log.info("Distributed Execution task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+      log.info(cacheWrapper.getNumMembers() + " nodes were used. " + cacheWrapper.getLocalSize()
+            + " entries on this node");
+      log.info(cacheWrapper.getInfo());
+      log.info("Distributed execution results:");
+      log.info("--------------------");
+      for (T t : resultList) {
+         log.info(t.toString());
+      }
+      log.info("--------------------");
+      return result;
    }
-
-   public void setExecutionPolicyName(String executionPolicyName) {
-      this.executionPolicyName = executionPolicyName;
-   }
-
-   public String getFailoverPolicyFqn() {
-      return failoverPolicyFqn;
-   }
-
-   public void setFailoverPolicyFqn(String failoverPolicyFqn) {
-      this.failoverPolicyFqn = failoverPolicyFqn;
-   }
-
-   public String getNodeAddress() {
-      return nodeAddress;
-   }
-
-   public void setNodeAddress(String nodeAddress) {
-      this.nodeAddress = nodeAddress;
-   }
-
-   public String getDistributedExecutionParams() {
-      return distributedExecutionParams;
-   }
-
-   public void setDistributedExecutionParams(String distributedExecutionParams) {
-      this.distributedExecutionParams = distributedExecutionParams;
-   }
-
 }
