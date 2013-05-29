@@ -20,6 +20,7 @@ package org.radargun.cachewrappers;
 
 import org.infinispan.Cache;
 import org.infinispan.distexec.mapreduce.MapReduceTask;
+import org.infinispan.distribution.ch.ConsistentHash;
 
 public class Infinispan52MapReduceWrapper<KIn, VIn, KOut, VOut, R> extends
       InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> {
@@ -40,6 +41,11 @@ public class Infinispan52MapReduceWrapper<KIn, VIn, KOut, VOut, R> extends
    protected MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTaskFactory() {
       Cache<KIn, VIn> cache = cacheManager.getCache(getCacheName());
       return new MapReduceTask<KIn, VIn, KOut, VOut>(cache, this.distributeReducePhase, this.useIntermediateSharedCache);
+   }
+
+   @Override
+   protected int membersCount(ConsistentHash consistentHash) {
+      return consistentHash.getMembers().size();
    }
 
 }
