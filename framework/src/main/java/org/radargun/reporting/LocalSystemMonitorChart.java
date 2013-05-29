@@ -31,6 +31,7 @@ public class LocalSystemMonitorChart {
    private ArrayList<String> reportStrings;
    private boolean hasNetworkStatistics = false;
    private TimeUnit chartTimeUnit = null;
+   private int chartFrequency = 1;
 
    final Map<String, LocalJmxMonitor> sysMonitors;
 
@@ -41,6 +42,7 @@ public class LocalSystemMonitorChart {
       LocalJmxMonitor ljm = this.sysMonitors.values().iterator().next();
       hasNetworkStatistics = ljm.getInterfaceName() != null;
       chartTimeUnit = ljm.getMeasuringUnit();
+      chartFrequency = ljm.getMeasuringFrequency();
    }
 
    public void generate(ReportDesc reportDesc) {
@@ -76,8 +78,8 @@ public class LocalSystemMonitorChart {
    private void generateMemory() {
       reportHeader = new StringBuilder(chartTimeUnit.name());
       reportStrings = null;
-      ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport(chartTimeUnit);
-      timeReport.init("Time(sec)", "Memory(Mb)", "Memory consumption", "");
+      ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport(chartFrequency, chartTimeUnit);
+      timeReport.init("Time(" + chartTimeUnit.name() + ")", "Memory(Mb)", "Memory consumption", "");
       for (String s : sysMonitors.keySet()) {
          reportHeader.append(", mem-" + s);
          MemoryUsageMonitor memMonitor = sysMonitors.get(s).getMemoryMonitor();
@@ -90,8 +92,8 @@ public class LocalSystemMonitorChart {
    private void generateCpu() {
       reportHeader = new StringBuilder(chartTimeUnit.name());
       reportStrings = null;
-      ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport(chartTimeUnit);
-      timeReport.init("Time(sec)", "CPU", "CPU Usage (%)", "");
+      ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport(chartFrequency, chartTimeUnit);
+      timeReport.init("Time(" + chartTimeUnit.name() + ")", "CPU", "CPU Usage (%)", "");
       for (String s : sysMonitors.keySet()) {
          reportHeader.append(", cpu-" + s);
          CpuUsageMonitor cpuMonitor = sysMonitors.get(s).getCpuMonitor();
@@ -103,8 +105,8 @@ public class LocalSystemMonitorChart {
    private void generateGc() {
       reportHeader = new StringBuilder(chartTimeUnit.name());
       reportStrings = null;
-      ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport(chartTimeUnit);
-      timeReport.init("Time(sec)", "GC", "GC Usage (%)", "");
+      ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport(chartFrequency, chartTimeUnit);
+      timeReport.init("Time(" + chartTimeUnit.name() + ")", "GC", "GC Usage (%)", "");
       for (String s : sysMonitors.keySet()) {
          reportHeader.append(", gc-" + s);
          GcMonitor gcMonitor = sysMonitors.get(s).getGcMonitor();
@@ -116,8 +118,8 @@ public class LocalSystemMonitorChart {
    private void generateNetwork() {
       reportHeader = new StringBuilder(chartTimeUnit.name());
       reportStrings = null;
-      ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport(chartTimeUnit);
-      timeReport.init("Time(sec)", "Network(bytes)", "Network traffic", "");
+      ClusterTimeSeriesReport timeReport = new ClusterTimeSeriesReport(chartFrequency, chartTimeUnit);
+      timeReport.init("Time(" + chartTimeUnit.name() + ")", "Network(bytes)", "Network traffic", "");
       for (String s : sysMonitors.keySet()) {
          reportHeader.append(", network-inbound-" + s + ", network-outbound-" + s);
          NetworkBytesMonitor netInMonitor = sysMonitors.get(s).getNetworkBytesInMonitor();

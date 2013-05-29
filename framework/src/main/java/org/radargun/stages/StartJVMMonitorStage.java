@@ -27,8 +27,7 @@ import org.radargun.sysmonitor.LocalJmxMonitor;
 
 /**
  * 
- * Starts collecting JVM statistics locally on each slave node.
- * {@link LocalJmxMonitor}
+ * Starts collecting JVM statistics locally on each slave node. {@link LocalJmxMonitor}
  * 
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
@@ -37,31 +36,29 @@ import org.radargun.sysmonitor.LocalJmxMonitor;
 public class StartJVMMonitorStage extends AbstractDistStage {
 
    public static final String MONITOR_KEY = "JVMMonitor";
-   private TimeUnit timeUnit = TimeUnit.SECONDS;
 
    @Property(doc = "Specifies the network interface where statistics are gathered. "
          + "If not specified, then statistics are not collected.")
    private String interfaceName;
 
-   @Property(doc = "Specifies the frequency that statistics are collected. "
-         + "One of: SECONDS, MINUTES, or HOURS. The default is SECONDS.")
-   private String timeUnitName = TimeUnit.SECONDS.name();
+   @Property(doc = "An integer that specifies the frequency that statistics are collected. " + "The default is one.")
+   private int frequency = 1;
+
+   @Property(doc = "Specifies the time unit that statistics are collected. "
+         + "One of: MILLISECONDS, SECONDS, MINUTES, or HOURS. The default is SECONDS.")
+   private TimeUnit timeUnit = TimeUnit.SECONDS;
 
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      timeUnit = Enum.valueOf(TimeUnit.class, timeUnitName);
       LocalJmxMonitor monitor = new LocalJmxMonitor();
       monitor.setProductName(productName);
       monitor.setConfigName(configName);
       if (interfaceName != null) {
          monitor.setInterfaceName(interfaceName);
       }
-      if (timeUnit != null) {
-         monitor.setMeasuringUnit(timeUnit);
-      } else {
-         log.error("Failed to find time unit named " + timeUnitName);
-      }
+      monitor.setMeasuringFrequency(frequency);
+      monitor.setMeasuringUnit(timeUnit);
       monitor.startMonitoringLocal();
       slaveState.put(MONITOR_KEY, monitor);
       return ack;
