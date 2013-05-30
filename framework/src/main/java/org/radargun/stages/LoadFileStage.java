@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -84,69 +82,68 @@ public class LoadFileStage extends AbstractDistStage {
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
 
       if (cacheWrapper == null) {
+         result.setError(true);
          result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
-      } else {
-//         Charset charset = Charset.defaultCharset();
-         RandomAccessFile theFile = null;
-         FileChannel theFileChannel = null;
-         long totalBytesRead = 0;
-         long putCount = 0;
+         return result;
+      }
 
-         try {
-            theFile = new RandomAccessFile(filePath, "r");
-            theFileChannel = theFile.getChannel();
-            theFileChannel.position(fileOffset);
+      RandomAccessFile theFile = null;
+      FileChannel theFileChannel = null;
+      long totalBytesRead = 0;
+      long putCount = 0;
 
-//            CharsetDecoder decoder = charset.newDecoder();
-            ByteBuffer buffer = ByteBuffer.allocate(valueSize);
-            while (true) {
-               long initPos = theFileChannel.position();
-               String key = Integer.toString(getSlaveIndex()) + "-" + Long.toString(initPos);
-               int bytesRead = theFileChannel.read(buffer);
-               
-               if (bytesRead != -1) {
-                  totalBytesRead += bytesRead;
-                  if (putCount % 5000 == 0) {
-                     log.info("Writing " + bytesRead + " bytes to cache key: " + key + " at position "
-                           + theFileChannel.position());
-                  }
-                  buffer.rewind();
-                  long start = System.nanoTime();
-                  cacheWrapper.put(bucket, key, buffer.array());
-//                  cacheWrapper.put(bucket, key, decoder.decode(buffer).toString());
-                  if (printWriteStatistics) {
-                     log.info("Put on slave-" + this.getSlaveIndex() + " took "
-                           + Utils.prettyPrintTime(System.nanoTime() - start, TimeUnit.NANOSECONDS));
-                  }
-                  putCount++;
-                  theFileChannel.position(initPos + (valueSize * totalWriters));
-                  buffer.clear();
-               } else {
-                  theFile.close();
-                  theFile = null;
-                  break;
+      try {
+         theFile = new RandomAccessFile(filePath, "r");
+         theFileChannel = theFile.getChannel();
+         theFileChannel.position(fileOffset);
+
+         ByteBuffer buffer = ByteBuffer.allocate(valueSize);
+         while (true) {
+            long initPos = theFileChannel.position();
+            String key = Integer.toString(getSlaveIndex()) + "-" + Long.toString(initPos);
+            int bytesRead = theFileChannel.read(buffer);
+            
+            if (bytesRead != -1) {
+               totalBytesRead += bytesRead;
+               if (putCount % 5000 == 0) {
+                  log.info("Writing " + bytesRead + " bytes to cache key: " + key + " at position "
+                        + theFileChannel.position());
                }
+               buffer.rewind();
+               long start = System.nanoTime();
+               cacheWrapper.put(bucket, key, buffer.array());
+               if (printWriteStatistics) {
+                  log.info("Put on slave-" + this.getSlaveIndex() + " took "
+                        + Utils.prettyPrintTime(System.nanoTime() - start, TimeUnit.NANOSECONDS));
+               }
+               putCount++;
+               theFileChannel.position(initPos + (valueSize * totalWriters));
+               buffer.clear();
+            } else {
+               theFile.close();
+               theFile = null;
+               break;
             }
-            result.setPayload(new long[] { putCount, totalBytesRead });
-         } catch (FileNotFoundException e) {
-            log.fatal("File not find at path: " + filePath, e);
-            result.setError(true);
-            result.setErrorMessage("File not find at path: " + filePath);
-         } catch (Exception e) {
-            log.fatal("An exception occurred", e);
-            result.setError(true);
-            result.setErrorMessage("An exception occurred");
-         } finally {
-            if (theFile != null) {
-               try {
-                  theFile.close();
-               } catch (IOException e) {
-                  log.fatal("An exception occurred closing the file", e);
-               }
+         }
+         result.setPayload(new long[] { putCount, totalBytesRead });
+      } catch (FileNotFoundException e) {
+         log.fatal("File not find at path: " + filePath, e);
+         result.setError(true);
+         result.setErrorMessage("File not find at path: " + filePath);
+      } catch (Exception e) {
+         log.fatal("An exception occurred", e);
+         result.setError(true);
+         result.setErrorMessage("An exception occurred");
+      } finally {
+         if (theFile != null) {
+            try {
+               theFile.close();
+            } catch (IOException e) {
+               log.fatal("An exception occurred closing the file", e);
             }
          }
       }
-
+   
       return result;
    }
 }
