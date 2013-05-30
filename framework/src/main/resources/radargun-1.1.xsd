@@ -964,7 +964,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <extension base="rg:AbstractMaster">
             <attribute name="reportPrefix" type="string">
                <annotation>
-                  <documentation>A prefix to add to the report name. Default is null.</documentation>
+                  <documentation>A prefix that will be added to the report name. Default is null.</documentation>
                </annotation>
             </attribute>
          </extension>
