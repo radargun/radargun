@@ -19,21 +19,22 @@
 package org.radargun.stages;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
+import org.radargun.utils.Utils;
 
 /**
  * Loads the contents of the specified file into the cache using the specified sized values. All
@@ -53,6 +54,10 @@ public class LoadFileStage extends AbstractDistStage {
 
    @Property(doc = "The name of the bucket where keys are written. The default is null")
    private String bucket = null;
+
+   @Property(doc = "If true, then the time for each put operation is written to the logs. " 
+         + "The default is false")
+   private boolean printWriteStatistics = false;
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
@@ -81,30 +86,41 @@ public class LoadFileStage extends AbstractDistStage {
       if (cacheWrapper == null) {
          result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
       } else {
-         Charset charset = Charset.defaultCharset();
-         FileChannel theFile = null;
+//         Charset charset = Charset.defaultCharset();
+         RandomAccessFile theFile = null;
+         FileChannel theFileChannel = null;
          long totalBytesRead = 0;
          long putCount = 0;
 
          try {
-            theFile = new FileInputStream(filePath).getChannel();
-            theFile.position(fileOffset);
+            theFile = new RandomAccessFile(filePath, "r");
+            theFileChannel = theFile.getChannel();
+            theFileChannel.position(fileOffset);
 
+//            CharsetDecoder decoder = charset.newDecoder();
+            ByteBuffer buffer = ByteBuffer.allocate(valueSize);
             while (true) {
-               ByteBuffer buffer = ByteBuffer.allocate(valueSize);
-               long initPos = theFile.position();
+               long initPos = theFileChannel.position();
                String key = Integer.toString(getSlaveIndex()) + "-" + Long.toString(initPos);
-               int bytesRead = theFile.read(buffer);
-               log.debug("bytesRead = " + bytesRead);
+               int bytesRead = theFileChannel.read(buffer);
+               
                if (bytesRead != -1) {
                   totalBytesRead += bytesRead;
-                  log.debug("Writing to cache key: " + key + " at position " + theFile.position());
+                  if (putCount % 5000 == 0) {
+                     log.info("Writing " + bytesRead + " bytes to cache key: " + key + " at position "
+                           + theFileChannel.position());
+                  }
                   buffer.rewind();
-                  CharsetDecoder decoder = charset.newDecoder();
-                  CharBuffer charBuffer = decoder.decode(buffer);
-                  cacheWrapper.put(bucket, key, charBuffer.toString());
+                  long start = System.nanoTime();
+                  cacheWrapper.put(bucket, key, buffer.array());
+//                  cacheWrapper.put(bucket, key, decoder.decode(buffer).toString());
+                  if (printWriteStatistics) {
+                     log.info("Put on slave-" + this.getSlaveIndex() + " took "
+                           + Utils.prettyPrintTime(System.nanoTime() - start, TimeUnit.NANOSECONDS));
+                  }
                   putCount++;
-                  theFile.position(initPos + (valueSize * totalWriters));
+                  theFileChannel.position(initPos + (valueSize * totalWriters));
+                  buffer.clear();
                } else {
                   theFile.close();
                   theFile = null;
@@ -133,29 +149,4 @@ public class LoadFileStage extends AbstractDistStage {
 
       return result;
    }
-
-   public String getFilePath() {
-      return filePath;
-   }
-
-   public void setFilePath(String filePath) {
-      this.filePath = filePath;
-   }
-
-   public int getValueSize() {
-      return valueSize;
-   }
-
-   public void setValueSize(int valueSize) {
-      this.valueSize = valueSize;
-   }
-
-   public String getBucket() {
-      return bucket;
-   }
-
-   public void setBucket(String bucket) {
-      this.bucket = bucket;
-   }
-
 }

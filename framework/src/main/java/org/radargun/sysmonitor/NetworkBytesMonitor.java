@@ -74,8 +74,9 @@ public class NetworkBytesMonitor extends AbstractActivityMonitor implements Seri
             inputStream = new FileInputStream("/proc/net/dev");
             BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
             try {
-               String line = br.readLine().trim();
+               String line = br.readLine();
                while (line != null) {
+                  line = line.trim();
                   if (line.startsWith(iface)) {
                      String[] vals = line.split(":")[1].trim().split("\\s+");
                      // Start monitoring from zero and then increase
@@ -87,7 +88,7 @@ public class NetworkBytesMonitor extends AbstractActivityMonitor implements Seri
                      }
                      break;
                   }
-                  line = br.readLine().trim();
+                  line = br.readLine();
                }
                br.close();
             } catch (Exception e) {
