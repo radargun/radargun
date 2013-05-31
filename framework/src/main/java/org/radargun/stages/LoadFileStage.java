@@ -87,27 +87,35 @@ public class LoadFileStage extends AbstractDistStage {
          return result;
       }
 
-      RandomAccessFile theFile = null;
-      FileChannel theFileChannel = null;
+      RandomAccessFile file = null;
+      FileChannel fileChannel = null;
       long totalBytesRead = 0;
       long putCount = 0;
 
       try {
-         theFile = new RandomAccessFile(filePath, "r");
-         theFileChannel = theFile.getChannel();
-         theFileChannel.position(fileOffset);
+         file = new RandomAccessFile(filePath, "r");
+         fileChannel = file.getChannel();
+         fileChannel.position(fileOffset);
 
          ByteBuffer buffer = ByteBuffer.allocate(valueSize);
          while (true) {
-            long initPos = theFileChannel.position();
+            long initPos = fileChannel.position();
             String key = Integer.toString(getSlaveIndex()) + "-" + Long.toString(initPos);
-            int bytesRead = theFileChannel.read(buffer);
+            int bytesRead = fileChannel.read(buffer);
             
             if (bytesRead != -1) {
+               while (bytesRead != valueSize) {
+                  int readBytes = fileChannel.read(buffer);
+                  if (readBytes == -1) {
+                     break;
+                  } else {
+                     bytesRead += readBytes;
+                  }
+               }
                totalBytesRead += bytesRead;
                if (putCount % 5000 == 0) {
                   log.info("Writing " + bytesRead + " bytes to cache key: " + key + " at position "
-                        + theFileChannel.position());
+                        + fileChannel.position());
                }
                buffer.rewind();
                long start = System.nanoTime();
@@ -117,11 +125,11 @@ public class LoadFileStage extends AbstractDistStage {
                         + Utils.prettyPrintTime(System.nanoTime() - start, TimeUnit.NANOSECONDS));
                }
                putCount++;
-               theFileChannel.position(initPos + (valueSize * totalWriters));
+               fileChannel.position(initPos + (valueSize * totalWriters));
                buffer.clear();
             } else {
-               theFile.close();
-               theFile = null;
+               file.close();
+               file = null;
                break;
             }
          }
@@ -135,9 +143,9 @@ public class LoadFileStage extends AbstractDistStage {
          result.setError(true);
          result.setErrorMessage("An exception occurred");
       } finally {
-         if (theFile != null) {
+         if (file != null) {
             try {
-               theFile.close();
+               file.close();
             } catch (IOException e) {
                log.fatal("An exception occurred closing the file", e);
             }
