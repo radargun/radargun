@@ -18,6 +18,7 @@
  */
 package org.radargun.stages;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +28,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
+import org.radargun.state.SlaveState;
 import org.radargun.utils.Utils;
 
 /**
@@ -63,13 +65,24 @@ public class RandomDataStage extends AbstractDistStage {
    @Property(doc = "The name of the bucket where keys are written. The default is null")
    private String bucket = null;
 
+   @Property(doc = "If true, then the bytes written to the cache are all printable characters. "
+         + "The default is false")
+   private boolean stringData = false;
+
    @Property(doc = "If true, then the time for each put operation is written to the logs. " + "The default is false")
    private boolean printWriteStatistics = false;
+
+   private Random random;
+
+   @Override
+   public void initOnSlave(SlaveState slaveState) {
+      super.initOnSlave(slaveState);
+      random = new Random(randomSeed);
+   }
 
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = newDefaultStageAck();
-      Random rand = new Random(randomSeed);
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
 
       if (cacheWrapper == null) {
@@ -109,12 +122,14 @@ public class RandomDataStage extends AbstractDistStage {
       try {
          byte[] buffer = new byte[valueSize];
          while (putCount > 0) {
-            String key = Integer.toString(getSlaveIndex()) + "-" + rand.nextLong();
+            String key = Integer.toString(getSlaveIndex()) + "-" + random.nextLong();
 
             if (putCount % 5000 == 0) {
                log.info(putCount + ": Writing " + valueSize + " bytes to cache key: " + key);
             }
-            rand.nextBytes(buffer);
+
+            buffer = generateRandomData(valueSize, stringData);
+
             long start = System.nanoTime();
             cacheWrapper.put(bucket, key, buffer);
             if (printWriteStatistics) {
@@ -129,10 +144,52 @@ public class RandomDataStage extends AbstractDistStage {
          log.fatal("An exception occurred", e);
          result.setError(true);
          result.setErrorMessage("An exception occurred");
-      } finally {
       }
 
       return result;
+   }
+
+   private byte[] generateRandomData(int dataSize, boolean useChars) {
+      byte[] buffer = null;
+      if (useChars) {
+         /*
+          * Generate a random string of "words" using random single and multi-byte characters that
+          * are separated by punctuation marks and whitespace.
+          */
+         String singleByteChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+         String multiByteChars = "ÅÄÇÉÑÖÕÜàäâáãçëèêéîïìíñôöòóüûùúÿ";
+         String punctuationChars = "!,.;?";
+         int maxWordLength = 20;
+
+         StringBuffer data = new StringBuffer();
+         while (data.toString().getBytes().length < dataSize) {
+            int wordLength = random.nextInt(maxWordLength);
+            for (int i = 0; i < wordLength; i++) {
+               if (random.nextBoolean() || dataSize - data.toString().getBytes().length == 1) {
+                  data.append(singleByteChars.charAt(random.nextInt(singleByteChars.length() - 1)));
+               } else {
+                  data.append(multiByteChars.charAt(random.nextInt(multiByteChars.length() - 1)));
+               }
+            }
+
+            if (random.nextBoolean()) {
+               data.append(punctuationChars.charAt(random.nextInt(punctuationChars.length() - 1)));
+            }
+
+            if (random.nextBoolean()) {
+               data.append(' ');
+            } else {
+               data.append('\n');
+            }
+         }
+
+         //character != byte
+         buffer = Arrays.copyOf(data.toString().getBytes(), dataSize);
+      } else {
+         buffer = new byte[dataSize];
+         random.nextBytes(buffer);
+      }
+      return buffer;
    }
 
    @Override
