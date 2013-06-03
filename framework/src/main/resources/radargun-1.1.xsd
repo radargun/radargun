@@ -970,6 +970,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>The seed to use for the java.util.Random object. The default is the return value of System.nanoTime().</documentation>
                </annotation>
             </attribute>
+            <attribute name="stringData" type="string">
+               <annotation>
+                  <documentation>If true, then the bytes written to the cache are all printable characters. The default is false</documentation>
+               </annotation>
+            </attribute>
             <attribute name="valueCount" type="string">
                <annotation>
                   <documentation>The number of values of valueSize to write to the cache. Either valueCount or ramPercentageDataSize should be specified, but not both.</documentation>
