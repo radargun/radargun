@@ -11,7 +11,10 @@ import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.state.MasterState;
+import org.radargun.stressors.AllRecordingStatistics;
 import org.radargun.stressors.CacheSpecificKeyGenStressor;
+import org.radargun.stressors.HistogramStatistics;
+import org.radargun.stressors.MultiStatistics;
 import org.radargun.stressors.StressTestStressor;
 import org.radargun.stressors.StringKeyGenerator;
 
@@ -96,6 +99,15 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "Specifies whether the key generator is produced by a cache wrapper and therefore is product-specific. Default is false.")
    protected boolean cacheSpecificKeyGenerator = false;
 
+   @Property(doc = "Generate a range for histogram with operations statistics (for use in next stress tests). Default is false.")
+   protected boolean generateHistogramRange = false;
+
+   @Property(doc = "The test will produce operation statistics in histogram. Default is false.")
+   protected boolean useHistogramStatistics = false;
+
+   @Property(doc = "The test will produce operation statistics as average values. Default is true.")
+   protected boolean useSimpleStatistics = true;
+
    protected CacheWrapper cacheWrapper;
 
    protected Map<String, Object> doWork() {
@@ -109,10 +121,31 @@ public class StressTestStage extends AbstractDistStage {
       }
       stressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
       stressor.setDurationMillis(duration);
+      setupStatistics(stressor);
       PropertyHelper.copyProperties(this, stressor);
-      return stressor.stress(cacheWrapper);
+      Map<String, Object> results = stressor.stress(cacheWrapper);
+      if (generateHistogramRange) {
+         slaveState.put(HistogramStatistics.HISTOGRAM_RANGES, results);
+      }
+      return results;
    }
-   
+
+   protected void setupStatistics(StressTestStressor stressor) {
+      if (generateHistogramRange) {
+         stressor.setStatisticsPrototype(new AllRecordingStatistics());
+      } else if (useHistogramStatistics) {
+         Map<String, Object> ranges = (Map<String, Object>) slaveState.get(HistogramStatistics.HISTOGRAM_RANGES);
+         if (ranges == null) {
+            throw new IllegalStateException("The ranges for histogram statistics are not generated. Please run StressTestWarmup with generateHistogramRange=true");
+         }
+         if (useSimpleStatistics) {
+            stressor.setStatisticsPrototype(new MultiStatistics(ranges));
+         } else {
+            stressor.setStatisticsPrototype(new HistogramStatistics(ranges));
+         }
+      }
+   }
+
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
       if (slaves != null && !slaves.contains(slaveIndex)) {
@@ -164,24 +197,16 @@ public class StressTestStage extends AbstractDistStage {
          Map<String, Object> benchResult = (Map<String, Object>) wAck.getPayload();
          if (benchResult != null) {
             results.put(ack.getSlaveIndex(), benchResult);
-            Object reqPerSes = benchResult.get("REQ_PER_SEC");
-            if (reqPerSes == null) {
-               throw new IllegalStateException("Requests per second should be present!");
+            Object reqPerSec = benchResult.get("REQ_PER_SEC");
+            Object sizeInfo = benchResult.remove("SIZE_INFO");
+            if (reqPerSec != null) {
+               log.info("Received " + sizeInfo);
+               log.info("Slave #" + ack.getSlaveIndex() + ": " + numberFormat(parseDouble(reqPerSec.toString())) + " requests per second.");
             }
-            logForDistributionCounting(benchResult);
-            log.info("Slave #" + ack.getSlaveIndex() + ": " + numberFormat(parseDouble(reqPerSes.toString())) + " requests per second.");
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }
       }
       return success;
-   }
-
-   /**
-    * Important: don't change the format of the log below as it is used by ./dist.sh in order to count the load
-    * distribution in the cluster.
-    */
-   private void logForDistributionCounting(Map<String, Object> benchResult) {
-      log.info("Received " +  benchResult.remove(SIZE_INFO));
    }
 }

@@ -144,7 +144,9 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
          if (sum != null && computeAverage) {
             Object oldSum = sum.get(key);
             if (oldSum == null) {
-               sum.put(key, data);
+               if (data instanceof Number) {
+                  sum.put(key, data);
+               }
             } else {
                if (oldSum instanceof Integer && data instanceof Integer) {
                   sum.put(key, (Integer) oldSum + (Integer) data);
