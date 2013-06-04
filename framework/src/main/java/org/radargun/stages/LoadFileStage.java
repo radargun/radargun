@@ -53,9 +53,11 @@ public class LoadFileStage extends AbstractDistStage {
    @Property(doc = "The name of the bucket where keys are written. The default is null")
    private String bucket = null;
 
-   @Property(doc = "If true, then the time for each put operation is written to the logs. " 
-         + "The default is false")
+   @Property(doc = "If true, then the time for each put operation is written to the logs. The default is false")
    private boolean printWriteStatistics = false;
+
+   @Property(doc = "If true, then String objects are written to the cache. The default is false")
+   private boolean stringData = false;
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
@@ -102,7 +104,7 @@ public class LoadFileStage extends AbstractDistStage {
             long initPos = fileChannel.position();
             String key = Integer.toString(getSlaveIndex()) + "-" + Long.toString(initPos);
             int bytesRead = fileChannel.read(buffer);
-            
+
             if (bytesRead != -1) {
                while (bytesRead != valueSize) {
                   int readBytes = fileChannel.read(buffer);
@@ -119,7 +121,13 @@ public class LoadFileStage extends AbstractDistStage {
                }
                buffer.rewind();
                long start = System.nanoTime();
-               cacheWrapper.put(bucket, key, buffer.array());
+               if (stringData) {
+                  String cacheData = buffer.asCharBuffer().toString();
+                  start = System.nanoTime();
+                  cacheWrapper.put(bucket, key, cacheData);
+               } else {
+                  cacheWrapper.put(bucket, key, buffer.array());
+               }
                if (printWriteStatistics) {
                   log.info("Put on slave-" + this.getSlaveIndex() + " took "
                         + Utils.prettyPrintTime(System.nanoTime() - start, TimeUnit.NANOSECONDS));
@@ -151,7 +159,7 @@ public class LoadFileStage extends AbstractDistStage {
             }
          }
       }
-   
+
       return result;
    }
 }

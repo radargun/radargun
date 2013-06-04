@@ -819,6 +819,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>If true, then the time for each put operation is written to the logs. The default is false</documentation>
                </annotation>
             </attribute>
+            <attribute name="stringData" type="string">
+               <annotation>
+                  <documentation>If true, then String objects are written to the cache. The default is false</documentation>
+               </annotation>
+            </attribute>
             <attribute name="valueSize" type="string">
                <annotation>
                   <documentation>The size of the values to put into the cache from the contents of the file. The default size is 1MB (1024 * 1024)</documentation>
@@ -957,7 +962,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             </attribute>
             <attribute name="stringData" type="string">
                <annotation>
-                  <documentation>If true, then the bytes written to the cache are all printable characters. The default is false</documentation>
+                  <documentation>If true, then String objects with printable characters are written to the cache.The default is false</documentation>
                </annotation>
             </attribute>
             <attribute name="valueCount" type="string">

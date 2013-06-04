@@ -18,7 +18,7 @@
  */
 package org.radargun.stages;
 
-import java.util.Arrays;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -65,7 +65,7 @@ public class RandomDataStage extends AbstractDistStage {
    @Property(doc = "The name of the bucket where keys are written. The default is null")
    private String bucket = null;
 
-   @Property(doc = "If true, then the bytes written to the cache are all printable characters. "
+   @Property(doc = "If true, then String objects with printable characters are written to the cache."
          + "The default is false")
    private boolean stringData = false;
 
@@ -131,7 +131,14 @@ public class RandomDataStage extends AbstractDistStage {
             buffer = generateRandomData(valueSize, stringData);
 
             long start = System.nanoTime();
-            cacheWrapper.put(bucket, key, buffer);
+            if (stringData) {
+               String cacheData = new String(buffer);
+               start = System.nanoTime();
+               cacheWrapper.put(bucket, key, cacheData);
+            } else {
+               cacheWrapper.put(bucket, key, buffer);
+
+            }
             if (printWriteStatistics) {
                log.info("Put on slave-" + this.getSlaveIndex() + " took "
                      + Utils.prettyPrintTime(System.nanoTime() - start, TimeUnit.NANOSECONDS));
@@ -156,40 +163,64 @@ public class RandomDataStage extends AbstractDistStage {
           * Generate a random string of "words" using random single and multi-byte characters that
           * are separated by punctuation marks and whitespace.
           */
-         String singleByteChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-         String multiByteChars = "ÅÄÇÉÑÖÕÜàäâáãçëèêéîïìíñôöòóüûùúÿ";
          String punctuationChars = "!,.;?";
-         int maxWordLength = 20;
 
-         StringBuffer data = new StringBuffer();
-         while (data.toString().getBytes().length < dataSize) {
-            int wordLength = random.nextInt(maxWordLength);
-            for (int i = 0; i < wordLength; i++) {
-               if (random.nextBoolean() || dataSize - data.toString().getBytes().length == 1) {
-                  data.append(singleByteChars.charAt(random.nextInt(singleByteChars.length() - 1)));
-               } else {
-                  data.append(multiByteChars.charAt(random.nextInt(multiByteChars.length() - 1)));
+         ByteBuffer data = ByteBuffer.allocate(dataSize);
+         int remainingBytes = dataSize;
+         int maxWordLength = 20;
+         while (remainingBytes > 0) {
+            byte[] word = this.generateRandomWord(maxWordLength);
+            data = data.put(word);
+            remainingBytes -= word.length;
+
+            if (remainingBytes >= 2 && random.nextInt() % 5 == 0 && random.nextBoolean()) {
+               data.put((byte) punctuationChars.charAt(random.nextInt(punctuationChars.length() - 1)));
+               data.put((byte) '\n');
+               remainingBytes -= 2;
+            } else {
+               if (remainingBytes >= 1) {
+                  data.put((byte) ' ');
+                  remainingBytes--;
                }
             }
 
-            if (random.nextBoolean()) {
-               data.append(punctuationChars.charAt(random.nextInt(punctuationChars.length() - 1)));
-            }
-
-            if (random.nextBoolean()) {
-               data.append(' ');
-            } else {
-               data.append('\n');
+            if (remainingBytes < maxWordLength) {
+               maxWordLength = remainingBytes;
             }
          }
 
-         //character != byte
-         buffer = Arrays.copyOf(data.toString().getBytes(), dataSize);
+         buffer = data.array();
       } else {
          buffer = new byte[dataSize];
          random.nextBytes(buffer);
       }
       return buffer;
+   }
+
+   /**
+    * 
+    * Generate a "word" made up of random single and multi-byte characters
+    * 
+    * @param maxBytes
+    *           the maximum length in bytes of the word
+    * @return the word as an array of bytes which may be less than maxBytes
+    */
+   private byte[] generateRandomWord(int maxBytes) {
+      String singleByteChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      String multiByteChars = "ÅÄÇÉÑÖÕÜàäâáãçëèêéîïìíñôöòóüûùúÿ";
+      StringBuilder data = new StringBuilder();
+
+      int byteLength = random.nextInt(maxBytes);
+      for (int i = byteLength; i > 0; i--) {
+         if (random.nextBoolean() || i == 1) {
+            data.append(singleByteChars.charAt(random.nextInt(singleByteChars.length() - 1)));
+         } else {
+            data.append(multiByteChars.charAt(random.nextInt(multiByteChars.length() - 1)));
+            i--;
+         }
+      }
+
+      return data.toString().getBytes();
    }
 
    @Override
