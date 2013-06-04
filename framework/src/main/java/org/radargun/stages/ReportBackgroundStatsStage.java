@@ -14,8 +14,8 @@ import java.util.Set;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.CSVChart;
-import org.radargun.stressors.Statistics;
 import org.radargun.stressors.BackgroundOpsManager;
+import org.radargun.stressors.SimpleStatistics;
 
 /**
  * Generates reports from Statistics.
@@ -45,7 +45,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
 
    public boolean execute() {
       @SuppressWarnings("unchecked")
-      Map<Integer, List<Statistics>> allResults = (Map<Integer, List<Statistics>>) masterState.get(BackgroundOpsManager.NAME);
+      Map<Integer, List<SimpleStatistics>> allResults = (Map<Integer, List<SimpleStatistics>>) masterState.get(BackgroundOpsManager.NAME);
       if (allResults == null) {
          log.error("Could not find BackgroundStressors results on the master. Master's state is  " + masterState);
          return false;
@@ -59,7 +59,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
          return false;
       }
       
-      List<List<Statistics>> results = new ArrayList<List<Statistics>>();
+      List<List<SimpleStatistics>> results = new ArrayList<List<SimpleStatistics>>();
       if (ignore != null) {
          for (int slave : allResults.keySet()) {
             if (!ignore.contains(slave)) {
@@ -99,7 +99,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
 
          generateMultiSlaveCsv(csvThroughput, results, maxResultSize, new StatGetter() {
             @Override
-            public String getStat(Statistics cell) {
+            public String getStat(SimpleStatistics cell) {
                if (cell != null && cell.isNodeUp()) {
                   return ffcsv(cell.getThroughput());
                } else {
@@ -109,7 +109,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
          });
          generateMultiSlaveCsv(csvAvgRespTimes, results, maxResultSize, new StatGetter() {
             @Override
-            public String getStat(Statistics cell) {
+            public String getStat(SimpleStatistics cell) {
                if (cell != null && cell.isNodeUp()) {
                   return ffcsv(cell.getAvgResponseTime() / NS_IN_MS);
                } else {
@@ -119,7 +119,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
          });
          generateMultiSlaveCsv(csvNullGets, results, maxResultSize, new StatGetter() {
             @Override
-            public String getStat(Statistics cell) {
+            public String getStat(SimpleStatistics cell) {
                if (cell != null && cell.isNodeUp()) {
                   return Long.toString(cell.getRequestsNullGet());
                } else {
@@ -129,7 +129,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
          });
          generateMultiSlaveCsv(csvErrors, results, maxResultSize, new StatGetter() {
             @Override
-            public String getStat(Statistics cell) {
+            public String getStat(SimpleStatistics cell) {
                if (cell != null && cell.isNodeUp()) {
                   return Long.toString(cell.getNumErrors());
                } else {
@@ -141,19 +141,19 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
             generateMultiSlaveCsv(new File(subdir, "interval-time-begin.csv"), results, maxResultSize,
                   new StatGetter() {
                      @Override
-                     public String getStat(Statistics cell) {
+                     public String getStat(SimpleStatistics cell) {
                         return cell != null ? humanReadableTime(cell.getIntervalBeginTime()) : "";
                      }
                   });
             generateMultiSlaveCsv(new File(subdir, "interval-time-end.csv"), results, maxResultSize, new StatGetter() {
                @Override
-               public String getStat(Statistics cell) {
+               public String getStat(SimpleStatistics cell) {
                   return cell != null ? humanReadableTime(cell.getIntervalEndTime()) : "";
                }
             });
             generateMultiSlaveCsv(new File(subdir, "interval-duration.csv"), results, maxResultSize, new StatGetter() {
                @Override
-               public String getStat(Statistics cell) {
+               public String getStat(SimpleStatistics cell) {
                   return cell != null ? Long.toString(cell.getDuration()) : "";
                }
             });
@@ -225,7 +225,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
       return result;
    }
 
-   private void generateMultiSlaveCsv(File file, List<List<Statistics>> results, int maxResultSize, StatGetter getter)
+   private void generateMultiSlaveCsv(File file, List<List<SimpleStatistics>> results, int maxResultSize, StatGetter getter)
          throws Exception {
       PrintWriter w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
       w.print("Iteration");
@@ -239,7 +239,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
          w.print(i);
          for (int j = 0; j < results.size(); j++) {
             w.print(CSVChart.SEPARATOR);
-            List<Statistics> statList = results.get(j);
+            List<SimpleStatistics> statList = results.get(j);
             if (i < statList.size()) {
                w.print(getter.getStat(statList.get(i)));
             } else {
@@ -251,7 +251,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
       w.close();
    }
 
-   private void generateEntryCountCsv(File file, List<List<Statistics>> results, int maxResultSize) throws Exception {
+   private void generateEntryCountCsv(File file, List<List<SimpleStatistics>> results, int maxResultSize) throws Exception {
       PrintWriter w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
       w.print("Iteration");
       List<String> slaveNames = getSlaveNames();
@@ -262,13 +262,13 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
       w.print(CSVChart.SEPARATOR);
       w.print("MaxRelDev");
       w.println();
-      List<Statistics> row = new ArrayList<Statistics>();
+      List<SimpleStatistics> row = new ArrayList<SimpleStatistics>();
       for (int i = 0; i < maxResultSize; i++) {
          w.print(i);
          row.clear();
          for (int j = 0; j < results.size(); j++) {
             w.print(CSVChart.SEPARATOR);
-            List<Statistics> statList = results.get(j);
+            List<SimpleStatistics> statList = results.get(j);
             if (i < statList.size() && statList.get(i).getCacheSize() != -1 && statList.get(i).isNodeUp()) {
                w.print(statList.get(i).getCacheSize());
                row.add(statList.get(i));
@@ -277,13 +277,13 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
             }
          }
          w.print(CSVChart.SEPARATOR);
-         w.print(ffcsv(Statistics.getCacheSizeMaxRelativeDeviation(row)));
+         w.print(ffcsv(SimpleStatistics.getCacheSizeMaxRelativeDeviation(row)));
          w.println();
       }
       w.close();
    }
 
-   private void generateTotalsCsv(File file, List<List<Statistics>> results, int maxResultSize) throws Exception {
+   private void generateTotalsCsv(File file, List<List<SimpleStatistics>> results, int maxResultSize) throws Exception {
       PrintWriter w = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
       w.print("Iteration");
       w.print(CSVChart.SEPARATOR);
@@ -312,13 +312,13 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
       w.print(CSVChart.SEPARATOR);
       w.print("SlaveCount");
       w.println();
-      List<Statistics> row = new ArrayList<Statistics>();
-      List<Statistics> rowAll = new ArrayList<Statistics>();
+      List<SimpleStatistics> row = new ArrayList<SimpleStatistics>();
+      List<SimpleStatistics> rowAll = new ArrayList<SimpleStatistics>();
       for (int i = 0; i < maxResultSize; i++) {
          row.clear();
          rowAll.clear();
          for (int j = 0; j < results.size(); j++) {
-            List<Statistics> statList = results.get(j);
+            List<SimpleStatistics> statList = results.get(j);
             if (i < statList.size()) {
                if (statList.get(i).isNodeUp()) {
                   row.add(statList.get(i));
@@ -328,10 +328,10 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
          }
          w.print(i);
 
-         long beginMin = Statistics.getIntervalBeginMin(rowAll);
-         long beginMax = Statistics.getIntervalBeginMax(rowAll);
-         long endMin = Statistics.getIntervalEndMin(rowAll);
-         long endMax = Statistics.getIntervalEndMax(rowAll);
+         long beginMin = SimpleStatistics.getIntervalBeginMin(rowAll);
+         long beginMax = SimpleStatistics.getIntervalBeginMax(rowAll);
+         long endMin = SimpleStatistics.getIntervalEndMin(rowAll);
+         long endMax = SimpleStatistics.getIntervalEndMax(rowAll);
 
          w.print(CSVChart.SEPARATOR);
          w.print(humanReadableTime(beginMin));
@@ -342,19 +342,19 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
          w.print(CSVChart.SEPARATOR);
          w.print(endMax - endMin);
          w.print(CSVChart.SEPARATOR);
-         w.print(Statistics.getTotalThroughput(row));
+         w.print(SimpleStatistics.getTotalThroughput(row));
          w.print(CSVChart.SEPARATOR);
-         w.print(Statistics.getAvgThroughput(row));
+         w.print(SimpleStatistics.getAvgThroughput(row));
          w.print(CSVChart.SEPARATOR);
-         w.print(ffcsv(Statistics.getAvgRespTime(row)));
+         w.print(ffcsv(SimpleStatistics.getAvgRespTime(row)));
          w.print(CSVChart.SEPARATOR);
-         w.print(Statistics.getMaxRespTime(row));
+         w.print(SimpleStatistics.getMaxRespTime(row));
          w.print(CSVChart.SEPARATOR);
-         w.print(Statistics.getTotalCacheSize(row));
+         w.print(SimpleStatistics.getTotalCacheSize(row));
          w.print(CSVChart.SEPARATOR);
-         w.print(Statistics.getTotalErrors(row));
+         w.print(SimpleStatistics.getTotalErrors(row));
          w.print(CSVChart.SEPARATOR);
-         w.print(Statistics.getTotalNullRequests(row));
+         w.print(SimpleStatistics.getTotalNullRequests(row));
          w.print(CSVChart.SEPARATOR);
          w.print(row.size());
          w.println();
@@ -367,7 +367,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
    }
 
    private interface StatGetter {
-      String getStat(Statistics cell);
+      String getStat(SimpleStatistics cell);
    }
 
    private void generateTotalThroughputCsvFromThroughputCsv(String from, String to){

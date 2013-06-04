@@ -1,12 +1,12 @@
 package org.radargun.stressors;
 
 /**
- * // TODO: Document this
+ * Wrapper over SimpleStatistics that provides synchronized access and sealing.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  * @since 1/28/13
  */
-public class SynchronizedStatistics extends Statistics {
+public class SynchronizedStatistics extends SimpleStatistics {
 
    protected boolean snapshot = false;
 

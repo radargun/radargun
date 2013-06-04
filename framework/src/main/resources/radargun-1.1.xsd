@@ -376,6 +376,11 @@
                   <documentation>The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.</documentation>
                </annotation>
             </attribute>
+            <attribute name="generateHistogramRange" type="string">
+               <annotation>
+                  <documentation>Generate a range for histogram with operations statistics (for use in next stress tests). Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="keyGeneratorClass" type="string">
                <annotation>
                   <documentation>Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.</documentation>
@@ -449,6 +454,16 @@
             <attribute name="useAtomics" type="string">
                <annotation>
                   <documentation>If true, putIfAbsent and replace operations are used. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="useHistogramStatistics" type="string">
+               <annotation>
+                  <documentation>The test will produce operation statistics in histogram. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="useSimpleStatistics" type="string">
+               <annotation>
+                  <documentation>The test will produce operation statistics as average values. Default is true.</documentation>
                </annotation>
             </attribute>
             <attribute name="useTransactions" type="string">

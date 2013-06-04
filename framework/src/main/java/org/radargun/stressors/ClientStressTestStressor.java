@@ -82,7 +82,7 @@ public class ClientStressTestStressor extends StressTestStressor {
    }
 
    protected Map<String, Object> processResults(String iteration, int threads, Map<String, Object> results) {
-      Statistics stats = new Statistics();
+      Statistics stats = createStatistics();
       for (Stressor stressor : stressors) {
          stats.merge(stressor.getStats());
       }

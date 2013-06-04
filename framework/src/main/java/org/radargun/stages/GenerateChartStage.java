@@ -8,9 +8,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,6 +21,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.reporting.BarPlotGenerator;
 import org.radargun.reporting.ClusterReport;
 import org.radargun.reporting.HtmlReportGenerator;
 import org.radargun.reporting.LineReportGenerator;
@@ -53,8 +57,9 @@ public class GenerateChartStage extends AbstractMasterStage {
    private String fnPrefix;
 
    private Map<String, List<String>> filter = new HashMap<String, List<String>>();
-   protected Map<String, List<Pattern>> compiledFilters = null;
-   Map<String, ClusterReport> reports = new HashMap<String, ClusterReport>();
+   private Map<String, List<Pattern>> compiledFilters = null;
+   private Map<String, ClusterReport> reports = new HashMap<String, ClusterReport>();
+   private Map<String, HistogramData> histogramReports = new HashMap<String, HistogramData>();
 
    public boolean execute() throws Exception {
       File[] files = getFilteredFiles(new File(csvFilesDirectory));
@@ -88,6 +93,10 @@ public class GenerateChartStage extends AbstractMasterStage {
          LineReportGenerator.generate(entry.getValue(), reportDirectory, fnPrefix + "_" + operation);
          HtmlReportGenerator.generate(entry.getValue(), reportDirectory, fnPrefix + "_" + operation);
       }
+      for (Map.Entry<String, HistogramData> histogram : histogramReports.entrySet()) {
+         histogram.getValue().mergeConstantLogWidth();
+         BarPlotGenerator.generate(histogram.getKey(), histogram.getValue().ranges, histogram.getValue().counts, reportDirectory, fnPrefix + "_" + histogram.getKey() + "_histogram.png");
+      }
       return true;
    }
 
@@ -116,11 +125,15 @@ public class GenerateChartStage extends AbstractMasterStage {
       String header = br.readLine(); //this is the header
       String[] columns = header.split(",", -1);
       List<OperationColumns> operations = new ArrayList<OperationColumns>();
+      List<HistogramColumns> histograms = new ArrayList<HistogramColumns>();
       for (int i = 0; i < columns.length; ++i) {
          String column = columns[i];
          if (column.endsWith("_COUNT")) {
             String name = column.substring(0, column.length() - 6);
             operations.add(new OperationColumns(name, i, getIndexOf(name + "S_PER_SEC", columns)));
+         } else if (column.endsWith("_HISTOGRAM")) {
+            String name = column.substring(0, column.length() - 10);
+            histograms.add(new HistogramColumns(name, i));
          }
       }
       int slaveIndex = getIndexOf("SLAVE_INDEX", columns);
@@ -148,6 +161,22 @@ public class GenerateChartStage extends AbstractMasterStage {
             }
             s.sumRate += rate;
             s.counts.add(count);
+         }
+         for (HistogramColumns histogram : histograms) {
+            if (parts[histogram.index].isEmpty()) continue;
+            try {
+               String[] rangesAndCounts = parts[histogram.index].split("=");
+               String[] ranges = rangesAndCounts[0].split(":");
+               String[] counts = rangesAndCounts[1].split(":");
+               HistogramData hist = histogramReports.get(histogram.name);
+               if (hist == null) {
+                  hist = new HistogramData();
+                  histogramReports.put(histogram.name, hist);
+               }
+               hist.add(ranges, counts);
+            } catch (Exception e) {
+               throw new IllegalArgumentException(parts[histogram.index], e);
+            }
          }
       }
       br.close();
@@ -207,9 +236,130 @@ public class GenerateChartStage extends AbstractMasterStage {
       }
    }
 
+   private static class HistogramColumns {
+      public String name;
+      public int index;
+
+      private HistogramColumns(String name, int index) {
+         this.name = name;
+         this.index = index;
+      }
+   }
+
    private static class Stats {
       double sumRate = 0;
       List<Integer> counts = new ArrayList<Integer>();
+   }
+
+   private static class HistogramData {
+      public final static int BUCKETS = 32;
+
+      List<long[]> rangesList = new ArrayList<long[]>();
+      List<long[]> countsList = new ArrayList<long[]>();
+      private long[] ranges;
+      private long[] counts;
+
+      public void mergeConstantHeight() {
+         SortedSet<Long> rr = new TreeSet<Long>();
+         for (long[] ranges : rangesList) {
+            for (int i = 0; i < ranges.length; ++i) {
+               rr.add(ranges[i]);
+            }
+         }
+         long[] mergeRanges = new long[rr.size()];
+         {
+            int i = 0;
+            for (Long l : rr) mergeRanges[i++] = l;
+         }
+         long[] mergeCounts = new long[mergeRanges.length - 1];
+         distributeAll(mergeRanges, mergeCounts);
+         long[] cumulativeSum = new long[mergeCounts.length];
+         long sum = 0;
+         for (int i = 0; i < mergeCounts.length; ++i) {
+            sum += mergeCounts[i];
+            cumulativeSum[i] = sum;
+         }
+         long[] resultRanges = new long[BUCKETS + 1];
+         long[] resultCounts = new long[BUCKETS];
+         resultRanges[0] = mergeRanges[0];
+         int resultIndex = 0;
+         long prevSum = 0;
+         for (int i = 0; i < cumulativeSum.length && resultIndex < BUCKETS; ++i) {
+            if (cumulativeSum[i] >= (sum * resultIndex)/BUCKETS) {
+               resultRanges[resultIndex + 1] = mergeRanges[i + 1];
+               resultCounts[resultIndex] = cumulativeSum[i] - prevSum;
+               prevSum = cumulativeSum[i];
+               resultIndex++;
+            }
+         }
+         this.ranges = resultRanges;
+         this.counts = resultCounts;
+      }
+
+      private void distributeAll(long[] mergeRanges, long[] mergeCounts) {
+         Iterator<long[]> rangesIterator = rangesList.iterator();
+         Iterator<long[]> countsIterator = countsList.iterator();
+         while (rangesIterator.hasNext()) {
+            distribute(mergeRanges, mergeCounts, rangesIterator.next(), countsIterator.next());
+         }
+      }
+
+      public void mergeConstantLogWidth() {
+         long min = Long.MAX_VALUE, max = 0;
+         for (long[] ranges : rangesList) {
+            min = Math.min(min, ranges[0]);
+            max = Math.max(max, ranges[ranges.length - 1]);
+         }
+         final double base = Math.pow((double) max / (double) min, 1d/BUCKETS);
+         ranges = new long[BUCKETS + 1];
+         double limit = min;
+         for (int i = 0; i <= BUCKETS; ++i) {
+            this.ranges[i] = (long) limit;
+            limit *= base;
+         }
+         ranges[BUCKETS] = max;
+         counts = new long[BUCKETS];
+         distributeAll(ranges, counts);
+      }
+
+      private void distribute(long[] resultRanges, long[] resultCounts, long[] myRanges, long[] myCounts) {
+         int resultIndex = 1;
+         long myPrevLimit = 0;
+         long resultPrevLimit = 0;
+         while (resultRanges[resultIndex] < myRanges[0]) {
+            resultPrevLimit = resultRanges[resultIndex];
+            resultIndex++;
+         }
+         for (int i = 1; i < myRanges.length; ++i) {
+            long myInterval = myRanges[i] - myPrevLimit;
+            long myCount = myCounts[i - 1];
+            while (myInterval > 0 && resultRanges[resultIndex] <= myRanges[i]) {
+               long resultInterval = resultRanges[resultIndex] - resultPrevLimit;
+               long pushedCount = (resultInterval * myCount) / myInterval;
+               resultCounts[resultIndex - 1] += pushedCount;
+               myCount -= pushedCount;
+               myInterval -= resultInterval;
+               resultPrevLimit = resultRanges[resultIndex++];
+            }
+            if (myCount > 0) {
+               resultCounts[resultIndex - 1] += myCount;
+            }
+            myPrevLimit = myRanges[i];
+         }
+      }
+
+      public void add(String[] ranges, String[] counts) {
+         this.rangesList.add(toLongArray(ranges));
+         this.countsList.add(toLongArray(counts));
+      }
+
+      private long[] toLongArray(String[] strings) {
+         long[] arr = new long[strings.length];
+         for (int i = 0; i < strings.length; ++i) {
+            arr[i] = Long.parseLong(strings[i]);
+         }
+         return arr;
+      }
    }
 
    private int getIndexOf(String string, String[] parts) {

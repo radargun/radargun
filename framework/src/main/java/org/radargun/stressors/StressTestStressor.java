@@ -114,6 +114,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    private volatile boolean terminated = false;
    
    protected List<Stressor> stressors = new ArrayList<Stressor>(numThreads);
+   private Statistics statisticsPrototype = new SimpleStatistics();
 
    protected void init(CacheWrapper wrapper) {
       this.cacheWrapper = wrapper;
@@ -169,16 +170,19 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    }
 
    protected Map<String, Object> processResults() {
-      Statistics stats = new Statistics();
+      Statistics stats = createStatistics();
 
       for (Stressor stressor : stressors) {
          stats.merge(stressor.getStats());
       }
 
       Map<String, Object> results = stats.getResultsMap(numThreads, "");
-      log.info("Finished generating report. Nr of failed operations on this node is: " + stats.getNumErrors() +
-                     ". Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
+      log.info("Finished generating report. Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
       return results;
+   }
+
+   protected Statistics createStatistics() {
+      return statisticsPrototype.copy();
    }
 
    protected void executeOperations() throws InterruptedException {
@@ -266,6 +270,10 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       } else {
          return new FixedSetPerThreadOperationLogic();
       }
+   }
+
+   public void setStatisticsPrototype(Statistics statisticsPrototype) {
+      this.statisticsPrototype = statisticsPrototype;
    }
 
    protected interface OperationLogic {
@@ -539,7 +547,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                   break;
                }
                logic.init(bucketId, threadIndex);
-               stats = new Statistics();
+               stats = createStatistics();
                synchronizer.slavePhaseEnd();
                synchronizer.slavePhaseStart();
                log.trace("Starting thread: " + getName());

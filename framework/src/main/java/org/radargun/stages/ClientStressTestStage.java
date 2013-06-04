@@ -48,6 +48,7 @@ public class ClientStressTestStage extends StressTestStage {
       ClientStressTestStressor stressor = new ClientStressTestStressor();
       stressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
       stressor.setDurationMillis(duration);
+      setupStatistics(stressor);
       PropertyHelper.copyProperties(this, stressor);
       return stressor.stress(cacheWrapper);
    }
