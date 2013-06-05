@@ -99,7 +99,7 @@ public class AllRecordingStatistics implements Statistics {
    }
 
    @Override
-   public double getOperationsPerSecond() {
+   public double getOperationsPerSecond(boolean includeOverhead) {
       return 0;
    }
 

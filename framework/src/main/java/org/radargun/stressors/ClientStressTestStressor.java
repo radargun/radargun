@@ -75,7 +75,7 @@ public class ClientStressTestStressor extends StressTestStressor {
          }
          processResults(String.format("%03d", iteration), threads, results);
       }
-      results.put("REQ_PER_SEC", requestPerSec);
+      results.put(Statistics.REQ_PER_SEC, requestPerSec);
       
       finishOperations();      
       return results;
@@ -87,7 +87,7 @@ public class ClientStressTestStressor extends StressTestStressor {
          stats.merge(stressor.getStats());
       }
       results.putAll(stats.getResultsMap(threads, iteration + "."));
-      requestPerSec = Math.max(requestPerSec, stats.getOperationsPerSecond());
+      requestPerSec = Math.max(requestPerSec, stats.getOperationsPerSecond(true));
       return results;
    }
          

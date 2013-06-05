@@ -31,6 +31,7 @@ import java.util.Map;
 public interface Statistics extends Serializable {
    long NS_IN_SEC = 1000 * 1000 * 1000;
    long NS_IN_MS = 1000 * 1000;
+   String REQ_PER_SEC = "REQ_PER_SEC";
 
    void registerRequest(long responseTime, long txOverhead, Operation operation);
 
@@ -44,5 +45,5 @@ public interface Statistics extends Serializable {
 
    Map<String, Object> getResultsMap(int threads, String prefix);
 
-   double getOperationsPerSecond();
+   double getOperationsPerSecond(boolean includeOverhead);
 }

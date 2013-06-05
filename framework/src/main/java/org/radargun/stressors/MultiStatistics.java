@@ -79,7 +79,7 @@ public class MultiStatistics implements Statistics {
    }
 
    @Override
-   public double getOperationsPerSecond() {
-      return simple.getOperationsPerSecond();
+   public double getOperationsPerSecond(boolean includeOverhead) {
+      return simple.getOperationsPerSecond(includeOverhead);
    }
 }

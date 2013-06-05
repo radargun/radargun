@@ -1,3 +1,25 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2013, Red Hat Middleware LLC, and individual contributors
+ * as indicated by the @author tags. See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+
 package org.radargun.stressors;
 
 import java.io.Serializable;
@@ -14,14 +36,6 @@ import java.util.Map;
 * @since 1/3/13
 */
 public class SimpleStatistics implements Statistics {
-
-   protected boolean nodeUp = true;
-
-   public double getOperationsPerSecond() {
-      long respSum = getResponseTimeSum();
-      if (respSum == 0) return 0;
-      return (double) (NS_IN_SEC * getNumberOfRequests()) / (double) respSum;
-   }
 
    protected static class OperationStats implements Serializable {
       public long requests;
@@ -63,6 +77,7 @@ public class SimpleStatistics implements Statistics {
 
    protected long intervalBeginTime;
    protected long intervalEndTime;
+   protected boolean nodeUp = true;
 
    protected int cacheSize;
 
@@ -224,6 +239,16 @@ public class SimpleStatistics implements Statistics {
       }
    }
 
+   @Override
+   public double getOperationsPerSecond(boolean includeOverhead) {
+      long respSum = getResponseTimeSum();
+      if (includeOverhead) {
+         respSum += getTxOverheadSum();
+      }
+      if (respSum == 0) return 0;
+      return (double) (NS_IN_SEC * getNumberOfRequests()) / (double) respSum;
+   }
+
    /* In nanoseconds */
    public long getDuration() {
       return (intervalEndTime - intervalBeginTime) * NS_IN_MS;
@@ -380,7 +405,8 @@ public class SimpleStatistics implements Statistics {
       Map<String, Object> results = new LinkedHashMap<String, Object>();
       results.put("DURATION", getResponseTimeSum() + getTxOverheadSum());
       results.put("FAILURES", getNumErrors());
-      results.put("REQ_PER_SEC", numThreads * getOperationsPerSecond());
+      results.put("REQ_PER_SEC_NET", numThreads * getOperationsPerSecond(false));
+      results.put(REQ_PER_SEC, numThreads * getOperationsPerSecond(true));
       Operation[] operations = Operation.values();
       for (int i = 0; i < operations.length; ++i) {
          OperationStats os = operationStats[i];
