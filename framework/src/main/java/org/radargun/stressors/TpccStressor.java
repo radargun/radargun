@@ -230,7 +230,7 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
       Map<String, Object> results = new LinkedHashMap<String, Object>();
       results.put("DURATION (msec)", (duration / this.numOfThreads));
       double requestPerSec = (reads + writes) / ((duration / numOfThreads) / 1000.0);
-      results.put("REQ_PER_SEC", requestPerSec);
+      results.put(Statistics.REQ_PER_SEC, requestPerSec);
 
       double wrtPerSec = 0;
       double rdPerSec = 0;

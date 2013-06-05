@@ -15,6 +15,7 @@ import org.radargun.stressors.AllRecordingStatistics;
 import org.radargun.stressors.CacheSpecificKeyGenStressor;
 import org.radargun.stressors.HistogramStatistics;
 import org.radargun.stressors.MultiStatistics;
+import org.radargun.stressors.Statistics;
 import org.radargun.stressors.StressTestStressor;
 import org.radargun.stressors.StringKeyGenerator;
 
@@ -197,8 +198,8 @@ public class StressTestStage extends AbstractDistStage {
          Map<String, Object> benchResult = (Map<String, Object>) wAck.getPayload();
          if (benchResult != null) {
             results.put(ack.getSlaveIndex(), benchResult);
-            Object reqPerSec = benchResult.get("REQ_PER_SEC");
-            Object sizeInfo = benchResult.remove("SIZE_INFO");
+            Object reqPerSec = benchResult.get(Statistics.REQ_PER_SEC);
+            Object sizeInfo = benchResult.remove(SIZE_INFO);
             if (reqPerSec != null) {
                log.info("Received " + sizeInfo);
                log.info("Slave #" + ack.getSlaveIndex() + ": " + numberFormat(parseDouble(reqPerSec.toString())) + " requests per second.");
