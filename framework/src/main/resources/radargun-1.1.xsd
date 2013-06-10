@@ -975,6 +975,21 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>The name of the bucket where keys are written. The default is null</documentation>
                </annotation>
             </attribute>
+            <attribute name="limitWordCount" type="string">
+               <annotation>
+                  <documentation>If true, then the random word generator selects a word from a pre-defined list. The default is false</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="maxWordByteLength" type="string">
+               <annotation>
+                  <documentation>The maximum number of bytes allowed in a word. The default is 20.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="maxWordCount" type="string">
+               <annotation>
+                  <documentation>The maximum number of words to generate in the pre-defined list of words used with limitWordCount.The default is 100.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="printWriteStatistics" type="string">
                <annotation>
                   <documentation>If true, then the time for each put operation is written to the logs. The default is false</documentation>
@@ -988,6 +1003,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="randomSeed" type="string">
                <annotation>
                   <documentation>The seed to use for the java.util.Random object. The default is the return value of System.nanoTime().</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="shareWords" type="string">
+               <annotation>
+                  <documentation>If false, then each node in the cluster generates a list of maxWordCount words. If true, then each node in the cluster shares the same list of words. The default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="stringData" type="string">
