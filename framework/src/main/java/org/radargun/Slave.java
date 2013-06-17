@@ -196,7 +196,7 @@ public class Slave {
       }
    }
 
-   public static void main(String[] args) throws Exception {
+   public static void main(String[] args) {
       String masterHost = null;
       int masterPort = Master.DEFAULT_PORT;
       int slaveIndex = -1;
@@ -227,7 +227,12 @@ public class Slave {
          printUsageAndExit();
       }
       Slave slave = new Slave(masterHost, masterPort, slaveIndex);
-      slave.start();
+      try {
+         slave.start();
+      } catch (Exception e) {
+         e.printStackTrace();
+         ShutDownHook.exit(10);
+      }
    }
 
    private static void printUsageAndExit() {
