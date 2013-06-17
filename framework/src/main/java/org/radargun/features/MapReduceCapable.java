@@ -19,6 +19,7 @@
 package org.radargun.features;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.radargun.CacheWrapper;
 import org.radargun.utils.ClassLoadHelper;
@@ -46,9 +47,12 @@ public interface MapReduceCapable<KOut, VOut, R> extends CacheWrapper {
     *           implementation. The implementation must have a no argument constructor.
     * 
     * @return the collated result
+    * 
+    * @throws an
+    *            exception if an error occurs while executing the task
     */
    public R executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn,
-         String collatorFqn);
+         String collatorFqn) throws Exception;
 
    /**
     * 
@@ -67,8 +71,12 @@ public interface MapReduceCapable<KOut, VOut, R> extends CacheWrapper {
     *           implementation. The implementation must have a no argument constructor.
     * 
     * @return a Map where each key is an output key and value is reduced value for that output key
+    * 
+    * @throws an
+    *            exception if an error occurs while executing the task
     */
-   public Map<KOut, VOut> executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn);
+   public Map<KOut, VOut> executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn)
+         throws Exception;
 
    /**
     * 
@@ -94,14 +102,31 @@ public interface MapReduceCapable<KOut, VOut, R> extends CacheWrapper {
 
    /**
     * 
-    * This method allows the caller to provide parameters to the Mapper, Reducer, and Collator
-    * objects used in a MapReduce job. Each Map contains keys for each public method name, and values
-    * for each single String parameter for the method. If no parameters are needed, these can be
-    * set to an empty Map.
+    * Set a timeout for the communication between the nodes during a Map Reduce task. Setting this
+    * value to zero or less than zero means to wait forever.
     * 
-    * @param mapperParameters parameters for the Mapper object
-    * @param reducerParameters parameters for the Reducer object
-    * @param collatorParameters parameters for the Collator object
+    * @param timeout
+    *           the value of the timeout
+    * @param unit
+    *           the unit of the timeout value
+    * @return <code>true</code> if the CacheWrapper supports setting the timeout, else
+    *         <code>false</code>
+    */
+   public boolean setTimeout(long timeout, TimeUnit unit);
+
+   /**
+    * 
+    * This method allows the caller to provide parameters to the Mapper, Reducer, and Collator
+    * objects used in a MapReduce job. Each Map contains keys for each public method name, and
+    * values for each single String parameter for the method. If no parameters are needed, these can
+    * be set to an empty Map.
+    * 
+    * @param mapperParameters
+    *           parameters for the Mapper object
+    * @param reducerParameters
+    *           parameters for the Reducer object
+    * @param collatorParameters
+    *           parameters for the Collator object
     */
    public void setParameters(Map<String, String> mapperParameters, Map<String, String> reducerParameters,
          Map<String, String> collatorParameters);
