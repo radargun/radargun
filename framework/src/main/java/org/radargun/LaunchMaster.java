@@ -15,7 +15,7 @@ public class LaunchMaster {
 
    private static Log log = LogFactory.getLog(LaunchMaster.class);
 
-   public static void main(String[] args) throws Exception {
+   public static void main(String[] args) {
 
       File currentDir = new File(".");
       String message = "Running in directory: " + currentDir.getAbsolutePath();
@@ -25,10 +25,15 @@ public class LaunchMaster {
 
       out("Configuration file is: " + config);
 
-      ConfigParser configParser = ConfigParser.getConfigParser();
-      MasterConfig masterConfig = configParser.parseConfig(config);
-      Master server = new Master(masterConfig);
-      server.start();
+      try {
+         ConfigParser configParser = ConfigParser.getConfigParser();
+         MasterConfig masterConfig = configParser.parseConfig(config);
+         Master server = new Master(masterConfig);
+         server.start();
+      } catch (Exception e) {
+         e.printStackTrace();
+         ShutDownHook.exit(10);
+      }
    }
 
    private static String getConfigOrExit(String[] args) {
