@@ -888,6 +888,21 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Reducer Object. The method must be public and take a String parameter. The default is null.</documentation>
                </annotation>
             </attribute>
+            <attribute name="storeResultInCache" type="string">
+               <annotation>
+                  <documentation>Boolean value that determines if the final results of the MapReduceTask are stored in the cache at key MAPREDUCE_RESULT_KEY. Enabling this feature will require extra DRAM usage. The default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="timeout" type="string">
+               <annotation>
+                  <documentation>A tiemout value for the remote communication that happens during a Map/Reduce task. The default is zero which means to wait forever.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="unit" type="string">
+               <annotation>
+                  <documentation>The java.util.concurrent.TimeUnit to use with the timeout property. The default is TimeUnit.MILLISECONDS</documentation>
+               </annotation>
+            </attribute>
             <attribute name="useIntermediateSharedCache" type="string">
                <annotation>
                   <documentation>Boolean value that determines if the intermediate results of the MapReduceTask are shared. The default is true.</documentation>

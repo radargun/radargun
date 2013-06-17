@@ -19,6 +19,7 @@
 package org.radargun.cachewrappers;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
 import org.infinispan.distexec.mapreduce.Collator;
@@ -34,6 +35,8 @@ public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends Infinis
 
    protected boolean distributeReducePhase;
    protected boolean useIntermediateSharedCache;
+   protected long timeout = 0;
+   protected TimeUnit unit = TimeUnit.MILLISECONDS;
 
    protected Map<String, String> mapperParameters;
    protected Map<String, String> reducerParameters;
@@ -120,6 +123,11 @@ public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends Infinis
 
    @Override
    public boolean setUseIntermediateSharedCache(boolean useIntermediateSharedCache) {
+      return false;
+   }
+
+   @Override
+   public boolean setTimeout(long timeout, TimeUnit unit) {
       return false;
    }
 
