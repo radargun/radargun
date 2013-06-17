@@ -32,6 +32,7 @@ import org.radargun.state.SlaveState;
 import org.radargun.utils.Utils;
 
 /**
+ * <p>
  * Generates random data to fill the cache. The seed used to instantiate the java.util.Random object
  * can be specified, so that the same data is generated between runs. To specify generating a fixed
  * amount of data in the cache, specify the valueSize and valueCount parameters. The number of
@@ -39,12 +40,20 @@ import org.radargun.utils.Utils;
  * data based on the amount of available RAM, specify the valueSize and ramPercentage parameters.
  * The amount of free memory on each node will be calculated and then used to determine the number
  * of values that are written by the node.
+ * </p>
+ * 
+ * <p>
+ * To add a precise amount of data to the cache, you need to be aware of the storage overhead. For a
+ * byte array, each value needs an additional 152 bytes. When <code>stringData</code> is enabled,
+ * the values will require 2 * String length bytes + the additional 152 bytes. Keep these values in
+ * mind when calculating the <code>valueCount</code>.
+ * </p>
  * 
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 @Stage(doc = "Generates random data to fill the cache.")
 public class RandomDataStage extends AbstractDistStage {
-   private long nodeCount;
+   private long nodePutCount;
 
    @Property(doc = "The seed to use for the java.util.Random object. "
          + "The default is the return value of System.nanoTime().")
@@ -57,7 +66,7 @@ public class RandomDataStage extends AbstractDistStage {
          + "Either valueCount or ramPercentageDataSize should be specified, but not both.")
    private long valueCount = -1;
 
-   @Property(doc = "A double that represents the percentage of available RAM "
+   @Property(doc = "A double that represents the percentage of the total Java heap "
          + "used to determine the amount of data to put into the cache."
          + "Either valueCount or ramPercentageDataSize should be specified, but not both.")
    private double ramPercentage = -1;
@@ -92,6 +101,17 @@ public class RandomDataStage extends AbstractDistStage {
    private String[][] words = null;
 
    private static String SHARED_WORDS_KEY = "random_words";
+
+   /*
+    * From http://infinispan.blogspot.com/2013/01/infinispan-memory-overhead.html
+    */
+   private int libraryModeValueByteOverhead = 152;
+
+   Runtime runtime = null;
+
+   private long targetMemoryUse;
+
+   private int byteOverhead;
 
    @Override
    public void initOnMaster(MasterState masterState, int slaveIndex) {
@@ -140,7 +160,7 @@ public class RandomDataStage extends AbstractDistStage {
       words = new String[maxWordLength][wordsPerLength];
       for (int i = 1; i <= maxWordLength; i++) {
          for (int j = 0; j < wordsPerLength; j++) {
-            words[i - 1][j] = new String(generateRandomUniqueWord(i, false));
+            words[i - 1][j] = new String(generateRandomUniqueWord(i, false)).intern();
          }
       }
    }
@@ -188,21 +208,32 @@ public class RandomDataStage extends AbstractDistStage {
          return result;
       }
 
+      byteOverhead = valueSize + libraryModeValueByteOverhead;
+      /*
+       * String data is twice the size of the byte array
+       */
+      if (stringData) {
+         byteOverhead = (valueSize * 2) + libraryModeValueByteOverhead;
+      }
+      runtime = Runtime.getRuntime();
       if (ramPercentage > 0) {
          System.gc();
-         nodeCount = (long) Math.ceil(Runtime.getRuntime().freeMemory() * ramPercentage / valueSize);
+         targetMemoryUse = (long) (runtime.maxMemory() * ramPercentage);
+         log.trace("targetMemoryUse: " + Utils.kbString(targetMemoryUse));
+
+         nodePutCount = (long) Math.ceil(targetMemoryUse / byteOverhead);
       } else {
-         nodeCount = (long) Math.ceil(valueCount / getActiveSlaveCount());
+         nodePutCount = (long) Math.ceil(valueCount / getActiveSlaveCount());
          /*
           * Add one to the nodeCount on each slave with an index less than the remainder so that the
           * correct number of values are written to the cache
           */
          if ((valueCount % getActiveSlaveCount() != 0) && getSlaveIndex() < (valueCount % getActiveSlaveCount())) {
-            nodeCount++;
+            nodePutCount++;
          }
       }
 
-      long putCount = nodeCount;
+      long putCount = nodePutCount;
       long bytesWritten = 0;
       try {
          byte[] buffer = new byte[valueSize];
@@ -217,12 +248,13 @@ public class RandomDataStage extends AbstractDistStage {
 
             long start = System.nanoTime();
             if (stringData) {
-               String cacheData = new String(buffer);
+               String cacheData = new String(buffer).intern();
                start = System.nanoTime();
                cacheWrapper.put(bucket, key, cacheData);
+               bytesWritten += (buffer.length * 2);
             } else {
                cacheWrapper.put(bucket, key, buffer);
-
+               bytesWritten += buffer.length;
             }
             if (printWriteStatistics) {
                log.info("Put on slave-" + getSlaveIndex() + " took "
@@ -230,9 +262,11 @@ public class RandomDataStage extends AbstractDistStage {
             }
 
             putCount--;
-            bytesWritten += buffer.length;
          }
-         result.setPayload(new long[] { nodeCount, bytesWritten });
+         System.gc();
+         log.info("Memory - free: " + Utils.kbString(runtime.freeMemory()) + " - max: "
+               + Utils.kbString(runtime.maxMemory()) + "- total: " + Utils.kbString(runtime.totalMemory()));
+         result.setPayload(new long[] { nodePutCount, bytesWritten, targetMemoryUse });
       } catch (Exception e) {
          log.fatal("An exception occurred", e);
          result.setError(true);
@@ -322,7 +356,7 @@ public class RandomDataStage extends AbstractDistStage {
       StringBuilder data = new StringBuilder();
 
       int byteLength = maxBytes;
-      if (randomLength) {
+      if (randomLength && maxBytes - 1 > 0) {
          byteLength = random.nextInt(maxBytes - 1) + 1;
       }
 
@@ -342,23 +376,43 @@ public class RandomDataStage extends AbstractDistStage {
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
       super.processAckOnMaster(acks, masterState);
       log.info("--------------------");
+      if (ramPercentage > 0) {
+         if (stringData) {
+            log.info("Filled cache with String objects totaling " + (ramPercentage * 100) + "% of the Java heap");
+         } else {
+            log.info("Filled cache with byte arrays totaling " + (ramPercentage * 100) + "% of the Java heap");
+         }
+      } else {
+         if (stringData) {
+            log.info("Filled cache with " + Utils.kbString((valueSize * 2) * valueCount) + " of String objects");
+         } else {
+            log.info("Filled cache with " + Utils.kbString(valueSize * valueCount) + " of byte arrays");
+         }
+      }
       long totalValues = 0;
       long totalBytes = 0;
       for (DistStageAck ack : acks) {
          long[] result = (long[]) ((DefaultDistStageAck) ack).getPayload();
-         log.info("Slave " + ((DefaultDistStageAck) ack).getSlaveIndex() + " wrote " + result[0]
-               + " values to the cache with a total size of " + result[1] + " bytes");
-         totalValues += result[0];
-         totalBytes += result[1];
+         if (result != null) {
+            totalValues += result[0];
+            totalBytes += result[1];
+            String logInfo = "Slave " + ((DefaultDistStageAck) ack).getSlaveIndex() + " wrote " + result[0]
+                  + " values to the cache with a total size of " + Utils.kbString(result[1]);
+            if (ramPercentage > 0) {
+               logInfo += "; targetMemoryUse = " + Utils.kbString(result[2]);
+            }
+            log.info(logInfo);
+         } else {
+            log.info("No results retrieved from Slave" + ((DefaultDistStageAck) ack).getSlaveIndex());
+         }
       }
-      log.info("The cache contains " + totalValues + " values with a total size of " + totalBytes + " bytes");
+      log.info("The cache contains " + totalValues + " values with a total size of " + Utils.kbString(totalBytes));
       if (limitWordCount) {
          int totalWordCount = maxWordCount;
          if (!shareWords) {
             totalWordCount = maxWordCount * getActiveSlaveCount();
          }
          log.info(totalWordCount + " words were generated with a maximum length of " + maxWordByteLength + " bytes");
-
       }
       log.info("--------------------");
       return true;
