@@ -18,7 +18,9 @@
  */
 package org.radargun.stages;
 
-import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -45,8 +47,8 @@ import org.radargun.utils.Utils;
  * <p>
  * To add a precise amount of data to the cache, you need to be aware of the storage overhead. For a
  * byte array, each value needs an additional 152 bytes. When <code>stringData</code> is enabled,
- * the values will require 2 * String length bytes + the additional 152 bytes. Keep these values in
- * mind when calculating the <code>valueCount</code>.
+ * the values will require 2 * <code>valueSize</code> bytes + the additional 152 bytes. Keep these
+ * values in mind when calculating the <code>valueCount</code>.
  * </p>
  * 
  * @author Alan Field &lt;afield@redhat.com&gt;
@@ -56,8 +58,8 @@ public class RandomDataStage extends AbstractDistStage {
    private long nodePutCount;
 
    @Property(doc = "The seed to use for the java.util.Random object. "
-         + "The default is the return value of System.nanoTime().")
-   private long randomSeed = System.nanoTime();
+         + "The default is the return value of Calendar.getInstance().getWeekYear().")
+   private long randomSeed = Calendar.getInstance().getWeekYear();
 
    @Property(doc = "The size of the values to put into the cache. The default size is 1MB (1024 * 1024).")
    private int valueSize = 1024 * 1024;
@@ -90,7 +92,7 @@ public class RandomDataStage extends AbstractDistStage {
    private int maxWordCount = 100;
 
    @Property(doc = "The maximum number of bytes allowed in a word. The default is 20.")
-   private int maxWordByteLength = 20;
+   private int maxWordLength = 20;
 
    @Property(doc = "If false, then each node in the cluster generates a list of maxWordCount words. "
          + "If true, then each node in the cluster shares the same list of words. The default is false.")
@@ -100,49 +102,15 @@ public class RandomDataStage extends AbstractDistStage {
 
    private String[][] words = null;
 
-   private static String SHARED_WORDS_KEY = "random_words";
-
    /*
     * From http://infinispan.blogspot.com/2013/01/infinispan-memory-overhead.html
     */
-   private int libraryModeValueByteOverhead = 152;
+   public final static int LIBRARY_MODE_VALUE_BYTE_OVERHEAD = 152;
 
    Runtime runtime = null;
 
    private long targetMemoryUse;
-
-   private int byteOverhead;
-
-   @Override
-   public void initOnMaster(MasterState masterState, int slaveIndex) {
-      super.initOnMaster(masterState, slaveIndex);
-      /*
-       * Add the slaveIndex to the seed to guarantee that each node generates a different word list
-       */
-      random = new Random(randomSeed + slaveIndex);
-
-      if (shareWords && limitWordCount) {
-         /*
-          * Generate the word list and put it in the masterState. Then wait for the other nodes to
-          * retrieve the word list.
-          */
-         if (slaveIndex == 0) {
-            fillWordArray(maxWordCount, maxWordByteLength);
-            masterState.put(SHARED_WORDS_KEY, words);
-         } else {
-            int sleepCount = getActiveSlaveCount();
-            while (masterState.get(SHARED_WORDS_KEY) == null && sleepCount > 0) {
-               try {
-                  Thread.sleep(5000);
-               } catch (InterruptedException e) {
-                  //Eat this
-               }
-               sleepCount--;
-            }
-            words = (String[][]) masterState.get(SHARED_WORDS_KEY);
-         }
-      }
-   }
+   private int newlinePunctuationModulo = 10;
 
    /**
     * 
@@ -160,17 +128,30 @@ public class RandomDataStage extends AbstractDistStage {
       words = new String[maxWordLength][wordsPerLength];
       for (int i = 1; i <= maxWordLength; i++) {
          for (int j = 0; j < wordsPerLength; j++) {
+            /*
+             * Intern the string to reduce memory usage since these words will be used multiple
+             * times
+             */
             words[i - 1][j] = new String(generateRandomUniqueWord(i, false)).intern();
          }
       }
+      log.trace("Slave" + this.getSlaveIndex() + " words array = " + Arrays.deepToString(words));
    }
 
    @Override
    public void initOnSlave(SlaveState slaveState) {
       super.initOnSlave(slaveState);
-      if (!shareWords && limitWordCount) {
-         fillWordArray(maxWordCount, maxWordByteLength);
+
+      if (shareWords && limitWordCount) {
+         random = new Random(randomSeed);
+      } else {
+         /*
+          * Add the slaveIndex to the seed to guarantee that each node generates a different word
+          * list
+          */
+         random = new Random(randomSeed + slaveIndex);
       }
+      fillWordArray(maxWordCount, maxWordLength);
    }
 
    @Override
@@ -208,20 +189,23 @@ public class RandomDataStage extends AbstractDistStage {
          return result;
       }
 
-      byteOverhead = valueSize + libraryModeValueByteOverhead;
+      runtime = Runtime.getRuntime();
+      int valueSizeWithOverhead = LIBRARY_MODE_VALUE_BYTE_OVERHEAD;
       /*
-       * String data is twice the size of the byte array
+       * String data is twice the size of a byte array
        */
       if (stringData) {
-         byteOverhead = (valueSize * 2) + libraryModeValueByteOverhead;
+         valueSizeWithOverhead += (valueSize * 2);
+      } else {
+         valueSizeWithOverhead += valueSize;
       }
-      runtime = Runtime.getRuntime();
+
       if (ramPercentage > 0) {
          System.gc();
          targetMemoryUse = (long) (runtime.maxMemory() * ramPercentage);
          log.trace("targetMemoryUse: " + Utils.kbString(targetMemoryUse));
 
-         nodePutCount = (long) Math.ceil(targetMemoryUse / byteOverhead);
+         nodePutCount = (long) Math.ceil(targetMemoryUse / valueSizeWithOverhead);
       } else {
          nodePutCount = (long) Math.ceil(valueCount / getActiveSlaveCount());
          /*
@@ -244,20 +228,20 @@ public class RandomDataStage extends AbstractDistStage {
                log.info(putCount + ": Writing " + valueSize + " bytes to cache key: " + key);
             }
 
-            buffer = generateRandomData(valueSize, stringData);
-
-            long start = System.nanoTime();
+            long start;
             if (stringData) {
-               String cacheData = new String(buffer).intern();
+               String cacheData = generateRandomStringData(valueSize);
+               bytesWritten += (valueSize * 2);
                start = System.nanoTime();
                cacheWrapper.put(bucket, key, cacheData);
-               bytesWritten += (buffer.length * 2);
             } else {
+               random.nextBytes(buffer);
+               bytesWritten += valueSize;
+               start = System.nanoTime();
                cacheWrapper.put(bucket, key, buffer);
-               bytesWritten += buffer.length;
             }
             if (printWriteStatistics) {
-               log.info("Put on slave-" + getSlaveIndex() + " took "
+               log.info("Put on slave" + getSlaveIndex() + " took "
                      + Utils.prettyPrintTime(System.nanoTime() - start, TimeUnit.NANOSECONDS));
             }
 
@@ -276,88 +260,83 @@ public class RandomDataStage extends AbstractDistStage {
       return result;
    }
 
-   private byte[] generateRandomData(int dataSize, boolean useChars) {
-      byte[] buffer = null;
-      if (useChars) {
-         /*
-          * Generate a random string of "words" using random single and multi-byte characters that
-          * are separated by punctuation marks and whitespace.
-          */
-         String punctuationChars = "!,.;?";
+   private String generateRandomStringData(int dataSize) {
+      /*
+       * Generate a random string of "words" using random single and multi-byte characters that are
+       * separated by punctuation marks and whitespace.
+       */
+      String punctuationChars = "!,.;?";
+      int wordLength = maxWordLength;
 
-         ByteBuffer data = ByteBuffer.allocate(dataSize);
-         while (data.remaining() > 0) {
-            byte[] word;
-            if (limitWordCount) {
-               word = generateRandomWord(maxWordByteLength);
-            } else {
-               word = generateRandomUniqueWord(maxWordByteLength, true);
-            }
-            data = data.put(word);
+      CharBuffer data = CharBuffer.allocate(dataSize);
+      while (data.remaining() > 0) {
+         String word;
+         if (limitWordCount) {
+            word = pickRandomWord(wordLength);
+         } else {
+            word = generateRandomUniqueWord(wordLength, true);
+         }
+         data = data.put(word);
 
-            if (data.remaining() >= 2 && random.nextInt() % 5 == 0 && random.nextBoolean()) {
-               data.put((byte) punctuationChars.charAt(random.nextInt(punctuationChars.length() - 1)));
-               data.put((byte) '\n');
-            } else {
-               if (data.remaining() >= 1) {
-                  data.put((byte) ' ');
-               }
-            }
-
-            if (data.remaining() < maxWordByteLength) {
-               maxWordByteLength = data.remaining();
+         if (data.remaining() >= 2 && random.nextInt() % newlinePunctuationModulo == 0) {
+            data.put(punctuationChars.charAt(random.nextInt(punctuationChars.length() - 1)));
+            data.put('\n');
+         } else {
+            if (data.remaining() >= 1) {
+               data.put(' ');
             }
          }
 
-         buffer = data.array();
-      } else {
-         buffer = new byte[dataSize];
-         random.nextBytes(buffer);
+         if (data.remaining() < wordLength) {
+            wordLength = data.remaining();
+         }
       }
-      return buffer;
+
+      return data.toString();
    }
 
    /**
     * 
     * Randomly selects a random length word based on the words array defined above
     * 
-    * @param maxBytes
-    *           the maximum length in bytes of the word
-    * @return the word as an array of bytes which may be less than maxBytes
+    * @param maxLength
+    *           the maximum length of the word
+    * @return the word as a String whose length may be less than <code>maxLength</code>
     */
-   private byte[] generateRandomWord(int maxBytes) {
-      byte[] result = new byte[0];
+   private String pickRandomWord(int maxLength) {
+      String word = "";
+      String[] pickWords = {};
+      int pick = 0;
       // Random.nextInt(0) generates an error
-      if (maxBytes - 1 > 0) {
-         int byteLength = random.nextInt(maxBytes - 1) + 1;
-         String[] pickWords = words[byteLength - 1];
-         int pick = 0;
+      if (maxLength - 1 > 0) {
+         int byteLength = random.nextInt(maxLength - 1) + 1;
+         pickWords = words[byteLength - 1];
          if (pickWords.length - 1 > 0) {
             pick = random.nextInt(pickWords.length - 1);
+            word = pickWords[pick];
          }
-         result = pickWords[pick].getBytes();
       }
-      return result;
+      return word;
    }
 
    /**
     * 
     * Generates a random length "word" by randomly selecting single and multi-byte characters
     * 
-    * @param maxBytes
-    *           the maximum length in bytes of the word
+    * @param maxLength
+    *           the maximum length of the word
     * @param randomLength
-    *           if <code>true</code>, use a random length with a max value of <code>maxBytes</code>
-    * @return the word as an array of bytes which may be less than maxBytes
+    *           if <code>true</code>, use a random length with a max value of <code>maxLength</code>
+    * @return the word as a String whose length may be less than <code>maxLength</code>
     */
-   private byte[] generateRandomUniqueWord(int maxBytes, boolean randomLength) {
+   private String generateRandomUniqueWord(int maxLength, boolean randomLength) {
       String singleByteChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
       String multiByteChars = "ÅÄÇÉÑÖÕÜàäâáãçëèêéîïìíñôöòóüûùúÿ";
       StringBuilder data = new StringBuilder();
 
-      int byteLength = maxBytes;
-      if (randomLength && maxBytes - 1 > 0) {
-         byteLength = random.nextInt(maxBytes - 1) + 1;
+      int byteLength = maxLength;
+      if (randomLength && maxLength - 1 > 0) {
+         byteLength = random.nextInt(maxLength - 1) + 1;
       }
 
       for (int i = byteLength; i > 0; i--) {
@@ -365,11 +344,10 @@ public class RandomDataStage extends AbstractDistStage {
             data.append(singleByteChars.charAt(random.nextInt(singleByteChars.length() - 1)));
          } else {
             data.append(multiByteChars.charAt(random.nextInt(multiByteChars.length() - 1)));
-            i--;
          }
       }
 
-      return data.toString().getBytes();
+      return data.toString();
    }
 
    @Override
@@ -412,7 +390,7 @@ public class RandomDataStage extends AbstractDistStage {
          if (!shareWords) {
             totalWordCount = maxWordCount * getActiveSlaveCount();
          }
-         log.info(totalWordCount + " words were generated with a maximum length of " + maxWordByteLength + " bytes");
+         log.info(totalWordCount + " words were generated with a maximum length of " + maxWordLength + " bytes");
       }
       log.info("--------------------");
       return true;
