@@ -91,7 +91,7 @@ public class RandomDataStage extends AbstractDistStage {
          + "The default is 100.")
    private int maxWordCount = 100;
 
-   @Property(doc = "The maximum number of bytes allowed in a word. The default is 20.")
+   @Property(doc = "The maximum number of characters allowed in a word. The default is 20.")
    private int maxWordLength = 20;
 
    @Property(doc = "If false, then each node in the cluster generates a list of maxWordCount words. "
@@ -115,13 +115,14 @@ public class RandomDataStage extends AbstractDistStage {
    /**
     * 
     * Fills a multi-dimensional array with randomly generated words. The first dimension of the
-    * array is based on the length of the word in bytes, and runs from 1 to maxWordLength. Dividing
-    * the wordCount by maxWordLength determines how many words of each length are generated.
+    * array is based on the length of the word in characters, and runs from 1 to maxWordLength.
+    * Dividing the wordCount by maxWordLength determines how many words of each length are
+    * generated.
     * 
     * @param wordCount
     *           the total number of words to generate
     * @param maxWordLength
-    *           the maximum size in bytes for a word
+    *           the maximum size in characters for a word
     */
    private void fillWordArray(int wordCount, int maxWordLength) {
       int wordsPerLength = wordCount / maxWordLength;
@@ -224,17 +225,21 @@ public class RandomDataStage extends AbstractDistStage {
          while (putCount > 0) {
             String key = Integer.toString(getSlaveIndex()) + "-" + random.nextLong();
 
-            if (putCount % 5000 == 0) {
-               log.info(putCount + ": Writing " + valueSize + " bytes to cache key: " + key);
-            }
-
             long start;
             if (stringData) {
+               if (putCount % 5000 == 0) {
+                  log.info(putCount + ": Writing string length " + valueSize + " to cache key: " + key);
+               }
+
                String cacheData = generateRandomStringData(valueSize);
                bytesWritten += (valueSize * 2);
                start = System.nanoTime();
                cacheWrapper.put(bucket, key, cacheData);
             } else {
+               if (putCount % 5000 == 0) {
+                  log.info(putCount + ": Writing " + valueSize + " bytes to cache key: " + key);
+               }
+
                random.nextBytes(buffer);
                bytesWritten += valueSize;
                start = System.nanoTime();
@@ -309,8 +314,8 @@ public class RandomDataStage extends AbstractDistStage {
       int pick = 0;
       // Random.nextInt(0) generates an error
       if (maxLength - 1 > 0) {
-         int byteLength = random.nextInt(maxLength - 1) + 1;
-         pickWords = words[byteLength - 1];
+         int wordLength = random.nextInt(maxLength - 1) + 1;
+         pickWords = words[wordLength - 1];
          if (pickWords.length - 1 > 0) {
             pick = random.nextInt(pickWords.length - 1);
             word = pickWords[pick];
@@ -334,16 +339,16 @@ public class RandomDataStage extends AbstractDistStage {
       String multiByteChars = "ÅÄÇÉÑÖÕÜàäâáãçëèêéîïìíñôöòóüûùúÿ";
       StringBuilder data = new StringBuilder();
 
-      int byteLength = maxLength;
+      int wordLength = maxLength;
       if (randomLength && maxLength - 1 > 0) {
-         byteLength = random.nextInt(maxLength - 1) + 1;
+         wordLength = random.nextInt(maxLength - 1) + 1;
       }
 
-      for (int i = byteLength; i > 0; i--) {
-         if (i == 1) {
-            data.append(singleByteChars.charAt(random.nextInt(singleByteChars.length() - 1)));
-         } else {
+      for (int i = wordLength; i > 0; i--) {
+         if (random.nextBoolean()) {
             data.append(multiByteChars.charAt(random.nextInt(multiByteChars.length() - 1)));
+         } else {
+            data.append(singleByteChars.charAt(random.nextInt(singleByteChars.length() - 1)));
          }
       }
 
@@ -390,7 +395,7 @@ public class RandomDataStage extends AbstractDistStage {
          if (!shareWords) {
             totalWordCount = maxWordCount * getActiveSlaveCount();
          }
-         log.info(totalWordCount + " words were generated with a maximum length of " + maxWordLength + " bytes");
+         log.info(totalWordCount + " words were generated with a maximum length of " + maxWordLength + " characters");
       }
       log.info("--------------------");
       return true;
