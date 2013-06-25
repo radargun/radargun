@@ -1,10 +1,5 @@
 package org.radargun.stressors;
 
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
@@ -13,8 +8,14 @@ import org.radargun.config.Stressor;
 import org.radargun.config.TimeConverter;
 import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.BulkOperationsCapable;
-import org.radargun.utils.Utils;
 import org.radargun.features.Queryable;
+import org.radargun.utils.Utils;
+
+import java.io.Serializable;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * On multiple threads executes put and get operations against the CacheWrapper, and returns the result as an Map.
@@ -112,6 +113,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    private volatile StressorCompletion completion;
    private volatile boolean finished = false;
    private volatile boolean terminated = false;
+   private AtomicLong keysLoaded = new AtomicLong(0);
    
    protected List<Stressor> stressors = new ArrayList<Stressor>(numThreads);
    private Statistics statisticsPrototype = new SimpleStatistics();
@@ -320,6 +322,12 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                Object value = generateValue(entrySize);
                cacheWrapper.put(bucketId, key, value);
                addPooledKey(key, value);
+               long loaded = keysLoaded.incrementAndGet();
+               if (loaded % 100000 == 0) {
+                  Runtime runtime = Runtime.getRuntime();
+                  log.info(String.format("Loaded %d/%d entries (on this node), free %d MB/%d MB",
+                        loaded, numEntries * numThreads, runtime.freeMemory() / 1048576, runtime.maxMemory() / 1048576));
+               }
             } catch (Throwable e) {
                log.warn("Failed to insert key " + key, e);
             }
@@ -363,6 +371,12 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          for (int keyIndex = threadIndex + nodeIndex * numThreads; keyIndex < numEntries; keyIndex += totalThreads) {
             try {
                cacheWrapper.put(null, keyGenerator.generateKey(keyIndex), generateValue(entrySize));
+               long loaded = keysLoaded.incrementAndGet();
+               if (loaded % 100000 == 0) {
+                  Runtime runtime = Runtime.getRuntime();
+                  log.info(String.format("Loaded %d/%d entries (on this node), free %d MB/%d MB",
+                        loaded, numEntries / numNodes, runtime.freeMemory() / 1048576, runtime.maxMemory() / 1048576));
+               }
             } catch (Exception e) {
                log.error("Failed to insert shared key " + keyIndex, e);
             }
