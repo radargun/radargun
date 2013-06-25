@@ -14,6 +14,7 @@ import java.util.TreeSet;
 
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
 
 /**
@@ -72,10 +73,13 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       openFile();
 
       List<String> headerRow = new ArrayList<String>();
-      Map<String, Object> aReport = results.get(0);
       headerRow.add("SLAVE_INDEX");
-      SortedSet<String> iterations = getIterations(aReport.keySet());
-      SortedSet<String> columns = getColumns(aReport.keySet());
+      SortedSet<String> iterations = new TreeSet<String>();
+      SortedSet<String> columns = new TreeSet<String>();
+      for (Map<String, Object> result : results.values()) {
+         addIterations(iterations, result.keySet());
+         addColumns(columns, result.keySet());
+      }
       if (!iterations.isEmpty()) headerRow.add("ITERATION");
       headerRow.addAll(columns);
       writeRowToFile(headerRow);
@@ -84,35 +88,38 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       Collections.sort(slaveIndices);
 
       Map<String, Object> sum = new HashMap<String, Object>();
+      Map<String, Integer> count = new HashMap<String, Integer>();
       for (Integer i : slaveIndices) {
          Map<String, Object> reportPerSlave = results.get(i);
          if (reportPerSlave == null)
             throw new IllegalStateException("Missing report for slave index: " + i);
-         writeReport(reportPerSlave, String.valueOf(i), iterations, columns, sum);
+         writeReport(reportPerSlave, String.valueOf(i), iterations, columns, sum, count);
       }
       if (computeAverage) {
          Map<String, Object> average = new HashMap<String, Object>();
          for (Map.Entry<String, Object> entry : sum.entrySet()) {
             if (entry.getValue() instanceof Integer) {
-               average.put(entry.getKey(), (Integer) entry.getValue() / slaveIndices.size());
+               average.put(entry.getKey(), (Integer) entry.getValue() / count.get(entry.getKey()));
             } else if (entry.getValue() instanceof Double) {
-               average.put(entry.getKey(), (Double) entry.getValue() / slaveIndices.size());
+               average.put(entry.getKey(), (Double) entry.getValue() / count.get(entry.getKey()));
             } else if (entry.getValue() instanceof Long) {
-               average.put(entry.getKey(), (Long) entry.getValue() / slaveIndices.size());
+               average.put(entry.getKey(), (Long) entry.getValue() / count.get(entry.getKey()));
+            } else {
+               average.put(entry.getKey(), "");
             }
          }
-         writeReport(average, "AVG", iterations, columns, null);
+         writeReport(average, "AVG", iterations, columns, null, null);
       }
 
       closeFile();
    }
 
-   private void writeReport(Map<String, Object> report, String slaveIndex, SortedSet<String> iterations, SortedSet<String> columns, Map<String, Object> sum) throws IOException {
+   private void writeReport(Map<String, Object> report, String slaveIndex, SortedSet<String> iterations, SortedSet<String> columns, Map<String, Object> sum, Map<String, Integer> count) throws IOException {
       List<String> dataRow = new ArrayList<String>();
       for (String iteration : iterations) {
          dataRow.add(slaveIndex);//add the slave index first
          dataRow.add(iteration);
-         addData(report, columns, iteration + '.', dataRow, sum);
+         addData(report, columns, iteration + '.', dataRow, sum, count);
          writeRowToFile(dataRow);
          dataRow.clear();
       }
@@ -128,13 +135,13 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
          if (!iterations.isEmpty()) {
             dataRow.add("");
          }
-         addData(report, columns, "", dataRow, sum);
+         addData(report, columns, "", dataRow, sum, count);
          writeRowToFile(dataRow);
          dataRow.clear();
       }
    }
 
-   private void addData(Map<String, Object> reportPerSlave, SortedSet<String> columns, String prefix, List<String> dataRow, Map<String, Object> sum) {
+   private void addData(Map<String, Object> reportPerSlave, SortedSet<String> columns, String prefix, List<String> dataRow, Map<String, Object> sum, Map<String, Integer> count) {
       for (String column : columns) {
          String key = prefix + column;
          Object data = reportPerSlave.get(key);
@@ -146,44 +153,42 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
             if (oldSum == null) {
                if (data instanceof Number) {
                   sum.put(key, data);
+                  count.put(key, Integer.valueOf(1));
                }
             } else {
                if (oldSum instanceof Integer && data instanceof Integer) {
                   sum.put(key, (Integer) oldSum + (Integer) data);
+                  count.put(key, count.get(key) + 1);
                } else if (oldSum instanceof Long && data instanceof Long) {
                   sum.put(key, (Long) oldSum + (Long) data);
+                  count.put(key, count.get(key) + 1);
                } else if (oldSum instanceof Double && data instanceof Double) {
                   sum.put(key, (Double) oldSum + (Double) data);
-               } else {
-                  sum.put(key, "");
+                  count.put(key, count.get(key) + 1);
                }
             }
          }
       }
    }
 
-   private SortedSet<String> getColumns(Set<String> keySet) {
-      SortedSet<String> list = new TreeSet<String>();
+   private void addColumns(Set<String> columns, Set<String> keySet) {
       for (String key : keySet) {
          int dot = key.indexOf('.');
          if (dot >= 0) {
-            list.add(key.substring(dot + 1));
+            columns.add(key.substring(dot + 1));
          } else {
-            list.add(key);
+            columns.add(key);
          }
       }
-      return list;
    }
 
-   private SortedSet<String> getIterations(Set<String> keySet) {
-      SortedSet<String> iterations = new TreeSet<String>();
+   private void addIterations(Set<String> iterations, Set<String> keySet) {
       for (String key : keySet) {
          int dot = key.indexOf('.');
          if (dot >= 0) {
             iterations.add(key.substring(0, dot));
          }
       }
-      return iterations;
    }
 
    private void closeFile() throws IOException {
@@ -224,5 +229,19 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       String actualFileName =  masterState.nameOfTheCurrentBenchmark() + "_" + masterState.configNameOfTheCurrentBenchmark() + "_" + clusterSize +".csv";
 
       outputFile = Utils.createOrReplaceFile(parentDir, actualFileName);
+   }
+
+   public static void addResult(MasterState masterState, int slaveIndex, String key, Object value) {
+      Map<Integer, Map<String, Object>> results = (Map<Integer, Map<String, Object>>) masterState.get(CsvReportGenerationStage.RESULTS);
+      if (results == null) {
+         results = new HashMap<Integer, Map<String, Object>>();
+         masterState.put(CsvReportGenerationStage.RESULTS, results);
+      }
+      Map<String, Object> slaveResult = results.get(slaveIndex);
+      if (slaveResult == null) {
+         slaveResult = new HashMap<String, Object>();
+         results.put(slaveIndex, slaveResult);
+      }
+      slaveResult.put(key, value);
    }
 }
