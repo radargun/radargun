@@ -37,7 +37,9 @@ import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
 public class StartHelper {
-   
+
+   public static final String START_TIME = "START_TIME";
+
    private StartHelper() {}
    
    private static final Log log = LogFactory.getLog(StartHelper.class);
@@ -66,7 +68,10 @@ public class StartHelper {
             ((Partitionable) wrapper).setStartWithReachable(slaveIndex, reachable);
          }
          slaveState.setCacheWrapper(wrapper);
+         long startingTime = System.nanoTime();
          wrapper.setUp(config, false, slaveIndex, confAttributes);
+         long startedTime = System.nanoTime();
+         ack.setPayload(StartStopTime.withStartTime(startedTime - startingTime, ack.getPayload()));
          if (clusterValidation != null) {
             
             int expectedNumberOfSlaves;

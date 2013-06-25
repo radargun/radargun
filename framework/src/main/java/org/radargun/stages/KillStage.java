@@ -1,11 +1,14 @@
 package org.radargun.stages;
 
+import java.util.List;
+
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.helpers.KillHelper;
 import org.radargun.stages.helpers.RoleHelper;
+import org.radargun.stages.helpers.StartStopTime;
 import org.radargun.state.MasterState;
 
 /**
@@ -66,5 +69,19 @@ public class KillStage extends AbstractDistStage {
          log.trace("Ignoring kill request, not targeted for this slave");
       }
       return ack;
+   }
+
+   @Override
+   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+      if (!super.processAckOnMaster(acks, masterState)) {
+         return false;
+      }
+      for (DistStageAck ack : acks) {
+         StartStopTime times = ((StartStopTime) ((DefaultDistStageAck) ack).getPayload());
+         if (times != null && times.getStopTime() >= 0) {
+            CsvReportGenerationStage.addResult(masterState, ack.getSlaveIndex(), KillHelper.STOP_TIME, times.getStopTime());
+         }
+      }
+      return true;
    }
 }

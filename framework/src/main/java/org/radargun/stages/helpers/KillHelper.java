@@ -37,7 +37,9 @@ import org.radargun.stressors.BackgroundOpsManager;
  * @since September 2012
  */
 public class KillHelper {
-   
+
+   public static final String STOP_TIME = "STOP_TIME";
+
    private KillHelper() {}
   
    private static final Log log = LogFactory.getLog(KillHelper.class);
@@ -47,11 +49,14 @@ public class KillHelper {
          CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
          if (cacheWrapper != null) {
             BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, false);
+            long stoppingTime;
             if (tearDown) {
                log.info("Tearing down cache wrapper.");
+               stoppingTime = System.nanoTime();
                cacheWrapper.tearDown();
             } else if (cacheWrapper instanceof Killable) {
                log.info("Killing cache wrapper.");
+               stoppingTime = System.nanoTime();
                if (async) {
                   ((Killable) cacheWrapper).killAsync();
                } else {
@@ -59,7 +64,12 @@ public class KillHelper {
                }
             } else {
                log.info("CacheWrapper is not killable, calling tearDown instead");
+               stoppingTime = System.nanoTime();
                cacheWrapper.tearDown();
+            }
+            long stoppedTime = System.nanoTime();
+            if (ack != null) {
+               ack.setPayload(StartStopTime.withStopTime(stoppedTime - stoppingTime, ack.getPayload()));
             }
          } else {
             log.info("No cache wrapper deployed on this slave, nothing to do.");

@@ -18,17 +18,20 @@
  */
 package org.radargun.stages;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.helpers.KillHelper;
 import org.radargun.stages.helpers.RoleHelper;
 import org.radargun.stages.helpers.StartHelper;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import org.radargun.stages.helpers.StartStopTime;
+import org.radargun.state.MasterState;
 
 /**
  * The stage start and kills some nodes concurrently (without waiting for each other).
@@ -91,5 +94,34 @@ public class ParallelStartKillStage extends AbstractStartStage {
          }
       }
       return ack;
+   }
+
+   @Override
+   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+      boolean success = true;
+      logDurationInfo(acks);
+      for (DistStageAck stageAck : acks) {
+         DefaultDistStageAck defaultStageAck = (DefaultDistStageAck) stageAck;
+         if (defaultStageAck.isError() && (mayFailOn == null || !mayFailOn.contains(stageAck.getSlaveIndex()))) {
+            log.warn("Received error ack " + defaultStageAck);
+            return false;
+         } else if (defaultStageAck.isError()) {
+            log.info("Received allowed error ack " + defaultStageAck);
+         } else {
+            log.trace("Received success ack " + defaultStageAck);
+            StartStopTime times = (StartStopTime) defaultStageAck.getPayload();
+            if (times != null) {
+               if (times.getStartTime() >= 0) {
+                  CsvReportGenerationStage.addResult(masterState, stageAck.getSlaveIndex(), StartHelper.START_TIME, times.getStartTime());
+               }
+               if (times.getStopTime() >= 0) {
+                  CsvReportGenerationStage.addResult(masterState, stageAck.getSlaveIndex(), KillHelper.STOP_TIME, times.getStopTime());
+               }
+            }
+         }
+      }
+      if (log.isTraceEnabled())
+         log.trace("All ack messages were successful");
+      return success;
    }
 }
