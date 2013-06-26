@@ -16,6 +16,7 @@
       <module>plugins/infinispan50</module>
       <module>plugins/infinispan51</module>
       <module>plugins/infinispan52</module>
+      <module>plugins/infinispan53</module>
       <module>plugins/jgroups</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
@@ -39,12 +40,12 @@
 
    <profiles>
       <profile>
-         <id>infinispan53</id>
+         <id>infinispan60</id>
          <activation>
             <activeByDefault>false</activeByDefault>
          </activation>
          <modules>
-            <module>plugins/infinispan53</module>
+            <module>plugins/infinispan60</module>
          </modules>
          <build>
             <plugins>
@@ -54,16 +55,16 @@
                   <version>1.3</version>
                   <executions>
                      <execution>
-                        <id>prepare_infinispan53_plugin</id>
+                        <id>prepare_infinispan60_plugin</id>
                         <phase>verify</phase>
                         <goals>
                            <goal>run</goal>
                         </goals>
                         <configuration>
                            <tasks>
-                              <echo message="Packaging the Infinispan 5.3.x snapshot plugin" />
-                              <copy todir="${distribution.artifact}/plugins/infinispan53">
-                                 <fileset dir="plugins/infinispan53/target/distribution/plugin-infinispan53-bin/plugin-infinispan53">
+                              <echo message="Packaging the Infinispan 6.0.x snapshot plugin" />
+                              <copy todir="${distribution.artifact}/plugins/infinispan60">
+                                 <fileset dir="plugins/infinispan60/target/distribution/plugin-infinispan60-bin/plugin-infinispan60">
                                     <include name="**/*" />
                                  </fileset>
                               </copy>
@@ -206,12 +207,13 @@
 				               <arg value="infinispan50" />
 				               <arg value="infinispan51" />
 				               <arg value="infinispan52" />
-                           <arg value="infinispan53" />
+				               <arg value="infinispan53" />
+				               <arg value="infinispan60" />
 				               <arg value="jgroups" />
 				               <arg value="jbosscache2" />
 				               <arg value="jbosscache3" />
 				               <arg value="ehcache25" />
-                           <arg value="ehcache26" />
+				               <arg value="ehcache26" />
 				               <arg value="terracota3" />
 				               <arg value="chm" />
 				               <arg value="coherence3" />
@@ -219,7 +221,7 @@
 				               <arg value="jdg61" />
 			               </java>
 
-                        <echo message="Packaging the framework, and the following plugins: hazelcast2, infinispan4, infinispan50, infinispan51, infinispan52, jbosscache2, jbosscache3, ehcache25, ehcache26" />
+                        <echo message="Packaging the framework, and the following plugins: hazelcast2, infinispan4, infinispan50, infinispan51, infinispan52, infinispan53, infinispan60, jbosscache2, jbosscache3, ehcache25, ehcache26, terracotta3" />
 
                         <copy todir="${distribution.artifact}/plugins/hazelcast2">
                            <fileset dir="plugins/hazelcast2/target/distribution/plugin-hazelcast2-bin/plugin-hazelcast2">
@@ -256,7 +258,13 @@
                               <include name="**/*" />
                            </fileset>
                         </copy>
-                        
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan60">
+                           <fileset dir="plugins/infinispan60/target/distribution/plugin-infinispan60-bin/plugin-infinispan60">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
                         <copy todir="${distribution.artifact}/plugins/jgroups">
                            <fileset dir="plugins/jgroups/target/distribution/plugin-jgroups-bin/plugin-jgroups">
                               <include name="**/*" />
