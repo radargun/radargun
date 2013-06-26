@@ -29,6 +29,7 @@ class BackgroundStressor extends Thread {
    private int remainingTxOps;
    private boolean loaded;
    private BackgroundOpsManager backgroundOpsManager;
+   private KeyGenerator keyGenerator;
 
    public BackgroundStressor(BackgroundOpsManager backgroundOpsManager, SlaveState slaveState, Range myRange, List<Range> deadSlavesRanges, int idx) {
       super("StressorThread-" + idx);
@@ -38,6 +39,11 @@ class BackgroundStressor extends Thread {
       this.currentKey = myRange.getStart();
       this.remainingTxOps = backgroundOpsManager.getTransactionSize();
       this.backgroundOpsManager = backgroundOpsManager;
+      this.keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
+      if (this.keyGenerator == null) {
+         this.keyGenerator = new StringKeyGenerator();
+         slaveState.put(KeyGenerator.KEY_GENERATOR, this.keyGenerator);
+      }
    }
 
    private void loadData() {
@@ -58,7 +64,7 @@ class BackgroundStressor extends Thread {
       CacheWrapper cacheWrapper = backgroundOpsManager.getCacheWrapper();
       for (currentKey = from; currentKey < to && !terminate; currentKey++, loaded_keys++) {
          try {
-            cacheWrapper.put(backgroundOpsManager.getBucketId(), key(currentKey), generateRandomEntry(backgroundOpsManager.getEntrySize()));
+            cacheWrapper.put(backgroundOpsManager.getBucketId(), keyGenerator.generateKey(currentKey), generateRandomEntry(backgroundOpsManager.getEntrySize()));
             if (loaded_keys % 1000 == 0) {
                log.debug("Loaded " + loaded_keys + " out of " + (to - from));
             }
@@ -95,10 +101,6 @@ class BackgroundStressor extends Thread {
       }
    }
 
-   private String key(int key) {
-      return "key" + key;
-   }
-
    private void resetLastOpTime() {
       lastOpStartTime = System.nanoTime();
    }
@@ -108,11 +110,11 @@ class BackgroundStressor extends Thread {
    }
 
    private void makeRequest() throws InterruptedException {
-      String key = null;
+      Object key = null;
       Operation operation = backgroundOpsManager.getOperation(rand);
       CacheWrapper cacheWrapper = backgroundOpsManager.getCacheWrapper();
       try {
-         key = key(currentKey++);
+         key = keyGenerator.generateKey(currentKey++);
          if (currentKey == keyRangeEnd) {
             currentKey = keyRangeStart;
          }

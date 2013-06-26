@@ -1,5 +1,11 @@
 package org.radargun.stressors;
 
+import java.io.Serializable;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
@@ -10,12 +16,6 @@ import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.BulkOperationsCapable;
 import org.radargun.features.Queryable;
 import org.radargun.utils.Utils;
-
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * On multiple threads executes put and get operations against the CacheWrapper, and returns the result as an Map.
@@ -80,6 +80,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          "used by all threads. Default is false.")
    protected boolean sharedKeys = false;
 
+   @Property(doc = "This option is valid only for sharedKeys=true. It forces local loading of all keys (not only numEntries/numNodes). Default is false.")
+   protected boolean loadAllKeys = false;
+
    @Property(doc = "The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.")
    protected boolean fixedKeys = true;
 
@@ -88,6 +91,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    @Property(doc = "Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.")
    private String keyGeneratorClass = StringKeyGenerator.class.getName();
+
+   @Property(doc = "Used to initialize the key generator. Null by default.")
+   private String keyGeneratorParam = null;
 
    /**
     * Number of slaves that participate in this test
@@ -226,14 +232,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       return nodeIndex == -1;
    }
 
-   public void setSharedKeys(boolean sharedKeys) {
-      this.sharedKeys = sharedKeys;
-   }
-
-   public void setFixedKeys(boolean fixedKeys) {
-      this.fixedKeys = fixedKeys;
-   }
-
    public OperationLogic getLogic() {
       if (sharedKeys && !fixedKeys) {
          throw new IllegalArgumentException("Cannot use both shared and non-fixed keys - not implemented");
@@ -315,9 +313,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             Object key = null;
             try {
                if (isLocalBenchmark()) {
-                  key = keyGenerator.generateKey(threadIndex, keyIndex);
+                  key = keyGenerator.generateKey(threadIndex * numEntries + keyIndex);
                } else {
-                  key = keyGenerator.generateKey(nodeIndex, threadIndex, keyIndex);
+                  key = keyGenerator.generateKey((nodeIndex * numThreads + threadIndex) * numEntries + keyIndex);
                }
                Object value = generateValue(entrySize);
                cacheWrapper.put(bucketId, key, value);
@@ -358,24 +356,51 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
       @Override
       public void init(String bucketId, int threadIndex) {
-         if (sharedKeys.size() == numEntries) return;
-         KeyGenerator keyGenerator = getKeyGenerator();
-         // no point in doing this in parallel, too much overhead in synchronization
-         if (threadIndex == 0) {
-            sharedKeys.clear();
-            for (int keyIndex = 0; keyIndex < numEntries; ++keyIndex) {
-               sharedKeys.add(keyGenerator.generateKey(keyIndex));
+         synchronized (sharedKeys) {
+            // no point in doing this in parallel, too much overhead in synchronization
+            if (threadIndex == 0) {
+               if (sharedKeys.size() != numEntries) {
+                  sharedKeys.clear();
+                  KeyGenerator keyGenerator = getKeyGenerator();
+                  for (int keyIndex = 0; keyIndex < numEntries; ++keyIndex) {
+                     sharedKeys.add(keyGenerator.generateKey(keyIndex));
+                  }
+               }
+               sharedKeys.notifyAll();
+            } else {
+               while (sharedKeys.size() != numEntries) {
+                  try {
+                     sharedKeys.wait();
+                  } catch (InterruptedException e) {
+                  }
+               }
             }
          }
-         int totalThreads = numThreads * numNodes;
-         for (int keyIndex = threadIndex + nodeIndex * numThreads; keyIndex < numEntries; keyIndex += totalThreads) {
+         int loadedEntryCount, keyIndex, loadingThreads;
+         if (loadAllKeys) {
+            loadedEntryCount = numEntries;
+            loadingThreads = numThreads;
+            keyIndex = threadIndex;
+         } else {
+            loadedEntryCount = numEntries / numNodes + (nodeIndex < numEntries % numNodes ? 1 : 0);
+            loadingThreads = numThreads * numNodes;
+            keyIndex = threadIndex + nodeIndex * numThreads;
+         }
+         if (threadIndex == 0) {
+            log.info(String.format("We have loaded %d keys, expecting %d locally loaded, %d in cache",
+                  keysLoaded.get(), loadedEntryCount, cacheWrapper.getLocalSize()));
+         }
+         if (keysLoaded.get() >= loadedEntryCount) {
+            return;
+         }
+         for (; keyIndex < numEntries; keyIndex += loadingThreads) {
             try {
-               cacheWrapper.put(null, keyGenerator.generateKey(keyIndex), generateValue(entrySize));
+               cacheWrapper.put(null, sharedKeys.get(keyIndex), generateValue(entrySize));
                long loaded = keysLoaded.incrementAndGet();
                if (loaded % 100000 == 0) {
                   Runtime runtime = Runtime.getRuntime();
                   log.info(String.format("Loaded %d/%d entries (on this node), free %d MB/%d MB",
-                        loaded, numEntries / numNodes, runtime.freeMemory() / 1048576, runtime.maxMemory() / 1048576));
+                        loaded, loadedEntryCount, runtime.freeMemory() / 1048576, runtime.maxMemory() / 1048576));
                }
             } catch (Exception e) {
                log.error("Failed to insert shared key " + keyIndex, e);
@@ -512,7 +537,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          } else {
             Object key;
             if (scheduledKeys.size() < numEntries) {
-               key = getKeyGenerator().generateKey(nodeIndex, threadIndex, nextKey++);
+               long keyIndex = (nodeIndex * numThreads + threadIndex) * numEntries + nextKey++;
+               key = getKeyGenerator().generateKey(keyIndex);
                KeyWithRemovalTime pair = new KeyWithRemovalTime(key, getRandomTimestamp(timestamp));
                scheduledKeys.add(pair);
             } else {
@@ -743,10 +769,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       return ((i + 1) % transactionSize) == 0;
    }
 
-   protected int getTxCount() {
-      return txCount.get();
-   }
-   
    public int getNumRequests() {
       return numRequests;
    }
@@ -755,32 +777,13 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       return numThreads;
    }
    
-   public void setNumRequests(int numberOfRequests) {
-      this.numRequests = numberOfRequests;
-   }
-
-   public void setNumEntries(int numberOfKeys) {
-      this.numEntries = numberOfKeys;
-   }
 
    public int getNumEntries() {
       return numEntries;
    }
 
-   public void setEntrySize(int sizeOfValue) {
-      this.entrySize = sizeOfValue;
-   }
-
    public void setNumThreads(int numOfThreads) {
       this.numThreads = numOfThreads;
-   }
-
-   public void setWritePercentage(int writePercentage) {
-      this.writePercentage = writePercentage;
-   }
-
-   public void setOpsCountStatusLog(int opsCountStatusLog) {
-      this.opsCountStatusLog = opsCountStatusLog;
    }
 
    protected Object generateValue(int size) {
@@ -794,55 +797,22 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       }
    }
 
-   public int getNodeIndex() {
-      return nodeIndex;
-   }
-
    public void setNodeIndex(int nodeIndex, int numNodes) {
       this.nodeIndex = nodeIndex;
       this.numNodes = numNodes;
    }
 
-   public String getKeyGeneratorClass() {
-      return keyGeneratorClass;
-   }
-
-   public void setKeyGeneratorClass(String keyGeneratorClass) {
-      this.keyGeneratorClass = keyGeneratorClass;
-      instantiateGenerator(keyGeneratorClass);
-   }
-
-   private void instantiateGenerator(String keyGeneratorClass) {
-      keyGenerator = (KeyGenerator) Utils.instantiate(keyGeneratorClass);
-   }
-
    public KeyGenerator getKeyGenerator() {
-      if (keyGenerator == null) instantiateGenerator(keyGeneratorClass);
+      if (keyGenerator == null) {
+         log.info("Using key generator " + keyGeneratorClass + ", param " + keyGeneratorParam);
+         keyGenerator = (KeyGenerator) Utils.instantiate(keyGeneratorClass);
+         keyGenerator.init(keyGeneratorParam);
+      }
       return keyGenerator;
-   }
-
-   public int getTransactionSize() {
-      return transactionSize;
-   }
-
-   public void setTransactionSize(int transactionSize) {
-      this.transactionSize = transactionSize;
    }
 
    public boolean isUseTransactions() {
       return useTransactions == null ? cacheWrapper.isTransactional(null) : useTransactions;
-   }
-
-   public void setUseTransactions(Boolean useTransactions) {
-      this.useTransactions = useTransactions;
-   }
-
-   public boolean isCommitTransactions() {
-      return commitTransactions;
-   }
-
-   public void setCommitTransactions(boolean commitTransactions) {
-      this.commitTransactions = commitTransactions;
    }
 
    public long getDurationMillis() {
@@ -852,11 +822,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    public void setDurationMillis(long durationMillis) {
       this.durationMillis = durationMillis;
    }
-
-   public void setDuration(String duration) {
-      this.durationMillis = Utils.string2Millis(duration);
-   }
-
 
    abstract class StressorCompletion {
  
@@ -901,7 +866,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
       @Override
       public boolean moreToRun() {
-         return requestsLeft.getAndDecrement() > -1;
+         return requestsLeft.getAndDecrement() > 0;
       }
    }
    

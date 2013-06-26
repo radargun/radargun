@@ -10,44 +10,25 @@ import java.io.ObjectOutput;
  */
 public class ObjectKey implements Externalizable {
 
-   private int nodeIndex = -1;
-
-   private int threadIndex;
-
    private long keyIndex;
 
-   public ObjectKey(int nodeIndex, int threadIndex, long keyIndex) {
-      this.nodeIndex = nodeIndex;
-      this.threadIndex = threadIndex;
-      this.keyIndex = keyIndex;
-   }
-
-   public ObjectKey(int threadIndex, long keyIndex) {
-      this.threadIndex = threadIndex;
+   public ObjectKey(long keyIndex) {
       this.keyIndex = keyIndex;
    }
 
    @Override
    public void writeExternal(ObjectOutput objectOutput) throws IOException {
-      objectOutput.writeInt(nodeIndex);
-      objectOutput.writeInt(threadIndex);
       objectOutput.writeLong(keyIndex);
    }
 
    @Override
    public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
-      this.nodeIndex = objectInput.readInt();
-      this.threadIndex = objectInput.readInt();
       this.keyIndex = objectInput.readLong();
    }
 
    @Override
    public String toString() {
-      return "ObjectKey{" +
-            "nodeIndex=" + nodeIndex +
-            ", threadIndex=" + threadIndex +
-            ", keyIndex=" + keyIndex +
-            '}';
+      return String.format("ObjectKey{%016X}", keyIndex);
    }
 
    @Override
@@ -58,38 +39,18 @@ public class ObjectKey implements Externalizable {
       ObjectKey objectKey = (ObjectKey) o;
 
       if (keyIndex != objectKey.keyIndex) return false;
-      if (nodeIndex != objectKey.nodeIndex) return false;
-      if (threadIndex != objectKey.threadIndex) return false;
-
       return true;
    }
 
    @Override
    public int hashCode() {
-      int result = nodeIndex;
-      result = 31 * result + threadIndex;
-      result = 31 * result + (int) keyIndex;
-      return result;
-   }
-
-   public int getNodeIndex() {
-      return nodeIndex;
-   }
-
-   public int getThreadIndex() {
-      return threadIndex;
-   }
-
-   public long getKeyIndex() {
-      return keyIndex;
+      return (int) keyIndex;
    }
 
    /**
     * This is an index that uniquely identifies this key in the cluster.
     */
    public long getKeyIndexInCluster(int threadCountPerNode, int keysPerThread) {
-      return nodeIndex * threadCountPerNode * keysPerThread
-            + threadIndex * keysPerThread
-            + keyIndex;
+      return keyIndex;
    }
 }

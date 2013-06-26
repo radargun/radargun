@@ -1,14 +1,12 @@
 package org.radargun.cachewrappers;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.infinispan.affinity.KeyAffinityService;
 import org.infinispan.affinity.KeyAffinityServiceFactory;
 import org.radargun.features.KeyGeneratorAware;
 import org.radargun.stressors.KeyGenerator;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * CacheWrapper implementation that produces a key generator generating keys through a key affinity service.
@@ -31,14 +29,16 @@ public class InfinispanKeyAffinityWrapper extends InfinispanWrapper implements K
    /**
     * A key generator using a key affinity service. All keys produced by this key generator
     * are local to the node that requested them.
+    * The generator does not honour the keyIndex passed as argument and always returns a new unique key.
     *
-    * shared keys vs. non-shared keys:
+    * Using shared keys with this generator is possible, but the set of generated keys is different on each node
+    * (this is very likely even if the key format was identical, we ensure that by adding the local node address).
+    * Initially only the local entries will be loaded into cache. Then, as the node executes PUT requests, the cache
+    * will be filled with entries that are considered non-local, but have different keys. This will result in cache
+    * with numEntries * numNodes.
+    * Previous GET operation will return null values, naturally.
     *
-    * - Keys are never shared between threads running on the same node as the key generator is shared between
-    * threads running on the same node and the generator produces a different key (with increasing index) every time.
-    * - Keys can only be shared between threads running on different nodes but only between nodes that are key owners.
-    * - As a result, using sharedKeys parameter has a bit different semantics from other key generators, the concurrency
-    * level is lower.
+    * Therefore, using shared keys with this generator is not advisable.
     *
     */
    protected class KeyAffinityStringKeyGenerator implements KeyGenerator {
@@ -51,48 +51,23 @@ public class InfinispanKeyAffinityWrapper extends InfinispanWrapper implements K
       public KeyAffinityStringKeyGenerator(int keyBufferSize) {
          this.keyBufferSize = keyBufferSize;
       }
-      /**
-       * Called only if the keys are not shared.
-       */
+
       @Override
-      public Object generateKey(int nodeIndex, int threadIndex, long keyIndex) {
-         return generateKey(nodeIndex, threadIndex);
+      public void init(String param) {
       }
 
-      /**
-       * Called only if the keys are not shared.
-       */
       @Override
-      public Object generateKey(int threadIndex, int keyIndex) {
-         synchronized(this) {
-            if (affinityService == null) {
-               newKeyAffinityService(false);
-            }
-         }
-         assertSameGeneratorType(false);
-         return affinityService.getKeyForAddress(cacheManager.getAddress());
-      }
-
-      /**
-       * Called only if keys are shared. Generated keys are not shared between threads on the same node !!
-       */
-      @Override
-      public Object generateKey(int keyIndex) {
+      public Object generateKey(long keyIndex) {
          synchronized (this) {
             if (affinityService == null) {
-               newKeyAffinityService(true);
+               newKeyAffinityService();
             }
          }
-         assertSameGeneratorType(true);
          return affinityService.getKeyForAddress(cacheManager.getAddress());
       }
 
-      private void newKeyAffinityService(boolean sharedKeys) {
-         if (sharedKeys) {
-            generator = new AddressAwareStringKeyGenerator();
-         } else {
-            generator = new AddressAwareStringKeyGenerator(cacheManager.getAddress().toString());
-         }
+      private void newKeyAffinityService() {
+         generator = new AddressAwareStringKeyGenerator(cacheManager.getAddress().toString());
          executor = Executors.newSingleThreadExecutor();
          affinityService = KeyAffinityServiceFactory.newLocalKeyAffinityService(getCache(null), generator, executor, keyBufferSize);
          log.info("Created key affinity service with keyBufferSize: " + keyBufferSize);
@@ -102,17 +77,9 @@ public class InfinispanKeyAffinityWrapper extends InfinispanWrapper implements K
             }
          });
       }
-
-      private void assertSameGeneratorType(boolean sharedKeys) {
-         if (generator.isSharedKeys() != sharedKeys) {
-            throw new RuntimeException("KeyGenerator was created with sharedKeys parameter set to: " + generator.isSharedKeys() + ", requesting different type!");
-         }
-      }
    }
 
    protected class AddressAwareStringKeyGenerator implements org.infinispan.affinity.KeyGenerator {
-
-      private boolean sharedKeys = false;
 
       private String address;
 
@@ -125,21 +92,9 @@ public class InfinispanKeyAffinityWrapper extends InfinispanWrapper implements K
          this.address = address;
       }
 
-      /**
-       * With this constructor the key generator generates the same keys on all nodes in cluster and therefore
-       * different stressors from different nodes might access the same keys but only if the key is local for that node
-       */
-      public AddressAwareStringKeyGenerator() {
-         this.address = "";
-      }
-
       @Override
       public Object getKey() {
          return "key_" + address + "_" + previousKey++;
-      }
-
-      public boolean isSharedKeys() {
-         return sharedKeys;
       }
    }
 

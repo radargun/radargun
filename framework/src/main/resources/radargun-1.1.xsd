@@ -253,6 +253,11 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
+            <attribute name="checkEntryCount" type="string">
+               <annotation>
+                  <documentation>Number of entries that will be checked in each step. Default is 1.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="checkThreads" type="string">
                <annotation>
                   <documentation>Number of thread per node which check data validity. Default is 1.</documentation>
@@ -275,12 +280,17 @@
             </attribute>
             <attribute name="extraEntries" type="string">
                <annotation>
-                  <documentation>Entries that have not the form key{number} but occur in the cluster. This string specifies a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries.Defaults to 0.</documentation>
+                  <documentation>Entries that do not have the expected form but occur in the cluster. This string specifies a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries.Defaults to 0.</documentation>
                </annotation>
             </attribute>
             <attribute name="failOnNull" type="string">
                <annotation>
                   <documentation>If entry is null, fail immediatelly. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="firstEntryOffset" type="string">
+               <annotation>
+                  <documentation>Index of key of first entry. This number will be multiplied by slaveIndex. Default is 0.</documentation>
                </annotation>
             </attribute>
             <attribute name="ignoreSum" type="string">
@@ -298,14 +308,24 @@
                   <documentation>Number of queries after which a DEBUG log message is printed. Default is 10000.</documentation>
                </annotation>
             </attribute>
+            <attribute name="memoryOnly" type="string">
+               <annotation>
+                  <documentation>If the cache wrapper supports persistent storage and this is set to true, the check will be executed only against in-memory data. Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="numEntries" type="string">
                <annotation>
-                  <documentation>Number of entries with key in form key{number} in the cache.</documentation>
+                  <documentation>Number of entries with key in form specified by the last used key generator, in the cache.</documentation>
                </annotation>
             </attribute>
             <attribute name="numOwners" type="string">
                <annotation>
                   <documentation>Number of owners of one key (primary + backups). If negative the number is multiplied by cluster size, therefore, -1 means full replication. Default is -1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="stepEntryCount" type="string">
+               <annotation>
+                  <documentation>Number of entries stepped in each step. Default is 1.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -387,6 +407,16 @@
             <attribute name="keyGeneratorClass" type="string">
                <annotation>
                   <documentation>Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="keyGeneratorParam" type="string">
+               <annotation>
+                  <documentation>Used to initialize the key generator. Null by default.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="loadAllKeys" type="string">
+               <annotation>
+                  <documentation>This option is valid only for sharedKeys=true. It forces local loading of all keys (not only numEntries/numNodes). Default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="numEntries" type="string">

@@ -102,28 +102,4 @@ public class ClientStressTestStressor extends StressTestStressor {
    public void setNumThreads(int numberOfThreads) {
       throw new UnsupportedOperationException("Set initThreads, maxThreads and increment instead");
    }
-   
-   public int getInitThreads() {
-      return initThreads;
-   }
-
-   public void setInitThreads(int initThreads) {
-      this.initThreads = initThreads;
-   }
-
-   public int getMaxThreads() {
-      return maxThreads;
-   }
-
-   public void setMaxThreads(int maxThreads) {
-      this.maxThreads = maxThreads;
-   }
-
-   public int getIncrement() {
-      return increment;
-   }
-
-   public void setIncrement(int increment) {
-      this.increment = increment;
-   }
 }
