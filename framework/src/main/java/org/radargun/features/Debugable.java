@@ -13,7 +13,7 @@ public interface Debugable {
     * @param bucket
     * @param key
     */
-   void debugKey(String bucket, String key);
+   void debugKey(String bucket, Object key);
 
    /**
     * Log debug info about the whole cache.

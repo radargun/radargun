@@ -18,12 +18,15 @@
  */
 package org.radargun.stages;
 
+import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.radargun.CacheWrapper;
+import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.features.XSReplicating;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Checks data loaded in XSReplLoadStage.
@@ -35,109 +38,41 @@ public class XSReplCheckStage extends CheckDataStage {
 
    @Property(doc = "Postfix part of the value contents. Default is empty string.")
    private String valuePostFix = "";
-   
+
+   private transient XSReplicating xswrapper;
+   private transient String[] backupCaches;
+   private transient BackupCacheValueChecker[] backupCheckers;
+
    @Override
-   protected CheckResult checkRange(int from, int to) {
+   public DistStageAck executeOnSlave() {
       if (!(slaveState.getCacheWrapper() instanceof XSReplicating)) {
-         throw new IllegalStateException("This stage requires wrapper that supports cross-site replication");
+         String message = "This stage requires wrapper that supports cross-site replication";
+         log.error(message);
+         DefaultDistStageAck ack = newDefaultStageAck();
+         ack.setErrorMessage(message);
+         ack.setError(true);
+         return ack;
       }
-      XSReplicating wrapper = (XSReplicating) slaveState.getCacheWrapper();
-      Pattern valuePattern = Pattern.compile("value(\\d*)([^@]*)@(.*)");      
-      
-      int checked = 0;
-      CheckResult result = new CheckResult();
-      log.info("Checking contents of main cache " + wrapper.getMainCache());
-      for (int i = from; i < to; ++i, ++checked) {
-         if (checked % getLogChecksCount() == 0) {
-            log.debug("Checked " + checked + " entries, so far " + result);
-         }
-         try {
-            Object value = wrapper.get(null,  "key" + i);
-            if (!isDeleted()) {
-               if (value != null && value.equals("value" + i + valuePostFix + "@" + wrapper.getMainCache())) {
-                  result.found++;
-               } else if (value != null) {
-                  result.invalidValues++;
-                  unexpected(i, value);
-               } else result.nullValues++;
-            } else {
-               if (value != null) {
-                  result.found++;
-                  shouldBeDeleted(i);
-               } else result.nullValues++;
-            }
-         } catch (Exception e) {
-            result.exceptions++;
-            if (log.isTraceEnabled()) {
-               log.trace("Error retrieving value for key" + i + "\n" + e);
-            }
-         }
+      xswrapper = (XSReplicating) slaveState.getCacheWrapper();
+      int numBackups = xswrapper.getBackupCaches().size();
+      backupCaches = new String[numBackups];
+      backupCheckers = new BackupCacheValueChecker[numBackups];
+      Iterator<String> iterator = xswrapper.getBackupCaches().iterator();
+      for (int i = 0; i < numBackups; ++i) {
+         String cacheName = iterator.next();
+         backupCaches[i] = cacheName;
+         backupCheckers[i] = new BackupCacheValueChecker(cacheName);
       }
-      
-      for (String cacheName : wrapper.getBackupCaches()) {
-         log.info("Checking contents of backup cache " + cacheName);
-         String originCache = null;
-         for (int i = from; i < to; ++i, ++checked) {
-            if (checked % getLogChecksCount() == 0) {
-               log.debug("Checked " + checked + " entries, so far " + result);
-            }
-            try {
-               Object value = wrapper.get(cacheName, "key" + i);
-               Matcher m;
-               if (!isDeleted()) {
-                  if (value == null) {
-                     unexpected(i, value);
-                     result.nullValues++;
-                  } else if (value instanceof String && (m = valuePattern.matcher((String) value)).matches()) {
-                     try {
-                        Integer.parseInt(m.group(1));
-                     } catch (NumberFormatException e) {
-                        unexpected(i, value);
-                        result.invalidValues++;
-                        continue;
-                     }
-                     if (!m.group(2).equals(valuePostFix)) {
-                        unexpected(i, value);
-                        result.invalidValues++;
-                        continue;
-                     }
-                     if (originCache == null) {
-                        log.info("Cache " + cacheName + " has entries from " + m.group(3));
-                        originCache = m.group(3);
-                     } else if (!originCache.equals(m.group(3))) {
-                        String message = "Cache " + cacheName + " has entries from " + m.group(3) + " but it also had entries from " + originCache + "!"; 
-                        log.error(message);
-                        result.invalidValues++;
-                        continue;
-                     }
-                     result.found++;
-                  } else {
-                     unexpected(i, value);
-                     result.invalidValues++;
-                  }
-               } else {
-                  if (value != null) {
-                     result.found++;
-                     shouldBeDeleted(i);
-                  } else {
-                     result.nullValues++;
-                  }
-               }
-            } catch (Exception e) {
-               result.exceptions++;
-               if (log.isTraceEnabled()) {
-                  log.trace("Error retrieving value for key" + i + "\n" + e);
-               }
-            }
-         }
-      }
-      return result;
+      return super.executeOnSlave();    // TODO: Customise this generated block
    }
 
-   private void shouldBeDeleted(int i) {
-      if (log.isTraceEnabled()) {
-         log.trace("Key" + i + " should be deleted!");
+   @Override
+   protected boolean checkKey(CacheWrapper wrapper, String bucketId, int keyIndex, CheckResult result, ValueChecker checker) {
+      boolean retval = super.checkKey(wrapper, null, keyIndex, result, new MainCacheValueChecker());
+      for (int i = 0; i < backupCaches.length; ++i) {
+         retval = retval && super.checkKey(wrapper, backupCaches[i], keyIndex, result, backupCheckers[i]);
       }
+      return retval;
    }
 
    @Override
@@ -145,10 +80,51 @@ public class XSReplCheckStage extends CheckDataStage {
       XSReplicating wrapper = (XSReplicating) slaveState.getCacheWrapper();
       return getNumEntries() * (wrapper.getBackupCaches().size() + 1);
    }
-   
-   private void unexpected(Object key, Object value) {
-      if (log.isTraceEnabled()) {
-         log.trace("Key" + key + " has unexpected value " + value);
+
+   private class MainCacheValueChecker implements ValueChecker {
+      @Override
+      public boolean check(int keyIndex, Object value) {
+         return value.equals("value" + keyIndex + valuePostFix + "@" + xswrapper.getMainCache());
       }
    }
+
+   private class BackupCacheValueChecker implements ValueChecker {
+      private Pattern valuePattern = Pattern.compile("value(\\d*)([^@]*)@(.*)");
+      private volatile String originCache = null;
+      private String cacheName;
+
+      private BackupCacheValueChecker(String cacheName) {
+         this.cacheName = cacheName;
+      }
+
+      @Override
+      public boolean check(int keyIndex, Object value) {
+         Matcher m;
+         if (!(value instanceof String) || !(m = valuePattern.matcher((String) value)).matches()) {
+            return false;
+         }
+         try {
+            Integer.parseInt(m.group(1));
+         } catch (NumberFormatException e) {
+            return false;
+         }
+         if (!m.group(2).equals(valuePostFix)) {
+            return false;
+         }
+         if (originCache == null) {
+            synchronized (this) {
+               if (originCache == null) {
+                  log.info("Cache " + cacheName + " has entries from " + m.group(3));
+                  originCache = m.group(3);
+               }
+            }
+         } else if (!originCache.equals(m.group(3))) {
+            String message = "Cache " + cacheName + " has entries from " + m.group(3) + " but it also had entries from " + originCache + "!";
+            log.error(message);
+            return false;
+         }
+         return true;
+      }
+   }
+
 }

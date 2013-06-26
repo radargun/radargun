@@ -440,7 +440,7 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
    }
 
    @Override
-   public void debugKey(String bucket, String key) {
+   public void debugKey(String bucket, Object key) {
       log.debug(getKeyInfo(bucket, key));
       List<Level> levels = new ArrayList<Level>();
       String[] debugPackages = getDebugKeyPackages();

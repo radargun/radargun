@@ -18,28 +18,30 @@
  */
 package org.radargun.cachewrappers;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import javax.transaction.Status;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 
-import javax.transaction.Status;
+import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
+import org.infinispan.context.Flag;
 import org.infinispan.transaction.LockingMode;
 import org.radargun.features.BulkOperationsCapable;
+import org.radargun.features.PersistentStorageCapable;
 import org.radargun.utils.TypedProperties;
 
-public class InfinispanExplicitLockingWrapper extends InfinispanKeyAffinityWrapper implements BulkOperationsCapable {
+public class InfinispanExplicitLockingWrapper extends InfinispanKeyAffinityWrapper implements BulkOperationsCapable, PersistentStorageCapable {
 
    private boolean isExplicitLocking;
+   private AdvancedCache<Object, Object> skipCacheLoadStore;
    
    @Override
    protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {
       super.postSetUpInternal(confAttributes);
       setUpExplicitLocking(getCache(null), confAttributes);
+      skipCacheLoadStore = getCache(null).getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD, Flag.SKIP_CACHE_STORE);
    }
    
    protected void setUpExplicitLocking(Cache<Object, Object> cache, TypedProperties confAttributes) {
@@ -220,5 +222,44 @@ public class InfinispanExplicitLockingWrapper extends InfinispanKeyAffinityWrapp
          endTransaction(true);
       }
       return values;
+   }
+
+   @Override
+   public Object getMemoryOnly(String bucket, Object key) throws Exception {
+      return skipCacheLoadStore.get(key);
+   }
+
+   @Override
+   public Object putMemoryOnly(String bucket, Object key, Object value) throws Exception {
+      boolean shouldStopTransactionHere = false;
+      if (isExplicitLocking && !isClusterValidationRequest(bucket)) {
+         if (tm.getStatus() == Status.STATUS_NO_TRANSACTION) {
+            shouldStopTransactionHere = true;
+            startTransaction();
+         }
+         skipCacheLoadStore.lock(key);
+      }
+      Object retval = skipCacheLoadStore.put(key, value);
+      if (shouldStopTransactionHere) {
+         endTransaction(true);
+      }
+      return retval;
+   }
+
+   @Override
+   public Object removeMemoryOnly(String bucket, Object key) throws Exception {
+      boolean shouldStopTransactionHere = false;
+      if (isExplicitLocking && !isClusterValidationRequest(bucket)) {
+         if (tm.getStatus() == Status.STATUS_NO_TRANSACTION) {
+            shouldStopTransactionHere = true;
+            startTransaction();
+         }
+         skipCacheLoadStore.lock(key);
+      }
+      Object retval = skipCacheLoadStore.remove(key);
+      if (shouldStopTransactionHere) {
+         endTransaction(true);
+      }
+      return retval;
    }
 }

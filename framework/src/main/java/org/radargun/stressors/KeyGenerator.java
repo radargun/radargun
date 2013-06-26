@@ -10,21 +10,13 @@ package org.radargun.stressors;
  */
 public interface KeyGenerator {
 
-   /**
-    * Called for distributed benchmarks.
-    */
-   Object generateKey(int nodeIndex, int threadIndex, long keyIndex);
+   String KEY_GENERATOR = "KEY_GENERATOR";
+
+   void init(String param);
 
    /**
-    * Called for local benchmarks.
-    */
-   Object generateKey(int threadIndex, int keyIndex);
-
-   /**
-    * Called for benchmarks with shared attributes
-    *
     * @param keyIndex
     * @return
     */
-   Object generateKey(int keyIndex);
+   Object generateKey(long keyIndex);
 }
