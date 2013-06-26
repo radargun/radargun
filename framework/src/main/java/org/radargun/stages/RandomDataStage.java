@@ -297,7 +297,7 @@ public class RandomDataStage extends AbstractDistStage {
          }
       }
 
-      return data.toString();
+      return data.rewind().toString();
    }
 
    /**
