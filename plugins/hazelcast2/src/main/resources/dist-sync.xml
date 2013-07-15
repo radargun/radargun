@@ -34,7 +34,7 @@
         <time-to-live-seconds>0</time-to-live-seconds>
         <max-idle-seconds>0</max-idle-seconds>
         <eviction-policy>NONE</eviction-policy>
-        <max-size policy="cluster_wide_map_size">0</max-size>
+        <max-size policy="PER_PARTITION">0</max-size>
         <eviction-percentage>25</eviction-percentage>
         <merge-policy>hz.ADD_NEW_ENTRY</merge-policy>
     </map>
