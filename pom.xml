@@ -122,6 +122,7 @@
          <modules>
             <module>plugins/jdg60</module>
             <module>plugins/jdg61</module>
+            <module>plugins/jdg62</module>
          </modules>
          <build>
             <plugins>
@@ -138,7 +139,7 @@
                         </goals>
                         <configuration>
                            <tasks>
-                              <echo message="Packaging the JDG 6.0.x and JDG 6.1.x plugins" />
+                              <echo message="Packaging the JDG 6.0.x, 6.1.x, and 6.2.x plugins" />
                               <copy todir="${distribution.artifact}/plugins/jdg60">
                                  <fileset dir="plugins/jdg60/target/distribution/plugin-jdg60-bin/plugin-jdg60">
                                     <include name="**/*" />
@@ -146,6 +147,11 @@
                               </copy>
                               <copy todir="${distribution.artifact}/plugins/jdg61">
                                  <fileset dir="plugins/jdg61/target/distribution/plugin-jdg61-bin/plugin-jdg61">
+                                    <include name="**/*" />
+                                 </fileset>
+                              </copy>
+                              <copy todir="${distribution.artifact}/plugins/jdg62">
+                                 <fileset dir="plugins/jdg62/target/distribution/plugin-jdg62-bin/plugin-jdg62">
                                     <include name="**/*" />
                                  </fileset>
                               </copy>
@@ -220,7 +226,8 @@
 				               <arg value="chm" />
 				               <arg value="coherence3" />
 				               <arg value="jdg60" />
-				               <arg value="jdg61" />
+                           <arg value="jdg61" />
+                           <arg value="jdg62" />
 			               </java>
 
                         <echo message="Packaging the framework, and the following plugins: hazelcast2, hazelcast3, infinispan4, infinispan50, infinispan51, infinispan52, infinispan53, infinispan60, jbosscache2, jbosscache3, ehcache25, ehcache26, terracotta3" />
