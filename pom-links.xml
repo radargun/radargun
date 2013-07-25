@@ -141,6 +141,7 @@
          <modules>
             <module>plugins/jdg60</module>
             <module>plugins/jdg61</module>
+            <module>plugins/jdg62</module>
          </modules>
          <build>
             <plugins>
@@ -157,7 +158,7 @@
                         </goals>
                         <configuration>
                            <tasks>
-                              <echo message="Packaging the JDG 6.0.x and JDG 6.1.x plugins" />
+                              <echo message="Packaging the JDG 6.0.x, 6.1.x, and 6.2.x plugins" />
                               <copy todir="${distribution.artifact}/plugins/jdg60">
                                  <fileset dir="plugins/jdg60/target/distribution/plugin-jdg60-bin/plugin-jdg60">
                                     <include name="**/*" />
@@ -188,6 +189,22 @@
                               <exec executable="bash" failonerror="true">
                                  <arg value="-c"/>
                                  <arg value="for FILE in `ls plugins/jdg61/target/distribution/plugin-jdg61-bin/plugin-jdg61/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/jdg61/lib/; done;"/>
+                              </exec>                    
+
+                              <copy todir="${distribution.artifact}/plugins/jdg62">
+                                 <fileset dir="plugins/jdg62/target/distribution/plugin-jdg62-bin/plugin-jdg62">
+                                    <include name="**/*" />
+                                    <exclude name="**/*.jar" />
+                                 </fileset>
+                              </copy>
+                              <copy todir="${distribution.artifact}/plugin-dependencies">
+                                 <fileset dir="plugins/jdg62/target/distribution/plugin-jdg62-bin/plugin-jdg62/lib">
+                                    <include name="*.jar" />
+                                 </fileset>                        
+                              </copy>
+                              <exec executable="bash" failonerror="true">
+                                 <arg value="-c"/>
+                                 <arg value="for FILE in `ls plugins/jdg62/target/distribution/plugin-jdg62-bin/plugin-jdg62/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/jdg62/lib/; done;"/>
                               </exec>                    
                            </tasks>
                         </configuration>
@@ -259,7 +276,8 @@
 				               <arg value="chm" />
 				               <arg value="coherence3" />
 				               <arg value="jdg60" />
-				               <arg value="jdg61" />
+                           <arg value="jdg61" />
+                           <arg value="jdg62" />
 			               </java>
 
                         <echo message="Packaging the framework, and the following plugins: hazelcast2, infinispan4, infinispan50, infinispan51, infinispan52, infinispan53, infinispan60, jbosscache2, jbosscache3, ehcache25, ehcache26, terracotta3" />
