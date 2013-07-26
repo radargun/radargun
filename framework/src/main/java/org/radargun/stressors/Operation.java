@@ -8,9 +8,12 @@ package org.radargun.stressors;
 */
 public enum Operation {
    GET("READ"),
+   GET_ASYNC(true),
    GET_NULL("READ_NULL"),
    PUT("WRITE"),
+   PUT_ASYNC(true),
    REMOVE,
+   REMOVE_ASYNC(true),
    REMOVE_VALID,
    REMOVE_INVALID,
    PUT_IF_ABSENT_IS_ABSENT,
@@ -27,11 +30,20 @@ public enum Operation {
    TRANSACTION; /* stats for whole transaction */
 
    private String altName;
+   private boolean async;
 
    Operation() {}
 
    Operation(String altName) {
       this.altName = altName;
+   }
+   
+   Operation(boolean async) {
+       this.async = async;
+    }
+   
+   public boolean isAsync(){
+       return async;
    }
 
    public String getAltName() {

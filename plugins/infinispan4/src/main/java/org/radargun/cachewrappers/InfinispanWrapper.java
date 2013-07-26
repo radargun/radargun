@@ -7,12 +7,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.arjuna.ats.arjuna.common.arjPropertyManager;
-import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.Level;
@@ -29,12 +31,16 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.infinispan.remoting.transport.Address;
 import org.radargun.CacheWrapper;
+import org.radargun.features.AsyncOperationsCapable;
 import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.Debugable;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
-public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperationsCapable {
+import com.arjuna.ats.arjuna.common.arjPropertyManager;
+import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
+
+public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperationsCapable, AsyncOperationsCapable {
 
    enum State {
       STOPPED,
@@ -508,5 +514,27 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
    @Override
    public boolean isTransactional(String bucket) {
       return tm != null;
+   }
+   
+   @Override
+   public Future<Object> putAsync(String bucket, Object key, Object value) throws Exception {
+       return getCache(bucket).putAsync(key, value);
+   }
+
+   @Override
+   public Future<Object> getAsync(final String bucket, final Object key) throws Exception {
+       FutureTask<Object> f = new FutureTask<Object>(new Callable<Object>() {
+           @Override
+           public Object call() throws Exception {
+               return getCache(bucket).get(key);
+           }
+       });
+       f.run();
+       return f;
+   }
+
+   @Override
+   public Future<Object> removeAsync(String bucket, Object key) throws Exception {
+       return getCache(bucket).removeAsync(key);
    }
 }

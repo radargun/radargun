@@ -1,17 +1,20 @@
 package org.radargun.cachewrappers;
 
 import java.io.InputStream;
+import java.util.concurrent.Future;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.radargun.CacheWrapper;
+import org.radargun.features.AsyncOperationsCapable;
+import org.radargun.features.AtomicOperationsCapable;
+import org.radargun.utils.TypedProperties;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.radargun.CacheWrapper;
-import org.radargun.features.AtomicOperationsCapable;
-import org.radargun.utils.TypedProperties;
 
 /**
  *
@@ -19,7 +22,7 @@ import org.radargun.utils.TypedProperties;
  * @author Martin Gencur
  *
  */
-public class HazelcastWrapper implements CacheWrapper, AtomicOperationsCapable {
+public class HazelcastWrapper implements CacheWrapper, AtomicOperationsCapable, AsyncOperationsCapable {
 
    protected final Log log = LogFactory.getLog(getClass());
    private final boolean trace = log.isTraceEnabled();
@@ -145,6 +148,21 @@ public class HazelcastWrapper implements CacheWrapper, AtomicOperationsCapable {
    @Override
    public int getTotalSize() {
       return hazelcastMap.size();
+   }
+   
+   @Override
+   public Future<Object> putAsync(String bucket, Object key, Object value) throws Exception {
+       return hazelcastMap.putAsync(key, value);
+   }
+
+   @Override
+   public Future<Object> getAsync(String bucket, Object key) throws Exception {
+       return hazelcastMap.getAsync(key);
+   }
+
+   @Override
+   public Future<Object> removeAsync(String bucket, Object key) throws Exception {
+       return hazelcastMap.removeAsync(key);
    }
 
    private InputStream getAsInputStreamFromClassLoader(String filename) {

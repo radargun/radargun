@@ -1,21 +1,32 @@
 package org.radargun.stressors;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.config.Property;
 import org.radargun.config.Stressor;
 import org.radargun.config.TimeConverter;
+import org.radargun.features.AsyncOperationsCapable;
 import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.BulkOperationsCapable;
 import org.radargun.features.Queryable;
 import org.radargun.utils.Utils;
-
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * On multiple threads executes put and get operations against the CacheWrapper, and returns the result as an Map.
@@ -88,6 +99,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    @Property(doc = "Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.")
    private String keyGeneratorClass = StringKeyGenerator.class.getName();
+   
+   @Property(doc = "If this is set to true, async API is used for testing. Transaction time is not recorded.")
+   private boolean async = false;
 
    /**
     * Number of slaves that participate in this test
@@ -269,6 +283,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          }
       } else if (sharedKeys) {
          return new FixedSetSharedOperationLogic(sharedKeysPool);
+      } else if (async) {
+         return new AsyncFixedSetPerThreadOperationLogic();
       } else {
          return new FixedSetPerThreadOperationLogic();
       }
@@ -286,6 +302,30 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    protected abstract class FixedSetOperationLogic implements OperationLogic {
       private Random r = new Random();
 
+      protected Operation put;
+      protected Operation get;
+      protected Operation remove;
+
+      public FixedSetOperationLogic(){
+         init();
+      }
+
+      public FixedSetOperationLogic(boolean async){
+          if (async) {
+              this.put = Operation.PUT_ASYNC;
+              this.get = Operation.GET_ASYNC;
+              this.remove = Operation.REMOVE_ASYNC;
+          } else {
+           init();
+          }
+      }
+
+      private void init() {
+         this.put = Operation.PUT;
+         this.get = Operation.GET;
+         this.remove = Operation.REMOVE;
+      }
+
       @Override
       public Object run(Stressor stressor, int iteration) {
          int randomAction = r.nextInt(100);
@@ -293,11 +333,11 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          Object key = getKey(randomKeyInt);
 
          if (randomAction < writePercentage) {
-            return stressor.makeRequest(iteration, Operation.PUT, key, generateValue(entrySize));
+            return stressor.makeRequest(iteration, put, key, generateValue(entrySize));
          } else if (randomAction < writePercentage + removePercentage) {
-            return stressor.makeRequest(iteration, Operation.REMOVE, key);
+            return stressor.makeRequest(iteration, remove, key);
          } else {
-            return stressor.makeRequest(iteration, Operation.GET, key);
+            return stressor.makeRequest(iteration, get, key);
          }
       }
 
@@ -306,6 +346,14 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    protected class FixedSetPerThreadOperationLogic extends FixedSetOperationLogic {
       private ArrayList<Object> pooledKeys = new ArrayList<Object>(numEntries);
+      
+      public FixedSetPerThreadOperationLogic(){
+         super();
+      }
+
+      public FixedSetPerThreadOperationLogic(boolean async){
+         super(async);
+      }
 
       @Override
       public void init(String bucketId, int threadIndex) {
@@ -341,6 +389,12 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       protected Object getKey(int keyId) {
          return pooledKeys.get(keyId);
       }
+   }
+   
+   protected class AsyncFixedSetPerThreadOperationLogic extends FixedSetPerThreadOperationLogic{
+       public AsyncFixedSetPerThreadOperationLogic(){
+           super(true);
+       }
    }
 
    protected class FixedSetSharedOperationLogic extends FixedSetOperationLogic {
@@ -600,7 +654,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
       public Object makeRequest(int iteration, Operation operation, Object... keysAndValues) {
          long startTxTime = 0;
-         if (useTransactions && shouldStartTransaction(iteration)) {
+         if (!operation.isAsync() && useTransactions && shouldStartTransaction(iteration)) {
             try {
                startTxTime = startTransaction();
                transactionDuration = startTxTime;
@@ -612,6 +666,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          }
 
          Object result = null;
+         Future<Object> f = null;
          boolean successfull = true;
          long start = System.nanoTime();
          long operationDuration;
@@ -622,15 +677,27 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                   result = cacheWrapper.get(bucketId, keysAndValues[0]);
                   operation = (result != null ? Operation.GET : Operation.GET_NULL);
                   break;
+               case GET_ASYNC:
+                   f = ((AsyncOperationsCapable) cacheWrapper).getAsync(bucketId, keysAndValues[0]);
+                   result = f.get();
+                   break;
                case PUT:
                   cacheWrapper.put(bucketId, keysAndValues[0], keysAndValues[1]);
                   break;
+               case PUT_ASYNC:
+                   f = ((AsyncOperationsCapable) cacheWrapper).putAsync(bucketId, keysAndValues[0], keysAndValues[1]);
+                   result = f.get();
+                   break;
                case QUERY:
                   result = ((Queryable) cacheWrapper).executeQuery((Map<String, Object>) keysAndValues[0]);
                   break;
                case REMOVE:
                   result = cacheWrapper.remove(bucketId, keysAndValues[0]);
                   break;
+               case REMOVE_ASYNC:
+                   f = ((AsyncOperationsCapable) cacheWrapper).removeAsync(bucketId, keysAndValues[0]);
+                   result = f.get();
+                   break;
                case REMOVE_VALID:
                   successfull = atomicCacheWrapper.remove(bucketId, keysAndValues[0], keysAndValues[1]);
                   break;
@@ -675,7 +742,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          transactionDuration += operationDuration;
 
          long endTxTime = 0;
-         if (useTransactions && shouldEndTransaction(iteration)) {
+         if (!operation.isAsync() && useTransactions && shouldEndTransaction(iteration)) {
             try {
                endTxTime = endTransaction();
                stats.registerRequest(transactionDuration + endTxTime, 0, Operation.TRANSACTION);
