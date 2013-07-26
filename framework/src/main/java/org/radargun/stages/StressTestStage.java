@@ -108,6 +108,9 @@ public class StressTestStage extends AbstractDistStage {
 
    @Property(doc = "The test will produce operation statistics as average values. Default is true.")
    protected boolean useSimpleStatistics = true;
+   
+   @Property(doc = "If this is set to true, async API is used for testing. Transaction time is not recorded.")
+   private boolean async = false;
 
    protected CacheWrapper cacheWrapper;
 
