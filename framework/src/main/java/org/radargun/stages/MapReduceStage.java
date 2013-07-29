@@ -85,6 +85,11 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          + "final results of the MapReduceTask are stored in the cache at key MAPREDUCE_RESULT_KEY. "
          + "Enabling this feature will require extra DRAM usage. The default is false.")
    private boolean storeResultInCache = false;
+
+   @Property(optional = true, doc = "Boolean value that determines if the "
+         + "final results of the MapReduceTask are written to the log of the "
+         + "first slave node. The default is false.")
+   private boolean printResult = false;
    
    @Property(doc = "A tiemout value for the remote communication that happens "
          + "during a Map/Reduce task. The default is zero which means to wait forever.")
@@ -195,6 +200,9 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             String payload = this.slaveIndex + ", " + mapReduceCapable.getNumMembers() + ", "
                   + mapReduceCapable.getLocalSize() + ", " + durationNanos + ", -1";
             result.setPayload(payload);
+            if (printResult) {
+               log.info("MapReduce result: " + payloadObject.toString());
+            }
             if (storeResultInCache) {
                try {
                   mapReduceCapable.put(null, MAPREDUCE_RESULT_KEY, payloadObject);
@@ -213,6 +221,12 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                String payload = this.slaveIndex + ", " + mapReduceCapable.getNumMembers() + ", "
                      + mapReduceCapable.getLocalSize() + ", " + durationNanos + ", " + payloadMap.keySet().size();
                result.setPayload(payload);
+               if (printResult) {
+                  log.info("MapReduce result:");
+                  for (Map.Entry<KOut, VOut> entry : payloadMap.entrySet()) {
+                     log.info("key: " + entry.getKey() + " value: " + entry.getValue());
+                  }
+               }
                if (storeResultInCache) {
                   try {
                      mapReduceCapable.put(null, MAPREDUCE_RESULT_KEY, payloadMap);

@@ -881,6 +881,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Mapper Object. The method must be public and take a String parameter. The default is null.</documentation>
                </annotation>
             </attribute>
+            <attribute name="printResult" type="string">
+               <annotation>
+                  <documentation>Boolean value that determines if the final results of the MapReduceTask are written to the log of the first slave node. The default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="reducerFqn" type="string">
                <annotation>
                   <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to execute.</documentation>
@@ -1016,6 +1021,16 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="stringData" type="string">
                <annotation>
                   <documentation>If true, then String objects with printable characters are written to the cache.The default is false</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="targetMemoryUse" type="string">
+               <annotation>
+                  <documentation>The number of bytes to write to the cache when the valueByteOverhead, stringData, and valueSize are taken into account. The code assumes this is an even multiple of valueSize.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="valueByteOverhead" type="string">
+               <annotation>
+                  <documentation>The bytes used over the size of the key and value when putting to the cache. The default is 136 for Infinispan 5.3.</documentation>
                </annotation>
             </attribute>
             <attribute name="valueCount" type="string">

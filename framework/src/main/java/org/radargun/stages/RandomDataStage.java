@@ -98,18 +98,25 @@ public class RandomDataStage extends AbstractDistStage {
          + "If true, then each node in the cluster shares the same list of words. The default is false.")
    private boolean shareWords = false;
 
+   /*
+    * From http://infinispan.blogspot.com/2013/01/infinispan-memory-overhead.html and
+    * http://infinispan.blogspot.com/2013/07/lower-memory-overhead-in-infinispan.html
+    */
+   @Property(doc = "The bytes used over the size of the key and value when "
+         + "putting to the cache. The default is 136 for Infinispan 5.3.")
+   private int valueByteOverhead = 136;
+
+   @Property(doc = "The number of bytes to write to the cache when the valueByteOverhead, "
+         + "stringData, and valueSize are taken into account. The code assumes this is an "
+         + "even multiple of valueSize.")
+   private long targetMemoryUse = -1;
+
    private Random random;
 
    private String[][] words = null;
 
-   /*
-    * From http://infinispan.blogspot.com/2013/01/infinispan-memory-overhead.html
-    */
-   public final static int LIBRARY_MODE_VALUE_BYTE_OVERHEAD = 152;
-
    Runtime runtime = null;
 
-   private long targetMemoryUse;
    private int newlinePunctuationModulo = 10;
 
    /**
@@ -191,7 +198,7 @@ public class RandomDataStage extends AbstractDistStage {
       }
 
       runtime = Runtime.getRuntime();
-      int valueSizeWithOverhead = LIBRARY_MODE_VALUE_BYTE_OVERHEAD;
+      int valueSizeWithOverhead = valueByteOverhead;
       /*
        * String data is twice the size of a byte array
        */
@@ -208,12 +215,16 @@ public class RandomDataStage extends AbstractDistStage {
 
          nodePutCount = (long) Math.ceil(targetMemoryUse / valueSizeWithOverhead);
       } else {
-         nodePutCount = (long) Math.ceil(valueCount / getActiveSlaveCount());
+         long totalPutCount = valueCount;
+         if (targetMemoryUse > 0) {
+            totalPutCount = targetMemoryUse / valueSizeWithOverhead;
+         }
+         nodePutCount = (long) Math.ceil(totalPutCount / getActiveSlaveCount());
          /*
           * Add one to the nodeCount on each slave with an index less than the remainder so that the
           * correct number of values are written to the cache
           */
-         if ((valueCount % getActiveSlaveCount() != 0) && getSlaveIndex() < (valueCount % getActiveSlaveCount())) {
+         if ((totalPutCount % getActiveSlaveCount() != 0) && getSlaveIndex() < (totalPutCount % getActiveSlaveCount())) {
             nodePutCount++;
          }
       }
@@ -223,7 +234,7 @@ public class RandomDataStage extends AbstractDistStage {
       try {
          byte[] buffer = new byte[valueSize];
          while (putCount > 0) {
-            String key = Integer.toString(getSlaveIndex()) + "-" + random.nextLong();
+            String key = Integer.toString(getSlaveIndex()) + "-" + putCount + ":" + random.nextLong();
 
             long start;
             if (stringData) {
@@ -361,15 +372,26 @@ public class RandomDataStage extends AbstractDistStage {
       log.info("--------------------");
       if (ramPercentage > 0) {
          if (stringData) {
-            log.info("Filled cache with String objects totaling " + (ramPercentage * 100) + "% of the Java heap");
+            log.info("Filled cache with String objects totaling " + Math.round(ramPercentage * 100)
+                  + "% of the Java heap");
          } else {
-            log.info("Filled cache with byte arrays totaling " + (ramPercentage * 100) + "% of the Java heap");
+            log.info("Filled cache with byte arrays totaling " + Math.round(ramPercentage * 100) + "% of the Java heap");
          }
-      } else {
+      }
+      if (ramPercentage < 0 && targetMemoryUse > 0) {
          if (stringData) {
-            log.info("Filled cache with " + Utils.kbString((valueSize * 2) * valueCount) + " of String objects");
+            log.info("Filled cache with String objects totaling " + Utils.kbString(targetMemoryUse));
          } else {
-            log.info("Filled cache with " + Utils.kbString(valueSize * valueCount) + " of byte arrays");
+            log.info("Filled cache with byte arrays totaling " + Utils.kbString(targetMemoryUse));
+         }
+      }
+      if (valueCount > 0) {
+         if (stringData) {
+            log.info("Filled cache with " + Utils.kbString((valueSize * 2) * valueCount) + " of " + valueSize
+                  + " character String objects");
+         } else {
+            log.info("Filled cache with " + Utils.kbString(valueSize * valueCount) + " of " + Utils.kbString(valueSize)
+                  + " byte arrays");
          }
       }
       long totalValues = 0;
