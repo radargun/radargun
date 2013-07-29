@@ -48,4 +48,9 @@ public class Infinispan52MapReduceWrapper<KIn, VIn, KOut, VOut, R> extends
       return consistentHash.getMembers().size();
    }
 
+   @Override
+   public int getValueByteOverhead() {
+      return 152;
+   }   
+
 }
