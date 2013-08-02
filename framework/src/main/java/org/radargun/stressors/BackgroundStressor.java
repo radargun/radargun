@@ -5,6 +5,7 @@ import java.util.Random;
 
 import org.apache.log4j.Logger;
 import org.radargun.CacheWrapper;
+import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.stages.helpers.Range;
 import org.radargun.state.SlaveState;
 
@@ -18,32 +19,36 @@ class BackgroundStressor extends Thread {
 
    private static Logger log = Logger.getLogger(BackgroundStressor.class);
 
-   private Random rand = new Random();
+   private final Random rand = new Random();
+   private final int keyRangeStart;
+   private final int keyRangeEnd;
+   private final List<Range> deadSlavesRanges;
+   private final BackgroundOpsManager backgroundOpsManager;
+   private final KeyGenerator keyGenerator;
+
    private long lastOpStartTime;
-   private SynchronizedStatistics threadStats = new SynchronizedStatistics();
-   private int keyRangeStart;
-   private int keyRangeEnd;
-   private List<Range> deadSlavesRanges;
+   private final SynchronizedStatistics threadStats = new SynchronizedStatistics();
    private int currentKey;
    private volatile boolean terminate = false;
    private int remainingTxOps;
    private boolean loaded;
-   private BackgroundOpsManager backgroundOpsManager;
-   private KeyGenerator keyGenerator;
 
    public BackgroundStressor(BackgroundOpsManager backgroundOpsManager, SlaveState slaveState, Range myRange, List<Range> deadSlavesRanges, int idx) {
       super("StressorThread-" + idx);
+      this.backgroundOpsManager = backgroundOpsManager;
       this.keyRangeStart = myRange.getStart();
       this.keyRangeEnd = myRange.getEnd();
       this.deadSlavesRanges = deadSlavesRanges;
-      this.currentKey = myRange.getStart();
-      this.remainingTxOps = backgroundOpsManager.getTransactionSize();
-      this.backgroundOpsManager = backgroundOpsManager;
-      this.keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
-      if (this.keyGenerator == null) {
+      KeyGenerator keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
+      if (keyGenerator != null) {
+         this.keyGenerator = keyGenerator;
+      } else {
          this.keyGenerator = new StringKeyGenerator();
          slaveState.put(KeyGenerator.KEY_GENERATOR, this.keyGenerator);
       }
+
+      this.currentKey = myRange.getStart();
+      this.remainingTxOps = backgroundOpsManager.getTransactionSize();
    }
 
    private void loadData() {
@@ -63,13 +68,21 @@ class BackgroundStressor extends Thread {
       int loaded_keys = 0;
       CacheWrapper cacheWrapper = backgroundOpsManager.getCacheWrapper();
       for (currentKey = from; currentKey < to && !terminate; currentKey++, loaded_keys++) {
-         try {
-            cacheWrapper.put(backgroundOpsManager.getBucketId(), keyGenerator.generateKey(currentKey), generateRandomEntry(backgroundOpsManager.getEntrySize()));
-            if (loaded_keys % 1000 == 0) {
-               log.debug("Loaded " + loaded_keys + " out of " + (to - from));
+         while (!terminate) {
+            try {
+               if (backgroundOpsManager.getLoadWithPutIfAbsent() && cacheWrapper instanceof AtomicOperationsCapable) {
+                  ((AtomicOperationsCapable) cacheWrapper).putIfAbsent(backgroundOpsManager.getBucketId(), keyGenerator.generateKey(currentKey), generateRandomEntry(backgroundOpsManager.getEntrySize()));
+               } else {
+                  cacheWrapper.put(backgroundOpsManager.getBucketId(), keyGenerator.generateKey(currentKey), generateRandomEntry(backgroundOpsManager.getEntrySize()));
+               }
+               if (loaded_keys % 1000 == 0) {
+                  log.debug("Loaded " + loaded_keys + " out of " + (to - from));
+               }
+               // if we get an exception, it's OK - we can retry.
+               break;
+            } catch (Exception e) {
+               log.error("Error while loading data", e);
             }
-         } catch (Exception e) {
-            log.error("Error while loading data", e);
          }
       }
       log.debug("Loaded all " + (to - from) + " keys");
@@ -80,6 +93,10 @@ class BackgroundStressor extends Thread {
       try {
          if (!loaded) {
             loadData();
+         }
+         if (backgroundOpsManager.getLoadOnly()) {
+            log.info("The stressor has finished loading data and will terminate.");
+            return;
          }
          while (!isInterrupted() && !terminate) {
             makeRequest();

@@ -1,12 +1,13 @@
 package org.radargun.stages;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Stage;
+import org.radargun.stressors.BackgroundOpsManager;
 import org.radargun.utils.Utils;
-
-import java.util.ArrayList;
-import java.util.Random;
 
 /**
  * Distributed stage that will clear the content of the cache wrapper on each slave.
@@ -26,19 +27,25 @@ public class ClearClusterStage extends AbstractDistStage {
 
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck defaultDistStageAck = newDefaultStageAck();
+      BackgroundOpsManager.beforeCacheWrapperClear(slaveState);
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
+      if (cacheWrapper == null) {
+         log.info("This slave is dead, cannot clear cache.");
+         return defaultDistStageAck;
+      }
       for (int i = 0; i < 5; i++) {
          try {
             log.info(Utils.printMemoryFootprint(true));
             if (slaves == null || slaves.contains(getSlaveIndex())) {
                cacheWrapper.empty();
             } else {
-               for (int count = new Random().nextInt(20) + 10; count > 0 && cacheWrapper.getLocalSize() > 0; --count) {
-                  log.debug("Waiting until the cache gets empty");
+               int size;
+               for (int count = new Random().nextInt(20) + 10; count > 0 && (size = cacheWrapper.getLocalSize()) > 0; --count) {
+                  log.debug("Waiting until the cache gets empty (contains " + size + " entries)");
                   Thread.sleep(1000);
                }
-               if (cacheWrapper.getLocalSize() > 0) {
-                  log.error("The cache was not cleared from another node, clearing locally");
+               if ((size = cacheWrapper.getLocalSize()) > 0) {
+                  log.error("The cache was not cleared from another node (contains " + size + " entries), clearing locally");
                   cacheWrapper.empty();
                }
             }
