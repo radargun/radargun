@@ -31,24 +31,28 @@ public class BackgroundOpsManager {
    private int gets;
    private int removes;
    private int operations;
-   
    private int numEntries;
    private int entrySize;
+   private String bucketId;
    private int numThreads;
-   private SlaveState slaveState;
    private long delayBetweenRequests;
+   private int numSlaves;
+   private int slaveIndex;
+   private int transactionSize;
+   private List<Integer> loadDataOnSlaves;
+   private List<Integer> loadDataForDeadSlaves;
+   private boolean loadOnly;
+   private boolean loadWithPutIfAbsent;
+
+
+   private SlaveState slaveState;
    private BackgroundStressor[] stressorThreads;
    private SizeThread sizeThread;
    private volatile boolean stressorsRunning = false;
-   private int numSlaves;
-   private int slaveIndex;
    private List<Statistics> stats;
    private BackgroundStatsThread backgroundStatsThread;
    private long statsIteration;
    private boolean loaded = false;
-   private int transactionSize;
-   private List<Integer> loadDataForDeadSlaves;
-   private String bucketId;
 
    public static BackgroundOpsManager getInstance(SlaveState slaveState) {
       return (BackgroundOpsManager) slaveState.get(NAME);
@@ -71,7 +75,9 @@ public class BackgroundOpsManager {
    public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, int puts, int gets, int removes,
                                                           int numEntries, int entrySize, String bucketId, int numThreads,
                                                           long delayBetweenRequests, int numSlaves, int slaveIndex,
-                                                          int transactionSize, List<Integer> loadDataForDeadSlaves) {
+                                                          int transactionSize, List<Integer> loadDataOnSlaves,
+                                                          List<Integer> loadDataForDeadSlaves, boolean loadOnly,
+                                                          boolean loadWithPutIfAbsent) {
       BackgroundOpsManager instance = getOrCreateInstance(slaveState);
       instance.puts = puts;
       instance.gets = gets;
@@ -85,7 +91,10 @@ public class BackgroundOpsManager {
       instance.numSlaves = numSlaves;
       instance.slaveIndex = slaveIndex;
       instance.transactionSize = transactionSize;
+      instance.loadDataOnSlaves = loadDataOnSlaves;
       instance.loadDataForDeadSlaves = loadDataForDeadSlaves;
+      instance.loadOnly = loadOnly;
+      instance.loadWithPutIfAbsent = loadWithPutIfAbsent;
       return instance;
    }
 
@@ -108,6 +117,10 @@ public class BackgroundOpsManager {
    }
 
    public synchronized void startStressors() {
+      if (loadDataOnSlaves != null && !loadDataOnSlaves.isEmpty() && !loadDataOnSlaves.contains(slaveIndex)) {
+         log.info("This slave is not loading any data.");
+         return;
+      }
       if (stressorThreads != null || stressorsRunning) {
          log.warn("Can't start stressors, they're already running.");
          return;
@@ -240,6 +253,14 @@ public class BackgroundOpsManager {
       return statsToReturn;
    }
 
+   public boolean getLoadOnly() {
+      return loadOnly;
+   }
+
+   public boolean getLoadWithPutIfAbsent() {
+      return loadWithPutIfAbsent;
+   }
+
    private class BackgroundStatsThread extends Thread {
 
       private SynchronizedStatistics nodeDownStats = new SynchronizedStatistics(false);
@@ -341,13 +362,20 @@ public class BackgroundOpsManager {
    public static void afterCacheWrapperStart(SlaveState slaveState) {
       BackgroundOpsManager instance = getInstance(slaveState);
       if (instance != null) {
-         instance.setLoaded(); // don't load data at this stage
+         instance.setLoaded(true); // don't load data at this stage
          instance.startStressors();
       }
    }
 
-   public void setLoaded() {
-      loaded = true;
+   public static void beforeCacheWrapperClear(SlaveState slaveState) {
+      BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState);
+      if (instance != null) {
+         instance.setLoaded(false);
+      }
+   }
+
+   public void setLoaded(boolean loaded) {
+      this.loaded = loaded;
    }
    
    public String getBucketId() {

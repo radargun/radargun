@@ -45,8 +45,17 @@ public class StartBackgroundStressorsStage extends AbstractDistStage {
    @Property(doc = "Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.")
    private boolean waitUntilLoaded = true;
 
+   @Property(doc = "List of slaves where the data should be loaded (others immediately start executing requests). Default is all live slaves).")
+   private List<Integer> loadDataOnSlaves;
+
    @Property(doc = "List of slaves whose data should be loaded by other threads because these slaves are not alive. Default is empty.")
    private List<Integer> loadDataForDeadSlaves;
+
+   @Property(doc = "If set to true, the stressor does not execute any requests after loading the data. Default is false.")
+   private boolean loadOnly = false;
+
+   @Property(doc = "Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.")
+   private boolean loadWithPutIfAbsent = false;
 
    @Property(doc = "Bucket where the entries should be inserted. Default is ")
    private String bucketId;
@@ -55,9 +64,10 @@ public class StartBackgroundStressorsStage extends AbstractDistStage {
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
       try {
-         BackgroundOpsManager instance = BackgroundOpsManager.getOrCreateInstance(slaveState, puts, gets, removes, numEntries,
-                                                                                  entrySize, bucketId, numThreads, delayBetweenRequests, getActiveSlaveCount(), getSlaveIndex(),
-                                                                                  transactionSize, loadDataForDeadSlaves);
+         BackgroundOpsManager instance =
+               BackgroundOpsManager.getOrCreateInstance(slaveState, puts, gets, removes, numEntries,
+                     entrySize, bucketId, numThreads, delayBetweenRequests, getActiveSlaveCount(), getSlaveIndex(),
+                     transactionSize, loadDataOnSlaves, loadDataForDeadSlaves, loadOnly, loadWithPutIfAbsent);
 
          log.info("Starting stressor threads");
          if (slaveState.getCacheWrapper() != null) {
@@ -66,7 +76,7 @@ public class StartBackgroundStressorsStage extends AbstractDistStage {
                log.info("Waiting until all stressor threads load data");
                instance.waitUntilLoaded();
             }
-            instance.setLoaded();
+            instance.setLoaded(true);
          }
 
          return ack;
