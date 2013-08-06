@@ -76,7 +76,6 @@
                      <choice maxOccurs="unbounded" minOccurs="1">
                         <element name="product" type="rg:product"/>
                         <element name="hazelcast2" type="rg:hazelcast2"/>
-                        <element name="hazelcast3" type="rg:hazelcast3"/>
                         <element name="infinispan4" type="rg:infinispan4"/>
                         <element name="infinispan50" type="rg:infinispan50"/>
                         <element name="infinispan51" type="rg:infinispan51"/>
@@ -452,6 +451,11 @@
             <attribute name="opsCountStatusLog" type="string">
                <annotation>
                   <documentation>Number of operations after which a log entry should be written. Default is 5000.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="poolKeys" type="string">
+               <annotation>
+                  <documentation>Keep all keys in a pool - do not generate the keys for each request anew. Default is true.</documentation>
                </annotation>
             </attribute>
             <attribute name="preferAsyncOperations" type="string">
@@ -1686,11 +1690,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </complexContent>
    </complexType>
    <complexType name="hazelcast2">
-      <complexContent>
-         <extension base="rg:abstractProduct"/>
-      </complexContent>
-   </complexType>
-   <complexType name="hazelcast3">
       <complexContent>
          <extension base="rg:abstractProduct"/>
       </complexContent>
