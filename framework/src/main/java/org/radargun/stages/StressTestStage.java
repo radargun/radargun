@@ -104,6 +104,9 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "If true, putIfAbsent and replace operations are used. Default is false.")
    protected boolean useAtomics = false;
 
+   @Property(doc = "Keep all keys in a pool - do not generate the keys for each request anew. Default is true.")
+   protected boolean poolKeys = true;
+
    @Property(doc = "Specifies whether the key generator is produced by a cache wrapper and therefore is product-specific. Default is false.")
    protected boolean cacheSpecificKeyGenerator = false;
 

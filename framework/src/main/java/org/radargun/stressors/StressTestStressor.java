@@ -89,6 +89,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    @Property(doc = "If true, putIfAbsent and replace operations are used. Default is false.")
    protected boolean useAtomics = false;
 
+   @Property(doc = "Keep all keys in a pool - do not generate the keys for each request anew. Default is true.")
+   protected boolean poolKeys = true;
+
    @Property(doc = "Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.")
    private String keyGeneratorClass = StringKeyGenerator.class.getName();
 
@@ -261,6 +264,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          if (sharedKeys) {
             throw new IllegalArgumentException("Atomics on shared keys are not supported.");
          } else if (cacheWrapper instanceof AtomicOperationsCapable) {
+            if (!poolKeys) {
+               log.warn("Keys are not pooled, but last values must be recorded!");
+            }
             return new FixedSetAtomicOperationLogic();
          } else {
             throw new IllegalArgumentException("Atomics can be executed only on wrapper which supports atomic operations.");
@@ -288,7 +294,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       public Object run(Stressor stressor, int iteration) {
          int randomAction = r.nextInt(100);
          int randomKeyInt = r.nextInt(numEntries - 1);
-         Object key = getKey(randomKeyInt);
+         Object key = getKey(randomKeyInt, stressor.threadIndex);
 
          if (randomAction < writePercentage) {
             return stressor.makeRequest(iteration, Operation.PUT, key, generateValue(entrySize));
@@ -299,15 +305,20 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          }
       }
 
-      protected abstract Object getKey(int keyId);
+      protected abstract Object getKey(int keyId, int threadIndex);
    }
 
    protected class FixedSetPerThreadOperationLogic extends FixedSetOperationLogic {
       private ArrayList<Object> pooledKeys = new ArrayList<Object>(numEntries);
+      private int myLoadedKeys = 0;
 
       @Override
       public void init(String bucketId, int threadIndex) {
-         if (pooledKeys.size() == numEntries) return;
+         if (poolKeys) {
+            if (pooledKeys.size() == numEntries) return;
+         } else {
+            if (myLoadedKeys == numEntries) return;
+         }
          KeyGenerator keyGenerator = getKeyGenerator();
          for (int keyIndex = 0; keyIndex < numEntries; keyIndex++) {
             Object key = null;
@@ -333,11 +344,21 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       }
 
       protected void addPooledKey(Object key, Object value) {
-         pooledKeys.add(key);
+         if (poolKeys) {
+            pooledKeys.add(key);
+         } else {
+            myLoadedKeys++;
+         }
       }
 
-      protected Object getKey(int keyId) {
-         return pooledKeys.get(keyId);
+      protected Object getKey(int keyId, int threadIndex) {
+         if (poolKeys) {
+            return pooledKeys.get(keyId);
+         } else if (isLocalBenchmark()) {
+            return keyGenerator.generateKey(threadIndex * numEntries + keyId);
+         } else {
+            return keyGenerator.generateKey((nodeIndex * numThreads + threadIndex) * numEntries + keyId);
+         }
       }
    }
 
@@ -350,28 +371,34 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       }
 
       @Override
-      public Object getKey(int keyId) {
-         return sharedKeys.get(keyId);
+      public Object getKey(int keyId, int threadIndex) {
+         if (poolKeys) {
+            return sharedKeys.get(keyId);
+         } else {
+            return keyGenerator.generateKey(keyId);
+         }
       }
 
       @Override
       public void init(String bucketId, int threadIndex) {
-         synchronized (sharedKeys) {
-            // no point in doing this in parallel, too much overhead in synchronization
-            if (threadIndex == 0) {
-               if (sharedKeys.size() != numEntries) {
-                  sharedKeys.clear();
-                  KeyGenerator keyGenerator = getKeyGenerator();
-                  for (int keyIndex = 0; keyIndex < numEntries; ++keyIndex) {
-                     sharedKeys.add(keyGenerator.generateKey(keyIndex));
+         if (poolKeys) {
+            synchronized (sharedKeys) {
+               // no point in doing this in parallel, too much overhead in synchronization
+               if (threadIndex == 0) {
+                  if (sharedKeys.size() != numEntries) {
+                     sharedKeys.clear();
+                     KeyGenerator keyGenerator = getKeyGenerator();
+                     for (int keyIndex = 0; keyIndex < numEntries; ++keyIndex) {
+                        sharedKeys.add(keyGenerator.generateKey(keyIndex));
+                     }
                   }
-               }
-               sharedKeys.notifyAll();
-            } else {
-               while (sharedKeys.size() != numEntries) {
-                  try {
-                     sharedKeys.wait();
-                  } catch (InterruptedException e) {
+                  sharedKeys.notifyAll();
+               } else {
+                  while (sharedKeys.size() != numEntries) {
+                     try {
+                        sharedKeys.wait();
+                     } catch (InterruptedException e) {
+                     }
                   }
                }
             }
@@ -395,7 +422,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          }
          for (; keyIndex < numEntries; keyIndex += loadingThreads) {
             try {
-               cacheWrapper.put(null, sharedKeys.get(keyIndex), generateValue(entrySize));
+               cacheWrapper.put(null, getKey(keyIndex, threadIndex), generateValue(entrySize));
                long loaded = keysLoaded.incrementAndGet();
                if (loaded % 100000 == 0) {
                   Runtime runtime = Runtime.getRuntime();
@@ -415,7 +442,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       @Override
       public Object run(Stressor stressor, int iteration) {
          int randomAction = r.nextInt(100);
-         Object key = getKey(r.nextInt(numEntries - 1));
+         Object key = getKey(r.nextInt(numEntries - 1), stressor.threadIndex);
          Object lastValue = lastValues.get(key);
 
          Object newValue = generateValue(entrySize);
@@ -475,7 +502,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          if (randomAction < writePercentage) {
             Map<Object, Object> map = new HashMap<Object, Object>(bulkSize);
             for (int i = 0; i < bulkSize;) {
-               Object key = initLogic.getKey(r.nextInt(numEntries - 1));
+               Object key = initLogic.getKey(r.nextInt(numEntries - 1), stressor.threadIndex);
                if (!map.containsKey(key)) {
                   map.put(key, generateValue(entrySize));
                   ++i;
@@ -485,7 +512,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          } else {
             Set<Object> set = new HashSet<Object>(bulkSize);
             for (int i = 0; i < bulkSize; ) {
-               Object key = initLogic.getKey(r.nextInt(numEntries - 1));
+               Object key = initLogic.getKey(r.nextInt(numEntries - 1), stressor.threadIndex);
                if (!set.contains(key)) {
                   set.add(key);
                   ++i;
