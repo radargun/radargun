@@ -159,7 +159,8 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
          Thread.yield();
       }
       // For local caches it has there is no transport - check that we have at least one clustered cache
-      boolean hasClustered = cacheManager.getDefaultConfiguration().getCacheMode().isClustered();
+      ClusteringConfiguration defaultClustering = cacheManager.getDefaultCacheConfiguration().clustering();
+      boolean hasClustered = defaultClustering != null && defaultClustering.cacheMode() != CacheMode.LOCAL;
       for (String cacheName : cacheManager.getCacheNames()) {
          ClusteringConfiguration clustering = cacheManager.getCacheConfiguration(cacheName).clustering();
          if (clustering != null && clustering.cacheMode() != CacheMode.LOCAL) {
