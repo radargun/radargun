@@ -1,10 +1,12 @@
 package org.radargun.utils;
 
+import javax.management.MBeanServer;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -14,10 +16,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import com.sun.management.HotSpotDiagnosticMXBean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.stages.GenerateChartStage;
@@ -31,6 +34,13 @@ public class Utils {
    public static final String PLUGINS_DIR = "plugins";
    private static final NumberFormat NF = new DecimalFormat("##,###");
    private static final NumberFormat MEM_FMT = new DecimalFormat("##,###.##");
+
+   private static final String HOTSPOT_BEAN_NAME = "com.sun.management:type=HotSpotDiagnostic";
+   private static final String HOTSPOT_BEAN_CLASS = "com.sun.management.HotSpotDiagnosticMXBean";
+   private static final String HOTSPOT_BEAN_DUMP_METHOD = "dumpHeap";
+
+   // field to store the hotspot diagnostic MBean
+   private static volatile Object hotspotMBean;
 
    public static String getMillisDurationString(long millis) {
       long secs = millis / 1000;
@@ -362,5 +372,19 @@ public class Utils {
       }
       return object;
    }
-   
+
+   public static void dumpHeap(String file) throws Exception {
+      if (hotspotMBean == null) {
+         synchronized (Utils.class) {
+            if (hotspotMBean == null) {
+               MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+               hotspotMBean =
+                     ManagementFactory.newPlatformMXBeanProxy(server, HOTSPOT_BEAN_NAME, HotSpotDiagnosticMXBean.class);
+            }
+         }
+      }
+      Class clazz = Class.forName(HOTSPOT_BEAN_CLASS);
+      Method m = clazz.getMethod(HOTSPOT_BEAN_DUMP_METHOD, String.class, boolean.class);
+      m.invoke(hotspotMBean, file, true);
+   }
 }

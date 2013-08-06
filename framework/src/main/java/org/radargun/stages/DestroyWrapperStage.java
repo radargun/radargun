@@ -4,6 +4,7 @@ import static org.radargun.utils.Utils.getFreeMemoryKb;
 import static org.radargun.utils.Utils.memString;
 import static org.radargun.utils.Utils.printMemoryFootprint;
 
+import java.io.File;
 import java.util.List;
 
 import org.radargun.CacheWrapper;
@@ -29,6 +30,9 @@ public class DestroyWrapperStage extends AbstractDistStage {
 
    @Property(doc = "If the free memory after wrapper destroy and System.gc() is below percentage specified in this property the benchmark will stop. Default is 95.")
    private byte memoryThreshold = 95;
+
+   @Property(doc = "Directory where the heap dump will be produced if the memory threshold is hit. By default the dump will not be produced.")
+   private String heapDumpDir = null;
 
    private Long initialFreeMemoryKb;
 
@@ -120,6 +124,13 @@ public class DestroyWrapperStage extends AbstractDistStage {
       if (actualPercentage < memoryThreshold) {
          String msg = "Actual percentage of memory smaller than expected!";
          log.error(msg);
+         if (heapDumpDir != null) {
+            try {
+               Utils.dumpHeap(new File(heapDumpDir, productName + "_" + configName + ".bin").getAbsolutePath());
+            } catch (Exception e) {
+               throw new RuntimeException("Cannot produce heap dump!", e);
+            }
+         }
          throw new RuntimeException(msg);
       }
    }
