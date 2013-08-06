@@ -76,6 +76,7 @@
                      <choice maxOccurs="unbounded" minOccurs="1">
                         <element name="product" type="rg:product"/>
                         <element name="hazelcast2" type="rg:hazelcast2"/>
+                        <element name="hazelcast3" type="rg:hazelcast3"/>
                         <element name="infinispan4" type="rg:infinispan4"/>
                         <element name="infinispan50" type="rg:infinispan50"/>
                         <element name="infinispan51" type="rg:infinispan51"/>
@@ -621,6 +622,11 @@
             <attribute name="enforceMemoryThrashHold" type="string">
                <annotation>
                   <documentation>Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="heapDumpDir" type="string">
+               <annotation>
+                  <documentation>Directory where the heap dump will be produced if the memory threshold is hit. By default the dump will not be produced.</documentation>
                </annotation>
             </attribute>
             <attribute name="memoryThreshold" type="string">
@@ -1690,6 +1696,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </complexContent>
    </complexType>
    <complexType name="hazelcast2">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="hazelcast3">
       <complexContent>
          <extension base="rg:abstractProduct"/>
       </complexContent>
