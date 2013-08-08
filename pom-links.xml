@@ -17,6 +17,7 @@
       <module>plugins/infinispan51</module>
       <module>plugins/infinispan52</module>
       <module>plugins/infinispan53</module>
+      <module>plugins/infinispan60</module>
       <module>plugins/jgroups</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
