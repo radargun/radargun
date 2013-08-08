@@ -29,6 +29,7 @@ import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.features.ProvidesMemoryOverhead;
 import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.Utils;
@@ -103,12 +104,13 @@ public class RandomDataStage extends AbstractDistStage {
     * http://infinispan.blogspot.com/2013/07/lower-memory-overhead-in-infinispan.html
     */
    @Property(doc = "The bytes used over the size of the key and value when "
-         + "putting to the cache. The default is 136 for Infinispan 5.3.")
-   private int valueByteOverhead = 136;
+         + "putting to the cache. The default is -1.")
+   private int valueByteOverhead = -1;
 
    @Property(doc = "The number of bytes to write to the cache when the valueByteOverhead, "
          + "stringData, and valueSize are taken into account. The code assumes this is an "
-         + "even multiple of valueSize.")
+         + "even multiple of valueSize plus valueByteOverhead. If stringData is true, then "
+         + "the code assumes this is an even multiple of (2 * valueSize) plus valueByteOverhead.")
    private long targetMemoryUse = -1;
 
    private Random random;
@@ -118,6 +120,8 @@ public class RandomDataStage extends AbstractDistStage {
    Runtime runtime = null;
 
    private int newlinePunctuationModulo = 10;
+
+   private long countOfWordsInData = 0;
 
    /**
     * 
@@ -197,6 +201,20 @@ public class RandomDataStage extends AbstractDistStage {
          return result;
       }
 
+      if (valueByteOverhead == -1 && !(cacheWrapper instanceof ProvidesMemoryOverhead)) {
+         result.setError(true);
+         result.setErrorMessage("The valueByteOverhead property must be supplied for this cache.");
+         return result;
+      }
+
+      /*
+       * If valueByteOverhead is not specified, then try to retrieve the byte overhead from the
+       * CacheWrapper
+       */
+      if (valueByteOverhead == -1 && cacheWrapper instanceof ProvidesMemoryOverhead) {
+         valueByteOverhead = ((ProvidesMemoryOverhead) cacheWrapper).getValueByteOverhead();
+      }
+
       runtime = Runtime.getRuntime();
       int valueSizeWithOverhead = valueByteOverhead;
       /*
@@ -217,6 +235,10 @@ public class RandomDataStage extends AbstractDistStage {
       } else {
          long totalPutCount = valueCount;
          if (targetMemoryUse > 0) {
+            if (targetMemoryUse % valueSizeWithOverhead != 0) {
+               log.warn("The supplied value for targetMemoryUse (" + targetMemoryUse
+                     + ") is not evenly divisible by the value size plus byte overhead (" + valueSizeWithOverhead + ")");
+            }
             totalPutCount = targetMemoryUse / valueSizeWithOverhead;
          }
          nodePutCount = (long) Math.ceil(totalPutCount / getActiveSlaveCount());
@@ -266,7 +288,7 @@ public class RandomDataStage extends AbstractDistStage {
          System.gc();
          log.info("Memory - free: " + Utils.kbString(runtime.freeMemory()) + " - max: "
                + Utils.kbString(runtime.maxMemory()) + "- total: " + Utils.kbString(runtime.totalMemory()));
-         result.setPayload(new long[] { nodePutCount, bytesWritten, targetMemoryUse });
+         result.setPayload(new long[] { nodePutCount, bytesWritten, targetMemoryUse, countOfWordsInData });
       } catch (Exception e) {
          log.fatal("An exception occurred", e);
          result.setError(true);
@@ -293,6 +315,7 @@ public class RandomDataStage extends AbstractDistStage {
             word = generateRandomUniqueWord(wordLength, true);
          }
          data = data.put(word);
+         countOfWordsInData++;
 
          if (data.remaining() >= 2 && random.nextInt() % newlinePunctuationModulo == 0) {
             data.put(punctuationChars.charAt(random.nextInt(punctuationChars.length() - 1)));
@@ -405,6 +428,9 @@ public class RandomDataStage extends AbstractDistStage {
                   + " values to the cache with a total size of " + Utils.kbString(result[1]);
             if (ramPercentage > 0) {
                logInfo += "; targetMemoryUse = " + Utils.kbString(result[2]);
+            }
+            if (stringData) {
+               logInfo += "; countOfWordsInData = " + result[3];
             }
             log.info(logInfo);
          } else {

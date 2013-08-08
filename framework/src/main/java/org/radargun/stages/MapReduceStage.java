@@ -90,7 +90,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          + "final results of the MapReduceTask are written to the log of the "
          + "first slave node. The default is false.")
    private boolean printResult = false;
-   
+
    @Property(doc = "A tiemout value for the remote communication that happens "
          + "during a Map/Reduce task. The default is zero which means to wait forever.")
    private long timeout = 0;
@@ -191,13 +191,16 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                + " does not support MapReduceCapable.setTimeout()");
       }
       try {
+         String payload = this.slaveIndex + ", " + mapReduceCapable.getNumMembers() + ", "
+               + mapReduceCapable.getLocalSize() + ", noDuration, noResultSize";
+         result.setPayload(payload);
          if (collatorFqn != null) {
             start = System.nanoTime();
             payloadObject = mapReduceCapable.executeMapReduceTask(classLoadHelper, mapperFqn, reducerFqn, collatorFqn);
             durationNanos = System.nanoTime() - start;
             log.info("MapReduce task with Collator completed in "
                   + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
-            String payload = this.slaveIndex + ", " + mapReduceCapable.getNumMembers() + ", "
+            payload = this.slaveIndex + ", " + mapReduceCapable.getNumMembers() + ", "
                   + mapReduceCapable.getLocalSize() + ", " + durationNanos + ", -1";
             result.setPayload(payload);
             if (printResult) {
@@ -218,7 +221,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             if (payloadMap != null) {
                log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
                log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
-               String payload = this.slaveIndex + ", " + mapReduceCapable.getNumMembers() + ", "
+               payload = this.slaveIndex + ", " + mapReduceCapable.getNumMembers() + ", "
                      + mapReduceCapable.getLocalSize() + ", " + durationNanos + ", " + payloadMap.keySet().size();
                result.setPayload(payload);
                if (printResult) {
