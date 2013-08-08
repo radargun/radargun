@@ -16,35 +16,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.radargun.cachewrappers;
+package org.radargun.features;
 
-import java.util.concurrent.TimeUnit;
+import org.radargun.CacheWrapper;
 
-import org.infinispan.Cache;
-import org.infinispan.distexec.mapreduce.MapReduceTask;
+public interface ProvidesMemoryOverhead extends CacheWrapper {
 
-public class Infinispan53MapReduceWrapper<KIn, VIn, KOut, VOut, R> extends
-      Infinispan52MapReduceWrapper<KIn, VIn, KOut, VOut, R> {
-
-   @Override
-   public boolean setTimeout(long timeout, TimeUnit unit) {
-      this.timeout = timeout;
-      this.unit = unit;
-      return true;
-   }
-
-   @Override
-   protected MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTaskFactory() {
-      Cache<KIn, VIn> cache = cacheManager.getCache(getCacheName());
-      MapReduceTask<KIn, VIn, KOut, VOut> task = new MapReduceTask<KIn, VIn, KOut, VOut>(cache,
-            this.distributeReducePhase, this.useIntermediateSharedCache);
-      task.timeout(timeout, unit);
-      return task;
-   }
-
-   @Override
-   public int getValueByteOverhead() {
-      return 136;
-   }
+   /**
+    * @return the number of bytes above the key and value size needed to store into the cache
+    */
+   int getValueByteOverhead();
 
 }

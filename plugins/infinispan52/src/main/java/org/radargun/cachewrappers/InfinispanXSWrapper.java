@@ -244,4 +244,9 @@ public class InfinispanXSWrapper extends InfinispanPartitionableWrapper implemen
    protected int membersCount(ConsistentHash consistentHash) {
       return consistentHash.getMembers().size();
    }
+
+   @Override
+   public int getValueByteOverhead() {
+      return 152;
+   }   
 }

@@ -142,7 +142,12 @@ public class LocalSystemMonitorChart {
       } else {
          for (Object item : monitorData.getItems()) {
             TimeSeriesDataItem tsdi = (TimeSeriesDataItem) item;
-            reportStrings.set(counter, reportStrings.get(counter) + "," + tsdi.getValue());
+            if (counter < reportStrings.size()) {
+               reportStrings.set(counter, reportStrings.get(counter) + "," + tsdi.getValue());
+            } else {
+               reportStrings.add(new String(new char[reportStrings.get(counter - 1).split(",").length - 1]).replace(
+                     "\0", ",") + tsdi.getValue());
+            }
             counter++;
          }
       }

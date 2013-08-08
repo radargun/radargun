@@ -31,10 +31,11 @@ import org.infinispan.remoting.transport.Address;
 import org.radargun.CacheWrapper;
 import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.Debugable;
+import org.radargun.features.ProvidesMemoryOverhead;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
-public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperationsCapable {
+public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperationsCapable, ProvidesMemoryOverhead {
 
    enum State {
       STOPPED,
@@ -513,4 +514,10 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
    public boolean isTransactional(String bucket) {
       return tm != null;
    }
+
+   @Override
+   public int getValueByteOverhead() {
+      return -1;
+   }   
+   
 }
