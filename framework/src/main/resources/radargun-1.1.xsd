@@ -194,12 +194,12 @@
       </annotation>
       <complexContent>
          <extension base="rg:Abstract">
-            <attribute name="exitBenchmarkOnSlaveFailure" type="string">
+            <attribute name="exitBenchmarkOnSlaveFailure" type="rg:boolean">
                <annotation>
                   <documentation>Should the benchmark fail if one of the slaves sends error acknowledgement? Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="runOnAllSlaves" type="string">
+            <attribute name="runOnAllSlaves" type="rg:boolean">
                <annotation>
                   <documentation>If set to true the stage should be run on maxSlaves (applies to scaling benchmarks). Default is false.</documentation>
                </annotation>
@@ -209,7 +209,7 @@
                   <documentation>Specifies on which slaves should this stage actively run. Default is stage-dependent (usually all or none).</documentation>
                </annotation>
             </attribute>
-            <attribute name="useSmartClassLoading" type="string">
+            <attribute name="useSmartClassLoading" type="rg:boolean">
                <annotation>
                   <documentation>Smart class loading loads libraries specific for the product. Default is true.</documentation>
                </annotation>
@@ -217,6 +217,18 @@
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <complexType abstract="true" name="AbstractMaster">
       <annotation>
          <documentation/>
@@ -253,27 +265,27 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="checkEntryCount" type="string">
+            <attribute name="checkEntryCount" type="rg:int">
                <annotation>
                   <documentation>Number of entries that will be checked in each step. Default is 1.</documentation>
                </annotation>
             </attribute>
-            <attribute name="checkThreads" type="string">
+            <attribute name="checkThreads" type="rg:int">
                <annotation>
                   <documentation>Number of thread per node which check data validity. Default is 1.</documentation>
                </annotation>
             </attribute>
-            <attribute name="debugNull" type="string">
+            <attribute name="debugNull" type="rg:boolean">
                <annotation>
                   <documentation>If the GET request results in null response, call wrapper-specific functions to show debug info. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="deleted" type="string">
+            <attribute name="deleted" type="rg:boolean">
                <annotation>
                   <documentation>If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="entrySize" type="string">
+            <attribute name="entrySize" type="rg:int" use="required">
                <annotation>
                   <documentation>Number of bytes carried in single entry.</documentation>
                </annotation>
@@ -283,47 +295,47 @@
                   <documentation>Entries that do not have the expected form but occur in the cluster. This string specifies a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries.Defaults to 0.</documentation>
                </annotation>
             </attribute>
-            <attribute name="failOnNull" type="string">
+            <attribute name="failOnNull" type="rg:boolean">
                <annotation>
                   <documentation>If entry is null, fail immediatelly. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="firstEntryOffset" type="string">
+            <attribute name="firstEntryOffset" type="rg:int">
                <annotation>
                   <documentation>Index of key of first entry. This number will be multiplied by slaveIndex. Default is 0.</documentation>
                </annotation>
             </attribute>
-            <attribute name="ignoreSum" type="string">
+            <attribute name="ignoreSum" type="rg:boolean">
                <annotation>
                   <documentation>Usually the test checks that sum of local nodes = numOwners * numEntries + extraEntries.This option disables such behaviour. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="liveSlavesHint" type="string">
+            <attribute name="liveSlavesHint" type="rg:int">
                <annotation>
                   <documentation>Hint how many slaves are currently alive - if set to &gt; 0 then the query for amount of entries inthis cache is postponed until the cache appears to be fully replicated. By default this is disabled.</documentation>
                </annotation>
             </attribute>
-            <attribute name="logChecksCount" type="string">
+            <attribute name="logChecksCount" type="rg:int">
                <annotation>
                   <documentation>Number of queries after which a DEBUG log message is printed. Default is 10000.</documentation>
                </annotation>
             </attribute>
-            <attribute name="memoryOnly" type="string">
+            <attribute name="memoryOnly" type="rg:boolean">
                <annotation>
                   <documentation>If the cache wrapper supports persistent storage and this is set to true, the check will be executed only against in-memory data. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numEntries" type="string">
+            <attribute name="numEntries" type="rg:int" use="required">
                <annotation>
                   <documentation>Number of entries with key in form specified by the last used key generator, in the cache.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numOwners" type="string">
+            <attribute name="numOwners" type="rg:int">
                <annotation>
                   <documentation>Number of owners of one key (primary + backups). If negative the number is multiplied by cluster size, therefore, -1 means full replication. Default is -1.</documentation>
                </annotation>
             </attribute>
-            <attribute name="stepEntryCount" type="string">
+            <attribute name="stepEntryCount" type="rg:int">
                <annotation>
                   <documentation>Number of entries stepped in each step. Default is 1.</documentation>
                </annotation>
@@ -331,23 +343,35 @@
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="int">
+      <union>
+         <simpleType>
+            <restriction base="integer"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <complexType name="CheckTopology">
       <annotation>
          <documentation>Controls which topology events have (not) happened recently</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="changed" type="string">
+            <attribute name="changed" type="rg:boolean">
                <annotation>
                   <documentation>The check controls if this event has happened (true) or not happened (false). Defaults to true.</documentation>
                </annotation>
             </attribute>
-            <attribute name="period" type="string">
+            <attribute name="period" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>The period in milliseconds which is checked. Default is infinite.</documentation>
                </annotation>
             </attribute>
-            <attribute name="type" type="string">
+            <attribute name="type" type="rg:org_radargun_stages_CheckTopologyStage_Type">
                <annotation>
                   <documentation>What does this stage control. Default is both DataRehashed and TopologyChanged events.</documentation>
                </annotation>
@@ -355,6 +379,36 @@
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="long__org_radargun_config_TimeConverter">
+      <union>
+         <simpleType>
+            <restriction>
+               <pattern value="[0-9]+\s*[mMsS]?"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="org_radargun_stages_CheckTopologyStage_Type">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="HASH_AND_TOPOLOGY"/>
+               <enumeration value="HASH"/>
+               <enumeration value="TOPOLOGY"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <complexType name="ClearCluster">
       <annotation>
          <documentation>Removes all data from the cache</documentation>
@@ -369,37 +423,37 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="bulkSize" type="string">
+            <attribute name="bulkSize" type="rg:int">
                <annotation>
                   <documentation>Number of keys inserted/retrieved within one operation. Applicable only when the cache wrappersupports bulk operations. Default is 1 (no bulk operations).</documentation>
                </annotation>
             </attribute>
-            <attribute name="cacheSpecificKeyGenerator" type="string">
+            <attribute name="cacheSpecificKeyGenerator" type="rg:boolean">
                <annotation>
                   <documentation>Specifies whether the key generator is produced by a cache wrapper and therefore is product-specific. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="commitTransactions" type="string">
+            <attribute name="commitTransactions" type="rg:boolean">
                <annotation>
                   <documentation>Specifies whether the transactions should be committed (true) or rolled back (false). Default is true</documentation>
                </annotation>
             </attribute>
-            <attribute name="duration" type="string">
+            <attribute name="duration" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>Benchmark duration. This takes precedence over numRequests. By default switched off.</documentation>
                </annotation>
             </attribute>
-            <attribute name="entrySize" type="string">
+            <attribute name="entrySize" type="rg:int">
                <annotation>
                   <documentation>Size of the value in bytes. Default is 1000.</documentation>
                </annotation>
             </attribute>
-            <attribute name="fixedKeys" type="string">
+            <attribute name="fixedKeys" type="rg:boolean">
                <annotation>
                   <documentation>The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.</documentation>
                </annotation>
             </attribute>
-            <attribute name="generateHistogramRange" type="string">
+            <attribute name="generateHistogramRange" type="rg:boolean">
                <annotation>
                   <documentation>Generate a range for histogram with operations statistics (for use in next stress tests). Default is false.</documentation>
                </annotation>
@@ -414,102 +468,102 @@
                   <documentation>Used to initialize the key generator. Null by default.</documentation>
                </annotation>
             </attribute>
-            <attribute name="loadAllKeys" type="string">
+            <attribute name="loadAllKeys" type="rg:boolean">
                <annotation>
                   <documentation>This option is valid only for sharedKeys=true. It forces local loading of all keys (not only numEntries/numNodes). Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numEntries" type="string">
+            <attribute name="numEntries" type="rg:int">
                <annotation>
                   <documentation>Number of key-value entries per each client thread which should be used. Default is 100.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numOfThreads" type="string">
+            <attribute name="numOfThreads" type="rg:int">
                <annotation>
                   <documentation>*DEPRECATED* The number of threads that will work on this slave. Default is 10.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numRequests" type="string">
+            <attribute name="numRequests" type="rg:int">
                <annotation>
                   <documentation>Total number of request to be made against this session: reads + writes. If duration is specified this value is ignored. Default is 50000.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numThreads" type="string">
+            <attribute name="numThreads" type="rg:int">
                <annotation>
                   <documentation>The number of threads that will work on this slave. Default is 10.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numberOfAttributes" type="string">
+            <attribute name="numberOfAttributes" type="rg:int">
                <annotation>
                   <documentation>*DEPRECATED* Number of key-value entries per each client thread which should be used. Default is 100.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numberOfRequests" type="string">
+            <attribute name="numberOfRequests" type="rg:int">
                <annotation>
                   <documentation>*DEPRECATED* Total number of request to be made against this session: reads + writes. If duration is specified this value is ignored. Default is 50000.</documentation>
                </annotation>
             </attribute>
-            <attribute name="opsCountStatusLog" type="string">
+            <attribute name="opsCountStatusLog" type="rg:int">
                <annotation>
                   <documentation>Number of operations after which a log entry should be written. Default is 5000.</documentation>
                </annotation>
             </attribute>
-            <attribute name="poolKeys" type="string">
+            <attribute name="poolKeys" type="rg:boolean">
                <annotation>
                   <documentation>Keep all keys in a pool - do not generate the keys for each request anew. Default is true.</documentation>
                </annotation>
             </attribute>
-            <attribute name="preferAsyncOperations" type="string">
+            <attribute name="preferAsyncOperations" type="rg:boolean">
                <annotation>
                   <documentation>When executing bulk operations, prefer version with multiple async operations over native implementation. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="removePercentage" type="string">
+            <attribute name="removePercentage" type="rg:int">
                <annotation>
                   <documentation>The frequency of removes (percentage). Default is 0%</documentation>
                </annotation>
             </attribute>
-            <attribute name="replaceInvalidPercentage" type="string">
+            <attribute name="replaceInvalidPercentage" type="rg:int">
                <annotation>
                   <documentation>In case we test replace performance, the frequency of replaces that should fail (percentage). Default is 40%</documentation>
                </annotation>
             </attribute>
-            <attribute name="sharedKeys" type="string">
+            <attribute name="sharedKeys" type="rg:boolean">
                <annotation>
                   <documentation>By default each client thread operates on his private set of keys. Setting this to true introduces contention between the threads, the numThreads property says total amount of entries that are used by all threads. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="sizeOfAnAttribute" type="string">
+            <attribute name="sizeOfAnAttribute" type="rg:int">
                <annotation>
                   <documentation>*DEPRECATED* Size of the value in bytes. Default is 1000.</documentation>
                </annotation>
             </attribute>
-            <attribute name="transactionSize" type="string">
+            <attribute name="transactionSize" type="rg:int">
                <annotation>
                   <documentation>Number of requests in one transaction. Default is 1.</documentation>
                </annotation>
             </attribute>
-            <attribute name="useAtomics" type="string">
+            <attribute name="useAtomics" type="rg:boolean">
                <annotation>
                   <documentation>If true, putIfAbsent and replace operations are used. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="useHistogramStatistics" type="string">
+            <attribute name="useHistogramStatistics" type="rg:boolean">
                <annotation>
                   <documentation>The test will produce operation statistics in histogram. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="useSimpleStatistics" type="string">
+            <attribute name="useSimpleStatistics" type="rg:boolean">
                <annotation>
                   <documentation>The test will produce operation statistics as average values. Default is true.</documentation>
                </annotation>
             </attribute>
-            <attribute name="useTransactions" type="string">
+            <attribute name="useTransactions" type="rg:java_lang_Boolean">
                <annotation>
                   <documentation>Specifies if the requests should be explicitely wrapped in transactions. By defaultthe cachewrapper is queried whether it does support the transactions, if it does,transactions are used, otherwise these are not.</documentation>
                </annotation>
             </attribute>
-            <attribute name="writePercentage" type="string">
+            <attribute name="writePercentage" type="rg:int">
                <annotation>
                   <documentation>Ratio of writes = PUT requests (percentage). Default is 20%</documentation>
                </annotation>
@@ -517,23 +571,35 @@
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="java_lang_Boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <complexType name="ClientStressTest">
       <annotation>
          <documentation>Repeats the StressTest logic with increasing amount of client threads.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:StressTest">
-            <attribute name="increment" type="string">
+            <attribute name="increment" type="rg:int">
                <annotation>
                   <documentation>Number of threads which should be added in each iteration. Default is 1.</documentation>
                </annotation>
             </attribute>
-            <attribute name="initThreads" type="string">
+            <attribute name="initThreads" type="rg:int" use="required">
                <annotation>
                   <documentation>Initial number of threads.</documentation>
                </annotation>
             </attribute>
-            <attribute name="maxThreads" type="string">
+            <attribute name="maxThreads" type="rg:int" use="required">
                <annotation>
                   <documentation>Maximum number of threads this will be run with.</documentation>
                </annotation>
@@ -547,17 +613,17 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="partialReplication" type="string">
+            <attribute name="partialReplication" type="rg:boolean">
                <annotation>
                   <documentation>If set to true, then the slave will consider that the cluster is formed when one slave replicated the control entry. Otherwise the replication will only be considered successful if all slaves replicated the control value. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="replicationTimeSleep" type="string">
+            <attribute name="replicationTimeSleep" type="rg:int">
                <annotation>
                   <documentation>Delay between attempts to retrieve the control entry.</documentation>
                </annotation>
             </attribute>
-            <attribute name="replicationTryCount" type="string">
+            <attribute name="replicationTryCount" type="rg:int">
                <annotation>
                   <documentation>How many times we should try to retrieve the control entry.</documentation>
                </annotation>
@@ -571,7 +637,7 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractMaster">
-            <attribute name="computeAverage" type="string">
+            <attribute name="computeAverage" type="rg:boolean">
                <annotation>
                   <documentation>Adds a line with average results. Default is false.</documentation>
                </annotation>
@@ -600,12 +666,12 @@
                   <documentation>Specifies the full path of the property file which contains different words for querying. No default value is provided. This property is mandatory.</documentation>
                </annotation>
             </attribute>
-            <attribute name="isWildCard" type="string">
+            <attribute name="isWildCard" type="rg:boolean">
                <annotation>
                   <documentation>Specifies whether the key generation should be done according to wildcard logic or no. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="propertyLength" type="string">
+            <attribute name="propertyLength" type="rg:int">
                <annotation>
                   <documentation>The length of the generated indexed entry. Default is 100.</documentation>
                </annotation>
@@ -619,7 +685,7 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="enforceMemoryThrashHold" type="string">
+            <attribute name="enforceMemoryThrashHold" type="rg:boolean">
                <annotation>
                   <documentation>Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
                </annotation>
@@ -643,7 +709,7 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="distributedCallableFqn" type="string">
+            <attribute name="distributedCallableFqn" type="string" use="required">
                <annotation>
                   <documentation>Fully qualified class name of the org.infinispan.distexec.DistributedCallable or java.util.concurrent.Callable implementation to execute.</documentation>
                </annotation>
@@ -696,27 +762,27 @@
       </annotation>
       <complexContent>
          <extension base="rg:Check">
-            <attribute name="duration" type="string">
+            <attribute name="duration" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>How long should this stage take. Default is 1 minute.</documentation>
                </annotation>
             </attribute>
-            <attribute name="expectedLevel" type="string">
+            <attribute name="expectedLevel" type="string" use="required">
                <annotation>
                   <documentation>Expected isolation level (should match to cache configuration). Supported values are [READ_COMMITTED, REPEATABLE_READ]</documentation>
                </annotation>
             </attribute>
-            <attribute name="readers" type="string">
+            <attribute name="readers" type="rg:int">
                <annotation>
                   <documentation>Number of concurrent threads that try to retrieve the value. Default is 10.</documentation>
                </annotation>
             </attribute>
-            <attribute name="transactionSize" type="string">
+            <attribute name="transactionSize" type="rg:int">
                <annotation>
                   <documentation>Number of reads executed inside on transaction. Default is 30.</documentation>
                </annotation>
             </attribute>
-            <attribute name="writers" type="string">
+            <attribute name="writers" type="rg:int">
                <annotation>
                   <documentation>Number of concurrent threads that modify the value. Default is 2.</documentation>
                </annotation>
@@ -730,7 +796,7 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractMaster">
-            <attribute name="jmxConnectionTimeout" type="string">
+            <attribute name="jmxConnectionTimeout" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>JMX connection timeout. Default is 3 seconds.</documentation>
                </annotation>
@@ -755,7 +821,7 @@
                   <documentation>Indices of slaves that should be up. Default is empty.</documentation>
                </annotation>
             </attribute>
-            <attribute name="waitTimeout" type="string">
+            <attribute name="waitTimeout" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>Cluster validation timeout. Default is 1 minute.</documentation>
                </annotation>
@@ -769,7 +835,7 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="jmxConnectionTimeout" type="string">
+            <attribute name="jmxConnectionTimeout" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>JMX Connection timeout. Default is 3 seconds.</documentation>
                </annotation>
@@ -789,7 +855,7 @@
                   <documentation>Generic property 3.</documentation>
                </annotation>
             </attribute>
-            <attribute name="waitTimeout" type="string">
+            <attribute name="waitTimeout" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>Cluster validation timeout. Default is 1 minute.</documentation>
                </annotation>
@@ -804,17 +870,17 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="operations" type="string">
+            <attribute name="operations" type="string" use="required">
                <annotation>
                   <documentation>Operations that should be invoked on the Controller</documentation>
                </annotation>
             </attribute>
-            <attribute name="resetCPUStats" type="string">
+            <attribute name="resetCPUStats" type="rg:boolean">
                <annotation>
                   <documentation>If true, any previously accumulated CPU profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_CPU_RECORDING and STOP_CPU_RECORDING. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="resetMemoryStats" type="string">
+            <attribute name="resetMemoryStats" type="rg:boolean">
                <annotation>
                   <documentation>If true, any previously accumulated Memory profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_MEMORY_RECORDING and STOP_MEMORY_RECORDING. Default is false.</documentation>
                </annotation>
@@ -833,22 +899,22 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="async" type="string">
+            <attribute name="async" type="rg:boolean">
                <annotation>
                   <documentation>If set to true the benchmark will not wait until the node is killed. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="delayExecution" type="string">
+            <attribute name="delayExecution" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>If this value is positive the stage will spawn a thread which will kill the node after the delay. The stage will not wait for anything. By default the kill is immediate and synchronous.</documentation>
                </annotation>
             </attribute>
-            <attribute name="role" type="string">
+            <attribute name="role" type="rg:org_radargun_stages_helpers_RoleHelper_Role">
                <annotation>
                   <documentation>Instead of specifying concrete slaves we may choose a victim based on his role in the cluster. Supported roles are [COORDINATOR, BRIDGE]. By default no role is specified.</documentation>
                </annotation>
             </attribute>
-            <attribute name="tearDown" type="string">
+            <attribute name="tearDown" type="rg:boolean">
                <annotation>
                   <documentation>If set to true, the nodes should be shutdown. Default is false = simulate node crash.</documentation>
                </annotation>
@@ -856,6 +922,21 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="org_radargun_stages_helpers_RoleHelper_Role">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="COORDINATOR"/>
+               <enumeration value="BRIDGE"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <complexType name="LoadFile">
       <annotation>
          <documentation>Loads the contents of a file into the cache.</documentation>
@@ -867,22 +948,22 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>The name of the bucket where keys are written. The default is null</documentation>
                </annotation>
             </attribute>
-            <attribute name="filePath" type="string">
+            <attribute name="filePath" type="string" use="required">
                <annotation>
                   <documentation>Full pathname to the file.</documentation>
                </annotation>
             </attribute>
-            <attribute name="printWriteStatistics" type="string">
+            <attribute name="printWriteStatistics" type="rg:boolean">
                <annotation>
                   <documentation>If true, then the time for each put operation is written to the logs. The default is false</documentation>
                </annotation>
             </attribute>
-            <attribute name="stringData" type="string">
+            <attribute name="stringData" type="rg:boolean">
                <annotation>
                   <documentation>If true, then String objects are written to the cache. The default is false</documentation>
                </annotation>
             </attribute>
-            <attribute name="valueSize" type="string">
+            <attribute name="valueSize" type="rg:int">
                <annotation>
                   <documentation>The size of the values to put into the cache from the contents of the file. The default size is 1MB (1024 * 1024)</documentation>
                </annotation>
@@ -906,12 +987,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Collator Object. The method must be public and take a String parameter. The default is null.</documentation>
                </annotation>
             </attribute>
-            <attribute name="distributeReducePhase" type="string">
+            <attribute name="distributeReducePhase" type="rg:boolean">
                <annotation>
                   <documentation>Boolean value that determines if the Reduce phase of the MapReduceTask is distributed. The default is true.</documentation>
                </annotation>
             </attribute>
-            <attribute name="mapperFqn" type="string">
+            <attribute name="mapperFqn" type="string" use="required">
                <annotation>
                   <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Mapper implementation to execute.</documentation>
                </annotation>
@@ -921,12 +1002,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Mapper Object. The method must be public and take a String parameter. The default is null.</documentation>
                </annotation>
             </attribute>
-            <attribute name="printResult" type="string">
+            <attribute name="printResult" type="rg:boolean">
                <annotation>
                   <documentation>Boolean value that determines if the final results of the MapReduceTask are written to the log of the first slave node. The default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="reducerFqn" type="string">
+            <attribute name="reducerFqn" type="string" use="required">
                <annotation>
                   <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to execute.</documentation>
                </annotation>
@@ -936,22 +1017,22 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Reducer Object. The method must be public and take a String parameter. The default is null.</documentation>
                </annotation>
             </attribute>
-            <attribute name="storeResultInCache" type="string">
+            <attribute name="storeResultInCache" type="rg:boolean">
                <annotation>
                   <documentation>Boolean value that determines if the final results of the MapReduceTask are stored in the cache at key MAPREDUCE_RESULT_KEY. Enabling this feature will require extra DRAM usage. The default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="timeout" type="string">
+            <attribute name="timeout" type="rg:long">
                <annotation>
                   <documentation>A tiemout value for the remote communication that happens during a Map/Reduce task. The default is zero which means to wait forever.</documentation>
                </annotation>
             </attribute>
-            <attribute name="unit" type="string">
+            <attribute name="unit" type="rg:java_util_concurrent_TimeUnit">
                <annotation>
                   <documentation>The java.util.concurrent.TimeUnit to use with the timeout property. The default is TimeUnit.MILLISECONDS</documentation>
                </annotation>
             </attribute>
-            <attribute name="useIntermediateSharedCache" type="string">
+            <attribute name="useIntermediateSharedCache" type="rg:boolean">
                <annotation>
                   <documentation>Boolean value that determines if the intermediate results of the MapReduceTask are shared. The default is true.</documentation>
                </annotation>
@@ -959,6 +1040,38 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="long">
+      <union>
+         <simpleType>
+            <restriction base="long"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="java_util_concurrent_TimeUnit">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="NANOSECONDS"/>
+               <enumeration value="MICROSECONDS"/>
+               <enumeration value="MILLISECONDS"/>
+               <enumeration value="SECONDS"/>
+               <enumeration value="MINUTES"/>
+               <enumeration value="HOURS"/>
+               <enumeration value="DAYS"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <complexType name="ParallelStartKill">
       <annotation>
          <documentation>The stage start and kills some nodes concurrently (without waiting for each other).</documentation>
@@ -975,7 +1088,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Applicable only for cache wrappers with Partitionable feature. Set of slaves that should bereachable from the new node. Default is empty.</documentation>
                </annotation>
             </attribute>
-            <attribute name="role" type="string">
+            <attribute name="role" type="rg:org_radargun_stages_helpers_RoleHelper_Role">
                <annotation>
                   <documentation>Another way how to specify killed nodes is by role. Available roles are [COORDINATOR, BRIDGE]. By default this is not used.</documentation>
                </annotation>
@@ -994,17 +1107,17 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:StressTest">
-            <attribute name="isWildcardQuery" type="string">
+            <attribute name="isWildcardQuery" type="rg:boolean" use="required">
                <annotation>
                   <documentation>Boolean variable which shows whether the keyword query should be done or wildcard.</documentation>
                </annotation>
             </attribute>
-            <attribute name="matching" type="string">
+            <attribute name="matching" type="string" use="required">
                <annotation>
                   <documentation>The matching string which should be used for querying.</documentation>
                </annotation>
             </attribute>
-            <attribute name="onField" type="string">
+            <attribute name="onField" type="string" use="required">
                <annotation>
                   <documentation>The name of the field for which the query should be executed.</documentation>
                </annotation>
@@ -1023,62 +1136,62 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>The name of the bucket where keys are written. The default is null</documentation>
                </annotation>
             </attribute>
-            <attribute name="limitWordCount" type="string">
+            <attribute name="limitWordCount" type="rg:boolean">
                <annotation>
                   <documentation>If true, then the random word generator selects a word from a pre-defined list. The default is false</documentation>
                </annotation>
             </attribute>
-            <attribute name="maxWordCount" type="string">
+            <attribute name="maxWordCount" type="rg:int">
                <annotation>
                   <documentation>The maximum number of words to generate in the pre-defined list of words used with limitWordCount.The default is 100.</documentation>
                </annotation>
             </attribute>
-            <attribute name="maxWordLength" type="string">
+            <attribute name="maxWordLength" type="rg:int">
                <annotation>
                   <documentation>The maximum number of characters allowed in a word. The default is 20.</documentation>
                </annotation>
             </attribute>
-            <attribute name="printWriteStatistics" type="string">
+            <attribute name="printWriteStatistics" type="rg:boolean">
                <annotation>
                   <documentation>If true, then the time for each put operation is written to the logs. The default is false</documentation>
                </annotation>
             </attribute>
-            <attribute name="ramPercentage" type="string">
+            <attribute name="ramPercentage" type="rg:double">
                <annotation>
                   <documentation>A double that represents the percentage of the total Java heap used to determine the amount of data to put into the cache.Either valueCount or ramPercentageDataSize should be specified, but not both.</documentation>
                </annotation>
             </attribute>
-            <attribute name="randomSeed" type="string">
+            <attribute name="randomSeed" type="rg:long">
                <annotation>
                   <documentation>The seed to use for the java.util.Random object. The default is the return value of Calendar.getInstance().getWeekYear().</documentation>
                </annotation>
             </attribute>
-            <attribute name="shareWords" type="string">
+            <attribute name="shareWords" type="rg:boolean">
                <annotation>
                   <documentation>If false, then each node in the cluster generates a list of maxWordCount words. If true, then each node in the cluster shares the same list of words. The default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="stringData" type="string">
+            <attribute name="stringData" type="rg:boolean">
                <annotation>
                   <documentation>If true, then String objects with printable characters are written to the cache.The default is false</documentation>
                </annotation>
             </attribute>
-            <attribute name="targetMemoryUse" type="string">
+            <attribute name="targetMemoryUse" type="rg:long">
                <annotation>
                   <documentation>The number of bytes to write to the cache when the valueByteOverhead, stringData, and valueSize are taken into account. The code assumes this is an even multiple of valueSize plus valueByteOverhead. If stringData is true, then the code assumes this is an even multiple of (2 * valueSize) plus valueByteOverhead.</documentation>
                </annotation>
             </attribute>
-            <attribute name="valueByteOverhead" type="string">
+            <attribute name="valueByteOverhead" type="rg:int">
                <annotation>
                   <documentation>The bytes used over the size of the key and value when putting to the cache. By default the stage retrieves the value from cache wrapper automatically.</documentation>
                </annotation>
             </attribute>
-            <attribute name="valueCount" type="string">
+            <attribute name="valueCount" type="rg:long">
                <annotation>
                   <documentation>The number of values of valueSize to write to the cache. Either valueCount or ramPercentageDataSize should be specified, but not both.</documentation>
                </annotation>
             </attribute>
-            <attribute name="valueSize" type="string">
+            <attribute name="valueSize" type="rg:int">
                <annotation>
                   <documentation>The size of the values to put into the cache. The default size is 1MB (1024 * 1024).</documentation>
                </annotation>
@@ -1086,23 +1199,35 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="double">
+      <union>
+         <simpleType>
+            <restriction base="double"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <complexType name="ReportBackgroundStats">
       <annotation>
          <documentation>Generates reports from Statistics.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractMaster">
-            <attribute name="chartHeight" type="string">
+            <attribute name="chartHeight" type="rg:int">
                <annotation>
                   <documentation>Height of the produced charts. Default is 600px.</documentation>
                </annotation>
             </attribute>
-            <attribute name="chartWidth" type="string">
+            <attribute name="chartWidth" type="rg:int">
                <annotation>
                   <documentation>Width of the produced charts. Default is 800px.</documentation>
                </annotation>
             </attribute>
-            <attribute name="generateIntervalTimeData" type="string">
+            <attribute name="generateIntervalTimeData" type="rg:boolean">
                <annotation>
                   <documentation>Generate files for verifying time synchronization of slaves. Default is false.</documentation>
                </annotation>
@@ -1140,12 +1265,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="package" type="string">
+            <attribute name="package" type="string" use="required">
                <annotation>
                   <documentation>The package or class which should be affected.</documentation>
                </annotation>
             </attribute>
-            <attribute name="pop" type="string">
+            <attribute name="pop" type="rg:boolean">
                <annotation>
                   <documentation>If set to true, instead of setting the priority directly just undo the last priority change. Default is false.</documentation>
                </annotation>
@@ -1164,7 +1289,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="partitions" type="string">
+            <attribute name="partitions" type="string" use="required">
                <annotation>
                   <documentation>Set of sets of partitions,e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.</documentation>
                </annotation>
@@ -1188,12 +1313,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Indices of threads which should have committed the transaction (others rolled back). Default is all committed.</documentation>
                </annotation>
             </attribute>
-            <attribute name="deleted" type="string">
+            <attribute name="deleted" type="rg:boolean">
                <annotation>
                   <documentation>If this is set to true, REMOVE operation should have been executed. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="transactionSize" type="string">
+            <attribute name="transactionSize" type="rg:int">
                <annotation>
                   <documentation>Expected size of the transcation.</documentation>
                </annotation>
@@ -1217,22 +1342,22 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Indices of threads which should commit the transaction (others will rollback). Default is all commit.</documentation>
                </annotation>
             </attribute>
-            <attribute name="delete" type="string">
+            <attribute name="delete" type="rg:boolean">
                <annotation>
                   <documentation>The threads by default do the PUT request, if this is set to true they will do REMOVE. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="duration" type="string">
+            <attribute name="duration" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>The enforced duration of the transaction. If &gt; 0 the threads will sleep for duration/transactionSize after each request. Default is 0.</documentation>
                </annotation>
             </attribute>
-            <attribute name="threads" type="string">
+            <attribute name="threads" type="rg:int">
                <annotation>
                   <documentation>Number of threads that should execute the transaction. Default is 1.</documentation>
                </annotation>
             </attribute>
-            <attribute name="transactionSize" type="string">
+            <attribute name="transactionSize" type="rg:int">
                <annotation>
                   <documentation>Number of request in the transaction. Default is 20.</documentation>
                </annotation>
@@ -1246,7 +1371,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractMaster">
-            <attribute name="time" type="string">
+            <attribute name="time" type="rg:long__org_radargun_config_TimeConverter" use="required">
                <annotation>
                   <documentation>Sleep duration.</documentation>
                </annotation>
@@ -1260,7 +1385,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="asyncLogging" type="string">
+            <attribute name="asyncLogging" type="rg:boolean">
                <annotation>
                   <documentation>If set to true the watchdog will not use standard logging for output but will push the output to queue consumed (logged) by another thread. Default is false.</documentation>
                </annotation>
@@ -1270,17 +1395,17 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>If set, only those threads which have this mask in the name will be checked. Default is not set.</documentation>
                </annotation>
             </attribute>
-            <attribute name="onlyStuck" type="string">
+            <attribute name="onlyStuck" type="rg:boolean">
                <annotation>
                   <documentation>By default the check will print out only those threads which appear to be stuck. If this is set to false all threads will be printed out. Default is true.</documentation>
                </annotation>
             </attribute>
-            <attribute name="period" type="string">
+            <attribute name="period" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>The delay between consecutive checks. Default is 10 seconds.</documentation>
                </annotation>
             </attribute>
-            <attribute name="shortStack" type="string">
+            <attribute name="shortStack" type="rg:int">
                <annotation>
                   <documentation>Threads with stack lower or equal to this value are never printed (because usually such threads are parked in thread pools). Default is 10.</documentation>
                </annotation>
@@ -1294,7 +1419,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="statsIterationDuration" type="string">
+            <attribute name="statsIterationDuration" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>Delay between statistics snapshots. Default is 5 seconds.</documentation>
                </annotation>
@@ -1313,17 +1438,17 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Bucket where the entries should be inserted. Default is </documentation>
                </annotation>
             </attribute>
-            <attribute name="delayBetweenRequests" type="string">
+            <attribute name="delayBetweenRequests" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
                </annotation>
             </attribute>
-            <attribute name="entrySize" type="string">
+            <attribute name="entrySize" type="rg:int">
                <annotation>
                   <documentation>Size of value used in the entry. Default is 1024 bytes.</documentation>
                </annotation>
             </attribute>
-            <attribute name="gets" type="string">
+            <attribute name="gets" type="rg:int">
                <annotation>
                   <documentation>Ratio of GET requests. Default is 2.</documentation>
                </annotation>
@@ -1338,42 +1463,42 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>List of slaves where the data should be loaded (others immediately start executing requests). Default is all live slaves).</documentation>
                </annotation>
             </attribute>
-            <attribute name="loadOnly" type="string">
+            <attribute name="loadOnly" type="rg:boolean">
                <annotation>
                   <documentation>If set to true, the stressor does not execute any requests after loading the data. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="loadWithPutIfAbsent" type="string">
+            <attribute name="loadWithPutIfAbsent" type="rg:boolean">
                <annotation>
                   <documentation>Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numEntries" type="string">
+            <attribute name="numEntries" type="rg:int">
                <annotation>
                   <documentation>Amount of entries (key-value pairs) inserted into the cache. Default is 1024.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numThreads" type="string">
+            <attribute name="numThreads" type="rg:int">
                <annotation>
                   <documentation>Number of stressor threads. Default is 10.</documentation>
                </annotation>
             </attribute>
-            <attribute name="puts" type="string">
+            <attribute name="puts" type="rg:int">
                <annotation>
                   <documentation>Ratio of PUT requests. Default is 1.</documentation>
                </annotation>
             </attribute>
-            <attribute name="removes" type="string">
+            <attribute name="removes" type="rg:int">
                <annotation>
                   <documentation>Ratio of REMOVE requests. Default is 0.</documentation>
                </annotation>
             </attribute>
-            <attribute name="transactionSize" type="string">
+            <attribute name="transactionSize" type="rg:int">
                <annotation>
                   <documentation>Amount of request wrapped into single transaction. By default transactions are not used (explicitely).</documentation>
                </annotation>
             </attribute>
-            <attribute name="waitUntilLoaded" type="string">
+            <attribute name="waitUntilLoaded" type="rg:boolean">
                <annotation>
                   <documentation>Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</documentation>
                </annotation>
@@ -1387,17 +1512,17 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractStart">
-            <attribute name="delayAfterFirstSlaveStarts" type="string">
+            <attribute name="delayAfterFirstSlaveStarts" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s</documentation>
                </annotation>
             </attribute>
-            <attribute name="delayBetweenStartingSlaves" type="string">
+            <attribute name="delayBetweenStartingSlaves" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
                </annotation>
             </attribute>
-            <attribute name="expectNumSlaves" type="string">
+            <attribute name="expectNumSlaves" type="rg:java_lang_Integer">
                <annotation>
                   <documentation>The number of slaves that should be up after all slaves are started. Applicable only with validateCluster=true. Default is all slaves in the cluster (in the same site in case of multi-site configuration).</documentation>
                </annotation>
@@ -1407,12 +1532,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.</documentation>
                </annotation>
             </attribute>
-            <attribute name="staggerSlaveStartup" type="string">
+            <attribute name="staggerSlaveStartup" type="rg:boolean">
                <annotation>
                   <documentation>If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.</documentation>
                </annotation>
             </attribute>
-            <attribute name="validateCluster" type="string">
+            <attribute name="validateCluster" type="rg:boolean">
                <annotation>
                   <documentation>Specifies whether the cluster formation should be checked after cache wrapper startup. Default is true.</documentation>
                </annotation>
@@ -1420,13 +1545,25 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="java_lang_Integer">
+      <union>
+         <simpleType>
+            <restriction base="integer"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <complexType name="StartJVMMonitor">
       <annotation>
          <documentation>Starts collecting JVM statistics locally on each slave node.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="frequency" type="string">
+            <attribute name="frequency" type="rg:int">
                <annotation>
                   <documentation>An integer that specifies the frequency that statistics are collected. The default is one.</documentation>
                </annotation>
@@ -1436,7 +1573,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.</documentation>
                </annotation>
             </attribute>
-            <attribute name="timeUnit" type="string">
+            <attribute name="timeUnit" type="rg:java_util_concurrent_TimeUnit">
                <annotation>
                   <documentation>Specifies the time unit that statistics are collected. One of: MILLISECONDS, SECONDS, MINUTES, or HOURS. The default is SECONDS.</documentation>
                </annotation>
@@ -1458,7 +1595,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="waitUntilLoaded" type="string">
+            <attribute name="waitUntilLoaded" type="rg:boolean">
                <annotation>
                   <documentation>If true, the phase does not finish until all stressors stop loading its data. Default is false.</documentation>
                </annotation>
@@ -1488,27 +1625,27 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="arrivalRate" type="string">
+            <attribute name="arrivalRate" type="rg:double">
                <annotation>
                   <documentation>Average arrival rate of the transactions to the system. Default is 0.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numThreads" type="string">
+            <attribute name="numThreads" type="rg:int">
                <annotation>
                   <documentation>Number of threads that will work on this slave. Default is 10.</documentation>
                </annotation>
             </attribute>
-            <attribute name="orderStatusWeight" type="string">
+            <attribute name="orderStatusWeight" type="rg:double">
                <annotation>
                   <documentation>Percentage of Order Status transactions. Default is 5 %.</documentation>
                </annotation>
             </attribute>
-            <attribute name="paymentWeight" type="string">
+            <attribute name="paymentWeight" type="rg:double">
                <annotation>
                   <documentation>Percentage of Payment transactions. Default is 45 %.</documentation>
                </annotation>
             </attribute>
-            <attribute name="perThreadSimulTime" type="string">
+            <attribute name="perThreadSimulTime" type="rg:long">
                <annotation>
                   <documentation>Total time (in seconds) of simulation for each stressor thread. Default is 180.</documentation>
                </annotation>
@@ -1522,22 +1659,22 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="cIdMask" type="string">
+            <attribute name="cIdMask" type="rg:long">
                <annotation>
                   <documentation>Mask used to generate non-uniformly distributed random customer numbers. Default is 1023.</documentation>
                </annotation>
             </attribute>
-            <attribute name="cLastMask" type="string">
+            <attribute name="cLastMask" type="rg:long">
                <annotation>
                   <documentation>Mask used to generate non-uniformly distributed random customer last names. Default is 255.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numWarehouses" type="string">
+            <attribute name="numWarehouses" type="rg:int">
                <annotation>
                   <documentation>Number of Warehouses. Default is 1.</documentation>
                </annotation>
             </attribute>
-            <attribute name="olIdMask" type="string">
+            <attribute name="olIdMask" type="rg:long">
                <annotation>
                   <documentation>Mask used to generate non-uniformly distributed random item numbers. Default is 8191.</documentation>
                </annotation>
@@ -1551,37 +1688,37 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="condition" type="string">
+            <attribute name="condition" type="rg:org_radargun_stages_WaitForTopologyEventStage_Condition">
                <annotation>
                   <documentation>Condition we are waiting for. Default is END.</documentation>
                </annotation>
             </attribute>
-            <attribute name="maxMembers" type="string">
+            <attribute name="maxMembers" type="rg:int">
                <annotation>
                   <documentation>The maximum number of slaves that participated in this event. Default is indefinite.</documentation>
                </annotation>
             </attribute>
-            <attribute name="minMembers" type="string">
+            <attribute name="minMembers" type="rg:int">
                <annotation>
                   <documentation>The minimum number of slaves that participated in this event. Default is 0.</documentation>
                </annotation>
             </attribute>
-            <attribute name="set" type="string">
+            <attribute name="set" type="rg:boolean">
                <annotation>
                   <documentation>Set last state before finishing. Default is true.</documentation>
                </annotation>
             </attribute>
-            <attribute name="timeout" type="string">
+            <attribute name="timeout" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</documentation>
                </annotation>
             </attribute>
-            <attribute name="type" type="string">
+            <attribute name="type" type="rg:org_radargun_stages_WaitForTopologyEventStage_Type">
                <annotation>
                   <documentation>Type of event we are detecting. Default is REHASH.</documentation>
                </annotation>
             </attribute>
-            <attribute name="wait" type="string">
+            <attribute name="wait" type="rg:boolean">
                <annotation>
                   <documentation>Wait for the event to happen. Default is true.</documentation>
                </annotation>
@@ -1589,23 +1726,53 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="org_radargun_stages_WaitForTopologyEventStage_Condition">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="START"/>
+               <enumeration value="END"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="org_radargun_stages_WaitForTopologyEventStage_Type">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="REHASH"/>
+               <enumeration value="TOPOLOGY_UPDATE"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <complexType name="WriteSkewCheck">
       <annotation>
          <documentation>Stage checking the write skew detection in transactional caches.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:Check">
-            <attribute name="duration" type="string">
+            <attribute name="duration" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>Duration of the test. Default is 1 minute.</documentation>
                </annotation>
             </attribute>
-            <attribute name="testNull" type="string">
+            <attribute name="testNull" type="rg:boolean">
                <annotation>
                   <documentation>Should write skew between null value and first value be tested? Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="threads" type="string">
+            <attribute name="threads" type="rg:int">
                <annotation>
                   <documentation>Number of threads overwriting concurrently the entry. Default is 10.</documentation>
                </annotation>
@@ -1633,12 +1800,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
-            <attribute name="delete" type="string">
+            <attribute name="delete" type="rg:boolean">
                <annotation>
                   <documentation>If set to true, the entries are removed instead of being inserted. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="numEntries" type="string">
+            <attribute name="numEntries" type="rg:int" use="required">
                <annotation>
                   <documentation>Amount of entries that should be inserted into the cache.</documentation>
                </annotation>
@@ -1681,8 +1848,8 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       <sequence>
          <element maxOccurs="unbounded" minOccurs="0" name="property">
             <complexType>
-               <attribute name="name" type="string"/>
-               <attribute name="value" type="string"/>
+               <attribute name="name" type="string" use="required"/>
+               <attribute name="value" type="string" use="required"/>
             </complexType>
          </element>
       </sequence>
