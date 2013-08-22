@@ -29,22 +29,12 @@ public class DefaultConverter implements Converter<Object> {
          public Object parse(String string, Type[] parameters) {
             return string;
          }
-
-         @Override
-         public String allowedPattern(Type[] parameters) {
-            return ".*";
-         }
       });
 
       definedMap.put(int.class, new Parser() {
          @Override
          public Object parse(String string, Type[] parameters) {
             return Integer.parseInt(string.trim());
-         }
-
-         @Override
-         public String allowedPattern(Type[] parameters) {
-            return "[0-9]+";
          }
       });
       definedMap.put(Integer.class, definedMap.get(int.class));
@@ -54,11 +44,6 @@ public class DefaultConverter implements Converter<Object> {
          public Object parse(String string, Type[] parameters) {
             return Long.parseLong(string.trim());
          }
-
-         @Override
-         public String allowedPattern(Type[] parameters) {
-            return "[0-9]+";
-         }
       });
       definedMap.put(Long.class, definedMap.get(long.class));
 
@@ -67,11 +52,6 @@ public class DefaultConverter implements Converter<Object> {
          public Object parse(String string, Type[] parameters) {
             return Boolean.parseBoolean(string.trim());
          }
-
-         @Override
-         public String allowedPattern(Type[] parameters) {
-            return "[tT][rR][uU][eE]|[fF][aA][lL][sS][eE]";
-         }
       });
       definedMap.put(Boolean.class, definedMap.get(boolean.class));
 
@@ -79,11 +59,6 @@ public class DefaultConverter implements Converter<Object> {
          @Override
          public Object parse(String string, Type[] parameters) {
             return Double.parseDouble(string.trim());
-         }
-
-         @Override
-         public String allowedPattern(Type[] parameters) {
-            return "[0-9]+(\\.[0-9]+)?";
          }
       });
       definedMap.put(Double.class, definedMap.get(double.class));
@@ -98,22 +73,12 @@ public class DefaultConverter implements Converter<Object> {
             }
             return set;
          }
-
-         @Override
-         public String allowedPattern(Type[] parameters) {
-            return collectionPattern(parameters[0]);
-         }
       });
       definedMap.put(List.class, new Parser() {
          @Override
          public Object parse(String string, Type[] parameters) {
             if (parameters.length != 1) throw new IllegalArgumentException();
             return parseCollection(string, parameters[0]);
-         }
-
-         @Override
-         public String allowedPattern(Type[] parameters) {
-            return collectionPattern(parameters[0]);
          }
       });
 
@@ -139,11 +104,6 @@ public class DefaultConverter implements Converter<Object> {
          completionMap = new HashMap<Class<?>, Parser>(definedMap);
       }
       parserMap = completionMap;
-   }
-
-   private static String collectionPattern(Type type) {
-      String element = staticAllowedPattern(type);
-      return element + "(,\\s*" + element + ")*";
    }
 
    @Override
@@ -269,16 +229,11 @@ public class DefaultConverter implements Converter<Object> {
 
    @Override
    public String allowedPattern(Type type) {
-      return staticAllowedPattern(type);
-   }
-
-   private static String staticAllowedPattern(Type type) {
-      return ".*";
+      return null; // the pattern is not used for default converter
    }
 
    private static interface Parser {
       Object parse(String string, Type[] parameters);
-      String allowedPattern(Type[] parameters);
    }
 
    public static ParameterizedType parametrized(Class<?> clazz, Type... typeParams) {

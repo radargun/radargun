@@ -1,5 +1,15 @@
 package org.radargun.config;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,16 +27,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import org.radargun.Stage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -39,16 +39,30 @@ public class ConfigSchemaGenerator {
    private static final String NS_XS = "http://www.w3.org/2001/XMLSchema";
    private static final String RG_PREFIX = "rg:";
    private static final String XS_ELEMENT = "element";
+   private static final String XS_RESTRICTION = "restriction";
+   private static final String XS_PATTERN = "pattern";
+   private static final String XS_ENUMERATION = "enumeration";
+   private static final String XS_SIMPLE_TYPE = "simpleType";
    private static final String XS_COMPLEX_TYPE = "complexType";
    private static final String XS_SEQUENCE = "sequence";
+   private static final String XS_UNION = "union";
    private static final String XS_MIN_OCCURS = "minOccurs";
    private static final String XS_MAX_OCCURS = "maxOccurs";
    private static final String XS_ATTRIBUTE = "attribute";
    private static final String XS_NAME = "name";
    private static final String XS_TYPE = "type";
+   private static final String XS_USE = "use";
+   private static final String XS_REQUIRED = "required";
+   private static final String XS_STRING = "string";
+   private static final String XS_INTEGER = "integer";
+   private static final String XS_LONG = "long";
+   private static final String XS_FLOAT = "float";
+   private static final String XS_DOUBLE = "double";
+   private static final String XS_BOOLEAN = "boolean";
    private static final String XS_COMPLEX_CONTENT = "complexContent";
    private static final String XS_EXTENSION = "extension";
    private static final String XS_BASE = "base";
+   private static final String XS_VALUE = "value";
    private static final String XS_ABSTRACT = "abstract";
    private static final String RG_ABSTRACT_PRODUCT = RG_PREFIX + "abstractProduct";
    private static final String XS_CHOICE = "choice";
@@ -56,6 +70,7 @@ public class ConfigSchemaGenerator {
    private static final String XS_DOCUMENTATION = "documentation";
    private static List<String> products = new ArrayList<String>();
    private static String stageJarFile;
+   private static Set<String> simpleTypes = new HashSet<String>();
 
 
    public static void generate(String directory) {
@@ -107,25 +122,25 @@ public class ConfigSchemaGenerator {
       Element benchConfigSequence = createSequence(doc, benchConfigComplex);
 
       Element masterComplex = createComplexElement(doc, benchConfigSequence, "master", 1, 1);
-      addAttribute(doc, masterComplex, "bindAddress", null, false);
-      addAttribute(doc, masterComplex, "port", null, false);
+      addAttribute(doc, masterComplex, "bindAddress", false);
+      addAttribute(doc, masterComplex, "port", false);
 
       Element benchmarkComplex = createComplexElement(doc, benchConfigSequence, "benchmark", 1, 1);
       Element benchmarkChoice = createChoice(doc, createSequence(doc, benchmarkComplex), 1, -1);
       Element repeatType = createComplexType(doc, schema, "repeat", null, false, null);
       Element repeatChoice = createChoice(doc, createSequence(doc, repeatType), 1, -1);
-      addAttribute(doc, repeatType, "times", null, false);
-      addAttribute(doc, repeatType, "from", null, false);
-      addAttribute(doc, repeatType, "to", null, false);
-      addAttribute(doc, repeatType, "inc", null, false);
-      addAttribute(doc, repeatType, "name", null, false);
+      addAttribute(doc, repeatType, "times", false);
+      addAttribute(doc, repeatType, "from", false);
+      addAttribute(doc, repeatType, "to", false);
+      addAttribute(doc, repeatType, "inc", false);
+      addAttribute(doc, repeatType, "name", false);
       createReference(doc, benchmarkChoice, "Repeat", RG_PREFIX + "repeat");
       createReference(doc, repeatChoice, "Repeat", RG_PREFIX + "repeat");
       generateStageDefinitions(doc, schema, new Element[]{benchmarkChoice, repeatChoice});
 
-      addAttribute(doc, benchmarkComplex, "initSize", null, false);
-      addAttribute(doc, benchmarkComplex, "maxSize", null, false);
-      addAttribute(doc, benchmarkComplex, "increment", null, false);
+      addAttribute(doc, benchmarkComplex, "initSize", false);
+      addAttribute(doc, benchmarkComplex, "maxSize", false);
+      addAttribute(doc, benchmarkComplex, "increment", false);
 
       Element productsComplex = createComplexElement(doc, benchConfigSequence, "products", 1, 1);
       Element productsSequence = createSequence(doc, productsComplex);
@@ -134,16 +149,16 @@ public class ConfigSchemaGenerator {
       Element abstractProductSequence = createSequence(doc, abstractProductType);
       Element configComplex = createComplexElement(doc, abstractProductSequence, "config", 1, -1);
       Element configSequence = createSequence(doc, configComplex);
-      addAttribute(doc, configComplex, "name", null, false);
-      addAttribute(doc, configComplex, "file", null, false);
-      addAttribute(doc, configComplex, "cache", null, false);
-      addAttribute(doc, configComplex, "wrapper", null, false);
+      addAttribute(doc, configComplex, "name", false);
+      addAttribute(doc, configComplex, "file", false);
+      addAttribute(doc, configComplex, "cache", false);
+      addAttribute(doc, configComplex, "wrapper", false);
       Element wrapperType = createComplexType(doc, schema, "wrapper", null, false, null);
       Element wrapperSequence = createSequence(doc, wrapperType);
       Element wrapperProperty = createComplexElement(doc, wrapperSequence, "property", 0, -1);
-      addAttribute(doc, wrapperProperty, "name", null, true);
-      addAttribute(doc, wrapperProperty, "value", null, true);
-      addAttribute(doc, wrapperType, "class", null, false);
+      addAttribute(doc, wrapperProperty, "name", true);
+      addAttribute(doc, wrapperProperty, "value", true);
+      addAttribute(doc, wrapperType, "class", false);
       Element wrapper = createReference(doc, configSequence, "wrapper", RG_PREFIX + "wrapper");
       wrapper.setAttribute(XS_MIN_OCCURS, "0");
       wrapper.setAttribute(XS_MAX_OCCURS, "1");
@@ -152,14 +167,14 @@ public class ConfigSchemaGenerator {
       wrapper = createReference(doc, siteSequence, "wrapper", RG_PREFIX + "wrapper");
       wrapper.setAttribute(XS_MIN_OCCURS, "0");
       wrapper.setAttribute(XS_MAX_OCCURS, "1");
-      addAttribute(doc, siteComplex, "name", null, false);
-      addAttribute(doc, siteComplex, "config", null, false);
-      addAttribute(doc, siteComplex, "slaves", null, false);
-      addAttribute(doc, siteComplex, "cache", null, false);
+      addAttribute(doc, siteComplex, "name", false);
+      addAttribute(doc, siteComplex, "config", false);
+      addAttribute(doc, siteComplex, "slaves", false);
+      addAttribute(doc, siteComplex, "cache", false);
 
       Element productChoice = createChoice(doc, productsSequence, 1, -1);
       Element genericProductType = createComplexType(doc, schema, "product", RG_ABSTRACT_PRODUCT, false, null);
-      addAttribute(doc, genericProductType, "name", null, false);
+      addAttribute(doc, genericProductType, "name", false);
       createReference(doc, productChoice, "product", RG_PREFIX + "product");
       for (String productName : products) {
          createComplexType(doc, schema, productName, RG_ABSTRACT_PRODUCT, false, null);
@@ -170,11 +185,11 @@ public class ConfigSchemaGenerator {
       Element reportsSequence = createSequence(doc, reportsComplex);
       Element reportComplex = createComplexElement(doc, reportsSequence, "report", 0, -1);
       Element reportSequence = createSequence(doc, reportComplex);
-      addAttribute(doc, reportComplex, "name", null, false);
-      addAttribute(doc, reportComplex, "includeAll", null, false);
+      addAttribute(doc, reportComplex, "name", false);
+      addAttribute(doc, reportComplex, "includeAll", false);
       Element itemComplex = createComplexElement(doc, reportSequence, "item", 0, -1);
-      addAttribute(doc, itemComplex, "product", null, false);
-      addAttribute(doc, itemComplex, "config", null, false);
+      addAttribute(doc, itemComplex, "product", false);
+      addAttribute(doc, itemComplex, "config", false);
    }
 
    private static void generateStageDefinitions(Document doc, Element schema, Element[] parents) {
@@ -214,9 +229,76 @@ public class ConfigSchemaGenerator {
          if (property.getKey().equals(propertyAnnotation.deprecatedName())) {
             propertyDocText = "*DEPRECATED* " + propertyDocText;
          }
-         addAttribute(doc, stageType, property.getKey(), propertyDocText, !propertyAnnotation.optional());
+         String type = generateType(doc, schema, property.getValue().getType(), propertyAnnotation.converter());
+         addAttribute(doc, stageType, property.getKey(), type, propertyDocText, !propertyAnnotation.optional());
       }
       generatedStages.add(stage);
+   }
+
+   private static String generateType(Document doc, Element schema, Class<?> type, Class<? extends Converter<?>> converterClass) {
+      Converter<?> converter;
+      try {
+         converter = converterClass.newInstance();
+      } catch (Exception e) {
+         System.err.printf("Cannot instantiate converter type %s: %s",
+               converterClass.getName(), e.getMessage());
+         return XS_STRING;
+      }
+      String typeName = type.getName().replaceAll("[.$]", "_");
+      if (!(converter instanceof DefaultConverter)) {
+         typeName += "__" + converter.getClass().getName().replaceAll("[.$]", "_");
+      }
+      if (simpleTypes.contains(typeName)) {
+         return RG_PREFIX + typeName;
+      }
+      Element typeElement = doc.createElementNS(NS_XS, XS_SIMPLE_TYPE);
+      typeElement.setAttribute(XS_NAME, typeName);
+      // do not hang the element yet - if we can't specify it well, drop that
+      Element union = doc.createElementNS(NS_XS, XS_UNION);
+      typeElement.appendChild(union);
+
+      Element propertyType = doc.createElementNS(NS_XS, XS_SIMPLE_TYPE);
+      union.appendChild(propertyType);
+      Element propertyRestriction = doc.createElementNS(NS_XS, XS_RESTRICTION);
+      propertyType.appendChild(propertyRestriction);
+      if (!(converter instanceof DefaultConverter)) {
+         Element propertyPattern = doc.createElementNS(NS_XS, XS_PATTERN);
+         propertyRestriction.appendChild(propertyPattern);
+         propertyPattern.setAttribute(XS_VALUE, converter.allowedPattern(type));
+      } else if (type == Integer.class || type == int.class) {
+         propertyRestriction.setAttribute(XS_BASE, XS_INTEGER);
+      } else if (type == Long.class || type == long.class) {
+         propertyRestriction.setAttribute(XS_BASE, XS_LONG);
+      } else if (type == Boolean.class || type == boolean.class) {
+         propertyRestriction.setAttribute(XS_BASE, XS_BOOLEAN);
+      } else if (type == Float.class || type == float.class) {
+         propertyRestriction.setAttribute(XS_BASE, XS_FLOAT);
+      } else if (type == Double.class || type == double.class) {
+         propertyRestriction.setAttribute(XS_BASE, XS_DOUBLE);
+      } else if (type.isEnum()) {
+         propertyRestriction.setAttribute(XS_BASE, XS_STRING);
+         for (Object e : type.getEnumConstants()) {
+            Element enumeration = doc.createElementNS(NS_XS, XS_ENUMERATION);
+            propertyRestriction.appendChild(enumeration);
+            enumeration.setAttribute(XS_VALUE, e.toString());
+         }
+      } else {
+         // all the elements are just dropped
+         return XS_STRING;
+      }
+
+      Element expressionType = doc.createElementNS(NS_XS, XS_SIMPLE_TYPE);
+      union.appendChild(expressionType);
+      Element expressionRestriction = doc.createElementNS(NS_XS, XS_RESTRICTION);
+      expressionType.appendChild(expressionRestriction);
+      expressionRestriction.setAttribute(XS_BASE, XS_STRING);
+      Element expressionPattern = doc.createElementNS(NS_XS, XS_PATTERN);
+      expressionRestriction.appendChild(expressionPattern);
+      expressionPattern.setAttribute(XS_VALUE, "[$#]\\{.*\\}");
+
+      simpleTypes.add(typeName);
+      schema.appendChild(typeElement);
+      return RG_PREFIX + typeName;
    }
 
    private static List<String> getStageNames() {
@@ -290,10 +372,17 @@ public class ConfigSchemaGenerator {
       return reference;
    }
 
-   private static void addAttribute(Document doc, Element complexTypeElement, String name, String documentation, boolean required) {
+   private static void addAttribute(Document doc, Element complexTypeElement, String name, boolean required) {
+      addAttribute(doc, complexTypeElement, name, XS_STRING, null, required);
+   }
+
+   private static void addAttribute(Document doc, Element complexTypeElement, String name, String type, String documentation, boolean required) {
       Element attribute = doc.createElementNS(NS_XS, XS_ATTRIBUTE);
       attribute.setAttribute(XS_NAME, name);
-      attribute.setAttribute(XS_TYPE, "string");
+      attribute.setAttribute(XS_TYPE, type);
+      if (required) {
+         attribute.setAttribute(XS_USE, XS_REQUIRED);
+      }
       complexTypeElement.appendChild(attribute);
       addDocumentation(doc, attribute, documentation);
    }
