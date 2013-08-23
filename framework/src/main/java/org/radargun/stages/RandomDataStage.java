@@ -21,7 +21,9 @@ package org.radargun.stages;
 import java.nio.CharBuffer;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -122,6 +124,7 @@ public class RandomDataStage extends AbstractDistStage {
    private int newlinePunctuationModulo = 10;
 
    private long countOfWordsInData = 0;
+   private HashMap<String, Integer> wordCount = new HashMap<String, Integer>();
 
    /**
     * 
@@ -168,6 +171,7 @@ public class RandomDataStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
+      random = new Random(randomSeed + slaveIndex);
       DefaultDistStageAck result = newDefaultStageAck();
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
 
@@ -256,12 +260,12 @@ public class RandomDataStage extends AbstractDistStage {
       try {
          byte[] buffer = new byte[valueSize];
          while (putCount > 0) {
-            String key = Integer.toString(getSlaveIndex()) + "-" + putCount + ":" + random.nextLong();
+            String key = Integer.toString(getSlaveIndex()) + "-" + putCount + ":" + System.nanoTime();
 
             long start;
             if (stringData) {
                if (putCount % 5000 == 0) {
-                  log.info(putCount + ": Writing string length " + valueSize + " to cache key: " + key);
+                  log.info("Writing string length " + valueSize + " to cache key: " + key);
                }
 
                String cacheData = generateRandomStringData(valueSize);
@@ -270,7 +274,7 @@ public class RandomDataStage extends AbstractDistStage {
                cacheWrapper.put(bucket, key, cacheData);
             } else {
                if (putCount % 5000 == 0) {
-                  log.info(putCount + ": Writing " + valueSize + " bytes to cache key: " + key);
+                  log.info("Writing " + valueSize + " bytes to cache key: " + key);
                }
 
                random.nextBytes(buffer);
@@ -288,11 +292,23 @@ public class RandomDataStage extends AbstractDistStage {
          System.gc();
          log.info("Memory - free: " + Utils.kbString(runtime.freeMemory()) + " - max: "
                + Utils.kbString(runtime.maxMemory()) + "- total: " + Utils.kbString(runtime.totalMemory()));
+         log.debug("nodePutCount = " + nodePutCount + "; bytesWritten = " + bytesWritten + "; targetMemoryUse = "
+               + targetMemoryUse + "; countOfWordsInData = " + countOfWordsInData);
          result.setPayload(new long[] { nodePutCount, bytesWritten, targetMemoryUse, countOfWordsInData });
       } catch (Exception e) {
          log.fatal("An exception occurred", e);
          result.setError(true);
          result.setErrorMessage("An exception occurred");
+      }
+
+      // Log the word counts for this node
+      if (stringData && !wordCount.isEmpty()) {
+         log.debug("Word counts for node" + getSlaveIndex());
+         log.debug("--------------------");
+         for (Map.Entry<String, Integer> entry : wordCount.entrySet()) {
+            log.debug("key: " + entry.getKey() + "; value: " + entry.getValue());
+         }
+         log.debug("--------------------");
       }
 
       return result;
@@ -316,6 +332,11 @@ public class RandomDataStage extends AbstractDistStage {
          }
          data = data.put(word);
          countOfWordsInData++;
+         if (wordCount.containsKey(word)) {
+            wordCount.put(word, wordCount.get(word) + 1);
+         } else {
+            wordCount.put(word, 1);
+         }
 
          if (data.remaining() >= 2 && random.nextInt() % newlinePunctuationModulo == 0) {
             data.put(punctuationChars.charAt(random.nextInt(punctuationChars.length() - 1)));
