@@ -1112,11 +1112,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Boolean variable which shows whether the keyword query should be done or wildcard.</documentation>
                </annotation>
             </attribute>
-            <attribute name="matching" type="string" use="required">
-               <annotation>
-                  <documentation>The matching string which should be used for querying.</documentation>
-               </annotation>
-            </attribute>
             <attribute name="onField" type="string" use="required">
                <annotation>
                   <documentation>The name of the field for which the query should be executed.</documentation>

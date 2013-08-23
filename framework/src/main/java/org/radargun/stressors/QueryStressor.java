@@ -18,14 +18,18 @@
  */
 package org.radargun.stressors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.radargun.CacheWrapper;
 import org.radargun.config.Property;
 import org.radargun.config.Stressor;
 import org.radargun.features.Queryable;
+import org.radargun.state.SlaveState;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 /**
  * Stressor for Local cache mode, which will execute queries on the cache.
@@ -34,16 +38,30 @@ import java.util.Map;
  */
 @Stressor(doc = "Executes queries using infinispan-query API against the cache wrapper.")
 public class QueryStressor extends StressTestStressor {
+   private static final Log log = LogFactory.getLog(QueryStressor.class);
+
    @Property(optional = false, doc = "Boolean variable which shows whether the keyword query should be done or wildcard.")
    private boolean isWildcardQuery;
 
    @Property(optional = false, doc = "The name of the field for which the query should be executed.")
    private String onField;
 
-   @Property(optional = false, doc = "The matching string which should be used for querying.")
-   private String matching;
+   private List<Queryable.QueryResult> queryResultsList = null;
+   private String matchingWord = null;
 
-   private List<Integer> resultObjects = null;
+   public QueryStressor() {
+   }
+
+   public QueryStressor(final SlaveState slaveState) {
+      this.slaveState = slaveState;
+   }
+
+   @Override
+   protected void init(CacheWrapper wrapper) {
+      this.matchingWord = (String) slaveState.get(DataForQueryStressor.MATCH_WORD_PROP_NAME);
+      queryResultsList = new Vector<Queryable.QueryResult>(1000);
+      super.init(wrapper);
+   }
 
    public OperationLogic getLogic() {
       return new QueryRunnerLogic();
@@ -53,18 +71,17 @@ public class QueryStressor extends StressTestStressor {
 
       @Override
       public void init(String bucketId, int threadIndex) {
-         resultObjects = new ArrayList();
       }
 
       @Override
       public Object run(Stressor stressor, int iteration) {
          Map<String, Object> paramMap = new HashMap<String, Object>();
          paramMap.put(Queryable.QUERYABLE_FIELD, onField);
-         paramMap.put(Queryable.MATCH_STRING, matching);
+         paramMap.put(Queryable.MATCH_STRING, matchingWord);
          paramMap.put(Queryable.IS_WILDCARD, isWildcardQuery);
 
-         List obj = (List) stressor.makeRequest(iteration, Operation.QUERY, paramMap);
-         resultObjects.add(obj.size());
+         Queryable.QueryResult obj = (Queryable.QueryResult) stressor.makeRequest(iteration, Operation.QUERY, paramMap);
+         queryResultsList.add(obj);
 
          return obj;
       }
@@ -78,12 +95,14 @@ public class QueryStressor extends StressTestStressor {
 
    private void compareQueryResults() {
       int previousResult = -1;
-      for (Integer queryResult : resultObjects) {
-         if (previousResult > 0) {
-            assert queryResult == previousResult : "The results are not the same for all queries.";
-         }
+      for (Queryable.QueryResult queryResult : queryResultsList) {
+         if(queryResult != null) {
+            if (previousResult > 0) {
+               assert queryResult.size() == previousResult : "The results are not the same for all queries.";
+            }
 
-         previousResult = queryResult;
+            previousResult = queryResult.size();
+         }
       }
    }
 
@@ -92,7 +111,7 @@ public class QueryStressor extends StressTestStressor {
       return "QueryStressor{" +
             "isWildcardQuery=" + isWildcardQuery +
             ", onField=" + onField +
-            ", matching=" + matching +
+            ", matching=" + matchingWord +
             "}";
    }
 }

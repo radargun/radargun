@@ -41,7 +41,7 @@ import java.util.Map;
 public class InfinispanQueryWrapper extends InfinispanXSWrapper implements Queryable, Serializable {
 
    @Override
-   public List executeQuery(Map<String, Object> queryParameters) {
+   public QueryResultImpl executeQuery(Map<String, Object> queryParameters) {
       Cache cache = cacheManager.getCache(getCacheName());
 
       SearchManager searchManager = Search.getSearchManager(cache);
@@ -59,7 +59,7 @@ public class InfinispanQueryWrapper extends InfinispanXSWrapper implements Query
 
       CacheQuery cacheQuery = searchManager.getQuery(termTermination.createQuery());
 
-      return cacheQuery.list();
+      return new QueryResultImpl(cacheQuery);
    }
 
    public void empty() {
@@ -93,6 +93,21 @@ public class InfinispanQueryWrapper extends InfinispanXSWrapper implements Query
       public String toString() {
          return description;
       }
+   }
 
+   public class QueryResultImpl implements QueryResult {
+      private CacheQuery cacheQuery;
+
+      public QueryResultImpl(final CacheQuery cacheQuery) {
+         this.cacheQuery = cacheQuery;
+      }
+
+      public int size() {
+         return cacheQuery.getResultSize();
+      }
+
+      public List list() {
+         return cacheQuery.list();
+      }
    }
 }
