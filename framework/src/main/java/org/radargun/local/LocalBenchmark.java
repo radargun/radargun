@@ -18,6 +18,8 @@ import org.radargun.CacheWrapper;
 import org.radargun.CacheWrapperStressor;
 import org.radargun.ShutDownHook;
 import org.radargun.reporting.LocalSystemMonitorChart;
+import org.radargun.state.SlaveState;
+import org.radargun.stressors.AbstractCacheWrapperStressor;
 import org.radargun.sysmonitor.LocalJmxMonitor;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
@@ -59,6 +61,7 @@ public class LocalBenchmark {
                wrapper.setUp(config, true, -1, new TypedProperties(configProps));
 
                Map<String, Object> results = null;
+               SlaveState slaveState = new SlaveState();
                for (CacheWrapperStressor stressor : stressors) {
                   LocalJmxMonitor monitor = null;
                   if (stressor.isSysMonitorEnabled()) {
@@ -68,6 +71,8 @@ public class LocalBenchmark {
                      monitor.setConfigName(config);
                      monitor.setProductName(product.getKey());
                   }
+                  ((AbstractCacheWrapperStressor)stressor).setSlaveState(slaveState);
+
                   results = stressor.stress(wrapper);
                   if (monitor != null) {
                      monitor.stopMonitoringLocal();

@@ -21,6 +21,7 @@ package org.radargun.stages;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
+import org.radargun.state.SlaveState;
 import org.radargun.stressors.DataForQueryStressor;
 
 import java.util.Map;
@@ -42,14 +43,25 @@ public class DataForQueryStage extends StressTestStage {
    @Property(doc = "Specifies the full path of the property file which contains different words for querying. No default value is provided. This property is mandatory.")
    private String dataPath = null;
 
+   private static DataForQueryStressor stressTestStressor = null;
+
+   public void initOnSlave(SlaveState slaveState) {
+      super.initOnSlave(slaveState);
+   }
+
    protected Map<String, Object> doWork() {
       log.info("Starting "+getClass().getSimpleName()+": " + this);
-      DataForQueryStressor stressTestStressor = null;
-      stressTestStressor = new DataForQueryStressor();
+
+      stressTestStressor = new DataForQueryStressor(slaveState);
 
       stressTestStressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
+      stressTestStressor.setDurationMillis(duration);
       PropertyHelper.copyProperties(this, stressTestStressor);
 
-      return stressTestStressor.stress(cacheWrapper);
+      Map<String, Object> result = stressTestStressor.stress(cacheWrapper);
+
+      stressTestStressor.destroy();
+
+      return result;
    }
 }

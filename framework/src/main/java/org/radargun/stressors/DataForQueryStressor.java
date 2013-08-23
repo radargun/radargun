@@ -23,12 +23,18 @@ import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.config.Property;
 import org.radargun.config.Stressor;
+import org.radargun.state.SlaveState;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -41,6 +47,11 @@ public class DataForQueryStressor extends StressTestStressor {
 
    private static final Log log = LogFactory.getLog(DataForQueryStressor.class);
 
+   /**
+    * The name of the key in slave state, which returns the word to be used in the queries.
+    */
+   public static final String MATCH_WORD_PROP_NAME = "matchingWord";
+
    @Property(doc = "The length of the generated indexed entry. Default is 100.")
    private int propertyLength = 100;
 
@@ -51,6 +62,15 @@ public class DataForQueryStressor extends StressTestStressor {
    private String dataPath = null;
 
    private List<String> wordsFromFile = null;
+
+   private Map<String, Integer> matchingWords = new Hashtable<String, Integer>();
+
+   public DataForQueryStressor(final SlaveState slaveState) {
+      this.slaveState = slaveState;
+   }
+
+   public DataForQueryStressor() {
+   }
 
    @Override
    protected void init(CacheWrapper wrapper) {
@@ -69,7 +89,10 @@ public class DataForQueryStressor extends StressTestStressor {
       StringBuffer str = new StringBuffer();
 
       if (isWildCard) {
-         str.append(wordsFromFile.get(rand.nextInt(wordsFromFile.size())));
+         String word = wordsFromFile.get(rand.nextInt(wordsFromFile.size()));
+         str.append(word);
+
+         saveUsedWordsStatistics(word);
 
          while(str.length() < propertyLength) {
             char symbol = letters[rand.nextInt(letters.length)];
@@ -77,11 +100,23 @@ public class DataForQueryStressor extends StressTestStressor {
          }
       } else {
          while(str.length() < propertyLength) {
-            str.append(wordsFromFile.get(rand.nextInt(wordsFromFile.size()))).append(" ");
+            String word = wordsFromFile.get(rand.nextInt(wordsFromFile.size()));
+            str.append(word).append(" ");
+
+            saveUsedWordsStatistics(word);
          }
       }
 
       return str.toString();
+   }
+
+   private void saveUsedWordsStatistics(final String word) {
+      Integer num = 0;
+      if(matchingWords.containsKey(word)) {
+         num = matchingWords.get(word);
+      }
+
+      matchingWords.put(word, ++num);
    }
 
    private List<String> readDataFromFile() {
@@ -109,9 +144,24 @@ public class DataForQueryStressor extends StressTestStressor {
       return wordsFromFile;
    }
 
+   private void findAndStoreTheMostUsedWord() {
+      //Writing the most used word into the slave state object
+
+      Integer max = 0;
+      String key = null;
+      for(Map.Entry<String, Integer> elem : matchingWords.entrySet()) {
+         if (elem.getValue() > max) {
+            max = elem.getValue();
+            key = elem.getKey();
+         }
+      }
+
+      slaveState.put(MATCH_WORD_PROP_NAME, key);
+   }
+
    @Override
    public void destroy() {
-      //Do nothing
+      findAndStoreTheMostUsedWord();
    }
 
    @Override
