@@ -18,6 +18,7 @@
       <module>plugins/infinispan51</module>
       <module>plugins/infinispan52</module>
       <module>plugins/infinispan53</module>
+      <module>plugins/infinispan60</module>
       <module>plugins/jgroups</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
@@ -40,53 +41,6 @@
    </properties>
 
    <profiles>
-      <profile>
-         <id>infinispan60</id>
-         <activation>
-            <activeByDefault>false</activeByDefault>
-         </activation>
-         <modules>
-            <module>plugins/infinispan60</module>
-         </modules>
-         <build>
-            <plugins>
-               <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-antrun-plugin</artifactId>
-                  <version>1.3</version>
-                  <executions>
-                     <execution>
-                        <id>prepare_infinispan60_plugin</id>
-                        <phase>verify</phase>
-                        <goals>
-                           <goal>run</goal>
-                        </goals>
-                        <configuration>
-                           <tasks>
-                              <echo message="Packaging the Infinispan 6.0.x snapshot plugin" />
-                              <copy todir="${distribution.artifact}/plugins/infinispan60">
-                                 <fileset dir="plugins/infinispan60/target/distribution/plugin-infinispan60-bin/plugin-infinispan60">
-                                    <include name="**/*" />
-                                    <exclude name="**/*.jar" />
-                                 </fileset>
-                              </copy>
-                              <copy todir="${distribution.artifact}/plugin-dependencies">
-                                 <fileset dir="plugins/infinispan60/target/distribution/plugin-infinispan60-bin/plugin-infinispan60/lib">
-                                    <include name="*.jar" />
-                                 </fileset>
-                              </copy>
-                              <exec executable="bash" failonerror="true">
-                                 <arg value="-c"/>
-                                 <arg value="for FILE in `ls plugins/infinispan60/target/distribution/plugin-infinispan60-bin/plugin-infinispan60/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/infinispan60/lib/; done;"/>
-                              </exec>
-                           </tasks>
-                        </configuration>
-                     </execution>
-                  </executions>
-               </plugin>
-            </plugins>
-         </build>
-      </profile>
       <profile>
          <id>coherence</id>
          <activation>
@@ -394,6 +348,22 @@
                         <exec executable="bash" failonerror="true">
                            <arg value="-c"/>
                            <arg value="for FILE in `ls plugins/infinispan53/target/distribution/plugin-infinispan53-bin/plugin-infinispan53/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/infinispan53/lib/; done;"/>
+                        </exec>
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan60">
+                           <fileset dir="plugins/infinispan60/target/distribution/plugin-infinispan60-bin/plugin-infinispan60">
+                              <include name="**/*" />
+                              <exclude name="**/*.jar" />
+                           </fileset>
+                        </copy>
+                        <copy todir="${distribution.artifact}/plugin-dependencies">
+                           <fileset dir="plugins/infinispan60/target/distribution/plugin-infinispan60-bin/plugin-infinispan60/lib">
+                              <include name="*.jar" />
+                           </fileset>
+                        </copy>
+                        <exec executable="bash" failonerror="true">
+                           <arg value="-c"/>
+                           <arg value="for FILE in `ls plugins/infinispan60/target/distribution/plugin-infinispan60-bin/plugin-infinispan60/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/infinispan60/lib/; done;"/>
                         </exec>
 
                         <copy todir="${distribution.artifact}/plugins/jgroups">
