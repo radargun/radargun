@@ -19,6 +19,30 @@
       <version.jbossts>4.16.3.Final</version.jbossts>
    </properties>
 
+   <profiles>
+      <profile>
+         <id>infinispan53-snapshot</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+         </activation>
+         <properties>
+            <version.infinispan>5.3.0-SNAPSHOT</version.infinispan>
+         </properties>
+      </profile>
+      <profile>
+         <id>leveldb</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+         </activation>
+         <dependencies>
+            <dependency>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-cachestore-leveldb</artifactId>
+               <version>${version.infinispan}</version>
+            </dependency>
+         </dependencies>
+      </profile>
+   </profiles>
 
    <dependencies>
       <dependency>
@@ -72,21 +96,5 @@
       </dependency>
 
    </dependencies>
-
-   <profiles>
-      <profile>
-         <id>leveldb</id>
-         <activation>
-            <activeByDefault>false</activeByDefault>
-         </activation>
-         <dependencies>
-            <dependency>
-               <groupId>org.infinispan</groupId>
-               <artifactId>infinispan-cachestore-leveldb</artifactId>
-               <version>${version.infinispan}</version>
-            </dependency>
-         </dependencies>
-      </profile>
-   </profiles>
 
 </project>
