@@ -557,7 +557,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       public Object run(Stressor stressor, int iteration) {
          long timestamp = System.currentTimeMillis();
          if (!scheduledKeys.isEmpty() && scheduledKeys.first().removeTimestamp <= timestamp) {
-            return stressor.makeRequest(iteration, Operation.REMOVE, scheduledKeys.pollFirst());
+            return stressor.makeRequest(iteration, Operation.REMOVE, scheduledKeys.pollFirst().key);
          } else if (r.nextInt(100) >= writePercentage && scheduledKeys.size() > 0) {
             // we cannot get random access to PriorityQueue and there is no SortedList or another appropriate structure
             return stressor.makeRequest(iteration, Operation.GET, getRandomKey(timestamp));
