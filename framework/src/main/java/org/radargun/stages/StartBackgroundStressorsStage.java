@@ -54,8 +54,31 @@ public class StartBackgroundStressorsStage extends AbstractDistStage {
    @Property(doc = "If set to true, the stressor does not execute any requests after loading the data. Default is false.")
    private boolean loadOnly = false;
 
+   @Property(doc = "Do not execute the loading, start usual request right away.")
+   private boolean noLoading = false;
+
    @Property(doc = "Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.")
    private boolean loadWithPutIfAbsent = false;
+
+   @Property(doc = "Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.")
+   private boolean useLogValues = false;
+
+   @Property(doc = "Number of threads on each node that are checking whether all operations from stressor threads have been logged. Default is 10.")
+   private int logCheckingThreads = 10;
+
+   @Property(doc = "Maximum number of records in one entry before the older ones have to be truncated. Default is 100.")
+   private int logValueMaxSize = 100;
+
+   @Property(doc = "Number of operations after which will the stressor or checker update in-cache operation counter. Default is 50.")
+   private long logCounterUpdatePeriod = 50;
+
+   @Property(doc = "Maximum time for which are the log value checkers allowed to show no new checked values " +
+         "(error is thrown in CheckBackgroundStressors stage). Default is one minute.", converter = TimeConverter.class)
+   private long logCheckersNoProgressTimeout = 60000;
+
+   @Property(doc = "By default each thread accesses only its private set of keys. This allows all threads all values. " +
+         "Atomic operations are required for this functionality. Default is false.")
+   private boolean sharedKeys = false;
 
    @Property(doc = "Bucket where the entries should be inserted. Default is ")
    private String bucketId;
@@ -67,10 +90,14 @@ public class StartBackgroundStressorsStage extends AbstractDistStage {
          BackgroundOpsManager instance =
                BackgroundOpsManager.getOrCreateInstance(slaveState, puts, gets, removes, numEntries,
                      entrySize, bucketId, numThreads, delayBetweenRequests, getActiveSlaveCount(), getSlaveIndex(),
-                     transactionSize, loadDataOnSlaves, loadDataForDeadSlaves, loadOnly, loadWithPutIfAbsent);
+                     transactionSize, loadDataOnSlaves, loadDataForDeadSlaves, loadOnly, loadWithPutIfAbsent,
+                     useLogValues, logCheckingThreads, logValueMaxSize, logCounterUpdatePeriod, logCheckersNoProgressTimeout, sharedKeys);
 
          log.info("Starting stressor threads");
          if (slaveState.getCacheWrapper() != null) {
+            if (noLoading) {
+               instance.setLoaded(true);
+            }
             instance.startStressors();
             if (waitUntilLoaded) {
                log.info("Waiting until all stressor threads load data");

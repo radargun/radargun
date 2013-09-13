@@ -18,6 +18,7 @@
                         <element name="AbstractMaster" type="rg:AbstractMaster"/>
                         <element name="AbstractStart" type="rg:AbstractStart"/>
                         <element name="Check" type="rg:Check"/>
+                        <element name="CheckBackgroundStressors" type="rg:CheckBackgroundStressors"/>
                         <element name="CheckData" type="rg:CheckData"/>
                         <element name="CheckTopology" type="rg:CheckTopology"/>
                         <element name="ClearCluster" type="rg:ClearCluster"/>
@@ -130,6 +131,7 @@
             <element name="AbstractMaster" type="rg:AbstractMaster"/>
             <element name="AbstractStart" type="rg:AbstractStart"/>
             <element name="Check" type="rg:Check"/>
+            <element name="CheckBackgroundStressors" type="rg:CheckBackgroundStressors"/>
             <element name="CheckData" type="rg:CheckData"/>
             <element name="CheckTopology" type="rg:CheckTopology"/>
             <element name="ClearCluster" type="rg:ClearCluster"/>
@@ -254,6 +256,14 @@
    <complexType abstract="true" name="Check">
       <annotation>
          <documentation/>
+      </annotation>
+      <complexContent>
+         <extension base="rg:AbstractDist"/>
+      </complexContent>
+   </complexType>
+   <complexType name="CheckBackgroundStressors">
+      <annotation>
+         <documentation>Stage that checks the progress in background stressors and fails if something went wrong.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist"/>
@@ -1468,6 +1478,31 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.</documentation>
                </annotation>
             </attribute>
+            <attribute name="logCheckersNoProgressTimeout" type="rg:long__org_radargun_config_TimeConverter">
+               <annotation>
+                  <documentation>Maximum time for which are the log value checkers allowed to show no new checked values (error is thrown in CheckBackgroundStressors stage). Default is one minute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="logCheckingThreads" type="rg:int">
+               <annotation>
+                  <documentation>Number of threads on each node that are checking whether all operations from stressor threads have been logged. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="logCounterUpdatePeriod" type="rg:long">
+               <annotation>
+                  <documentation>Number of operations after which will the stressor or checker update in-cache operation counter. Default is 50.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="logValueMaxSize" type="rg:int">
+               <annotation>
+                  <documentation>Maximum number of records in one entry before the older ones have to be truncated. Default is 100.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="noLoading" type="rg:boolean">
+               <annotation>
+                  <documentation>Do not execute the loading, start usual request right away.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="numEntries" type="rg:int">
                <annotation>
                   <documentation>Amount of entries (key-value pairs) inserted into the cache. Default is 1024.</documentation>
@@ -1488,9 +1523,19 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Ratio of REMOVE requests. Default is 0.</documentation>
                </annotation>
             </attribute>
+            <attribute name="sharedKeys" type="rg:boolean">
+               <annotation>
+                  <documentation>By default each thread accesses only its private set of keys. This allows all threads all values. Atomic operations are required for this functionality. Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="transactionSize" type="rg:int">
                <annotation>
                   <documentation>Amount of request wrapped into single transaction. By default transactions are not used (explicitely).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="useLogValues" type="rg:boolean">
+               <annotation>
+                  <documentation>Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="waitUntilLoaded" type="rg:boolean">
