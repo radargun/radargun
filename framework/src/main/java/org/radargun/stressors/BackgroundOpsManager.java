@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.stages.helpers.Range;
 import org.radargun.state.SlaveState;
@@ -25,7 +26,7 @@ public class BackgroundOpsManager {
     */
    public static final String NAME = "BackgroundOpsManager";
 
-   private static Logger log = Logger.getLogger(BackgroundOpsManager.class);
+   private static Log log = LogFactory.getLog(BackgroundOpsManager.class);
 
    private int puts;
    private int gets;
@@ -43,7 +44,12 @@ public class BackgroundOpsManager {
    private List<Integer> loadDataForDeadSlaves;
    private boolean loadOnly;
    private boolean loadWithPutIfAbsent;
-
+   private boolean useLogValues;
+   private int logCheckingThreads;
+   private int logValueMaxSize;
+   private long logCounterUpdatePeriod;
+   private long logCheckersNoProgressTimeout;
+   private boolean sharedKeys;
 
    private SlaveState slaveState;
    private BackgroundStressor[] stressorThreads;
@@ -53,6 +59,8 @@ public class BackgroundOpsManager {
    private BackgroundStatsThread backgroundStatsThread;
    private long statsIteration;
    private boolean loaded = false;
+   private LogChecker[] logCheckers;
+   private LogChecker.Pool logCheckerPool;
 
    public static BackgroundOpsManager getInstance(SlaveState slaveState) {
       return (BackgroundOpsManager) slaveState.get(NAME);
@@ -77,7 +85,9 @@ public class BackgroundOpsManager {
                                                           long delayBetweenRequests, int numSlaves, int slaveIndex,
                                                           int transactionSize, List<Integer> loadDataOnSlaves,
                                                           List<Integer> loadDataForDeadSlaves, boolean loadOnly,
-                                                          boolean loadWithPutIfAbsent) {
+                                                          boolean loadWithPutIfAbsent, boolean useLogValues, int logCheckingThreads,
+                                                          int logValueMaxSize, long logCounterUpdatePeriod,
+                                                          long logCheckersNoProgressTimeout, boolean sharedKeys) {
       BackgroundOpsManager instance = getOrCreateInstance(slaveState);
       instance.puts = puts;
       instance.gets = gets;
@@ -95,6 +105,12 @@ public class BackgroundOpsManager {
       instance.loadDataForDeadSlaves = loadDataForDeadSlaves;
       instance.loadOnly = loadOnly;
       instance.loadWithPutIfAbsent = loadWithPutIfAbsent;
+      instance.useLogValues = useLogValues;
+      instance.logCheckingThreads = logCheckingThreads;
+      instance.logValueMaxSize = logValueMaxSize;
+      instance.logCounterUpdatePeriod = logCounterUpdatePeriod;
+      instance.logCheckersNoProgressTimeout = logCheckersNoProgressTimeout;
+      instance.sharedKeys = sharedKeys;
       return instance;
    }
 
@@ -148,12 +164,33 @@ public class BackgroundOpsManager {
             Range threadKeyRange = Range.divideRange(slaveKeyRange.getSize(), numThreads, i);
             Range myKeyRange = threadKeyRange.shift(slaveKeyRange.getStart());
             stressorThreads[i] = new BackgroundStressor(this, slaveState, myKeyRange,
-                  rangesForThreads == null ? null : rangesForThreads.get(i + numThreads * liveId), i);
+                  rangesForThreads == null ? null : rangesForThreads.get(i + numThreads * liveId), slaveIndex, i);
             stressorThreads[i].setLoaded(this.loaded);
             stressorThreads[i].start();
          }
       } else {
          log.warn("Stressor thread number set to 0!");
+      }
+      if (useLogValues) {
+         if (logCheckingThreads <= 0) {
+            log.error("LogValue checker set to 0!");
+         } else if (sharedKeys) {
+            logCheckers = new LogChecker[logCheckingThreads];
+            SharedLogChecker.Pool pool = new SharedLogChecker.Pool(numSlaves, numThreads, numEntries);
+            logCheckerPool = pool;
+            for (int i = 0; i < logCheckingThreads; ++i) {
+               logCheckers[i] = new SharedLogChecker(i, slaveState, pool, this);
+               logCheckers[i].start();
+            }
+         } else {
+            logCheckers = new LogChecker[logCheckingThreads];
+            PrivateLogChecker.Pool pool = new PrivateLogChecker.Pool(numSlaves, numThreads, numEntries);
+            logCheckerPool = pool;
+            for (int i = 0; i < logCheckingThreads; ++i) {
+               logCheckers[i] = new PrivateLogChecker(i, pool, this);
+               logCheckers[i].start();
+            }
+         }
       }
       stressorsRunning = true;
    }
@@ -200,6 +237,11 @@ public class BackgroundOpsManager {
       for (int i = 0; i < stressorThreads.length; i++) {
          stressorThreads[i].requestTerminate();
       }
+      if (logCheckers != null) {
+         for (int i = 0; i < logCheckers.length; ++i) {
+            logCheckers[i].requestTerminate();
+         }
+      }
       // give the threads a second to terminate
       try {
          Thread.sleep(1000);
@@ -209,17 +251,29 @@ public class BackgroundOpsManager {
       for (int i = 0; i < stressorThreads.length; i++) {
          stressorThreads[i].interrupt();
       }
+      if (logCheckers != null) {
+         for (int i = 0; i < logCheckers.length; ++i) {
+            logCheckers[i].interrupt();
+         }
+      }
+
       log.debug("Waiting until all threads join");
       // then wait for them to finish
       try {
          for (int i = 0; i < stressorThreads.length; i++) {
             stressorThreads[i].join();
          }
+         if (logCheckers != null) {
+            for (int i = 0; i < logCheckers.length; ++i) {
+               logCheckers[i].join();
+            }
+         }
          log.debug("All threads have joined");
       } catch (InterruptedException e1) {
          log.error("interrupted while waiting for sizeThread and stressorThreads to stop");
       }
       stressorThreads = null;
+      logCheckers = null;
    }
 
    public synchronized void startStats() {
@@ -259,6 +313,58 @@ public class BackgroundOpsManager {
 
    public boolean getLoadWithPutIfAbsent() {
       return loadWithPutIfAbsent;
+   }
+
+   public int getSlaveIndex() {
+      return slaveIndex;
+   }
+
+   public int getNumSlaves() {
+      return numSlaves;
+   }
+
+   public int getLogCheckingThreads() {
+      return logCheckingThreads;
+   }
+
+   public int getLogValueMaxSize() {
+      return logValueMaxSize;
+   }
+
+   public long getLogCounterUpdatePeriod() {
+      return logCounterUpdatePeriod;
+   }
+
+   public KeyGenerator getKeyGenerator() {
+      KeyGenerator keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
+      if (keyGenerator == null) {
+         keyGenerator = new StringKeyGenerator();
+         slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
+      }
+      return keyGenerator;
+   }
+
+   public String getError() {
+      if (useLogValues) {
+         if (logCheckerPool != null && logCheckerPool.getMissingOperations() > 0) {
+            return "Background stressors report " + logCheckerPool.getMissingOperations() + " missing operations!";
+         }
+         if (logCheckers != null) {
+            long lastProgress = System.currentTimeMillis() - logCheckerPool.getLastStoredOperationTimestamp();
+            if (lastProgress > logCheckersNoProgressTimeout) {
+               return "No progress in checkers for " + lastProgress + " ms!";
+            }
+         }
+      }
+      return null;
+   }
+
+   public int getNumThreads() {
+      return numThreads;
+   }
+
+   public int getNumEntries() {
+      return numEntries;
    }
 
    private class BackgroundStatsThread extends Thread {
@@ -392,6 +498,14 @@ public class BackgroundOpsManager {
 
    public long getDelayBetweenRequests() {
       return delayBetweenRequests;
+   }
+
+   public boolean isUseLogValues() {
+      return useLogValues;
+   }
+
+   public boolean isSharedKeys() {
+      return sharedKeys;
    }
 
    public CacheWrapper getCacheWrapper() {

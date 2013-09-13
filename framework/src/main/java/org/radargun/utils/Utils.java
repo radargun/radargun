@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -18,7 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
 import org.apache.commons.logging.Log;
@@ -386,5 +389,21 @@ public class Utils {
       Class clazz = Class.forName(HOTSPOT_BEAN_CLASS);
       Method m = clazz.getMethod(HOTSPOT_BEAN_DUMP_METHOD, String.class, boolean.class);
       m.invoke(hotspotMBean, file, true);
+   }
+
+   public static long getRandomSeed(Random random) {
+      try {
+         Field seedField = Random.class.getDeclaredField("seed");
+         seedField.setAccessible(true);
+         return ((AtomicLong) seedField.get(random)).get();
+      } catch (Exception e) {
+         log.error("Cannot access seed", e);
+         throw new RuntimeException(e);
+      }
+   }
+
+   public static Random setRandomSeed(Random random, long seed) {
+      random.setSeed(seed ^ 0x5DEECE66DL);
+      return random;
    }
 }
