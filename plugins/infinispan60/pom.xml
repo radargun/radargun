@@ -41,7 +41,7 @@
    </profiles>
 
    <properties>
-      <version.infinispan>6.0.0.Alpha3</version.infinispan>
+      <version.infinispan>6.0.0.Beta1</version.infinispan>
       <version.jbossts>4.16.3.Final</version.jbossts>
    </properties>
 
