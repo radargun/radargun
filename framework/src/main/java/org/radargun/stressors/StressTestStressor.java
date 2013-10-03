@@ -15,6 +15,7 @@ import org.radargun.config.TimeConverter;
 import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.BulkOperationsCapable;
 import org.radargun.features.Queryable;
+import org.radargun.utils.Fuzzy;
 import org.radargun.utils.Utils;
 
 /**
@@ -36,8 +37,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    @Property(doc = "Number of keys on which all the GETs and PUTs are performed. Default is 100.")
    private int numEntries = 100;
 
-   @Property(doc = "Size of the entry in bytes. Default is 1000.")
-   private int entrySize = 1000;
+   @Property(doc = "Size of the entry in bytes. Default is 1000.", converter = Fuzzy.IntegerConverter.class)
+   private Fuzzy<Integer> entrySize = Fuzzy.always(1000);
 
    @Property(doc = "The frequency of writes (percentage). Default is 20%")
    private int writePercentage = 20;
@@ -297,7 +298,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          Object key = getKey(randomKeyInt, stressor.threadIndex);
 
          if (randomAction < writePercentage) {
-            return stressor.makeRequest(iteration, Operation.PUT, key, generateValue(entrySize));
+            return stressor.makeRequest(iteration, Operation.PUT, key, generateValue());
          } else if (randomAction < writePercentage + removePercentage) {
             return stressor.makeRequest(iteration, Operation.REMOVE, key);
          } else {
@@ -322,15 +323,16 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          KeyGenerator keyGenerator = getKeyGenerator();
          for (int keyIndex = 0; keyIndex < numEntries; keyIndex++) {
             Object key = null;
+
+            if (isLocalBenchmark()) {
+               key = keyGenerator.generateKey(threadIndex * numEntries + keyIndex);
+            } else {
+               key = keyGenerator.generateKey((nodeIndex * numThreads + threadIndex) * numEntries + keyIndex);
+            }
+            Object value = generateValue();
+            addPooledKey(key, value);
             try {
-               if (isLocalBenchmark()) {
-                  key = keyGenerator.generateKey(threadIndex * numEntries + keyIndex);
-               } else {
-                  key = keyGenerator.generateKey((nodeIndex * numThreads + threadIndex) * numEntries + keyIndex);
-               }
-               Object value = generateValue(entrySize);
                cacheWrapper.put(bucketId, key, value);
-               addPooledKey(key, value);
                long loaded = keysLoaded.incrementAndGet();
                if (loaded % 100000 == 0) {
                   Runtime runtime = Runtime.getRuntime();
@@ -422,7 +424,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          }
          for (; keyIndex < numEntries; keyIndex += loadingThreads) {
             try {
-               cacheWrapper.put(null, getKey(keyIndex, threadIndex), generateValue(entrySize));
+               cacheWrapper.put(null, getKey(keyIndex, threadIndex), generateValue());
                long loaded = keysLoaded.incrementAndGet();
                if (loaded % 100000 == 0) {
                   Runtime runtime = Runtime.getRuntime();
@@ -445,7 +447,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          Object key = getKey(r.nextInt(numEntries - 1), stressor.threadIndex);
          Object lastValue = lastValues.get(key);
 
-         Object newValue = generateValue(entrySize);
+         Object newValue = generateValue();
          int probability = 0;
          if (lastValue == null) {
             lastValues.put(key, newValue);
@@ -456,9 +458,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             lastValues.remove(key);
             return stressor.makeRequest(iteration, Operation.REMOVE_VALID, key, lastValue);
          } else if (randomAction < (probability += removeInvalidPercentage)) {
-            return stressor.makeRequest(iteration, Operation.REMOVE_INVALID, key, generateValue(entrySize));
+            return stressor.makeRequest(iteration, Operation.REMOVE_INVALID, key, generateValue());
          } else if (randomAction < (probability += replaceInvalidPercentage)) {
-            return stressor.makeRequest(iteration, Operation.REPLACE_INVALID, key, generateValue(entrySize), newValue);
+            return stressor.makeRequest(iteration, Operation.REPLACE_INVALID, key, generateValue(), newValue);
          } else {
             lastValues.put(key, newValue);
             return stressor.makeRequest(iteration, Operation.REPLACE_VALID, key, lastValue, newValue);
@@ -504,7 +506,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             for (int i = 0; i < bulkSize;) {
                Object key = initLogic.getKey(r.nextInt(numEntries - 1), stressor.threadIndex);
                if (!map.containsKey(key)) {
-                  map.put(key, generateValue(entrySize));
+                  map.put(key, generateValue());
                   ++i;
                }
             }
@@ -571,7 +573,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             } else {
                key = getRandomKey(timestamp);
             }
-            return stressor.makeRequest(iteration, Operation.PUT, key, generateValue(entrySize));
+            return stressor.makeRequest(iteration, Operation.PUT, key, generateValue());
          }
       }
 
@@ -813,7 +815,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       this.numThreads = numOfThreads;
    }
 
-   protected Object generateValue(int size) {
+   protected Object generateValue() {
+      int size = entrySize.next(r);
       byte[] array = new byte[size];
       r.nextBytes(array);
       if (useAtomics) {
