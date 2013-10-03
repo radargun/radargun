@@ -179,7 +179,7 @@ public class BackgroundOpsManager {
             SharedLogChecker.Pool pool = new SharedLogChecker.Pool(numSlaves, numThreads, numEntries);
             logCheckerPool = pool;
             for (int i = 0; i < logCheckingThreads; ++i) {
-               logCheckers[i] = new SharedLogChecker(i, slaveState, pool, this);
+               logCheckers[i] = new SharedLogChecker(i, pool, this);
                logCheckers[i].start();
             }
          } else {

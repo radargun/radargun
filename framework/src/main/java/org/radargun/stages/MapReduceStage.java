@@ -151,7 +151,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       if (getSlaveIndex() == 0) {
          @SuppressWarnings("unchecked")
          MapReduceCapable<KOut, VOut, R> mapReduceCapable = (MapReduceCapable<KOut, VOut, R>) cacheWrapper;
-         result = executeMapReduceTask(mapReduceCapable);
+         result = executeMapReduceTask(cacheWrapper, mapReduceCapable);
       } else {
          String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
                + ", 0, -1";
@@ -160,7 +160,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       return result;
    }
 
-   private DefaultDistStageAck executeMapReduceTask(MapReduceCapable<KOut, VOut, R> mapReduceCapable) {
+   private DefaultDistStageAck executeMapReduceTask(CacheWrapper cacheWrapper, MapReduceCapable<KOut, VOut, R> mapReduceCapable) {
       DefaultDistStageAck result = newDefaultStageAck();
       Map<KOut, VOut> payloadMap = null;
       R payloadObject = null;
@@ -191,8 +191,8 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                + " does not support MapReduceCapable.setTimeout()");
       }
       try {
-         String payload = this.slaveIndex + ", " + mapReduceCapable.getNumMembers() + ", "
-               + mapReduceCapable.getLocalSize() + ", noDuration, noResultSize";
+         String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
+               + cacheWrapper.getLocalSize() + ", noDuration, noResultSize";
          result.setPayload(payload);
          if (collatorFqn != null) {
             start = System.nanoTime();
@@ -200,15 +200,15 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             durationNanos = System.nanoTime() - start;
             log.info("MapReduce task with Collator completed in "
                   + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
-            payload = this.slaveIndex + ", " + mapReduceCapable.getNumMembers() + ", "
-                  + mapReduceCapable.getLocalSize() + ", " + durationNanos + ", -1";
+            payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
+                  + cacheWrapper.getLocalSize() + ", " + durationNanos + ", -1";
             result.setPayload(payload);
             if (printResult) {
                log.info("MapReduce result: " + payloadObject.toString());
             }
             if (storeResultInCache) {
                try {
-                  mapReduceCapable.put(null, MAPREDUCE_RESULT_KEY, payloadObject);
+                  cacheWrapper.put(null, MAPREDUCE_RESULT_KEY, payloadObject);
                } catch (Exception e) {
                   log.error("Failed to put collated result object into cache", e);
                }
@@ -221,8 +221,8 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             if (payloadMap != null) {
                log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
                log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
-               payload = this.slaveIndex + ", " + mapReduceCapable.getNumMembers() + ", "
-                     + mapReduceCapable.getLocalSize() + ", " + durationNanos + ", " + payloadMap.keySet().size();
+               payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
+                     + cacheWrapper.getLocalSize() + ", " + durationNanos + ", " + payloadMap.keySet().size();
                result.setPayload(payload);
                if (printResult) {
                   log.info("MapReduce result:");
@@ -232,7 +232,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                }
                if (storeResultInCache) {
                   try {
-                     mapReduceCapable.put(null, MAPREDUCE_RESULT_KEY, payloadMap);
+                     cacheWrapper.put(null, MAPREDUCE_RESULT_KEY, payloadMap);
                   } catch (Exception e) {
                      log.error("Failed to put result map into cache", e);
                   }
@@ -248,9 +248,9 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          result.setRemoteException(e1);
          log.error("executeMapReduceTask() returned an exception", e1);
       }
-      log.info(mapReduceCapable.getNumMembers() + " nodes were used. " + mapReduceCapable.getLocalSize()
+      log.info(cacheWrapper.getNumMembers() + " nodes were used. " + cacheWrapper.getLocalSize()
             + " entries on this node");
-      log.info(mapReduceCapable.getInfo());
+      log.info(cacheWrapper.getInfo());
       log.info("--------------------");
 
       return result;

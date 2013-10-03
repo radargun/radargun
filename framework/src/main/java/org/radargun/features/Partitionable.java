@@ -20,14 +20,12 @@ package org.radargun.features;
 
 import java.util.Set;
 
-import org.radargun.CacheWrapper;
-
 /**
  * Allows the wrapper to simulate partition split.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public interface Partitionable extends CacheWrapper {
+public interface Partitionable {
    /**
     * Changes with which members this slave can communicate. Should be run only when the wrapper is started.
     *

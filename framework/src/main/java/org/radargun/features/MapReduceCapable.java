@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import org.radargun.CacheWrapper;
 import org.radargun.utils.ClassLoadHelper;
 
-public interface MapReduceCapable<KOut, VOut, R> extends CacheWrapper {
+public interface MapReduceCapable<KOut, VOut, R> {
 
    /**
     * 

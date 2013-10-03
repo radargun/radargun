@@ -25,14 +25,12 @@ package org.radargun.features;
 import java.util.Map;
 import java.util.Set;
 
-import org.radargun.CacheWrapper;
-
 /**
  * The cachewrapper suports bulk operations
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public interface BulkOperationsCapable extends CacheWrapper {
+public interface BulkOperationsCapable {
    Map<Object, Object> getAll(String bucket, Set<Object> keys, boolean preferAsync) throws Exception;
    /**
     * Returning previous entries from the cache is optional - if the cache

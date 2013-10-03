@@ -1,6 +1,5 @@
 package org.radargun.features;
 
-import org.radargun.CacheWrapper;
 import org.radargun.stressors.KeyGenerator;
 
 /**
@@ -8,7 +7,7 @@ import org.radargun.stressors.KeyGenerator;
  *
  * @author Martin Gencur
  */
-public interface KeyGeneratorAware extends CacheWrapper {
+public interface KeyGeneratorAware {
 
    KeyGenerator getKeyGenerator(int keyBufferSize);
 

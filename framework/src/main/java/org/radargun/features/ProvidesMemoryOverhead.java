@@ -18,9 +18,7 @@
  */
 package org.radargun.features;
 
-import org.radargun.CacheWrapper;
-
-public interface ProvidesMemoryOverhead extends CacheWrapper {
+public interface ProvidesMemoryOverhead {
 
    /**
     * @return the number of bytes above the key and value size needed to store into the cache

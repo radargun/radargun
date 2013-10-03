@@ -25,7 +25,7 @@ import java.util.concurrent.Future;
 import org.radargun.CacheWrapper;
 import org.radargun.utils.ClassLoadHelper;
 
-public interface DistributedTaskCapable<K, V, T> extends CacheWrapper {
+public interface DistributedTaskCapable<K, V, T> {
 
    /**
     * 
