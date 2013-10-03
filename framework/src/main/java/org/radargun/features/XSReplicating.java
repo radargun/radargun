@@ -21,15 +21,13 @@ package org.radargun.features;
 import java.util.Collection;
 import java.util.List;
 
-import org.radargun.CacheWrapper;
-
 /**
  * Cache wrapper that is able of cross-site replication and, therefore, carries
  * multiple caches (then accessed directly using the bucket argument in other operations)
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public interface XSReplicating extends CacheWrapper {
+public interface XSReplicating {
    /**
     * @return Name of the cache where we execute the common operations. Null can be used as bucket to access this cache.
     */

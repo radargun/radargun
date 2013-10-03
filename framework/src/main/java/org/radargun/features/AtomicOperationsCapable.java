@@ -22,12 +22,10 @@
 
 package org.radargun.features;
 
-import org.radargun.CacheWrapper;
-
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public interface AtomicOperationsCapable extends CacheWrapper {
+public interface AtomicOperationsCapable {
    boolean replace(String bucket, Object key, Object oldValue, Object newValue) throws Exception;
    Object putIfAbsent(String bucket, Object key, Object value) throws Exception;
    boolean remove(String bucket, Object key, Object oldValue) throws Exception;

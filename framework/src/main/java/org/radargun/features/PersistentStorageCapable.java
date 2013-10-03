@@ -22,14 +22,12 @@
 
 package org.radargun.features;
 
-import org.radargun.CacheWrapper;
-
 /**
  * Feature for wrappers that support persistent storage.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public interface PersistentStorageCapable extends CacheWrapper {
+public interface PersistentStorageCapable {
    /**
     * Retrieve value for this bucket and key, ignoring any persistent storage.
     *

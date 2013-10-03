@@ -529,11 +529,13 @@ class BackgroundStressor extends Thread {
    }
 
    private class SharedLogLogic extends AbstractLogLogic {
-      private AtomicOperationsCapable cacheWrapper;
+      private CacheWrapper cacheWrapper;
+      private AtomicOperationsCapable atomicWrapper;
 
       public SharedLogLogic(long seed) {
          super(seed);
-         cacheWrapper = (AtomicOperationsCapable) manager.getCacheWrapper();
+         cacheWrapper = manager.getCacheWrapper();
+         atomicWrapper = (AtomicOperationsCapable) cacheWrapper;
       }
 
       @Override
@@ -555,20 +557,20 @@ class BackgroundStressor extends Thread {
          // logic step).
          SharedLogValue prevValue = checkedGetValue(cacheWrapper, bucketId, keyId);
          SharedLogValue backupValue = checkedGetValue(cacheWrapper, bucketId, ~keyId);
-         SharedLogValue nextValue = getNextValue(cacheWrapper, prevValue, backupValue);
+         SharedLogValue nextValue = getNextValue(atomicWrapper, prevValue, backupValue);
          // now for modify operations, execute it
          if (operation == Operation.PUT) {
-            if (checkedPutValue(cacheWrapper, bucketId, keyId, prevValue, nextValue)) {
+            if (checkedPutValue(atomicWrapper, bucketId, keyId, prevValue, nextValue)) {
                if (backupValue != null) {
-                  checkedRemoveValue(cacheWrapper, bucketId, ~keyId, backupValue);
+                  checkedRemoveValue(atomicWrapper, bucketId, ~keyId, backupValue);
                }
             } else {
                return false;
             }
          } else if (operation == Operation.REMOVE) {
-            if (checkedPutValue(cacheWrapper, bucketId, ~keyId, backupValue, nextValue)) {
+            if (checkedPutValue(atomicWrapper, bucketId, ~keyId, backupValue, nextValue)) {
                if (prevValue != null) {
-                  checkedRemoveValue(cacheWrapper, bucketId, keyId, prevValue);
+                  checkedRemoveValue(atomicWrapper, bucketId, keyId, prevValue);
                }
             } else {
                return false;
@@ -619,7 +621,7 @@ class BackgroundStressor extends Thread {
          return null;
       }
 
-      private SharedLogValue checkedGetValue(AtomicOperationsCapable cacheWrapper, String bucketId, long keyId) throws Exception {
+      private SharedLogValue checkedGetValue(CacheWrapper cacheWrapper, String bucketId, long keyId) throws Exception {
          Object prevValue;
          long startTime = System.nanoTime();
          try {

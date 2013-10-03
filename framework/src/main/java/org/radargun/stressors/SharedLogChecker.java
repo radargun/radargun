@@ -2,18 +2,13 @@ package org.radargun.stressors;
 
 import java.util.Random;
 
-import org.radargun.features.AtomicOperationsCapable;
-import org.radargun.state.SlaveState;
-
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 class SharedLogChecker extends LogChecker {
-   private final AtomicOperationsCapable cacheWrapper;
 
-   public SharedLogChecker(int id, SlaveState slaveState, Pool pool, BackgroundOpsManager manager) {
+   public SharedLogChecker(int id, Pool pool, BackgroundOpsManager manager) {
       super("SharedLogChecker-" + id, manager, pool);
-      this.cacheWrapper = (AtomicOperationsCapable) manager.getCacheWrapper();
    }
 
    @Override

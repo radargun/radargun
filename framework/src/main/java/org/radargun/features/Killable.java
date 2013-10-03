@@ -1,14 +1,12 @@
 package org.radargun.features;
 
-import org.radargun.CacheWrapper;
-
 /**
  * 
  * Allows simulation of abrupt cache shutdown (node crash).
  * 
  * @author Michal Linhard <mlinhard@redhat.com>
  */
-public interface Killable extends CacheWrapper {
+public interface Killable {
    /**
     * Kill the CacheWrapper instance abruptly.
     *
