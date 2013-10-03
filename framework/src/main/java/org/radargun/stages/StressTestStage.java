@@ -22,6 +22,7 @@ import org.radargun.stressors.MultiStatistics;
 import org.radargun.stressors.Statistics;
 import org.radargun.stressors.StressTestStressor;
 import org.radargun.stressors.StringKeyGenerator;
+import org.radargun.utils.Fuzzy;
 
 /**
  * Simulates the work with a distributed web sessions.
@@ -47,8 +48,8 @@ public class StressTestStage extends AbstractDistStage {
          deprecatedName = "numberOfAttributes")
    protected int numEntries = 100;
 
-   @Property(doc = "Size of the value in bytes. Default is 1000.", deprecatedName = "sizeOfAnAttribute")
-   protected int entrySize = 1000;
+   @Property(doc = "Size of the value in bytes. Default is 1000.", deprecatedName = "sizeOfAnAttribute", converter = Fuzzy.IntegerConverter.class)
+   protected Fuzzy<Integer> entrySize = Fuzzy.always(1000);
 
    @Property(doc = "Ratio of writes = PUT requests (percentage). Default is 20%")
    protected int writePercentage = 20;

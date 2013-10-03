@@ -18,24 +18,21 @@
  */
 package org.radargun.stressors;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.config.Property;
 import org.radargun.config.Stressor;
 import org.radargun.state.SlaveState;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 /**
  * Stressor which writes Queryable data into the cache.
@@ -83,7 +80,7 @@ public class DataForQueryStressor extends StressTestStressor {
    }
 
    @Override
-   public Object generateValue(int size) {
+   public Object generateValue() {
       char[] letters = "abcdefghijklmnopqrstuvw 1234567890".toCharArray();
       Random rand = new Random();
       StringBuffer str = new StringBuffer();

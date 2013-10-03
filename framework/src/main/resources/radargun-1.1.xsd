@@ -453,7 +453,7 @@
                   <documentation>Benchmark duration. This takes precedence over numRequests. By default switched off.</documentation>
                </annotation>
             </attribute>
-            <attribute name="entrySize" type="rg:int">
+            <attribute name="entrySize" type="rg:org_radargun_utils_Fuzzy__org_radargun_utils_Fuzzy_IntegerConverter">
                <annotation>
                   <documentation>Size of the value in bytes. Default is 1000.</documentation>
                </annotation>
@@ -543,7 +543,7 @@
                   <documentation>By default each client thread operates on his private set of keys. Setting this to true introduces contention between the threads, the numThreads property says total amount of entries that are used by all threads. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="sizeOfAnAttribute" type="rg:int">
+            <attribute name="sizeOfAnAttribute" type="rg:org_radargun_utils_Fuzzy__org_radargun_utils_Fuzzy_IntegerConverter">
                <annotation>
                   <documentation>*DEPRECATED* Size of the value in bytes. Default is 1000.</documentation>
                </annotation>
@@ -581,6 +581,20 @@
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="org_radargun_utils_Fuzzy__org_radargun_utils_Fuzzy_IntegerConverter">
+      <union>
+         <simpleType>
+            <restriction>
+               <pattern value="\s*([0-9.]+(\.[0-9]*)?\s*%?\s*:\s*)?[0-9]+\s*(,\s*([0-9.]+(\.[0-9]*)?\s*%?\s*:\s*)?[0-9]+\s*)*"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <simpleType name="java_lang_Boolean">
       <union>
          <simpleType>
