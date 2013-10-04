@@ -558,6 +558,11 @@
                   <documentation>If true, putIfAbsent and replace operations are used. Default is false.</documentation>
                </annotation>
             </attribute>
+            <attribute name="useBuckets" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, each thread will write into its own bucket in form 'bucket_/threadId/'. Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="useHistogramStatistics" type="rg:boolean">
                <annotation>
                   <documentation>The test will produce operation statistics in histogram. Default is false.</documentation>

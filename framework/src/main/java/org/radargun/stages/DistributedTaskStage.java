@@ -135,7 +135,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
 
       log.info("--------------------");
       @SuppressWarnings("unchecked")
-      DistributedTaskCapable<K, V, T> distributedTaskCapable = (DistributedTaskCapable<K, V, T>) cacheWrapper;
+      DistributedTaskCapable<T> distributedTaskCapable = (DistributedTaskCapable<T>) cacheWrapper;
       long durationNanos;
       long start = System.nanoTime();
       futureList = distributedTaskCapable.executeDistributedTask(classLoadHelper, distributedCallableFqn,

@@ -1,19 +1,9 @@
 package org.radargun.cachewrappers;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
-import org.infinispan.configuration.cache.CacheMode;
-import org.infinispan.configuration.cache.ClusteringConfiguration;
-import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.notifications.Listener;
-import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
-import org.infinispan.notifications.cachelistener.annotation.TopologyChanged;
-import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
-import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
@@ -22,8 +12,6 @@ import org.jgroups.protocols.FD_SOCK;
 import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
 import org.radargun.features.Killable;
-import org.radargun.features.TopologyAware;
-import org.radargun.utils.TypedProperties;
 
 /**
  * 
@@ -34,7 +22,11 @@ import org.radargun.utils.TypedProperties;
  * @author Ondrej Nevelik <onevelik@redhat.com>
  * @author Radim Vansa <rvansa@redhat.com>
  */
-public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper implements Killable, TopologyAware {
+public class InfinispanKillableLifecycle extends InfinispanLifecycle implements Killable {
+
+   public InfinispanKillableLifecycle(Infinispan51Wrapper wrapper) {
+      super(wrapper);
+   }
 
    private enum KillRequest {
       NO_REQUEST,
@@ -42,19 +34,17 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
       KILL_FINISHED
    }
 
-   private List<TopologyAware.Event> topologyChanges = new ArrayList<TopologyAware.Event>();
-   private List<TopologyAware.Event> hashChanges = new ArrayList<TopologyAware.Event>();
    private KillRequest killState = KillRequest.NO_REQUEST;
    private Object killSync = new Object();
 
    @Override
-   public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
+   public void setUp() throws Exception {
       synchronized (killSync) {
          if (killState == KillRequest.KILL_FINISHED) {
             killState = KillRequest.NO_REQUEST;
          }
       }
-      super.setUp(config, isLocal, nodeIndex, confAttributes);
+      super.setUp();
    }
 
    @Override
@@ -127,20 +117,19 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
    }
    
    private void killInternal() throws Exception {
-      List<Address> addressList = cacheManager.getMembers();
-      cacheManager.stop();
+      List<Address> addressList = wrapper.getCacheManager().getMembers();
+      wrapper.getCacheManager().stop();
       log.info("Killed, previous view is " + addressList);
    }
 
    @Override
-   protected void postSetUpInternal(TypedProperties confAttributes) throws Exception {      
+   protected void postSetUpInternal() throws Exception {
       synchronized (killSync) {
          if (killState == KillRequest.NO_REQUEST) {
             stopDiscarding();
          }
       }
-      getCache(null).addListener(new TopologyAwareListener());
-      super.postSetUpInternal(confAttributes);
+      super.postSetUpInternal();
    }
 
    protected List<JChannel> getChannels() {
@@ -154,23 +143,21 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
          return list;
       }
       JGroupsTransport transport;
-      while (cacheManager == null) {
+      while (wrapper.getCacheManager() == null) {
          notReadyMessage("Cache manager is not ready", failOnNotReady);
          Thread.yield();
       }
       // For local caches it has there is no transport - check that we have at least one clustered cache
-      ClusteringConfiguration defaultClustering = cacheManager.getDefaultCacheConfiguration().clustering();
-      boolean hasClustered = defaultClustering != null && defaultClustering.cacheMode() != CacheMode.LOCAL;
-      for (String cacheName : cacheManager.getCacheNames()) {
-         ClusteringConfiguration clustering = cacheManager.getCacheConfiguration(cacheName).clustering();
-         if (clustering != null && clustering.cacheMode() != CacheMode.LOCAL) {
+      boolean hasClustered = false;
+      for (String cacheName : wrapper.getCacheManager().getCacheNames()) {
+         if (wrapper.isCacheClustered(wrapper.getCacheManager().getCache(cacheName))) {
             hasClustered = true;
             break;
          }
       }
       if (!hasClustered) return list;
       for (;;) {
-         transport = (JGroupsTransport) ((DefaultCacheManager) cacheManager).getTransport();
+         transport = (JGroupsTransport) ((DefaultCacheManager) wrapper.getCacheManager()).getTransport();
          if (transport != null) break;
          notReadyMessage("Transport is not ready", failOnNotReady);
          Thread.yield();
@@ -222,7 +209,7 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
    }
    
    protected synchronized void stopDiscarding() {
-      if (cacheManager == null) {
+      if (wrapper.getCacheManager() == null) {
          log.warn("Cache manager is not ready!");
          return;
       }
@@ -237,109 +224,5 @@ public class InfinispanKillableWrapper extends InfinispanExplicitLockingWrapper 
       log.debug("Stopped discarding.");
    }
 
-   @Override
-   public List<TopologyAware.Event> getTopologyChangeHistory() {
-      return Collections.unmodifiableList(topologyChanges);
-   }
 
-   @Override
-   public List<TopologyAware.Event> getRehashHistory() {
-      return Collections.unmodifiableList(hashChanges);
-   }
-
-   @Override
-   public boolean isCoordinator() {
-      return ((DefaultCacheManager) cacheManager).isCoordinator();
-   }
-
-   @Listener
-   public class TopologyAwareListener {
-      @TopologyChanged
-      public void onTopologyChanged(TopologyChangedEvent<?,?> e) {
-         log.debug("Topology change " + (e.isPre() ? "started" : "finished"));
-         int atStart = membersCount(e.getConsistentHashAtStart());
-         int atEnd = membersCount(e.getConsistentHashAtEnd());
-         addEvent(topologyChanges, e.isPre(), atStart, atEnd);
-      }
-      
-      @DataRehashed
-      public void onDataRehashed(DataRehashedEvent<?,?> e) {
-         log.debug("Rehash " + (e.isPre() ? "started" : "finished"));
-         int atStart = e.getMembersAtStart().size();
-         int atEnd = e.getMembersAtEnd().size();
-         addEvent(hashChanges, e.isPre(), atStart, atEnd);
-      }
-
-      private void addEvent(List<TopologyAware.Event> list, boolean isPre, int atStart, int atEnd) {
-         if (isPre) {
-            list.add(new Event(false, atStart, atEnd));
-         } else {
-            int size = list.size();
-            if (size == 0 || list.get(size - 1).getEnded() != null) {
-               Event ev = new Event(true, atStart, atEnd);
-               list.add(ev);
-            } else {
-               ((Event) list.get(size - 1)).setEnded();
-            }
-         }
-      }
-      
-      class Event extends TopologyAware.Event {
-         private final Date started;
-         private Date ended;
-         private final int atStart;
-         private final int atEnd;
-
-         private Event(Date started, Date ended, int atStart, int atEnd) {
-            this.started = started;
-            this.ended = ended;
-            this.atStart = atStart;
-            this.atEnd = atEnd;
-         }
-
-         public Event(boolean finished, int atStart, int atEnd) {
-            if (finished) {
-               this.started = this.ended = new Date();
-            } else {
-               this.started = new Date();
-            }
-            this.atStart = atStart;
-            this.atEnd = atEnd;
-         }
-
-         @Override
-         public Date getStarted() {
-            return started;
-         }
-         
-         public void setEnded() {
-            if (ended != null) throw new IllegalStateException();
-            ended = new Date();
-         }
-
-         @Override
-         public Date getEnded() {
-            return ended;
-         }
-
-         @Override
-         public int getMembersAtStart() {
-            return atStart;
-         }
-
-         @Override
-         public int getMembersAtEnd() {
-            return atEnd;
-         }
-
-         @Override
-         public TopologyAware.Event copy() {
-            return new Event(started, ended, atStart, atEnd);
-         }
-      }
-   }
-
-   protected int membersCount(ConsistentHash consistentHash) {
-      return consistentHash.getCaches().size();
-   }
 }

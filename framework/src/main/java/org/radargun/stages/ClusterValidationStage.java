@@ -1,15 +1,15 @@
 package org.radargun.stages;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Distributed stage that would validate that cluster is correctly formed.
@@ -78,14 +78,14 @@ public class ClusterValidationStage extends AbstractDistStage {
    }
 
    private int confirmReplication() throws Exception {
-      wrapper.put(nodeBucket(getSlaveIndex()), confirmationKey(getSlaveIndex()), "true");
+      wrapper.put(null, confirmationKey(getSlaveIndex()), "true");
       for (int i : getSlaves()) {
-         for (int j = 0; j < 10 && (wrapper.get(nodeBucket(i), confirmationKey(i)) == null); j++) {
+         for (int j = 0; j < 10 && (wrapper.get(null, confirmationKey(i)) == null); j++) {
             tryToPut();
-            wrapper.put(nodeBucket(getSlaveIndex()), confirmationKey(getSlaveIndex()), "true");
+            wrapper.put(null, confirmationKey(getSlaveIndex()), "true");
             Thread.sleep(1000);
          }
-         if (wrapper.get(nodeBucket(i), confirmationKey(i)) == null) {
+         if (wrapper.get(null, confirmationKey(i)) == null) {
             log.warn("Confirm phase unsuccessful. Slave " + i + " hasn't acknowledged the test");
             return i;
          }
@@ -96,10 +96,6 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    private String confirmationKey(int slaveIndex) {
       return CONFIRMATION_KEY + slaveIndex;
-   }
-
-   private String nodeBucket(int slaveIndex) {
-      return BUCKET + slaveIndex;
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
@@ -138,7 +134,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCount = 0;
       while (tryCount < 5) {
          try {
-            wrapper.put(nodeBucket(getSlaveIndex()), key(getSlaveIndex()), "true");
+            wrapper.put(null, key(getSlaveIndex()), "true");
             return;
          } catch (Throwable e) {
             log.warn("Error while trying to put data: ", e);
@@ -193,7 +189,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCont = 0;
       while (tryCont < 5) {
          try {
-            return wrapper.getReplicatedData(nodeBucket(i), key(i));
+            return wrapper.getReplicatedData(null, key(i));
          } catch (Throwable e) {
             tryCont++;
          }

@@ -18,39 +18,30 @@
  */
 package org.radargun.cachewrappers;
 
+import java.util.concurrent.TimeUnit;
+
 import org.infinispan.Cache;
 import org.infinispan.distexec.mapreduce.MapReduceTask;
-import org.infinispan.distribution.ch.ConsistentHash;
 
-public class Infinispan52MapReduceWrapper<KIn, VIn, KOut, VOut, R> extends
-      InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> {
+public class Infinispan53MapReduce<KIn, VIn, KOut, VOut, R> extends Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> {
 
-   @Override
-   public boolean setDistributeReducePhase(boolean distributeReducePhase) {
-      this.distributeReducePhase = distributeReducePhase;
-      return true;
+   public Infinispan53MapReduce(Infinispan53Wrapper wrapper) {
+      super(wrapper);
    }
 
    @Override
-   public boolean setUseIntermediateSharedCache(boolean useIntermediateSharedCache) {
-      this.useIntermediateSharedCache = useIntermediateSharedCache;
+   public boolean setTimeout(long timeout, TimeUnit unit) {
+      this.timeout = timeout;
+      this.unit = unit;
       return true;
    }
 
    @Override
    protected MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTaskFactory() {
-      Cache<KIn, VIn> cache = cacheManager.getCache(getCacheName());
-      return new MapReduceTask<KIn, VIn, KOut, VOut>(cache, this.distributeReducePhase, this.useIntermediateSharedCache);
+      Cache<KIn, VIn> cache = (Cache<KIn, VIn>) wrapper.getCache(null);
+      MapReduceTask<KIn, VIn, KOut, VOut> task = new MapReduceTask<KIn, VIn, KOut, VOut>(cache,
+            this.distributeReducePhase, this.useIntermediateSharedCache);
+      task.timeout(timeout, unit);
+      return task;
    }
-
-   @Override
-   protected int membersCount(ConsistentHash consistentHash) {
-      return consistentHash.getMembers().size();
-   }
-
-   @Override
-   public int getValueByteOverhead() {
-      return 152;
-   }   
-
 }

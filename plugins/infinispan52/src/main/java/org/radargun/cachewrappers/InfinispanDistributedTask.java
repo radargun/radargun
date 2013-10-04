@@ -24,12 +24,15 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.infinispan.Cache;
 import org.infinispan.distexec.DefaultExecutorService;
 import org.infinispan.distexec.DistributedExecutorService;
 import org.infinispan.distexec.DistributedTaskBuilder;
 import org.infinispan.distexec.DistributedTaskExecutionPolicy;
 import org.infinispan.distexec.DistributedTaskFailoverPolicy;
+import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.Transport;
 import org.radargun.features.DistributedTaskCapable;
@@ -43,15 +46,21 @@ import org.radargun.utils.Utils;
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 
-public class InfinispanDistributedTaskWrapper<K, V, T> extends InfinispanXSWrapper implements
-      DistributedTaskCapable<K, V, T> {
+public class InfinispanDistributedTask<K, V, T> implements DistributedTaskCapable<T> {
+
+   protected final Log log = LogFactory.getLog(getClass());
+   protected final Infinispan52Wrapper wrapper;
+
+   public InfinispanDistributedTask(Infinispan52Wrapper wrapper) {
+      this.wrapper = wrapper;
+   }
 
    @SuppressWarnings("unchecked")
    @Override
    public List<Future<T>> executeDistributedTask(ClassLoadHelper classLoadHelper, String distributedCallableFqn,
          String executionPolicyName, String failoverPolicyFqn, String nodeAddress, Map<String, String> params) {
 
-      Cache<K, V> cache = cacheManager.getCache(getCacheName());
+      Cache<K, V> cache = (Cache<K, V>) wrapper.getCache(null);
       DistributedExecutorService des = new DefaultExecutorService(cache);
       Callable<T> callable = null;
       DistributedTaskBuilder<T> taskBuilder = null;
@@ -109,7 +118,7 @@ public class InfinispanDistributedTaskWrapper<K, V, T> extends InfinispanXSWrapp
 
    private Address findHostPhysicalAddress(String nodeAddress) {
       Address result = null;
-      Transport t = cacheManager.getTransport();
+      Transport t = ((DefaultCacheManager) wrapper.getCacheManager()).getTransport();
       if (t != null) {
          for (Address add : t.getPhysicalAddresses()) {
             if (add.toString().contains(nodeAddress)) {

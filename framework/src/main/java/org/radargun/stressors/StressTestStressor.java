@@ -99,6 +99,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    @Property(doc = "Used to initialize the key generator. Null by default.")
    private String keyGeneratorParam = null;
 
+   @Property(doc = "If true, each thread will write into its own bucket in form 'bucket_/threadId/'. Default is false.")
+   private boolean useBuckets = false;
+
    /**
     * Number of slaves that participate in this test
     */
@@ -603,7 +606,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          super("Stressor-" + threadIndex);         
          this.threadIndex = threadIndex;
          this.logic = logic;
-         this.bucketId = isLocalBenchmark() ? String.valueOf(threadIndex) : nodeIndex + "_" + threadIndex;
+         this.bucketId = useBuckets ? "bucket_" + threadIndex : null;
       }
 
       @Override

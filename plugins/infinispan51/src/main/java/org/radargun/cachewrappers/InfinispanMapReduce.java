@@ -30,8 +30,10 @@ import org.radargun.features.MapReduceCapable;
 import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
 
-public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends InfinispanKillableWrapper implements
+public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements
       MapReduceCapable<KOut, VOut, R> {
+
+   protected Infinispan51Wrapper wrapper;
 
    protected boolean distributeReducePhase;
    protected boolean useIntermediateSharedCache;
@@ -41,6 +43,10 @@ public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends Infinis
    protected Map<String, String> mapperParameters;
    protected Map<String, String> reducerParameters;
    protected Map<String, String> collatorParameters;
+
+   public InfinispanMapReduce(Infinispan51Wrapper wrapper) {
+      this.wrapper = wrapper;
+   }
 
    @SuppressWarnings("unchecked")
    @Override
@@ -141,7 +147,7 @@ public class InfinispanMapReduceWrapper<KIn, VIn, KOut, VOut, R> extends Infinis
     * @return a MapReduceTask object that executes against on the default cache
     */
    protected MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTaskFactory() {
-      Cache<KIn, VIn> cache = cacheManager.getCache(getCacheName());
+      Cache<KIn, VIn> cache = wrapper.getCacheManager().getCache(wrapper.getMainCacheName());
       return new MapReduceTask<KIn, VIn, KOut, VOut>(cache);
    }
 

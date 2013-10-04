@@ -96,6 +96,9 @@ public class StressTestStage extends AbstractDistStage {
          "used by all threads. Default is false.")
    protected boolean sharedKeys = false;
 
+   @Property(doc = "If true, each thread will write into its own bucket in form 'bucket_/threadId/'. Default is false.")
+   private boolean useBuckets = false;
+
    @Property(doc = "This option is valid only for sharedKeys=true. It forces local loading of all keys (not only numEntries/numNodes). Default is false.")
    protected boolean loadAllKeys = false;
 

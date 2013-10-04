@@ -22,10 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
-import org.radargun.CacheWrapper;
 import org.radargun.utils.ClassLoadHelper;
 
-public interface DistributedTaskCapable<K, V, T> {
+public interface DistributedTaskCapable<T> {
 
    /**
     * 
@@ -50,7 +49,7 @@ public interface DistributedTaskCapable<K, V, T> {
     * 
     * @param nodeAddress
     * 
-    * @param inputKeys
+    * @param params
     * 
     * @return
     */

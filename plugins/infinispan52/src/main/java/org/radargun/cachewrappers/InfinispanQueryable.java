@@ -18,6 +18,10 @@
  */
 package org.radargun.cachewrappers;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Indexed;
 import org.hibernate.search.annotations.Store;
@@ -29,20 +33,22 @@ import org.infinispan.query.Search;
 import org.infinispan.query.SearchManager;
 import org.radargun.features.Queryable;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Wrapper which will be able to run queries on Infinispan caches.
  *
  * @author Anna Manukyan
  */
-public class InfinispanQueryWrapper extends InfinispanXSWrapper implements Queryable, Serializable {
+public class InfinispanQueryable implements Queryable, Serializable {
+
+   protected Infinispan52Wrapper wrapper;
+
+   public InfinispanQueryable(Infinispan52Wrapper wrapper) {
+      this.wrapper = wrapper;
+   }
 
    @Override
    public QueryResultImpl executeQuery(Map<String, Object> queryParameters) {
-      Cache cache = cacheManager.getCache(getCacheName());
+      Cache cache = wrapper.getCache(null);
 
       SearchManager searchManager = Search.getSearchManager(cache);
       QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(QueryableData.class).get();
@@ -62,18 +68,8 @@ public class InfinispanQueryWrapper extends InfinispanXSWrapper implements Query
       return new QueryResultImpl(cacheQuery);
    }
 
-   public void empty() {
-      //Do nothing
-   }
-
-   public void put(String bucket, Object key, Object value) throws Exception {
-      QueryableData data = new QueryableData((String) value);
-
-      super.put(getCacheName(), key, data);
-   }
-
-   public Object get(String bucket, Object key) throws Exception {
-      return super.get(getCacheName(), key);
+   Object wrapForQuery(Object value) {
+      return new QueryableData((String) value);
    }
 
    @Indexed(index = "query")
