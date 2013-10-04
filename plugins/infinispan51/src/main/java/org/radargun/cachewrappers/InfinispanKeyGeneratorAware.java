@@ -3,6 +3,8 @@ package org.radargun.cachewrappers;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.infinispan.affinity.KeyAffinityService;
 import org.infinispan.affinity.KeyAffinityServiceFactory;
 import org.radargun.features.KeyGeneratorAware;
@@ -14,9 +16,16 @@ import org.radargun.stressors.KeyGenerator;
  *
  * @author Martin Gencur
  */
-public class InfinispanKeyAffinityWrapper extends InfinispanWrapper implements KeyGeneratorAware {
+public class InfinispanKeyGeneratorAware implements KeyGeneratorAware {
 
+   protected final Log log = LogFactory.getLog(InfinispanKeyGeneratorAware.class);
+
+   private Infinispan51Wrapper wrapper;
    private KeyGenerator keyAffinityStringKeyGenerator;
+
+   public InfinispanKeyGeneratorAware(Infinispan51Wrapper wrapper) {
+      this.wrapper = wrapper;
+   }
 
    @Override
    public KeyGenerator getKeyGenerator(int keyBufferSize) {
@@ -63,13 +72,13 @@ public class InfinispanKeyAffinityWrapper extends InfinispanWrapper implements K
                newKeyAffinityService();
             }
          }
-         return affinityService.getKeyForAddress(cacheManager.getAddress());
+         return affinityService.getKeyForAddress(wrapper.getCacheManager().getAddress());
       }
 
       private void newKeyAffinityService() {
-         generator = new AddressAwareStringKeyGenerator(cacheManager.getAddress().toString());
+         generator = new AddressAwareStringKeyGenerator(wrapper.getCacheManager().getAddress().toString());
          executor = Executors.newSingleThreadExecutor();
-         affinityService = KeyAffinityServiceFactory.newLocalKeyAffinityService(getCache(null), generator, executor, keyBufferSize);
+         affinityService = KeyAffinityServiceFactory.newLocalKeyAffinityService(wrapper.getCache(null), generator, executor, keyBufferSize);
          log.info("Created key affinity service with keyBufferSize: " + keyBufferSize);
          Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {

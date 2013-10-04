@@ -18,9 +18,10 @@
  */
 package org.radargun.cachewrappers;
 
-import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
-import org.infinispan.configuration.parsing.Parser;
-import org.infinispan.manager.DefaultCacheManager;
+import java.util.List;
+import java.util.Set;
+
+import org.infinispan.remoting.transport.Transport;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
 import org.jgroups.protocols.TP;
@@ -28,24 +29,13 @@ import org.jgroups.stack.ProtocolStack;
 import org.radargun.features.Partitionable;
 import org.radargun.protocols.SLAVE_PARTITION;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Set;
-
-public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper implements Partitionable {
+public class InfinispanPartitionableLifecycle extends InfinispanKillableLifecycle implements Partitionable {
    
    private int mySlaveIndex = -1;
    private Set<Integer> initiallyReachable;
 
-   @Override
-   protected DefaultCacheManager createCacheManager(String configFile) throws IOException {
-      ConfigurationBuilderHolder cbh = createConfiguration(configFile);
-      cbh.getGlobalConfigurationBuilder().transport().transport(new HookedJGroupsTransport());
-      return new DefaultCacheManager(cbh, true);
-   }
-
-   protected ConfigurationBuilderHolder createConfiguration(String configFile) throws IOException {
-      return new Parser(Thread.currentThread().getContextClassLoader()).parseFile(configFile);
+   public InfinispanPartitionableLifecycle(Infinispan51Wrapper wrapper) {
+      super(wrapper);
    }
 
    @Override
@@ -79,6 +69,10 @@ public class InfinispanPartitionableWrapper extends InfinispanKillableWrapper im
    public void setStartWithReachable(int slaveIndex, Set<Integer> members) {
       mySlaveIndex = slaveIndex;
       initiallyReachable = members;
+   }
+
+   public Transport createTransport() {
+      return new HookedJGroupsTransport();
    }
 
    private class HookedJGroupsTransport extends JGroupsTransport {
