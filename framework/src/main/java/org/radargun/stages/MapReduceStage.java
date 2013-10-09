@@ -64,6 +64,16 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    private String reducerParams = null;
 
    @Property(optional = true, doc = "Fully qualified class name of the "
+         + "org.infinispan.distexec.mapreduce.Reducer implementation to use as a combiner.")
+   private String combinerFqn;
+
+   @Property(optional = true, doc = "A String in the form of "
+         + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
+         + " invoking a method on the Reducer Object used as a combiner. The method"
+         + " must be public and take a String parameter. The default is null.")
+   private String combinerParams = null;
+
+   @Property(optional = true, doc = "Fully qualified class name of the "
          + "org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.")
    private String collatorFqn = null;
 
@@ -160,7 +170,8 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       return result;
    }
 
-   private DefaultDistStageAck executeMapReduceTask(CacheWrapper cacheWrapper, MapReduceCapable<KOut, VOut, R> mapReduceCapable) {
+   private DefaultDistStageAck executeMapReduceTask(CacheWrapper cacheWrapper,
+         MapReduceCapable<KOut, VOut, R> mapReduceCapable) {
       DefaultDistStageAck result = newDefaultStageAck();
       Map<KOut, VOut> payloadMap = null;
       R payloadObject = null;
@@ -169,7 +180,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
       log.info("--------------------");
       mapReduceCapable.setParameters(Utils.parseParams(mapperParams), Utils.parseParams(reducerParams),
-            Utils.parseParams(collatorParams));
+            Utils.parseParams(combinerParams), Utils.parseParams(collatorParams));
       if (mapReduceCapable.setDistributeReducePhase(distributeReducePhase)) {
          log.info(mapReduceCapable.getClass().getName() + " supports MapReduceCapable.setDistributeReducePhase()");
       } else {
@@ -177,22 +188,24 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                + " does not support MapReduceCapable.setDistributeReducePhase()");
       }
       if (mapReduceCapable.setUseIntermediateSharedCache(useIntermediateSharedCache)) {
-         log.info(mapReduceCapable.getClass().getName()
-               + " supports MapReduceCapable.setUseIntermediateSharedCache()");
+         log.info(mapReduceCapable.getClass().getName() + " supports MapReduceCapable.setUseIntermediateSharedCache()");
       } else {
          log.info(mapReduceCapable.getClass().getName()
                + " does not support MapReduceCapable.setUseIntermediateSharedCache()");
       }
       if (mapReduceCapable.setTimeout(timeout, unit)) {
-         log.info(mapReduceCapable.getClass().getName()
-               + " supports MapReduceCapable.setTimeout()");
+         log.info(mapReduceCapable.getClass().getName() + " supports MapReduceCapable.setTimeout()");
       } else {
-         log.info(mapReduceCapable.getClass().getName()
-               + " does not support MapReduceCapable.setTimeout()");
+         log.info(mapReduceCapable.getClass().getName() + " does not support MapReduceCapable.setTimeout()");
+      }
+      if (mapReduceCapable.setCombiner(combinerFqn)) {
+         log.info(mapReduceCapable.getClass().getName() + " supports MapReduceCapable.setCombiner()");
+      } else {
+         log.info(mapReduceCapable.getClass().getName() + " does not support MapReduceCapable.setCombiner()");
       }
       try {
-         String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
-               + cacheWrapper.getLocalSize() + ", noDuration, noResultSize";
+         String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
+               + ", noDuration, noResultSize";
          result.setPayload(payload);
          if (collatorFqn != null) {
             start = System.nanoTime();
@@ -200,8 +213,8 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             durationNanos = System.nanoTime() - start;
             log.info("MapReduce task with Collator completed in "
                   + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
-            payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
-                  + cacheWrapper.getLocalSize() + ", " + durationNanos + ", -1";
+            payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize() + ", "
+                  + durationNanos + ", -1";
             result.setPayload(payload);
             if (printResult) {
                log.info("MapReduce result: " + payloadObject.toString());
@@ -221,8 +234,8 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             if (payloadMap != null) {
                log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
                log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
-               payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", "
-                     + cacheWrapper.getLocalSize() + ", " + durationNanos + ", " + payloadMap.keySet().size();
+               payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
+                     + ", " + durationNanos + ", " + payloadMap.keySet().size();
                result.setPayload(payload);
                if (printResult) {
                   log.info("MapReduce result:");

@@ -1016,6 +1016,16 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Collator Object. The method must be public and take a String parameter. The default is null.</documentation>
                </annotation>
             </attribute>
+            <attribute name="combinerFqn" type="string">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to use as a combiner.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="combinerParams" type="string">
+               <annotation>
+                  <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Reducer Object used as a combiner. The method must be public and take a String parameter. The default is null.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="distributeReducePhase" type="rg:boolean">
                <annotation>
                   <documentation>Boolean value that determines if the Reduce phase of the MapReduceTask is distributed. The default is true.</documentation>

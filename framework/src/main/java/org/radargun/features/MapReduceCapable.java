@@ -21,7 +21,6 @@ package org.radargun.features;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.radargun.CacheWrapper;
 import org.radargun.utils.ClassLoadHelper;
 
 public interface MapReduceCapable<KOut, VOut, R> {
@@ -116,19 +115,32 @@ public interface MapReduceCapable<KOut, VOut, R> {
 
    /**
     * 
-    * This method allows the caller to provide parameters to the Mapper, Reducer, and Collator
-    * objects used in a MapReduce job. Each Map contains keys for each public method name, and
-    * values for each single String parameter for the method. If no parameters are needed, these can
-    * be set to an empty Map.
+    * This method allows the caller to provide parameters to the Mapper, Reducer, Combiner, and
+    * Collator objects used in a MapReduce job. Each Map contains keys for each public method name,
+    * and values for each single String parameter for the method. If no parameters are needed, these
+    * can be set to an empty Map.
     * 
     * @param mapperParameters
     *           parameters for the Mapper object
     * @param reducerParameters
     *           parameters for the Reducer object
+    * @param combinerParameters
+    *           parameters for the Reducer object used as a combiner
     * @param collatorParameters
     *           parameters for the Collator object
     */
    public void setParameters(Map<String, String> mapperParameters, Map<String, String> reducerParameters,
-         Map<String, String> collatorParameters);
+         Map<String, String> combinerParameters, Map<String, String> collatorParameters);
+
+   /**
+    * 
+    * Specifies a Reducer class to be used with the MapReduceTask during the combine phase
+    * 
+    * @param combinerFqn
+    *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Reducer
+    *           implementation. The implementation must have a no argument constructor.
+    * @return <code>true</code> if the CacheWrapper supports this flag, else <code>false</code>
+    */
+   public boolean setCombiner(String combinerFqn);
 
 }
