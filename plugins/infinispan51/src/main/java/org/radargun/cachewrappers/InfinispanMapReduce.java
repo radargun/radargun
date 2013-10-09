@@ -30,8 +30,7 @@ import org.radargun.features.MapReduceCapable;
 import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
 
-public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements
-      MapReduceCapable<KOut, VOut, R> {
+public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReduceCapable<KOut, VOut, R> {
 
    protected Infinispan51Wrapper wrapper;
 
@@ -42,7 +41,10 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements
 
    protected Map<String, String> mapperParameters;
    protected Map<String, String> reducerParameters;
+   protected Map<String, String> combinerParameters;
    protected Map<String, String> collatorParameters;
+
+   protected String combinerFqn = null;
 
    public InfinispanMapReduce(Infinispan51Wrapper wrapper) {
       this.wrapper = wrapper;
@@ -73,6 +75,8 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements
       } catch (Exception e) {
          throw (new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e));
       }
+
+      setCombiner(t, classLoadHelper, combinerFqn);
 
       try {
          collator = (Collator<KOut, VOut, R>) classLoadHelper.createInstance(collatorFqn);
@@ -137,6 +141,20 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements
       return false;
    }
 
+   @Override
+   public void setParameters(Map<String, String> mapperParameters, Map<String, String> reducerParameters,
+         Map<String, String> combinerParameters, Map<String, String> collatorParameters) {
+      this.mapperParameters = mapperParameters;
+      this.reducerParameters = reducerParameters;
+      this.combinerParameters = combinerParameters;
+      this.collatorParameters = collatorParameters;
+   }
+
+   @Override
+   public boolean setCombiner(String combinerFqn) {
+      return false;
+   }
+
    /**
     * 
     * Factory method to create a MapReduceTask class. Infinispan 5.1 executed the reduce phase on a
@@ -151,12 +169,24 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements
       return new MapReduceTask<KIn, VIn, KOut, VOut>(cache);
    }
 
-   @Override
-   public void setParameters(Map<String, String> mapperParameters, Map<String, String> reducerParameters,
-         Map<String, String> collatorParameters) {
-      this.mapperParameters = mapperParameters;
-      this.reducerParameters = reducerParameters;
-      this.collatorParameters = collatorParameters;
+   /**
+    * 
+    * Method to set the combiner on a MapReduceTask object. Infinispan 5.2 added the option to
+    * perform a combine phase on the local node before executing the global reduce phase.
+    * 
+    * @param task
+    *           the MapReduceTask object to modify
+    * @param classLoadHelper
+    *           a <code>ClassLoadHelper</code> used to instantiate the classes
+    * @param combinerFqn
+    *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Reducer
+    *           implementation. The implementation must have a no argument constructor.
+    * 
+    * @return the MapReduceTask with the combiner set if the CacheWrapper supports it
+    */
+   protected MapReduceTask<KIn, VIn, KOut, VOut> setCombiner(MapReduceTask<KIn, VIn, KOut, VOut> task,
+         ClassLoadHelper classLoadHelper, String combinerFqn) {
+      return task;
    }
 
 }

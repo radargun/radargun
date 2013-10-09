@@ -201,8 +201,13 @@ public class Infinispan51Wrapper extends InfinispanWrapper
    }
 
    @Override
-   public void setParameters(Map mapperParameters, Map reducerParameters, Map collatorParameters) {
-      mapReduce.setParameters(mapperParameters, reducerParameters, collatorParameters);
+   public boolean setCombiner(String combinerFqn) {
+      return mapReduce.setCombiner(combinerFqn);
+   }
+
+   @Override
+   public void setParameters(Map mapperParameters, Map reducerParameters, Map combinerParameters, Map collatorParameters) {
+      mapReduce.setParameters(mapperParameters, reducerParameters, combinerParameters, collatorParameters);
    }
 
    @Override
