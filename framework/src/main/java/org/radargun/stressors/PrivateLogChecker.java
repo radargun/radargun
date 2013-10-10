@@ -51,11 +51,7 @@ public class PrivateLogChecker extends LogChecker {
       PrivateLogValue logValue = (PrivateLogValue) value;
       if (logValue.getThreadId() == record.getThreadId()) {
          for (int i = logValue.size() - 1; i >= 0; --i) {
-            long operationId = logValue.getOperationId(i);
-            if (operationId > record.getLastStressorOperation()) {
-               record.setLastStressorOperation(operationId);
-            }
-            if (operationId == record.getOperationId()) {
+            if (logValue.getOperationId(i) == record.getOperationId()) {
                return true;
             }
          }
