@@ -19,7 +19,10 @@
       <module>plugins/infinispan52</module>
       <module>plugins/infinispan53</module>
       <module>plugins/infinispan60</module>
-      <module>plugins/jgroups</module>
+      <module>plugins/jgroups30</module>
+      <module>plugins/jgroups32</module>
+      <module>plugins/jgroups33</module>
+      <module>plugins/jgroups34</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
       <module>plugins/ehcache25</module>
@@ -223,7 +226,10 @@
 				               <arg value="infinispan52" />
                            <arg value="infinispan53" />
 				               <arg value="infinispan60" />
-				               <arg value="jgroups" />
+				               <arg value="jgroups30" />
+                           <arg value="jgroups32" />
+                           <arg value="jgroups33" />
+                           <arg value="jgroups34" />
 				               <arg value="jbosscache2" />
 				               <arg value="jbosscache3" />
 				               <arg value="ehcache25" />
@@ -366,21 +372,69 @@
                            <arg value="for FILE in `ls plugins/infinispan60/target/distribution/plugin-infinispan60-bin/plugin-infinispan60/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/infinispan60/lib/; done;"/>
                         </exec>
 
-                        <copy todir="${distribution.artifact}/plugins/jgroups">
-                           <fileset dir="plugins/jgroups/target/distribution/plugin-jgroups-bin/plugin-jgroups">
+                        <copy todir="${distribution.artifact}/plugins/jgroups30">
+                           <fileset dir="plugins/jgroups30/target/distribution/plugin-jgroups30-bin/plugin-jgroups30">
                               <include name="**/*" />
                               <exclude name="**/*.jar" />
                            </fileset>
                         </copy>
                         <copy todir="${distribution.artifact}/plugin-dependencies">
-                           <fileset dir="plugins/jgroups/target/distribution/plugin-jgroups-bin/plugin-jgroups/lib">
+                           <fileset dir="plugins/jgroups30/target/distribution/plugin-jgroups30-bin/plugin-jgroups30/lib">
                               <include name="*.jar" />
                            </fileset>                        
                         </copy>
                         <exec executable="bash" failonerror="true">
                            <arg value="-c"/>
-                           <arg value="for FILE in `ls plugins/jgroups/target/distribution/plugin-jgroups-bin/plugin-jgroups/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/jgroups/lib/; done;"/>
-                        </exec>                       
+                           <arg value="for FILE in `ls plugins/jgroups30/target/distribution/plugin-jgroups30-bin/plugin-jgroups30/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/jgroups30/lib/; done;"/>
+                        </exec>
+
+                        <copy todir="${distribution.artifact}/plugins/jgroups32">
+                           <fileset dir="plugins/jgroups32/target/distribution/plugin-jgroups32-bin/plugin-jgroups32">
+                              <include name="**/*" />
+                              <exclude name="**/*.jar" />
+                           </fileset>
+                        </copy>
+                        <copy todir="${distribution.artifact}/plugin-dependencies">
+                           <fileset dir="plugins/jgroups32/target/distribution/plugin-jgroups32-bin/plugin-jgroups32/lib">
+                              <include name="*.jar" />
+                           </fileset>
+                        </copy>
+                        <exec executable="bash" failonerror="true">
+                           <arg value="-c"/>
+                           <arg value="for FILE in `ls plugins/jgroups32/target/distribution/plugin-jgroups32-bin/plugin-jgroups32/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/jgroups32/lib/; done;"/>
+                        </exec>
+
+                        <copy todir="${distribution.artifact}/plugins/jgroups33">
+                           <fileset dir="plugins/jgroups33/target/distribution/plugin-jgroups33-bin/plugin-jgroups33">
+                              <include name="**/*" />
+                              <exclude name="**/*.jar" />
+                           </fileset>
+                        </copy>
+                        <copy todir="${distribution.artifact}/plugin-dependencies">
+                           <fileset dir="plugins/jgroups33/target/distribution/plugin-jgroups33-bin/plugin-jgroups33/lib">
+                              <include name="*.jar" />
+                           </fileset>
+                        </copy>
+                        <exec executable="bash" failonerror="true">
+                           <arg value="-c"/>
+                           <arg value="for FILE in `ls plugins/jgroups33/target/distribution/plugin-jgroups33-bin/plugin-jgroups33/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/jgroups33/lib/; done;"/>
+                        </exec>
+
+                        <copy todir="${distribution.artifact}/plugins/jgroups34">
+                           <fileset dir="plugins/jgroups34/target/distribution/plugin-jgroups34-bin/plugin-jgroups34">
+                              <include name="**/*" />
+                              <exclude name="**/*.jar" />
+                           </fileset>
+                        </copy>
+                        <copy todir="${distribution.artifact}/plugin-dependencies">
+                           <fileset dir="plugins/jgroups34/target/distribution/plugin-jgroups34-bin/plugin-jgroups34/lib">
+                              <include name="*.jar" />
+                           </fileset>
+                        </copy>
+                        <exec executable="bash" failonerror="true">
+                           <arg value="-c"/>
+                           <arg value="for FILE in `ls plugins/jgroups34/target/distribution/plugin-jgroups34-bin/plugin-jgroups34/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/jgroups34/lib/; done;"/>
+                        </exec>
 
                         <copy todir="${distribution.artifact}/plugins/jbosscache3">
                            <fileset dir="plugins/jbosscache3/target/distribution/plugin-jbosscache3-bin/plugin-jbosscache3">

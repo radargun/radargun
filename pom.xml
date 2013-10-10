@@ -19,7 +19,10 @@
       <module>plugins/infinispan52</module>
       <module>plugins/infinispan53</module>
       <module>plugins/infinispan60</module>
-      <module>plugins/jgroups</module>
+      <module>plugins/jgroups30</module>
+      <module>plugins/jgroups32</module>
+      <module>plugins/jgroups33</module>
+      <module>plugins/jgroups34</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
       <module>plugins/ehcache25</module>
@@ -245,8 +248,26 @@
                            </fileset>
                         </copy>
 
-                        <copy todir="${distribution.artifact}/plugins/jgroups">
-                           <fileset dir="plugins/jgroups/target/distribution/plugin-jgroups-bin/plugin-jgroups">
+                        <copy todir="${distribution.artifact}/plugins/jgroups30">
+                           <fileset dir="plugins/jgroups30/target/distribution/plugin-jgroups30-bin/plugin-jgroups30">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/jgroups32">
+                           <fileset dir="plugins/jgroups32/target/distribution/plugin-jgroups32-bin/plugin-jgroups32">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/jgroups33">
+                           <fileset dir="plugins/jgroups33/target/distribution/plugin-jgroups33-bin/plugin-jgroups33">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/jgroups34">
+                           <fileset dir="plugins/jgroups34/target/distribution/plugin-jgroups34-bin/plugin-jgroups34">
                               <include name="**/*" />
                            </fileset>
                         </copy>

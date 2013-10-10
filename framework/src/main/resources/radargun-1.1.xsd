@@ -84,7 +84,10 @@
                         <element name="infinispan52" type="rg:infinispan52"/>
                         <element name="infinispan53" type="rg:infinispan53"/>
                         <element name="infinispan60" type="rg:infinispan60"/>
-                        <element name="jgroups" type="rg:jgroups"/>
+                        <element name="jgroups30" type="rg:jgroups30"/>
+                        <element name="jgroups32" type="rg:jgroups32"/>
+                        <element name="jgroups33" type="rg:jgroups33"/>
+                        <element name="jgroups34" type="rg:jgroups34"/>
                         <element name="jbosscache2" type="rg:jbosscache2"/>
                         <element name="jbosscache3" type="rg:jbosscache3"/>
                         <element name="ehcache25" type="rg:ehcache25"/>
@@ -1971,7 +1974,22 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <extension base="rg:abstractProduct"/>
       </complexContent>
    </complexType>
-   <complexType name="jgroups">
+   <complexType name="jgroups30">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="jgroups32">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="jgroups33">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="jgroups34">
       <complexContent>
          <extension base="rg:abstractProduct"/>
       </complexContent>
