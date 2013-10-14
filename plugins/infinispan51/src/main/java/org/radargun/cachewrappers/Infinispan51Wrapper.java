@@ -31,6 +31,7 @@ import org.radargun.utils.ClassLoadHelper;
 public class Infinispan51Wrapper extends InfinispanWrapper
       implements BulkOperationsCapable, KeyGeneratorAware, Killable, MapReduceCapable, Partitionable, PersistentStorageCapable, TopologyAware {
    protected boolean explicitLocking;
+   protected boolean batching;
    protected final InfinispanPartitionableLifecycle partitionable;
    protected final InfinispanBulkOperations bulkOperations;
    protected final InfinispanKeyGeneratorAware keyGeneratorAware;
@@ -94,17 +95,34 @@ public class Infinispan51Wrapper extends InfinispanWrapper
       topologyAware = createTopologyAware();
       persistentStorage = createPersistentStorage();
       setUpExplicitLocking(getCache(null));
+      batching = confAttributes.getBooleanProperty("batching", false);
    }
 
    protected void setUpExplicitLocking(Cache<Object, Object> cache) {
       LockingMode lockingMode = cache.getAdvancedCache().getCacheConfiguration().transaction()
                .lockingMode();
 
-      Object explicitLocking = confAttributes.get("explicitLocking");
-      if (explicitLocking != null && explicitLocking.equals("true")
-               && lockingMode.equals(LockingMode.PESSIMISTIC)) {
+      if (confAttributes.getBooleanProperty("explicitLocking", false) && lockingMode.equals(LockingMode.PESSIMISTIC)) {
          this.explicitLocking = true;
          log.info("Using explicit locking!");
+      }
+   }
+
+   @Override
+   public void startTransaction() {
+      if (batching) {
+         getCache(null).getAdvancedCache().startBatch();
+      } else {
+         super.startTransaction();
+      }
+   }
+
+   @Override
+   public void endTransaction(boolean successful) {
+      if (batching) {
+         getCache(null).getAdvancedCache().endBatch(successful);
+      } else {
+         super.endTransaction(successful);
       }
    }
 
