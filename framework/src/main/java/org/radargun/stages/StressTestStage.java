@@ -14,14 +14,7 @@ import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.state.MasterState;
-import org.radargun.stressors.AllRecordingStatistics;
-import org.radargun.stressors.CacheSpecificKeyGenStressor;
-import org.radargun.stressors.HistogramStatistics;
-import org.radargun.stressors.KeyGenerator;
-import org.radargun.stressors.MultiStatistics;
-import org.radargun.stressors.Statistics;
-import org.radargun.stressors.StressTestStressor;
-import org.radargun.stressors.StringKeyGenerator;
+import org.radargun.stressors.*;
 import org.radargun.utils.Fuzzy;
 
 /**
@@ -123,6 +116,9 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "The test will produce operation statistics as average values. Default is true.")
    protected boolean useSimpleStatistics = true;
 
+   @Property(doc = "Period of single statistics result. By default periodic statistics are not used.", converter = TimeConverter.class)
+   protected long statisticsPeriod = 0;
+
    protected CacheWrapper cacheWrapper;
 
    protected Map<String, Object> doWork() {
@@ -146,19 +142,26 @@ public class StressTestStage extends AbstractDistStage {
    }
 
    protected void setupStatistics(StressTestStressor stressor) {
+      Statistics statistics;
       if (generateHistogramRange) {
-         stressor.setStatisticsPrototype(new AllRecordingStatistics());
+         statistics = new AllRecordingStatistics();
       } else if (useHistogramStatistics) {
          Map<String, Object> ranges = (Map<String, Object>) slaveState.get(HistogramStatistics.HISTOGRAM_RANGES);
          if (ranges == null) {
             throw new IllegalStateException("The ranges for histogram statistics are not generated. Please run StressTestWarmup with generateHistogramRange=true");
          }
          if (useSimpleStatistics) {
-            stressor.setStatisticsPrototype(new MultiStatistics(ranges));
+            statistics = new MultiStatistics(ranges);
          } else {
-            stressor.setStatisticsPrototype(new HistogramStatistics(ranges));
+            statistics = new HistogramStatistics(ranges);
          }
+      } else {
+         statistics = new SimpleStatistics();
       }
+      if (statisticsPeriod > 0) {
+         statistics = new PeriodicStatistics(statistics, statisticsPeriod);
+      }
+      stressor.setStatisticsPrototype(statistics);
    }
 
    public DistStageAck executeOnSlave() {

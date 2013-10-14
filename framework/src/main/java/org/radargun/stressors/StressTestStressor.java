@@ -192,6 +192,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       }
 
       Map<String, Object> results = stats.getResultsMap(numThreads, "");
+      results.put(Statistics.REQ_PER_SEC, numThreads * stats.getOperationsPerSecond(true));
+
       log.info("Finished generating report. Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
       return results;
    }

@@ -190,6 +190,10 @@ public class GenerateChartStage extends AbstractMasterStage {
             } catch (NumberFormatException e) {
                xCoord = -1;
             }
+         } else if (xLabelIteration) {
+            // if we are using iteration as the x label and there are some non-iteration related data,
+            // we'd overwrite the iteration #cluster size
+            continue;
          } else {
             xCoord = clusterSize;
          }
