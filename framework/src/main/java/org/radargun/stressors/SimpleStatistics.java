@@ -403,10 +403,10 @@ public class SimpleStatistics implements Statistics {
 
    public Map<String, Object> getResultsMap(int numThreads, String prefix) {
       Map<String, Object> results = new LinkedHashMap<String, Object>();
-      results.put("DURATION", getResponseTimeSum() + getTxOverheadSum());
-      results.put("FAILURES", getNumErrors());
-      results.put("REQ_PER_SEC_NET", numThreads * getOperationsPerSecond(false));
-      results.put(REQ_PER_SEC, numThreads * getOperationsPerSecond(true));
+      results.put(prefix + "DURATION", getResponseTimeSum() + getTxOverheadSum());
+      results.put(prefix + "FAILURES", getNumErrors());
+      results.put(prefix + "REQ_PER_SEC_NET", numThreads * getOperationsPerSecond(false));
+      results.put(prefix + REQ_PER_SEC, numThreads * getOperationsPerSecond(true));
       Operation[] operations = Operation.values();
       for (int i = 0; i < operations.length; ++i) {
          OperationStats os = operationStats[i];
