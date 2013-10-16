@@ -1,11 +1,5 @@
 package org.radargun.stressors;
 
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
@@ -17,6 +11,12 @@ import org.radargun.features.BulkOperationsCapable;
 import org.radargun.features.Queryable;
 import org.radargun.utils.Fuzzy;
 import org.radargun.utils.Utils;
+
+import java.io.Serializable;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * On multiple threads executes put and get operations against the CacheWrapper, and returns the result as an Map.
@@ -36,6 +36,10 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    @Property(doc = "Number of keys on which all the GETs and PUTs are performed. Default is 100.")
    private int numEntries = 100;
+
+   @Property(doc = "Applicable only with fixedKeys=false, makes sense for entrySize with multiple values. " +
+         "Replaces numEntries; requested number of bytes in values set by the stressor. By default not set.")
+   private long numBytes = 0;
 
    @Property(doc = "Size of the entry in bytes. Default is 1000.", converter = Fuzzy.IntegerConverter.class)
    private Fuzzy<Integer> entrySize = Fuzzy.always(1000);
@@ -86,6 +90,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    @Property(doc = "The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.")
    protected boolean fixedKeys = true;
+
+   @Property(doc = "")
+   protected long entryLifespan = 1000000;
 
    @Property(doc = "If true, putIfAbsent and replace operations are used. Default is false.")
    protected boolean useAtomics = false;
@@ -241,9 +248,14 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    }
 
    public OperationLogic getLogic() {
-      if (sharedKeys && !fixedKeys) {
+      if (fixedKeys && numBytes > 0) {
+         throw new IllegalArgumentException("numBytes can be set only for fixedKeys=false");
+      } else if (sharedKeys && !fixedKeys) {
          throw new IllegalArgumentException("Cannot use both shared and non-fixed keys - not implemented");
       } else if (!fixedKeys) {
+         if (!poolKeys) {
+            throw new IllegalArgumentException("Keys have to be pooled with changing set.");
+         }
          if (bulkSize != 1 || useAtomics) {
             throw new IllegalArgumentException("Replace/bulk operations on changing set not supported.");
          }
@@ -287,26 +299,34 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       this.statisticsPrototype = statisticsPrototype;
    }
 
+   /* Exception thrown from the request itself - if thrown, the logic
+      cannot know whether the request was successful or not and should behave according to that. */
+   protected class RequestException extends Exception {
+      private RequestException(Throwable cause) {
+         super(cause);
+      }
+   }
+
    protected interface OperationLogic {
       void init(String bucketId, int threadIndex);
-      Object run(Stressor stressor, int iteration);
+      Object run(Stressor stressor) throws RequestException;
    }
 
    protected abstract class FixedSetOperationLogic implements OperationLogic {
       private Random r = new Random();
 
       @Override
-      public Object run(Stressor stressor, int iteration) {
+      public Object run(Stressor stressor) throws RequestException {
          int randomAction = r.nextInt(100);
          int randomKeyInt = r.nextInt(numEntries - 1);
          Object key = getKey(randomKeyInt, stressor.threadIndex);
 
          if (randomAction < writePercentage) {
-            return stressor.makeRequest(iteration, Operation.PUT, key, generateValue());
+            return stressor.makeRequest(Operation.PUT, key, generateValue(Integer.MAX_VALUE));
          } else if (randomAction < writePercentage + removePercentage) {
-            return stressor.makeRequest(iteration, Operation.REMOVE, key);
+            return stressor.makeRequest(Operation.REMOVE, key);
          } else {
-            return stressor.makeRequest(iteration, Operation.GET, key);
+            return stressor.makeRequest(Operation.GET, key);
          }
       }
 
@@ -333,7 +353,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             } else {
                key = keyGenerator.generateKey((nodeIndex * numThreads + threadIndex) * numEntries + keyIndex);
             }
-            Object value = generateValue();
+            Object value = generateValue(Integer.MAX_VALUE);
             addPooledKey(key, value);
             try {
                cacheWrapper.put(bucketId, key, value);
@@ -428,7 +448,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          }
          for (; keyIndex < numEntries; keyIndex += loadingThreads) {
             try {
-               cacheWrapper.put(null, getKey(keyIndex, threadIndex), generateValue());
+               cacheWrapper.put(null, getKey(keyIndex, threadIndex), generateValue(Integer.MAX_VALUE));
                long loaded = keysLoaded.incrementAndGet();
                if (loaded % 100000 == 0) {
                   Runtime runtime = Runtime.getRuntime();
@@ -446,28 +466,28 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       private Map<Object, Object> lastValues = new HashMap<Object, Object>(numEntries);
 
       @Override
-      public Object run(Stressor stressor, int iteration) {
+      public Object run(Stressor stressor) throws RequestException {
          int randomAction = r.nextInt(100);
          Object key = getKey(r.nextInt(numEntries - 1), stressor.threadIndex);
          Object lastValue = lastValues.get(key);
 
-         Object newValue = generateValue();
+         Object newValue = generateValue(Integer.MAX_VALUE);
          int probability = 0;
          if (lastValue == null) {
             lastValues.put(key, newValue);
-            return stressor.makeRequest(iteration, Operation.PUT_IF_ABSENT_IS_ABSENT, key, newValue);
+            return stressor.makeRequest(Operation.PUT_IF_ABSENT_IS_ABSENT, key, newValue);
          } else if (randomAction < (probability += writePercentage)) {
-            return stressor.makeRequest(iteration, Operation.PUT_IF_ABSENT_NOT_ABSENT, key, newValue, lastValue);
+            return stressor.makeRequest(Operation.PUT_IF_ABSENT_NOT_ABSENT, key, newValue, lastValue);
          } else if (randomAction < (probability += removePercentage)) {
             lastValues.remove(key);
-            return stressor.makeRequest(iteration, Operation.REMOVE_VALID, key, lastValue);
+            return stressor.makeRequest(Operation.REMOVE_VALID, key, lastValue);
          } else if (randomAction < (probability += removeInvalidPercentage)) {
-            return stressor.makeRequest(iteration, Operation.REMOVE_INVALID, key, generateValue());
+            return stressor.makeRequest(Operation.REMOVE_INVALID, key, generateValue(Integer.MAX_VALUE));
          } else if (randomAction < (probability += replaceInvalidPercentage)) {
-            return stressor.makeRequest(iteration, Operation.REPLACE_INVALID, key, generateValue(), newValue);
+            return stressor.makeRequest(Operation.REPLACE_INVALID, key, generateValue(Integer.MAX_VALUE), newValue);
          } else {
             lastValues.put(key, newValue);
-            return stressor.makeRequest(iteration, Operation.REPLACE_VALID, key, lastValue, newValue);
+            return stressor.makeRequest(Operation.REPLACE_VALID, key, lastValue, newValue);
          }
       }
 
@@ -503,18 +523,18 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       }
 
       @Override
-      public Object run(Stressor stressor, int iteration) {
+      public Object run(Stressor stressor) throws RequestException {
          int randomAction = r.nextInt(100);
          if (randomAction < writePercentage) {
             Map<Object, Object> map = new HashMap<Object, Object>(bulkSize);
             for (int i = 0; i < bulkSize;) {
                Object key = initLogic.getKey(r.nextInt(numEntries - 1), stressor.threadIndex);
                if (!map.containsKey(key)) {
-                  map.put(key, generateValue());
+                  map.put(key, generateValue(Integer.MAX_VALUE));
                   ++i;
                }
             }
-            return stressor.makeRequest(iteration, putOperation, map);
+            return stressor.makeRequest(putOperation, map);
          } else {
             Set<Object> set = new HashSet<Object>(bulkSize);
             for (int i = 0; i < bulkSize; ) {
@@ -525,79 +545,129 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                }
             }
             if (randomAction < writePercentage + removePercentage) {
-               return stressor.makeRequest(iteration, removeOperation, set);
+               return stressor.makeRequest(removeOperation, set);
             } else {
-               return stressor.makeRequest(iteration, getOperation, set);
+               return stressor.makeRequest(getOperation, set);
             }
          }
       }
    }
 
    private static class KeyWithRemovalTime implements Comparable<KeyWithRemovalTime> {
-      public Object key;
-      public long removeTimestamp;
+      public final Object key;
+      public final long removeTimestamp;
+      public int valueSize;
 
-      public KeyWithRemovalTime(Object key, long removeTimestamp) {
+      public KeyWithRemovalTime(Object key, long removeTimestamp, int valueSize) {
          this.key = key;
          this.removeTimestamp = removeTimestamp;
+         this.valueSize = valueSize;
       }
 
       @Override
       public int compareTo(KeyWithRemovalTime o) {
-         return o.removeTimestamp == removeTimestamp ? 0 : removeTimestamp < o.removeTimestamp ? -1 : 1;
+         if (removeTimestamp < o.removeTimestamp) return -1;
+         if (removeTimestamp > o.removeTimestamp) return 1;
+         if (key == null || o.key == null) return 0;
+         if (key.equals(o.key)) return 0;
+         return -1;
       }
    }
 
    protected class ChangingSetOperationLogic implements OperationLogic {
       private TreeSet<KeyWithRemovalTime> scheduledKeys = new TreeSet<KeyWithRemovalTime>();
       private Random r = new Random();
-      private int threadIndex;
-      private long nextKey = 0;
+      private long currentLoad;
+      private long changeId = 0;
 
       @Override
       public void init(String bucketId, int threadIndex) {
-         this.threadIndex = threadIndex;
+         keysLoaded.compareAndSet(0, nodeIndex);
       }
 
       @Override
-      public Object run(Stressor stressor, int iteration) {
+      public Object run(Stressor stressor) throws RequestException {
+         KeyWithRemovalTime pair;
          long timestamp = System.currentTimeMillis();
          if (!scheduledKeys.isEmpty() && scheduledKeys.first().removeTimestamp <= timestamp) {
-            return stressor.makeRequest(iteration, Operation.REMOVE, scheduledKeys.pollFirst().key);
+            pair = scheduledKeys.pollFirst();
+            Object value;
+            try {
+               value = stressor.makeRequest(Operation.REMOVE, pair.key);
+            } catch (RequestException e) {
+               scheduledKeys.add(pair);
+               return null;
+            }
+            if (value == null) {
+               log.error("REMOVE: Value for key " + pair.key + " is null!");
+            } else {
+               currentLoad -= sizeOf(value);
+            }
+            if (++changeId % 1000 == 0) {
+               log.info(String.format("Current load: %.2f MB", currentLoad / 1048576d));
+            }
+            return value;
          } else if (r.nextInt(100) >= writePercentage && scheduledKeys.size() > 0) {
             // we cannot get random access to PriorityQueue and there is no SortedList or another appropriate structure
-            return stressor.makeRequest(iteration, Operation.GET, getRandomKey(timestamp));
-         } else {
-            Object key;
-            if (scheduledKeys.size() < numEntries) {
-               long keyIndex = (nodeIndex * numThreads + threadIndex) * numEntries + nextKey++;
-               key = getKeyGenerator().generateKey(keyIndex);
-               KeyWithRemovalTime pair = new KeyWithRemovalTime(key, getRandomTimestamp(timestamp));
-               scheduledKeys.add(pair);
-            } else {
-               key = getRandomKey(timestamp);
+            Object key = getRandomKey(timestamp);
+            Object value = stressor.makeRequest(Operation.GET, key);
+            if (value == null) {
+               log.error("GET: Value for key " + key + " is null!");
             }
-            return stressor.makeRequest(iteration, Operation.PUT, key, generateValue());
+            return value;
+         } else {
+            Object value = generateValue(numBytes > 0 ? (int) Math.min(numBytes - currentLoad, Integer.MAX_VALUE) : Integer.MAX_VALUE);
+            int size = sizeOf(value);
+            if ((numBytes > 0 && currentLoad < numBytes) || scheduledKeys.size() < numEntries) {
+               long keyIndex = keysLoaded.getAndAdd(numNodes);
+               pair = new KeyWithRemovalTime(getKeyGenerator().generateKey(keyIndex), getRandomTimestamp(timestamp), size);
+               scheduledKeys.add(pair);
+               currentLoad += size;
+            } else {
+               pair = getRandomPair(timestamp);
+               currentLoad += size - pair.valueSize;
+            }
+            if (++changeId % 1000 == 0) {
+               log.info(String.format("Current load: %.2f MB", currentLoad / 1048576d));
+            }
+            try {
+               return stressor.makeRequest(Operation.PUT, pair.key, value);
+            } catch (RequestException e) {
+               currentLoad -= size;
+               scheduledKeys.remove(pair);
+               for (;;) {
+                  try {
+                     return stressor.makeRequest(Operation.REMOVE, pair.key);
+                  } catch (RequestException e1) {
+                  }
+               }
+            }
          }
       }
 
       private long getRandomTimestamp(long current) {
          // ~sqrt probability for 1 - maxRoot^2
-         final int maxRoot = 1000;
-         int rand = r.nextInt(maxRoot);
-         return current + rand * rand + r.nextInt(2*maxRoot - 2) + 1;
+         final long maxRoot = (long) Math.sqrt((double) entryLifespan);
+         long rand = r.nextLong() % maxRoot;
+         return current + rand * rand + r.nextLong() % (2*maxRoot - 2) + 1;
       }
 
       private Object getRandomKey(long timestamp) {
-         KeyWithRemovalTime pair = scheduledKeys.floor(new KeyWithRemovalTime(null, getRandomTimestamp(timestamp)));
-         return pair == null ? scheduledKeys.first().key : pair.key;
+         // GET is executed only if there is some key present
+         KeyWithRemovalTime pair = getRandomPair(timestamp);
+         return pair.key;
+      }
+
+      private KeyWithRemovalTime getRandomPair(long timestamp) {
+         KeyWithRemovalTime pair = scheduledKeys.floor(new KeyWithRemovalTime(null, getRandomTimestamp(timestamp), 0));
+         return pair != null ? pair : scheduledKeys.first();
       }
    }
 
    protected class Stressor extends Thread {
       private int threadIndex;
       private final String bucketId;
-      private boolean txNotCompleted = false;
+      private int txRemainingOperations = 0;
       private long transactionDuration = 0;
       private Statistics stats;
       private OperationLogic logic;
@@ -619,16 +689,20 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                   synchronizer.slavePhaseEnd();
                   break;
                }
-               logic.init(bucketId, threadIndex);
+               if (!terminated) {
+                  logic.init(bucketId, threadIndex);
+               }
                stats = createStatistics();
                synchronizer.slavePhaseEnd();
                synchronizer.slavePhaseStart();
-               log.trace("Starting thread: " + getName());
                try {
-                  runInternal();
+                  if (!terminated) {
+                     log.trace("Starting thread: " + getName());
+                     runInternal();
+                  }
                } catch (Exception e) {
                   terminated = true;
-                  throw e;
+                  log.error("Unexpected error in stressor!", e);
                } finally {
                   synchronizer.slavePhaseEnd();
                }
@@ -641,12 +715,17 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       private void runInternal() {
          int i = 0;
          while (completion.moreToRun()) {
-            Object result = logic.run(this, i);
+            Object result = null;
+            try {
+               result = logic.run(this);
+            } catch (RequestException e) {
+               // the exception was already logged in makeRequest
+            }
             i++;
             completion.logProgress(i, result, threadIndex);
          }
 
-         if (txNotCompleted) {
+         if (txRemainingOperations > 0) {
             try {
                long endTxTime = endTransaction();
                stats.registerRequest(transactionDuration + endTxTime, 0, Operation.TRANSACTION);
@@ -657,13 +736,13 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          }
       }
 
-      public Object makeRequest(int iteration, Operation operation, Object... keysAndValues) {
+      public Object makeRequest(Operation operation, Object... keysAndValues) throws RequestException {
          long startTxTime = 0;
-         if (useTransactions && shouldStartTransaction(iteration)) {
+         if (useTransactions && txRemainingOperations <= 0) {
             try {
                startTxTime = startTransaction();
                transactionDuration = startTxTime;
-               txNotCompleted = true;
+               txRemainingOperations = transactionSize;
             } catch (TransactionException e) {
                stats.registerError(e.getOperationDuration(), 0, Operation.TRANSACTION);
                return null;
@@ -672,6 +751,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
          Object result = null;
          boolean successfull = true;
+         Exception exception = null;
          long start = System.nanoTime();
          long operationDuration;
          try {
@@ -726,19 +806,21 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                   throw new IllegalArgumentException();
             }
             operationDuration = System.nanoTime() - start;
+            txRemainingOperations--;
          } catch (Exception e) {
             operationDuration = System.nanoTime() - start;
             log.warn("Error in request", e);
             successfull = false;
+            txRemainingOperations = 0;
+            exception = e;
          }
          transactionDuration += operationDuration;
 
          long endTxTime = 0;
-         if (useTransactions && shouldEndTransaction(iteration)) {
+         if (useTransactions && txRemainingOperations <= 0) {
             try {
                endTxTime = endTransaction();
                stats.registerRequest(transactionDuration + endTxTime, 0, Operation.TRANSACTION);
-               txNotCompleted = false;
             } catch (TransactionException e) {
                endTxTime = e.getOperationDuration();
                stats.registerError(transactionDuration + endTxTime, 0, Operation.TRANSACTION);
@@ -748,6 +830,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             stats.registerRequest(operationDuration, startTxTime + endTxTime, operation);
          } else {
             stats.registerError(operationDuration, startTxTime + endTxTime, operation);
+         }
+         if (exception != null) {
+            throw new RequestException(exception);
          }
          return result;
       }
@@ -794,14 +879,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       }
    }
 
-   private boolean shouldStartTransaction(int i) {
-      return (i % transactionSize) == 0;
-   }
-
-   private boolean shouldEndTransaction(int i) {
-      return ((i + 1) % transactionSize) == 0;
-   }
-
    public int getNumRequests() {
       return numRequests;
    }
@@ -819,8 +896,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       this.numThreads = numOfThreads;
    }
 
-   protected Object generateValue() {
+   protected Object generateValue(int maxValueSize) {
       int size = entrySize.next(r);
+      size = Math.min(size, maxValueSize);
       byte[] array = new byte[size];
       r.nextBytes(array);
       if (useAtomics) {
@@ -828,6 +906,16 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          return new ByteArrayWrapper(array);
       } else {
          return array;
+      }
+   }
+
+   protected int sizeOf(Object value) {
+      if (value instanceof byte[]) {
+         return ((byte[]) value).length;
+      } else if (value instanceof ByteArrayWrapper) {
+         return ((ByteArrayWrapper) value).array.length;
+      } else {
+         throw new IllegalArgumentException("Cannot find size of " + value);
       }
    }
 
