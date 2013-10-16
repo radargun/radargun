@@ -28,6 +28,7 @@ import java.io.InputStream;
 import org.infinispan.commons.util.FileLookupFactory;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
+import org.infinispan.container.entries.InternalCacheEntry;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -37,5 +38,20 @@ public class Infinispan60Wrapper extends Infinispan53Wrapper {
    protected ConfigurationBuilderHolder createConfiguration(String configFile) throws FileNotFoundException {
       InputStream input = FileLookupFactory.newInstance().lookupFileStrict(configFile, Thread.currentThread().getContextClassLoader());
       return new ParserRegistry(Thread.currentThread().getContextClassLoader()).parse(input);
+   }
+
+   @Override
+   protected String toString(InternalCacheEntry ice) {
+      if (ice == null) return null;
+      StringBuilder sb = new StringBuilder(256);
+      sb.append(ice.getClass().getSimpleName());
+      sb.append("[key=").append(ice.getKey()).append(", value=").append(ice.getValue());
+      sb.append(", created=").append(ice.getCreated()).append(", isCreated=").append(ice.isCreated());
+      sb.append(", lastUsed=").append(ice.getLastUsed()).append(", isChanged=").append(ice.isChanged());
+      sb.append(", expires=").append(ice.getExpiryTime()).append(", isExpired=").append(ice.isExpired(System.currentTimeMillis()));
+      sb.append(", canExpire=").append(ice.canExpire()).append(", isEvicted=").append(ice.isEvicted());
+      sb.append(", isRemoved=").append(ice.isRemoved()).append(", isValid=").append(ice.isValid());
+      sb.append(", lifespan=").append(ice.getLifespan()).append(", maxIdle=").append(ice.getMaxIdle());
+      return sb.append(']').toString();
    }
 }
