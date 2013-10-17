@@ -15,6 +15,7 @@ import java.util.TreeSet;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
+import org.radargun.stressors.SimpleStatistics;
 import org.radargun.utils.Utils;
 
 /**
@@ -62,7 +63,7 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
          prepareOutputFile(results.size());
          writeData(results);
       } catch (Exception e) {
-         log.error(e);
+         log.error("Error writing data", e);
          return false;
       }
       return true;
@@ -87,26 +88,20 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       List<Integer> slaveIndices = new ArrayList<Integer>(results.keySet());
       Collections.sort(slaveIndices);
 
-      Map<String, Object> sum = new HashMap<String, Object>();
-      Map<String, Integer> count = new HashMap<String, Integer>();
+      //Map<String, Object> sum = new HashMap<String, Object>();
+      //Map<String, Integer> count = new HashMap<String, Integer>();
+      Map<String, SimpleStatistics> agregatedStats = new HashMap<String, SimpleStatistics>();
+      Map<String, Integer> threadCounts = new HashMap<String, Integer>();
       for (Integer i : slaveIndices) {
          Map<String, Object> reportPerSlave = results.get(i);
          if (reportPerSlave == null)
             throw new IllegalStateException("Missing report for slave index: " + i);
-         writeReport(reportPerSlave, String.valueOf(i), iterations, columns, sum, count);
+         writeReport(reportPerSlave, String.valueOf(i), iterations, columns, agregatedStats, threadCounts);
       }
       if (computeAverage) {
          Map<String, Object> average = new HashMap<String, Object>();
-         for (Map.Entry<String, Object> entry : sum.entrySet()) {
-            if (entry.getValue() instanceof Integer) {
-               average.put(entry.getKey(), (Integer) entry.getValue() / count.get(entry.getKey()));
-            } else if (entry.getValue() instanceof Double) {
-               average.put(entry.getKey(), (Double) entry.getValue() / count.get(entry.getKey()));
-            } else if (entry.getValue() instanceof Long) {
-               average.put(entry.getKey(), (Long) entry.getValue() / count.get(entry.getKey()));
-            } else {
-               average.put(entry.getKey(), "");
-            }
+         for (Map.Entry<String, SimpleStatistics> entry : agregatedStats.entrySet()) {
+            average.putAll(entry.getValue().getResultsMap(threadCounts.get(entry.getKey()), entry.getKey().isEmpty() ? "" : entry.getKey() + "."));
          }
          writeReport(average, "AVG", iterations, columns, null, null);
       }
@@ -114,12 +109,17 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       closeFile();
    }
 
-   private void writeReport(Map<String, Object> report, String slaveIndex, SortedSet<String> iterations, SortedSet<String> columns, Map<String, Object> sum, Map<String, Integer> count) throws IOException {
+   private void writeReport(Map<String, Object> report, String slaveIndex, SortedSet<String> iterations, SortedSet<String> columns,
+                            Map<String, SimpleStatistics> aggregated, Map<String, Integer> threadCounts) throws IOException {
       List<String> dataRow = new ArrayList<String>();
       for (String iteration : iterations) {
          dataRow.add(slaveIndex);//add the slave index first
          dataRow.add(iteration);
-         addData(report, columns, iteration + '.', dataRow, sum, count);
+         if (aggregated != null && !aggregated.containsKey(iteration)) {
+            aggregated.put(iteration, new SimpleStatistics());
+         }
+         addData(report, columns, iteration + '.', dataRow, aggregated == null ? null : aggregated.get(iteration));
+         threadCounts.put(iteration, (Integer) report.get(iteration + ".THREADS"));
          writeRowToFile(dataRow);
          dataRow.clear();
       }
@@ -135,39 +135,32 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
          if (!iterations.isEmpty()) {
             dataRow.add("");
          }
-         addData(report, columns, "", dataRow, sum, count);
+         if (aggregated != null && !aggregated.containsKey("")) {
+            aggregated.put("", new SimpleStatistics());
+         }
+         if (threadCounts != null) {
+            threadCounts.put("", (Integer) report.get("THREADS"));
+         }
+         addData(report, columns, "", dataRow, aggregated == null ? null : aggregated.get(""));
          writeRowToFile(dataRow);
          dataRow.clear();
       }
    }
 
-   private void addData(Map<String, Object> reportPerSlave, SortedSet<String> columns, String prefix, List<String> dataRow, Map<String, Object> sum, Map<String, Integer> count) {
+   private void addData(Map<String, Object> reportPerSlave, SortedSet<String> columns, String prefix, List<String> dataRow, SimpleStatistics aggregatedStats) {
+      SimpleStatistics rowStats = new SimpleStatistics();
       for (String column : columns) {
          String key = prefix + column;
          Object data = reportPerSlave.get(key);
          //if (data == null)
          //   throw new IllegalStateException("Missing data for header: " + header + " from slave " + i + ". Report for this slave is: " + reportPerSlave);
          dataRow.add(data == null ? "" : String.valueOf(data));
-         if (sum != null && computeAverage) {
-            Object oldSum = sum.get(key);
-            if (oldSum == null) {
-               if (data instanceof Number) {
-                  sum.put(key, data);
-                  count.put(key, Integer.valueOf(1));
-               }
-            } else {
-               if (oldSum instanceof Integer && data instanceof Integer) {
-                  sum.put(key, (Integer) oldSum + (Integer) data);
-                  count.put(key, count.get(key) + 1);
-               } else if (oldSum instanceof Long && data instanceof Long) {
-                  sum.put(key, (Long) oldSum + (Long) data);
-                  count.put(key, count.get(key) + 1);
-               } else if (oldSum instanceof Double && data instanceof Double) {
-                  sum.put(key, (Double) oldSum + (Double) data);
-                  count.put(key, count.get(key) + 1);
-               }
-            }
+         if (data != null) {
+            rowStats.parseIn(column, data);
          }
+      }
+      if (aggregatedStats != null) {
+         aggregatedStats.merge(rowStats);
       }
    }
 
