@@ -38,9 +38,14 @@ import java.util.Map;
 public class SimpleStatistics implements Statistics {
 
    protected static class OperationStats implements Serializable {
+      private static final double INVERSE_NORMAL_95 = 1.96;
       public long requests;
       public long responseTimeMax = Long.MIN_VALUE;
       public long responseTimeSum;
+      public double responseTimeMean; // first moment
+      public double responseTimeM2; // second moment, var = M2 / (n - 1)
+      public double withTxOverheadMean; // first moment
+      public double withTxOverheadM2; // second moment, var = M2 / (n - 1)
       public long txOverhead;
       public long errors;
 
@@ -49,12 +54,21 @@ public class SimpleStatistics implements Statistics {
          copy.requests = requests;
          copy.responseTimeMax = responseTimeMax;
          copy.responseTimeSum = responseTimeSum;
+         copy.responseTimeMean = responseTimeMean;
+         copy.responseTimeM2 = responseTimeM2;
+         copy.withTxOverheadMean = withTxOverheadMean;
+         copy.withTxOverheadM2 = withTxOverheadM2;
          copy.txOverhead = txOverhead;
          copy.errors = errors;
          return copy;
       }
 
       public void merge(OperationStats other) {
+         responseTimeM2 = mergeM2(responseTimeMean, responseTimeM2, requests, other.responseTimeMean, other.responseTimeM2, other.requests);
+         responseTimeMean = mergeMean(responseTimeMean, requests, other.responseTimeMean, other.requests);
+         withTxOverheadM2 = mergeM2(withTxOverheadMean, withTxOverheadM2, requests, other.withTxOverheadMean, other.withTxOverheadM2, other.requests);
+         withTxOverheadMean = mergeMean(withTxOverheadMean, requests, other.withTxOverheadMean, other.requests);
+
          requests += other.requests;
          responseTimeMax = Math.max(responseTimeMax, other.responseTimeMax);
          responseTimeSum += other.responseTimeSum;
@@ -62,14 +76,47 @@ public class SimpleStatistics implements Statistics {
          errors += other.errors;
       }
 
+      private static double mergeMean(double myMean, double myN, double otherMean, double otherN) {
+         return (myMean * myN + otherMean * otherN) / (myN + otherN);
+      }
+
+      private static double mergeM2(double myMean, double myM2, double myN, double otherMean, double otherM2, double otherN) {
+         double delta = myMean - otherMean;
+         return myM2 + otherM2 + delta * delta * otherN * myN / (otherN + myN);
+      }
+
       public double getPerSecond(boolean includeOverhead) {
-         if (responseTimeSum == 0) return 0;
-         return NS_IN_SEC * requests / (double) (responseTimeSum + (includeOverhead ? txOverhead : 0));
+         //if (responseTimeSum == 0) return 0;
+         //return NS_IN_SEC * requests / (double) (responseTimeSum + (includeOverhead ? txOverhead : 0));
+         if (responseTimeMean == 0d || withTxOverheadMean == 0d) return 0d;
+         return NS_IN_SEC / (includeOverhead ? withTxOverheadMean : responseTimeMean);
       }
 
       public String toString() {
          return String.format("requests=%d, responseTimeMax=%d, responseTimeSum=%d, errors=%d, txOverhead=%d",
                               requests, responseTimeMax, responseTimeSum, errors, txOverhead);
+      }
+
+      public void register(long responseTime, long txTime) {
+         requests++;
+         responseTimeMax = Math.max(responseTimeMax, responseTime);
+         responseTimeSum += responseTime;
+         // see http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm
+         double delta = (double) responseTime - responseTimeMean;
+         responseTimeMean += delta/(double) requests;
+         responseTimeM2 += delta * ((double)responseTime - responseTimeMean);
+
+         double deltaTx = (double) (responseTime + txTime) - withTxOverheadMean;
+         withTxOverheadMean += deltaTx / (double) requests;
+         withTxOverheadM2 += deltaTx * ((double) (responseTime + txTime) - withTxOverheadMean);
+
+         txOverhead += txTime;
+      }
+
+      public String getConfidenceInterval() {
+         if (requests < 2) return "";
+         double error = INVERSE_NORMAL_95 * Math.sqrt(responseTimeM2 / ((double) (requests - 1) * (double) requests));
+         return String.format("%.2f - %.2f ms", (responseTimeMean - error) / 1000000d, (responseTimeMean + error) / 1000000d);
       }
    }
 
@@ -124,10 +171,7 @@ public class SimpleStatistics implements Statistics {
    @Override
    public void registerRequest(long responseTime, long txOverhead, Operation operation) {
       OperationStats stats = getOperationStats(operation);
-      stats.requests++;
-      stats.responseTimeMax = Math.max(stats.responseTimeMax, responseTime);
-      stats.responseTimeSum += responseTime;
-      stats.txOverhead += txOverhead;
+      stats.register(responseTime, txOverhead);
    }
 
    private OperationStats getOperationStats(Operation operation) {
@@ -137,10 +181,7 @@ public class SimpleStatistics implements Statistics {
    @Override
    public void registerError(long responseTime, long txOverhead, Operation operation) {
       OperationStats stats = getOperationStats(operation);
-      stats.requests++;
-      stats.responseTimeSum += responseTime;
-      stats.responseTimeMax = Math.max(stats.responseTimeMax, responseTime);
-      stats.txOverhead += txOverhead;
+      stats.register(responseTime, txOverhead);
       stats.errors++;
    }
 
@@ -405,23 +446,54 @@ public class SimpleStatistics implements Statistics {
       Map<String, Object> results = new LinkedHashMap<String, Object>();
       results.put(prefix + "DURATION", getResponseTimeSum() + getTxOverheadSum());
       results.put(prefix + "FAILURES", getNumErrors());
+      results.put(prefix + "THREADS", numThreads);
       results.put(prefix + "REQ_PER_SEC_NET", numThreads * getOperationsPerSecond(false));
       results.put(prefix + REQ_PER_SEC, numThreads * getOperationsPerSecond(true));
       Operation[] operations = Operation.values();
       for (int i = 0; i < operations.length; ++i) {
          OperationStats os = operationStats[i];
-         String name = operations[i].getAltName();
+         String prefixedName = prefix + operations[i].getAltName();
          if (os.requests > 0) {
-            results.put(prefix + name + "_COUNT", os.requests);
+            results.put(prefixedName + "_COUNT", os.requests);
             if (os.errors != 0) {
-               results.put(prefix + name + "_ERRORS", os.errors);
+               results.put(prefixedName + "_ERRORS", os.errors);
             }
-            results.put(prefix + name + "S_PER_SEC", numThreads * os.getPerSecond(true));
+            results.put(prefixedName + "S_PER_SEC", numThreads * os.getPerSecond(true));
             if (os.txOverhead != 0) {
-               results.put(prefix + name + "S_PER_SEC_NET", numThreads * os.getPerSecond(false));
+               results.put(prefixedName + "S_PER_SEC_NET", numThreads * os.getPerSecond(false));
             }
+            results.put(prefixedName + "_CI", os.getConfidenceInterval());
+            results.put(prefixedName + "_AVG", (double) os.responseTimeSum / (double) os.requests);
+            results.put(prefixedName + "_SUM", os.responseTimeSum);
+            results.put(prefixedName + "_MEAN", os.responseTimeMean);
+            results.put(prefixedName + "_M2", os.responseTimeM2);
          }
       }
       return results;
    }
+
+   public void parseIn(String key, Object value) {
+      for (Operation op : Operation.values()) {
+         if (key.startsWith(op.getAltName())) {
+            String type = key.substring(op.getAltName().length() + 1);
+            OperationStats opStats = operationStats[op.ordinal()];
+            if (type.equals("COUNT")) {
+               opStats.requests = (Long) value;
+            } else if (type.equals("ERRORS")) {
+               opStats.errors = (Long) value;
+            } else if (type.equals("MEAN")) {
+               opStats.responseTimeMean = (Double) value;
+            } else if (type.equals("M2")) {
+               opStats.responseTimeM2 = (Double) value;
+            } else if (type.equals("SUM")) {
+               opStats.responseTimeSum = (Long) value;
+            } else {
+               // operation name may be only prefix of different operation name
+               continue;
+            }
+            break;
+         }
+      }
+   }
+
 }
