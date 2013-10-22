@@ -1,6 +1,8 @@
 package org.radargun.stressors;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.logging.Log;
@@ -236,12 +238,14 @@ class BackgroundStressor extends Thread {
       }
    }
 
-   private abstract class AbstractLogLogic implements Logic {
+   private abstract class AbstractLogLogic<ValueType> implements Logic {
 
       protected final Random keySelectorRandom;
       protected final Random operationTypeRandom = new Random();
       protected final CacheWrapper cacheWrapper;
+      protected final int transactionSize = manager.getTransactionSize();
       protected long operationId = 0;
+      protected Map<Long, DelayedRemove> delayedRemoves = new HashMap<Long, DelayedRemove>();
       private long txStartOperationId;
       private long txStartKeyId = -1;
       private long txStartRandSeed;
@@ -289,7 +293,6 @@ class BackgroundStressor extends Thread {
 
       protected boolean invokeOn(long keyId) throws InterruptedException {
          try {
-            int transactionSize = manager.getTransactionSize();
             if (transactionSize != -1 && remainingTxOps == transactionSize) {
                txStartOperationId = operationId;
                txStartKeyId = keyId;
@@ -313,10 +316,14 @@ class BackgroundStressor extends Thread {
                   } catch (Exception e) {
                      log.trace("Transaction was rolled back, restarting from operation " + txStartOperationId);
                      txRolledBack = true;
+                     afterRollback();
                      return false;
                   } finally {
                      remainingTxOps = transactionSize;
                   }
+
+                  afterCommit();
+
                   // for non-transactional caches write the stressor last operation only after the transaction
                   // has finished
                   try {
@@ -344,12 +351,47 @@ class BackgroundStressor extends Thread {
                } catch (Exception e1) {
                   log.error("Error while ending transaction, restarting from operation " + txStartOperationId, e);
                   txRolledBack = true;
+                  afterRollback();
+                  return false;
+               } finally {
+                  remainingTxOps = manager.getTransactionSize();
                }
-               remainingTxOps = manager.getTransactionSize();
+               afterCommit();
             }
             return false; // on the same key
          }
       }
+
+      private void afterRollback() {
+         delayedRemoves.clear();
+      }
+
+      private void afterCommit() {
+         for (;;) {
+            try {
+               cacheWrapper.startTransaction();
+               for (DelayedRemove delayedRemove : delayedRemoves.values()) {
+                  checkedRemoveValue(delayedRemove.bucketId, delayedRemove.keyId, delayedRemove.oldValue);
+               }
+               cacheWrapper.endTransaction(true);
+               return;
+            } catch (Exception e) {
+               log.error("Error while executing delayed removes.", e);
+            }
+         }
+      }
+
+      protected void delayedRemoveValue(String bucketId, long keyId, ValueType prevValue) throws Exception {
+         if (transactionSize <= 0) {
+            checkedRemoveValue(bucketId, keyId, prevValue);
+         } else {
+            // if we moved around the key within one transaction multiple times we don't want to delete the complement
+            delayedRemoves.remove(~keyId);
+            delayedRemoves.put(keyId, new DelayedRemove(bucketId, keyId, prevValue));
+         }
+      }
+
+      protected abstract boolean checkedRemoveValue(String bucketId, long keyId, ValueType oldValue) throws Exception;
 
       private void writeStressorLastOperation() {
          try {
@@ -378,9 +420,21 @@ class BackgroundStressor extends Thread {
          }
          return minReadOperationId;
       }
+
+      protected class DelayedRemove {
+         public final String bucketId;
+         public final long keyId;
+         public final ValueType oldValue;
+
+         protected DelayedRemove(String bucketId, long keyId, ValueType oldValue) {
+            this.bucketId = bucketId;
+            this.keyId = keyId;
+            this.oldValue = oldValue;
+         }
+      }
    }
 
-   private class PrivateLogLogic extends AbstractLogLogic {
+   private class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
 
       private PrivateLogLogic(long seed) {
          super(seed);
@@ -397,36 +451,36 @@ class BackgroundStressor extends Thread {
          String bucketId = manager.getBucketId();
 
          // first we have to get the value
-         PrivateLogValue prevValue = checkedGetValue(cacheWrapper, bucketId, keyId);
+         PrivateLogValue prevValue = checkedGetValue(bucketId, keyId);
          // now for modify operations, execute it
          if (prevValue == null || operation == Operation.PUT) {
             PrivateLogValue nextValue;
             PrivateLogValue backupValue = null;
             if (prevValue != null) {
-               nextValue = getNextValue(cacheWrapper, prevValue);
+               nextValue = getNextValue(prevValue);
             } else {
                // the value may have been removed, look for backup
-                backupValue = checkedGetValue(cacheWrapper, bucketId, ~keyId);
+                backupValue = checkedGetValue(bucketId, ~keyId);
                if (backupValue == null) {
                   nextValue = new PrivateLogValue(threadId, operationId);
                } else {
-                  nextValue = getNextValue(cacheWrapper, backupValue);
+                  nextValue = getNextValue(backupValue);
                }
             }
             if (nextValue == null) {
                return false;
             }
-            checkedPutValue(cacheWrapper, bucketId, keyId, nextValue);
+            checkedPutValue(bucketId, keyId, nextValue);
             if (backupValue != null) {
-               checkedRemoveValue(cacheWrapper, bucketId, ~keyId, backupValue);
+               delayedRemoveValue(bucketId, ~keyId, backupValue);
             }
          } else if (operation == Operation.REMOVE) {
-            PrivateLogValue nextValue = getNextValue(cacheWrapper, prevValue);
+            PrivateLogValue nextValue = getNextValue(prevValue);
             if (nextValue == null) {
                return false;
             }
-            checkedPutValue(cacheWrapper, bucketId, ~keyId, nextValue);
-            checkedRemoveValue(cacheWrapper, bucketId, keyId, prevValue);
+            checkedPutValue(bucketId, ~keyId, nextValue);
+            delayedRemoveValue(bucketId, keyId, prevValue);
          } else {
             // especially GETs are not allowed here, because these would break the deterministic order
             // - each operationId must be written somewhere
@@ -435,7 +489,7 @@ class BackgroundStressor extends Thread {
          return true;
       }
 
-      private PrivateLogValue getNextValue(CacheWrapper cacheWrapper, PrivateLogValue prevValue) throws InterruptedException {
+      private PrivateLogValue getNextValue(PrivateLogValue prevValue) throws InterruptedException {
          if (prevValue.size() >= manager.getLogValueMaxSize()) {
             int checkedValues;
             // TODO some limit after which the stressor will terminate
@@ -462,7 +516,7 @@ class BackgroundStressor extends Thread {
          }
       }
 
-      private PrivateLogValue checkedGetValue(CacheWrapper cacheWrapper, String bucketId, long keyId) throws Exception {
+      private PrivateLogValue checkedGetValue(String bucketId, long keyId) throws Exception {
          Object prevValue;
          long startTime = System.nanoTime();
          try {
@@ -482,7 +536,8 @@ class BackgroundStressor extends Thread {
          }
       }
 
-      private PrivateLogValue checkedRemoveValue(CacheWrapper cacheWrapper, String bucketId, long keyId, PrivateLogValue expectedValue) throws Exception {
+      @Override
+      protected boolean checkedRemoveValue(String bucketId, long keyId, PrivateLogValue expectedValue) throws Exception {
          Object prevValue;
          long startTime = System.nanoTime();
          try {
@@ -508,14 +563,14 @@ class BackgroundStressor extends Thread {
          }
          if (successful) {
             threadStats.registerRequest(endTime - startTime, 0, Operation.REMOVE);
-            return (PrivateLogValue) prevValue;
+            return true;
          } else {
             threadStats.registerError(endTime - startTime, 0, Operation.REMOVE);
             throw new IllegalStateException();
          }
       }
 
-      private void checkedPutValue(CacheWrapper cacheWrapper, String bucketId, long keyId, PrivateLogValue value) throws Exception {
+      private void checkedPutValue(String bucketId, long keyId, PrivateLogValue value) throws Exception {
          long startTime = System.nanoTime();
          try {
             cacheWrapper.put(bucketId, keyGenerator.generateKey(keyId), value);
@@ -526,15 +581,14 @@ class BackgroundStressor extends Thread {
          long endTime = System.nanoTime();
          threadStats.registerRequest(endTime - startTime, 0, Operation.PUT);
       }
+
    }
 
-   private class SharedLogLogic extends AbstractLogLogic {
-      private CacheWrapper cacheWrapper;
+   private class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
       private AtomicOperationsCapable atomicWrapper;
 
       public SharedLogLogic(long seed) {
          super(seed);
-         cacheWrapper = manager.getCacheWrapper();
          atomicWrapper = (AtomicOperationsCapable) cacheWrapper;
       }
 
@@ -555,22 +609,22 @@ class BackgroundStressor extends Thread {
          // must be recorded in at least one of the entries, but the situation with both of these having
          // some value is valid (although, we try to evade it be conditionally removing one of them in each
          // logic step).
-         SharedLogValue prevValue = checkedGetValue(cacheWrapper, bucketId, keyId);
-         SharedLogValue backupValue = checkedGetValue(cacheWrapper, bucketId, ~keyId);
-         SharedLogValue nextValue = getNextValue(atomicWrapper, prevValue, backupValue);
+         SharedLogValue prevValue = checkedGetValue(bucketId, keyId);
+         SharedLogValue backupValue = checkedGetValue(bucketId, ~keyId);
+         SharedLogValue nextValue = getNextValue(prevValue, backupValue);
          // now for modify operations, execute it
          if (operation == Operation.PUT) {
-            if (checkedPutValue(atomicWrapper, bucketId, keyId, prevValue, nextValue)) {
+            if (checkedPutValue(bucketId, keyId, prevValue, nextValue)) {
                if (backupValue != null) {
-                  checkedRemoveValue(atomicWrapper, bucketId, ~keyId, backupValue);
+                  delayedRemoveValue(bucketId, ~keyId, backupValue);
                }
             } else {
                return false;
             }
          } else if (operation == Operation.REMOVE) {
-            if (checkedPutValue(atomicWrapper, bucketId, ~keyId, backupValue, nextValue)) {
+            if (checkedPutValue(bucketId, ~keyId, backupValue, nextValue)) {
                if (prevValue != null) {
-                  checkedRemoveValue(atomicWrapper, bucketId, keyId, prevValue);
+                  delayedRemoveValue(bucketId, keyId, prevValue);
                }
             } else {
                return false;
@@ -583,7 +637,7 @@ class BackgroundStressor extends Thread {
          return true;
       }
 
-      private SharedLogValue getNextValue(AtomicOperationsCapable cacheWrapper, SharedLogValue prevValue, SharedLogValue backupValue) {
+      private SharedLogValue getNextValue(SharedLogValue prevValue, SharedLogValue backupValue) {
          if (prevValue == null && backupValue == null) {
             return new SharedLogValue(threadId, operationId);
          } else if (prevValue != null && backupValue != null) {
@@ -621,7 +675,7 @@ class BackgroundStressor extends Thread {
          return null;
       }
 
-      private SharedLogValue checkedGetValue(CacheWrapper cacheWrapper, String bucketId, long keyId) throws Exception {
+      private SharedLogValue checkedGetValue(String bucketId, long keyId) throws Exception {
          Object prevValue;
          long startTime = System.nanoTime();
          try {
@@ -641,14 +695,14 @@ class BackgroundStressor extends Thread {
          }
       }
 
-      private boolean checkedPutValue(AtomicOperationsCapable cacheWrapper, String bucketId, long keyId, SharedLogValue oldValue, SharedLogValue newValue) throws Exception {
+      private boolean checkedPutValue(String bucketId, long keyId, SharedLogValue oldValue, SharedLogValue newValue) throws Exception {
          boolean returnValue;
          long startTime = System.nanoTime();
          try {
             if (oldValue == null) {
-               returnValue = cacheWrapper.putIfAbsent(bucketId, keyGenerator.generateKey(keyId), newValue) == null;
+               returnValue = atomicWrapper.putIfAbsent(bucketId, keyGenerator.generateKey(keyId), newValue) == null;
             } else {
-               returnValue = cacheWrapper.replace(bucketId, keyGenerator.generateKey(keyId), oldValue, newValue);
+               returnValue = atomicWrapper.replace(bucketId, keyGenerator.generateKey(keyId), oldValue, newValue);
             }
          } catch (Exception e) {
             threadStats.registerError(System.nanoTime() - startTime, 0, Operation.PUT);
@@ -659,10 +713,11 @@ class BackgroundStressor extends Thread {
          return returnValue;
       }
 
-      private boolean checkedRemoveValue(AtomicOperationsCapable cacheWrapper, String bucketId, long keyId, SharedLogValue oldValue) throws Exception {
+      @Override
+      protected boolean checkedRemoveValue(String bucketId, long keyId, SharedLogValue oldValue) throws Exception {
          long startTime = System.nanoTime();
          try {
-            boolean returnValue = cacheWrapper.remove(bucketId, keyGenerator.generateKey(keyId), oldValue);
+            boolean returnValue = atomicWrapper.remove(bucketId, keyGenerator.generateKey(keyId), oldValue);
             long endTime = System.nanoTime();
             threadStats.registerRequest(endTime - startTime, 0, Operation.REMOVE);
             return returnValue;
