@@ -12,7 +12,7 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesDataItem;
 import org.radargun.local.ReportDesc;
 import org.radargun.local.ReportItem;
-import org.radargun.stages.GenerateChartStage;
+import org.radargun.stages.GenerateReportStage;
 import org.radargun.sysmonitor.AbstractActivityMonitor;
 import org.radargun.sysmonitor.CpuUsageMonitor;
 import org.radargun.sysmonitor.GcMonitor;
@@ -152,7 +152,7 @@ public class LocalSystemMonitorChart {
    private void generateReport(ClusterTimeSeriesReport timeReport, String fileNameNoExtension) {
       try {
          Utils.createOutputFile(reportPrefix + "-" + fileNameNoExtension + ".csv", generateReportCSV());
-         TimeSeriesReportGenerator.generate(timeReport, GenerateChartStage.REPORTS, reportPrefix + "-"
+         TimeSeriesReportGenerator.generate(timeReport, GenerateReportStage.REPORTS, reportPrefix + "-"
                + fileNameNoExtension);
       } catch (IOException e1) {
          log.error("Failed to write CSV file", e1);

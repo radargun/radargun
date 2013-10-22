@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.sun.management.HotSpotDiagnosticMXBean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.radargun.stages.GenerateChartStage;
+import org.radargun.stages.GenerateReportStage;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -303,7 +303,7 @@ public class Utils {
    }
 
    public static void createOutputFile(String fileName, String fileContent, boolean doBackup) throws IOException {
-      File parentDir = new File(GenerateChartStage.REPORTS);
+      File parentDir = new File(GenerateReportStage.REPORTS);
       if (!parentDir.exists() && !parentDir.mkdirs()) {
          log.error("Directory '" + parentDir.getAbsolutePath() + "' could not be created");
          /*

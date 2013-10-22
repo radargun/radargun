@@ -90,11 +90,11 @@ public class HistogramStatistics implements Statistics {
             return "";
          }
          StringBuilder sb = new StringBuilder();
-         sb.append(min).append(':');
+         sb.append(Math.min(min, ranges[0])).append(':');
          for (int i = 0; i < ranges.length; ++i) {
             sb.append(ranges[i]).append(':');
          }
-         sb.append(max).append('=');
+         sb.append(Math.max(ranges[ranges.length - 1], max)).append('=');
          for (int i = 0; i < counts.length - 1; ++i) {
             sb.append(counts[i]).append(':');
          }

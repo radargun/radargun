@@ -87,22 +87,7 @@ public class StageHelper {
          String propertyName = property.getKey();
          Field propertyField = property.getValue();
          sb.append(propertyName).append('=');
-
-         propertyField.setAccessible(true);
-         Object value = null;
-         try {
-            value = propertyField.get(stage);
-            Converter converter = propertyField.getAnnotation(Property.class).converter().newInstance();
-            sb.append(converter.convertToString(value));
-         } catch (IllegalAccessException e) {
-            sb.append("<not accessible>");
-         } catch (InstantiationException e) {
-            sb.append("<cannot create converter: ").append(value).append(">");
-         } catch (ClassCastException e) {
-            sb.append("<cannot convert: ").append(value).append(">");
-         } catch (Throwable t) {
-            sb.append("<error ").append(t).append(": ").append(value).append(">");
-         }
+         sb.append(PropertyHelper.getPropertyString(propertyField, stage));
          if (iterator.hasNext()) {
             sb.append(", ");
          }

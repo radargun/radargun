@@ -1,8 +1,8 @@
 package org.radargun.reporting;
 
-import org.radargun.stages.GenerateChartStage;
-
 import java.util.StringTokenizer;
+
+import org.radargun.stages.GenerateReportStage;
 
 /**
  * Manual chart generator.  Grabs CSVs generated and spits out line graphs.
@@ -16,21 +16,19 @@ import java.util.StringTokenizer;
  *
  * @author Manik Surtani
  */
-public class ChartGenerator {
+public class ReportGenerator {
    private static void help() {
       System.out.println("Usage:");
-      System.out.println("   ChartGenerator [-reportDir <directory containing CSV files>] [-o <outputFileNamePrefix>] [-filter <productName>(config1,confi2);<productName2>(config1,config2,config3)] ]");
+      System.out.println("   ReportGenerator [-reportDir <directory containing CSV files>] [-o <outputFileNamePrefix>] [-filter <productName>(config1,confi2);<productName2>(config1,config2,config3)] ]");
    }
 
    public static void main(String[] args) throws Exception {
       String reportDirectory = null;
-
-
-      String fnPrefix = null;
+      String prefix = "default";
       String filter = null;
 
       long startTime = System.currentTimeMillis();
-      System.out.println("Welcome to the ChartGenerator.");
+      System.out.println("Welcome to the ReportGenerator.");
       // the params we expect:
       for (int i = 0; i < args.length; i++) {
          if (args[i].equals("-reportDir")) {
@@ -39,7 +37,7 @@ public class ChartGenerator {
          }
 
          if (args[i].equals("-o")) {
-            fnPrefix = args[++i];
+            prefix = args[++i];
             continue;
          }
 
@@ -58,10 +56,10 @@ public class ChartGenerator {
       }
 
 
-      GenerateChartStage generateChartStage = new GenerateChartStage();
-      generateChartStage.setCsvFilesDirectory(reportDirectory);
-      generateChartStage.setFnPrefix(fnPrefix);
-      generateChartStage.setReportDirectory(reportDirectory);
+      GenerateReportStage generateReportStage = new GenerateReportStage();
+      generateReportStage.setCsvFilesDirectory(reportDirectory);
+      generateReportStage.setPrefix(prefix);
+      generateReportStage.setReportDirectory(reportDirectory);
 
       if (filter != null) {
          StringTokenizer products = new StringTokenizer(filter, ";");
@@ -73,11 +71,11 @@ public class ChartGenerator {
             StringTokenizer configTokenizer = new StringTokenizer(productConfigs, ",");
             while (configTokenizer.hasMoreTokens()) {
                String config = configTokenizer.nextToken();
-               generateChartStage.addReportFilter(productName, config);
+               generateReportStage.addReportFilter(productName, config);
             }
          }
       }
-      generateChartStage.execute();
+      generateReportStage.execute();
       System.out.println("Finished in " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds!");
    }
 }

@@ -1,19 +1,20 @@
 package org.radargun.local;
 
-import org.radargun.reporting.AbstractChartGen;
-import org.radargun.utils.Utils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.labels.CategoryItemLabelGenerator;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer3D;
+import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.radargun.utils.Utils;
 
 import java.awt.*;
 import java.io.File;
 import java.text.NumberFormat;
+import java.util.Date;
 
 /**
  * // TODO: Mircea - Document this!
@@ -84,12 +85,19 @@ public class LocalChartGenerator {
          }
       });
 
-      chart.addSubtitle(AbstractChartGen.getSubtitle());
+      chart.addSubtitle(getSubtitle());
 
       chart.setBorderVisible(true);
       chart.setAntiAlias(true);
       chart.setTextAntiAlias(true);
       chart.setBackgroundPaint(new Color(0x61, 0x9e, 0xa1));
       return chart;
+   }
+
+   public static TextTitle getSubtitle() {
+      return new TextTitle("Generated on " + new Date() + " by RadarGun \nJDK: " +
+            System.getProperty("java.vm.name") + " (" + System.getProperty("java.vm.version") + ", " +
+            System.getProperty("java.vm.vendor") + ") OS: " + System.getProperty("os.name") + " (" +
+            System.getProperty("os.version") + ", " + System.getProperty("os.arch") + ")");
    }
 }

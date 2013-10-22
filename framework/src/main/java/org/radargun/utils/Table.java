@@ -561,7 +561,7 @@ public class Table<TRowKey, TColumnKey, TValue> {
 
       protected boolean ensure() {
          if (rowIndex < 0) {
-            Integer index = columnIndices.get(row);
+            Integer index = rowIndices.get(row);
             if (index != null) {
                rowIndex = index;
                rowList = data.get(rowIndex);

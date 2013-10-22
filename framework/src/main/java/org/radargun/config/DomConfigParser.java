@@ -9,7 +9,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.radargun.Master;
 import org.radargun.Stage;
 import org.radargun.stages.AbstractStartStage;
-import org.radargun.stages.GenerateChartStage;
+import org.radargun.stages.GenerateReportStage;
 import org.radargun.utils.TypedProperties;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -61,9 +61,9 @@ public class DomConfigParser extends ConfigParser {
       for (int i = 0; i < reportElList.getLength(); i++) {
          if (reportElList.item(i) instanceof Element) {
             Element thisReportEl = (Element) reportElList.item(i);
-            GenerateChartStage generateChartStage = new GenerateChartStage();
-            reportBenchmark.addStage(generateChartStage);
-            generateChartStage.setFnPrefix(ConfigHelper.getStrAttribute(thisReportEl, "name"));
+            GenerateReportStage generateReportStage = new GenerateReportStage();
+            reportBenchmark.addStage(generateReportStage);
+            generateReportStage.setPrefix(ConfigHelper.getStrAttribute(thisReportEl, "name"));
             if (thisReportEl.getAttribute("includeAll") != null) {
                String inclAll = ConfigHelper.getStrAttribute(thisReportEl, "includeAll");
                if (inclAll.equalsIgnoreCase("true"))
@@ -75,7 +75,7 @@ public class DomConfigParser extends ConfigParser {
                Element itemEl = (Element) itemsEl.item(j);
                String productName = ConfigHelper.getStrAttribute(itemEl, "product");
                String productConfig = ConfigHelper.getStrAttribute(itemEl, "config");
-               generateChartStage.addReportFilter(productName, productConfig);
+               generateReportStage.addReportFilter(productName, productConfig);
             }
          }
       }

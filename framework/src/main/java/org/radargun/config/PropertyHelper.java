@@ -35,6 +35,24 @@ public class PropertyHelper {
       return getPropertyName(property, annotation);
    }
 
+   public static String getPropertyString(Field propertyField, Object source) {
+      propertyField.setAccessible(true);
+      Object value = null;
+      try {
+         value = propertyField.get(source);
+         Converter converter = propertyField.getAnnotation(Property.class).converter().newInstance();
+         return converter.convertToString(value);
+      } catch (IllegalAccessException e) {
+         return "<not accessible>";
+      } catch (InstantiationException e) {
+         return "<cannot create converter: " + value + ">";
+      } catch (ClassCastException e) {
+         return "<cannot convert: " + value + ">";
+      } catch (Throwable t) {
+         return "<error " + t + ": " + value + ">";
+      }
+   }
+
    private static String getPropertyName(Field property, Property annotation) {
       return annotation.name().equals(Property.FIELD_NAME) ? property.getName() : annotation.name();
    }

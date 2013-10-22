@@ -54,7 +54,7 @@ public class BarPlotGenerator {
     * @param filename
     * @throws IOException
     */
-   public static void generate(String operation, long[] ranges, long[] counts, String reportDir, String filename) throws IOException {
+   public static void generate(String operation, long[] ranges, long[] counts, String reportDir, String filename, int width, int height) throws IOException {
       XYSeries series = new XYSeries(operation + " response times");
       long totalCount = 0;
       for (long count : counts) {
@@ -68,7 +68,7 @@ public class BarPlotGenerator {
       }
       series.add(right, 0d);
       XYDataset dataset = new XYSeriesCollection(series);
-      JFreeChart chart = ChartFactory.createXYStepAreaChart(operation + " response time histogram", "Response time", "Percentage", dataset,
+      JFreeChart chart = ChartFactory.createXYStepAreaChart(null, "Response time", "Percentage", dataset,
                                                        PlotOrientation.VERTICAL, false, false, false);
       XYPlot plot = (XYPlot) chart.getPlot();
       NumberAxis d = (NumberAxis) plot.getDomainAxis();
@@ -76,7 +76,7 @@ public class BarPlotGenerator {
       d.setStandardTickUnits(new HistoTickUnitSource());
       plot.setDomainAxis(d);
       FileOutputStream output = new FileOutputStream(new File(reportDir + File.separator + filename));
-      ChartUtilities.writeChartAsPNG(output, chart, 1024, 768);
+      ChartUtilities.writeChartAsPNG(output, chart, width, height);
       output.close();
    }
 
