@@ -23,6 +23,7 @@
       <module>plugins/jgroups32</module>
       <module>plugins/jgroups33</module>
       <module>plugins/jgroups34</module>
+      <module>plugins/jgroups35</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
       <module>plugins/ehcache25</module>
@@ -184,7 +185,11 @@
                            <arg value="infinispan52" />
                            <arg value="infinispan53" />
                            <arg value="infinispan60" />
-                           <arg value="jgroups" />
+                           <arg value="jgroups30" />
+                           <arg value="jgroups32" />
+                           <arg value="jgroups33" />
+                           <arg value="jgroups34" />
+                           <arg value="jgroups35" />
                            <arg value="jbosscache2" />
                            <arg value="jbosscache3" />
                            <arg value="ehcache25" />
@@ -268,6 +273,12 @@
 
                         <copy todir="${distribution.artifact}/plugins/jgroups34">
                            <fileset dir="plugins/jgroups34/target/distribution/plugin-jgroups34-bin/plugin-jgroups34">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/jgroups35">
+                           <fileset dir="plugins/jgroups35/target/distribution/plugin-jgroups35-bin/plugin-jgroups35">
                               <include name="**/*" />
                            </fileset>
                         </copy>

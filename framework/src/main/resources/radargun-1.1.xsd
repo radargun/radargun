@@ -88,6 +88,7 @@
                         <element name="jgroups32" type="rg:jgroups32"/>
                         <element name="jgroups33" type="rg:jgroups33"/>
                         <element name="jgroups34" type="rg:jgroups34"/>
+                        <element name="jgroups35" type="rg:jgroups35"/>
                         <element name="jbosscache2" type="rg:jbosscache2"/>
                         <element name="jbosscache3" type="rg:jbosscache3"/>
                         <element name="ehcache25" type="rg:ehcache25"/>
@@ -1990,6 +1991,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </complexContent>
    </complexType>
    <complexType name="jgroups34">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="jgroups35">
       <complexContent>
          <extension base="rg:abstractProduct"/>
       </complexContent>

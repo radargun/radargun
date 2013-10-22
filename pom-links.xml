@@ -23,6 +23,7 @@
       <module>plugins/jgroups32</module>
       <module>plugins/jgroups33</module>
       <module>plugins/jgroups34</module>
+      <module>plugins/jgroups35</module>
       <module>plugins/jbosscache2</module>
       <module>plugins/jbosscache3</module>
       <module>plugins/ehcache25</module>
@@ -230,6 +231,7 @@
                            <arg value="jgroups32" />
                            <arg value="jgroups33" />
                            <arg value="jgroups34" />
+                           <arg value="jgroups35" />
 				               <arg value="jbosscache2" />
 				               <arg value="jbosscache3" />
 				               <arg value="ehcache25" />
@@ -434,6 +436,22 @@
                         <exec executable="bash" failonerror="true">
                            <arg value="-c"/>
                            <arg value="for FILE in `ls plugins/jgroups34/target/distribution/plugin-jgroups34-bin/plugin-jgroups34/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/jgroups34/lib/; done;"/>
+                        </exec>
+
+                        <copy todir="${distribution.artifact}/plugins/jgroups35">
+                           <fileset dir="plugins/jgroups35/target/distribution/plugin-jgroups35-bin/plugin-jgroups35">
+                              <include name="**/*" />
+                              <exclude name="**/*.jar" />
+                           </fileset>
+                        </copy>
+                        <copy todir="${distribution.artifact}/plugin-dependencies">
+                           <fileset dir="plugins/jgroups35/target/distribution/plugin-jgroups35-bin/plugin-jgroups35/lib">
+                              <include name="*.jar" />
+                           </fileset>
+                        </copy>
+                        <exec executable="bash" failonerror="true">
+                           <arg value="-c"/>
+                           <arg value="for FILE in `ls plugins/jgroups35/target/distribution/plugin-jgroups35-bin/plugin-jgroups35/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/jgroups35/lib/; done;"/>
                         </exec>
 
                         <copy todir="${distribution.artifact}/plugins/jbosscache3">
