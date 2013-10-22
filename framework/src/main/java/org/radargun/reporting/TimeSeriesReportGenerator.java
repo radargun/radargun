@@ -1,6 +1,5 @@
 package org.radargun.reporting;
 
-import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 
@@ -9,7 +8,6 @@ import org.apache.commons.logging.LogFactory;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.title.TextTitle;
 import org.radargun.utils.Utils;
 
 /**
@@ -40,13 +38,7 @@ public class TimeSeriesReportGenerator {
    }
 
    private static JFreeChart createChart(ClusterTimeSeriesReport report) {
-      JFreeChart chart = ChartFactory.createTimeSeriesChart(report.getTitle(), report.getXLabel(), report.getYLabel(),
+      return ChartFactory.createTimeSeriesChart(report.getTitle(), report.getXLabel(), report.getYLabel(),
             report.getCategorySet(), true, false, false);
-      chart.addSubtitle(new TextTitle(report.getSubtitle()));
-      chart.setBorderVisible(true);
-      chart.setAntiAlias(true);
-      chart.setTextAntiAlias(true);
-      chart.setBackgroundPaint(new Color(0x61, 0x9e, 0xa1));
-      return chart;
    }
 }

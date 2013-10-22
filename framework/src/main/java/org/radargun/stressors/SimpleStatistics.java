@@ -24,21 +24,51 @@ package org.radargun.stressors;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
-* // TODO: Document this
+* Statistics gathered in one period, requiring constant amount of memory regardless of the test duration.
 *
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
 * @since 1/3/13
 */
 public class SimpleStatistics implements Statistics {
 
+   public static class BoxAndWhiskers {
+      public final double maxRegular;
+      public final double q3;
+      public final double mean;
+      public final double q1;
+      public final double minRegular;
+
+      public BoxAndWhiskers(double maxRegular, double q3, double mean, double q1, double minRegular) {
+         this.maxRegular = maxRegular;
+         this.q3 = q3;
+         this.mean = mean;
+         this.q1 = q1;
+         this.minRegular = minRegular;
+      }
+   }
+
+   public static class MeanAndDev {
+      public final double mean;
+      public final double dev;
+
+      public MeanAndDev(double mean, double dev) {
+         this.mean = mean;
+         this.dev = dev;
+      }
+   }
+
    protected static class OperationStats implements Serializable {
       private static final double INVERSE_NORMAL_95 = 1.96;
+      private static final double INVERSE_NORMAL_50 = 0.67448;
       public long requests;
       public long responseTimeMax = Long.MIN_VALUE;
       public long responseTimeSum;
@@ -86,8 +116,6 @@ public class SimpleStatistics implements Statistics {
       }
 
       public double getPerSecond(boolean includeOverhead) {
-         //if (responseTimeSum == 0) return 0;
-         //return NS_IN_SEC * requests / (double) (responseTimeSum + (includeOverhead ? txOverhead : 0));
          if (responseTimeMean == 0d || withTxOverheadMean == 0d) return 0d;
          return NS_IN_SEC / (includeOverhead ? withTxOverheadMean : responseTimeMean);
       }
@@ -113,10 +141,33 @@ public class SimpleStatistics implements Statistics {
          txOverhead += txTime;
       }
 
-      public String getConfidenceInterval() {
-         if (requests < 2) return "";
-         double error = INVERSE_NORMAL_95 * Math.sqrt(responseTimeM2 / ((double) (requests - 1) * (double) requests));
-         return String.format("%.2f - %.2f ms", (responseTimeMean - error) / 1000000d, (responseTimeMean + error) / 1000000d);
+      public BoxAndWhiskers getBoxAndWhiskers(boolean includeOverhead) {
+         if (includeOverhead) {
+            if (requests < 2) {
+               return new BoxAndWhiskers(withTxOverheadMean, withTxOverheadMean, withTxOverheadMean, withTxOverheadMean, withTxOverheadMean);
+            }
+            double stddev =  Math.sqrt(withTxOverheadM2 / ((double) (requests - 1) * (double) requests));
+            return new BoxAndWhiskers(withTxOverheadMean + INVERSE_NORMAL_95 * stddev, withTxOverheadMean + INVERSE_NORMAL_50 * stddev,
+                  withTxOverheadMean, withTxOverheadMean - INVERSE_NORMAL_50 * stddev, withTxOverheadMean - INVERSE_NORMAL_95 * stddev);
+         } else {
+            if (requests < 2) {
+               return new BoxAndWhiskers(responseTimeMean, responseTimeMean, responseTimeMean, responseTimeMean, responseTimeMean);
+            }
+            double stddev =  Math.sqrt(responseTimeM2 / ((double) (requests - 1) * (double) requests));
+            return new BoxAndWhiskers(responseTimeMean + INVERSE_NORMAL_95 * stddev, responseTimeMean + INVERSE_NORMAL_50 * stddev,
+                  responseTimeMean, responseTimeMean - INVERSE_NORMAL_50 * stddev, responseTimeMean - INVERSE_NORMAL_95 * stddev);
+         }
+      }
+
+      public MeanAndDev getMeanAndDev(boolean includeOverhead) {
+         if (requests < 2) return new MeanAndDev(includeOverhead ? withTxOverheadMean : responseTimeMean, 0);
+         if (includeOverhead) {
+            double stddev =  Math.sqrt(withTxOverheadM2 / ((double) (requests - 1) * (double) requests));
+            return new MeanAndDev(withTxOverheadMean, stddev);
+         } else {
+            double stddev =  Math.sqrt(responseTimeM2 / ((double) (requests - 1) * (double) requests));
+            return new MeanAndDev(responseTimeMean, stddev);
+         }
       }
    }
 
@@ -151,6 +202,46 @@ public class SimpleStatistics implements Statistics {
       return new SimpleStatistics();
    }
 
+   public Map<String, BoxAndWhiskers> getBoxAndWhiskers(boolean includeOverhead) {
+      Map<String, BoxAndWhiskers> map = new HashMap<String, BoxAndWhiskers>();
+      for (Operation op : Operation.values()) {
+         if (operationStats[op.ordinal()].requests > 0) {
+            map.put(op.getAltName(), operationStats[op.ordinal()].getBoxAndWhiskers(includeOverhead));
+         }
+      }
+      return map;
+   }
+
+   public MeanAndDev getMeanAndDev(boolean includeOverhead, String operation) {
+      for (Operation op : Operation.values()) {
+         if (op.getAltName().equals(operation)) {
+            return operationStats[op.ordinal()].getMeanAndDev(includeOverhead);
+         }
+      }
+      throw new IllegalArgumentException(operation);
+   }
+
+   public Map<String, MeanAndDev> getMeanAndDev(boolean includeOverhead) {
+      Map<String, MeanAndDev> map = new HashMap<String, MeanAndDev>();
+      for (Operation op : Operation.values()) {
+         if (operationStats[op.ordinal()].requests > 0) {
+            map.put(op.getAltName(), operationStats[op.ordinal()].getMeanAndDev(includeOverhead));
+         }
+      }
+      return map;
+   }
+
+   public Set<String> getUsedOperations() {
+      Set<String> set = new HashSet<String>();
+      for (Operation op : Operation.values()) {
+         if (operationStats[op.ordinal()].requests > 0) {
+            set.add(op.getAltName());
+         }
+      }
+      return set;
+   }
+
+
    @Override
    public String toString() {
       StringBuilder sb = new StringBuilder(
@@ -170,17 +261,13 @@ public class SimpleStatistics implements Statistics {
 
    @Override
    public void registerRequest(long responseTime, long txOverhead, Operation operation) {
-      OperationStats stats = getOperationStats(operation);
+      OperationStats stats = operationStats[operation.ordinal()];
       stats.register(responseTime, txOverhead);
-   }
-
-   private OperationStats getOperationStats(Operation operation) {
-      return operationStats[operation.ordinal()];
    }
 
    @Override
    public void registerError(long responseTime, long txOverhead, Operation operation) {
-      OperationStats stats = getOperationStats(operation);
+      OperationStats stats = operationStats[operation.ordinal()];
       stats.register(responseTime, txOverhead);
       stats.errors++;
    }
@@ -278,6 +365,16 @@ public class SimpleStatistics implements Statistics {
       } else {
          return ((double) getResponseTimeSum()) / ((double) getNumberOfRequests());
       }
+   }
+
+   public double getOperationsPerSecond(boolean includeOverhead, String operation) {
+      for (Operation op : Operation.values()) {
+         if (op.getAltName().equals(operation)) {
+            OperationStats stats = operationStats[op.ordinal()];
+            return (NS_IN_SEC * stats.requests) / (double) (stats.responseTimeSum + (includeOverhead ? stats.txOverhead : 0));
+         }
+      }
+      throw new IllegalArgumentException(operation);
    }
 
    @Override
@@ -462,11 +559,14 @@ public class SimpleStatistics implements Statistics {
             if (os.txOverhead != 0) {
                results.put(prefixedName + "S_PER_SEC_NET", numThreads * os.getPerSecond(false));
             }
-            results.put(prefixedName + "_CI", os.getConfidenceInterval());
-            results.put(prefixedName + "_AVG", (double) os.responseTimeSum / (double) os.requests);
-            results.put(prefixedName + "_SUM", os.responseTimeSum);
-            results.put(prefixedName + "_MEAN", os.responseTimeMean);
-            results.put(prefixedName + "_M2", os.responseTimeM2);
+            results.put(prefixedName + "_AVG_NET", (double) os.responseTimeSum / (double) os.requests);
+            results.put(prefixedName + "_AVG_TX", (double) (os.responseTimeSum + os.txOverhead) / (double) os.requests);
+            results.put(prefixedName + "_DURATION_NET", os.responseTimeSum);
+            results.put(prefixedName + "_TX_OVERHEAD", os.txOverhead);
+            results.put(prefixedName + "_MEAN_NET", os.responseTimeMean);
+            results.put(prefixedName + "_MEAN_TX", os.withTxOverheadMean);
+            results.put(prefixedName + "_M2_NET", os.responseTimeM2);
+            results.put(prefixedName + "_M2_TX", os.withTxOverheadM2);
          }
       }
       return results;
@@ -481,12 +581,18 @@ public class SimpleStatistics implements Statistics {
                opStats.requests = (Long) value;
             } else if (type.equals("ERRORS")) {
                opStats.errors = (Long) value;
-            } else if (type.equals("MEAN")) {
+            } else if (type.equals("MEAN_NET")) {
                opStats.responseTimeMean = (Double) value;
-            } else if (type.equals("M2")) {
+            } else if (type.equals("MEAN_TX")) {
+               opStats.withTxOverheadMean = (Double) value;
+            } else if (type.equals("M2_NET")) {
                opStats.responseTimeM2 = (Double) value;
-            } else if (type.equals("SUM")) {
+            } else if (type.equals("M2_TX")) {
+               opStats.withTxOverheadM2 = (Double) value;
+            } else if (type.equals("DURATION_NET")) {
                opStats.responseTimeSum = (Long) value;
+            } else if (type.equals("TX_OVERHEAD")) {
+               opStats.txOverhead = (Long) value;
             } else {
                // operation name may be only prefix of different operation name
                continue;

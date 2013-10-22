@@ -88,8 +88,6 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       List<Integer> slaveIndices = new ArrayList<Integer>(results.keySet());
       Collections.sort(slaveIndices);
 
-      //Map<String, Object> sum = new HashMap<String, Object>();
-      //Map<String, Integer> count = new HashMap<String, Integer>();
       Map<String, SimpleStatistics> agregatedStats = new HashMap<String, SimpleStatistics>();
       Map<String, Integer> threadCounts = new HashMap<String, Integer>();
       for (Integer i : slaveIndices) {

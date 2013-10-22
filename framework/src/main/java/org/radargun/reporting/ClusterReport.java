@@ -4,42 +4,44 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
+import org.jfree.data.statistics.MeanAndStandardDeviation;
 
 /**
- * // TODO: Mircea - Document this!
- *
  * @author Mircea.Markus@jboss.com
  */
 public class ClusterReport extends AbstractClusterReport {
 
-   private DefaultCategoryDataset categorySet = new DefaultCategoryDataset();
-   public void addCategory(String rowKey, int columnKey, Number value) {
-      this.categorySet.addValue(value, rowKey, columnKey);
+   private DefaultStatisticalCategoryDataset categorySet = new DefaultStatisticalCategoryDataset();
+
+   public void addCategory(String rowKey, int columnKey, double mean, double dev) {
+      this.categorySet.add(mean, dev, rowKey, Integer.valueOf(columnKey));
    }
    
-   public DefaultCategoryDataset getCategorySet() {
+   public DefaultStatisticalCategoryDataset getCategorySet() {
       return categorySet;
    }
    
    public void sort() {
-      SortedMap<Comparable, SortedMap<Comparable, Number>> raw = new TreeMap<Comparable, SortedMap<Comparable, Number>>();
+      SortedMap<Comparable, SortedMap<Comparable, MeanAndStandardDeviation>> raw = new TreeMap<Comparable, SortedMap<Comparable, MeanAndStandardDeviation>>();
       for (int i = 0; i < categorySet.getRowCount(); i++) {
          Comparable row = categorySet.getRowKey(i);
-         SortedMap<Comparable, Number> rowData = new TreeMap<Comparable, Number>();
+         SortedMap<Comparable, MeanAndStandardDeviation> rowData = new TreeMap<Comparable, MeanAndStandardDeviation>();
          for (int j = 0; j < categorySet.getColumnCount(); j++) {
             Comparable column = categorySet.getColumnKey(j);
-            Number value = categorySet.getValue(i, j);
-            rowData.put(column, value);
+            Number mean = categorySet.getMeanValue(i, j);
+            Number stddev = categorySet.getStdDevValue(i, j);
+            rowData.put(column, new MeanAndStandardDeviation(mean, stddev));
          }
          raw.put(row, rowData);
       }
 
       categorySet.clear();
       for (Comparable row : raw.keySet()) {
-         Map<Comparable, Number> rowData = raw.get(row);
+         Map<Comparable, MeanAndStandardDeviation> rowData = raw.get(row);
          for (Comparable column : rowData.keySet()) {
-            categorySet.addValue(rowData.get(column), row, column);
+            MeanAndStandardDeviation md = rowData.get(column);
+            categorySet.add(md.getMean(), md.getStandardDeviation(), row, column);
          }
       }
    }

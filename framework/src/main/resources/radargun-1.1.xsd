@@ -30,7 +30,7 @@
                         <element name="DataForQuery" type="rg:DataForQuery"/>
                         <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
                         <element name="DistributedTask" type="rg:DistributedTask"/>
-                        <element name="GenerateChart" type="rg:GenerateChart"/>
+                        <element name="GenerateReport" type="rg:GenerateReport"/>
                         <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
                         <element name="JMXClusterValidation" type="rg:JMXClusterValidation"/>
                         <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
@@ -147,7 +147,7 @@
             <element name="DataForQuery" type="rg:DataForQuery"/>
             <element name="DestroyWrapper" type="rg:DestroyWrapper"/>
             <element name="DistributedTask" type="rg:DistributedTask"/>
-            <element name="GenerateChart" type="rg:GenerateChart"/>
+            <element name="GenerateReport" type="rg:GenerateReport"/>
             <element name="IsolationLevelCheck" type="rg:IsolationLevelCheck"/>
             <element name="JMXClusterValidation" type="rg:JMXClusterValidation"/>
             <element name="JMXClusterValidationPrepare" type="rg:JMXClusterValidationPrepare"/>
@@ -775,7 +775,7 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="GenerateChart">
+   <complexType name="GenerateReport">
       <annotation>
          <documentation>Stage that generates a chart from a set of csv files.</documentation>
       </annotation>
