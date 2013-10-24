@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.config.Property;
+import org.radargun.config.SizeConverter;
 import org.radargun.config.Stressor;
 import org.radargun.config.TimeConverter;
 import org.radargun.features.AtomicOperationsCapable;
@@ -38,7 +39,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    private int numEntries = 100;
 
    @Property(doc = "Applicable only with fixedKeys=false, makes sense for entrySize with multiple values. " +
-         "Replaces numEntries; requested number of bytes in values set by the stressor. By default not set.")
+         "Replaces numEntries; requested number of bytes in values set by one stressor. By default not set.",
+         converter = SizeConverter.class)
    private long numBytes = 0;
 
    @Property(doc = "Size of the entry in bytes. Default is 1000.", converter = Fuzzy.IntegerConverter.class)
@@ -91,8 +93,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    @Property(doc = "The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.")
    protected boolean fixedKeys = true;
 
-   @Property(doc = "")
-   protected long entryLifespan = 1000000;
+   @Property(doc = "With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.", converter = TimeConverter.class)
+   protected long entryLifespan = 3600000;
 
    @Property(doc = "If true, putIfAbsent and replace operations are used. Default is false.")
    protected boolean useAtomics = false;
@@ -556,12 +558,10 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    private static class KeyWithRemovalTime implements Comparable<KeyWithRemovalTime> {
       public final Object key;
       public final long removeTimestamp;
-      public int valueSize;
 
-      public KeyWithRemovalTime(Object key, long removeTimestamp, int valueSize) {
+      public KeyWithRemovalTime(Object key, long removeTimestamp) {
          this.key = key;
          this.removeTimestamp = removeTimestamp;
-         this.valueSize = valueSize;
       }
 
       @Override
@@ -574,30 +574,62 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       }
    }
 
+   private static class Load {
+      public long current;
+      public long max;
+      public TreeSet<KeyWithRemovalTime> scheduledKeys = new TreeSet<KeyWithRemovalTime>();
+
+      private Load(long max) {
+         this.max = max;
+      }
+   }
+
    protected class ChangingSetOperationLogic implements OperationLogic {
-      private TreeSet<KeyWithRemovalTime> scheduledKeys = new TreeSet<KeyWithRemovalTime>();
       private Random r = new Random();
       private long currentLoad;
       private long changeId = 0;
+      private long minRemoveTimestamp = Long.MAX_VALUE;
+      private int minRemoveSize = 0;
+      private HashMap<Integer, Load> loadForSize = new HashMap<Integer, Load>();
 
       @Override
       public void init(String bucketId, int threadIndex) {
          keysLoaded.compareAndSet(0, nodeIndex);
+         double averageSize = 0;
+         Map<Integer, Double> probabilityMap = entrySize.getProbabilityMap();
+         long entries;
+         if (numBytes > 0) {
+            for (Map.Entry<Integer, Double> entry : probabilityMap.entrySet()) {
+               averageSize += entry.getValue() * entry.getKey();
+            }
+            entries = (long) (numBytes / averageSize);
+         } else {
+            entries = numEntries;
+         }
+         long expectedMax = 0;
+         for (Map.Entry<Integer, Double> entry : probabilityMap.entrySet()) {
+            long valuesForSize = (long) (entries * entry.getValue());
+            expectedMax += valuesForSize * entry.getKey();
+            loadForSize.put(entry.getKey(), new Load(valuesForSize));
+         }
+         log.info("Expecting maximal load of " + new SizeConverter().convertToString(expectedMax));
       }
 
       @Override
       public Object run(Stressor stressor) throws RequestException {
          KeyWithRemovalTime pair;
          long timestamp = System.currentTimeMillis();
-         if (!scheduledKeys.isEmpty() && scheduledKeys.first().removeTimestamp <= timestamp) {
-            pair = scheduledKeys.pollFirst();
+         if (minRemoveTimestamp <= timestamp) {
+            Load load = loadForSize.get(minRemoveSize);
+            pair = load.scheduledKeys.pollFirst();
             Object value;
             try {
                value = stressor.makeRequest(Operation.REMOVE, pair.key);
             } catch (RequestException e) {
-               scheduledKeys.add(pair);
+               load.scheduledKeys.add(pair);
                return null;
             }
+            updateMin();
             if (value == null) {
                log.error("REMOVE: Value for key " + pair.key + " is null!");
             } else {
@@ -607,39 +639,54 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                log.info(String.format("Current load: %.2f MB", currentLoad / 1048576d));
             }
             return value;
-         } else if (r.nextInt(100) >= writePercentage && scheduledKeys.size() > 0) {
+         } else if (r.nextInt(100) >= writePercentage && minRemoveTimestamp < Long.MAX_VALUE) {
             // we cannot get random access to PriorityQueue and there is no SortedList or another appropriate structure
-            Object key = getRandomKey(timestamp);
+            Load load;
+            do {
+               load = loadForSize.get(entrySize.next(r));
+            } while (load.current == 0);
+            Object key = getRandomPair(load.scheduledKeys, timestamp).key;
             Object value = stressor.makeRequest(Operation.GET, key);
             if (value == null) {
                log.error("GET: Value for key " + key + " is null!");
             }
             return value;
          } else {
-            Object value = generateValue(numBytes > 0 ? (int) Math.min(numBytes - currentLoad, Integer.MAX_VALUE) : Integer.MAX_VALUE);
+            Object value = generateValue(Integer.MAX_VALUE);
             int size = sizeOf(value);
-            if ((numBytes > 0 && currentLoad < numBytes) || scheduledKeys.size() < numEntries) {
+            Load load = loadForSize.get(size);
+            if (load.current < load.max) {
                long keyIndex = keysLoaded.getAndAdd(numNodes);
-               pair = new KeyWithRemovalTime(getKeyGenerator().generateKey(keyIndex), getRandomTimestamp(timestamp), size);
-               scheduledKeys.add(pair);
-               currentLoad += size;
+               pair = new KeyWithRemovalTime(getKeyGenerator().generateKey(keyIndex), getRandomTimestamp(timestamp));
+               load.scheduledKeys.add(pair);
+               load.current++;
+               updateMin();
             } else {
-               pair = getRandomPair(timestamp);
-               currentLoad += size - pair.valueSize;
-            }
-            if (++changeId % 1000 == 0) {
-               log.info(String.format("Current load: %.2f MB", currentLoad / 1048576d));
+               pair = getRandomPair(load.scheduledKeys, timestamp);
             }
             try {
                return stressor.makeRequest(Operation.PUT, pair.key, value);
             } catch (RequestException e) {
                currentLoad -= size;
-               scheduledKeys.remove(pair);
+               load.scheduledKeys.remove(pair);
                for (;;) {
                   try {
                      return stressor.makeRequest(Operation.REMOVE, pair.key);
                   } catch (RequestException e1) {
                   }
+               }
+            }
+         }
+      }
+
+      private void updateMin() {
+         minRemoveTimestamp = Long.MAX_VALUE;
+         for (Map.Entry<Integer, Load> entry : loadForSize.entrySet()) {
+            if (!entry.getValue().scheduledKeys.isEmpty()) {
+               long min = entry.getValue().scheduledKeys.first().removeTimestamp;
+               if (min < minRemoveTimestamp) {
+                  minRemoveTimestamp = min;
+                  minRemoveSize = entry.getKey();
                }
             }
          }
@@ -652,14 +699,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          return current + rand * rand + r.nextLong() % (2*maxRoot - 2) + 1;
       }
 
-      private Object getRandomKey(long timestamp) {
-         // GET is executed only if there is some key present
-         KeyWithRemovalTime pair = getRandomPair(timestamp);
-         return pair.key;
-      }
-
-      private KeyWithRemovalTime getRandomPair(long timestamp) {
-         KeyWithRemovalTime pair = scheduledKeys.floor(new KeyWithRemovalTime(null, getRandomTimestamp(timestamp), 0));
+      private KeyWithRemovalTime getRandomPair(TreeSet<KeyWithRemovalTime> scheduledKeys, long timestamp) {
+         KeyWithRemovalTime pair = scheduledKeys.floor(new KeyWithRemovalTime(null, getRandomTimestamp(timestamp)));
          return pair != null ? pair : scheduledKeys.first();
       }
    }

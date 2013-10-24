@@ -11,6 +11,7 @@ import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
+import org.radargun.config.SizeConverter;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.state.MasterState;
@@ -40,6 +41,10 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "Number of key-value entries per each client thread which should be used. Default is 100.",
          deprecatedName = "numberOfAttributes")
    protected int numEntries = 100;
+
+   @Property(doc = "Applicable only with fixedKeys=false, makes sense for entrySize with multiple values. " +
+         "Replaces numEntries; requested number of bytes in values set by the stressor. By default not set.", converter = SizeConverter.class)
+   private long numBytes = 0;
 
    @Property(doc = "Size of the value in bytes. Default is 1000.", deprecatedName = "sizeOfAnAttribute", converter = Fuzzy.IntegerConverter.class)
    protected Fuzzy<Integer> entrySize = Fuzzy.always(1000);
@@ -118,6 +123,9 @@ public class StressTestStage extends AbstractDistStage {
 
    @Property(doc = "Period of single statistics result. By default periodic statistics are not used.", converter = TimeConverter.class)
    protected long statisticsPeriod = 0;
+
+   @Property(doc = "With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.", converter = TimeConverter.class)
+   protected long entryLifespan = 3600000;
 
    protected CacheWrapper cacheWrapper;
 
