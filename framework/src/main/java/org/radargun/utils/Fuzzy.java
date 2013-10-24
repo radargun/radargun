@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import org.radargun.config.Converter;
@@ -34,6 +36,14 @@ public class Fuzzy<T extends Serializable> implements Serializable {
          index = index + 1;
       }
       return (T) values[index];
+   }
+
+   public Map<T, Double> getProbabilityMap() {
+      HashMap<T, Double> map = new HashMap<T, Double>();
+      for (int i = 0; i < values.length; ++i) {
+         map.put((T) values[i], probability[i]);
+      }
+      return map;
    }
 
    @Override

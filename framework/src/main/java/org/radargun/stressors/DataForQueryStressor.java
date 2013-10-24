@@ -80,7 +80,7 @@ public class DataForQueryStressor extends StressTestStressor {
    }
 
    @Override
-   public Object generateValue(int maxSize) {
+   public Object generateValue(int maxValueSize) {
       char[] letters = "abcdefghijklmnopqrstuvw 1234567890".toCharArray();
       Random rand = new Random();
       StringBuffer str = new StringBuffer();

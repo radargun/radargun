@@ -276,24 +276,35 @@ public class Utils {
    }
    
    public static long string2Millis(String duration) {
-      long durationMillis;
+      long durationMillis = 0;
+      duration = duration.toUpperCase().trim();
+      int days = duration.indexOf('D');
+      int hours = duration.indexOf('H');
+      int minutes = duration.indexOf('M');
+      int seconds = duration.indexOf('S');
+      int lastIndex = 0;
       try {
-         durationMillis = Long.parseLong(duration);
-      } catch (NumberFormatException nfe) {
-         int indexOfM = duration.toUpperCase().indexOf('M');
-         if (indexOfM > 0) {
-            durationMillis = Long.parseLong(duration.substring(0, indexOfM));
-            durationMillis = TimeUnit.MINUTES.toMillis(durationMillis);
-         } else {
-            int indexOfS = duration.toUpperCase().indexOf('S');
-            if (indexOfS > 0) {
-               durationMillis = Long.parseLong(duration.substring(0, indexOfS));
-               durationMillis = TimeUnit.SECONDS.toMillis(durationMillis);
-            }
-            else {
-               throw new IllegalArgumentException("Cannot parse string: '" + duration + "' Supported formats: '321321' (millis), '3m' (minutes) or '75s' (seconds)");
-            }
+         if (days > 0) {
+            durationMillis += TimeUnit.DAYS.toMillis(Long.parseLong(duration.substring(lastIndex, days).trim()));
+            lastIndex = days + 1;
          }
+         if (hours > 0) {
+            durationMillis += TimeUnit.HOURS.toMillis(Long.parseLong(duration.substring(lastIndex, hours).trim()));
+            lastIndex = hours + 1;
+         }
+         if (minutes > 0) {
+            durationMillis += TimeUnit.MINUTES.toMillis(Long.parseLong(duration.substring(lastIndex, minutes).trim()));
+            lastIndex = minutes + 1;
+         }
+         if (seconds > 0) {
+            durationMillis += TimeUnit.SECONDS.toMillis(Long.parseLong(duration.substring(lastIndex, seconds).trim()));
+            lastIndex = seconds + 1;
+         }
+         if (lastIndex < duration.length()) {
+            durationMillis += Long.parseLong(duration.substring(lastIndex));
+         }
+      } catch (NumberFormatException nfe) {
+         throw new IllegalArgumentException("Cannot parse string: '" + duration + "'", nfe);
       }
       return durationMillis;
    }

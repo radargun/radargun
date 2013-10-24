@@ -457,6 +457,11 @@
                   <documentation>Benchmark duration. This takes precedence over numRequests. By default switched off.</documentation>
                </annotation>
             </attribute>
+            <attribute name="entryLifespan" type="rg:long__org_radargun_config_TimeConverter">
+               <annotation>
+                  <documentation>With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="entrySize" type="rg:org_radargun_utils_Fuzzy__org_radargun_utils_Fuzzy_IntegerConverter">
                <annotation>
                   <documentation>Size of the value in bytes. Default is 1000.</documentation>
@@ -485,6 +490,11 @@
             <attribute name="loadAllKeys" type="rg:boolean">
                <annotation>
                   <documentation>This option is valid only for sharedKeys=true. It forces local loading of all keys (not only numEntries/numNodes). Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="numBytes" type="rg:long__org_radargun_config_SizeConverter">
+               <annotation>
+                  <documentation>Applicable only with fixedKeys=false, makes sense for entrySize with multiple values. Replaces numEntries; requested number of bytes in values set by the stressor. By default not set.</documentation>
                </annotation>
             </attribute>
             <attribute name="numEntries" type="rg:int">
@@ -600,6 +610,20 @@
          <simpleType>
             <restriction>
                <pattern value="\s*([0-9.]+(\.[0-9]*)?\s*%?\s*:\s*)?[0-9]+\s*(,\s*([0-9.]+(\.[0-9]*)?\s*%?\s*:\s*)?[0-9]+\s*)*"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="long__org_radargun_config_SizeConverter">
+      <union>
+         <simpleType>
+            <restriction>
+               <pattern value="[0-9]+\s*(k[bB]?|M[bB]?|G[bB]?)"/>
             </restriction>
          </simpleType>
          <simpleType>
