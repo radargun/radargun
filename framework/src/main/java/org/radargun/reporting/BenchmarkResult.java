@@ -105,6 +105,18 @@ public class BenchmarkResult {
       itResult.setThreads(node, threads);
    }
 
+   public int getMaxClusterSize() {
+      int maxSize = 0;
+      for (int size : configResults.columnKeys()) {
+         maxSize = Math.max(size, maxSize);
+      }
+      return maxSize;
+   }
+
+   public SimpleStatistics getNodeStats(String config, int clusterSize, int iteration, int node) {
+      return configResults.get(config, clusterSize).get(iteration).nodeStats.get(node);
+   }
+
    private static class Iteration {
       SortedMap<Integer, SimpleStatistics> nodeStats = new TreeMap<Integer, SimpleStatistics>();
       SimpleStatistics aggregatedStats = new SimpleStatistics();

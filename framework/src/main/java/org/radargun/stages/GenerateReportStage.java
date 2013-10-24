@@ -45,7 +45,7 @@ public class GenerateReportStage extends AbstractMasterStage {
    private static Pattern resultFilePattern = Pattern.compile("(.*)_(.*)_([0-9][0-9]*).csv");
 
    public static final String X_LABEL_CLUSTER_SIZE = "Cluster size (number of cache instances)";
-   public static final String X_LABEL_ITERATION = "Iteration (related to number of stressor threads)";
+   public static final String X_LABEL_ITERATION = "Iteration";
    public static final String REPORTS = "reports";
 
    @Property(doc = "Path to directory where the report (output) should be generated. Default is '" + GenerateReportStage.REPORTS + "'.")
@@ -165,16 +165,22 @@ public class GenerateReportStage extends AbstractMasterStage {
          SimpleStatistics nodeStats = new SimpleStatistics();
          for (int i = 0; i < parts.length; ++i) {
             int lastDot = columns[i].lastIndexOf('.');
-            nodeStats.parseIn(lastDot < 0 ? columns[i] : columns[i].substring(lastDot + 1), parse(parts[i]));
+            try {
+               nodeStats.parseIn(lastDot < 0 ? columns[i] : columns[i].substring(lastDot + 1), parts[i].trim());
+            } catch (Exception e) {
+               log.error("Failed to parse in '" + parts[i] + "' from " + f.getName() + " in column " + columns[i], e);
+            }
          }
-         int iteration = 0;
+         int iteration = -1;
          if (iterIndex >= 0) {
             try {
                iteration = Integer.parseInt(parts[iterIndex]);
             } catch (NumberFormatException e) {}
          }
-         int threads = Integer.parseInt(parts[threadsIndex].trim());
-         result.setThreads(productName,  configName, clusterSize, iteration, node, threads);
+         try {
+            int threads = Integer.parseInt(parts[threadsIndex].trim());
+            result.setThreads(productName,  configName, clusterSize, iteration, node, threads);
+         } catch (NumberFormatException e) {}
          result.addNodeStats(productName, configName, clusterSize, iteration, node, nodeStats);
          for (HistogramColumns histogram : histograms) {
             if (parts[histogram.index].isEmpty()) continue;
@@ -204,16 +210,6 @@ public class GenerateReportStage extends AbstractMasterStage {
 
    private double toMillis(double value) {
       return value / 1000000d;
-   }
-
-   private Object parse(String str) {
-      try {
-         return Long.parseLong(str);
-      } catch (NumberFormatException e) {}
-      try {
-         return Double.parseDouble(str);
-      } catch (NumberFormatException e) {}
-      return str;
    }
 
    private static class HistogramColumns {

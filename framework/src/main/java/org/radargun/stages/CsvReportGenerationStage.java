@@ -150,11 +150,10 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       for (String column : columns) {
          String key = prefix + column;
          Object data = reportPerSlave.get(key);
-         //if (data == null)
-         //   throw new IllegalStateException("Missing data for header: " + header + " from slave " + i + ". Report for this slave is: " + reportPerSlave);
-         dataRow.add(data == null ? "" : String.valueOf(data));
+         String dataString = data == null ? "" : String.valueOf(data);
+         dataRow.add(dataString);
          if (data != null) {
-            rowStats.parseIn(column, data);
+            rowStats.parseIn(column, dataString);
          }
       }
       if (aggregatedStats != null) {

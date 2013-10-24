@@ -212,13 +212,22 @@ public class SimpleStatistics implements Statistics {
       return map;
    }
 
+   public long getNumRequests(String operation) {
+      for (Operation op : Operation.values()) {
+         if (op.getAltName().equals(operation)) {
+            return operationStats[op.ordinal()].requests;
+         }
+      }
+      return 0;
+   }
+
    public MeanAndDev getMeanAndDev(boolean includeOverhead, String operation) {
       for (Operation op : Operation.values()) {
          if (op.getAltName().equals(operation)) {
             return operationStats[op.ordinal()].getMeanAndDev(includeOverhead);
          }
       }
-      throw new IllegalArgumentException(operation);
+      return null;
    }
 
    public Map<String, MeanAndDev> getMeanAndDev(boolean includeOverhead) {
@@ -374,7 +383,7 @@ public class SimpleStatistics implements Statistics {
             return (NS_IN_SEC * stats.requests) / (double) (stats.responseTimeSum + (includeOverhead ? stats.txOverhead : 0));
          }
       }
-      throw new IllegalArgumentException(operation);
+      return Double.NaN;
    }
 
    @Override
@@ -572,27 +581,27 @@ public class SimpleStatistics implements Statistics {
       return results;
    }
 
-   public void parseIn(String key, Object value) {
+   public void parseIn(String key, String value) {
       for (Operation op : Operation.values()) {
          if (key.startsWith(op.getAltName())) {
             String type = key.substring(op.getAltName().length() + 1);
             OperationStats opStats = operationStats[op.ordinal()];
             if (type.equals("COUNT")) {
-               opStats.requests = (Long) value;
+               opStats.requests = value.isEmpty() ? 0 : Long.parseLong(value);
             } else if (type.equals("ERRORS")) {
-               opStats.errors = (Long) value;
+               opStats.errors = value.isEmpty() ? 0 : Long.parseLong(value);
             } else if (type.equals("MEAN_NET")) {
-               opStats.responseTimeMean = (Double) value;
+               opStats.responseTimeMean = value.isEmpty() ? 0d : Double.parseDouble(value);
             } else if (type.equals("MEAN_TX")) {
-               opStats.withTxOverheadMean = (Double) value;
+               opStats.withTxOverheadMean = value.isEmpty() ? 0d : Double.parseDouble(value);
             } else if (type.equals("M2_NET")) {
-               opStats.responseTimeM2 = (Double) value;
+               opStats.responseTimeM2 = value.isEmpty() ? 0d : Double.parseDouble(value);
             } else if (type.equals("M2_TX")) {
-               opStats.withTxOverheadM2 = (Double) value;
+               opStats.withTxOverheadM2 = value.isEmpty() ? 0d : Double.parseDouble(value);
             } else if (type.equals("DURATION_NET")) {
-               opStats.responseTimeSum = (Long) value;
+               opStats.responseTimeSum = value.isEmpty() ? 0 : Long.parseLong(value);
             } else if (type.equals("TX_OVERHEAD")) {
-               opStats.txOverhead = (Long) value;
+               opStats.txOverhead = value.isEmpty() ? 0 : Long.parseLong(value);
             } else {
                // operation name may be only prefix of different operation name
                continue;

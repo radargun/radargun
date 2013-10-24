@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,6 +46,7 @@ public class HtmlReportGenerator {
    private final String prefix;
    private final MasterConfig config;
    private PrintWriter writer;
+   private int elementCounter = 0;
 
    public HtmlReportGenerator(MasterConfig config, BenchmarkResult result, String directory, String prefix) {
       this.config = config;
@@ -62,12 +64,28 @@ public class HtmlReportGenerator {
          writer.print("TABLE { border-spacing: 0; border-collapse: collapse; }\n");
          writer.print("TD { border: 1px solid gray; padding: 2px; }\n");
          writer.print("TH { padding: 2px; }\n");
-         writer.print("</STYLE></HEAD>\n<BODY>");
+         writer.print("</STYLE>\n<SCRIPT>\n");
+         writer.print("function switch_visibility (id) {\n");
+         writer.print("    var element = document.getElementById(id);\n");
+         writer.print("    if (element.style.visibility == 'collapse') {\n");
+         writer.print("        element.style.visibility = 'visible';\n");
+         writer.print("    } else {\n");
+         writer.print("         element.style.visibility = 'collapse';\n");
+         writer.print("    }\n}\n");
+         writer.print("function switch_li_display (id) {\n");
+         writer.print("    var element = document.getElementById(id);\n");
+         writer.print("    if (element.style.display == 'none') {\n");
+         writer.print("        element.style.display = 'list-item';\n");
+         writer.print("    } else {\n");
+         writer.print("         element.style.display = 'none';\n");
+         writer.print("    }\n}\n");
+         writer.print("</SCRIPT></HEAD>\n<BODY>");
          printTag("h1", "RadarGun benchmark report");
          if (config != null) {
             reportDescription();
          }
          printTag("h2", "Benchmark results");
+         writer.write("For closer explanation of these numbers see <a href=\"https://github.com/radargun/radargun/wiki/Understanding-StressTest-results\">RadarGun wiki/Understanding StressTest results</a>");
          for (String requestType : result.getRequestTypes()) {
             reportRequestType(requestType);
          }
@@ -136,8 +154,13 @@ public class HtmlReportGenerator {
       } catch (Exception e) {
          log.error("Cannot instantiate default stage for " + stageClass.getName(), e);
       }
-      writer.write(String.format("<li>%s<ul>", StageHelper.getStageName(stageClass)));
-      for (Map.Entry<String, Field> property : PropertyHelper.getProperties(stageClass).entrySet()) {
+      writer.write("<li style=\"cursor: pointer\" onClick=\"");
+      Set<Map.Entry<String,Field>> properties = PropertyHelper.getProperties(stageClass).entrySet();
+      for (int i = 0; i < properties.size(); ++i) {
+         writer.write("switch_li_display('e" + (elementCounter + i) + "');");
+      }
+      writer.write(String.format("\">%s<ul>", StageHelper.getStageName(stageClass)));
+      for (Map.Entry<String, Field> property : properties) {
          Field propertyField = property.getValue();
          String currentValue = PropertyHelper.getPropertyString(propertyField, stage);
          if (defaultStage == null) {
@@ -145,7 +168,8 @@ public class HtmlReportGenerator {
          } else {
             String defaultValue = PropertyHelper.getPropertyString(propertyField, defaultStage);
             if (defaultValue == currentValue || (defaultValue != null && defaultValue.equals(currentValue))) {
-               writer.write(String.format("<li><small>%s = %s</small></li>", property.getKey(), currentValue));
+               writer.write(String.format("<li id=\"e%d\" style=\"display: none\"><small>%s = %s</small></li>",
+                     elementCounter++, property.getKey(), currentValue));
             } else {
                writer.write(String.format("<li><strong>%s = %s</strong></li>\n", property.getKey(), currentValue));
             }
@@ -226,8 +250,24 @@ public class HtmlReportGenerator {
    }
 
    private void reportTableData(String requestType) {
-      Set<Integer> allIterations = result.getAllIterations();
       Set<Integer> clusterSizes = result.getClusterSizes();
+      Set<Integer> allIterations = result.getAllIterations();
+      Set<Integer> emptyIterations = new HashSet<Integer>();
+      for (int iteration : allIterations) {
+         boolean requestsFound = false;
+         over_configs: for (String config : result.getConfigs()) {
+            for (int clusterSize: clusterSizes) {
+               if (result.getAggregatedStats(config, clusterSize, iteration).getNumRequests(requestType) != 0) {
+                  requestsFound = true;
+                  break over_configs;
+               }
+            }
+         }
+         if (!requestsFound) {
+            emptyIterations.add(iteration);
+         }
+      }
+      allIterations.removeAll(emptyIterations);
 
       writer.write("<table>\n<tr><th>&nbsp;</th>");
       for (int clusterSize : clusterSizes) {
@@ -237,39 +277,89 @@ public class HtmlReportGenerator {
       }
       writer.write("</tr>\n<tr><th>&nbsp;</th>\n");
       for (int i = clusterSizes.size() * allIterations.size(); i > 0; --i) {
+         writer.write("<th style=\"text-align: center\">count</th>\n");
          writer.write("<th style=\"text-align: center\" colspan=\"3\">incl. tx</th>\n");
          writer.write("<th style=\"text-align: center\" colspan=\"3\">without tx (net)</th>\n");
       }
       writer.write("</tr>\n<tr><th>Product, config</th>");
-      for (int i = clusterSizes.size() * allIterations.size() * 2; i > 0; --i) {
-         writer.write("<th>mean</td><th>std.dev<th>throughput</th>");
+      for (int i = clusterSizes.size() * allIterations.size(); i > 0; --i) {
+         writer.write("<th>&nbsp;</th><th>mean</td><th>std.dev<th>throughput</th><th>mean</td><th>std.dev<th>throughput</th>");
       }
       writer.write("</tr>\n");
       for (String config : result.getConfigs()) {
-         writer.write(String.format("<tr><th>%s</th>", config));
+         writer.write("<tr><th style=\"text-align: left; cursor: pointer\" onClick=\"");
+         int maxClusterSize = result.getMaxClusterSize();
+         for (int i = 0; i < maxClusterSize; ++i) {
+            writer.write("switch_visibility('e" + (elementCounter + i) + "'); ");
+         }
+         writer.write(String.format("\">%s</th>", config));
          boolean first = true;
          for (int clusterSize : clusterSizes) {
             for (int iteration : allIterations) {
                SimpleStatistics stats = result.getAggregatedStats(config, clusterSize, iteration);
-               SimpleStatistics.MeanAndDev withTx = stats.getMeanAndDev(true).get(requestType);
-               SimpleStatistics.MeanAndDev net = stats.getMeanAndDev(false).get(requestType);
+               long totalRequests = stats.getNumRequests(requestType);
+               boolean suspect = false;
+               for (int i = 0; i < clusterSize; ++i) {
+                  SimpleStatistics nodeStats = result.getNodeStats(config, clusterSize, iteration, i);
+                  if (nodeStats != null) {
+                     long nodeRequests = nodeStats.getNumRequests(requestType);
+                     if (nodeRequests * clusterSize > totalRequests * 5 / 4 || nodeRequests * clusterSize < totalRequests * 4 / 5) {
+                        suspect = true;
+                     }
+                  }
+               }
                int threadCount = result.getThreadCount(config, clusterSize, iteration);
-               printTD(String.format("%.2f ms", toMillis(withTx.mean)),
-                     "text-align: right;" + (first ? "" : "border-left-color: black; border-left-width: 4px;"));
-               printTD(String.format("%.2f ms", toMillis(withTx.dev)), "text-align: right;");
-               printTD(String.format("%.0f reqs/s",
-                     threadCount * stats.getOperationsPerSecond(true, requestType)), "text-align: right;");
-               printTD(String.format("%.2f ms", toMillis(net.mean)),
-                     "text-align: right; border-left-color: black; border-left-width: 2px;");
-               printTD(String.format("%.2f ms", toMillis(net.dev)), "text-align: right;");
-               printTD(String.format("%.0f reqs/s",
-                     threadCount * stats.getOperationsPerSecond(false, requestType)), "text-align: right;");
+               if (threadCount <= 0) stats = null;
+               printTableDataRow(stats, threadCount, requestType, first, false, suspect);
                first = false;
             }
          }
          writer.write("</tr>\n");
+         for (int i = 0; i < maxClusterSize; ++i) {
+            writer.write(String.format("<tr id=\"e%d\" style=\"visibility: collapse;\"><th style=\"text-align: right\">node%d</th>", elementCounter++, i));
+            first = true;
+            for (int clusterSize : clusterSizes) {
+               for (int iteration : allIterations) {
+                  long totalRequests = result.getAggregatedStats(config, clusterSize, iteration).getNumRequests(requestType);
+                  SimpleStatistics stats = result.getNodeStats(config, clusterSize, iteration, i);
+                  int threadCount = result.getThreadCount(config, clusterSize, iteration);
+                  long requests = stats == null ? 0 : stats.getNumRequests(requestType);
+                  boolean suspect = requests * clusterSize > totalRequests * 5 / 4 || requests * clusterSize < totalRequests * 4 / 5;
+                  printTableDataRow(stats, threadCount, requestType, first, true, suspect);
+                  first = false;
+               }
+            }
+            writer.write("</tr>\n");
+         }
       }
       writer.write("</table><br>\n");
+   }
+
+   private void printTableDataRow(SimpleStatistics stats, int threadCount, String requestType, boolean first, boolean gray, boolean suspect) {
+      if (stats == null) {
+         printTD("&nbsp;", first ? "" : "border-left-color: black; border-left-width: 4px;");
+         printTD("&nbsp;", "border-left-color: black; border-left-width: 2px;");
+         printTD("&nbsp;", "");
+         printTD("&nbsp;", "");
+         printTD("&nbsp;", "border-left-color: black; border-left-width: 2px;");
+         printTD("&nbsp;", "");
+         printTD("&nbsp;", "");
+         return;
+      }
+      String rowStyle = suspect ? "background-color: #FFBBBB; " : (gray ? "background-color: #F0F0F0; ": "");
+      rowStyle += "text-align: right; ";
+      SimpleStatistics.MeanAndDev withTx = stats.getMeanAndDev(true, requestType);
+      SimpleStatistics.MeanAndDev net = stats.getMeanAndDev(false, requestType);
+      printTD(String.valueOf(stats.getNumRequests(requestType)),
+            rowStyle + (first ? "" : "border-left-color: black; border-left-width: 4px;"));
+      printTD(withTx == null ? "-" : String.format("%.2f ms", toMillis(withTx.mean)),
+            rowStyle + "border-left-color: black; border-left-width: 2px;");
+      printTD(withTx == null ? "-" : String.format("%.2f ms", toMillis(withTx.dev)), rowStyle);
+      printTD(String.format("%.0f reqs/s", threadCount * stats.getOperationsPerSecond(true, requestType)), rowStyle);
+      printTD(net == null ? "-" : String.format("%.2f ms", toMillis(net.mean)),
+            rowStyle + "border-left-color: black; border-left-width: 2px;");
+      printTD(net == null ? "-" : String.format("%.2f ms", toMillis(net.dev)), rowStyle);
+      printTD(String.format("%.0f reqs/s", threadCount * stats.getOperationsPerSecond(false, requestType)), rowStyle);
    }
 
    private void printTD(String content, String style) {
