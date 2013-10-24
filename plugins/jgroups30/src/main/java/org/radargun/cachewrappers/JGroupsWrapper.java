@@ -60,6 +60,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    private boolean bundle;
    private boolean flowControl;
    private boolean getFirst;
+   private boolean oob;
    private volatile Object lastValue = null;
 
    static {
@@ -80,6 +81,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       bundle = confAttributes.getBooleanProperty("bundle", false);
       flowControl = confAttributes.getBooleanProperty("flowControl", false);
       getFirst = confAttributes.getBooleanProperty("getFirst", false);
+      oob = confAttributes.getBooleanProperty("oob", false);
       String configFile = confAttributes.getProperty("file", configName);
 
       log.debug("numOwners=" + numOwners + ", selfRequests=" + selfRequests + ", config=" + configFile);
@@ -127,6 +129,9 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       MethodCall putCall = new MethodCall(PUT, putArgs);
       RequestOptions putOptions = new RequestOptions(ResponseMode.GET_ALL, 20000, true, null); // uses anycasting
 
+      if (oob) {
+         putOptions.setFlags(Message.Flag.OOB);
+      }
       if (!bundle) {
          putOptions.setFlags(Message.Flag.DONT_BUNDLE);
       }
@@ -143,6 +148,9 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       MethodCall getCall = new MethodCall(GET, getArgs);
       RequestOptions getOptions = new RequestOptions(getFirst ? ResponseMode.GET_FIRST : ResponseMode.GET_ALL, 20000, false, null);
 
+      if (oob) {
+         getOptions.setFlags(Message.Flag.OOB);
+      }
       if (!bundle) {
          getOptions.setFlags(Message.Flag.DONT_BUNDLE);
       }
