@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -20,7 +21,7 @@ public class PeriodicStatistics implements Statistics {
 
    public PeriodicStatistics(Statistics prototype, long period) {
       this.prototype = prototype;
-      this.period = period;
+      this.period = TimeUnit.MILLISECONDS.toNanos(period);
       this.buckets = new ArrayList<Statistics>();
       this.commonStart = new AtomicLong(Long.MIN_VALUE);
    }
