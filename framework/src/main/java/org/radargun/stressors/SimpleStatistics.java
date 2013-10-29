@@ -146,14 +146,14 @@ public class SimpleStatistics implements Statistics {
             if (requests < 2) {
                return new BoxAndWhiskers(withTxOverheadMean, withTxOverheadMean, withTxOverheadMean, withTxOverheadMean, withTxOverheadMean);
             }
-            double stddev =  Math.sqrt(withTxOverheadM2 / ((double) (requests - 1) * (double) requests));
+            double stddev =  Math.sqrt(withTxOverheadM2 / (double) (requests - 1));
             return new BoxAndWhiskers(withTxOverheadMean + INVERSE_NORMAL_95 * stddev, withTxOverheadMean + INVERSE_NORMAL_50 * stddev,
                   withTxOverheadMean, withTxOverheadMean - INVERSE_NORMAL_50 * stddev, withTxOverheadMean - INVERSE_NORMAL_95 * stddev);
          } else {
             if (requests < 2) {
                return new BoxAndWhiskers(responseTimeMean, responseTimeMean, responseTimeMean, responseTimeMean, responseTimeMean);
             }
-            double stddev =  Math.sqrt(responseTimeM2 / ((double) (requests - 1) * (double) requests));
+            double stddev =  Math.sqrt(responseTimeM2 / (double) (requests - 1));
             return new BoxAndWhiskers(responseTimeMean + INVERSE_NORMAL_95 * stddev, responseTimeMean + INVERSE_NORMAL_50 * stddev,
                   responseTimeMean, responseTimeMean - INVERSE_NORMAL_50 * stddev, responseTimeMean - INVERSE_NORMAL_95 * stddev);
          }
@@ -162,10 +162,10 @@ public class SimpleStatistics implements Statistics {
       public MeanAndDev getMeanAndDev(boolean includeOverhead) {
          if (requests < 2) return new MeanAndDev(includeOverhead ? withTxOverheadMean : responseTimeMean, 0);
          if (includeOverhead) {
-            double stddev =  Math.sqrt(withTxOverheadM2 / ((double) (requests - 1) * (double) requests));
+            double stddev =  Math.sqrt(withTxOverheadM2 / (double) (requests - 1));
             return new MeanAndDev(withTxOverheadMean, stddev);
          } else {
-            double stddev =  Math.sqrt(responseTimeM2 / ((double) (requests - 1) * (double) requests));
+            double stddev =  Math.sqrt(responseTimeM2 / (double) (requests - 1));
             return new MeanAndDev(responseTimeMean, stddev);
          }
       }
