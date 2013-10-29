@@ -193,10 +193,10 @@ public class HistogramStatistics implements Statistics {
       Map<String, Object> results = new HashMap<String, Object>();
       for (Operation op : Operation.values()) {
          if (nonTxStats[op.ordinal()].max != Long.MIN_VALUE) {
-            results.put(prefix + op.name() + "_NET_HISTOGRAM", nonTxStats[op.ordinal()].toString());
+            results.put(prefix + op.getAltName() + "_NET_HISTOGRAM", nonTxStats[op.ordinal()].toString());
          }
          if (incTxStats[op.ordinal()].max != Long.MIN_VALUE) {
-            results.put(prefix + op.name() + "_TX_HISTOGRAM", incTxStats[op.ordinal()].toString());
+            results.put(prefix + op.getAltName() + "_TX_HISTOGRAM", incTxStats[op.ordinal()].toString());
          }
       }
       return results;
