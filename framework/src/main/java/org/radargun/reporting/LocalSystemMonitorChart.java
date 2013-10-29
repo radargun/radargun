@@ -141,8 +141,14 @@ public class LocalSystemMonitorChart {
          }
       } else {
          for (Object item : monitorData.getItems()) {
-            TimeSeriesDataItem tsdi = (TimeSeriesDataItem) item;
-            reportStrings.set(counter, reportStrings.get(counter) + "," + tsdi.getValue());
+            /*
+             * It's possible that one node gathered more data items than another node in the
+             * cluster. If this happens, ignore those items.
+             */
+            if (counter < reportStrings.size()) {
+               TimeSeriesDataItem tsdi = (TimeSeriesDataItem) item;
+               reportStrings.set(counter, reportStrings.get(counter) + "," + tsdi.getValue());
+            }
             counter++;
          }
       }
