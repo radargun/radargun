@@ -18,6 +18,11 @@
  */
 package org.radargun.stressors;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
@@ -25,11 +30,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stressor;
 import org.radargun.features.Queryable;
 import org.radargun.state.SlaveState;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
 
 /**
  * Stressor for Local cache mode, which will execute queries on the cache.
@@ -74,13 +74,13 @@ public class QueryStressor extends StressTestStressor {
       }
 
       @Override
-      public Object run(Stressor stressor, int iteration) {
+      public Object run(Stressor stressor) throws RequestException {
          Map<String, Object> paramMap = new HashMap<String, Object>();
          paramMap.put(Queryable.QUERYABLE_FIELD, onField);
          paramMap.put(Queryable.MATCH_STRING, matchingWord);
          paramMap.put(Queryable.IS_WILDCARD, isWildcardQuery);
 
-         Queryable.QueryResult obj = (Queryable.QueryResult) stressor.makeRequest(iteration, Operation.QUERY, paramMap);
+         Queryable.QueryResult obj = (Queryable.QueryResult) stressor.makeRequest(Operation.QUERY, paramMap);
          queryResultsList.add(obj);
 
          return obj;
