@@ -42,9 +42,10 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    private static Log log = LogFactory.getLog(JGroupsWrapper.class);
    public static Random random = new Random();
 
-   private static final Method[] METHODS = new Method[2];
+   private static final Method[] METHODS = new Method[3];
    protected static final short GET = 0;
    protected static final short PUT = 1;
+   protected static final short REMOVE = 2;
 
    protected JChannel ch;
    protected RpcDispatcher disp;
@@ -61,12 +62,14 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    private boolean flowControl;
    private boolean getFirst;
    private boolean oob;
+   private boolean anycasting;
    private volatile Object lastValue = null;
 
    static {
       try {
          METHODS[GET] = JGroupsWrapper.class.getMethod("getFromRemote", Object.class);
          METHODS[PUT] = JGroupsWrapper.class.getMethod("putFromRemote", Object.class, Object.class);
+         METHODS[REMOVE] = JGroupsWrapper.class.getMethod("removeFromRemote", Object.class);
       } catch (NoSuchMethodException e) {
          throw new RuntimeException(e);
       }
@@ -82,6 +85,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       flowControl = confAttributes.getBooleanProperty("flowControl", false);
       getFirst = confAttributes.getBooleanProperty("getFirst", false);
       oob = confAttributes.getBooleanProperty("oob", false);
+      anycasting = confAttributes.getBooleanProperty("anycasting", false);
       String configFile = confAttributes.getProperty("file", configName);
 
       log.debug("numOwners=" + numOwners + ", selfRequests=" + selfRequests + ", config=" + configFile);
@@ -124,6 +128,10 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       return lastValue;
    }
 
+   public Object removeFromRemote(Object key) throws Exception {
+      return lastValue;
+   }
+
    public void put(String bucket, Object key, Object value) throws Exception {
       Object[] putArgs = new Object[]{key, value};
       MethodCall putCall = new MethodCall(PUT, putArgs);
@@ -157,6 +165,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       if (!flowControl) {
          getOptions.setFlags(Message.Flag.NO_FC);
       }
+      getOptions.setAnycasting(anycasting);
 
       if (getFirst) {
          List<Address> targets = pickGetTargets();
@@ -178,7 +187,23 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    }
    
    public Object remove(String bucket, Object key) throws Exception {
-      throw new UnsupportedOperationException();
+      Object[] removeArgs = new Object[]{key};
+      MethodCall removeCall = new MethodCall(REMOVE, removeArgs);
+      RequestOptions removeOptions = new RequestOptions(ResponseMode.GET_ALL, 20000, true, null); // uses anycasting
+
+      if (oob) {
+         removeOptions.setFlags(Message.Flag.OOB);
+      }
+      if (!bundle) {
+         removeOptions.setFlags(Message.Flag.DONT_BUNDLE);
+      }
+      if (!flowControl) {
+         removeOptions.setFlags(Message.Flag.NO_FC);
+      }
+
+      Collection<Address> targets = pickPutTargets();
+      RspList<Object> responses = disp.callRemoteMethods(targets, removeCall, removeOptions);
+      return responses.getFirst();
    }        
 
    public void empty() throws Exception {
