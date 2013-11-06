@@ -367,13 +367,23 @@ class BackgroundStressor extends Thread {
       }
 
       private void afterCommit() {
+         boolean inTransaction = false;
          for (;;) {
             try {
+               if (inTransaction) {
+                  try {
+                     cacheWrapper.endTransaction(false);
+                  } catch (Exception e) {
+                  }
+               }
                cacheWrapper.startTransaction();
+               inTransaction = true;
                for (DelayedRemove delayedRemove : delayedRemoves.values()) {
                   checkedRemoveValue(delayedRemove.bucketId, delayedRemove.keyId, delayedRemove.oldValue);
                }
                cacheWrapper.endTransaction(true);
+               inTransaction = false;
+               delayedRemoves.clear();
                return;
             } catch (Exception e) {
                log.error("Error while executing delayed removes.", e);
@@ -517,6 +527,10 @@ class BackgroundStressor extends Thread {
       }
 
       private PrivateLogValue checkedGetValue(String bucketId, long keyId) throws Exception {
+         DelayedRemove removed = delayedRemoves.get(keyId);
+         if (removed != null) {
+            return null;
+         }
          Object prevValue;
          long startTime = System.nanoTime();
          try {
@@ -559,7 +573,7 @@ class BackgroundStressor extends Thread {
          } else if (expectedValue == null) {
             successful = true;
          } else {
-            log.error("Expected to remove null-value but found " + prevValue);
+            log.error("Expected to remove " + expectedValue + " but found " + prevValue);
          }
          if (successful) {
             threadStats.registerRequest(endTime - startTime, 0, Operation.REMOVE);
