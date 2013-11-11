@@ -23,7 +23,7 @@ public class TerracottaWrapper implements CacheWrapper {
    }
 
    public void tearDown() throws Exception {
-      empty();
+      clear(true);
    }
 
    @Override
@@ -71,7 +71,8 @@ public class TerracottaWrapper implements CacheWrapper {
       return false;
    }
 
-   public void empty() throws Exception {
+   @Override
+   public void clear(boolean local) throws Exception {
       synchronized (sessionCaches) {
          for (Map cache : sessionCaches.values()) {
             synchronized (cache) {

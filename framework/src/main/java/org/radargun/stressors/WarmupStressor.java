@@ -136,7 +136,6 @@ public class WarmupStressor extends AbstractCacheWrapperStressor {
 
 
    public void destroy() throws Exception {
-      wrapper.empty();
       wrapper = null;
    }
 }

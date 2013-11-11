@@ -83,7 +83,11 @@ public class Coherence3Wrapper implements CacheWrapper {
       return nc.remove(key);
    }
 
-   public void empty() throws Exception {
+   @Override
+   public void clear(boolean local) throws Exception {
+      if (local) {
+         log.warn("This cache cannot remove only local entries");
+      }
       nc.clear();
    }
 

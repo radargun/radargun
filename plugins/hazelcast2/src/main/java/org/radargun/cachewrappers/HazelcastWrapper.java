@@ -87,7 +87,10 @@ public class HazelcastWrapper implements CacheWrapper, AtomicOperationsCapable {
    }
 
    @Override
-   public void empty() throws Exception {
+   public void clear(boolean local) throws Exception {
+      if (local) {
+         log.warn("This cache cannot remove only local entries");
+      }
       hazelcastMap.clear();
    }
 

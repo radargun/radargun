@@ -206,8 +206,8 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       return responses.getFirst();
    }        
 
-   public void empty() throws Exception {
-      ; // no-op
+   public void clear(boolean local) throws Exception {
+      lastValue = null;
    }
 
    public void viewAccepted(View newView) {

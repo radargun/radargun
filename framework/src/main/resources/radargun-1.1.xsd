@@ -428,7 +428,13 @@
          <documentation>Removes all data from the cache</documentation>
       </annotation>
       <complexContent>
-         <extension base="rg:AbstractDist"/>
+         <extension base="rg:AbstractDist">
+            <attribute name="local" type="rg:boolean">
+               <annotation>
+                  <documentation>Execute local variant of clear on each slave. Default value is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
       </complexContent>
    </complexType>
    <complexType name="StressTest">

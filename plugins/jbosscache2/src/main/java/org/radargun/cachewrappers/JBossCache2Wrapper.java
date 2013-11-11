@@ -55,8 +55,11 @@ public class JBossCache2Wrapper implements CacheWrapper
       return cache.remove(Fqn.fromString(bucket), key);
    }
 
-   public void empty() throws Exception
+   public void clear(boolean local) throws Exception
    {
+      if (local) {
+         log.warn("This cache cannot remove only local entries");
+      }
       //not removing root because there it fails with buddy replication: http://jira.jboss.com/jira/browse/JBCACHE-1241
       cache.removeNode(Fqn.fromElements("test"));
    }

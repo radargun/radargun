@@ -79,8 +79,12 @@ public class JBossCache3Wrapper implements CacheWrapper
          return cache.remove(Fqn.fromString(bucket), key);
    }
 
-   public void empty() throws Exception
+   @Override
+   public void clear(boolean local) throws Exception
    {
+      if (local) {
+         log.warn("This cache cannot remove only local entries");
+      }
       if (FLAT)
       {
          flatCache.clear();

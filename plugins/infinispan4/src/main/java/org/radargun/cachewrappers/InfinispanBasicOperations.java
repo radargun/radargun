@@ -4,7 +4,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
-import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.rpc.RpcManager;
 import org.radargun.BasicOperations;
 
@@ -42,13 +41,13 @@ public class InfinispanBasicOperations implements BasicOperations {
    }
 
    @Override
-   public void empty() throws Exception {
+   public void clear(boolean local) throws Exception {
       for (String cacheName : wrapper.getCacheManager().getCacheNames()) {
-         clear(wrapper.getCacheManager().getCache(cacheName));
+         clear(wrapper.getCacheManager().getCache(cacheName), local);
       }
    }
 
-   protected void clear(Cache<?, ?> cache) throws Exception {
+   protected void clear(Cache<?, ?> cache, boolean local) throws Exception {
       boolean needsTx = wrapper.isCacheTransactional(cache) && !wrapper.isCacheAutoCommit(cache);
       RpcManager rpcManager = cache.getAdvancedCache().getRpcManager();
       int clusterSize = 0;
@@ -60,7 +59,11 @@ public class InfinispanBasicOperations implements BasicOperations {
       if (needsTx) {
          cache.getAdvancedCache().getTransactionManager().begin();
       }
-      cache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).clear();
+      if (local) {
+         cache.getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL).clear();
+      } else {
+         cache.clear();
+      }
       if (needsTx) {
          cache.getAdvancedCache().getTransactionManager().commit();
       }

@@ -36,8 +36,8 @@ public interface BasicOperations {
    Object remove(String bucket, Object key) throws Exception;
 
    /**
-    * This is called after each test type (if emptyCacheBetweenTests is set to true in benchmark.xml) and is
-    * used to flush the cache.
+    * Remove all entries from the cache. If local is set to true, remove entries only on this node.
+    * @param local
     */
-   void empty() throws Exception;
+   void clear(boolean local) throws Exception;
 }

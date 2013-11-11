@@ -78,8 +78,9 @@ public class EHCacheWrapper implements CacheWrapper, AtomicOperationsCapable, Bu
       return cache.get(key);
    }
 
-   public void empty() throws Exception {
-      cache.removeAll();
+   @Override
+   public void clear(boolean local) throws Exception {
+      cache.removeAll(local);
    }
 
    public void put(String path, Object key, Object value) throws Exception {

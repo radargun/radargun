@@ -105,7 +105,6 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
    }
 
    public void destroy() throws Exception {
-      cacheWrapper.empty();
       cacheWrapper = null;
    }
 

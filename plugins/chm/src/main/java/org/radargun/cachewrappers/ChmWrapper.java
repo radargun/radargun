@@ -80,7 +80,8 @@ public class ChmWrapper implements CacheWrapper, BulkOperationsCapable, AtomicOp
       return values;
    }
 
-   public void empty() throws Exception {
+   @Override
+   public void clear(boolean local) throws Exception {
       chm.clear();
    }
 

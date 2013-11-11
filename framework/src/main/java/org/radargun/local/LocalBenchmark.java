@@ -78,6 +78,7 @@ public class LocalBenchmark {
                      monitor.stopMonitoringLocal();
                   }
                   stressor.destroy();
+                  wrapper.clear(true);
                }
                generateReport(results, product.getKey(), config);
                wrapper.tearDown();
