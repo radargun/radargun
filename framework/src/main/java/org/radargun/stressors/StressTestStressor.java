@@ -175,7 +175,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    }
 
    public void destroy() throws Exception {
-      cacheWrapper.empty();
       cacheWrapper = null;
       bulkCacheWrapper = null;
    }

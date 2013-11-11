@@ -1,10 +1,10 @@
 package org.radargun.stages;
 
-import java.util.ArrayList;
 import java.util.Random;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stressors.BackgroundOpsManager;
 import org.radargun.utils.Utils;
@@ -17,13 +17,8 @@ import org.radargun.utils.Utils;
 @Stage(doc = "Removes all data from the cache")
 public class ClearClusterStage extends AbstractDistStage {
 
-   public ClearClusterStage() {
-      /* The clear command should be executed only once to clear the whole cache, not only this node.
-       * With optimistic locking the clear could timeout if executed on all nodes (this causes maximal contention on all
-       * keys) */
-      slaves = new ArrayList<Integer>();
-      slaves.add(0);
-   }
+   @Property(doc = "Execute local variant of clear on each slave. Default value is true.")
+   private boolean local = true;
 
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck defaultDistStageAck = newDefaultStageAck();
@@ -37,7 +32,7 @@ public class ClearClusterStage extends AbstractDistStage {
          try {
             log.info(Utils.printMemoryFootprint(true));
             if (slaves == null || slaves.contains(getSlaveIndex())) {
-               cacheWrapper.empty();
+               cacheWrapper.clear(local);
             } else {
                int size;
                for (int count = new Random().nextInt(20) + 10; count > 0 && (size = cacheWrapper.getLocalSize()) > 0; --count) {
@@ -46,7 +41,7 @@ public class ClearClusterStage extends AbstractDistStage {
                }
                if ((size = cacheWrapper.getLocalSize()) > 0) {
                   log.error("The cache was not cleared from another node (contains " + size + " entries), clearing locally");
-                  cacheWrapper.empty();
+                  cacheWrapper.clear(local);
                }
             }
             return defaultDistStageAck;

@@ -199,8 +199,8 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
    }
 
    @Override
-   public void empty() throws Exception {
-      basicOperations.empty();
+   public void clear(boolean local) throws Exception {
+      basicOperations.clear(local);
    }
 
    @Override

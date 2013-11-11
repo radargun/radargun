@@ -173,8 +173,8 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
       throw new UnsupportedOperationException();
    }        
 
-   public void empty() throws Exception {
-      ; // no-op
+   public void clear(boolean local) throws Exception {
+      lastValue = null;
    }
 
    public void viewAccepted(View newView) {
