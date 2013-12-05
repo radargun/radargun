@@ -81,6 +81,8 @@ public class LocalConfigParser {
                Element configEl = (Element) configs.item(configIndex);
                Properties configAttrs = new Properties();
                DomConfigParser.addDirectAttributes(configAttrs, configEl, "");
+               DomConfigParser.addWrapperAttributes(configAttrs, configEl, "");
+
                configNames.add(configAttrs);
                all.add(new ReportItem(productName, configAttrs.getProperty("name")));
             }

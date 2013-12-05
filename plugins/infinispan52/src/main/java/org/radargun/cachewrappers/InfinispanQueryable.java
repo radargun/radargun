@@ -38,7 +38,7 @@ import org.radargun.features.Queryable;
  *
  * @author Anna Manukyan
  */
-public class InfinispanQueryable implements Queryable, Serializable {
+public class InfinispanQueryable implements Queryable {
 
    protected Infinispan52Wrapper wrapper;
 
@@ -73,7 +73,7 @@ public class InfinispanQueryable implements Queryable, Serializable {
    }
 
    @Indexed(index = "query")
-   public class QueryableData implements Serializable {
+   public static class QueryableData implements Serializable {
 
       @Field(store = Store.YES)
       private String description;
