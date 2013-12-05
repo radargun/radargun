@@ -18,6 +18,7 @@
  */
 package org.radargun.cachewrappers;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ import org.radargun.utils.Utils;
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 
-public class InfinispanDistributedTask<K, V, T> implements DistributedTaskCapable<T> {
+public class InfinispanDistributedTask<K, V, T> implements DistributedTaskCapable<T>, Serializable {
 
    protected final Log log = LogFactory.getLog(getClass());
    protected final Infinispan52Wrapper wrapper;
