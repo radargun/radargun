@@ -126,7 +126,7 @@ public class LocalBenchmark {
       }
       if (!freeMemoryOkay()) {
          log.error("The amount of free memory is more than 10% smaller than original one, benchmarks might be affected. Exiting... ");
-         ShutDownHook.exit(1);
+         //ShutDownHook.exit(1);
       }
       log.info(Utils.printMemoryFootprint(false));
    }

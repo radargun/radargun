@@ -2,6 +2,7 @@ package org.radargun.cachewrappers;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -20,13 +21,14 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.util.FileLookupFactory;
 import org.radargun.config.DefaultConverter;
 import org.radargun.features.DistributedTaskCapable;
+import org.radargun.features.Queryable;
 import org.radargun.features.XSReplicating;
 import org.radargun.utils.ClassLoadHelper;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Infinispan52Wrapper extends Infinispan51Wrapper implements DistributedTaskCapable<Object>, XSReplicating {
+public class Infinispan52Wrapper extends Infinispan51Wrapper implements DistributedTaskCapable<Object>, Queryable, XSReplicating, Serializable {
 
    protected List<Integer> slaves;
    protected boolean wrapForQuery;
@@ -158,6 +160,11 @@ public class Infinispan52Wrapper extends Infinispan51Wrapper implements Distribu
    public List<Future<Object>> executeDistributedTask(ClassLoadHelper classLoadHelper, String distributedCallableFqn,
                                       String executionPolicyName, String failoverPolicyFqn, String nodeAddress, Map<String, String> params) {
       return distributedTask.executeDistributedTask(classLoadHelper, distributedCallableFqn, executionPolicyName, failoverPolicyFqn, nodeAddress, params);
+   }
+
+   @Override
+   public QueryResult executeQuery(Map<String, Object> queryParameters) {
+      return queryable.executeQuery(queryParameters);
    }
 
    public Object wrapValue(Object value) {
