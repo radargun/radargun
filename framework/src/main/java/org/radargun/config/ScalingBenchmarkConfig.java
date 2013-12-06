@@ -1,6 +1,8 @@
 package org.radargun.config;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -14,7 +16,7 @@ import org.radargun.Stage;
  *
  * @author Mircea.Markus@jboss.com
  */
-public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
+public class ScalingBenchmarkConfig extends AbstractBenchmarkConfig {
 
    public enum IncrementMethod {
       ADD,
@@ -24,13 +26,12 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
    // For Apache/commons/logging Log doesn't need to be static.
    protected Log log = LogFactory.getLog(ScalingBenchmarkConfig.class);
 
-   private boolean initialized = false;
-
    List<FixedSizeBenchmarkConfig> fixedBenchmarks = new ArrayList<FixedSizeBenchmarkConfig>();
    private int fixedBenchmarkIt = 0;
 
    //mandatory
    private int initSize = -1;
+   private int maxSize = -1;
 
 
    //optional
@@ -45,6 +46,14 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
       this.initSize = initSize;
    }
 
+   public int getMaxSize() {
+      return maxSize;
+   }
+
+   public void setMaxSize(int maxSize) {
+      this.maxSize = maxSize;
+   }
+
    public int getIncrement() {
       return increment;
    }
@@ -54,10 +63,25 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
       this.incrementMethod = method;
    }
 
+   @Override
+   public void setProductName(String productName) {
+      for (FixedSizeBenchmarkConfig benchmark : fixedBenchmarks) {
+         benchmark.setProductName(productName);
+      }
+      super.setProductName(productName);
+   }
+
+   @Override
+   public void setConfigName(String configName) {
+      for (FixedSizeBenchmarkConfig benchmark : fixedBenchmarks) {
+         benchmark.setConfigName(configName);
+      }
+      super.setConfigName(configName);
+   }
+
    public void validate() {
-      super.validate();
-      if (initSize < 2)
-         throw new RuntimeException("For scaling benchmarks(" + getProductName() + ") the initial size must be at least 2");
+      if (initSize < 1)
+         throw new RuntimeException("For scaling benchmarks(" + getProductName() + ") the initial size must be at least 1");
       if (getMaxSize() < initSize)
          throw new RuntimeException("Config problems for benchmark: " + getProductName() + " - maxSize must be >= initSize");
       if (increment <= 0) throw new RuntimeException("Increment must be positive!");
@@ -65,43 +89,40 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
 
    @Override
    public boolean hasNextStage() {
-      initialize();
       log.trace("fixedBenchmarkIt="+fixedBenchmarkIt);
       if (fixedBenchmarkIt < fixedBenchmarks.size() - 1) return true;
       return currentFixedBenchmark().hasNextStage();
    }
 
-   private void initialize() {
-      if (!initialized) {
-         log.info("Initializing.  Starting with " + initSize + " nodes, up to "+ getMaxSize() + " nodes, incrementing "
-               + (incrementMethod == IncrementMethod.ADD ? "by " : "times ") + increment);
-         for (int size = initSize; size <= getMaxSize(); ) {
-            log.info("Initializing configuration with " + size + " nodes");
-            FixedSizeBenchmarkConfig conf = new FixedSizeBenchmarkConfig();
-            conf.setMaxSize(getMaxSize());
-            conf.stages = cloneStages(this.stages);
-            conf.setSize(size);
-            conf.setConfigName(super.configName);
-            conf.setProductName(super.productName);
-            fixedBenchmarks.add(conf);
-            if (increment == 0) break;
-            switch (incrementMethod) {
-               case ADD:
-                  size += increment;
-                  break;
-               case MULTIPLY:
-                  size *= increment;
-                  break;
-            }
+   public Collection<FixedSizeBenchmarkConfig> initBenchmarks() {
+      log.info("Initializing.  Starting with " + initSize + " nodes, up to "+ getMaxSize() + " nodes, incrementing "
+            + (incrementMethod == IncrementMethod.ADD ? "by " : "times ") + increment);
+      for (int size = initSize; size <= getMaxSize(); ) {
+         log.info("Initializing configuration with " + size + " nodes");
+         FixedSizeBenchmarkConfig conf = new FixedSizeBenchmarkConfig();
+         conf.setMaxSize(getMaxSize());
+         conf.setSize(size);
+         fixedBenchmarks.add(conf);
+         if (increment == 0) break;
+         switch (incrementMethod) {
+            case ADD:
+               size += increment;
+               break;
+            case MULTIPLY:
+               size *= increment;
+               break;
          }
-         initialized = true;
-         log.info("Number of cluster topologies on which benchmark will be executed is " + fixedBenchmarks.size());
       }
+      log.info("Number of cluster topologies on which benchmark will be executed is " + fixedBenchmarks.size());
+      return getBenchmarks();
+   }
+
+   public Collection<FixedSizeBenchmarkConfig> getBenchmarks() {
+      return Collections.unmodifiableCollection(fixedBenchmarks);
    }
 
    @Override
    public Stage nextStage() {
-      initialize();
       if (!currentFixedBenchmark().hasNextStage()) {
          fixedBenchmarkIt++;
       }
@@ -118,7 +139,12 @@ public class ScalingBenchmarkConfig extends FixedSizeBenchmarkConfig {
 
    @Override
    public ScalingBenchmarkConfig clone() {
-      ScalingBenchmarkConfig clone = (ScalingBenchmarkConfig) super.clone();
+      ScalingBenchmarkConfig clone = null;
+      try {
+         clone = (ScalingBenchmarkConfig) super.clone();
+      } catch (CloneNotSupportedException e) {
+         throw new RuntimeException(e);
+      }
       clone.fixedBenchmarks = new ArrayList<FixedSizeBenchmarkConfig>();
       for (FixedSizeBenchmarkConfig fbc : fixedBenchmarks) {
          clone.fixedBenchmarks.add(fbc.clone());

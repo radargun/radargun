@@ -1,15 +1,12 @@
 package org.radargun.config;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.radargun.DistStage;
-import org.radargun.Stage;
-import org.radargun.utils.TypedProperties;
-import org.radargun.utils.Utils;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.radargun.DistStage;
+import org.radargun.Stage;
 
 /**
  * A fixed size benchmark is a benchmark that executes over a fixed number of slaves. This defines the configuration of
@@ -18,21 +15,22 @@ import java.util.List;
  * @author Mircea.Markus@jboss.com
  * @see org.radargun.config.ScalingBenchmarkConfig
  */
-public class FixedSizeBenchmarkConfig implements Cloneable {
+public class FixedSizeBenchmarkConfig extends AbstractBenchmarkConfig {
 
    private static Log log = LogFactory.getLog(FixedSizeBenchmarkConfig.class);
 
-   protected List<Stage> stages = new ArrayList<Stage>();
-
-   protected String productName;
-   protected String configName;
-   protected int size;
-
-   private TypedProperties configAttributes;
-
-
-   protected int stIterator = 0;
+   private List<Stage> stages = new ArrayList<Stage>();
+   private int size;
    private int maxSize = -1;
+   private int stIterator = 0;
+
+   public int getSize() {
+      return size;
+   }
+
+   public void setSize(int size) {
+      this.size = size;
+   }
 
    public int getMaxSize() {
       return maxSize;
@@ -45,10 +43,6 @@ public class FixedSizeBenchmarkConfig implements Cloneable {
    public FixedSizeBenchmarkConfig() {
    }
 
-   public void setStages(List<Stage> stages) {
-      this.stages = new ArrayList<Stage>(stages);
-   }
-
    public void addStage(Stage stage) {
       stages.add(stage);
    }
@@ -57,46 +51,9 @@ public class FixedSizeBenchmarkConfig implements Cloneable {
       return new ArrayList<Stage>(stages);
    }
 
-   public String getProductName() {
-      return productName;
-   }
-
-   public void setProductName(String productName) {
-      assertNo_(productName);
-      this.productName = productName;
-   }
-
-   private void assertNo_(String name) {
-      if (name.indexOf("_") >= 0) {
-         throw new RuntimeException("'_' not allowed in productName (reporting relies on that)");
-      }
-   }
-
-   public String getConfigName() {
-      return configName;
-   }
-
-   public void setConfigName(String configName) {
-      configName = Utils.fileName2Config(configName);
-      assertNo_(configName);
-      this.configName = configName;
-   }
-
-   public void setConfigAttributes(TypedProperties typedProperties) {
-      this.configAttributes = typedProperties;
-   }
-
-   public TypedProperties getConfigAttributes() {
-      return configAttributes;
-   }
-
-
+   @Override
    public void validate() {
       if (productName == null) throw new RuntimeException("Name must be set!");
-   }
-
-   public void setSize(int size) {
-      this.size = size;
    }
 
    @Override
@@ -107,14 +64,19 @@ public class FixedSizeBenchmarkConfig implements Cloneable {
       } catch (CloneNotSupportedException e) {
          throw new RuntimeException("Impossible!!!");
       }
-      clone.stages = cloneStages(this.stages);
+      clone.stages = new ArrayList<Stage>();
+      for (Stage st : stages) {
+         clone.stages.add(st.clone());
+      }
       return clone;
    }
 
+   @Override
    public boolean hasNextStage() {
       return stIterator < stages.size();
    }
 
+   @Override
    public Stage nextStage() {
       Stage stage = stages.get(stIterator);
       stIterator++;
@@ -133,13 +95,5 @@ public class FixedSizeBenchmarkConfig implements Cloneable {
    public void errorOnCurrentBenchmark() {
       log.trace("Issues in current benchmark, skipping remaining stages");
       stIterator = stages.size();
-   }
-
-   protected List<Stage> cloneStages(List<Stage> stages) {
-      List<Stage> clone = new ArrayList<Stage>();
-      for (Stage st : stages) {
-         clone.add(st.clone());
-      }
-      return clone;
    }
 }
