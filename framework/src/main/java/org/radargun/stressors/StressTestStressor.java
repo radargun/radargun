@@ -1,5 +1,11 @@
 package org.radargun.stressors;
 
+import java.io.Serializable;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
@@ -12,12 +18,6 @@ import org.radargun.features.BulkOperationsCapable;
 import org.radargun.features.Queryable;
 import org.radargun.utils.Fuzzy;
 import org.radargun.utils.Utils;
-
-import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * On multiple threads executes put and get operations against the CacheWrapper, and returns the result as an Map.
@@ -92,6 +92,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    @Property(doc = "The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.")
    protected boolean fixedKeys = true;
+
+   @Property(doc = "Due to configuration (eviction, expiration), some keys may spuriously disappear. Do not issue a warning for this situation. Default is false.")
+   protected boolean expectLostKeys = false;
 
    @Property(doc = "With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.", converter = TimeConverter.class)
    protected long entryLifespan = 3600000;
@@ -575,7 +578,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    }
 
    private static class Load {
-      public long current;
       public long max;
       public TreeSet<KeyWithRemovalTime> scheduledKeys = new TreeSet<KeyWithRemovalTime>();
 
@@ -586,8 +588,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    protected class ChangingSetOperationLogic implements OperationLogic {
       private Random r = new Random();
-      private long currentLoad;
-      private long changeId = 0;
       private long minRemoveTimestamp = Long.MAX_VALUE;
       private int minRemoveSize = 0;
       private HashMap<Integer, Load> loadForSize = new HashMap<Integer, Load>();
@@ -630,36 +630,40 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
                return null;
             }
             updateMin();
-            if (value == null) {
+            if (value == null && !expectLostKeys) {
                log.error("REMOVE: Value for key " + pair.key + " is null!");
-            } else {
-               currentLoad -= sizeOf(value);
-            }
-            if (++changeId % 1000 == 0) {
-               log.info(String.format("Current load: %.2f MB", currentLoad / 1048576d));
             }
             return value;
          } else if (r.nextInt(100) >= writePercentage && minRemoveTimestamp < Long.MAX_VALUE) {
             // we cannot get random access to PriorityQueue and there is no SortedList or another appropriate structure
-            Load load;
-            do {
+            Load load = null;
+            for (int attempt = 0; attempt < 100; ++attempt) {
                load = loadForSize.get(entrySize.next(r));
-            } while (load.current == 0);
-            Object key = getRandomPair(load.scheduledKeys, timestamp).key;
-            Object value = stressor.makeRequest(Operation.GET, key);
+               if (!load.scheduledKeys.isEmpty()) break;
+            }
+            if (load.scheduledKeys.isEmpty()) {
+               log.error("Current load seems to be null but timestamp is " + minRemoveTimestamp);
+               return null;
+            }
+            pair = getRandomPair(load.scheduledKeys, timestamp);
+            Object value = stressor.makeRequest(Operation.GET, pair.key);
             if (value == null) {
-               log.error("GET: Value for key " + key + " is null!");
+               if (expectLostKeys) {
+                  load.scheduledKeys.remove(pair);
+                  updateMin();
+               } else {
+                  log.error("GET: Value for key " + pair.key + " is null!");
+               }
             }
             return value;
          } else {
             Object value = generateValue(Integer.MAX_VALUE);
             int size = sizeOf(value);
             Load load = loadForSize.get(size);
-            if (load.current < load.max) {
+            if (load.scheduledKeys.size() < load.max) {
                long keyIndex = keysLoaded.getAndAdd(numNodes);
                pair = new KeyWithRemovalTime(getKeyGenerator().generateKey(keyIndex), getRandomTimestamp(timestamp));
                load.scheduledKeys.add(pair);
-               load.current++;
                updateMin();
             } else {
                pair = getRandomPair(load.scheduledKeys, timestamp);
@@ -667,7 +671,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             try {
                return stressor.makeRequest(Operation.PUT, pair.key, value);
             } catch (RequestException e) {
-               currentLoad -= size;
                load.scheduledKeys.remove(pair);
                for (;;) {
                   try {

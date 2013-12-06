@@ -103,6 +103,9 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.")
    protected boolean fixedKeys = true;
 
+   @Property(doc = "Due to configuration (eviction, expiration), some keys may spuriously disappear. Do not issue a warning for this situation. Default is false.")
+   protected boolean expectLostKeys = false;
+
    @Property(doc = "If true, putIfAbsent and replace operations are used. Default is false.")
    protected boolean useAtomics = false;
 
