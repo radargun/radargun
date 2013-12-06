@@ -3,6 +3,7 @@ package org.radargun.config;
 import java.lang.reflect.Field;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.Stack;
 
 import org.apache.commons.logging.Log;
@@ -98,13 +99,15 @@ public class ConfigHelper {
             }
          } else {
             String sysProp = System.getProperties().getProperty(val);
-            if (sysProp == null) {
+            if (sysProp != null) {
+               return sysProp;
+            } else if (val.startsWith("random.")) {
+               return random(val);
+            } else {
                String errorMessage = "For property '" + originalVal + "' there's no System.property with key " + val
                      + " .Existing properties are: " + System.getProperties();
                log.error(errorMessage);
                throw new RuntimeException(errorMessage);
-            } else {
-               return sysProp;
             }
          }
       } else if (val.startsWith("#{") && val.endsWith("}")) {
@@ -112,6 +115,21 @@ public class ConfigHelper {
          return eval(stack, val.substring(2, val.length() - 1).trim());
       } else {
          return val;
+      }
+   }
+
+   private static String random(String type) {
+      Random random = new Random();
+      if (type.equals("random.int")) {
+         return String.valueOf(Math.abs(random.nextInt()));
+      } else if (type.equals("random.long")) {
+         return String.valueOf(Math.abs(random.nextLong()));
+      } else if (type.equals("random.double")) {
+         return String.valueOf(random.nextDouble());
+      } else if (type.equals("random.boolean")) {
+         return String.valueOf(random.nextBoolean());
+      } else {
+         throw new IllegalArgumentException("Unknown random type: " + type);
       }
    }
 
@@ -135,6 +153,12 @@ public class ConfigHelper {
             next = 2;
          } else if (expression.startsWith(",")) {
             stack.push(add(stack.pop(), stack.pop()));
+            next = 1;
+         } else if (expression.startsWith("/")) {
+            stack.push(div(stack.pop(), stack.pop()));
+            next = 1;
+         } else if (expression.startsWith("%")) {
+            stack.push(modulo(stack.pop(), stack.pop()));
             next = 1;
          } else {
             next = 0;
@@ -226,10 +250,25 @@ public class ConfigHelper {
       }
    }
 
-   /*public static int parseInt(String val) {
-      val = checkForProps(val);
-      return Integer.valueOf(val);
-   } */
+   private static String div(String second, String first) {
+      try {
+         return String.valueOf(Integer.parseInt(first) / Integer.parseInt(second));
+      } catch (NumberFormatException e) {
+         try {
+            return String.valueOf(Double.parseDouble(first) / Double.parseDouble(second));
+         } catch (NumberFormatException e2) {
+            throw new IllegalArgumentException(first + " / " + second);
+         }
+      }
+   }
+
+   private static String modulo(String second, String first) {
+      try {
+         return String.valueOf(Integer.parseInt(first) % Integer.parseInt(second));
+      } catch (NumberFormatException e) {
+         throw new IllegalArgumentException(first + " % " + second);
+      }
+   }
 
    public static String parseString(String value) {
       return checkForProps(value);
