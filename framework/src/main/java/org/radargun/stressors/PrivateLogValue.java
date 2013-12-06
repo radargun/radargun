@@ -1,6 +1,7 @@
 package org.radargun.stressors;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -40,6 +41,18 @@ public class PrivateLogValue implements Serializable {
       return operationIds[i];
    }
 
+   public int getThreadId() {
+      return threadId;
+   }
+
+   @Override
+   public boolean equals(Object obj) {
+      if (!(obj instanceof PrivateLogValue)) return false;
+      PrivateLogValue other = (PrivateLogValue) obj;
+      if (other.threadId != threadId) return false;
+      return Arrays.equals(other.operationIds, operationIds);
+   }
+
    @Override
    public String toString() {
       StringBuilder sb = new StringBuilder("[").append(threadId).append(" #").append(operationIds.length).append(": ");
@@ -47,9 +60,5 @@ public class PrivateLogValue implements Serializable {
          sb.append(op).append(", ");
       }
       return sb.append("]").toString();
-   }
-
-   public int getThreadId() {
-      return threadId;
    }
 }
