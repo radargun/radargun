@@ -1,11 +1,12 @@
 package org.radargun.config;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import org.radargun.Master;
 import org.radargun.Stage;
 import org.radargun.stages.AbstractStartStage;
@@ -103,13 +104,11 @@ public class DomConfigParser extends ConfigParser {
                addSitesAttributes(configAttributes, configEl);
 
                ScalingBenchmarkConfig clone = prototype.clone();
-               clone.setProductName(productName);
                masterConfig.addBenchmark(clone);
+               clone.setProductName(productName);
                clone.setConfigName(configName);
-               clone.setConfigAttributes(new TypedProperties(configAttributes));
-               updateStartupStage(configName, clone);
+               updateStartupStage(configName, clone, new TypedProperties(configAttributes));
             }
-
          }
       }
    }
@@ -175,12 +174,14 @@ public class DomConfigParser extends ConfigParser {
       return masterConfig;
    }
 
-   private void updateStartupStage(String configName, ScalingBenchmarkConfig clone) {
-      for (Stage st : clone.getStages()) {
-         if (st instanceof AbstractStartStage) {
-            AbstractStartStage ass = (AbstractStartStage) st;
-            ass.setConfig(configName);
-            ass.setConfAttributes(clone.getConfigAttributes());
+   private void updateStartupStage(String configName, ScalingBenchmarkConfig scaling, TypedProperties typedProperties) {
+      for (FixedSizeBenchmarkConfig fixed : scaling.getBenchmarks()) {
+         for (Stage st : fixed.getStages()) {
+            if (st instanceof AbstractStartStage) {
+               AbstractStartStage ass = (AbstractStartStage) st;
+               ass.setConfig(configName);
+               ass.setConfAttributes(typedProperties);
+            }
          }
       }
    }
@@ -204,19 +205,24 @@ public class DomConfigParser extends ConfigParser {
          throw new IllegalArgumentException("Cannot parse increment!", e);
       }
       prototype.setIncrement(incCount, incMethod);
+      Collection<FixedSizeBenchmarkConfig> benchmarks = prototype.initBenchmarks();
 
       NodeList childNodes = benchmarkEl.getChildNodes();
-      for (int i = 0; i < childNodes.getLength(); i++) {
-         Node child = childNodes.item(i);
-         if (child instanceof Element) {
-            addStage(prototype, (Element) child);            
+      for (FixedSizeBenchmarkConfig fixedPrototype : benchmarks) {
+         System.setProperty("benchmark.activeSize", String.valueOf(fixedPrototype.getSize()));
+         System.setProperty("benchmark.maxSize", String.valueOf(fixedPrototype.getMaxSize()));
+         for (int i = 0; i < childNodes.getLength(); i++) {
+            Node child = childNodes.item(i);
+            if (child instanceof Element) {
+               addStage(fixedPrototype, (Element) child);
+            }
          }
       }
       return prototype;
    }
 
 
-   private void addStage(ScalingBenchmarkConfig prototype, Element element) {
+   private void addStage(FixedSizeBenchmarkConfig prototype, Element element) {
       if (element.getNodeName().equalsIgnoreCase("Repeat")) {
          String timesStr = element.getAttribute("times");
          String fromStr = element.getAttribute("from");

@@ -24,12 +24,14 @@ import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.Stage;
+import org.radargun.config.AbstractBenchmarkConfig;
 import org.radargun.config.FixedSizeBenchmarkConfig;
 import org.radargun.config.MasterConfig;
 import org.radargun.config.PropertyHelper;
@@ -104,7 +106,7 @@ public class HtmlReportGenerator {
    private void reportDescription() {
       printTag("h2", "Benchmark description");
       writer.write("The benchmark was executed on following products, configurations and cluster sizes:\n<ul>");
-      for (FixedSizeBenchmarkConfig benchmark : config.getBenchmarks()) {
+      for (AbstractBenchmarkConfig benchmark : config.getBenchmarks()) {
          if ("report".equals(benchmark.getProductName())) continue;
 
          StringBuilder sb = new StringBuilder();
@@ -116,12 +118,21 @@ public class HtmlReportGenerator {
                sb.append(", ").append(i);
             }
          } else {
-            sb.append(", ").append(benchmark.getMaxSize());
+            FixedSizeBenchmarkConfig fixed = (FixedSizeBenchmarkConfig) benchmark;
+            sb.append(", ").append(fixed.getSize());
          }
          writer.write(sb.append(" nodes</li>\n").toString());
       }
       writer.print("</ul>\nThese stages have been used for the benchmark:\n<ul>");
-      for (Stage stage : config.getBenchmarks().get(0).getStages()) {
+      AbstractBenchmarkConfig firstBenchmark = config.getBenchmarks().get(0);
+      List<Stage> stages;
+      if (firstBenchmark instanceof ScalingBenchmarkConfig) {
+         ScalingBenchmarkConfig scaling = (ScalingBenchmarkConfig) firstBenchmark;
+         stages = ((FixedSizeBenchmarkConfig) scaling.getBenchmarks().toArray(new AbstractBenchmarkConfig[0])[0]).getStages();
+      } else {
+         stages = ((FixedSizeBenchmarkConfig) firstBenchmark).getStages();
+      }
+      for (Stage stage : stages) {
          reportStage(stage);
       }
       writer.print("</ul>\n");

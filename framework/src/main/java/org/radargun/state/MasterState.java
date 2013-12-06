@@ -1,19 +1,19 @@
 package org.radargun.state;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.DistStage;
 import org.radargun.DistStageAck;
 import org.radargun.MasterStage;
 import org.radargun.Stage;
-import org.radargun.config.FixedSizeBenchmarkConfig;
+import org.radargun.config.AbstractBenchmarkConfig;
 import org.radargun.config.MasterConfig;
 import org.radargun.utils.Utils;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 /**
  * State residing on the server, passed to each stage before execution.
@@ -25,14 +25,14 @@ public class MasterState extends StateBase {
    private static Log log = LogFactory.getLog(MasterState.class);
 
    private MasterConfig config;
-   private List<FixedSizeBenchmarkConfig> benchmarks;
-   private FixedSizeBenchmarkConfig currentBenchmark;
+   private List<AbstractBenchmarkConfig> benchmarks;
+   private AbstractBenchmarkConfig currentBenchmark;
    private long startTime = System.currentTimeMillis();
    private DistStage currentDistStage;
 
    public MasterState(MasterConfig config) {
       this.config = config;
-      benchmarks = new ArrayList<FixedSizeBenchmarkConfig>(config.getBenchmarks());
+      benchmarks = new ArrayList<AbstractBenchmarkConfig>(config.getBenchmarks());
       if (benchmarks.isEmpty())
          throw new IllegalStateException("There must be at least one benchmark");
       currentBenchmark = benchmarks.remove(0);

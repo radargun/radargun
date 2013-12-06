@@ -15,7 +15,7 @@ public class MasterConfig {
    private String host;
    private int slavesCount;
 
-   List<FixedSizeBenchmarkConfig> benchmarks = new ArrayList<FixedSizeBenchmarkConfig>();
+   List<AbstractBenchmarkConfig> benchmarks = new ArrayList<AbstractBenchmarkConfig>();
 
    public MasterConfig(int port, String host, int slavesCount) {
       this.port = port;
@@ -35,17 +35,17 @@ public class MasterConfig {
       return slavesCount;
    }
 
-   public List<FixedSizeBenchmarkConfig> getBenchmarks() {
+   public List<AbstractBenchmarkConfig> getBenchmarks() {
       return benchmarks;
    }
 
-   public void addBenchmark(FixedSizeBenchmarkConfig config) {
+   public void addBenchmark(AbstractBenchmarkConfig config) {
       benchmarks.add(config);
    }
 
    public void validate() {
       Set<String> allBenchmarkNames = new HashSet<String>();
-      for (FixedSizeBenchmarkConfig f: benchmarks) {
+      for (AbstractBenchmarkConfig f: benchmarks) {
          if (!allBenchmarkNames.add(f.getProductName())) {
             throw new RuntimeException("There are two benchmarks having same name:" + f.getProductName() + ". Benchmark name should be unique!");
          }
