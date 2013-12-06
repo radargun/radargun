@@ -321,8 +321,19 @@ class BackgroundStressor extends Thread {
                   } finally {
                      remainingTxOps = transactionSize;
                   }
-
+                  if (terminate) {
+                     // If the thread was interrupted and cache is registered as Synchronization (not XAResource)
+                     // commit phase may fail but no exception is thrown. Therefore, we should terminate immediatelly
+                     // as we don't want to remove entries while the modifications have not been written.
+                     log.info("Thread is about to terminate, not executing delayed removes");
+                     return false;
+                  }
                   afterCommit();
+                  if (terminate) {
+                     // the removes may have failed and we have not repeated them due to termination
+                     log.info("Thread is about to terminate, not writing the last operation");
+                     return false;
+                  }
 
                   // for non-transactional caches write the stressor last operation only after the transaction
                   // has finished
@@ -348,15 +359,15 @@ class BackgroundStressor extends Thread {
             if (manager.getTransactionSize() > 0) {
                try {
                   cacheWrapper.endTransaction(false);
+                  log.info("Transaction rolled back");
                } catch (Exception e1) {
-                  log.error("Error while ending transaction, restarting from operation " + txStartOperationId, e);
+                  log.error("Error while rolling back transaction", e1);
+               } finally {
+                  log.info("Restarting from operation " + txStartOperationId);
+                  remainingTxOps = manager.getTransactionSize();
                   txRolledBack = true;
                   afterRollback();
-                  return false;
-               } finally {
-                  remainingTxOps = manager.getTransactionSize();
                }
-               afterCommit();
             }
             return false; // on the same key
          }
@@ -368,7 +379,7 @@ class BackgroundStressor extends Thread {
 
       private void afterCommit() {
          boolean inTransaction = false;
-         for (;;) {
+         while (!terminate) {
             try {
                if (inTransaction) {
                   try {
