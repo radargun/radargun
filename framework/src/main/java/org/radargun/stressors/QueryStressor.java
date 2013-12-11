@@ -19,9 +19,7 @@
 package org.radargun.stressors;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -46,7 +44,7 @@ public class QueryStressor extends StressTestStressor {
    @Property(optional = false, doc = "The name of the field for which the query should be executed.")
    private String onField;
 
-   private List<Queryable.QueryResult> queryResultsList = null;
+   private Queryable.QueryResult previousQueryResult = null;
    private String matchingWord = null;
 
    public QueryStressor() {
@@ -59,7 +57,6 @@ public class QueryStressor extends StressTestStressor {
    @Override
    protected void init(CacheWrapper wrapper) {
       this.matchingWord = (String) slaveState.get(DataForQueryStressor.MATCH_WORD_PROP_NAME);
-      queryResultsList = new Vector<Queryable.QueryResult>(1000);
       super.init(wrapper);
    }
 
@@ -80,30 +77,21 @@ public class QueryStressor extends StressTestStressor {
          paramMap.put(Queryable.MATCH_STRING, matchingWord);
          paramMap.put(Queryable.IS_WILDCARD, isWildcardQuery);
 
-         Queryable.QueryResult obj = (Queryable.QueryResult) stressor.makeRequest(Operation.QUERY, paramMap);
-         queryResultsList.add(obj);
+         Queryable.QueryResult queryResult = (Queryable.QueryResult) stressor.makeRequest(Operation.QUERY, paramMap);
 
-         return obj;
+         if (previousQueryResult != null) {
+            if (queryResult.size() != previousQueryResult.size()) {
+               throw new RuntimeException("The query result is different from the previous one. All results should be the same when executing the same query");
+            }
+         }
+         previousQueryResult = queryResult;
+
+         return queryResult;
       }
    }
 
    protected Map<String, Object> processResults() {
-      compareQueryResults();
-
       return super.processResults();
-   }
-
-   private void compareQueryResults() {
-      int previousResult = -1;
-      for (Queryable.QueryResult queryResult : queryResultsList) {
-         if(queryResult != null) {
-            if (previousResult > 0) {
-               assert queryResult.size() == previousResult : "The results are not the same for all queries.";
-            }
-
-            previousResult = queryResult.size();
-         }
-      }
    }
 
    @Override
