@@ -112,8 +112,12 @@ public class HtmlReportGenerator {
          sb.append(", configuration ").append(benchmark.getConfigName());
          if (benchmark instanceof ScalingBenchmarkConfig) {
             ScalingBenchmarkConfig scaling = (ScalingBenchmarkConfig) benchmark;
-            for (int i = scaling.getInitSize(); i <= scaling.getMaxSize(); i += scaling.getIncrement()) {
-               sb.append(", ").append(i);
+            if (scaling.getIncrement() == 0) {
+               sb.append(", ").append(scaling.getInitSize());
+            } else {
+               for (int i = scaling.getInitSize(); i <= scaling.getMaxSize(); i += scaling.getIncrement()) {
+                  sb.append(", ").append(i);
+               }
             }
          } else {
             sb.append(", ").append(benchmark.getMaxSize());
