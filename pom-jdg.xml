@@ -1,0 +1,187 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <artifactId>radargun-aggregator</artifactId>
+   <version>1.1.0-SNAPSHOT</version>
+   <groupId>org.radargun</groupId>
+   <name>RadarGun - Aggregator</name>
+   <description>The aggregator for RadarGun</description>
+   <packaging>pom</packaging>
+
+   <modules>
+      <module>framework</module>
+      <module>plugins/infinispan4</module>
+      <module>plugins/infinispan50</module>
+      <module>plugins/infinispan51</module>
+      <module>plugins/infinispan52</module>
+      <module>plugins/infinispan53</module>
+      <module>plugins/infinispan60</module>
+      <module>plugins/jdg62</module>
+   </modules>
+
+   <scm>
+      <connection>scm:git:git@github.com:radargun/radargun.git</connection>
+      <url>scm:git:git@github.com:radargun/radargun.git</url>
+      <developerConnection>scm:git:git@github.com:radargun/radargun.git</developerConnection>
+   </scm>
+
+   <properties>
+      <distribution.name>RadarGun-${project.version}</distribution.name>
+      <distribution.artifact>target/distribution/${distribution.name}</distribution.artifact>
+      <distribution.zipfile>target/distribution/${distribution.name}.zip</distribution.zipfile>
+   </properties>
+
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-release-plugin</artifactId>
+            <version>2.2.2</version>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.3</version>
+            <executions>
+               <execution>
+                  <id>prepare_distribution</id>
+                  <phase>post-integration-test</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <tasks>
+                        <delete dir="target/distribution" />
+                        <mkdir dir="target/distribution" />
+                        <mkdir dir="${distribution.artifact}" />
+                     </tasks>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <id>prepare_plugins</id>
+                  <phase>verify</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <tasks>
+                        <echo message="Generating XSD schema" />
+                        <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true">
+                           <classpath>
+                              <fileset dir="framework/target/distribution/radargun-framework-bin/radargun-framework/lib">
+                                 <include name="*.jar" />
+                              </fileset>
+                           </classpath>
+                           <arg value="framework/src/main/resources" />
+                           <arg value="framework/target/distribution/radargun-framework-bin/radargun-framework/lib/radargun-framework-1.1.0-SNAPSHOT.jar" />
+                           <arg value="hazelcast2" />
+                           <arg value="hazelcast3" />
+                           <arg value="infinispan4" />
+                           <arg value="infinispan50" />
+                           <arg value="infinispan51" />
+                           <arg value="infinispan52" />
+                           <arg value="infinispan53" />
+                           <arg value="infinispan60" />
+                           <arg value="jgroups30" />
+                           <arg value="jgroups32" />
+                           <arg value="jgroups33" />
+                           <arg value="jgroups34" />
+                           <arg value="jgroups35" />
+                           <arg value="jbosscache2" />
+                           <arg value="jbosscache3" />
+                           <arg value="ehcache25" />
+                           <arg value="ehcache26" />
+                           <arg value="terracota3" />
+                           <arg value="chm" />
+                           <arg value="coherence3" />
+                           <arg value="jdg60" />
+                           <arg value="jdg61" />
+                           <arg value="jdg62" />
+                        </java>
+
+                        <echo
+                           message="Packaging the framework, and the following plugins: infinispan4, infinispan50, infinispan51, infinispan52, infinispan53, infinispan60, jdg62" />
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan4">
+                           <fileset dir="plugins/infinispan4/target/distribution/plugin-infinispan4-bin/plugin-infinispan4">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan50">
+                           <fileset dir="plugins/infinispan50/target/distribution/plugin-infinispan50-bin/plugin-infinispan50">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan51">
+                           <fileset dir="plugins/infinispan51/target/distribution/plugin-infinispan51-bin/plugin-infinispan51">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan52">
+                           <fileset dir="plugins/infinispan52/target/distribution/plugin-infinispan52-bin/plugin-infinispan52">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan53">
+                           <fileset dir="plugins/infinispan53/target/distribution/plugin-infinispan53-bin/plugin-infinispan53">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/infinispan60">
+                           <fileset dir="plugins/infinispan60/target/distribution/plugin-infinispan60-bin/plugin-infinispan60">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+
+                        <copy todir="${distribution.artifact}/plugins/jdg62">
+                           <fileset dir="plugins/jdg62/target/distribution/plugin-jdg62-bin/plugin-jdg62">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+                     </tasks>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <id>build_distro</id>
+                  <phase>install</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <tasks>
+                        <echo message="Packaging the framework, common scripts and building archive" />
+                        <copy todir="${distribution.artifact}">
+                           <fileset dir="framework/target/distribution/radargun-framework-bin/radargun-framework">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+                        <copy todir="${distribution.artifact}/bin">
+                           <fileset dir="bin">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+                        <chmod perm="ugo+rwx" type="file">
+                           <fileset dir="${distribution.artifact}/bin">
+                              <include name="**/*.sh" />
+                              <include name="**/*.py" />
+                           </fileset>
+                        </chmod>
+                        <zip destfile="${distribution.zipfile}" basedir="target/distribution" excludes="**/bin/**">
+                           <zipfileset dir="${distribution.artifact}/bin" filemode="755" prefix="${distribution.name}/bin" />
+                        </zip>
+                     </tasks>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+   </build>
+</project>

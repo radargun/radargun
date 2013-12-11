@@ -67,7 +67,7 @@ public class StartClusterStage extends AbstractStartStage {
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
             + ". This slave's index is: " + getSlaveIndex());
       
-      StartHelper.start(productName, config, confAttributes, slaveState, getSlaveIndex(),
+      StartHelper.start(productName, configFile, confAttributes, slaveState, getSlaveIndex(),
             validateCluster ? new StartHelper.ClusterValidation(expectNumSlaves, getActiveSlaveCount()) : null,
             clusterFormationTimeout, reachable, classLoadHelper, ack);
       if (!ack.isError()) {

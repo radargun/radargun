@@ -1,7 +1,5 @@
 package org.radargun.config;
 
-import org.radargun.utils.Utils;
-
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -31,7 +29,6 @@ public abstract class AbstractBenchmarkConfig implements Cloneable {
    }
 
    public void setConfigName(String configName) {
-      configName = Utils.fileName2Config(configName);
       assertNo_(configName);
       this.configName = configName;
    }

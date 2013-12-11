@@ -37,16 +37,21 @@ import org.radargun.utils.TypedProperties;
 @Stage(doc = "")
 public abstract class AbstractStartStage extends AbstractDistStage {
 
-   @Property(readonly = true, doc = "Config used for this stage")
-   protected String config;
+   public static final String PROP_CONFIG_NAME = "configName";
+   public static final String PROP_PRODUCT_NAME = "productName";
+
+   @Property(readonly = true, doc = "Configuration file used for this stage")
+   protected String configFile;
 
    @Property(doc = "Set of slaves where the start may fail but this will not cause an error. Default is none.")
    protected Collection<Integer> mayFailOn;
 
    protected TypedProperties confAttributes;
 
-   public void setConfig(String config) {
-      this.config = config;
+   public void setProductConfig(String productName, String configName, String configFile) {
+      this.configFile = configFile;
+      confAttributes.put(AbstractStartStage.PROP_PRODUCT_NAME, productName);
+      confAttributes.put(AbstractStartStage.PROP_CONFIG_NAME, configName);
    }  
    
    public void setConfAttributes(TypedProperties confAttributes) {

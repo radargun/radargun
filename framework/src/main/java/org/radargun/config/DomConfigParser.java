@@ -12,6 +12,7 @@ import org.radargun.Stage;
 import org.radargun.stages.AbstractStartStage;
 import org.radargun.stages.GenerateReportStage;
 import org.radargun.utils.TypedProperties;
+import org.radargun.utils.Utils;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -96,7 +97,10 @@ public class DomConfigParser extends ConfigParser {
             NodeList configs = nodeEl.getElementsByTagName("config");
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
                Element configEl = (Element) configs.item(configIndex);
-               String configName = configEl.getAttribute("name");
+               String config = configEl.getAttribute("name");
+               String configName = Utils.fileName2Config(config);
+               String configFile = configEl.getAttribute("file");
+               if (configFile.isEmpty()) configFile = config;
 
                Properties configAttributes = new Properties();
                addDirectAttributes(configAttributes, configEl, ""); // parse own
@@ -107,7 +111,7 @@ public class DomConfigParser extends ConfigParser {
                masterConfig.addBenchmark(clone);
                clone.setProductName(productName);
                clone.setConfigName(configName);
-               updateStartupStage(configName, clone, new TypedProperties(configAttributes));
+               updateStartupStage(configFile, clone, new TypedProperties(configAttributes));
             }
          }
       }
@@ -174,13 +178,13 @@ public class DomConfigParser extends ConfigParser {
       return masterConfig;
    }
 
-   private void updateStartupStage(String configName, ScalingBenchmarkConfig scaling, TypedProperties typedProperties) {
+   private void updateStartupStage(String configFile, ScalingBenchmarkConfig scaling, TypedProperties typedProperties) {
       for (FixedSizeBenchmarkConfig fixed : scaling.getBenchmarks()) {
          for (Stage st : fixed.getStages()) {
             if (st instanceof AbstractStartStage) {
                AbstractStartStage ass = (AbstractStartStage) st;
-               ass.setConfig(configName);
                ass.setConfAttributes(typedProperties);
+               ass.setProductConfig(scaling.getProductName(), scaling.getConfigName(), configFile);
             }
          }
       }

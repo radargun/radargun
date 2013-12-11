@@ -1,5 +1,6 @@
 package org.radargun.cachewrappers;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -20,10 +21,12 @@ import org.radargun.config.DefaultConverter;
 import org.radargun.features.DistributedTaskCapable;
 import org.radargun.features.Queryable;
 import org.radargun.features.XSReplicating;
+import org.radargun.stages.AbstractStartStage;
 import org.radargun.utils.ClassLoadHelper;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ * @author Michal Linhard (mlinhard@redhat.com)
  */
 public class Infinispan52Wrapper extends Infinispan51Wrapper implements DistributedTaskCapable<Object>, Queryable, XSReplicating {
 
@@ -89,6 +92,38 @@ public class Infinispan52Wrapper extends Infinispan51Wrapper implements Distribu
       }
 
       super.setUpCaches();
+      // config dumping
+      if (confAttributes.getBooleanProperty("dumpConfig", false)) {
+         String productName = confAttributes.getProperty(AbstractStartStage.PROP_PRODUCT_NAME, "default");
+         String configName = confAttributes.getProperty(AbstractStartStage.PROP_CONFIG_NAME, "default");
+         File dumpDir = new File("conf" + File.separator + "normalized" + File.separator + productName + File.separator + configName);
+         if (!dumpDir.exists()) {
+            dumpDir.mkdirs();
+         }
+         dumpConfiguration(dumpDir);
+      }
+   }
+
+   /**
+    * 
+    * Dump wrapper configuration as set of files into the dump directory (one per product/config)
+    * 
+    * @param dumpDir
+    */
+   protected void dumpConfiguration(File dumpDir) {
+      ConfigDumpHelper helper = createConfigDumpHelper();
+      if (!dumpDir.exists()) {
+         dumpDir.mkdirs();
+      }
+      helper.dumpGlobal(new File(dumpDir, "config_global.xml"), cacheManager.getCacheManagerConfiguration(), cacheManager.getName());
+      helper.dumpCache(new File(dumpDir, "config_cache.xml"), getCache(null).getAdvancedCache().getCacheConfiguration(), cacheManager.getName(),
+            getMainCacheName());
+      helper.dumpJGroups(new File(dumpDir, "config_jgroups.xml"), cacheManager.getCacheManagerConfiguration().transport() == null ? null : cacheManager
+            .getCacheManagerConfiguration().transport().clusterName());
+   }
+
+   protected ConfigDumpHelper createConfigDumpHelper() {
+      return new ConfigDumpHelper();
    }
 
    @Override

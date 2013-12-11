@@ -89,7 +89,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
                      log.error("Starting delay was interrupted.", e);
                   }
                }
-               StartHelper.start(productName, config, confAttributes, slaveState, getSlaveIndex(),
+               StartHelper.start(productName, configFile, confAttributes, slaveState, getSlaveIndex(),
                      null, 0, reachable, classLoadHelper, ack);
                if (ack.isError()) return ack;
                startMe = false;               

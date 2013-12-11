@@ -55,7 +55,7 @@ public class StartHelper {
       }
    }
    
-   public static void start(String productName, String config, TypedProperties confAttributes, SlaveState slaveState, int slaveIndex,
+   public static void start(String productName, String configFile, TypedProperties confAttributes, SlaveState slaveState, int slaveIndex,
                             ClusterValidation clusterValidation, long clusterFormationTimeout, Set<Integer> reachable, ClassLoadHelper classLoadHelper, DefaultDistStageAck ack) {
       CacheWrapper wrapper = null;
       try {
@@ -67,7 +67,7 @@ public class StartHelper {
          }
          slaveState.setCacheWrapper(wrapper);
          long startingTime = System.nanoTime();
-         wrapper.setUp(config, false, slaveIndex, confAttributes);
+         wrapper.setUp(configFile, false, slaveIndex, confAttributes);
          long startedTime = System.nanoTime();
          ack.setPayload(StartStopTime.withStartTime(startedTime - startingTime, ack.getPayload()));
          if (clusterValidation != null) {

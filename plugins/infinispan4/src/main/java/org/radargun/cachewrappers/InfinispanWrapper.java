@@ -52,7 +52,7 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
 
    protected DefaultCacheManager cacheManager;
    protected TransactionManager tm;
-   protected String config;
+   protected String configFile;
    protected TypedProperties confAttributes;
    protected int nodeIndex;
    protected volatile boolean enlistExtraXAResource;
@@ -92,7 +92,7 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
       // yes, backward compatibility and compatibility with sites
       if (confAttributes.containsKey("config")) return confAttributes.getProperty("config");
       if (confAttributes.containsKey("file")) return confAttributes.getProperty("file");
-      return config;
+      return configFile;
    }
 
    protected void setUpCaches() throws Exception {
@@ -165,7 +165,7 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
       log.debug("Loading JGroups from: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
       log.info("Using config attributes: " + confAttributes);
-      this.config = config;
+      this.configFile = config;
       this.nodeIndex = nodeIndex;
       this.confAttributes = confAttributes;
       lifecycle.setUp();
@@ -243,7 +243,7 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
 
    public String getInfo() {
       //Important: don't change this string without validating the ./dist.sh as it relies on its format!!
-      return "Running : " + getCache(null).getVersion() +  ", config:" + config + ", cacheName:" + getCache(null).getName();
+      return "Running : " + getCache(null).getVersion() +  ", config:" + configFile + ", cacheName:" + getCache(null).getName();
    }
 
    public void startTransaction() {
