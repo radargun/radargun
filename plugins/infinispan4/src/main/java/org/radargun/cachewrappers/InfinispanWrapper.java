@@ -23,6 +23,7 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.Address;
+import org.infinispan.util.hash.Hash;
 import org.radargun.CacheWrapper;
 import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.Debugable;
@@ -132,16 +133,17 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
    }
 
    protected void blockForRehashing(Cache<Object, Object> cache) throws InterruptedException {
-      // should we be blocking until all rehashing, etc. has finished?
-      long gracePeriod = MINUTES.toMillis(15);
-      long giveup = System.currentTimeMillis() + gracePeriod;
       if (isCacheDistributed(cache)) {
-         while (!cache.getAdvancedCache().getDistributionManager().isJoinComplete() && System.currentTimeMillis() < giveup)
-            Thread.sleep(200);
-      }
+         // should we be blocking until all rehashing, etc. has finished?
+         long gracePeriod = MINUTES.toMillis(15);
+         long giveup = System.currentTimeMillis() + gracePeriod;
 
-      if (isCacheDistributed(cache) && !cache.getAdvancedCache().getDistributionManager().isJoinComplete())
-         throw new RuntimeException("Caches haven't discovered and joined the cluster even after " + Utils.prettyPrintMillis(gracePeriod));
+         while (!isJoinComplete(cache) && System.currentTimeMillis() < giveup)
+            Thread.sleep(200);
+         if (!isJoinComplete(cache)) {
+            throw new RuntimeException("Caches haven't discovered and joined the cluster even after " + Utils.prettyPrintMillis(gracePeriod));
+         }
+      }
    }
 
    protected void injectEvenConsistentHash(Cache<Object, Object> cache) {
@@ -339,6 +341,10 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
 
    protected boolean isCacheAutoCommit(Cache<?, ?> cache) {
       return false;
+   }
+
+   protected boolean isJoinComplete(Cache<?, ?> cache) {
+      return cache.getAdvancedCache().getDistributionManager().isJoinComplete();
    }
 
    protected String getKeyInfo(String bucket, Object key) {

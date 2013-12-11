@@ -10,13 +10,11 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 import org.infinispan.Cache;
-import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
-import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.util.FileLookupFactory;
 import org.radargun.config.DefaultConverter;
 import org.radargun.features.DistributedTaskCapable;
@@ -172,5 +170,16 @@ public class Infinispan52Wrapper extends Infinispan51Wrapper implements Distribu
       } else {
          return value;
       }
+   }
+
+   @Override
+   protected boolean isJoinComplete(Cache<?, ?> cache) {
+      DistributionManager dm = cache.getAdvancedCache().getDistributionManager();
+      boolean joinComplete = dm.isJoinComplete();
+      Set<Integer> ownedSegments = dm.getReadConsistentHash().getSegmentsForOwner(cache.getCacheManager().getAddress());
+      if (log.isTraceEnabled()) {
+         log.trace("joinComplete=" + joinComplete + ", ownedSegments=" + ownedSegments + ", " + getCHInfo(dm));
+      }
+      return joinComplete && !ownedSegments.isEmpty();
    }
 }
