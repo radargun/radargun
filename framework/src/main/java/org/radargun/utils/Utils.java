@@ -3,6 +3,7 @@ package org.radargun.utils;
 import javax.management.MBeanServer;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -14,9 +15,13 @@ import java.net.URLClassLoader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
@@ -416,5 +421,43 @@ public class Utils {
    public static Random setRandomSeed(Random random, long seed) {
       random.setSeed(seed ^ 0x5DEECE66DL);
       return random;
+   }
+
+   /**
+    * 
+    * Sort and save properties to a file.
+    * 
+    * @param props Properties
+    * @param f file
+    * @throws Exception
+    */
+   public static void saveSorted(Properties props, File f) throws Exception {
+      FileOutputStream fout = null;
+      try {
+         Properties sorted = new Properties() {
+            @Override
+            public Set<Object> keySet() {
+               return Collections.unmodifiableSet(new TreeSet<Object>(super.keySet()));
+            }
+
+            @Override
+            public synchronized Enumeration<Object> keys() {
+               return Collections.enumeration(new TreeSet<Object>(super.keySet()));
+            }
+
+            @Override
+            public Set<String> stringPropertyNames() {
+               return Collections.unmodifiableSet(new TreeSet<String>(super.stringPropertyNames()));
+            }
+         };
+         sorted.putAll(props);
+         fout = new FileOutputStream(f);
+         sorted.storeToXML(fout, null);
+         fout.flush();
+      } finally {
+         if (fout != null) {
+            fout.close();
+         }
+      }
    }
 }
