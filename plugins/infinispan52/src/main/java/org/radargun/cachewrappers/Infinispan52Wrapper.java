@@ -20,6 +20,7 @@ import org.radargun.config.DefaultConverter;
 import org.radargun.features.DistributedTaskCapable;
 import org.radargun.features.Queryable;
 import org.radargun.features.XSReplicating;
+import org.radargun.stages.AbstractStartStage;
 import org.radargun.utils.ClassLoadHelper;
 
 /**
@@ -92,8 +93,8 @@ public class Infinispan52Wrapper extends Infinispan51Wrapper implements Distribu
       super.setUpCaches();
       // config dumping
       if (confAttributes.getBooleanProperty("dumpConfig", false)) {
-         String productName = confAttributes.getProperty("productName", "default");
-         String configName = confAttributes.getProperty("configName", "default");
+         String productName = confAttributes.getProperty(AbstractStartStage.PROP_PRODUCT_NAME, "default");
+         String configName = confAttributes.getProperty(AbstractStartStage.PROP_CONFIG_NAME, "default");
          File dumpDir = new File("conf" + File.separator + "normalized" + File.separator + productName + File.separator + configName);
          if (!dumpDir.exists()) {
             dumpDir.mkdirs();

@@ -47,7 +47,16 @@ import org.radargun.utils.Utils;
  * 
  */
 public class ConfigDumpHelper {
+
    protected static Log log = LogFactory.getLog(ConfigDumpHelper.class);
+   private static Method plainToString = null;
+   static {
+      try {
+         plainToString = Object.class.getMethod("toString");
+      } catch (Exception e) {
+         log.error("Error while initializing", e);
+      }
+   }
 
    public boolean dumpGlobal(File dumpFile, GlobalConfiguration globalConfiguration, String managerName) {
       try {
@@ -100,15 +109,6 @@ public class ConfigDumpHelper {
       }
    }
 
-   private static Method plainToString = null;
-   static {
-      try {
-         plainToString = Object.class.getMethod("toString");
-      } catch (Exception e) {
-         log.error("Error while initializing", e);
-      }
-   }
-
    private List<Method> getMethods(Class<?> clazz) {
       Class<?> c = clazz;
       List<Method> r = new ArrayList<Method>();
@@ -126,7 +126,7 @@ public class ConfigDumpHelper {
          if (cls.getMethod("toString") == plainToString) {
             return true;
          }
-         String plainToStringValue = cls.getName() + "@" + Integer.toHexString(obj.hashCode());
+         String plainToStringValue = cls.getName() + "@" + Integer.toHexString(System.identityHashCode(obj));
          return plainToStringValue.equals(obj.toString());
       } catch (Exception e) {
          return false;

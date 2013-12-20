@@ -11,6 +11,7 @@ import org.radargun.Stage;
 import org.radargun.stages.AbstractStartStage;
 import org.radargun.stages.GenerateReportStage;
 import org.radargun.utils.TypedProperties;
+import org.radargun.utils.Utils;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -180,7 +181,10 @@ public class DomConfigParser extends ConfigParser {
          if (st instanceof AbstractStartStage) {
             AbstractStartStage ass = (AbstractStartStage) st;
             ass.setConfig(configName);
-            ass.setConfAttributes(clone.getConfigAttributes());
+            TypedProperties confAttributes = clone.getConfigAttributes();
+            confAttributes.put(AbstractStartStage.PROP_PRODUCT_NAME, clone.productName);
+            confAttributes.put(AbstractStartStage.PROP_CONFIG_NAME, Utils.fileName2Config(configName));
+            ass.setConfAttributes(confAttributes);
          }
       }
    }

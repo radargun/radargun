@@ -6,7 +6,6 @@ import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.helpers.StartHelper;
 import org.radargun.state.MasterState;
-import org.radargun.utils.Utils;
 
 import java.util.Set;
 
@@ -65,8 +64,6 @@ public class StartClusterStage extends AbstractStartStage {
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
             + ". This slave's index is: " + getSlaveIndex());
       
-      confAttributes.put("productName", productName);
-      confAttributes.put("configName", Utils.fileName2Config(config));
       StartHelper.start(productName, config, confAttributes, slaveState, getSlaveIndex(),
             validateCluster ? new StartHelper.ClusterValidation(expectNumSlaves, getActiveSlaveCount()) : null,
             reachable, classLoadHelper, ack);
