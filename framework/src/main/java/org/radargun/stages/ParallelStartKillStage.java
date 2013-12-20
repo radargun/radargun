@@ -20,13 +20,13 @@ package org.radargun.stages;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
 import org.radargun.stages.helpers.KillHelper;
 import org.radargun.stages.helpers.RoleHelper;
 import org.radargun.stages.helpers.StartHelper;
@@ -44,12 +44,21 @@ public class ParallelStartKillStage extends AbstractStartStage {
    @Property(doc = "Set of slaves which should be killed in this stage. Default is empty.")
    private Collection<Integer> kill = new ArrayList<Integer>();
 
+   @Property(converter = TimeConverter.class, doc = "Delay before the slaves are killed. Default is 0.")
+   private long killDelay = 0;
+
+   @Property(doc = "If set to true, the nodes should be shutdown. Default is false = simulate node crash.")
+   private boolean tearDown = false;
+
    @Property(doc = "Set of slaves which should be started in this stage. Default is empty.")
    private Collection<Integer> start = new ArrayList<Integer>();
 
+   @Property(converter = TimeConverter.class, doc = "Delay before the slaves are started. Default is 0.")
+   private long startDelay = 0;
+
    @Property(doc = "Applicable only for cache wrappers with Partitionable feature. Set of slaves that should be" +
-         "reachable from the new node. Default is empty.")
-   private Set<Integer> reachable = new HashSet<Integer>();
+         "reachable from the new node. Default is all slaves.")
+   private Set<Integer> reachable = null;
 
    /* Note: having role for start has no sense as the dead nodes cannot have any role in the cluster */
    @Property(doc = "Another way how to specify killed nodes is by role. Available roles are "
@@ -73,8 +82,15 @@ public class ParallelStartKillStage extends AbstractStartStage {
                   return ack;
                } 
             } else {
+               if (startDelay > 0) {
+                  try {
+                     Thread.sleep(startDelay);
+                  } catch (InterruptedException e) {
+                     log.error("Starting delay was interrupted.", e);
+                  }
+               }
                StartHelper.start(productName, config, confAttributes, slaveState, getSlaveIndex(),
-                     null, reachable, classLoadHelper, ack);
+                     null, 0, reachable, classLoadHelper, ack);
                if (ack.isError()) return ack;
                startMe = false;               
             }            
@@ -87,7 +103,12 @@ public class ParallelStartKillStage extends AbstractStartStage {
                   return ack;
                }
             } else {
-               KillHelper.kill(slaveState, false, false, ack);
+               try {
+                  Thread.sleep(killDelay);
+               } catch (InterruptedException e) {
+                  log.error("Killing delay was interrupted.", e);
+               }
+               KillHelper.kill(slaveState, tearDown, false, ack);
                if (ack.isError()) return ack;
                killMe = false;
             }

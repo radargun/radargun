@@ -25,6 +25,7 @@ import org.infinispan.remoting.transport.Transport;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
 import org.jgroups.protocols.TP;
+import org.jgroups.stack.Protocol;
 import org.jgroups.stack.ProtocolStack;
 import org.radargun.features.Partitionable;
 import org.radargun.protocols.SLAVE_PARTITION;
@@ -38,6 +39,10 @@ public class InfinispanPartitionableLifecycle extends InfinispanKillableLifecycl
       super(wrapper);
    }
 
+   protected Class<? extends SLAVE_PARTITION> getPartitionProtocolClass() {
+      return SLAVE_PARTITION.class;
+   }
+
    @Override
    public void setMembersInPartition(int slaveIndex, Set<Integer> members) {
       List<JChannel> channels = getChannels(null, true);
@@ -49,10 +54,15 @@ public class InfinispanPartitionableLifecycle extends InfinispanKillableLifecycl
 
    private void setPartitionInChannel(JChannel channel, int slaveIndex, Set<Integer> members) {
       log.trace("Setting partition in channel " + channel);
-      SLAVE_PARTITION partition = (SLAVE_PARTITION) channel.getProtocolStack().findProtocol(SLAVE_PARTITION.class);
+      SLAVE_PARTITION partition = (SLAVE_PARTITION) channel.getProtocolStack().findProtocol(getPartitionProtocolClass());
       if (partition == null) {
          log.info("No SLAVE_PARTITION protocol found in stack for " + channel.getName() + ", inserting above transport protocol");
-         partition = new SLAVE_PARTITION();
+         try {
+            partition = getPartitionProtocolClass().newInstance();
+         } catch (Exception e) {
+            log.error("Error creating SLAVE_PARTITION protocol", e);
+            return;
+         }
          try {
             channel.getProtocolStack().insertProtocol(partition, ProtocolStack.ABOVE, TP.class);
          } catch (Exception e) {

@@ -44,8 +44,6 @@ public class StartHelper {
    
    private static final Log log = LogFactory.getLog(StartHelper.class);
    
-   private static final int TRY_COUNT = 180;
-   
    public static class ClusterValidation {
       Integer expectedSlaves;
       int activeSlaveCount;
@@ -58,7 +56,7 @@ public class StartHelper {
    }
    
    public static void start(String productName, String config, TypedProperties confAttributes, SlaveState slaveState, int slaveIndex,
-         ClusterValidation clusterValidation, Set<Integer> reachable, ClassLoadHelper classLoadHelper, DefaultDistStageAck ack) {
+                            ClusterValidation clusterValidation, long clusterFormationTimeout, Set<Integer> reachable, ClassLoadHelper classLoadHelper, DefaultDistStageAck ack) {
       CacheWrapper wrapper = null;
       try {
          confAttributes = pickForSite(confAttributes, slaveIndex);
@@ -83,14 +81,15 @@ public class StartHelper {
             } else {
                expectedNumberOfSlaves = clusterValidation.activeSlaveCount;
             }
-            
-            for (int i = 0; i < TRY_COUNT; i++) {
+
+            long clusterFormationDeadline = System.currentTimeMillis() + clusterFormationTimeout;
+            for (;;) {
                int numMembers = wrapper.getNumMembers();
                if (numMembers != expectedNumberOfSlaves) {
                   String msg = "Number of members=" + numMembers + " is not the one expected: " + expectedNumberOfSlaves;
                   log.info(msg);
                   Thread.sleep(1000);
-                  if (i == TRY_COUNT - 1) {
+                  if (System.currentTimeMillis() > clusterFormationDeadline) {
                      ack.setError(true);
                      ack.setErrorMessage(msg);
                      return;

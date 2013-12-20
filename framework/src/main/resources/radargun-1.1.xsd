@@ -987,6 +987,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>If set to true, the nodes should be shutdown. Default is false = simulate node crash.</documentation>
                </annotation>
             </attribute>
+            <attribute name="waitForDelayed" type="rg:boolean">
+               <annotation>
+                  <documentation>If set, the stage will not kill any node but will wait until the delayed execution is finished. Default is false</documentation>
+               </annotation>
+            </attribute>
          </extension>
       </complexContent>
    </complexType>
@@ -1161,9 +1166,14 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Set of slaves which should be killed in this stage. Default is empty.</documentation>
                </annotation>
             </attribute>
+            <attribute name="killDelay" type="rg:long__org_radargun_config_TimeConverter">
+               <annotation>
+                  <documentation>Delay before the slaves are killed. Default is 0.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="reachable" type="string">
                <annotation>
-                  <documentation>Applicable only for cache wrappers with Partitionable feature. Set of slaves that should bereachable from the new node. Default is empty.</documentation>
+                  <documentation>Applicable only for cache wrappers with Partitionable feature. Set of slaves that should bereachable from the new node. Default is all slaves.</documentation>
                </annotation>
             </attribute>
             <attribute name="role" type="rg:org_radargun_stages_helpers_RoleHelper_Role">
@@ -1174,6 +1184,16 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="start" type="string">
                <annotation>
                   <documentation>Set of slaves which should be started in this stage. Default is empty.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="startDelay" type="rg:long__org_radargun_config_TimeConverter">
+               <annotation>
+                  <documentation>Delay before the slaves are started. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="tearDown" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, the nodes should be shutdown. Default is false = simulate node crash.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -1620,6 +1640,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:AbstractStart">
+            <attribute name="clusterFormationTimeout" type="rg:long__org_radargun_config_TimeConverter">
+               <annotation>
+                  <documentation>Time allowed the cluster to reach `expectNumSlaves` members. Default is 3 minutes.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="delayAfterFirstSlaveStarts" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s</documentation>
