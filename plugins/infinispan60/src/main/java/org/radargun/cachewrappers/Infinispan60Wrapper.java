@@ -32,6 +32,7 @@ import org.infinispan.container.entries.InternalCacheEntry;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ * @author Michal Linhard (mlinhard@redhat.com)
  */
 public class Infinispan60Wrapper extends Infinispan53Wrapper {
    @Override
@@ -54,4 +55,8 @@ public class Infinispan60Wrapper extends Infinispan53Wrapper {
       sb.append(", lifespan=").append(ice.getLifespan()).append(", maxIdle=").append(ice.getMaxIdle());
       return sb.append(']').toString();
    }
+
+   protected ConfigDumpHelper createConfigDumpHelper() {
+      return new ConfigDumpHelper60();
+   }   
 }

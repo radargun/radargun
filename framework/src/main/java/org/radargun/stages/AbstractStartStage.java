@@ -37,6 +37,9 @@ import org.radargun.utils.TypedProperties;
 @Stage(doc = "")
 public abstract class AbstractStartStage extends AbstractDistStage {
 
+   public static final String PROP_CONFIG_NAME = "configName";
+   public static final String PROP_PRODUCT_NAME = "productName";
+
    @Property(readonly = true, doc = "Config used for this stage")
    protected String config;
 
