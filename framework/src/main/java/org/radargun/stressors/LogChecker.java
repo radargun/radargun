@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.features.Debugable;
 import org.radargun.utils.Utils;
 
 /**
@@ -103,6 +104,11 @@ public abstract class LogChecker extends Thread {
                      log.trace("Not found in " + value);
                   }
                   pool.reportMissingOperation();
+                  if (cacheWrapper instanceof Debugable) {
+                     ((Debugable) cacheWrapper).debugInfo(bucketId);
+                     ((Debugable) cacheWrapper).debugKey(bucketId, keyGenerator.generateKey(record.getKeyId()));
+                     ((Debugable) cacheWrapper).debugKey(bucketId, keyGenerator.generateKey(~record.getKeyId()));
+                  }
                   record.next();
                } else {
                   record.setLastUnsuccessfulCheckTimestamp(System.currentTimeMillis());

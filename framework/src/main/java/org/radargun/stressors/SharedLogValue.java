@@ -3,6 +3,7 @@ package org.radargun.stressors;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Value that stores all operations that were executed on this entry.
@@ -33,17 +34,19 @@ public class SharedLogValue implements Serializable {
       return new SharedLogValue(newThreadIds, newOperationIds);
    }
 
-   public SharedLogValue with(int threadId, long operationId, long checkedOperationId) {
+   public SharedLogValue with(int threadId, long operationId, Map<Integer, Long> checkedOperationIds) {
       int toRemoveCount = 0;
       for (int i = 0; i < threadIds.length; ++i) {
-         if (threadIds[i] == threadId && operationIds[i] <= checkedOperationId) {
+         long checked = checkedOperationIds.get(threadIds[i]);
+         if (operationIds[i] <= checked) {
             ++toRemoveCount;
          }
       }
       int[] newThreadIds = new int[threadIds.length - toRemoveCount + 1];
       long[] newOperationIds = new long[operationIds.length - toRemoveCount + 1];
       for (int i = 0, j = 0; i < threadIds.length; ++i) {
-         if (threadIds[i] != threadId || operationIds[i] > checkedOperationId) {
+         long checked = checkedOperationIds.get(threadIds[i]);
+         if (operationIds[i] > checked) {
             newThreadIds[j] = threadIds[i];
             newOperationIds[j] = operationIds[i];
             ++j;

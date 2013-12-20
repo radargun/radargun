@@ -167,13 +167,19 @@ class BackgroundStressor extends Thread {
       return snapshot;
    }
 
+   public String getStatus() {
+      return String.format("%s [id=%d, terminated=%s]: %s [%s]", getName(), threadId, terminate,
+            logic.getClass().getSimpleName(), logic.getStatus());
+   }
+
    private interface Logic {
       public void invoke() throws InterruptedException;
+      String getStatus();
    }
 
    private class LegacyLogic implements Logic {
       private final Random rand = new Random();
-      private long currentKey;
+      private volatile long currentKey;
 
       public LegacyLogic(long startKey) {
          currentKey = startKey;
@@ -236,6 +242,11 @@ class BackgroundStressor extends Thread {
             threadStats.registerError(startTime <= 0 ? 0 : System.nanoTime() - startTime, 0, operation);
          }
       }
+
+      @Override
+      public String getStatus() {
+         return String.format("currentKey=%s, remainingTxOps=%d", keyGenerator.generateKey(currentKey), remainingTxOps);
+      }
    }
 
    private abstract class AbstractLogLogic<ValueType> implements Logic {
@@ -244,12 +255,15 @@ class BackgroundStressor extends Thread {
       protected final Random operationTypeRandom = new Random();
       protected final CacheWrapper cacheWrapper;
       protected final int transactionSize = manager.getTransactionSize();
-      protected long operationId = 0;
+      protected volatile long operationId = 0;
+      protected volatile long keyId;
       protected Map<Long, DelayedRemove> delayedRemoves = new HashMap<Long, DelayedRemove>();
-      private long txStartOperationId;
-      private long txStartKeyId = -1;
+      private volatile long txStartOperationId;
+      private volatile long txStartKeyId = -1;
       private long txStartRandSeed;
       private boolean txRolledBack = false;
+      private volatile long lastSuccessfulOpTimestamp;
+      private volatile long lastSuccessfulTxTimestamp;
 
       public AbstractLogLogic(long seed) {
          cacheWrapper = manager.getCacheWrapper();
@@ -274,7 +288,7 @@ class BackgroundStressor extends Thread {
 
       @Override
       public void invoke() throws InterruptedException {
-         long keyId = nextKeyId();
+         keyId = nextKeyId();
          do {
             if (txRolledBack) {
                keyId = txStartKeyId;
@@ -283,10 +297,21 @@ class BackgroundStressor extends Thread {
                txRolledBack = false;
             }
             if (trace) {
-               log.trace("Operation " + operationId + " on key " + keyId);
+               log.trace("Operation " + operationId + " on key " + keyGenerator.generateKey(keyId));
             }
          } while (!invokeOn(keyId) && !isInterrupted() && !terminate);
          operationId++;
+      }
+
+      @Override
+      public String getStatus() {
+         long currentTime = System.currentTimeMillis();
+         return String.format("current[id=%d, key=%s], lastSuccessfulOpTime=%d",
+               operationId, keyGenerator.generateKey(keyId), lastSuccessfulOpTimestamp - currentTime)
+               + (manager.getTransactionSize() > 0 ?
+                  String.format(", txStart[id=%d, key=%s], remainingTxOps=%d, lastSuccessfulTxTime=%d",
+                        txStartOperationId, keyGenerator.generateKey(txStartKeyId), remainingTxOps,
+                        lastSuccessfulTxTimestamp - currentTime) : "");
       }
 
       protected abstract long nextKeyId();
@@ -302,6 +327,7 @@ class BackgroundStressor extends Thread {
             }
 
             if (!invokeLogic(keyId)) return false;
+            lastSuccessfulOpTimestamp = System.currentTimeMillis();
 
             // for non-transactional caches write the stressor last operation anytime (once in a while)
             if (transactionSize < 0 && operationId % manager.getLogCounterUpdatePeriod() == 0) {
@@ -313,6 +339,7 @@ class BackgroundStressor extends Thread {
                if (remainingTxOps == 0) {
                   try {
                      cacheWrapper.endTransaction(true);
+                     lastSuccessfulTxTimestamp = System.currentTimeMillis();
                   } catch (Exception e) {
                      log.trace("Transaction was rolled back, restarting from operation " + txStartOperationId);
                      txRolledBack = true;
@@ -393,6 +420,7 @@ class BackgroundStressor extends Thread {
                   checkedRemoveValue(delayedRemove.bucketId, delayedRemove.keyId, delayedRemove.oldValue);
                }
                cacheWrapper.endTransaction(true);
+               lastSuccessfulTxTimestamp = System.currentTimeMillis();
                inTransaction = false;
                delayedRemoves.clear();
                return;
@@ -427,14 +455,22 @@ class BackgroundStressor extends Thread {
 
       protected abstract boolean invokeLogic(long keyId) throws Exception;
 
-      protected long getLastCheckedOperation() {
+      protected Map<Integer, Long> getCheckedOperations() {
+         Map<Integer, Long> minIds = new HashMap<Integer, Long>();
+         for (int thread = 0; thread < manager.getNumThreads() * manager.getNumSlaves(); ++thread) {
+            minIds.put(thread, getCheckedOperation(thread));
+         }
+         return minIds;
+      }
+
+      protected long getCheckedOperation(int thread) {
          long minReadOperationId = Long.MAX_VALUE;
          for (int i = 0; i < manager.getNumSlaves(); ++i) {
             Object lastCheck = null;
             try {
-               lastCheck = cacheWrapper.get(manager.getBucketId(), LogChecker.checkerKey(i, threadId));
+               lastCheck = cacheWrapper.get(manager.getBucketId(), LogChecker.checkerKey(i, thread));
             } catch (Exception e) {
-               log.error("Cannot read last checked operation id for slave " + i + " and thread " + threadId, e);
+               log.error("Cannot read last checked operation id for slave " + i + " and thread " + thread, e);
             }
             long readOperationId = lastCheck == null ? Long.MIN_VALUE : ((LogChecker.LastOperation) lastCheck).getOperationId();
             minReadOperationId = Math.min(minReadOperationId, readOperationId);
@@ -518,7 +554,7 @@ class BackgroundStressor extends Thread {
                if (isInterrupted() || terminate) {
                   return null;
                }
-               long minReadOperationId = getLastCheckedOperation();
+               long minReadOperationId = getCheckedOperation(threadId);
                if (prevValue.getOperationId(0) <= minReadOperationId) {
                   for (checkedValues = 1; checkedValues < prevValue.size() && prevValue.getOperationId(checkedValues) <= minReadOperationId; ++checkedValues);
                   break;
@@ -634,9 +670,13 @@ class BackgroundStressor extends Thread {
          // must be recorded in at least one of the entries, but the situation with both of these having
          // some value is valid (although, we try to evade it be conditionally removing one of them in each
          // logic step).
-         SharedLogValue prevValue = checkedGetValue(bucketId, keyId);
-         SharedLogValue backupValue = checkedGetValue(bucketId, ~keyId);
-         SharedLogValue nextValue = getNextValue(prevValue, backupValue);
+         SharedLogValue prevValue, backupValue, nextValue;
+         do {
+            prevValue = checkedGetValue(bucketId, keyId);
+            backupValue = checkedGetValue(bucketId, ~keyId);
+            nextValue = getNextValue(prevValue, backupValue);
+            if (terminate || Thread.currentThread().isInterrupted()) return false;
+         } while (nextValue == null);
          // now for modify operations, execute it
          if (operation == Operation.PUT) {
             if (checkedPutValue(bucketId, keyId, prevValue, nextValue)) {
@@ -682,22 +722,13 @@ class BackgroundStressor extends Thread {
       }
 
       private SharedLogValue filterAndAddOperation(SharedLogValue value) {
-         // TODO some limit after which the stressor will terminate
-         while (!terminate && !isInterrupted()) {
-            long minReadOperationId = getLastCheckedOperation();
-            SharedLogValue filtered = value.with(threadId, operationId, minReadOperationId);
-            if (filtered.size() > manager.getLogValueMaxSize()) {
-               try {
-                  Thread.sleep(100);
-               } catch (InterruptedException e) {
-                  Thread.currentThread().interrupt();
-                  return null;
-               }
-            } else {
-               return filtered;
-            }
+         Map<Integer, Long> operationIds = getCheckedOperations();
+         SharedLogValue filtered = value.with(threadId, operationId, operationIds);
+         if (filtered.size() > manager.getLogValueMaxSize()) {
+            return null;
+         } else {
+            return filtered;
          }
-         return null;
       }
 
       private SharedLogValue checkedGetValue(String bucketId, long keyId) throws Exception {

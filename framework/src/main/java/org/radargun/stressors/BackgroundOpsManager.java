@@ -2,6 +2,7 @@ package org.radargun.stressors;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.apache.commons.logging.Log;
@@ -352,6 +353,23 @@ public class BackgroundOpsManager {
          if (logCheckers != null) {
             long lastProgress = System.currentTimeMillis() - logCheckerPool.getLastStoredOperationTimestamp();
             if (lastProgress > logCheckersNoProgressTimeout) {
+               StringBuilder sb = new StringBuilder(1000).append("Current stressors info:\n");
+               for (BackgroundStressor stressor : stressorThreads) {
+                  sb.append(stressor.getStatus()).append(", stacktrace:\n");
+                  for (StackTraceElement ste : stressor.getStackTrace()) {
+                     sb.append(ste).append("\n");
+                  }
+               }
+               sb.append("Other threads:\n");
+               for (Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces().entrySet()) {
+                  Thread thread = entry.getKey();
+                  if (thread.getName().startsWith("StressorThread")) continue;
+                  sb.append(thread.getName()).append(" (").append(thread.getState()).append("):\n");
+                  for (StackTraceElement ste : thread.getStackTrace()) {
+                     sb.append(ste).append("\n");
+                  }
+               }
+               log.info(sb.toString());
                return "No progress in checkers for " + lastProgress + " ms!";
             }
          }

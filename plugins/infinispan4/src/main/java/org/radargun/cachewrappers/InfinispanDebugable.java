@@ -82,29 +82,33 @@ public class InfinispanDebugable implements Debugable {
 
    @Override
    public void debugKey(String bucket, Object key) {
-      log.debug(wrapper.getKeyInfo(bucket, key));
-      List<Level> levels = new ArrayList<Level>();
-      String[] debugPackages = getDebugKeyPackages();
-      ComponentRegistry componentRegistry = wrapper.getCache(bucket).getAdvancedCache().getComponentRegistry();
       try {
-         for (String pkg : debugPackages) {
-            Logger logger = Logger.getLogger(pkg);
-            levels.add(logger.getLevel());
-            logger.setLevel(Level.TRACE);
+         log.debug(wrapper.getKeyInfo(bucket, key));
+         List<Level> levels = new ArrayList<Level>();
+         String[] debugPackages = getDebugKeyPackages();
+         ComponentRegistry componentRegistry = wrapper.getCache(bucket).getAdvancedCache().getComponentRegistry();
+         try {
+            for (String pkg : debugPackages) {
+               Logger logger = Logger.getLogger(pkg);
+               levels.add(logger.getLevel());
+               logger.setLevel(Level.TRACE);
+            }
+            for (String clazz : getDebugKeyClassesTraceFix()) {
+               setTraceField(componentRegistry, clazz, true);
+            }
+            wrapper.getCache(bucket).get(key);
+         } finally {
+            int i = 0;
+            for (Level l : levels) {
+               Logger.getLogger(debugPackages[i]).setLevel(l);
+               ++i;
+            }
+            for (String clazz : getDebugKeyClassesTraceFix()) {
+               setTraceField(componentRegistry, clazz, false);
+            }
          }
-         for (String clazz : getDebugKeyClassesTraceFix()) {
-            setTraceField(componentRegistry, clazz, true);
-         }
-         wrapper.getCache(bucket).get(key);
-      } finally {
-         int i = 0;
-         for (Level l : levels) {
-            Logger.getLogger(debugPackages[i]).setLevel(l);
-            ++i;
-         }
-         for (String clazz : getDebugKeyClassesTraceFix()) {
-            setTraceField(componentRegistry, clazz, false);
-         }
+      } catch (Throwable t) {
+         log.error("Debugging key " + key + " failed", t);
       }
    }
 
