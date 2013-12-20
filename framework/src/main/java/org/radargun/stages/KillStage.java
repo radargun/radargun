@@ -22,6 +22,8 @@ import org.radargun.state.MasterState;
 @Stage(doc = "Shutdowns or kills (simulates node crash) one or more nodes.")
 public class KillStage extends AbstractDistStage {
 
+   private static final String KILL_DELAY_THREAD = "_KILL_DELAY_THREAD_";
+
    @Property(doc = "If set to true, the nodes should be shutdown. Default is false = simulate node crash.")
    private boolean tearDown = false;
 
@@ -37,6 +39,10 @@ public class KillStage extends AbstractDistStage {
          "and synchronous.")
    private long delayExecution;
 
+   @Property(doc="If set, the stage will not kill any node but will wait until the delayed execution is finished. " +
+         "Default is false")
+   private boolean waitForDelayed = false;
+
    public KillStage() {
       // nada
    }
@@ -48,8 +54,25 @@ public class KillStage extends AbstractDistStage {
 
    public DistStageAck executeOnSlave() {
       log.info("Received kill request from master...");
-      DefaultDistStageAck ack = newDefaultStageAck();      
-      if ((role != null && RoleHelper.hasRole(slaveState, role)) || (slaves != null && slaves.contains(getSlaveIndex()))) {
+      DefaultDistStageAck ack = newDefaultStageAck();
+      if (waitForDelayed) {
+         Thread t = (Thread) slaveState.get(KILL_DELAY_THREAD);
+         if (t != null) {
+            try {
+               t.join();
+               slaveState.remove(KILL_DELAY_THREAD);
+            } catch (InterruptedException e) {
+               String error = "Interrupted while waiting for kill to be finished.";
+               log.error(error, e);
+               ack.setErrorMessage(error);
+               ack.setRemoteException(e);
+               ack.setError(true);
+            }
+         } else {
+            log.info("No delayed execution found in history.");
+         }
+      } else if ((role != null && RoleHelper.hasRole(slaveState, role))
+            || (slaves != null && slaves.contains(getSlaveIndex()))) {
          if (delayExecution > 0) {
             Thread t = new Thread() {
                @Override
@@ -61,6 +84,7 @@ public class KillStage extends AbstractDistStage {
                   KillHelper.kill(slaveState, tearDown, async, null);
                }
             };
+            slaveState.put(KILL_DELAY_THREAD, t);
             t.start();
          } else {
             KillHelper.kill(slaveState, tearDown, async, ack);

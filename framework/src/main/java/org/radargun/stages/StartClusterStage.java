@@ -1,13 +1,13 @@
 package org.radargun.stages;
 
+import java.util.Set;
+
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.helpers.StartHelper;
 import org.radargun.state.MasterState;
-
-import java.util.Set;
 
 /**
  * Stage that starts a CacheWrapper on each slave.
@@ -28,6 +28,9 @@ public class StartClusterStage extends AbstractStartStage {
 
    @Property(converter = TimeConverter.class, doc = "Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms")
    private long delayBetweenStartingSlaves = 500;
+
+   @Property(converter = TimeConverter.class, doc = "Time allowed the cluster to reach `expectNumSlaves` members. Default is 3 minutes.")
+   private long clusterFormationTimeout = 180000;
 
    @Property(doc = "The number of slaves that should be up after all slaves are started. Applicable only with " +
          "validateCluster=true. Default is all slaves in the cluster (in the same site in case of multi-site configuration).")
@@ -66,7 +69,7 @@ public class StartClusterStage extends AbstractStartStage {
       
       StartHelper.start(productName, config, confAttributes, slaveState, getSlaveIndex(),
             validateCluster ? new StartHelper.ClusterValidation(expectNumSlaves, getActiveSlaveCount()) : null,
-            reachable, classLoadHelper, ack);
+            clusterFormationTimeout, reachable, classLoadHelper, ack);
       if (!ack.isError()) {
          log.info("Successfully started cache wrapper on slave " + getSlaveIndex() + ": " + slaveState.getCacheWrapper());
       }
