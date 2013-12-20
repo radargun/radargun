@@ -84,6 +84,7 @@
                         <element name="infinispan52" type="rg:infinispan52"/>
                         <element name="infinispan53" type="rg:infinispan53"/>
                         <element name="infinispan60" type="rg:infinispan60"/>
+                        <element name="infinispan70" type="rg:infinispan70"/>
                         <element name="jgroups30" type="rg:jgroups30"/>
                         <element name="jgroups32" type="rg:jgroups32"/>
                         <element name="jgroups33" type="rg:jgroups33"/>
@@ -2006,6 +2007,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </complexContent>
    </complexType>
    <complexType name="infinispan60">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="infinispan70">
       <complexContent>
          <extension base="rg:abstractProduct"/>
       </complexContent>
