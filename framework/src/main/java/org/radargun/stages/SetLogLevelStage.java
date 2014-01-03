@@ -18,15 +18,15 @@
  */
 package org.radargun.stages;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.radargun.DistStageAck;
-import org.radargun.config.Property;
-import org.radargun.config.Stage;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+
+import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.logging.Level;
+import org.radargun.logging.LogFactory;
 
 /**
  * This stage is meant for debugging. Changes log priorities. Beware that some code can cache the is{LogLevel}Enabled().
@@ -56,13 +56,13 @@ public class SetLogLevelStage extends AbstractDistStage {
             stacks.put(pkg, stack);
          }
          if (priority != null) {
-            stack.push(Logger.getLogger(pkg).getLevel());
-            Logger.getLogger(pkg).setLevel(Level.toLevel(priority));
+            stack.push(LogFactory.getLog(pkg).getLevel());
+            LogFactory.getLog(pkg).setLevel(Level.toLevel(priority));
          } else if (pop) {
             if (stack.empty()) {
                log.error("Cannot POP priority level, stack empty!");
             } else {
-               Logger.getLogger(pkg).setLevel(stack.pop());
+               LogFactory.getLog(pkg).setLevel(stack.pop());
             }
          } else {
             log.error("Neither priority nor POP request specified");

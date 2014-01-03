@@ -1,8 +1,13 @@
 package org.radargun.tpcc;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
+import java.util.Date;
+
 import org.radargun.CacheWrapper;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.tpcc.domain.Customer;
 import org.radargun.tpcc.domain.District;
 import org.radargun.tpcc.domain.History;
@@ -12,11 +17,6 @@ import org.radargun.tpcc.domain.Order;
 import org.radargun.tpcc.domain.OrderLine;
 import org.radargun.tpcc.domain.Stock;
 import org.radargun.tpcc.domain.Warehouse;
-
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
-import java.lang.management.MemoryUsage;
-import java.util.Date;
 
 /**
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
@@ -101,7 +101,7 @@ public class TpccPopulation {
                wrapper.put(null, "C_C_LAST", c_c_last);
                successful = true;
             } catch (Throwable e) {
-               log.warn(e);
+               log.warn("C_C_LAST", e);
             }
          }
 
@@ -111,7 +111,7 @@ public class TpccPopulation {
                wrapper.put(null, "C_C_ID", c_c_id);
                successful = true;
             } catch (Throwable e) {
-               log.warn(e);
+               log.warn("C_C_ID", e);
             }
          }
 
@@ -121,7 +121,7 @@ public class TpccPopulation {
                wrapper.put(null, "C_OL_ID", c_ol_i_id);
                successful = true;
             } catch (Throwable e) {
-               log.warn(e);
+               log.warn("C_OL_ID", e);
             }
          }
 
@@ -192,7 +192,7 @@ public class TpccPopulation {
                newItem.store(wrapper);
                successful = true;
             } catch (Throwable e) {
-               log.warn(e);
+               log.warn("Storing new item failed:", e);
             }
          }
 
@@ -226,7 +226,7 @@ public class TpccPopulation {
                      newWarehouse.store(wrapper);
                      successful = true;
                   } catch (Throwable e) {
-                     log.warn(e);
+                     log.warn("Storing new warehouse failed", e);
                   }
                }
             }
@@ -292,7 +292,7 @@ public class TpccPopulation {
                   newStock.store(wrapper);
                   successful = true;
                } catch (Throwable e) {
-                  log.warn(e);
+                  log.warn("Storing new stock failed", e);
                }
             }
 
@@ -345,7 +345,7 @@ public class TpccPopulation {
                   newDistrict.store(wrapper);
                   successful = true;
                } catch (Throwable e) {
-                  log.warn(e);
+                  log.warn("Storing new district failed", e);
                }
             }
 
@@ -386,7 +386,7 @@ public class TpccPopulation {
                   newCustomer.store(wrapper);
                   successful = true;
                } catch (Throwable e) {
-                  log.warn(e);
+                  log.warn("Storing new customer failed", e);
                }
             }
 
@@ -410,7 +410,7 @@ public class TpccPopulation {
                newHistory.store(wrapper, this.slaveIndex);
                successful = true;
             } catch (Throwable e) {
-               log.warn(e);
+               log.warn("Storing new history failed", e);
             }
          }
 
@@ -443,7 +443,7 @@ public class TpccPopulation {
                newOrder.store(wrapper);
                successful = true;
             } catch (Throwable e) {
-               log.warn(e);
+               log.warn("Storing new order failed", e);
             }
          }
 
@@ -487,7 +487,7 @@ public class TpccPopulation {
                newOrderLine.store(wrapper);
                successful = true;
             } catch (Throwable e) {
-               log.warn(e);
+               log.warn("Storing new order line failed", e);
             }
          }
 
@@ -506,7 +506,7 @@ public class TpccPopulation {
             newNewOrder.store(wrapper);
             successful = true;
          } catch (Throwable e) {
-            log.warn(e);
+            log.warn("Storing new order failed", e);
          }
       }
 

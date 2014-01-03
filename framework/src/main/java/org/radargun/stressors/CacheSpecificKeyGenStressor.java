@@ -1,7 +1,7 @@
 package org.radargun.stressors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.config.Stressor;
 import org.radargun.features.KeyGeneratorAware;
 

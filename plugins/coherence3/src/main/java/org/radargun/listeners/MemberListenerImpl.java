@@ -18,14 +18,14 @@
  */
 package org.radargun.listeners;
 
-import org.apache.log4j.Logger;
-
 import com.tangosol.net.MemberEvent;
 import com.tangosol.net.MemberListener;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 public class MemberListenerImpl implements MemberListener {
    
-   private Logger log = Logger.getLogger(MemberListenerImpl.class);
+   private Log log = LogFactory.getLog(MemberListenerImpl.class);
    
    public MemberListenerImpl() {     
    }

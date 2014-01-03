@@ -1,7 +1,7 @@
 package org.radargun.stages;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.MasterStage;
 import org.radargun.config.Stage;
 import org.radargun.state.MasterState;

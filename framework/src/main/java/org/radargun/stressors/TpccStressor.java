@@ -10,8 +10,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.config.Property;
 import org.radargun.config.Stressor;
@@ -443,7 +443,7 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
             startPoint.await();
             log.info("Starting thread: " + getName());
          } catch (InterruptedException e) {
-            log.warn(e);
+            log.warn("Interupted!", e);
          }
 
          TpccTerminal terminal = new TpccTerminal(this.paymentWeight, this.orderStatusWeight, this.nodeIndex);
@@ -516,7 +516,7 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
                transaction.executeTransaction(cacheWrapper);
             } catch (Throwable e) {
                successful = false;
-               log.warn(e);
+               log.warn("Transaction failed:", e);
                if (e instanceof ElementNotFoundException) {
                   this.appFailures++;
                }
@@ -554,7 +554,7 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
 
                }
             } catch (Throwable rb) {
-               log.info(this.threadIndex + "Error while committing");
+               log.warn(this.threadIndex + "Error while committing", rb);
 
                nrFailures++;
 
@@ -570,7 +570,6 @@ public class TpccStressor extends AbstractCacheWrapperStressor {
                   nrRdFailures++;
                }
                successful = false;
-               log.warn(rb);
 
             }
 

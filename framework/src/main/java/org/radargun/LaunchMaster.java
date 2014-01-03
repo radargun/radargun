@@ -1,12 +1,12 @@
 package org.radargun;
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.File;
+
 import org.radargun.config.ConfigParser;
 import org.radargun.config.MasterConfig;
-
-import java.io.File;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * @author Mircea.Markus@jboss.com

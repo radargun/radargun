@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.w3c.dom.Element;
 
 /**

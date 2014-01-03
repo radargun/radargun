@@ -8,8 +8,8 @@ import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.CacheWrapperStressor;
 import org.radargun.config.ConfigHelper;
 import org.radargun.config.DomConfigParser;

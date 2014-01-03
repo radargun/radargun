@@ -1,14 +1,14 @@
 package org.radargun.jmx;
 
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
 import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
-
-import org.apache.log4j.Logger;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * 
@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
  * 
  */
 public class InfinispanJMXClusterValidator implements JMXClusterValidator {
-   private static final Logger log = Logger.getLogger(InfinispanJMXClusterValidator.class);
+   private static final Log log = LogFactory.getLog(InfinispanJMXClusterValidator.class);
 
    private static final String ATTR_VIEW = "View";
    private static final String ATTR_NUM_MEMBERS = "NumMembers";

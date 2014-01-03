@@ -6,8 +6,8 @@ import java.lang.management.OperatingSystemMXBean;
 
 import javax.management.MBeanServerConnection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * @author Galder Zamarreno

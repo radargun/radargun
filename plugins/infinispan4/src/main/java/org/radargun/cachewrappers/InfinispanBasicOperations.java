@@ -1,7 +1,7 @@
 package org.radargun.cachewrappers;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
 import org.infinispan.remoting.rpc.RpcManager;

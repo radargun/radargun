@@ -1,10 +1,5 @@
 package org.radargun;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.radargun.config.MasterConfig;
-import org.radargun.state.MasterState;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -12,7 +7,17 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.radargun.config.MasterConfig;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+import org.radargun.state.MasterState;
 
 /**
  * This is the master that will coordinate the {@link Slave}s in order to run the benchmark.
@@ -97,25 +102,25 @@ public class Master {
       try {
          discoverySelector.close();
       } catch (Throwable e) {
-         log.warn(e);
+         log.warn("Error closing discovery selector", e);
       }
       try {
          communicationSelector.close();
       } catch (Throwable e) {
-         log.warn(e);
+         log.warn("Error closing comunication selector", e);
       }
       for (SocketChannel sc : slaves) {
          try {
             sc.socket().close();
          } catch (Throwable e) {
-            log.warn(e);
+            log.warn("Error closing channel", e);
          }
       }
 
       try {
          if (serverSocketChannel != null) serverSocketChannel.socket().close();
       } catch (Throwable e) {
-         log.warn(e);
+         log.warn("Error closing server socket channel", e);
       }
    }
 

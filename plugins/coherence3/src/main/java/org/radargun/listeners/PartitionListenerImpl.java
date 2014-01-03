@@ -18,14 +18,14 @@
  */
 package org.radargun.listeners;
 
-import org.apache.log4j.Logger;
-
 import com.tangosol.net.partition.PartitionEvent;
 import com.tangosol.net.partition.PartitionListener;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 public class PartitionListenerImpl implements PartitionListener {
    
-   private Logger log = Logger.getLogger(PartitionListenerImpl.class);
+   private Log log = LogFactory.getLog(PartitionListenerImpl.class);
    
    public PartitionListenerImpl() {     
    }

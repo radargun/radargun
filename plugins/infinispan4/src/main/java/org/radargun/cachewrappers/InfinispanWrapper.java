@@ -12,8 +12,6 @@ import java.util.Set;
 
 import com.arjuna.ats.arjuna.common.arjPropertyManager;
 import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.infinispan.Cache;
 import org.infinispan.container.DataContainer;
 import org.infinispan.container.entries.InternalCacheEntry;
@@ -23,11 +21,12 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.util.hash.Hash;
 import org.radargun.CacheWrapper;
 import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.Debugable;
 import org.radargun.features.ProvidesMemoryOverhead;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 

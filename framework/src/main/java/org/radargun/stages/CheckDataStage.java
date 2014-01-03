@@ -142,7 +142,7 @@ public class CheckDataStage extends AbstractDistStage {
             }
          }
       } catch (Exception e) {         
-         log.error(e);
+         log.error("Failed to check entries", e);
          ack.setError(true);
          ack.setRemoteException(e);
          ack.setErrorMessage("Failed to check entries");
@@ -227,7 +227,7 @@ public class CheckDataStage extends AbstractDistStage {
             }
             return result;
          } catch (Exception e) {
-            log.error(e);
+            log.error("Failed to check entries", e);
             return null;
          }
       }
