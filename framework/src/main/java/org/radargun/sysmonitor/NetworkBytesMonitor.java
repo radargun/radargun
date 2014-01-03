@@ -26,8 +26,8 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * Parse the /proc/net/dev file for a value on the specified network interface

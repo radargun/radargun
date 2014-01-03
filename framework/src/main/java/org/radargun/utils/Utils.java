@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.stages.GenerateReportStage;
 
 /**
@@ -186,7 +186,7 @@ public class Utils {
             try {
                inStream.close();
             } catch (IOException e) {
-               log.warn(e);
+               log.warn("Error closing properties stream", e);
             }
       }
    }

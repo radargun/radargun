@@ -49,6 +49,16 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
          <version>${version.infinispan}</version>
+         <exclusions>
+            <exclusion>
+               <groupId>log4j</groupId>
+               <artifactId>log4j</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
 
       <dependency>

@@ -1,5 +1,11 @@
 package org.radargun.stages;
 
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.DefaultConverter;
@@ -7,9 +13,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.features.Partitionable;
 import org.radargun.state.MasterState;
-
-import java.lang.reflect.Type;
-import java.util.*;
 
 /**
  * Stage that partitions the cluster into several parts that cannot communicate
@@ -61,9 +64,11 @@ public class SetPartitionsStage extends AbstractDistStage {
             log.error(message);
          }
       } catch (Exception e) {
+         String message = "Error setting members in partition";
+         log.error(message, e);
          ack.setError(true);
-         ack.setErrorMessage(e.getMessage());
-         log.error(e);         
+         ack.setErrorMessage(message);
+         ack.setRemoteException(e);
       }
       return ack;
    }

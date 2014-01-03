@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * Helper for loading the classes from JAR according to annotations.
@@ -48,9 +48,12 @@ public class AnnotatedHelper {
                   }
                   classes.add((Class<? extends TClass>) clazz);
                }
+            } catch (NoClassDefFoundError e) {
+               log.warn("Cannot load class " + className);
             } catch (ClassNotFoundException e) {
                log.warn("Cannot instantiate class object for " + className);
             }
+
          }
       } catch (FileNotFoundException e) {
          log.error("Cannot load executed JAR file '" + path + "'to find stages.");

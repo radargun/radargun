@@ -1,5 +1,8 @@
 package org.radargun.stages;
 
+import static java.lang.Double.parseDouble;
+import static org.radargun.utils.Utils.numberFormat;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,9 +14,6 @@ import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.Statistics;
 import org.radargun.stressors.TpccStressor;
-
-import static java.lang.Double.parseDouble;
-import static org.radargun.utils.Utils.numberFormat;
 
 /**
  * Simulate the activities found in complex OLTP application environments.
@@ -98,7 +98,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
             log.warn("Received error ack: " + wAck);
          } else {
             if (log.isTraceEnabled())
-               log.trace(wAck);
+               log.trace("Received success ack: " + wAck);
          }
          Map<String, Object> benchResult = (Map<String, Object>) wAck.getPayload();
          if (benchResult != null) {

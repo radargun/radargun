@@ -1,13 +1,5 @@
 package org.radargun.jmx;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import javax.management.MBeanServerConnection;
 import javax.management.Notification;
 import javax.management.NotificationFilterSupport;
@@ -16,8 +8,16 @@ import javax.management.remote.JMXConnectionNotification;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.log4j.Logger;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * 
@@ -28,7 +28,7 @@ import org.apache.log4j.Logger;
  */
 public abstract class JMXPoller implements NotificationListener {
    public static final String DEFAULT_SERVICE_URL_TEMPLATE = "service:jmx:rmi:///jndi/rmi://%s:%d/jmxrmi";
-   private static Logger log = Logger.getLogger(JMXPoller.class);
+   private static Log log = LogFactory.getLog(JMXPoller.class);
 
    private List<InetSocketAddress> jmxEndpoints;
    private long queryTimeout;

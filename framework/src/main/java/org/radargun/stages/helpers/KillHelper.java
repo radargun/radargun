@@ -18,8 +18,8 @@
  */
 package org.radargun.stages.helpers;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.features.Killable;
 import org.radargun.stages.DefaultDistStageAck;

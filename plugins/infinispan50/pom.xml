@@ -18,6 +18,16 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
          <version>5.0.1.FINAL</version>
+         <exclusions>
+            <exclusion>
+               <groupId>log4j</groupId>
+               <artifactId>log4j</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
 
       <dependency>

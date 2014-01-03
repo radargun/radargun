@@ -3,8 +3,8 @@ package org.radargun.cachewrappers;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.infinispan.remoting.transport.Address;
 
 /**

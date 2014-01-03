@@ -1,19 +1,19 @@
 package org.radargun.stages;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.Collection;
+import java.util.List;
+
 import org.radargun.DistStage;
 import org.radargun.DistStageAck;
 import org.radargun.config.MasterConfig;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Support class for distributed stages.

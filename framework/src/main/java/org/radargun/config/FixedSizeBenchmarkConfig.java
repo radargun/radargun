@@ -3,8 +3,8 @@ package org.radargun.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.DistStage;
 import org.radargun.Stage;
 

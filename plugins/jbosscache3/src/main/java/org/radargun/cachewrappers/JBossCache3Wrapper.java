@@ -1,7 +1,7 @@
 package org.radargun.cachewrappers;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.jboss.cache.Cache;
 import org.jboss.cache.CacheStatus;
 import org.jboss.cache.DefaultCacheFactory;

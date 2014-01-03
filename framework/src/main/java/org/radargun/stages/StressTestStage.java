@@ -221,7 +221,7 @@ public class StressTestStage extends AbstractDistStage {
             log.warn("Received error ack: " + wAck);
          } else {
             if (log.isTraceEnabled())
-               log.trace(wAck);
+               log.trace("Received success ack: " + wAck);
          }
          Map<String, Object> benchResult = (Map<String, Object>) wAck.getPayload();
          if (benchResult != null) {

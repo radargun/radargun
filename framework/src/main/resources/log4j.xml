@@ -5,7 +5,7 @@
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
    <!-- The list of appenders -->
    <!-- The rolling file appender -->
-   <appender name="FILE" class="org.radargun.utils.PerNodeRollingFileAppender">
+   <appender name="FILE" class="org.radargun.logging.PerNodeRollingFileAppender">
       <param name="File" value="radargun.log"/>
       <param name="Append" value="false"/>
       <param name="Threshold" value="TRACE"/>

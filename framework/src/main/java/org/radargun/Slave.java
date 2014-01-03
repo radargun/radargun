@@ -1,9 +1,5 @@
 package org.radargun;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.radargun.state.SlaveState;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -21,6 +17,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+import org.radargun.state.SlaveState;
 
 /**
  * Slave being coordinated by a single {@link Master} object in order to run benchmarks.
@@ -112,7 +112,7 @@ public class Slave {
                            byteBuffer.put(bytes);                           
                            byteBuffer.flip();
                         } catch (IOException e) {
-                           log.error(e);
+                           log.error("Error during serialization", e);
                         }
                      }
                   };

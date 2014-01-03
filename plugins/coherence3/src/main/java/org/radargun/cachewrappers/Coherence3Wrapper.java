@@ -5,14 +5,14 @@ import javax.management.AttributeList;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.apache.log4j.Logger;
-import org.radargun.CacheWrapper;
-import org.radargun.utils.TypedProperties;
-
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.DefaultConfigurableCacheFactory;
 import com.tangosol.net.NamedCache;
 import com.tangosol.net.management.MBeanHelper;
+import org.radargun.CacheWrapper;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+import org.radargun.utils.TypedProperties;
 
 /**
  * Oracle Coherence 3.x CacheWrapper implementation.
@@ -28,7 +28,7 @@ public class Coherence3Wrapper implements CacheWrapper {
    private static final String DEFAULT_SERVICE_NAME = "DistributedCache";
    private static final String CACHE_JMX_NAME_TEMPLATE = "Coherence:type=Cache,service=%s,name=%s,nodeId=%d,tier=back";
    
-   private Logger log = Logger.getLogger(Coherence3Wrapper.class);
+   private Log log = LogFactory.getLog(Coherence3Wrapper.class);
    
    private NamedCache nc;
    private MBeanServer mBeanServer;

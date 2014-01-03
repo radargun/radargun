@@ -1,5 +1,6 @@
 package org.radargun.sysmonitor;
 
+import javax.management.MBeanServerConnection;
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
@@ -9,10 +10,8 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.management.MBeanServerConnection;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * @author Galder Zamarreno
@@ -59,7 +58,7 @@ public class MemoryUsageMonitor extends AbstractActivityMonitor implements Seria
             log.trace("Memory usage: used=" + formatDecimal(genUsed) + " B, size=" + formatDecimal(genCapacity)
                   + " B, max=" + formatDecimal(genMaxCapacity));
          } catch (Exception e) {
-            log.error(e);
+            log.error("Error in JMX memory stats retrieval", e);
          }
       }
    }

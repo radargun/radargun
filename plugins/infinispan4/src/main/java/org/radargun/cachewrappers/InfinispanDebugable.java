@@ -5,14 +5,13 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.infinispan.container.DataContainer;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.factories.ComponentRegistry;
 import org.radargun.features.Debugable;
+import org.radargun.logging.Level;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * // TODO: Document this
@@ -89,7 +88,7 @@ public class InfinispanDebugable implements Debugable {
          ComponentRegistry componentRegistry = wrapper.getCache(bucket).getAdvancedCache().getComponentRegistry();
          try {
             for (String pkg : debugPackages) {
-               Logger logger = Logger.getLogger(pkg);
+               Log logger = LogFactory.getLog(pkg);
                levels.add(logger.getLevel());
                logger.setLevel(Level.TRACE);
             }
@@ -100,7 +99,7 @@ public class InfinispanDebugable implements Debugable {
          } finally {
             int i = 0;
             for (Level l : levels) {
-               Logger.getLogger(debugPackages[i]).setLevel(l);
+               LogFactory.getLog(debugPackages[i]).setLevel(l);
                ++i;
             }
             for (String clazz : getDebugKeyClassesTraceFix()) {

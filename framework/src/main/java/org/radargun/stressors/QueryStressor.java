@@ -21,8 +21,8 @@ package org.radargun.stressors;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.config.Property;
 import org.radargun.config.Stressor;
