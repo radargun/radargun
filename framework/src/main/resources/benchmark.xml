@@ -21,9 +21,9 @@
          <config name="repl-sync.xml"/>
          <config name="dist-sync.xml"/>
       </infinispan52>
-      <jbosscache3>
-         <config name="mvcc/mvcc-repl-sync.xml"/>
-      </jbosscache3>
+      <infinispan60>
+         <config name="dist-sync.xml"/>
+      </infinispan60>
    </products>
 
    <reports>

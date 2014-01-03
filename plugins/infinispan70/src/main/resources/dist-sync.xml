@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ JBoss, Home of Professional Open Source.
+  ~ Copyright 2013, Red Hat Middleware LLC, and individual contributors
+  ~ as indicated by the @author tags. See the copyright.txt file in the
+  ~ distribution for a full listing of individual contributors.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this software; if not, write to the Free
+  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  -->
+
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:infinispan:config:7.0">
+   <global>
+      <transport clusterName="default">
+         <properties>
+            <property name="configurationFile" value="jgroups-udp.xml"/>
+         </properties>
+      </transport>
+   </global>
+
+   <default>
+      <transaction transactionManagerLookupClass="org.infinispan.transaction.lookup.GenericTransactionManagerLookup"/>
+      <locking concurrencyLevel="1000" useLockStriping="false"/>
+
+      <unsafe unreliableReturnValues="true" />
+
+      <clustering mode="distribution" >
+         <sync replTimeout="60000"/>
+         <l1 enabled="false" />
+         <hash numOwners="2" numSegments="40"/>
+      </clustering>
+   </default>
+
+   <namedCache name="testCache" />
+</infinispan>
