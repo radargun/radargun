@@ -339,8 +339,14 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    }
 
    protected class FixedSetPerThreadOperationLogic extends FixedSetOperationLogic {
-      private ArrayList<Object> pooledKeys = new ArrayList<Object>(numEntries);
+      private ArrayList<Object> pooledKeys;
       private int myLoadedKeys = 0;
+
+      public FixedSetPerThreadOperationLogic() {
+         if (poolKeys) {
+            this.pooledKeys = new ArrayList<Object>(numEntries);
+         }
+      }
 
       @Override
       public void init(String bucketId, int threadIndex) {
