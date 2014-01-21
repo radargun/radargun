@@ -1,5 +1,6 @@
 package org.radargun.features;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -66,7 +67,10 @@ public interface TopologyAware {
 
       @Override
       public String toString() {
-         return "[" + getStarted() + " - " + getEnded() + "]";
+         SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss,S");
+         return String.format("[%s - %s]",
+               getStarted() == null ? "not started" : formatter.format(getStarted()),
+               getEnded() == null ? "not ended" : formatter.format(getEnded()));
       }
    }
 }
