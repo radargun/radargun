@@ -271,7 +271,18 @@
          <documentation>Stage that checks the progress in background stressors and fails if something went wrong.</documentation>
       </annotation>
       <complexContent>
-         <extension base="rg:AbstractDist"/>
+         <extension base="rg:AbstractDist">
+            <attribute name="resumeAfterChecked" type="rg:boolean">
+               <annotation>
+                  <documentation>Resume writers after we have stopped them in order to let checkers check everything. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="waitUntilChecked" type="rg:boolean">
+               <annotation>
+                  <documentation>Do not write additional operations until all operations are confirmed. Default is false.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
       </complexContent>
    </complexType>
    <complexType name="CheckData">
@@ -1537,6 +1548,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Bucket where the entries should be inserted. Default is </documentation>
                </annotation>
             </attribute>
+            <attribute name="deadSlaveTimeout" type="rg:long__org_radargun_config_TimeConverter">
+               <annotation>
+                  <documentation>Period after which a slave is considered to be dead. Default is 90 s.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="delayBetweenRequests" type="rg:long__org_radargun_config_TimeConverter">
                <annotation>
                   <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
@@ -1550,6 +1566,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="gets" type="rg:int">
                <annotation>
                   <documentation>Ratio of GET requests. Default is 2.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="ignoreDeadCheckers" type="rg:boolean">
+               <annotation>
+                  <documentation>When the log value is full, the stressor needs to wait until all checkers confirm that the records have been checked before discarding oldest records. With ignoreDeadCheckers=true the stressor does not wait for checkers on dead nodes. Default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="loadDataForDeadSlaves" type="string">

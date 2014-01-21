@@ -23,7 +23,7 @@ class SharedLogChecker extends LogChecker {
       // in any entry.
       Object value = null, prevValue = null, prev2Value;
       long keyId = record.getKeyId();
-      for (int i = 0; i < 1000; ++i) {
+      for (int i = 0; i < 100; ++i) {
          prev2Value = prevValue;
          prevValue = value;
          value = cacheWrapper.get(bucketId, keyGenerator.generateKey(keyId));
@@ -31,7 +31,7 @@ class SharedLogChecker extends LogChecker {
             break;
          }
          if (keyId < 0 && record.getLastStressorOperation() < record.getOperationId()) {
-            // do not poll it 1000x when we're not sure that the operation is written, try just twice
+            // do not poll it 100x when we're not sure that the operation is written, try just twice
             break;
          }
          keyId = ~keyId;
@@ -64,8 +64,8 @@ class SharedLogChecker extends LogChecker {
 
    public static class Pool extends LogChecker.Pool {
 
-      public Pool(int numSlaves, int numThreads, int numEntries) {
-         super(numThreads, numSlaves);
+      public Pool(int numSlaves, int numThreads, int numEntries, BackgroundOpsManager manager) {
+         super(numThreads, numSlaves, manager);
          for (int slaveId = 0; slaveId < numSlaves; ++slaveId) {
             for (int threadId = 0; threadId < numThreads; ++threadId) {
                add(new StressorRecord(slaveId * numThreads + threadId, numEntries));

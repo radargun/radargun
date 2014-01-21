@@ -120,7 +120,7 @@ class BackgroundStressor extends Thread {
       } catch (InterruptedException e) {
          log.trace("Stressor interrupted.");
          // we should close the transaction, otherwise TX Reaper would find dead thread in tx
-         if (manager.getTransactionSize() != -1) {
+         if (manager.getTransactionSize() > 0) {
             try {
                CacheWrapper cacheWrapper = manager.getCacheWrapper();
                if (cacheWrapper != null && cacheWrapper.isRunning()) {
@@ -231,7 +231,7 @@ class BackgroundStressor extends Thread {
             } else {
                log.error("Cache operation error", e);
             }
-            if (manager.getTransactionSize() != -1) {
+            if (manager.getTransactionSize() > 0) {
                try {
                   cacheWrapper.endTransaction(false);
                } catch (Exception e1) {
@@ -271,8 +271,8 @@ class BackgroundStressor extends Thread {
          try {
             Object last = cacheWrapper.get(manager.getBucketId(), LogChecker.lastOperationKey(threadId));
             if (last != null) {
-               operationId = ((PrivateLogChecker.LastOperation) last).getOperationId() + 1;
-               rand = Utils.setRandomSeed(new Random(0), ((PrivateLogChecker.LastOperation) last).getSeed());
+               operationId = ((LogChecker.LastOperation) last).getOperationId() + 1;
+               rand = Utils.setRandomSeed(new Random(0), ((LogChecker.LastOperation) last).getSeed());
                log.debug("Restarting operations from operation " + operationId);
             }
          } catch (Exception e) {
@@ -316,9 +316,11 @@ class BackgroundStressor extends Thread {
 
       protected abstract long nextKeyId();
 
+      /* Return value = true: follow with next operation,
+                       false: txRolledBack ? restart from txStartOperationId : retry operationId */
       protected boolean invokeOn(long keyId) throws InterruptedException {
          try {
-            if (transactionSize != -1 && remainingTxOps == transactionSize) {
+            if (transactionSize > 0 && remainingTxOps == transactionSize) {
                txStartOperationId = operationId;
                txStartKeyId = keyId;
                // we could serialize & deserialize instead, but that's not much better
@@ -326,17 +328,22 @@ class BackgroundStressor extends Thread {
                cacheWrapper.startTransaction();
             }
 
-            if (!invokeLogic(keyId)) return false;
+            boolean txBreakRequest = false;
+            try {
+               if (!invokeLogic(keyId)) return false;
+            } catch (BreakTxRequest request) {
+               txBreakRequest = true;
+            }
             lastSuccessfulOpTimestamp = System.currentTimeMillis();
 
             // for non-transactional caches write the stressor last operation anytime (once in a while)
-            if (transactionSize < 0 && operationId % manager.getLogCounterUpdatePeriod() == 0) {
+            if (transactionSize <= 0 && operationId % manager.getLogCounterUpdatePeriod() == 0) {
                writeStressorLastOperation();
             }
 
-            if (transactionSize != -1) {
+            if (transactionSize > 0) {
                remainingTxOps--;
-               if (remainingTxOps == 0) {
+               if (remainingTxOps <= 0 || txBreakRequest) {
                   try {
                      cacheWrapper.endTransaction(true);
                      lastSuccessfulTxTimestamp = System.currentTimeMillis();
@@ -359,6 +366,10 @@ class BackgroundStressor extends Thread {
                   if (terminate) {
                      // the removes may have failed and we have not repeated them due to termination
                      log.info("Thread is about to terminate, not writing the last operation");
+                     return false;
+                  }
+                  if (txBreakRequest) {
+                     log.trace("Transaction was committed sooner, retrying operation " + operationId);
                      return false;
                   }
 
@@ -447,7 +458,7 @@ class BackgroundStressor extends Thread {
             // we have to write down the keySelectorRandom as well in order to be able to continue work if this slave
             // is restarted
             cacheWrapper.put(manager.getBucketId(), LogChecker.lastOperationKey(threadId),
-                  new PrivateLogChecker.LastOperation(operationId, Utils.getRandomSeed(keySelectorRandom)));
+                  new LogChecker.LastOperation(operationId, Utils.getRandomSeed(keySelectorRandom)));
          } catch (Exception e) {
             log.error("Error writing stressor last operation", e);
          }
@@ -455,25 +466,46 @@ class BackgroundStressor extends Thread {
 
       protected abstract boolean invokeLogic(long keyId) throws Exception;
 
-      protected Map<Integer, Long> getCheckedOperations() {
+      protected Map<Integer, Long> getCheckedOperations(long minOperationId) throws StressorException, BreakTxRequest {
          Map<Integer, Long> minIds = new HashMap<Integer, Long>();
          for (int thread = 0; thread < manager.getNumThreads() * manager.getNumSlaves(); ++thread) {
-            minIds.put(thread, getCheckedOperation(thread));
+            minIds.put(thread, getCheckedOperation(thread, minOperationId));
          }
          return minIds;
       }
 
-      protected long getCheckedOperation(int thread) {
+      protected long getCheckedOperation(int thread, long minOperationId) throws StressorException, BreakTxRequest {
          long minReadOperationId = Long.MAX_VALUE;
          for (int i = 0; i < manager.getNumSlaves(); ++i) {
-            Object lastCheck = null;
+            Object lastCheck;
             try {
                lastCheck = cacheWrapper.get(manager.getBucketId(), LogChecker.checkerKey(i, thread));
             } catch (Exception e) {
                log.error("Cannot read last checked operation id for slave " + i + " and thread " + thread, e);
+               throw new StressorException(e);
             }
             long readOperationId = lastCheck == null ? Long.MIN_VALUE : ((LogChecker.LastOperation) lastCheck).getOperationId();
-            minReadOperationId = Math.min(minReadOperationId, readOperationId);
+            if (readOperationId < minOperationId && manager.isIgnoreDeadCheckers() && !manager.isSlaveAlive(i)) {
+               try {
+                  Object ignored = cacheWrapper.get(manager.getBucketId(), LogChecker.ignoredKey(i, thread));
+                  if (ignored == null || (Long) ignored < minOperationId) {
+                     log.debug(String.format("Setting ignore operation for checker slave %d and stressor %d: %s -> %d (last check %s)",
+                           i, thread, ignored, minOperationId, lastCheck));
+                     cacheWrapper.put(manager.getBucketId(), LogChecker.ignoredKey(i, thread), minOperationId);
+                     if (transactionSize > 0) {
+                        throw new BreakTxRequest();
+                     }
+                  }
+                  minReadOperationId = Math.min(minReadOperationId, minOperationId);
+               } catch (BreakTxRequest request) {
+                  throw request;
+               } catch (Exception e) {
+                  log.error("Cannot overwrite last checked operation id for slave " + i + " and thread " + thread, e);
+                  throw new StressorException(e);
+               }
+            } else {
+               minReadOperationId = Math.min(minReadOperationId, readOperationId);
+            }
          }
          return minReadOperationId;
       }
@@ -489,6 +521,19 @@ class BackgroundStressor extends Thread {
             this.oldValue = oldValue;
          }
       }
+   }
+
+   private static class StressorException extends Exception {
+      public StressorException(Throwable cause) {
+         super(cause);
+      }
+   }
+
+   /*
+    * Not a "problem" exception, but signalizes that we need to commit current transaction
+    * and retry the currently executed operation in a new transaction.
+    */
+   private static class BreakTxRequest extends Exception {
    }
 
    private class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
@@ -546,7 +591,7 @@ class BackgroundStressor extends Thread {
          return true;
       }
 
-      private PrivateLogValue getNextValue(PrivateLogValue prevValue) throws InterruptedException {
+      private PrivateLogValue getNextValue(PrivateLogValue prevValue) throws InterruptedException, BreakTxRequest {
          if (prevValue.size() >= manager.getLogValueMaxSize()) {
             int checkedValues;
             // TODO some limit after which the stressor will terminate
@@ -554,9 +599,16 @@ class BackgroundStressor extends Thread {
                if (isInterrupted() || terminate) {
                   return null;
                }
-               long minReadOperationId = getCheckedOperation(threadId);
+               long minReadOperationId;
+               try {
+                  minReadOperationId = getCheckedOperation(threadId, prevValue.getOperationId(0));
+               } catch (StressorException e) {
+                  return null;
+               }
                if (prevValue.getOperationId(0) <= minReadOperationId) {
-                  for (checkedValues = 1; checkedValues < prevValue.size() && prevValue.getOperationId(checkedValues) <= minReadOperationId; ++checkedValues);
+                  for (checkedValues = 1; checkedValues < prevValue.size() && prevValue.getOperationId(checkedValues) <= minReadOperationId; ++checkedValues) {
+                     log.trace(String.format("Discarding operation %d (minReadOperationId is %d)", prevValue.getOperationId(checkedValues), minReadOperationId));
+                  }
                   break;
                } else {
                   try {
@@ -702,7 +754,7 @@ class BackgroundStressor extends Thread {
          return true;
       }
 
-      private SharedLogValue getNextValue(SharedLogValue prevValue, SharedLogValue backupValue) {
+      private SharedLogValue getNextValue(SharedLogValue prevValue, SharedLogValue backupValue) throws StressorException, BreakTxRequest {
          if (prevValue == null && backupValue == null) {
             return new SharedLogValue(threadId, operationId);
          } else if (prevValue != null && backupValue != null) {
@@ -721,8 +773,8 @@ class BackgroundStressor extends Thread {
          }
       }
 
-      private SharedLogValue filterAndAddOperation(SharedLogValue value) {
-         Map<Integer, Long> operationIds = getCheckedOperations();
+      private SharedLogValue filterAndAddOperation(SharedLogValue value) throws StressorException, BreakTxRequest {
+         Map<Integer, Long> operationIds = getCheckedOperations(value.minFrom(threadId));
          SharedLogValue filtered = value.with(threadId, operationId, operationIds);
          if (filtered.size() > manager.getLogValueMaxSize()) {
             return null;

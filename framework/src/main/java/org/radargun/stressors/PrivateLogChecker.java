@@ -21,12 +21,16 @@ public class PrivateLogChecker extends LogChecker {
    @Override
    protected Object findValue(AbstractStressorRecord record) throws Exception {
       // We cannot atomically get the two vars - the stressor could move backup to main or back between the two
-      // gets. But the chance for doing this 1000 times is small enough.
+      // gets. But the chance for doing this 100 times is small enough.
       Object value = null;
       long keyId = record.getKeyId();
-      for (int i = 0; i < 1000; ++i) {
+      for (int i = 0; i < 100; ++i) {
          value = cacheWrapper.get(bucketId, keyGenerator.generateKey(keyId));
          if (value == null) {
+            if (keyId < 0 && record.getLastStressorOperation() < record.getOperationId()) {
+               // do not poll it 100x when we're not sure that the operation is written, try just twice
+               break;
+            }
             keyId = ~keyId;
             if (keyId > 0) {
                // we yield because of the first entry to empty cache
@@ -63,15 +67,15 @@ public class PrivateLogChecker extends LogChecker {
 
    public static class Pool extends LogChecker.Pool {
 
-      public Pool(int numSlaves, int numThreads, int numEntries) {
-         super(numThreads, numSlaves);
+      public Pool(int numSlaves, int numThreads, int numEntries, BackgroundOpsManager manager) {
+         super(numThreads, numSlaves, manager);
          for (int slaveId = 0; slaveId < numSlaves; ++slaveId) {
             Range slaveKeyRange = Range.divideRange(numEntries, numSlaves, slaveId);
             for (int threadId = 0; threadId < numThreads; ++threadId) {
                Range threadKeyRange = Range.divideRange(slaveKeyRange.getSize(), numThreads, threadId);
                Range range = threadKeyRange.shift(slaveKeyRange.getStart());
                log.trace("Expecting range " + range + " for thread " + (slaveId * numThreads + threadId));
-               records.add(new StressorRecord(slaveId * numThreads + threadId, range));
+               add(new StressorRecord(slaveId * numThreads + threadId, range));
             }
          }
       }

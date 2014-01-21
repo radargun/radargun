@@ -4,11 +4,12 @@ import java.io.Serializable;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.features.Debugable;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.utils.Utils;
 
 /**
@@ -40,6 +41,10 @@ public abstract class LogChecker extends Thread {
       return String.format("checker_%d_%d", checkerSlaveId, slaveAndThreadId);
    }
 
+   public static String ignoredKey(int checkerSlaveId, int slaveAndThreadId) {
+      return String.format("ignored_%d_%d", checkerSlaveId, slaveAndThreadId);
+   }
+
    public static String lastOperationKey(int slaveAndThreadId) {
       return String.format("stressor_%d", slaveAndThreadId);
    }
@@ -50,9 +55,9 @@ public abstract class LogChecker extends Thread {
 
    @Override
    public void run() {
+      int delayedKeys = 0;
       while (!terminate) {
          AbstractStressorRecord record = null;
-         int delayedKeys = 0;
          try {
             if (delayedKeys > pool.getTotalThreads()) {
                Thread.sleep(UNSUCCESSFUL_CHECK_MIN_DELAY_MS);
@@ -62,6 +67,7 @@ public abstract class LogChecker extends Thread {
                delayedKeys++;
                continue;
             }
+            delayedKeys = 0;
             if (record.getLastUnsuccessfulCheckTimestamp() > Long.MIN_VALUE) {
                // the last check was unsuccessful -> grab lastOperation BEFORE the value to check if we've lost that
                Object last = cacheWrapper.get(bucketId, lastOperationKey(record.getThreadId()));
@@ -73,9 +79,18 @@ public abstract class LogChecker extends Thread {
                Object last = cacheWrapper.get(bucketId, checkerKey(slaveIndex, record.getThreadId()));
                if (last != null) {
                   LastOperation lastCheck = (LastOperation) last;
-                  log.debug(String.format("Check for thread %d continues from operation %d",
-                        record.getThreadId(), lastCheck.getOperationId() + 1));
                   record = newRecord(record, lastCheck.getOperationId(), lastCheck.getSeed());
+               }
+               Object ignored = cacheWrapper.get(bucketId, ignoredKey(slaveIndex, record.getThreadId()));
+               if (ignored != null && record.getOperationId() <= (Long) ignored) {
+                  log.debug(String.format("Ignoring operations %d - %d for thread %d", record.getOperationId(), ignored, record.getThreadId()));
+                  while (record.getOperationId() <= (Long) ignored) {
+                     record.next();
+                  }
+               }
+               if (record.getOperationId() != 0) {
+                  log.debug(String.format("Check for thread %d continues from operation %d",
+                     record.getThreadId(), record.getOperationId()));
                }
             }
             if (trace) {
@@ -96,6 +111,16 @@ public abstract class LogChecker extends Thread {
                pool.reportStoredOperation();
             } else {
                if (record.getLastStressorOperation() >= record.getOperationId()) {
+                  // one more check to see whether some operations should not be ignored
+                  Object ignored = cacheWrapper.get(bucketId, ignoredKey(slaveIndex, record.getThreadId()));
+                  if (ignored != null && record.getOperationId() <= (Long) ignored) {
+                     log.debug(String.format("Operations %d - %d for thread %d are ignored.", record.getOperationId(), ignored, record.threadId));
+                     while (record.getOperationId() <= (Long) ignored) {
+                        record.next();
+                     }
+                     continue;
+                  }
+
                   log.error(String.format("Missing operation %d for thread %d on key %d (%s) %s",
                         record.getOperationId(), record.getThreadId(), record.getKeyId(),
                         keyGenerator.generateKey(record.getKeyId()),
@@ -137,13 +162,18 @@ public abstract class LogChecker extends Thread {
    protected abstract boolean containsOperation(Object value, AbstractStressorRecord record);
 
    public static abstract class Pool {
-      protected final int totalThreads;
-      protected final ConcurrentLinkedQueue<AbstractStressorRecord> records = new ConcurrentLinkedQueue<AbstractStressorRecord>();
-      private AtomicLong missingOperations = new AtomicLong();
+      private final int totalThreads;
+      private final AtomicReferenceArray<AbstractStressorRecord> allRecords;
+      private final ConcurrentLinkedQueue<AbstractStressorRecord> records = new ConcurrentLinkedQueue<AbstractStressorRecord>();
+      private final BackgroundOpsManager manager;
+      private final AtomicLong missingOperations = new AtomicLong();
       private volatile long lastStoredOperationTimestamp = Long.MIN_VALUE;
 
-      public Pool(int numThreads, int numSlaves) {
+
+      public Pool(int numThreads, int numSlaves, BackgroundOpsManager manager) {
          totalThreads = numThreads * numSlaves;
+         allRecords = new AtomicReferenceArray<AbstractStressorRecord>(totalThreads);
+         this.manager = manager;
       }
 
       public long getMissingOperations() {
@@ -172,6 +202,62 @@ public abstract class LogChecker extends Thread {
 
       public void add(AbstractStressorRecord record) {
          records.add(record);
+         allRecords.set(record.getThreadId(), record);
+      }
+
+      public String waitUntilChecked(long timeout) {
+         for (int i = 0; i < totalThreads; ++i) {
+            AbstractStressorRecord record = allRecords.get(i);
+            if (record == null) continue;
+            try {
+               LastOperation lastOperation = (LastOperation) manager.getCacheWrapper().get(manager.getBucketId(), lastOperationKey(record.getThreadId()));
+               if (lastOperation == null) {
+                  log.trace("Thread " + record.getThreadId() + " has no recorded operation.");
+               } else {
+                  record.setLastStressorOperation(lastOperation.getOperationId());
+               }
+            } catch (Exception e) {
+               log.error("Failed to read last operation key for thread " + record.getThreadId(), e);
+            }
+         }
+         for (;;) {
+            boolean allChecked = true;
+            for (int i = 0; i < totalThreads; ++i) {
+               AbstractStressorRecord record = allRecords.get(i);
+               if (record == null) continue;
+               if (record.getOperationId() <= record.getLastStressorOperation()) {
+                  if (log.isTraceEnabled()) {
+                     log.trace(String.format("Currently checked operation for thread %d is %d (key id %08X), last written is %d",
+                           record.getThreadId(), record.getOperationId(), record.getKeyId(), record.getLastStressorOperation()));
+                  }
+                  allChecked = false;
+                  break;
+               }
+            }
+            if (lastStoredOperationTimestamp + timeout < System.currentTimeMillis()) {
+               String error = "Waiting for checkers timed out after " + (System.currentTimeMillis() - lastStoredOperationTimestamp) + " ms";
+               log.error(error);
+               return error;
+            }
+            if (allChecked) {
+               StringBuilder sb = new StringBuilder("All checks OK: ");
+               for (int i = 0; i < totalThreads; ++i) {
+                  AbstractStressorRecord record = allRecords.get(i);
+                  if (record == null) continue;
+                  sb.append(record.getThreadId()).append("# ")
+                        .append(record.getOperationId()).append(" (")
+                        .append(record.getLastStressorOperation()).append("), ");
+               }
+               log.debug(sb.toString());
+               return null;
+            }
+            try {
+               Thread.sleep(1000);
+            } catch (InterruptedException e) {
+               log.error("Interrupted waiting for checkers.", e);
+               return e.toString();
+            }
+         }
       }
    }
 
