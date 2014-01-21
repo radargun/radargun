@@ -74,7 +74,15 @@ public class StartBackgroundStressorsStage extends AbstractDistStage {
 
    @Property(doc = "Maximum time for which are the log value checkers allowed to show no new checked values " +
          "(error is thrown in CheckBackgroundStressors stage). Default is one minute.", converter = TimeConverter.class)
-   private long logCheckersNoProgressTimeout = 60000;
+   private long logCheckersNoProgressTimeout = 120000;
+
+   @Property(doc = "When the log value is full, the stressor needs to wait until all checkers confirm that " +
+         "the records have been checked before discarding oldest records. With ignoreDeadCheckers=true " +
+         "the stressor does not wait for checkers on dead nodes. Default is false.")
+   private boolean ignoreDeadCheckers = false;
+
+   @Property(doc = "Period after which a slave is considered to be dead. Default is 90 s.", converter = TimeConverter.class)
+   private long deadSlaveTimeout = 90000;
 
    @Property(doc = "By default each thread accesses only its private set of keys. This allows all threads all values. " +
          "Atomic operations are required for this functionality. Default is false.")
@@ -91,14 +99,15 @@ public class StartBackgroundStressorsStage extends AbstractDistStage {
                BackgroundOpsManager.getOrCreateInstance(slaveState, puts, gets, removes, numEntries,
                      entrySize, bucketId, numThreads, delayBetweenRequests, getActiveSlaveCount(), getSlaveIndex(),
                      transactionSize, loadDataOnSlaves, loadDataForDeadSlaves, loadOnly, loadWithPutIfAbsent,
-                     useLogValues, logCheckingThreads, logValueMaxSize, logCounterUpdatePeriod, logCheckersNoProgressTimeout, sharedKeys);
+                     useLogValues, logCheckingThreads, logValueMaxSize, logCounterUpdatePeriod, logCheckersNoProgressTimeout,
+                     ignoreDeadCheckers, deadSlaveTimeout, sharedKeys);
 
          log.info("Starting stressor threads");
          if (slaveState.getCacheWrapper() != null) {
             if (noLoading) {
                instance.setLoaded(true);
             }
-            instance.startStressors();
+            instance.startBackgroundThreads();
             if (waitUntilLoaded) {
                log.info("Waiting until all stressor threads load data");
                instance.waitUntilLoaded();

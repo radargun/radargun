@@ -92,6 +92,15 @@ public class SharedLogValue implements Serializable {
       }
    }
 
+   public long minFrom(int threadId) {
+      long operationId = Long.MAX_VALUE;
+      for (int i = 0; i < threadIds.length; ++i) {
+         if (threadIds[i] == threadId)
+            operationId = Math.min(operationIds[i], operationId);
+      }
+      return operationId;
+   }
+
    private static class ThreadOperation {
       public final int threadId;
       public final long operationId;

@@ -53,15 +53,17 @@ public class BackgroundOpsManager {
    private boolean sharedKeys;
 
    private SlaveState slaveState;
-   private BackgroundStressor[] stressorThreads;
+   private volatile BackgroundStressor[] stressorThreads;
    private SizeThread sizeThread;
-   private volatile boolean stressorsRunning = false;
+   private KeepAliveThread keepAliveThread;
    private List<Statistics> stats;
    private BackgroundStatsThread backgroundStatsThread;
    private long statsIteration;
    private boolean loaded = false;
    private LogChecker[] logCheckers;
    private LogChecker.Pool logCheckerPool;
+   private boolean ignoreDeadCheckers;
+   private long deadSlaveTimeout;
 
    public static BackgroundOpsManager getInstance(SlaveState slaveState) {
       return (BackgroundOpsManager) slaveState.get(NAME);
@@ -88,7 +90,8 @@ public class BackgroundOpsManager {
                                                           List<Integer> loadDataForDeadSlaves, boolean loadOnly,
                                                           boolean loadWithPutIfAbsent, boolean useLogValues, int logCheckingThreads,
                                                           int logValueMaxSize, long logCounterUpdatePeriod,
-                                                          long logCheckersNoProgressTimeout, boolean sharedKeys) {
+                                                          long logCheckersNoProgressTimeout, boolean ignoreDeadCheckers,
+                                                          long deadSlaveTimeout, boolean sharedKeys) {
       BackgroundOpsManager instance = getOrCreateInstance(slaveState);
       instance.puts = puts;
       instance.gets = gets;
@@ -111,6 +114,8 @@ public class BackgroundOpsManager {
       instance.logValueMaxSize = logValueMaxSize;
       instance.logCounterUpdatePeriod = logCounterUpdatePeriod;
       instance.logCheckersNoProgressTimeout = logCheckersNoProgressTimeout;
+      instance.ignoreDeadCheckers = ignoreDeadCheckers;
+      instance.deadSlaveTimeout = deadSlaveTimeout;
       instance.sharedKeys = sharedKeys;
       return instance;
    }
@@ -133,12 +138,12 @@ public class BackgroundOpsManager {
       } else return Operation.REMOVE;
    }
 
-   public synchronized void startStressors() {
+   public synchronized void startBackgroundThreads() {
       if (loadDataOnSlaves != null && !loadDataOnSlaves.isEmpty() && !loadDataOnSlaves.contains(slaveIndex)) {
          log.info("This slave is not loading any data.");
          return;
       }
-      if (stressorThreads != null || stressorsRunning) {
+      if (stressorThreads != null) {
          log.warn("Can't start stressors, they're already running.");
          return;
       }
@@ -146,54 +151,65 @@ public class BackgroundOpsManager {
          log.warn("Can't start stressors, cache wrapper not available");
          return;
       }
+      startStressorThreads();
+      if (useLogValues) {
+         startCheckers();
+      }
+      if (ignoreDeadCheckers) {
+         keepAliveThread = new KeepAliveThread();
+         keepAliveThread.start();
+      }
+   }
+
+   private synchronized void startStressorThreads() {
       stressorThreads = new BackgroundStressor[numThreads];
-      if (numThreads > 0) {
-         Range slaveKeyRange = Range.divideRange(numEntries, numSlaves, slaveIndex);
+      if (numThreads <= 0) {
+         log.warn("Stressor thread number set to 0!");
+         return;
+      }
+      Range slaveKeyRange = Range.divideRange(numEntries, numSlaves, slaveIndex);
 
-         List<List<Range>> rangesForThreads = null;
-         int liveId = slaveIndex;
-         if (!loaded && loadDataForDeadSlaves != null && !loadDataForDeadSlaves.isEmpty()) {
-            List<Range> deadSlavesKeyRanges = new ArrayList<Range>(loadDataForDeadSlaves.size());
-            for (int deadSlave : loadDataForDeadSlaves) {
-               deadSlavesKeyRanges.add(Range.divideRange(numEntries, numSlaves, deadSlave)); // key range for the current dead slave
-               if (deadSlave < slaveIndex) liveId--;
-            }
-            rangesForThreads = Range.balance(deadSlavesKeyRanges, (numSlaves - loadDataForDeadSlaves.size()) * numThreads);
+      List<List<Range>> rangesForThreads = null;
+      int liveId = slaveIndex;
+      if (!loaded && loadDataForDeadSlaves != null && !loadDataForDeadSlaves.isEmpty()) {
+         List<Range> deadSlavesKeyRanges = new ArrayList<Range>(loadDataForDeadSlaves.size());
+         for (int deadSlave : loadDataForDeadSlaves) {
+            deadSlavesKeyRanges.add(Range.divideRange(numEntries, numSlaves, deadSlave)); // key range for the current dead slave
+            if (deadSlave < slaveIndex) liveId--;
          }
+         rangesForThreads = Range.balance(deadSlavesKeyRanges, (numSlaves - loadDataForDeadSlaves.size()) * numThreads);
+      }
 
-         for (int i = 0; i < stressorThreads.length; i++) {
-            Range threadKeyRange = Range.divideRange(slaveKeyRange.getSize(), numThreads, i);
-            Range myKeyRange = threadKeyRange.shift(slaveKeyRange.getStart());
-            stressorThreads[i] = new BackgroundStressor(this, slaveState, myKeyRange,
-                  rangesForThreads == null ? null : rangesForThreads.get(i + numThreads * liveId), slaveIndex, i);
-            stressorThreads[i].setLoaded(this.loaded);
-            stressorThreads[i].start();
+      for (int i = 0; i < stressorThreads.length; i++) {
+         Range threadKeyRange = Range.divideRange(slaveKeyRange.getSize(), numThreads, i);
+         Range myKeyRange = threadKeyRange.shift(slaveKeyRange.getStart());
+         stressorThreads[i] = new BackgroundStressor(this, slaveState, myKeyRange,
+               rangesForThreads == null ? null : rangesForThreads.get(i + numThreads * liveId), slaveIndex, i);
+         stressorThreads[i].setLoaded(this.loaded);
+         stressorThreads[i].start();
+      }
+   }
+
+   private synchronized void startCheckers() {
+      if (logCheckingThreads <= 0) {
+         log.error("LogValue checker set to 0!");
+      } else if (sharedKeys) {
+         logCheckers = new LogChecker[logCheckingThreads];
+         SharedLogChecker.Pool pool = new SharedLogChecker.Pool(numSlaves, numThreads, numEntries, this);
+         logCheckerPool = pool;
+         for (int i = 0; i < logCheckingThreads; ++i) {
+            logCheckers[i] = new SharedLogChecker(i, pool, this);
+            logCheckers[i].start();
          }
       } else {
-         log.warn("Stressor thread number set to 0!");
-      }
-      if (useLogValues) {
-         if (logCheckingThreads <= 0) {
-            log.error("LogValue checker set to 0!");
-         } else if (sharedKeys) {
-            logCheckers = new LogChecker[logCheckingThreads];
-            SharedLogChecker.Pool pool = new SharedLogChecker.Pool(numSlaves, numThreads, numEntries);
-            logCheckerPool = pool;
-            for (int i = 0; i < logCheckingThreads; ++i) {
-               logCheckers[i] = new SharedLogChecker(i, pool, this);
-               logCheckers[i].start();
-            }
-         } else {
-            logCheckers = new LogChecker[logCheckingThreads];
-            PrivateLogChecker.Pool pool = new PrivateLogChecker.Pool(numSlaves, numThreads, numEntries);
-            logCheckerPool = pool;
-            for (int i = 0; i < logCheckingThreads; ++i) {
-               logCheckers[i] = new PrivateLogChecker(i, pool, this);
-               logCheckers[i].start();
-            }
+         logCheckers = new LogChecker[logCheckingThreads];
+         PrivateLogChecker.Pool pool = new PrivateLogChecker.Pool(numSlaves, numThreads, numEntries, this);
+         logCheckerPool = pool;
+         for (int i = 0; i < logCheckingThreads; ++i) {
+            logCheckers[i] = new PrivateLogChecker(i, pool, this);
+            logCheckers[i].start();
          }
       }
-      stressorsRunning = true;
    }
 
    /**
@@ -221,27 +237,54 @@ public class BackgroundOpsManager {
       }
    }
 
+   public String waitUntilChecked() {
+      if (logCheckerPool == null || logCheckers == null) {
+         log.warn("No log checker pool or active checkers.");
+         return null;
+      }
+      BackgroundStressor[] stressors = stressorThreads;
+      if (stressors != null) {
+         stopBackgroundThreads(true, false, false);
+      }
+      String error = logCheckerPool.waitUntilChecked(logCheckersNoProgressTimeout);
+      if (error != null) {
+         return error;
+      }
+      return null;
+   }
+
+   public void resumeAfterChecked() {
+      if (stressorThreads == null) {
+         startStressorThreads();
+      } else {
+         log.error("Stressors already started.");
+      }
+   }
+
    /**
     * 
     * Stops the stressors, call this before tearing down or killing CacheWrapper.
     * 
     */
-   public synchronized void stopStressors() {
-      if (stressorThreads == null || !stressorsRunning) {
-         log.warn("Can't stop stressors, they're not running.");
-         return;
-      }
-      stressorsRunning = false;
-      log.debug("Interrupting size thread");
+   public synchronized void stopBackgroundThreads() {
+      stopBackgroundThreads(true, true, true);
+   }
+
+   private synchronized void stopBackgroundThreads(boolean stressors, boolean checkers, boolean keepAlive) {
       // interrupt all threads
       log.debug("Stopping stressors");
-      for (int i = 0; i < stressorThreads.length; i++) {
-         stressorThreads[i].requestTerminate();
+      if (stressors && stressorThreads != null) {
+         for (int i = 0; i < stressorThreads.length; i++) {
+            stressorThreads[i].requestTerminate();
+         }
       }
-      if (logCheckers != null) {
+      if (checkers && logCheckers != null) {
          for (int i = 0; i < logCheckers.length; ++i) {
             logCheckers[i].requestTerminate();
          }
+      }
+      if (keepAlive && keepAliveThread != null) {
+         keepAliveThread.requestTerminate();
       }
       // give the threads a second to terminate
       try {
@@ -249,32 +292,43 @@ public class BackgroundOpsManager {
       } catch (InterruptedException e) {         
       }
       log.debug("Interrupting stressors");
-      for (int i = 0; i < stressorThreads.length; i++) {
-         stressorThreads[i].interrupt();
+      if (stressors && stressorThreads != null) {
+         for (int i = 0; i < stressorThreads.length; i++) {
+            stressorThreads[i].interrupt();
+         }
       }
-      if (logCheckers != null) {
+      if (checkers && logCheckers != null) {
          for (int i = 0; i < logCheckers.length; ++i) {
             logCheckers[i].interrupt();
          }
+      }
+      if (keepAlive && keepAliveThread != null) {
+         keepAliveThread.interrupt();
       }
 
       log.debug("Waiting until all threads join");
       // then wait for them to finish
       try {
-         for (int i = 0; i < stressorThreads.length; i++) {
-            stressorThreads[i].join();
+         if (stressors && stressorThreads != null) {
+            for (int i = 0; i < stressorThreads.length; i++) {
+               stressorThreads[i].join();
+            }
          }
-         if (logCheckers != null) {
+         if (checkers && logCheckers != null) {
             for (int i = 0; i < logCheckers.length; ++i) {
                logCheckers[i].join();
             }
+         }
+         if (keepAlive && keepAliveThread != null) {
+            keepAliveThread.join();
          }
          log.debug("All threads have joined");
       } catch (InterruptedException e1) {
          log.error("interrupted while waiting for sizeThread and stressorThreads to stop");
       }
-      stressorThreads = null;
-      logCheckers = null;
+      if (stressors) stressorThreads = null;
+      if (checkers) logCheckers = null;
+      if (keepAlive) keepAliveThread = null;
    }
 
    public synchronized void startStats() {
@@ -295,6 +349,7 @@ public class BackgroundOpsManager {
       if (backgroundStatsThread == null || stats == null) {
          throw new IllegalStateException("Stat thread not running");
       }
+      log.debug("Interrupting statistics threads");
       backgroundStatsThread.interrupt();
       sizeThread.interrupt();
       try {
@@ -385,6 +440,50 @@ public class BackgroundOpsManager {
       return numEntries;
    }
 
+   public boolean isIgnoreDeadCheckers() {
+      return ignoreDeadCheckers;
+   }
+
+   public boolean isSlaveAlive(int slaveId) {
+      Object value = null;
+      try {
+         value = getCacheWrapper().get(getBucketId(), "__keepAlive_" + slaveId);
+      } catch (Exception e) {
+         log.error("Failed to retrieve the keep alive timestamp", e);
+         return true;
+      }
+      return value != null &&  value instanceof Long && ((Long) value) > System.currentTimeMillis() - deadSlaveTimeout;
+   }
+
+   private class KeepAliveThread extends Thread {
+      private volatile boolean terminate;
+
+      private KeepAliveThread() {
+         super("KeepAlive");
+      }
+
+      @Override
+      public void run() {
+         while (!terminate && !isInterrupted()) {
+            try {
+               getCacheWrapper().put(getBucketId(), "__keepAlive_" + getSlaveIndex(), System.currentTimeMillis());
+            } catch (Exception e) {
+               log.error("Failed to place keep alive timestamp", e);
+            }
+            try {
+               Thread.sleep(1000);
+            } catch (InterruptedException e) {
+               log.error("Interrupted", e);
+               break;
+            }
+         }
+      }
+
+      public void requestTerminate() {
+         terminate = true;
+      }
+   }
+
    private class BackgroundStatsThread extends Thread {
 
       private SynchronizedStatistics nodeDownStats = new SynchronizedStatistics(false);
@@ -407,13 +506,14 @@ public class BackgroundOpsManager {
 
       private SynchronizedStatistics gatherStats() {
          long now = System.currentTimeMillis();
-         if (!stressorsRunning) {
+         BackgroundStressor[] threads = stressorThreads;
+         if (threads == null) {
             return nodeDownStats.snapshot(true, now);
          } else {
             nodeDownStats.reset(now); // we need to reset should we need them in next round
             SynchronizedStatistics r = null;
-            for (int i = 0; i < stressorThreads.length; i++) {
-               SynchronizedStatistics threadStats = stressorThreads[i].getStatsSnapshot(true, now);
+            for (int i = 0; i < threads.length; i++) {
+               SynchronizedStatistics threadStats = threads[i].getStatsSnapshot(true, now);
                if (r == null) {
                   r = threadStats;
                } else {
@@ -476,7 +576,7 @@ public class BackgroundOpsManager {
    public static void beforeCacheWrapperDestroy(SlaveState slaveState, boolean destroyAll) {
       BackgroundOpsManager instance = getInstance(slaveState);
       if (instance != null) {
-         instance.stopStressors();
+         instance.stopBackgroundThreads();
          if (destroyAll) {
             instance.destroy();
          }
@@ -487,7 +587,7 @@ public class BackgroundOpsManager {
       BackgroundOpsManager instance = getInstance(slaveState);
       if (instance != null) {
          instance.setLoaded(true); // don't load data at this stage
-         instance.startStressors();
+         instance.startBackgroundThreads();
       }
    }
 

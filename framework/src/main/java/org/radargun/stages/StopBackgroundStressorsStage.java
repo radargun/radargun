@@ -24,7 +24,7 @@ public class StopBackgroundStressorsStage extends AbstractDistStage {
          BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState);
          if (instance != null) {
             instance.waitUntilLoaded();
-            instance.stopStressors();
+            instance.stopBackgroundThreads();
          } else {
             log.error("No " + BackgroundOpsManager.NAME);
             ack.setError(true);
