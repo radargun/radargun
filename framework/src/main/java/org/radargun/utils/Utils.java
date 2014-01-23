@@ -1,6 +1,5 @@
 package org.radargun.utils;
 
-import javax.management.MBeanServer;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -10,23 +9,16 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Properties;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.management.MBeanServer;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
 import org.radargun.logging.Log;
@@ -40,6 +32,7 @@ public class Utils {
 
    private static Log log = LogFactory.getLog(Utils.class);
    public static final String PLUGINS_DIR = "plugins";
+   public static final String SPECIFIC_DIR = "specific";
    private static final NumberFormat NF = new DecimalFormat("##,###");
    private static final NumberFormat MEM_FMT = new DecimalFormat("##,###.##");
 
@@ -133,8 +126,15 @@ public class Utils {
 
    public static URLClassLoader buildProductSpecificClassLoader(String productName, ClassLoader parent) throws Exception {
       log.trace("Using smart class loading");
-      File libFolder = new File(PLUGINS_DIR + File.separator + productName + File.separator + "lib");
       List<URL> jars = new ArrayList<URL>();
+      addJars(new File(PLUGINS_DIR + File.separator + productName + File.separator + "lib"), jars);
+      addJars(new File(SPECIFIC_DIR), jars);
+      File confDir = new File(PLUGINS_DIR + File.separator + productName + File.separator + "conf/");
+      jars.add(confDir.toURI().toURL());
+      return new URLClassLoader(jars.toArray(new URL[jars.size()]), parent);
+   }
+
+   private static void addJars(File libFolder, List<URL> jars) throws MalformedURLException {
       if (!libFolder.isDirectory()) {
          log.info("Could not find lib directory: " + libFolder.getAbsolutePath());
       } else {
@@ -162,9 +162,6 @@ public class Utils {
             jars.add(aJar.toURI().toURL());
          }
       }
-      File confDir = new File(PLUGINS_DIR + File.separator + productName + File.separator + "conf/");
-      jars.add(confDir.toURI().toURL());
-      return new URLClassLoader(jars.toArray(new URL[jars.size()]), parent);
    }
 
    public static String getCacheProviderProperty(String productName, String propertyName) {

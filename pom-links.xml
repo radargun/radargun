@@ -45,6 +45,15 @@
 
    <profiles>
       <profile>
+         <id>jpa</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+         </activation>
+         <modules>
+            <module>jpa</module>
+         </modules>
+      </profile>
+      <profile>
          <!-- TODO: temporary profile for infinispan70, once there's a first release, add it among standard modules 
               after this is done, also leave a infinispan70-snapshot profile for building the plugin with SNAPSHOT version
               similar to how it's done in infinispan60 plugin -->
@@ -645,6 +654,11 @@
                         <copy todir="${distribution.artifact}">
                            <fileset dir="framework/target/distribution/radargun-framework-bin/radargun-framework">
                               <include name="**/*" />
+                           </fileset>
+                        </copy>
+                        <copy todir="${distribution.artifact}/specific">
+                           <fileset dir="jpa/target">
+                              <include name="radargun-jpa-*.jar" />
                            </fileset>
                         </copy>
                         <copy todir="${distribution.artifact}/bin">

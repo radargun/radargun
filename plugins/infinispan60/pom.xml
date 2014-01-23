@@ -97,5 +97,23 @@
       </dependency>
 
    </dependencies>
+   <profiles>
+      <profile>
+         <id>p6spy</id>
+         <activation>
+            <property>
+               <name>p6spy</name>
+            </property>
+            <activeByDefault>false</activeByDefault>
+         </activation>
+         <dependencies>
+            <dependency>
+               <groupId>p6spy</groupId>
+               <artifactId>p6spy</artifactId>
+               <version>1.3</version>
+            </dependency>
+         </dependencies>
+      </profile>
+   </profiles>
 
 </project>

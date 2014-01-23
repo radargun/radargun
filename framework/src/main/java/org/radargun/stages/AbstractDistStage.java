@@ -25,7 +25,7 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
 
    protected Log log = LogFactory.getLog(getClass());
    private static final String PREV_PRODUCT = "AbstractDistStage.previousProduct";
-   private static final String CLASS_LOADER = "AbstractDistStage.classLoader";
+   public static final String CLASS_LOADER = "AbstractDistStage.classLoader";
 
    protected transient SlaveState slaveState;
 

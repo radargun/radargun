@@ -36,7 +36,7 @@ public class CargoKeyGenerator implements KeyGenerator {
    private byte[] cargo;
 
    @Override
-   public void init(String param) {
+   public void init(String param, ClassLoader classLoader) {
       int keySize = Integer.parseInt(param);
       cargo = new byte[keySize];
       new Random().nextBytes(cargo);
