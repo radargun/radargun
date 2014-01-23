@@ -72,6 +72,7 @@ public class ConfigHelper {
             throw new IllegalArgumentException("Couldn't find a property for parameter " + propName + " on class [" + objectClass + "]");
          }
       }
+      InitHelper.init(target);
    }
 
    //looks for this syntax: ${defaultValue:existingPropValue}
