@@ -455,6 +455,11 @@
       </annotation>
       <complexContent>
          <extension base="rg:AbstractDist">
+            <attribute name="bucketPolicy" type="rg:org_radargun_stages_helpers_BucketPolicy__org_radargun_stages_helpers_BucketPolicy_Converter">
+               <annotation>
+                  <documentation>Which buckets will the stressors use. Available is 'none' (no buckets = null),'thread' (each thread will use bucked_/threadId/) or 'all:/bucketName/' (all threads will use bucketName). Default is 'none'.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="bulkSize" type="rg:int">
                <annotation>
                   <documentation>Number of keys inserted/retrieved within one operation. Applicable only when the cache wrappersupports bulk operations. Default is 1 (no bulk operations).</documentation>
@@ -600,11 +605,6 @@
                   <documentation>If true, putIfAbsent and replace operations are used. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="useBuckets" type="rg:boolean">
-               <annotation>
-                  <documentation>If true, each thread will write into its own bucket in form 'bucket_/threadId/'. Default is false.</documentation>
-               </annotation>
-            </attribute>
             <attribute name="useHistogramStatistics" type="rg:boolean">
                <annotation>
                   <documentation>The test will produce operation statistics in histogram. Default is false.</documentation>
@@ -620,6 +620,16 @@
                   <documentation>Specifies if the requests should be explicitely wrapped in transactions. By defaultthe cachewrapper is queried whether it does support the transactions, if it does,transactions are used, otherwise these are not.</documentation>
                </annotation>
             </attribute>
+            <attribute name="valueGeneratorClass" type="string">
+               <annotation>
+                  <documentation>Full class name of the value generator. Default is org.radargun.stressors.ByteArrayValueGenerator if useAtomics=false and org.radargun.stressors.WrappedArrayValueGenerator otherwise.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="valueGeneratorParam" type="string">
+               <annotation>
+                  <documentation>Used to initialize the value generator. Null by default.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="writePercentage" type="rg:int">
                <annotation>
                   <documentation>Ratio of writes = PUT requests (percentage). Default is 20%</documentation>
@@ -628,6 +638,20 @@
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="org_radargun_stages_helpers_BucketPolicy__org_radargun_stages_helpers_BucketPolicy_Converter">
+      <union>
+         <simpleType>
+            <restriction>
+               <pattern value="(none|thread|)(:.*)?"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <simpleType name="org_radargun_utils_Fuzzy__org_radargun_utils_Fuzzy_IntegerConverter">
       <union>
          <simpleType>
@@ -1545,7 +1569,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <extension base="rg:AbstractDist">
             <attribute name="bucketId" type="string">
                <annotation>
-                  <documentation>Bucket where the entries should be inserted. Default is </documentation>
+                  <documentation>Bucket where the entries should be inserted. Default is null (default).</documentation>
                </annotation>
             </attribute>
             <attribute name="deadSlaveTimeout" type="rg:long__org_radargun_config_TimeConverter">

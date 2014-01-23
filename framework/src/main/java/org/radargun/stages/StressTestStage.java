@@ -9,11 +9,13 @@ import java.util.Map;
 
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
+import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.config.SizeConverter;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
+import org.radargun.stages.helpers.BucketPolicy;
 import org.radargun.state.MasterState;
 import org.radargun.stressors.*;
 import org.radargun.utils.Fuzzy;
@@ -67,6 +69,12 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "Used to initialize the key generator. Null by default.")
    private String keyGeneratorParam = null;
 
+   @Property(doc = "Full class name of the value generator. Default is org.radargun.stressors.ByteArrayValueGenerator if useAtomics=false and org.radargun.stressors.WrappedArrayValueGenerator otherwise.")
+   private String valueGeneratorClass = null;
+
+   @Property(doc = "Used to initialize the value generator. Null by default.")
+   private String valueGeneratorParam = null;
+
    @Property(doc = "Specifies if the requests should be explicitely wrapped in transactions. By default" +
          "the cachewrapper is queried whether it does support the transactions, if it does," +
          "transactions are used, otherwise these are not.")
@@ -94,8 +102,11 @@ public class StressTestStage extends AbstractDistStage {
          "used by all threads. Default is false.")
    protected boolean sharedKeys = false;
 
-   @Property(doc = "If true, each thread will write into its own bucket in form 'bucket_/threadId/'. Default is false.")
-   private boolean useBuckets = false;
+   @Property(doc = "Which buckets will the stressors use. Available is 'none' (no buckets = null)," +
+         "'thread' (each thread will use bucked_/threadId/) or " +
+         "'all:/bucketName/' (all threads will use bucketName). Default is 'none'.",
+         converter = BucketPolicy.Converter.class)
+   private BucketPolicy bucketPolicy = new BucketPolicy(BucketPolicy.Type.NONE, null);
 
    @Property(doc = "This option is valid only for sharedKeys=true. It forces local loading of all keys (not only numEntries/numNodes). Default is false.")
    protected boolean loadAllKeys = false;
@@ -130,6 +141,14 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.", converter = TimeConverter.class)
    protected long entryLifespan = 3600000;
 
+   @Init
+   public void init() {
+      if (valueGeneratorClass == null) {
+         if (useAtomics) valueGeneratorClass = WrappedArrayValueGenerator.class.getName();
+         else valueGeneratorClass = ByteArrayValueGenerator.class.getName();
+      }
+   }
+
    protected CacheWrapper cacheWrapper;
 
    protected Map<String, Object> doWork() {
@@ -140,11 +159,14 @@ public class StressTestStage extends AbstractDistStage {
       } else {
          stressor = new StressTestStressor();
       }
+      stressor.setSlaveState(slaveState);
       stressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
       stressor.setDurationMillis(duration);
       setupStatistics(stressor);
       PropertyHelper.copyProperties(this, stressor);
+      slaveState.put(BucketPolicy.LAST_BUCKET, bucketPolicy.getBucketName(-1));
       slaveState.put(KeyGenerator.KEY_GENERATOR, stressor.getKeyGenerator());
+      slaveState.put(ValueGenerator.VALUE_GENERATOR, stressor.getValueGenerator());
       Map<String, Object> results = stressor.stress(cacheWrapper);
       if (generateHistogramRange) {
          slaveState.put(HistogramStatistics.HISTOGRAM_RANGES, results);

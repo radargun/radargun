@@ -6,6 +6,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
+import org.radargun.stages.helpers.BucketPolicy;
 import org.radargun.stressors.BackgroundOpsManager;
 
 /**
@@ -88,12 +89,13 @@ public class StartBackgroundStressorsStage extends AbstractDistStage {
          "Atomic operations are required for this functionality. Default is false.")
    private boolean sharedKeys = false;
 
-   @Property(doc = "Bucket where the entries should be inserted. Default is ")
+   @Property(doc = "Bucket where the entries should be inserted. Default is null (default).")
    private String bucketId;
 
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
+      slaveState.put(BucketPolicy.LAST_BUCKET, bucketId);
       try {
          BackgroundOpsManager instance =
                BackgroundOpsManager.getOrCreateInstance(slaveState, puts, gets, removes, numEntries,

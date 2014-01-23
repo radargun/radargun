@@ -32,11 +32,13 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.features.Debugable;
 import org.radargun.features.PersistentStorageCapable;
+import org.radargun.stages.helpers.BucketPolicy;
 import org.radargun.stages.helpers.Range;
 import org.radargun.state.MasterState;
-import org.radargun.stressors.BackgroundOpsManager;
+import org.radargun.stressors.ByteArrayValueGenerator;
 import org.radargun.stressors.KeyGenerator;
 import org.radargun.stressors.StringKeyGenerator;
+import org.radargun.stressors.ValueGenerator;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -117,7 +119,7 @@ public class CheckDataStage extends AbstractDistStage {
          }
          if (checkThreads <= 1) {
             String bucketId = getBucketId();
-            ValueChecker checker = new ByteArrayValueChecker();
+            ValueChecker checker = new GeneratedValueChecker((ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR));
             int entriesToCheck = numEntries;
             for (int i = firstEntryOffset * slaveIndex; entriesToCheck > 0; i += stepEntryCount) {
                int checkAmount = Math.min(checkEntryCount, entriesToCheck);
@@ -194,9 +196,7 @@ public class CheckDataStage extends AbstractDistStage {
    }
 
    private String getBucketId() {
-      // TODO: different stages may use different buckets
-      BackgroundOpsManager bgStats = (BackgroundOpsManager) slaveState.get(BackgroundOpsManager.NAME);
-      return bgStats == null ? BackgroundOpsManager.NAME : bgStats.getBucketId();
+      return (String) slaveState.get(BucketPolicy.LAST_BUCKET);
    }
 
    private class CheckRangeTask implements Callable<CheckResult> {
@@ -211,7 +211,7 @@ public class CheckDataStage extends AbstractDistStage {
       public CheckResult call() throws Exception {
          try {
             CheckResult result = new CheckResult();
-            ValueChecker checker = new ByteArrayValueChecker();
+            ValueChecker checker = new GeneratedValueChecker((ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR));
             CacheWrapper wrapper = slaveState.getCacheWrapper();
             String bucketId = getBucketId();
             int entriesToCheck = to - from;
@@ -238,9 +238,6 @@ public class CheckDataStage extends AbstractDistStage {
    }
 
    protected boolean checkKey(CacheWrapper wrapper, String bucketId, int keyIndex, CheckResult result, ValueChecker checker) {
-      if (result.checked % logChecksCount == 0) {
-         log.debug("Checked " + result.checked + " entries, so far " + result);
-      }
       Object key = keyGenerator.generateKey(keyIndex);
       try {
          Object value;
@@ -260,7 +257,6 @@ public class CheckDataStage extends AbstractDistStage {
                      ((Debugable) wrapper).debugKey(bucketId, key);
                   }
                   if (failOnNull) {
-                     result.checked++;
                      return false;
                   }
                } else {
@@ -276,11 +272,17 @@ public class CheckDataStage extends AbstractDistStage {
                result.nullValues++;
             }
          }
-         result.checked++;
       } catch (Exception e) {
+         if (result.exceptions == 0) {
+            log.error("Error retrieving value for key " + key, e);
+         } else if (log.isTraceEnabled()) {
+            log.trace("Error retrieving value for key " + key, e);
+         }
          result.exceptions++;
-         if (log.isTraceEnabled()) {
-            log.trace("Error retrieving value for key " + key + "\n" + e);
+      } finally {
+         result.checked++;
+         if (result.checked % logChecksCount == 0) {
+            log.debug("Checked so far: " + result);
          }
       }
       return true;
@@ -387,10 +389,16 @@ public class CheckDataStage extends AbstractDistStage {
       boolean check(int keyIndex, Object value);
    }
 
-   protected class ByteArrayValueChecker implements ValueChecker {
+   protected class GeneratedValueChecker implements ValueChecker {
+      private final ValueGenerator valueGenerator;
+
+      public GeneratedValueChecker(ValueGenerator valueGenerator) {
+         this.valueGenerator = valueGenerator == null ? new ByteArrayValueGenerator() : valueGenerator;
+      }
+
       @Override
       public boolean check(int keyIndex, Object value) {
-         return value instanceof byte[] && (entrySize <= 0 || ((byte[]) value).length == entrySize);
+         return valueGenerator.checkValue(value, entrySize);
       }
    }
 }

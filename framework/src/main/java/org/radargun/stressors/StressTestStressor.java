@@ -1,14 +1,20 @@
 package org.radargun.stressors;
 
-import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.radargun.CacheWrapper;
+import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.SizeConverter;
 import org.radargun.config.Stressor;
@@ -16,6 +22,10 @@ import org.radargun.config.TimeConverter;
 import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.BulkOperationsCapable;
 import org.radargun.features.Queryable;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+import org.radargun.stages.AbstractDistStage;
+import org.radargun.stages.helpers.BucketPolicy;
 import org.radargun.utils.Fuzzy;
 import org.radargun.utils.Utils;
 
@@ -111,8 +121,25 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
    @Property(doc = "Used to initialize the key generator. Null by default.")
    private String keyGeneratorParam = null;
 
-   @Property(doc = "If true, each thread will write into its own bucket in form 'bucket_/threadId/'. Default is false.")
-   private boolean useBuckets = false;
+   @Property(doc = "Full class name of the value generator. Default is org.radargun.stressors.ByteArrayValueGenerator if useAtomics=false and org.radargun.stressors.WrappedArrayValueGenerator otherwise.")
+   private String valueGeneratorClass = null;
+
+   @Property(doc = "Used to initialize the value generator. Null by default.")
+   private String valueGeneratorParam = null;
+
+   @Property(doc = "Which buckets will the stressors use. Available is 'none' (no buckets = null)," +
+         "'thread' (each thread will use bucked_/threadId/) or " +
+         "'all:/bucketName/' (all threads will use bucketName). Default is 'none'.",
+         converter = BucketPolicy.Converter.class)
+   private BucketPolicy bucketPolicy = new BucketPolicy(BucketPolicy.Type.NONE, null);
+
+   @Init
+   public void init() {
+      if (valueGeneratorClass == null) {
+         if (useAtomics) valueGeneratorClass = WrappedArrayValueGenerator.class.getName();
+         else valueGeneratorClass = ByteArrayValueGenerator.class.getName();
+      }
+   }
 
    /**
     * Number of slaves that participate in this test
@@ -126,7 +153,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    private AtomicInteger txCount = new AtomicInteger(0);
 
-   protected KeyGenerator keyGenerator;
+   protected volatile KeyGenerator keyGenerator;
+   protected volatile ValueGenerator valueGenerator;
 
    protected CacheWrapper cacheWrapper;
    protected AtomicOperationsCapable atomicCacheWrapper;
@@ -327,7 +355,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          Object key = getKey(randomKeyInt, stressor.threadIndex);
 
          if (randomAction < writePercentage) {
-            return stressor.makeRequest(Operation.PUT, key, generateValue(Integer.MAX_VALUE));
+            return stressor.makeRequest(Operation.PUT, key, generateValue(key, Integer.MAX_VALUE));
          } else if (randomAction < writePercentage + removePercentage) {
             return stressor.makeRequest(Operation.REMOVE, key);
          } else {
@@ -364,7 +392,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             } else {
                key = keyGenerator.generateKey((nodeIndex * numThreads + threadIndex) * numEntries + keyIndex);
             }
-            Object value = generateValue(Integer.MAX_VALUE);
+            Object value = generateValue(key, Integer.MAX_VALUE);
             addPooledKey(key, value);
             try {
                cacheWrapper.put(bucketId, key, value);
@@ -459,7 +487,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          }
          for (; keyIndex < numEntries; keyIndex += loadingThreads) {
             try {
-               cacheWrapper.put(null, getKey(keyIndex, threadIndex), generateValue(Integer.MAX_VALUE));
+               Object key = getKey(keyIndex, threadIndex);
+               cacheWrapper.put(null, key, generateValue(key, Integer.MAX_VALUE));
                long loaded = keysLoaded.incrementAndGet();
                if (loaded % 100000 == 0) {
                   Runtime runtime = Runtime.getRuntime();
@@ -482,7 +511,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          Object key = getKey(r.nextInt(numEntries - 1), stressor.threadIndex);
          Object lastValue = lastValues.get(key);
 
-         Object newValue = generateValue(Integer.MAX_VALUE);
+         Object newValue = generateValue(key, Integer.MAX_VALUE);
          int probability = 0;
          if (lastValue == null) {
             lastValues.put(key, newValue);
@@ -493,9 +522,9 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             lastValues.remove(key);
             return stressor.makeRequest(Operation.REMOVE_VALID, key, lastValue);
          } else if (randomAction < (probability += removeInvalidPercentage)) {
-            return stressor.makeRequest(Operation.REMOVE_INVALID, key, generateValue(Integer.MAX_VALUE));
+            return stressor.makeRequest(Operation.REMOVE_INVALID, key, generateValue(key, Integer.MAX_VALUE));
          } else if (randomAction < (probability += replaceInvalidPercentage)) {
-            return stressor.makeRequest(Operation.REPLACE_INVALID, key, generateValue(Integer.MAX_VALUE), newValue);
+            return stressor.makeRequest(Operation.REPLACE_INVALID, key, generateValue(key, Integer.MAX_VALUE), newValue);
          } else {
             lastValues.put(key, newValue);
             return stressor.makeRequest(Operation.REPLACE_VALID, key, lastValue, newValue);
@@ -541,7 +570,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             for (int i = 0; i < bulkSize;) {
                Object key = initLogic.getKey(r.nextInt(numEntries - 1), stressor.threadIndex);
                if (!map.containsKey(key)) {
-                  map.put(key, generateValue(Integer.MAX_VALUE));
+                  map.put(key, generateValue(key, Integer.MAX_VALUE));
                   ++i;
                }
             }
@@ -663,8 +692,8 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             }
             return value;
          } else {
-            Object value = generateValue(Integer.MAX_VALUE);
-            int size = sizeOf(value);
+            Object value = generateValue(null, Integer.MAX_VALUE);
+            int size = getValueGenerator().sizeOf(value);
             Load load = loadForSize.get(size);
             if (load.scheduledKeys.size() < load.max) {
                long keyIndex = keysLoaded.getAndAdd(numNodes);
@@ -727,7 +756,7 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
          super("Stressor-" + threadIndex);         
          this.threadIndex = threadIndex;
          this.logic = logic;
-         this.bucketId = useBuckets ? "bucket_" + threadIndex : null;
+         this.bucketId = bucketPolicy.getBucketName(threadIndex);
       }
 
       @Override
@@ -946,27 +975,10 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
       this.numThreads = numOfThreads;
    }
 
-   protected Object generateValue(int maxValueSize) {
+   protected Object generateValue(Object key, int maxValueSize) {
       int size = entrySize.next(r);
       size = Math.min(size, maxValueSize);
-      byte[] array = new byte[size];
-      r.nextBytes(array);
-      if (useAtomics) {
-         // this has a few bytes over but supports equals etc.
-         return new ByteArrayWrapper(array);
-      } else {
-         return array;
-      }
-   }
-
-   protected int sizeOf(Object value) {
-      if (value instanceof byte[]) {
-         return ((byte[]) value).length;
-      } else if (value instanceof ByteArrayWrapper) {
-         return ((ByteArrayWrapper) value).array.length;
-      } else {
-         throw new IllegalArgumentException("Cannot find size of " + value);
-      }
+      return getValueGenerator().generateValue(key, size, r);
    }
 
    public void setNodeIndex(int nodeIndex, int numNodes) {
@@ -976,11 +988,26 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
 
    public KeyGenerator getKeyGenerator() {
       if (keyGenerator == null) {
-         log.info("Using key generator " + keyGeneratorClass + ", param " + keyGeneratorParam);
-         keyGenerator = (KeyGenerator) Utils.instantiate(keyGeneratorClass);
-         keyGenerator.init(keyGeneratorParam);
+         synchronized (this) {
+            if (keyGenerator != null) return keyGenerator;
+            log.info("Using key generator " + keyGeneratorClass + ", param " + keyGeneratorParam);
+            keyGenerator = (KeyGenerator) Utils.instantiate(keyGeneratorClass);
+            keyGenerator.init(keyGeneratorParam, (ClassLoader) slaveState.get(AbstractDistStage.CLASS_LOADER));
+         }
       }
       return keyGenerator;
+   }
+
+   public ValueGenerator getValueGenerator() {
+      if (valueGenerator == null) {
+         synchronized (this) {
+            if (valueGenerator != null) return valueGenerator;
+            log.info("Using value generator " + valueGeneratorClass + ", param " + valueGeneratorParam);
+            valueGenerator = (ValueGenerator) Utils.instantiate(valueGeneratorClass);
+            valueGenerator.init(valueGeneratorParam, (ClassLoader) slaveState.get(AbstractDistStage.CLASS_LOADER));
+         }
+      }
+      return valueGenerator;
    }
 
    public boolean isUseTransactions() {
@@ -1111,38 +1138,6 @@ public class StressTestStressor extends AbstractCacheWrapperStressor {
             ", commitTransactions=" + commitTransactions +
             ", durationMillis=" + durationMillis +
             "}";
-   }
-
-   /* Because byte[].equals compares only pointers */
-   private static class ByteArrayWrapper implements Serializable {
-      private byte[] array;
-      private transient int hashCode = 0;
-
-      public ByteArrayWrapper(byte[] array) {
-         this.array = array;
-      }
-
-      @Override
-      public int hashCode() {
-         if (hashCode == 0) {
-            hashCode = 42 + Arrays.hashCode(array);
-            if (hashCode == 0) hashCode = 42;
-         }
-         return hashCode;
-      }
-
-      @Override
-      public String toString() {
-         return String.format("ByteArray[%d](%db)", hashCode(), array.length);
-      }
-
-      @Override
-      public boolean equals(Object obj) {
-         if (obj instanceof ByteArrayWrapper) {
-            return Arrays.equals(array, ((ByteArrayWrapper) obj).array);
-         }
-         return false;
-      }
    }
 }
 

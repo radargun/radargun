@@ -6,7 +6,7 @@ package org.radargun.stressors;
 public class ObjectKeyGenerator implements KeyGenerator {
 
    @Override
-   public void init(String param) {
+   public void init(String param, ClassLoader classLoader) {
    }
 
    @Override

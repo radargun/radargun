@@ -25,6 +25,7 @@ import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.stressors.ClientStressTestStressor;
 import org.radargun.stressors.KeyGenerator;
+import org.radargun.stressors.ValueGenerator;
 
 /**
  * Repeats the StressTest logic with variable amount of threads.
@@ -52,6 +53,7 @@ public class ClientStressTestStage extends StressTestStage {
       setupStatistics(stressor);
       PropertyHelper.copyProperties(this, stressor);
       slaveState.put(KeyGenerator.KEY_GENERATOR, stressor.getKeyGenerator());
+      slaveState.put(ValueGenerator.VALUE_GENERATOR, stressor.getValueGenerator());
       return stressor.stress(cacheWrapper);
    }
 }

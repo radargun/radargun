@@ -12,7 +12,11 @@ public interface KeyGenerator {
 
    String KEY_GENERATOR = "KEY_GENERATOR";
 
-   void init(String param);
+   /**
+    * @param param Generic argument
+    * @param classLoader Class loader that should be used if the generator will load some classes via reflection.
+    */
+   void init(String param, ClassLoader classLoader);
 
    /**
     * @param keyIndex

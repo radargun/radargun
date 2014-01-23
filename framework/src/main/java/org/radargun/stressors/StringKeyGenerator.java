@@ -7,7 +7,7 @@ public class StringKeyGenerator implements KeyGenerator {
    private String format = "key_%016X";
 
    @Override
-   public void init(String param) {
+   public void init(String param, ClassLoader classLoader) {
       if (param != null) {
          format = param;
       }

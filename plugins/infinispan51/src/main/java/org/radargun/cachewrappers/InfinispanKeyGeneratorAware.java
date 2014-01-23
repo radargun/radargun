@@ -62,7 +62,7 @@ public class InfinispanKeyGeneratorAware implements KeyGeneratorAware {
       }
 
       @Override
-      public void init(String param) {
+      public void init(String param, ClassLoader classLoader) {
       }
 
       @Override
