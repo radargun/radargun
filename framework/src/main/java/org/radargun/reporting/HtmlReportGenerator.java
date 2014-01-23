@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.radargun.config.InitHelper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.Stage;
@@ -162,6 +163,7 @@ public class HtmlReportGenerator {
       Stage defaultStage = null;
       try {
          defaultStage = stageClass.newInstance();
+         InitHelper.init(defaultStage);
       } catch (Exception e) {
          log.error("Cannot instantiate default stage for " + stageClass.getName(), e);
       }
