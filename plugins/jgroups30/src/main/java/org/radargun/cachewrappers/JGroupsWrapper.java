@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.jgroups.Address;
 import org.jgroups.JChannel;
@@ -39,8 +40,7 @@ import org.radargun.utils.TypedProperties;
  * @author Bela Ban
  */
 public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
-   private static Log log = LogFactory.getLog(JGroupsWrapper.class);
-   public static Random random = new Random();
+   protected static Log log = LogFactory.getLog(JGroupsWrapper.class);
 
    private static final Method[] METHODS = new Method[3];
    protected static final short GET = 0;
@@ -271,7 +271,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    private Address pickGetTarget() {
       List<Address> members = this.members; // grab reference
       int size = excludeSelfRequests ? members.size() - 1 : members.size();
-      int index = random.nextInt(size);
+      int index = ThreadLocalRandom.current().nextInt(size);
 
       // self also has the keys for the previous numOwners - 1 nodes
       if (noopSelfRequests && index >= members.size() - numOwners)
@@ -283,7 +283,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    private List<Address> pickGetTargets() {
       List<Address> members = this.members;
       int size = excludeSelfRequests ? members.size() - 1 : members.size();
-      int startIndex = random.nextInt(size);
+      int startIndex = ThreadLocalRandom.current().nextInt(size);
 
       // self also has the keys for the previous numOwners - 1 nodes
       if (noopSelfRequests && startIndex >= members.size() - numOwners)
@@ -300,7 +300,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    private Collection<Address> pickPutTargets() {
       List<Address> members = this.members;
       int size = excludeSelfRequests ? members.size() - 1 : members.size();
-      int startIndex = random.nextInt(size);
+      int startIndex = ThreadLocalRandom.current().nextInt(size);
 
       Collection<Address> targets = new ArrayList<Address>(numOwners);
       for (int i = 0; i < numOwners; i++) {
