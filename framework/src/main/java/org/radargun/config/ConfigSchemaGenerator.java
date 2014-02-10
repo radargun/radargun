@@ -186,6 +186,8 @@ public class ConfigSchemaGenerator {
       Element reportComplex = createComplexElement(doc, reportsSequence, "report", 0, -1);
       Element reportSequence = createSequence(doc, reportComplex);
       addAttribute(doc, reportComplex, "name", false);
+      addAttribute(doc, reportComplex, "reportDirectory", false);
+      addAttribute(doc, reportComplex, "csvFilesDirectory", false);
       addAttribute(doc, reportComplex, "includeAll", false);
       Element itemComplex = createComplexElement(doc, reportSequence, "item", 0, -1);
       addAttribute(doc, itemComplex, "product", false);

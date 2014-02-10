@@ -54,6 +54,7 @@ public class GenerateReportStage extends AbstractMasterStage {
    @Property(doc = "Path to directory where are the (input) CSV files. Default is '" + GenerateReportStage.REPORTS + "'.")
    private String csvFilesDirectory = REPORTS;
 
+   @Property(doc = "Name (prefix) for the report.", name = "name")
    private String prefix;
 
    private Map<String, List<String>> filter = new HashMap<String, List<String>>();
@@ -62,8 +63,8 @@ public class GenerateReportStage extends AbstractMasterStage {
 
    public boolean execute() throws Exception {
       File[] files = getFilteredFiles(new File(csvFilesDirectory));
-      Arrays.sort(files);
       if (files == null) return true;
+      Arrays.sort(files);
       for (File f : files) {
          readData(f);
       }

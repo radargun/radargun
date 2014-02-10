@@ -1,11 +1,11 @@
 package org.radargun.config;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.radargun.Master;
 import org.radargun.Stage;
@@ -65,11 +65,21 @@ public class DomConfigParser extends ConfigParser {
             Element thisReportEl = (Element) reportElList.item(i);
             GenerateReportStage generateReportStage = new GenerateReportStage();
             reportBenchmark.addStage(generateReportStage);
-            generateReportStage.setPrefix(ConfigHelper.getStrAttribute(thisReportEl, "name"));
-            if (thisReportEl.getAttribute("includeAll") != null) {
-               String inclAll = ConfigHelper.getStrAttribute(thisReportEl, "includeAll");
-               if (inclAll.equalsIgnoreCase("true"))
-                  continue;
+
+            NamedNodeMap attributes = thisReportEl.getAttributes();
+            Map<String, String> attrToSet = new HashMap<String, String>();
+            boolean includeAll = false;
+            for (int attrIndex = 0; attrIndex < attributes.getLength(); attrIndex++) {
+               Attr attr = (Attr) attributes.item(attrIndex);
+               if ("includeAll".equals(attr.getName())) {
+                  includeAll = "true".equalsIgnoreCase(attr.getValue());
+               } else {
+                  attrToSet.put(attr.getName(), ConfigHelper.parseString(attr.getValue()));
+               }
+            }
+            ConfigHelper.setValues(generateReportStage, attrToSet, true);
+            if (includeAll) {
+               continue;
             }
 
             NodeList itemsEl = thisReportEl.getElementsByTagName("item");
