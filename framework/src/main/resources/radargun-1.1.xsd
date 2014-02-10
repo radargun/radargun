@@ -118,6 +118,8 @@
                               </element>
                            </sequence>
                            <attribute name="name" type="string"/>
+                           <attribute name="reportDirectory" type="string"/>
+                           <attribute name="csvFilesDirectory" type="string"/>
                            <attribute name="includeAll" type="string"/>
                         </complexType>
                      </element>
@@ -855,6 +857,11 @@
             <attribute name="csvFilesDirectory" type="string">
                <annotation>
                   <documentation>Path to directory where are the (input) CSV files. Default is 'reports'.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="name" type="string">
+               <annotation>
+                  <documentation>Name (prefix) for the report.</documentation>
                </annotation>
             </attribute>
             <attribute name="reportDirectory" type="string">
