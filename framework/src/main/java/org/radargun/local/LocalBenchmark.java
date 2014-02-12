@@ -10,18 +10,17 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.CacheWrapperStressor;
 import org.radargun.ShutDownHook;
+import org.radargun.config.PropertyHelper;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.reporting.LocalSystemMonitorChart;
 import org.radargun.state.SlaveState;
 import org.radargun.stressors.AbstractCacheWrapperStressor;
 import org.radargun.sysmonitor.LocalJmxMonitor;
-import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
 /**
@@ -36,7 +35,7 @@ public class LocalBenchmark {
    private static final boolean SKIP_FREE_MEMORY_CHECK = Boolean.getBoolean("radargun.skip_free_memory_check");
 
    private List<CacheWrapperStressor> stressors = new ArrayList<CacheWrapperStressor>();
-   private LinkedHashMap<String, List<Properties>> product2Config = new LinkedHashMap<String, List<Properties>>();
+   private LinkedHashMap<String, List<Map<String, String>>> product2Config = new LinkedHashMap<String, List<Map<String, String>>>();
    private boolean headerGenerted = false;
    private List<ReportDesc> reportDescs = new ArrayList<ReportDesc>();
 
@@ -52,13 +51,14 @@ public class LocalBenchmark {
 
    public void benchmark() throws Exception {
       log.info("Starting benchmark with " + Utils.kb(initialFreeMemory) + " kb initial free memory.");
-      for (Map.Entry<String, List<Properties>> product : product2Config.entrySet()) {
-         for (Properties configProps : product.getValue()) {
-            final String config = configProps.getProperty("name");
+      for (Map.Entry<String, List<Map<String, String>>> product : product2Config.entrySet()) {
+         for (Map<String, String> configProps : product.getValue()) {
+            final String config = configProps.get("name");
             log.info("Processing " + product.getKey() + "-" + config);
-            CacheWrapper wrapper = getCacheWrapper(product.getKey(), configProps.getProperty("wrapper"));
+            CacheWrapper wrapper = getCacheWrapper(product.getKey(), configProps.get("wrapper"));
+            PropertyHelper.setProperties(wrapper, configProps, true);
             try {
-               wrapper.setUp(config, true, -1, new TypedProperties(configProps));
+               wrapper.setUp(true, -1);
 
                Map<String, Object> results = null;
                SlaveState slaveState = new SlaveState();
@@ -205,7 +205,7 @@ public class LocalBenchmark {
       stressors.add(stressor);
    }
 
-   public void addProductConfig(String productName, List<Properties> configs) {
+   public void addProductConfig(String productName, List<Map<String, String>> configs) {
       product2Config.put(productName, configs);
    }
 

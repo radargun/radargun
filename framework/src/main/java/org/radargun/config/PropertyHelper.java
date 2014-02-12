@@ -96,4 +96,41 @@ public class PropertyHelper {
          }
       }
    }
+
+   public static void setProperties(Object target, Map<String, String> propertyMap, boolean ignoreMissingProperty) {
+      Class targetClass = target.getClass();
+      Map<String, Field> properties = getProperties(target.getClass());
+
+      for (Map.Entry<String, String> entry : propertyMap.entrySet()) {
+         String propName = entry.getKey();
+
+         Field field = properties.get(propName);
+         if (field != null) {
+            Property property = field.getAnnotation(Property.class);
+            if (property.readonly()) {
+               throw new IllegalArgumentException("Property " + propName + " on class [" + targetClass + "] is readonly and therefore cannot be set!");
+            }
+            Class<? extends Converter> converterClass = property.converter();
+            try {
+               Converter converter = converterClass.newInstance();
+               field.setAccessible(true);
+               field.set(target, converter.convert(entry.getValue(), field.getGenericType()));
+               continue;
+            } catch (InstantiationException e) {
+               log.error(String.format("Cannot instantiate converter %s for setting %s.%s (%s): %s",
+                     converterClass.getName(), target.getClass().getName(), field.getName(), propName, e));
+            } catch (IllegalAccessException e) {
+               log.error(String.format("Cannot access converter %s for setting %s.%s (%s): %s",
+                     converterClass.getName(), target.getClass().getName(), field.getName(), propName, e));
+            } catch (Throwable t) {
+               log.error("Failed to convert value " + entry.getValue() + ": " + t);
+            }
+         }
+         if (ignoreMissingProperty) {
+            log.trace("Property " + propName + " could not be set on class [" + targetClass + "]");
+         } else {
+            throw new IllegalArgumentException("Couldn't find a property for parameter " + propName + " on class [" + targetClass + "]");
+         }
+      }
+   }
 }

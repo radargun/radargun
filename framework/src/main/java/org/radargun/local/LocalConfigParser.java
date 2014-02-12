@@ -4,16 +4,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
+
 import org.radargun.CacheWrapperStressor;
 import org.radargun.config.ConfigHelper;
 import org.radargun.config.DomConfigParser;
+import org.radargun.config.InitHelper;
+import org.radargun.config.PropertyHelper;
 import org.radargun.config.StressorHelper;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -60,7 +61,8 @@ public class LocalConfigParser {
                Attr attr = (Attr) nodeEl.getAttributes().item(j);
                attrValues.put(attr.getName(), attr.getValue());
             }
-            ConfigHelper.setValues(stressor, attrValues, true);
+            PropertyHelper.setProperties(stressor, attrValues, false);
+            InitHelper.init(stressor);
             result.addStressor(stressor);
          }
       }
@@ -75,16 +77,16 @@ public class LocalConfigParser {
             Element nodeEl = (Element) node;
             String productName = nodeEl.getNodeName();
             NodeList configs = nodeEl.getElementsByTagName("config");
-            List<Properties> configNames = new ArrayList<Properties>();
+            List<Map<String, String>> configNames = new ArrayList<Map<String, String>>();
 
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
                Element configEl = (Element) configs.item(configIndex);
-               Properties configAttrs = new Properties();
+               Map<String, String> configAttrs = new HashMap<String, String>();
                DomConfigParser.addDirectAttributes(configAttrs, configEl, "");
                DomConfigParser.addWrapperAttributes(configAttrs, configEl, "");
 
                configNames.add(configAttrs);
-               all.add(new ReportItem(productName, configAttrs.getProperty("name")));
+               all.add(new ReportItem(productName, configAttrs.get("name")));
             }
             localBenchmark.addProductConfig(productName, configNames);
          }

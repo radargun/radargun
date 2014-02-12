@@ -8,6 +8,7 @@
       <relativePath>../parent/pom.xml</relativePath>
    </parent>
 
+   <groupId>org.radargun</groupId>
    <artifactId>radargun-plugin-parent</artifactId>
    <name>Parent pom for radargun plugins</name>
    <packaging>pom</packaging>

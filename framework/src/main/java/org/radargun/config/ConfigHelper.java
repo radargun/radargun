@@ -1,8 +1,6 @@
 package org.radargun.config;
 
-import java.lang.reflect.Field;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Random;
 import java.util.Stack;
 
@@ -34,45 +32,6 @@ public class ConfigHelper {
          }
       }
       return sb.toString();
-   }
-
-   public static void setValues(Object target, Map<String, String> attribs, boolean failOnMissingSetter) {
-      Class objectClass = target.getClass();
-
-      Map<String, Field> properties = PropertyHelper.getProperties(target.getClass());
-
-      // go thru simple string setters first.
-      for (Map.Entry<String, String> entry : attribs.entrySet()) {
-         String propName = (String) entry.getKey();
-
-         Field field = properties.get(propName);
-         if (field != null) {
-            Property property = field.getAnnotation(Property.class);
-            if (property.readonly()) {
-               throw new IllegalArgumentException("Property " + propName + " on class [" + objectClass + "] is readonly and therefore cannot be set!");
-            }
-            Class<? extends Converter> converterClass = property.converter();
-            try {
-               Converter converter = converterClass.newInstance();
-               field.setAccessible(true);
-               field.set(target, converter.convert(entry.getValue(), field.getGenericType()));
-               continue;
-            } catch (InstantiationException e) {
-               log.error(String.format("Cannot instantiate converter %s for setting %s.%s (%s): %s",
-                     converterClass.getName(), target.getClass().getName(), field.getName(), propName, e));
-            } catch (IllegalAccessException e) {
-               log.error(String.format("Cannot access converter %s for setting %s.%s (%s): %s",
-                     converterClass.getName(), target.getClass().getName(), field.getName(), propName, e));
-            } catch (Throwable t) {
-               log.error("Failed to convert value " + entry.getValue() + ": " + t);
-            }
-         }
-
-         if (failOnMissingSetter) {
-            throw new IllegalArgumentException("Couldn't find a property for parameter " + propName + " on class [" + objectClass + "]");
-         }
-      }
-      InitHelper.init(target);
    }
 
    //looks for this syntax: ${defaultValue:existingPropValue}

@@ -10,9 +10,9 @@ import com.tangosol.net.DefaultConfigurableCacheFactory;
 import com.tangosol.net.NamedCache;
 import com.tangosol.net.management.MBeanHelper;
 import org.radargun.CacheWrapper;
+import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.utils.TypedProperties;
 
 /**
  * Oracle Coherence 3.x CacheWrapper implementation.
@@ -22,26 +22,25 @@ import org.radargun.utils.TypedProperties;
  * @since 1.0.0
  */
 public class Coherence3Wrapper implements CacheWrapper {
-   private static final String PROP_SERVICE = "service";
-   private static final String PROP_CACHE = "cache";
-   private static final String DEFAULT_CACHE_NAME = "x";
-   private static final String DEFAULT_SERVICE_NAME = "DistributedCache";
    private static final String CACHE_JMX_NAME_TEMPLATE = "Coherence:type=Cache,service=%s,name=%s,nodeId=%d,tier=back";
    
    private Log log = LogFactory.getLog(Coherence3Wrapper.class);
    
    private NamedCache nc;
    private MBeanServer mBeanServer;
-   private String cacheName;
-   private String serviceName;
    private String jmxCacheName;
+
+   @Property(name = "file", doc = "Configuration file.", deprecatedName = "config")
+   private String configFile;
+   @Property(name = "cache", doc = "Name of the default cache. Default is 'testCache'.")
+   private String cacheName = "testCache";
+   @Property(name = "service", doc = "Name of the default service. Default is 'DistributedCache")
+   private String serviceName = "DistributedCache";
    
    @Override
-   public void setUp(String configuration, boolean isLocal, int nodeIndex, TypedProperties confAttributes)
+   public void setUp(boolean isLocal, int nodeIndex)
          throws Exception {
-      cacheName = confAttributes.containsKey(PROP_CACHE) ? confAttributes.getProperty(PROP_CACHE) : DEFAULT_CACHE_NAME;
-      serviceName = confAttributes.containsKey(PROP_SERVICE) ? confAttributes.getProperty(PROP_SERVICE) : DEFAULT_SERVICE_NAME;
-      CacheFactory.setConfigurableCacheFactory(new DefaultConfigurableCacheFactory(configuration));
+      CacheFactory.setConfigurableCacheFactory(new DefaultConfigurableCacheFactory(configFile));
       nc = CacheFactory.getCache(cacheName);
       log.debug("CacheFactory.getClusterConfig(): \n" + CacheFactory.getClusterConfig());
       log.debug("CacheFactory.getConfigurableCacheFactoryConfig(): \n"

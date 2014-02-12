@@ -7,11 +7,11 @@ import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
+import org.radargun.CacheWrapper;
+import org.radargun.config.Property;
+import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.CacheWrapper;
-import org.radargun.features.AtomicOperationsCapable;
-import org.radargun.utils.TypedProperties;
 
 /**
  *
@@ -24,23 +24,23 @@ public class HazelcastWrapper implements CacheWrapper, AtomicOperationsCapable {
    protected final Log log = LogFactory.getLog(getClass());
    private final boolean trace = log.isTraceEnabled();
 
-   private static final String DEFAULT_MAP_NAME = "default";
    protected HazelcastInstance hazelcastInstance;
    protected IMap<Object, Object> hazelcastMap;
 
+   @Property(name = "file", doc = "Configuration file.")
+   private String config;
+
+   @Property(name = "cache", doc = "Name of the map ~ cache", deprecatedName = "map")
+   private String mapName = "default";
+
    @Override
-   public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
+   public void setUp(boolean isLocal, int nodeIndex) throws Exception {
       log.info("Creating cache with the following configuration: " + config);
-      String mapName = getMapName(confAttributes);
       InputStream configStream = getAsInputStreamFromClassLoader(config);
       Config cfg = new XmlConfigBuilder(configStream).build();
       hazelcastInstance = Hazelcast.newHazelcastInstance(cfg);
       log.info("Hazelcast configuration:" + hazelcastInstance.getConfig().toString());
       hazelcastMap = hazelcastInstance.getMap(mapName);
-   }
-
-   protected String getMapName(TypedProperties confAttributes) {
-      return confAttributes.containsKey("map") ? confAttributes.getProperty("map") : DEFAULT_MAP_NAME;
    }
 
    @Override

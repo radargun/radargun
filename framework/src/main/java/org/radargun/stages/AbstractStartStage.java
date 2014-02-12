@@ -20,6 +20,7 @@ package org.radargun.stages;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
@@ -27,7 +28,6 @@ import org.radargun.config.Stage;
 import org.radargun.stages.helpers.StartHelper;
 import org.radargun.stages.helpers.StartStopTime;
 import org.radargun.state.MasterState;
-import org.radargun.utils.TypedProperties;
 
 /**
  * Common base for stages that start slaves.
@@ -46,16 +46,16 @@ public abstract class AbstractStartStage extends AbstractDistStage {
    @Property(doc = "Set of slaves where the start may fail but this will not cause an error. Default is none.")
    protected Collection<Integer> mayFailOn;
 
-   protected TypedProperties confAttributes;
+   protected Map<String, String> configProperties;
 
    public void setProductConfig(String productName, String configName, String configFile) {
       this.configFile = configFile;
-      confAttributes.put(AbstractStartStage.PROP_PRODUCT_NAME, productName);
-      confAttributes.put(AbstractStartStage.PROP_CONFIG_NAME, configName);
+      configProperties.put(AbstractStartStage.PROP_PRODUCT_NAME, productName);
+      configProperties.put(AbstractStartStage.PROP_CONFIG_NAME, configName);
    }  
    
-   public void setConfAttributes(TypedProperties confAttributes) {
-      this.confAttributes = confAttributes;
+   public void setConfigProperties(Map<String, String> configProperties) {
+      this.configProperties = configProperties;
    }
 
    @Override

@@ -1,8 +1,6 @@
 package org.radargun;
 
 
-import org.radargun.utils.TypedProperties;
-
 /**
  * CacheWrappers wrap caching products to provide RadarGun with a standard way of
  * accessing and manipulating a cache.
@@ -18,11 +16,9 @@ public interface CacheWrapper extends BasicOperations
     * usually the name or path to a config file specific to the
     * caching product being tested.
     *
-    * @param config
     * @param nodeIndex
-    * @param confAttributes
     */
-   void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception;
+   void setUp(boolean isLocal, int nodeIndex) throws Exception;
 
    /**
     * This is called at the very end of all tests on this cache, and is used for clean-up

@@ -8,14 +8,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.radargun.CacheWrapper;
 import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.BulkOperationsCapable;
-import org.radargun.utils.TypedProperties;
 
 public class ChmWrapper implements CacheWrapper, BulkOperationsCapable, AtomicOperationsCapable {
 
    public final ConcurrentHashMap chm = new ConcurrentHashMap();
 
    @Override
-   public void setUp(String configuration, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
+   public void setUp(boolean isLocal, int nodeIndex) throws Exception {
    }
 
    public void tearDown() throws Exception {

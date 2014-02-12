@@ -1,22 +1,22 @@
 package org.radargun.cachewrappers;
 
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Ehcache;
-import net.sf.ehcache.Element;
-import net.sf.ehcache.Status;
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-import org.radargun.CacheWrapper;
-import org.radargun.features.AtomicOperationsCapable;
-import org.radargun.features.BulkOperationsCapable;
-import org.radargun.utils.TypedProperties;
-
 import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.Status;
+import org.radargun.CacheWrapper;
+import org.radargun.config.Property;
+import org.radargun.features.AtomicOperationsCapable;
+import org.radargun.features.BulkOperationsCapable;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 
 /**
@@ -32,18 +32,16 @@ public class EHCacheWrapper implements CacheWrapper, AtomicOperationsCapable, Bu
    private Ehcache cache;
    private Log log = LogFactory.getLog("org.radargun.cachewrappers.EHCacheWrapper");
    boolean localMode;
-   private String configFile, cacheName;
 
-   public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
+   @Property(name = "file", doc = "Configuration file.", deprecatedName = "config")
+   private String configFile;
+   @Property(name = "cache", doc = "Name of the default cache. Default is 'testCache'.")
+   private String cacheName = "testCache";
+
+   public void setUp(boolean isLocal, int nodeIndex) throws Exception {
       if (log.isTraceEnabled()) log.trace("Entering EHCacheWrapper.setUp()");
       localMode = isLocal;
-      log.debug("Initializing the cache with props " + config);
-
-      configFile  = confAttributes.containsKey("file") ? confAttributes.getProperty("file") : config;
-      cacheName = confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : "x";
-
-
-      log.debug("Initializing the cache with props " + config);
+      log.debug("Initializing the cache with " + configFile);
       URL url = getClass().getClassLoader().getResource(configFile);
       manager = new CacheManager(url);
       log.info("Caches available:");

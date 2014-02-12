@@ -2,13 +2,13 @@ package org.radargun.cachewrappers;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 
 import com.arjuna.ats.arjuna.common.arjPropertyManager;
 import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
@@ -22,12 +22,12 @@ import org.infinispan.factories.ComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.Address;
 import org.radargun.CacheWrapper;
+import org.radargun.config.Property;
 import org.radargun.features.AtomicOperationsCapable;
 import org.radargun.features.Debugable;
 import org.radargun.features.ProvidesMemoryOverhead;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
 public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperationsCapable, ProvidesMemoryOverhead {
@@ -37,9 +37,6 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
       arjPropertyManager.getCoordinatorEnvironmentBean().setCommunicationStore(VolatileStore.class.getName());
       arjPropertyManager.getObjectStoreEnvironmentBean().setObjectStoreType(VolatileStore.class.getName());
    }
-
-   private static final String DEFAULT_CACHE_NAME = "testCache";
-   private String cacheName;
 
    protected final Log log = LogFactory.getLog(getClass());
    protected final boolean trace = log.isTraceEnabled();
@@ -51,11 +48,21 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
 
    protected DefaultCacheManager cacheManager;
    protected TransactionManager tm;
-   protected String configFile;
-   protected TypedProperties confAttributes;
    protected int nodeIndex;
    protected volatile boolean enlistExtraXAResource;
    protected Map<String, Cache> buckets = new HashMap<String, Cache>();
+
+   @Property(name = "file", doc = "File used as a configuration for this wrapper.", deprecatedName = "config")
+   protected String configFile;
+
+   @Property(name = "cache", doc = "Name of the main cache. Default is 'testCache'")
+   private String cacheName = "testCache";
+
+   @Property(doc = "Threads per node - for EvenConsistentHash.")
+   private int threadsPerNode = -1;
+
+   @Property(doc = "Keys per thread - for EvenConsistentHash.")
+   private int keysPerThread = -1;
 
    public InfinispanWrapper() {
       lifecycle = createLifecycle();
@@ -87,16 +94,8 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
       log.info("Using transaction manager: " + tm);
    }
 
-   protected String getConfigFile() {
-      // yes, backward compatibility and compatibility with sites
-      if (confAttributes.containsKey("config")) return confAttributes.getProperty("config");
-      if (confAttributes.containsKey("file")) return confAttributes.getProperty("file");
-      return configFile;
-   }
-
    protected void setUpCaches() throws Exception {
       String mainCacheName = getMainCacheName();
-      String configFile = getConfigFile();
 
       log.trace("Using config file: " + configFile + " and cache name: " + mainCacheName);
 
@@ -149,9 +148,7 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
       if (isCacheDistributed(cache)) {
          ConsistentHash ch = cache.getAdvancedCache().getDistributionManager().getConsistentHash();
          if (ch instanceof EvenSpreadingConsistentHash) {
-            int threadsPerNode = confAttributes.getIntProperty("threadsPerNode", -1);
             if (threadsPerNode < 0) throw new IllegalStateException("When EvenSpreadingConsistentHash is used threadsPerNode must also be set.");
-            int keysPerThread = confAttributes.getIntProperty("keysPerThread", -1);
             if (keysPerThread < 0) throw new IllegalStateException("When EvenSpreadingConsistentHash is used must also be set.");
             ((EvenSpreadingConsistentHash)ch).init(threadsPerNode, keysPerThread);
             log.info("Using an even consistent hash!");
@@ -160,13 +157,10 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
    }
 
    @Override
-   public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
+   public void setUp(boolean isLocal, int nodeIndex) throws Exception {
       log.debug("Loading JGroups from: " + org.jgroups.Version.class.getProtectionDomain().getCodeSource().getLocation());
       log.info("JGroups version: " + org.jgroups.Version.printDescription());
-      log.info("Using config attributes: " + confAttributes);
-      this.configFile = config;
       this.nodeIndex = nodeIndex;
-      this.confAttributes = confAttributes;
       lifecycle.setUp();
    }
 
@@ -313,9 +307,6 @@ public class InfinispanWrapper implements CacheWrapper, Debugable, AtomicOperati
    }
 
    public String getMainCacheName() {
-      if (cacheName == null) {
-         cacheName = confAttributes.containsKey("cache") ? confAttributes.getProperty("cache") : DEFAULT_CACHE_NAME;
-      }
       return cacheName;
    }
 

@@ -3,7 +3,6 @@ package org.radargun.config;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -11,7 +10,6 @@ import org.radargun.Master;
 import org.radargun.Stage;
 import org.radargun.stages.AbstractStartStage;
 import org.radargun.stages.GenerateReportStage;
-import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -77,7 +75,8 @@ public class DomConfigParser extends ConfigParser {
                   attrToSet.put(attr.getName(), ConfigHelper.parseString(attr.getValue()));
                }
             }
-            ConfigHelper.setValues(generateReportStage, attrToSet, true);
+            PropertyHelper.setProperties(generateReportStage, attrToSet, false);
+            InitHelper.init(generateReportStage);
             if (includeAll) {
                continue;
             }
@@ -112,31 +111,31 @@ public class DomConfigParser extends ConfigParser {
                String configFile = configEl.getAttribute("file");
                if (configFile.isEmpty()) configFile = config;
 
-               Properties configAttributes = new Properties();
-               addDirectAttributes(configAttributes, configEl, ""); // parse own
-               addWrapperAttributes(configAttributes, configEl, "");
-               addSitesAttributes(configAttributes, configEl);
+               Map<String, String> properties = new HashMap<String, String>();
+               addDirectAttributes(properties, configEl, ""); // parse own
+               addWrapperAttributes(properties, configEl, "");
+               addSitesAttributes(properties, configEl);
 
                ScalingBenchmarkConfig clone = prototype.clone();
                masterConfig.addBenchmark(clone);
                clone.setProductName(productName);
                clone.setConfigName(configName);
-               updateStartupStage(configFile, clone, new TypedProperties(configAttributes));
+               updateStartupStage(configFile, clone, properties);
             }
          }
       }
    }
 
-   public static void addDirectAttributes(Properties properties, Element element, String prefix) {
+   public static void addDirectAttributes(Map<String, String> properties, Element element, String prefix) {
       NamedNodeMap attributes = element.getAttributes();
       for (int j = 0; j < attributes.getLength(); j++) {
          String name = attributes.item(j).getNodeName();
-         String value = attributes.item(j).getNodeValue();
+         String value = ConfigHelper.parseString(attributes.item(j).getNodeValue());
          properties.put(prefix + name, value);
       }
    }
 
-   public static void addWrapperAttributes(Properties properties, Element element, String prefix) {
+   public static void addWrapperAttributes(Map<String, String> properties, Element element, String prefix) {
       NodeList childList = element.getChildNodes();
       for (int i = 0; i < childList.getLength(); ++i) {
          if (childList.item(i) instanceof Element) {
@@ -144,7 +143,7 @@ public class DomConfigParser extends ConfigParser {
             if (child.getNodeName().equalsIgnoreCase("wrapper")) {
                String wrapperClass = child.getAttribute("class");
                if (wrapperClass != null && !wrapperClass.isEmpty()) {
-                  properties.setProperty(prefix + "wrapper", wrapperClass);
+                  properties.put(prefix + "wrapper", wrapperClass);
                }
                NodeList wrapperProps = child.getChildNodes();
                for (int j = 0; j < wrapperProps.getLength(); ++j) {
@@ -154,9 +153,9 @@ public class DomConfigParser extends ConfigParser {
                         throw new IllegalArgumentException();
                      }
                      String name = prop.getAttribute("name");
-                     String value = prop.getAttribute("value");
+                     String value = ConfigHelper.parseString(prop.getAttribute("value"));
                      if (name == null || name.isEmpty()) throw new IllegalArgumentException();
-                     properties.setProperty(prefix + name, value);
+                     properties.put(prefix + name, value);
                   }
                }
             }
@@ -164,7 +163,7 @@ public class DomConfigParser extends ConfigParser {
       }
    }
 
-   public static void addSitesAttributes(Properties properties, Element configEl) {
+   public static void addSitesAttributes(Map<String, String> properties, Element configEl) {
       NodeList childList = configEl.getChildNodes();
       int siteIndex = 0;
       for (int i = 0; i < childList.getLength(); ++i) {
@@ -188,12 +187,12 @@ public class DomConfigParser extends ConfigParser {
       return masterConfig;
    }
 
-   private void updateStartupStage(String configFile, ScalingBenchmarkConfig scaling, TypedProperties typedProperties) {
+   private void updateStartupStage(String configFile, ScalingBenchmarkConfig scaling, Map<String, String> properties) {
       for (FixedSizeBenchmarkConfig fixed : scaling.getBenchmarks()) {
          for (Stage st : fixed.getStages()) {
             if (st instanceof AbstractStartStage) {
                AbstractStartStage ass = (AbstractStartStage) st;
-               ass.setConfAttributes(typedProperties);
+               ass.setConfigProperties(properties);
                ass.setProductConfig(scaling.getProductName(), scaling.getConfigName(), configFile);
             }
          }
@@ -276,7 +275,8 @@ public class DomConfigParser extends ConfigParser {
             Attr attr = (Attr) attributes.item(attrIndex);
             attrToSet.put(attr.getName(), ConfigHelper.parseString(attr.getValue()));
          }
-         ConfigHelper.setValues(st, attrToSet, true);
+         PropertyHelper.setProperties(st, attrToSet, false);
+         InitHelper.init(st);
       }
    }
 

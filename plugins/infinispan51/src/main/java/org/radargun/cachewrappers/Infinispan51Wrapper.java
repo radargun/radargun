@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
-import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.TransactionConfiguration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.Parser;
@@ -15,6 +14,7 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.transaction.LockingMode;
 import org.infinispan.transaction.TransactionMode;
+import org.radargun.config.Property;
 import org.radargun.features.BulkOperationsCapable;
 import org.radargun.features.KeyGeneratorAware;
 import org.radargun.features.Killable;
@@ -30,8 +30,12 @@ import org.radargun.utils.ClassLoadHelper;
  */
 public class Infinispan51Wrapper extends InfinispanWrapper
       implements BulkOperationsCapable, KeyGeneratorAware, Killable, MapReduceCapable, Partitionable, PersistentStorageCapable, TopologyAware {
-   protected boolean explicitLocking;
-   protected boolean batching;
+   @Property(doc = "Explicitely lock each modification. Default is false.")
+   protected boolean explicitLocking = false;
+
+   @Property(doc = "Use batching instead of transactions. Default is false.")
+   protected boolean batching = false;
+
    protected final InfinispanPartitionableLifecycle partitionable;
    protected final InfinispanBulkOperations bulkOperations;
    protected final InfinispanKeyGeneratorAware keyGeneratorAware;
@@ -95,16 +99,17 @@ public class Infinispan51Wrapper extends InfinispanWrapper
       topologyAware = createTopologyAware();
       persistentStorage = createPersistentStorage();
       setUpExplicitLocking(getCache(null));
-      batching = confAttributes.getBooleanProperty("batching", false);
    }
 
    protected void setUpExplicitLocking(Cache<Object, Object> cache) {
-      LockingMode lockingMode = cache.getAdvancedCache().getCacheConfiguration().transaction()
-               .lockingMode();
-
-      if (confAttributes.getBooleanProperty("explicitLocking", false) && lockingMode.equals(LockingMode.PESSIMISTIC)) {
-         this.explicitLocking = true;
-         log.info("Using explicit locking!");
+      if (explicitLocking) {
+         LockingMode lockingMode = cache.getAdvancedCache().getCacheConfiguration().transaction().lockingMode();
+         if (lockingMode.equals(LockingMode.PESSIMISTIC)) {
+            log.info("Using explicit locking!");
+         } else {
+            explicitLocking = false;
+            log.error("Cannot use explicit locking with optimistic transactions.");
+         }
       }
    }
 

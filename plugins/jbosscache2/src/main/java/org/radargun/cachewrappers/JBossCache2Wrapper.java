@@ -1,5 +1,6 @@
 package org.radargun.cachewrappers;
 
+import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.jboss.cache.*;
@@ -7,7 +8,6 @@ import org.jboss.cache.buddyreplication.GravitateResult;
 import org.jboss.cache.marshall.NodeData;
 import org.jboss.cache.transaction.DummyTransactionManager;
 import org.radargun.CacheWrapper;
-import org.radargun.utils.TypedProperties;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -20,7 +20,10 @@ public class JBossCache2Wrapper implements CacheWrapper
    private Log log = LogFactory.getLog(JBossCache2Wrapper.class);
    private boolean inLocalMode;
 
-   public void setUp(String config, boolean ignored, int nodeIndex, TypedProperties confAttributes) throws Exception
+   @Property(name = "file", doc = "Configuration file.")
+   private String config;
+
+   public void setUp(boolean ignored, int nodeIndex) throws Exception
    {
       log.info("Creating cache with the following configuration: " + config);
       cache = new DefaultCacheFactory().createCache(config);

@@ -1,5 +1,6 @@
 package org.radargun.cachewrappers;
 
+import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.jboss.cache.Cache;
@@ -10,7 +11,6 @@ import org.jboss.cache.config.Option;
 import org.jboss.cache.transaction.DummyTransactionManager;
 import org.jboss.cache.util.Caches;
 import org.radargun.CacheWrapper;
-import org.radargun.utils.TypedProperties;
 
 import java.util.Map;
 
@@ -25,12 +25,15 @@ public class JBossCache3Wrapper implements CacheWrapper
    private Log log = LogFactory.getLog(JBossCache3Wrapper.class);
    private final boolean FLAT; // this  is final so that the compiler inlines it and it doesn't become a reason for a perf bottleneck
 
+   @Property(name = "file", doc = "Configuration file.")
+   private String config;
+
    public JBossCache3Wrapper()
    {
       FLAT = Boolean.getBoolean("radargun.useFlatCache");
    }
 
-   public void setUp(String config, boolean ignored, int nodeIndex, TypedProperties confAttributes) throws Exception
+   public void setUp(boolean ignored, int nodeIndex) throws Exception
    {
       log.info("Creating cache with the following configuration: " + config);
       cache = new DefaultCacheFactory().createCache(config);

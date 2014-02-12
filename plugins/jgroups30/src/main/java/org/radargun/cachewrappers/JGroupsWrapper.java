@@ -1,13 +1,12 @@
 package org.radargun.cachewrappers;
 
-import javax.transaction.TransactionManager;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import javax.transaction.TransactionManager;
 
 import org.jgroups.Address;
 import org.jgroups.JChannel;
@@ -25,7 +24,7 @@ import org.jgroups.logging.LogFactory;
 import org.jgroups.util.RspList;
 import org.jgroups.util.Util;
 import org.radargun.CacheWrapper;
-import org.radargun.utils.TypedProperties;
+import org.radargun.config.Property;
 
 
 /**
@@ -55,14 +54,32 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    protected volatile Address localAddr;
    protected volatile List<Address> members = Collections.emptyList();
 
-   private int numOwners;
+   public enum SelfRequests {
+      execute,
+      exclude,
+      noop
+   }
+
+   @Property(doc = "Number of nodes where the writes will be replicated.")
+   private int numOwners = 2;
+   @Property(doc = "What to do with requests directed on ourselves. Variants are 'execute', 'exclude' and 'noop'. Default is execute.")
+   private SelfRequests selfRequests = SelfRequests.execute;
+   @Property(doc = "Controls use of the DONT_BUNDLE flag. Default is false.")
+   private boolean bundle;
+   @Property(doc = "Controls use of the FC flag. Default is false.")
+   private boolean flowControl;
+   @Property(doc = "If true, reads are executed on all owners using ResponseMode GET_FIRST. Otherwise it just randomly picks one node for reading. Default is false.")
+   private boolean getFirst;
+   @Property(doc = "Controls use of the OOB flag. Default is false.")
+   private boolean oob;
+   @Property(doc = "Controls use of anycasting flag in RequestOptions. Default is false.")
+   private boolean anycasting;
+
+   @Property(name = "file", doc = "Configuration file for JGroups.", deprecatedName = "config")
+   private String configFile;
+
    private boolean excludeSelfRequests;
    private boolean noopSelfRequests;
-   private boolean bundle;
-   private boolean flowControl;
-   private boolean getFirst;
-   private boolean oob;
-   private boolean anycasting;
    private volatile Object lastValue = null;
 
    static {
@@ -76,17 +93,9 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    }
 
 
-   public void setUp(String configName, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
-      numOwners = confAttributes.getIntProperty("numOwners", 2);
-      String selfRequests = confAttributes.getProperty("selfRequests", "");
-      excludeSelfRequests = "exclude".equalsIgnoreCase(selfRequests);
-      noopSelfRequests = "noop".equals(selfRequests);
-      bundle = confAttributes.getBooleanProperty("bundle", false);
-      flowControl = confAttributes.getBooleanProperty("flowControl", false);
-      getFirst = confAttributes.getBooleanProperty("getFirst", false);
-      oob = confAttributes.getBooleanProperty("oob", false);
-      anycasting = confAttributes.getBooleanProperty("anycasting", false);
-      String configFile = confAttributes.getProperty("file", configName);
+   public void setUp(boolean isLocal, int nodeIndex) throws Exception {
+      excludeSelfRequests = selfRequests == SelfRequests.exclude;
+      noopSelfRequests = selfRequests == SelfRequests.noop;
 
       log.debug("numOwners=" + numOwners + ", selfRequests=" + selfRequests + ", config=" + configFile);
 

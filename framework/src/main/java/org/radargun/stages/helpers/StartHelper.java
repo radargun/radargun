@@ -18,22 +18,24 @@
  */
 package org.radargun.stages.helpers;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.config.DefaultConverter;
+import org.radargun.config.PropertyHelper;
 import org.radargun.features.Partitionable;
 import org.radargun.features.XSReplicating;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
 import org.radargun.stressors.BackgroundOpsManager;
 import org.radargun.utils.ClassLoadHelper;
-import org.radargun.utils.TypedProperties;
 import org.radargun.utils.Utils;
 
 public class StartHelper {
@@ -55,19 +57,22 @@ public class StartHelper {
       }
    }
    
-   public static void start(String productName, String configFile, TypedProperties confAttributes, SlaveState slaveState, int slaveIndex,
-                            ClusterValidation clusterValidation, long clusterFormationTimeout, Set<Integer> reachable, ClassLoadHelper classLoadHelper, DefaultDistStageAck ack) {
+   public static void start(String productName, Map<String, String> configProperties,
+                            SlaveState slaveState, int slaveIndex,
+                            ClusterValidation clusterValidation, long clusterFormationTimeout,
+                            Set<Integer> reachable, ClassLoadHelper classLoadHelper, DefaultDistStageAck ack) {
       CacheWrapper wrapper = null;
       try {
-         confAttributes = pickForSite(confAttributes, slaveIndex);
-         String plugin = getPluginWrapperClass(productName, confAttributes);         
+         configProperties = pickForSite(configProperties, slaveIndex);
+         String plugin = getPluginWrapperClass(productName, configProperties);
          wrapper = (CacheWrapper) classLoadHelper.createInstance(plugin);
+         PropertyHelper.setProperties(wrapper, configProperties, true);
          if (wrapper instanceof Partitionable) {
             ((Partitionable) wrapper).setStartWithReachable(slaveIndex, reachable);
          }
          slaveState.setCacheWrapper(wrapper);
          long startingTime = System.nanoTime();
-         wrapper.setUp(configFile, false, slaveIndex, confAttributes);
+         wrapper.setUp(false, slaveIndex);
          long startedTime = System.nanoTime();
          ack.setPayload(StartStopTime.withStartTime(startedTime - startingTime, ack.getPayload()));
          if (clusterValidation != null) {
@@ -117,38 +122,37 @@ public class StartHelper {
       }
    }
 
-   private static TypedProperties pickForSite(TypedProperties confAttributes, int slaveIndex) {
+   private static Map<String, String> pickForSite(Map<String, String> configProperties, int slaveIndex) {
       Pattern slavesPattern = Pattern.compile("site\\[(\\d*)\\].slaves");
       Matcher m;
       int mySiteIndex = -1;
-      TypedProperties properties = new TypedProperties();
-      for (String property : confAttributes.stringPropertyNames()) {
-         if ((m = slavesPattern.matcher(property)).matches()) {
-            String value = confAttributes.getProperty(property);
-            List<Integer> slaves = (List<Integer>) DefaultConverter.staticConvert(value, DefaultConverter.parametrized(List.class, Integer.class));
-            properties.setProperty("slaves", value);
+      Map<String, String> properties = new HashMap<String, String>();
+      for (Map.Entry<String, String> entry : configProperties.entrySet()) {
+         if ((m = slavesPattern.matcher(entry.getKey())).matches()) {
+            List<Integer> slaves = (List<Integer>) DefaultConverter.staticConvert(entry.getValue(), DefaultConverter.parametrized(List.class, Integer.class));
+            properties.put("slaves", entry.getValue());
             if (slaves.contains(slaveIndex)) {
                if (mySiteIndex >= 0) throw new IllegalArgumentException("Slave set up in multiple sites!");
                try {
                   mySiteIndex = Integer.parseInt(m.group(1));
                } catch (NumberFormatException e) {
-                  log.debug("Cannot parse site index from " + property);
+                  log.debug("Cannot parse site index from " + entry.getKey());
                }
             }
-         } else if (!property.startsWith("site[")) {
-            properties.setProperty(property, confAttributes.getProperty(property));
+         } else if (!entry.getKey().startsWith("site[")) {
+            properties.put(entry.getKey(), entry.getValue());
          }
       }
       // site properties override global ones
       if (mySiteIndex >= 0) {
-         properties.setProperty("siteIndex", String.valueOf(mySiteIndex));
+         properties.put("siteIndex", String.valueOf(mySiteIndex));
          String prefix = "site[" + mySiteIndex + "].";
-         for (String property: confAttributes.stringPropertyNames()) {
-            if (property.startsWith(prefix)) {
-               if (property.equalsIgnoreCase(prefix + "name")) {
-                  properties.setProperty("siteName", confAttributes.getProperty(prefix + "name"));
+         for (Map.Entry<String, String> entry: configProperties.entrySet()) {
+            if (entry.getKey().startsWith(prefix)) {
+               if (entry.getKey().equalsIgnoreCase(prefix + "name")) {
+                  properties.put("siteName", entry.getValue());
                } else {
-                  properties.setProperty(property.substring(prefix.length()), confAttributes.getProperty(property));
+                  properties.put(entry.getKey().substring(prefix.length()), entry.getValue());
                }
             }
          }
@@ -156,9 +160,10 @@ public class StartHelper {
       return properties;
    }
 
-   private static String getPluginWrapperClass(String productName, TypedProperties confAttributes) {
-      if (confAttributes.getProperty("wrapper") != null) {
-         return confAttributes.getProperty("wrapper");
+   private static String getPluginWrapperClass(String productName, Map<String, String> configProperties) {
+      String wrapperClass = configProperties.get("wrapper");
+      if (wrapperClass != null) {
+         return wrapperClass;
       } else {
          return Utils.getCacheWrapperFqnClass(productName);
       }

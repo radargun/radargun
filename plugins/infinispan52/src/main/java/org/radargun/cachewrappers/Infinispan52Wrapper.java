@@ -18,6 +18,7 @@ import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.util.FileLookupFactory;
 import org.radargun.config.DefaultConverter;
+import org.radargun.config.Property;
 import org.radargun.features.DistributedTaskCapable;
 import org.radargun.features.Queryable;
 import org.radargun.features.XSReplicating;
@@ -29,9 +30,26 @@ import org.radargun.utils.ClassLoadHelper;
  * @author Michal Linhard (mlinhard@redhat.com)
  */
 public class Infinispan52Wrapper extends Infinispan51Wrapper implements DistributedTaskCapable<Object>, Queryable, XSReplicating {
-
+   @Property(doc = "Slaves in the same site. Default is all slaves.")
    protected List<Integer> slaves;
-   protected boolean wrapForQuery;
+
+   @Property(doc = "Index of my site. Default is none.")
+   private int siteIndex = -1;
+
+   @Property(doc = "Index of my site. Default is none.")
+   private String siteName;
+
+   @Property(doc = "Wrap values inserted into cache as queryable objects. Default is false.")
+   protected boolean wrapForQuery = false;
+
+   @Property(doc = "Dump configuration into property files. Default is false.")
+   protected boolean dumpConfig = false;
+
+   @Property(name = AbstractStartStage.PROP_PRODUCT_NAME, doc = "Name of the current product.")
+   protected String productName = "default";
+
+   @Property(name = AbstractStartStage.PROP_CONFIG_NAME, doc = "Name of the current config.")
+   protected String configName = "default";
 
    protected final InfinispanDistributedTask distributedTask;
    protected final InfinispanQueryable queryable;
@@ -77,25 +95,16 @@ public class Infinispan52Wrapper extends Infinispan51Wrapper implements Distribu
 
    @Override
    protected void setUpCaches() throws Exception {
-      wrapForQuery = confAttributes.getBooleanProperty("wrapForQuery", false);
-
       // the site properties are selected in StartHelper
-      String slaves = confAttributes.getProperty("slaves");
-      if (slaves != null && !slaves.isEmpty()) {
-         this.slaves = (List<Integer>) DefaultConverter.staticConvert(slaves, DefaultConverter.parametrized(List.class, Integer.class));
-      }
-      int siteIndex = confAttributes.getIntProperty("siteIndex", -1);
       if (siteIndex < 0) {
          log.info("Cannot find any site for slave index " + nodeIndex);
       } else {
-         log.info("Slave " + nodeIndex + " will use site " + confAttributes.getProperty("siteName", "site[" + siteIndex + "]"));
+         log.info("Slave " + nodeIndex + " will use site " + siteName);
       }
 
       super.setUpCaches();
       // config dumping
-      if (confAttributes.getBooleanProperty("dumpConfig", false)) {
-         String productName = confAttributes.getProperty(AbstractStartStage.PROP_PRODUCT_NAME, "default");
-         String configName = confAttributes.getProperty(AbstractStartStage.PROP_CONFIG_NAME, "default");
+      if (dumpConfig) {
          File dumpDir = new File("conf" + File.separator + "normalized" + File.separator + productName + File.separator + configName);
          if (!dumpDir.exists()) {
             dumpDir.mkdirs();

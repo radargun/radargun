@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.radargun.CacheWrapper;
-import org.radargun.utils.TypedProperties;
 
 /**
  * Cache wrapper for Terracotta 2.3.0
@@ -19,7 +18,7 @@ public class TerracottaWrapper implements CacheWrapper {
    private final Map<String, Map> sessionCaches = new HashMap<String, Map>();
 
    @Override
-   public void setUp(String config, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
+   public void setUp(boolean isLocal, int nodeIndex) throws Exception {
    }
 
    public void tearDown() throws Exception {
