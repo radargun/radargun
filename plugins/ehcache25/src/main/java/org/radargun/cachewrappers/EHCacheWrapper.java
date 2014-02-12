@@ -149,12 +149,12 @@ public class EHCacheWrapper implements CacheWrapper, AtomicOperationsCapable, Bu
 
    @Override
    public int getLocalSize() {
-      return cache.getKeys().size();
+      return cache.getSize();
    }
    
    @Override
    public int getTotalSize() {
-      return cache.getSize();
+      return -1;
    }
 
    @Override
