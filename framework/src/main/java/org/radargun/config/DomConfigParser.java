@@ -72,7 +72,7 @@ public class DomConfigParser extends ConfigParser {
                if ("includeAll".equals(attr.getName())) {
                   includeAll = "true".equalsIgnoreCase(attr.getValue());
                } else {
-                  attrToSet.put(attr.getName(), ConfigHelper.parseString(attr.getValue()));
+                  attrToSet.put(attr.getName(), Evaluator.parseString(attr.getValue()));
                }
             }
             PropertyHelper.setProperties(generateReportStage, attrToSet, false);
@@ -84,8 +84,8 @@ public class DomConfigParser extends ConfigParser {
             NodeList itemsEl = thisReportEl.getElementsByTagName("item");
             for (int j = 0; j < itemsEl.getLength(); j++) {
                Element itemEl = (Element) itemsEl.item(j);
-               String productName = ConfigHelper.getStrAttribute(itemEl, "product");
-               String productConfig = ConfigHelper.getStrAttribute(itemEl, "config");
+               String productName = Evaluator.parseString(itemEl.getAttribute("product"));
+               String productConfig = Evaluator.parseString(itemEl.getAttribute("config"));
                generateReportStage.addReportFilter(productName, productConfig);
             }
          }
@@ -101,7 +101,7 @@ public class DomConfigParser extends ConfigParser {
             Element nodeEl = (Element) node;
             String productName = nodeEl.getNodeName();
             if ("product".equalsIgnoreCase(productName)) {
-               productName = ConfigHelper.getStrAttribute(nodeEl, "name");
+               productName = Evaluator.parseString(nodeEl.getAttribute("name"));
             }
             NodeList configs = nodeEl.getElementsByTagName("config");
             for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
@@ -130,7 +130,7 @@ public class DomConfigParser extends ConfigParser {
       NamedNodeMap attributes = element.getAttributes();
       for (int j = 0; j < attributes.getLength(); j++) {
          String name = attributes.item(j).getNodeName();
-         String value = ConfigHelper.parseString(attributes.item(j).getNodeValue());
+         String value = Evaluator.parseString(attributes.item(j).getNodeValue());
          properties.put(prefix + name, value);
       }
    }
@@ -153,7 +153,7 @@ public class DomConfigParser extends ConfigParser {
                         throw new IllegalArgumentException();
                      }
                      String name = prop.getAttribute("name");
-                     String value = ConfigHelper.parseString(prop.getAttribute("value"));
+                     String value = Evaluator.parseString(prop.getAttribute("value"));
                      if (name == null || name.isEmpty()) throw new IllegalArgumentException();
                      properties.put(prefix + name, value);
                   }
@@ -181,8 +181,8 @@ public class DomConfigParser extends ConfigParser {
    private MasterConfig parseMaster(Element configRoot, ScalingBenchmarkConfig prototype) {
       MasterConfig masterConfig;
       Element masterEl = (Element) configRoot.getElementsByTagName("master").item(0);
-      String bindAddress = ConfigHelper.getStrAttribute(masterEl, "bindAddress");
-      int port = masterEl.getAttribute("port") != null ? ConfigHelper.getIntAttribute(masterEl, "port") : Master.DEFAULT_PORT;
+      String bindAddress = Evaluator.parseString(masterEl.getAttribute("bindAddress"));
+      int port = masterEl.getAttribute("port") != null ? Evaluator.parseInt(masterEl.getAttribute("port")) : Master.DEFAULT_PORT;
       masterConfig = new MasterConfig(port, bindAddress, prototype.getMaxSize());
       return masterConfig;
    }
@@ -203,9 +203,9 @@ public class DomConfigParser extends ConfigParser {
       ScalingBenchmarkConfig prototype;
       prototype = new ScalingBenchmarkConfig();
       Element benchmarkEl = (Element) configRoot.getElementsByTagName("benchmark").item(0);
-      prototype.setInitSize(ConfigHelper.getIntAttribute(benchmarkEl, "initSize"));
-      prototype.setMaxSize(ConfigHelper.getIntAttribute(benchmarkEl, "maxSize"));
-      String inc = ConfigHelper.getStrAttribute(benchmarkEl, "increment").trim();
+      prototype.setInitSize(Evaluator.parseInt(benchmarkEl.getAttribute("initSize")));
+      prototype.setMaxSize(Evaluator.parseInt(benchmarkEl.getAttribute("maxSize")));
+      String inc = Evaluator.parseString(benchmarkEl.getAttribute("increment")).trim();
       ScalingBenchmarkConfig.IncrementMethod incMethod = ScalingBenchmarkConfig.IncrementMethod.ADD;
       int incCount = 0;
       if (inc.startsWith("*")) {
@@ -273,7 +273,7 @@ public class DomConfigParser extends ConfigParser {
          Map<String, String> attrToSet = new HashMap<String, String>();
          for (int attrIndex = 0; attrIndex < attributes.getLength(); attrIndex++) {
             Attr attr = (Attr) attributes.item(attrIndex);
-            attrToSet.put(attr.getName(), ConfigHelper.parseString(attr.getValue()));
+            attrToSet.put(attr.getName(), Evaluator.parseString(attr.getValue()));
          }
          PropertyHelper.setProperties(st, attrToSet, false);
          InitHelper.init(st);

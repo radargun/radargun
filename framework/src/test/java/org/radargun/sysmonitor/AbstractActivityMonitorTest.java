@@ -1,12 +1,11 @@
-package org.radargun.fwk;
+package org.radargun.sysmonitor;
 
-import org.radargun.sysmonitor.AbstractActivityMonitor;
-import org.testng.annotations.Test;
+import static org.testng.Assert.assertEquals;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 
-import static org.testng.Assert.assertEquals;
+import org.testng.annotations.Test;
 
 /**
  * @author mmarkus

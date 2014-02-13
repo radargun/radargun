@@ -182,7 +182,7 @@ public class DefaultConverter implements Converter<Object> {
    /* Includes special handling for .. operator, but lacks brackets handling as int collection shouldn't contain
     * any sub-collection. */
    private static List<Object> parseIntCollection(String string, Type type) {
-      Tokenizer tokenizer = new Tokenizer(string.trim(), new String[] { ",", ".."}, true, false);
+      Tokenizer tokenizer = new Tokenizer(string.trim(), new String[] { ",", ".."}, true, false, -1);
       List list = new ArrayList<Object>();
 
       Integer lastNumber = null;

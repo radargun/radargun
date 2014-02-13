@@ -21,7 +21,7 @@ public class Tokenizer implements Enumeration<String> {
    private boolean returnEmpty = false;
 
    public Tokenizer(String string, String[] delims) {
-      this(string, delims, false, false);
+      this(string, delims, false, false, -1);
    }
 
    /**
@@ -33,8 +33,11 @@ public class Tokenizer implements Enumeration<String> {
     * @param returnDelims
     * @param returnEmpty
     */
-   public Tokenizer(String string, String[] delims, boolean returnDelims, boolean returnEmpty) {
+   public Tokenizer(String string, String[] delims, boolean returnDelims, boolean returnEmpty, int startIndex) {
       this.string = string;
+      if (startIndex >= 0) {
+         pos = startIndex;
+      }
       if (string.isEmpty() && !returnEmpty) {
          pos = -1;
       }
@@ -45,6 +48,13 @@ public class Tokenizer implements Enumeration<String> {
       this.returnDelims = returnDelims;
       this.returnEmpty = returnEmpty;
       findNextDelim();
+      if (nextDelimPos == pos) {
+         nextIsDelim = true;
+         pos += nextDelim.length();
+         if (pos >= string.length()) {
+            pos = -1;
+         }
+      }
    }
 
    private void findNextDelim() {
@@ -120,5 +130,11 @@ public class Tokenizer implements Enumeration<String> {
          pos = -1;
       }
       return token;
+   }
+
+   /* After calling nextToken it returns the position just after this token */
+   public int getPosition() {
+      if (pos < 0) return string.length();
+      return pos;
    }
 }

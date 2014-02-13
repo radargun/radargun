@@ -8,7 +8,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.radargun.CacheWrapperStressor;
-import org.radargun.config.ConfigHelper;
+import org.radargun.config.Evaluator;
 import org.radargun.config.DomConfigParser;
 import org.radargun.config.InitHelper;
 import org.radargun.config.PropertyHelper;
@@ -102,12 +102,12 @@ public class LocalConfigParser {
             ReportDesc reportDesc = new ReportDesc();
             Element thisReportEl = (Element) reportElList.item(i);
             if (thisReportEl.getAttribute("includeAll") != null) {
-               String inclAll = ConfigHelper.getStrAttribute(thisReportEl, "includeAll");
+               String inclAll = Evaluator.parseString(thisReportEl.getAttribute("includeAll"));
                if (inclAll.equalsIgnoreCase("true")) {
                   reportDesc.setIncludeAll(true);
                   reportDesc.addReportItems(all);
                   localBenchmark.addReportDesc(reportDesc);
-                  reportDesc.setReportName(ConfigHelper.getStrAttribute(thisReportEl, "name"));
+                  reportDesc.setReportName(Evaluator.parseString(thisReportEl.getAttribute("name")));
                   continue;
                }
             }
@@ -115,11 +115,11 @@ public class LocalConfigParser {
             NodeList itemsEl = thisReportEl.getElementsByTagName("item");
             for (int j = 0; j < itemsEl.getLength(); j++) {
                Element itemEl = (Element) itemsEl.item(j);
-               String productName = ConfigHelper.getStrAttribute(itemEl, "product");
-               String productConfig = ConfigHelper.getStrAttribute(itemEl, "config");
+               String productName = Evaluator.parseString(itemEl.getAttribute("product"));
+               String productConfig = Evaluator.parseString(itemEl.getAttribute("config"));
                reportDesc.addReportItem(productName, productConfig);
             }
-            reportDesc.setReportName(ConfigHelper.getStrAttribute(thisReportEl, "name"));
+            reportDesc.setReportName(Evaluator.parseString(thisReportEl.getAttribute("name")));
             localBenchmark.addReportDesc(reportDesc);
          }
       }
