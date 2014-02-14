@@ -417,7 +417,7 @@
                            </fileset>
                         </copy>
                         <copy todir="${distribution.artifact}/specific">
-                           <fileset dir="jpa/target">
+                           <fileset dir="jpa/target" erroronmissingdir="false">
                               <include name="radargun-jpa-*.jar" />
                            </fileset>
                         </copy>
