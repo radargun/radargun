@@ -10,9 +10,7 @@
    </parent>
    <modelVersion>4.0.0</modelVersion>
 
-   <groupId>org.radargun</groupId>
    <artifactId>radargun-jpa</artifactId>
-   <version>${parent.version}</version>
    <name>Radargun JPA support</name>
    <packaging>jar</packaging>
 
@@ -20,7 +18,7 @@
       <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>radargun-framework</artifactId>
-         <version>${parent.version}</version>
+         <version>${project.version}</version>
       </dependency>
       <dependency>
          <groupId>javax.persistence</groupId>

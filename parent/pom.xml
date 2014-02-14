@@ -4,13 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
    <modelVersion>4.0.0</modelVersion>
 
+   <groupId>org.radargun</groupId>
    <artifactId>radargun-parent</artifactId>
    <version>1.1.0-SNAPSHOT</version>
-   <groupId>org.radargun</groupId>
+
    <name>RadarGun - Parent POM</name>
    <description>The parent POM for RadarGun</description>
    <packaging>pom</packaging>
-   <url>http://github.com/infinispan/radargun</url>
+   <url>http://github.com/radargun/radargun</url>
 
    <licenses>
       <license>
@@ -21,14 +22,14 @@
    </licenses>
 
    <scm>
-      <connection>scm:git:git://github.com/infinispan/radargun.git</connection>
-      <developerConnection>scm:git:git@github.com:infinispan/radargun.git</developerConnection>
-      <url>scm:git:https://github.com/infinispan/radargun</url>
+      <connection>scm:git:git://github.com/radargun/radargun.git</connection>
+      <developerConnection>scm:git:git@github.com:radargun/radargun.git</developerConnection>
+      <url>scm:git:https://github.com/radargun/radargun</url>
    </scm>
 
    <issueManagement>
       <system>GitHub</system>
-      <url>https://github.com/infinispan/radargun/issues</url>
+      <url>https://github.com/radargun/radargun/issues</url>
    </issueManagement>
 
    <developers>
@@ -47,10 +48,44 @@
          </roles>
          <timezone>GMT</timezone>
       </developer>
+
+      <developer>
+         <name>Radim Vansa</name>
+         <roles>
+            <role>Project maintainer</role>
+            <role>Developer</role>
+         </roles>
+         <timezone>CET</timezone>
+      </developer>
+
+      <developer>
+         <name>Alan Field</name>
+         <roles>
+            <role>Developer</role>
+         </roles>
+         <timezone>EST</timezone>
+      </developer>
+
+      <developer>
+         <name>Michal Linhard</name>
+         <roles>
+            <role>Contributor</role>
+         </roles>
+         <timezone>GMT</timezone>
+      </developer>
+
    </developers>
 
    <build>
       <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-release-plugin</artifactId>
+            <version>2.4.2</version>
+            <configuration>
+               <autoVersionSubmodules>true</autoVersionSubmodules>
+            </configuration>
+         </plugin>
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
@@ -139,7 +174,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-assembly-plugin</artifactId>
-            <version>2.2-beta-3</version>
+            <version>2.4</version>
             <executions>
                <execution>
                   <id>assemble</id>
