@@ -30,7 +30,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.features.DistributedTaskCapable;
-import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
 
 /**
@@ -71,12 +70,12 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    private String distributedExecutionParams = null;
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
-      super.processAckOnMaster(acks, masterState);
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
+      super.processAckOnMaster(acks);
       StringBuilder reportCsvContent = new StringBuilder();
 
       if (masterState.get(FIRST_SCALE_STAGE_KEY) == null) {
-         masterState.put(FIRST_SCALE_STAGE_KEY, masterState.nameOfTheCurrentBenchmark());
+         masterState.put(FIRST_SCALE_STAGE_KEY, masterState.getConfigName());
          reportCsvContent.append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, DURATION_NANOSECONDS\n");
       }
 
@@ -118,10 +117,10 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          return result;
       }
 
-      if (getSlaveIndex() == 0) {
+      if (slaveState.getSlaveIndex() == 0) {
          result = executeTask(cacheWrapper);
       } else {
-         String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
+         String payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
                + ", 0";
          result.setPayload(payload);
       }
@@ -138,7 +137,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
       DistributedTaskCapable<T> distributedTaskCapable = (DistributedTaskCapable<T>) cacheWrapper;
       long durationNanos;
       long start = System.nanoTime();
-      futureList = distributedTaskCapable.executeDistributedTask(classLoadHelper, distributedCallableFqn,
+      futureList = distributedTaskCapable.executeDistributedTask(slaveState.getClassLoadHelper(), distributedCallableFqn,
             executionPolicyName, failoverPolicyFqn, nodeAddress, Utils.parseParams(distributedExecutionParams));
       if (futureList == null) {
          result.setError(true);
@@ -159,7 +158,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          }
       }
       durationNanos = System.nanoTime() - start;
-      String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
+      String payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
             + ", " + durationNanos;
       result.setPayload(payload);
 

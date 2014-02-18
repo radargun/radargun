@@ -34,7 +34,6 @@ import org.radargun.features.Debugable;
 import org.radargun.features.PersistentStorageCapable;
 import org.radargun.stages.helpers.BucketPolicy;
 import org.radargun.stages.helpers.Range;
-import org.radargun.state.MasterState;
 import org.radargun.stressors.ByteArrayValueGenerator;
 import org.radargun.stressors.KeyGenerator;
 import org.radargun.stressors.StringKeyGenerator;
@@ -103,7 +102,7 @@ public class CheckDataStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      if (slaves != null && !slaves.contains(getSlaveIndex())) {
+      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
          return ack;
       }
       keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
@@ -121,7 +120,7 @@ public class CheckDataStage extends AbstractDistStage {
             String bucketId = getBucketId();
             ValueChecker checker = new GeneratedValueChecker((ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR));
             int entriesToCheck = numEntries;
-            for (int i = firstEntryOffset * slaveIndex; entriesToCheck > 0; i += stepEntryCount) {
+            for (int i = firstEntryOffset * slaveState.getSlaveIndex(); entriesToCheck > 0; i += stepEntryCount) {
                int checkAmount = Math.min(checkEntryCount, entriesToCheck);
                for (int j = 0; j < checkAmount; ++j) {
                   if (!checkKey(wrapper, bucketId, i + j, result, checker)) {
@@ -173,7 +172,7 @@ public class CheckDataStage extends AbstractDistStage {
             int extraEntries = getExtraEntries();
             int commonEntries = isDeleted() ? 0 : numEntries;
             if (numOwners < 0) {
-               myExpectedSize = -numOwners * getActiveSlaveCount() * (commonEntries + extraEntries) / liveSlavesHint;
+               myExpectedSize = -numOwners * slaveState.getClusterSize() * (commonEntries + extraEntries) / liveSlavesHint;
             } else {
                myExpectedSize = numOwners * (commonEntries + extraEntries) / liveSlavesHint;
             }
@@ -215,7 +214,7 @@ public class CheckDataStage extends AbstractDistStage {
             CacheWrapper wrapper = slaveState.getCacheWrapper();
             String bucketId = getBucketId();
             int entriesToCheck = to - from;
-            for (int i = from * (stepEntryCount / checkEntryCount) + firstEntryOffset * slaveIndex; entriesToCheck > 0; i += stepEntryCount) {
+            for (int i = from * (stepEntryCount / checkEntryCount) + firstEntryOffset * slaveState.getSlaveIndex(); entriesToCheck > 0; i += stepEntryCount) {
                int checkAmount = Math.min(checkEntryCount, entriesToCheck);
                for (int j = 0; j < checkAmount; ++j) {
                   if (!checkKey(wrapper, bucketId, i + j, result, checker)) {
@@ -301,8 +300,8 @@ public class CheckDataStage extends AbstractDistStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
-      boolean success = super.processAckOnMaster(acks, masterState);
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
+      boolean success = super.processAckOnMaster(acks);
       if (success) {
          int sumSize = 0;
          for (DistStageAck ack : acks) {
@@ -320,7 +319,7 @@ public class CheckDataStage extends AbstractDistStage {
             int extraEntries = getExtraEntries();
             int commonEntries = isDeleted() ? 0 : numEntries;            
             if (numOwners < 0) {
-               expectedSize = -numOwners * getActiveSlaveCount() * (commonEntries + extraEntries);
+               expectedSize = -numOwners * slaveState.getClusterSize() * (commonEntries + extraEntries);
             } else {
                expectedSize = numOwners * (commonEntries + extraEntries);
             }
@@ -346,7 +345,7 @@ public class CheckDataStage extends AbstractDistStage {
          for (String entries : extraEntries.split(",")) {
             int count = Integer.parseInt(entries);
             sum += count * multiplicator;
-            multiplicator *= getActiveSlaveCount();
+            multiplicator *= slaveState.getClusterSize();
          }
       } catch (NumberFormatException e) {
          log.error("Cannot parse " + extraEntries);

@@ -215,8 +215,8 @@ public class CsvReportGenerationStage extends AbstractMasterStage {
       }
       assert parentDir.exists() && parentDir.isDirectory();
 
-      // file name is in the format data_<cache-product>_<cache-cfg.xml>_<cluster-size>.csv
-      String actualFileName =  masterState.nameOfTheCurrentBenchmark() + "_" + masterState.configNameOfTheCurrentBenchmark() + "_" + clusterSize +".csv";
+      // file name is in the format <config-name>_<cluster-size>.csv
+      String actualFileName = masterState.getConfigName() + "_" + clusterSize +".csv";
 
       outputFile = Utils.createOrReplaceFile(parentDir, actualFileName);
    }

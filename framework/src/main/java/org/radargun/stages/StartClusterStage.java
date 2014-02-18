@@ -7,7 +7,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.helpers.StartHelper;
-import org.radargun.state.MasterState;
 
 /**
  * Stage that starts a CacheWrapper on each slave.
@@ -50,35 +49,30 @@ public class StartClusterStage extends AbstractStartStage {
          return ack;
       }
       if (slaves != null) {
-         if (!slaves.contains(getSlaveIndex())) {
+         if (!slaves.contains(slaveState.getSlaveIndex())) {
             log.trace("Start request not targeted for this slave, ignoring.");
             return ack;
          } else {
             int index = 0;
             for (Integer slave : slaves) {
-               if (slave.equals(getSlaveIndex())) break;
+               if (slave.equals(slaveState.getSlaveIndex())) break;
                index++;
             }
             staggerStartup(index, slaves.size());
          }
       } else {
-         staggerStartup(slaveIndex, getActiveSlaveCount());
+         staggerStartup(slaveState.getSlaveIndex(), slaveState.getClusterSize());
       }
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
-            + ". This slave's index is: " + getSlaveIndex());
+            + ". This slave's index is: " + slaveState.getSlaveIndex());
       
-      StartHelper.start(productName, configProperties, slaveState, getSlaveIndex(),
-            validateCluster ? new StartHelper.ClusterValidation(expectNumSlaves, getActiveSlaveCount()) : null,
-            clusterFormationTimeout, reachable, classLoadHelper, ack);
+      StartHelper.start(slaveState, service, configProperties,
+            validateCluster ? new StartHelper.ClusterValidation(expectNumSlaves, slaveState.getClusterSize()) : null,
+            clusterFormationTimeout, reachable, ack);
       if (!ack.isError()) {
-         log.info("Successfully started cache wrapper on slave " + getSlaveIndex() + ": " + slaveState.getCacheWrapper());
+         log.info("Successfully started cache wrapper on slave " + slaveState.getSlaveIndex() + ": " + slaveState.getCacheWrapper());
       }
       return ack;
-   }
-
-   @Override
-   public void initOnMaster(MasterState masterState, int slaveIndex) {
-      super.initOnMaster(masterState, slaveIndex);
    }
 
    private void staggerStartup(int thisNodeIndex, int numSlavesToStart) {

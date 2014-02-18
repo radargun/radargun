@@ -35,11 +35,11 @@ import org.radargun.Stage;
  */
 public class ConfigWikiGenerator {
    public static void main(String[] args) {
-      for (Map.Entry<String, Class<? extends Stage>> entry : StageHelper.getStagesFromJar(args[0]).entrySet()) {
+      for (Map.Entry<String, Class<? extends Stage>> entry : StageHelper.getStagesFromJar(args[0], true).entrySet()) {
          if (Modifier.isAbstract(entry.getValue().getModifiers())) continue;
          System.out.println("## " + entry.getKey());
          System.out.println(entry.getValue().getAnnotation(org.radargun.config.Stage.class).doc());
-         for (Map.Entry<String, Field> property : PropertyHelper.getProperties(entry.getValue()).entrySet()) {
+         for (Map.Entry<String, Field> property : PropertyHelper.getProperties(entry.getValue(), true).entrySet()) {
             Property propertyAnnotation = property.getValue().getAnnotation(Property.class);
             if (property.getKey().equals(propertyAnnotation.deprecatedName()) || propertyAnnotation.readonly()) continue;
             System.out.println("* " + property.getKey()

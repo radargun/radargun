@@ -12,7 +12,6 @@ import org.radargun.config.DefaultConverter;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.features.Partitionable;
-import org.radargun.state.MasterState;
 
 /**
  * Stage that partitions the cluster into several parts that cannot communicate
@@ -39,14 +38,14 @@ public class SetPartitionsStage extends AbstractDistStage {
       }
       int myPartitionIndex = -1;
       for (int i = 0; i < partitions.size(); ++i) {
-         if (partitions.get(i).contains(getSlaveIndex())) {
+         if (partitions.get(i).contains(slaveState.getSlaveIndex())) {
             myPartitionIndex = i;
             break;
          }
       }
       if (myPartitionIndex < 0) {
          ack.setError(true);
-         ack.setErrorMessage("Slave " + getSlaveIndex() + " is not contained in any partition!");
+         ack.setErrorMessage("Slave " + slaveState.getSlaveIndex() + " is not contained in any partition!");
          return ack;
       }
       try {
@@ -56,7 +55,7 @@ public class SetPartitionsStage extends AbstractDistStage {
             return ack;
          }
          if (cacheWrapper instanceof Partitionable) {
-            ((Partitionable) cacheWrapper).setMembersInPartition(getSlaveIndex(), partitions.get(myPartitionIndex));
+            ((Partitionable) cacheWrapper).setMembersInPartition(slaveState.getSlaveIndex(), partitions.get(myPartitionIndex));
          } else {
             String message = "Cache wrapper " + cacheWrapper.getClass() + "does not allow to split partitions";
             ack.setError(true);
@@ -71,11 +70,6 @@ public class SetPartitionsStage extends AbstractDistStage {
          ack.setRemoteException(e);
       }
       return ack;
-   }
-
-   @Override
-   public void initOnMaster(MasterState masterState, int slaveIndex) {
-      super.initOnMaster(masterState, slaveIndex);
    }
 
    public static class UniqueCheckerConverter extends DefaultConverter {

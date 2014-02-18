@@ -1,8 +1,8 @@
 package org.radargun.stages;
 
-import org.radargun.DistStageAck;
-
 import java.net.InetAddress;
+
+import org.radargun.DistStageAck;
 
 /**
  * Default implementation for a distributed stage.
@@ -22,10 +22,16 @@ public class DefaultDistStageAck implements DistStageAck {
 
    private String remoteExceptionString;
 
-
    public DefaultDistStageAck(int slaveIndex, InetAddress slaveAddress) {
       this.slaveIndex = slaveIndex;
       this.slaveAddress = slaveAddress;
+   }
+
+   public DefaultDistStageAck error(String message, Throwable exception) {
+      isError = true;
+      errorMessage = message;
+      setRemoteException(exception);
+      return this;
    }
 
    public int getSlaveIndex() {
@@ -45,13 +51,23 @@ public class DefaultDistStageAck implements DistStageAck {
    }
 
    public void setRemoteException(Throwable remoteException) {
-      StackTraceElement[] stackTraceElements = remoteException.getStackTrace();
-      if (stackTraceElements != null && stackTraceElements.length > 0) {
-         remoteExceptionString = "\n";
-         for (StackTraceElement ste : stackTraceElements) {
-            remoteExceptionString += ste.toString() + "\n";
+      StringBuilder sb = new StringBuilder();
+      while (remoteException != null) {
+         sb.append(remoteException.toString());
+         StackTraceElement[] stackTraceElements = remoteException.getStackTrace();
+         if (stackTraceElements != null && stackTraceElements.length > 0) {
+            for (StackTraceElement ste : stackTraceElements) {
+               sb.append("\n\t at ").append(ste.toString());
+            }
+            if (remoteException.getCause() != null) {
+               sb.append("\ncaused by: ");
+               remoteException = remoteException.getCause();
+            } else {
+               break;
+            }
          }
       }
+      remoteExceptionString = sb.append('\n').toString();
    }
 
    public String getErrorMessage() {

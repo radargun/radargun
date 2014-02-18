@@ -54,7 +54,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
          log.warn("Nothing to report!");
          return false;
       }
-      if (masterState.getSlavesCountForCurrentStage() != allResults.size()) {
+      if (masterState.getClusterSize() != allResults.size()) {
          log.error("We're missing statistics from some slaves");
          return false;
       }
@@ -76,8 +76,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
             log.error("Couldn't create directory " + targetDir);
             return false;
          }
-         File subdir = new File(reportDir, masterState.nameOfTheCurrentBenchmark() + "_"
-               + masterState.configNameOfTheCurrentBenchmark() + "_" + results.size());
+         File subdir = new File(reportDir, masterState.getConfigName() + "_" + results.size());
          if (!subdir.exists() && !subdir.mkdirs()) {
             log.error("Couldn't create directory " + subdir.getAbsolutePath());
             return false;
@@ -219,7 +218,7 @@ public class ReportBackgroundStatsStage extends AbstractMasterStage {
 
    private List<String> getSlaveNames() {
       List<String> result = new ArrayList<String>();
-      for (int i = 0; i < masterState.getSlavesCountForCurrentStage(); i++) {
+      for (int i = 0; i < masterState.getClusterSize(); i++) {
          result.add("slave" + i);
       }
       return result;

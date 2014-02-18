@@ -11,7 +11,6 @@ import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.MasterState;
 import org.radargun.stressors.Statistics;
 import org.radargun.stressors.TpccStressor;
 
@@ -53,7 +52,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
    private CacheWrapper cacheWrapper;
 
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
+      DefaultDistStageAck result = new DefaultDistStageAck(slaveState.getSlaveIndex(), slaveState.getLocalAddress());
       this.cacheWrapper = slaveState.getCacheWrapper();
       if (cacheWrapper == null) {
          log.info("Not running test on this slave as the wrapper hasn't been configured.");
@@ -63,8 +62,8 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       log.info("Starting TpccBenchmarkStage: " + this.toString());
 
       TpccStressor tpccStressor = new TpccStressor();
-      tpccStressor.setNodeIndex(getSlaveIndex());
-      tpccStressor.setNumSlaves(getActiveSlaveCount());
+      tpccStressor.setNodeIndex(slaveState.getSlaveIndex());
+      tpccStressor.setNumSlaves(slaveState.getClusterSize());
       tpccStressor.setNumThreads(this.numThreads);
       tpccStressor.setPerThreadSimulTime(this.perThreadSimulTime);
       tpccStressor.setArrivalRate(this.arrivalRate);
@@ -73,7 +72,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
 
       try {
          Map<String, Object> results = tpccStressor.stress(cacheWrapper);
-         String sizeInfo = "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + super.getActiveSlaveCount() + ", nodeIndex:" + super.getSlaveIndex() + ", cacheSize: " + cacheWrapper.getLocalSize();
+         String sizeInfo = "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + slaveState.getClusterSize() + ", nodeIndex:" + slaveState.getSlaveIndex() + ", cacheSize: " + cacheWrapper.getLocalSize();
          log.info(sizeInfo);
          results.put(SIZE_INFO, sizeInfo);
          result.setPayload(results);
@@ -86,7 +85,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       }
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       logDurationInfo(acks);
       boolean success = true;
       Map<Integer, Map<String, Object>> results = new HashMap<Integer, Map<String, Object>>();

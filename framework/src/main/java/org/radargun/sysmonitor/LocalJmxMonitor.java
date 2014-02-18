@@ -42,7 +42,6 @@ public class LocalJmxMonitor implements Serializable {
    /** The serialVersionUID */
    private static final long serialVersionUID = 2530981300271084693L;
 
-   private String productName;
    private String configName;
    private String interfaceName;
 
@@ -116,14 +115,6 @@ public class LocalJmxMonitor implements Serializable {
 
    public NetworkBytesMonitor getNetworkBytesOutMonitor() {
       return netOutMonitor;
-   }
-
-   public String getProductName() {
-      return productName;
-   }
-
-   public void setProductName(String productName) {
-      this.productName = productName;
    }
 
    public String getConfigName() {

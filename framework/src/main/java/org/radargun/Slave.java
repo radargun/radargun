@@ -1,25 +1,16 @@
 package org.radargun;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.AbstractExecutorService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.radargun.config.Cluster;
+import org.radargun.config.Configuration;
+import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.stages.AbstractStartStage;
+import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
 
 /**
@@ -31,174 +22,75 @@ public class Slave {
 
    private static Log log = LogFactory.getLog(Slave.class);
 
-   private String masterHost;
-   private boolean exitOnMasterShutdown = true;
-   private int masterPort;
-   private SocketChannel socketChannel;
-   private ByteBuffer byteBuffer = null;
    private SlaveState state = new SlaveState();
-   private int slaveIndex = -1;
+   //private int slaveIndex = -1;
+   //private int slaveCount;
+   private RemoteMasterConnection connection;
 
-   ExecutorService es = Executors.newSingleThreadExecutor(new ThreadFactory() {
-      public Thread newThread(Runnable r) {
-         Thread th = new Thread(r);
-         th.setDaemon(true);
-         return th;
-      }
-   });
-   private Future<?> future;
+   private Scenario scenario;
+   private Configuration configuration;
+   private Cluster cluster;
 
-   public Slave(String masterHost, int masterPort, int slaveIndex) {
-      this.masterHost = masterHost;
-      this.masterPort = masterPort;
-      this.slaveIndex = slaveIndex;
+   public Slave(RemoteMasterConnection connection) {
+      this.connection = connection;
+      //this.slaveIndex = slaveIndex;
       Runtime.getRuntime().addShutdownHook(new ShutDownHook("Slave process"));
-      int byteBufferSize = 8192;
-      try {
-         byteBufferSize = Integer.valueOf(System.getProperty("slave.bufsize", "8192"));
-      } catch (Exception e) {
-         log.error("Couldn't parse byte buffer size, keeping default", e);
-      }
-      this.byteBuffer = ByteBuffer.allocate(byteBufferSize);
    }
 
-   private void start() throws Exception {
-      connectToMaster();
-      startCommunicationWithMaster();
+   private void run(int slaveIndex) throws Exception {
+      InetAddress address = connection.connectToMaster(slaveIndex);
+      // the provided slaveIndex is just a "recommendation"
+      state.setSlaveIndex(connection.receiveSlaveIndex());
+      log.info("Received slave index " + state.getSlaveIndex());
+      state.setMaxClusterSize(connection.receiveSlaveCount());
+      log.info("Received slave count " + state.getMaxClusterSize());
+      state.setLocalAddress(address);
+      while (true) {
+         Object object = connection.receiveObject();
+         if (object == null) {
+            log.info("Master shutdown!");
+            break;
+         } else if (object instanceof Scenario) {
+            scenario = (Scenario) object;
+         } else if (object instanceof Configuration) {
+            configuration = (Configuration) object;
+            state.setConfigName(configuration.name);
+         } else if (object instanceof Cluster) {
+            cluster = (Cluster) object;
+            int stageId;
+            Map<String, String> extras = getCurrentExtras(configuration, cluster);
+            Cluster.Group group = cluster.getGroup(state.getSlaveIndex());
+            state.setClusterSize(cluster.getSize());
+            state.setGroupSize(group.size);
+            state.setPlugin(configuration.getSetup(group.name).plugin);
+            Configuration.Setup setup = configuration.getSetup(group.name);
+            while ((stageId = connection.receiveNextStageId()) >= 0) {
+               DistStage stage = (DistStage) scenario.getStage(stageId, extras);
+               stage.initOnSlave(state);
+               if (stage instanceof AbstractStartStage) {
+                  ((AbstractStartStage) stage).setup(setup.service, setup.file, setup.getProperties());
+               }
+               DistStageAck response;
+               try {
+                  long start =System.currentTimeMillis();
+                  response = stage.executeOnSlave();
+                  response.setDuration(System.currentTimeMillis() - start);
+               } catch (Exception e) {
+                  log.error("Stage execution has failed", e);
+                  response = new DefaultDistStageAck(state.getSlaveIndex(), state.getLocalAddress()).error("Stage execution has failed", e);
+               }
+               connection.sendReponse(response);
+            }
+            connection.sendReponse(new DefaultDistStageAck(state.getSlaveIndex(), state.getLocalAddress()));
+         }
+      }
       ShutDownHook.exit(0);
    }
 
-   private void startCommunicationWithMaster() throws Exception {
-      Selector selector = Selector.open();
-      socketChannel.register(selector, SelectionKey.OP_READ);
-      while (true) {
-         selector.select();
-         // Get set of ready objects
-         Set<SelectionKey> readyKeys = selector.selectedKeys();
-
-         Iterator<SelectionKey> readyItor = readyKeys.iterator();
-         // Walk through set
-         while (readyItor.hasNext()) {
-            final SelectionKey key = readyItor.next();
-            readyItor.remove();
-            SocketChannel keyChannel = (SocketChannel) key.channel();
-
-            if (key.isReadable()) {
-               int numRead = keyChannel.read(byteBuffer);
-               if (numRead == -1) {
-                  log.info("Master shutdown!");
-                  key.channel().close();
-                  key.cancel();
-                  return;
-               }
-               final int expectedSize = byteBuffer.getInt(0);
-               if (byteBuffer.position() == expectedSize + 4) {
-                  Runnable runnable = new Runnable() {
-                     public void run() {
-                        try {
-                           DistStage stage = (DistStage) SerializationHelper.deserialize(byteBuffer.array(), 4, expectedSize);
-                           stage.initOnSlave(state);
-                           log.info("Executing stage: " + stage);
-                           long start =System.currentTimeMillis();
-                           DistStageAck ack = stage.executeOnSlave();
-                           ack.setDuration(System.currentTimeMillis() - start);
-                           byte[] bytes = SerializationHelper.prepareForSerialization(ack);
-                           log.info("Finished stage: " + stage);
-                           byteBuffer.clear();
-                           if (bytes.length > byteBuffer.capacity()) {
-                              log.info("Buffer is too short, required " + bytes.length + " bytes, reallocating");                              
-                              byteBuffer = ByteBuffer.allocate(bytes.length);
-                           }
-                           byteBuffer.put(bytes);                           
-                           byteBuffer.flip();
-                        } catch (IOException e) {
-                           log.error("Error during serialization", e);
-                        }
-                     }
-                  };
-                  future = es.submit(runnable);
-                  key.interestOps(SelectionKey.OP_WRITE | SelectionKey.OP_READ);
-               }
-            } else if (key.isWritable()) {
-               try {
-                  future.get(500, TimeUnit.MILLISECONDS);
-                  if (log.isTraceEnabled()) {
-                     log.trace("Buffer before writing is: " + byteBuffer);
-                  }
-                  key.interestOps(SelectionKey.OP_WRITE);
-                  int val = keyChannel.write(byteBuffer);
-                  if (log.isTraceEnabled()) {
-                     log.trace("Successfully written: " + val + " bytes to the master from buffer: " + byteBuffer);
-                  }
-
-                  if (byteBuffer.remaining() == 0) {
-                     log.info("Ack successfully sent to the master");
-                     byteBuffer.clear();
-                     key.interestOps(SelectionKey.OP_READ);
-                  }
-
-               } catch (TimeoutException e) {
-//                  log.trace("Current stage not finished processing, nothing to write for now.");
-               }
-
-            } else {
-               log.warn("Received a key that is not connectible, readable or writable: " + key);
-            }
-         }
-      }
-   }
-
-   private void connectToMaster() throws IOException {
-      InetSocketAddress socketAddress = new InetSocketAddress(masterHost, masterPort);
-      log.info("Attempting to connect to master " + masterHost + ":" + masterPort);
-      socketChannel = SocketChannel.open();
-      socketChannel.connect(socketAddress);
-      log.info("Successfully established connection with master at: " + masterHost + ":" + masterPort);
-      
-      ByteBuffer slaveIndexBuffer = ByteBuffer.allocate(4);
-      slaveIndexBuffer.putInt(slaveIndex);
-      slaveIndexBuffer.flip();
-      socketChannel.write(slaveIndexBuffer);
-      
-      // now the channel must be connected
-      state.setLocalAddress(socketChannel.socket().getLocalAddress());
-      state.setMasterAddress(socketChannel.socket().getInetAddress());
-      
-      socketChannel.configureBlocking(false);
-                 
-      if (exitOnMasterShutdown) {
-         es = Executors.newSingleThreadExecutor();
-      } else {
-         es = new AbstractExecutorService() {
-            public void shutdown() {
-            }
-
-            public List<Runnable> shutdownNow() {
-               return Collections.EMPTY_LIST;
-            }
-
-            public boolean isShutdown() {
-               return false;
-            }
-
-            public boolean isTerminated() {
-               return false;
-            }
-
-            public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
-               return false;
-            }
-
-            public void execute(Runnable command) {
-               command.run();
-            }
-         };
-      }
-   }
 
    public static void main(String[] args) {
       String masterHost = null;
-      int masterPort = Master.DEFAULT_PORT;
+      int masterPort = RemoteSlaveConnection.DEFAULT_PORT;
       int slaveIndex = -1;
       for (int i = 0; i < args.length - 1; i++) {
          if (args[i].equals("-master")) {
@@ -226,9 +118,9 @@ public class Slave {
       if (masterHost == null) {
          printUsageAndExit();
       }
-      Slave slave = new Slave(masterHost, masterPort, slaveIndex);
+      Slave slave = new Slave(new RemoteMasterConnection(masterHost, masterPort));
       try {
-         slave.start();
+         slave.run(slaveIndex);
       } catch (Exception e) {
          e.printStackTrace();
          ShutDownHook.exit(10);
@@ -237,7 +129,20 @@ public class Slave {
 
    private static void printUsageAndExit() {
       System.out.println("Usage: start_local_slave.sh -master <host>:port");
-      System.out.println("       -master: The host(and optional port) on which the master resides. If port is missing it defaults to " + Master.DEFAULT_PORT);
+      System.out.println("       -master: The host(and optional port) on which the master resides. If port is missing it defaults to " + RemoteSlaveConnection.DEFAULT_PORT);
       ShutDownHook.exit(1);
+   }
+
+   private Map<String, String> getCurrentExtras(Configuration configuration, Cluster cluster) {
+      Map<String, String> extras = new HashMap<String, String>();
+      extras.put(Properties.PROPERTY_CONFIG_NAME, configuration.name);
+      extras.put(Properties.PROPERTY_PLUGIN_NAME, state.getPlugin());
+      extras.put(Properties.PROPERTY_CLUSTER_SIZE, String.valueOf(cluster.getSize()));
+      extras.put(Properties.PROPERTY_CLUSTER_MAX_SIZE, String.valueOf(state.getMaxClusterSize()));
+      extras.put(Properties.PROPERTY_SLAVE_INDEX, String.valueOf(state.getSlaveIndex()));
+      Cluster.Group group = cluster.getGroup(state.getSlaveIndex());
+      extras.put(Properties.PROPERTY_GROUP_NAME, group.name);
+      extras.put(Properties.PROPERTY_GROUP_SIZE, String.valueOf(group.size));
+      return extras;
    }
 }

@@ -32,7 +32,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.features.ProvidesMemoryOverhead;
-import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.Utils;
 
@@ -150,7 +149,7 @@ public class RandomDataStage extends AbstractDistStage {
             words[i - 1][j] = new String(generateRandomUniqueWord(i, false)).intern();
          }
       }
-      log.trace("Slave" + this.getSlaveIndex() + " words array = " + Arrays.deepToString(words));
+      log.trace("Slave" + slaveState.getSlaveIndex() + " words array = " + Arrays.deepToString(words));
    }
 
    @Override
@@ -164,14 +163,14 @@ public class RandomDataStage extends AbstractDistStage {
           * Add the slaveIndex to the seed to guarantee that each node generates a different word
           * list
           */
-         random = new Random(randomSeed + slaveIndex);
+         random = new Random(randomSeed + slaveState.getSlaveIndex());
       }
       fillWordArray(maxWordCount, maxWordLength);
    }
 
    @Override
    public DistStageAck executeOnSlave() {
-      random = new Random(randomSeed + slaveIndex);
+      random = new Random(randomSeed + slaveState.getSlaveIndex());
       DefaultDistStageAck result = newDefaultStageAck();
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
 
@@ -245,12 +244,12 @@ public class RandomDataStage extends AbstractDistStage {
             }
             totalPutCount = targetMemoryUse / valueSizeWithOverhead;
          }
-         nodePutCount = (long) Math.ceil(totalPutCount / getActiveSlaveCount());
+         nodePutCount = (long) Math.ceil(totalPutCount / slaveState.getClusterSize());
          /*
           * Add one to the nodeCount on each slave with an index less than the remainder so that the
           * correct number of values are written to the cache
           */
-         if ((totalPutCount % getActiveSlaveCount() != 0) && getSlaveIndex() < (totalPutCount % getActiveSlaveCount())) {
+         if ((totalPutCount % slaveState.getClusterSize() != 0) && slaveState.getSlaveIndex() < (totalPutCount % slaveState.getClusterSize())) {
             nodePutCount++;
          }
       }
@@ -260,7 +259,7 @@ public class RandomDataStage extends AbstractDistStage {
       try {
          byte[] buffer = new byte[valueSize];
          while (putCount > 0) {
-            String key = Integer.toString(getSlaveIndex()) + "-" + putCount + ":" + System.nanoTime();
+            String key = Integer.toString(slaveState.getSlaveIndex()) + "-" + putCount + ":" + System.nanoTime();
 
             long start;
             if (stringData) {
@@ -283,7 +282,7 @@ public class RandomDataStage extends AbstractDistStage {
                cacheWrapper.put(bucket, key, buffer);
             }
             if (printWriteStatistics) {
-               log.info("Put on slave" + getSlaveIndex() + " took "
+               log.info("Put on slave" + slaveState.getSlaveIndex() + " took "
                      + Utils.prettyPrintTime(System.nanoTime() - start, TimeUnit.NANOSECONDS));
             }
 
@@ -303,7 +302,7 @@ public class RandomDataStage extends AbstractDistStage {
 
       // Log the word counts for this node
       if (stringData && !wordCount.isEmpty()) {
-         log.debug("Word counts for node" + getSlaveIndex());
+         log.debug("Word counts for node" + slaveState.getSlaveIndex());
          log.debug("--------------------");
          for (Map.Entry<String, Integer> entry : wordCount.entrySet()) {
             log.debug("key: " + entry.getKey() + "; value: " + entry.getValue());
@@ -411,8 +410,8 @@ public class RandomDataStage extends AbstractDistStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
-      super.processAckOnMaster(acks, masterState);
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
+      super.processAckOnMaster(acks);
       log.info("--------------------");
       if (ramPercentage > 0) {
          if (stringData) {
@@ -462,7 +461,7 @@ public class RandomDataStage extends AbstractDistStage {
       if (limitWordCount) {
          int totalWordCount = maxWordCount;
          if (!shareWords) {
-            totalWordCount = maxWordCount * getActiveSlaveCount();
+            totalWordCount = maxWordCount * slaveState.getClusterSize();
          }
          log.info(totalWordCount + " words were generated with a maximum length of " + maxWordLength + " characters");
       }

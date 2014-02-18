@@ -35,7 +35,6 @@ import org.radargun.logging.LogFactory;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
 import org.radargun.stressors.BackgroundOpsManager;
-import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
 
 public class StartHelper {
@@ -57,22 +56,20 @@ public class StartHelper {
       }
    }
    
-   public static void start(String productName, Map<String, String> configProperties,
-                            SlaveState slaveState, int slaveIndex,
+   public static void start(SlaveState slaveState, String service, Map<String, String> configProperties,
                             ClusterValidation clusterValidation, long clusterFormationTimeout,
-                            Set<Integer> reachable, ClassLoadHelper classLoadHelper, DefaultDistStageAck ack) {
-      CacheWrapper wrapper = null;
+                            Set<Integer> reachable, DefaultDistStageAck ack) {
+      CacheWrapper control = null;
       try {
-         configProperties = pickForSite(configProperties, slaveIndex);
-         String plugin = getPluginWrapperClass(productName, configProperties);
-         wrapper = (CacheWrapper) classLoadHelper.createInstance(plugin);
-         PropertyHelper.setProperties(wrapper, configProperties, true);
-         if (wrapper instanceof Partitionable) {
-            ((Partitionable) wrapper).setStartWithReachable(slaveIndex, reachable);
+         String controlClass = Utils.getServiceProperty(slaveState.getPlugin(), "service." + service);
+         control = (CacheWrapper) slaveState.getClassLoadHelper().createInstance(controlClass);
+         PropertyHelper.setProperties(control, configProperties, true, true);
+         if (control instanceof Partitionable) {
+            ((Partitionable) control).setStartWithReachable(slaveState.getSlaveIndex(), reachable);
          }
-         slaveState.setCacheWrapper(wrapper);
+         slaveState.setCacheWrapper(control);
          long startingTime = System.nanoTime();
-         wrapper.setUp(false, slaveIndex);
+         control.setUp(false, slaveState.getSlaveIndex());
          long startedTime = System.nanoTime();
          ack.setPayload(StartStopTime.withStartTime(startedTime - startingTime, ack.getPayload()));
          if (clusterValidation != null) {
@@ -80,8 +77,8 @@ public class StartHelper {
             int expectedNumberOfSlaves;
             if (clusterValidation.expectedSlaves != null) {
                expectedNumberOfSlaves = clusterValidation.expectedSlaves;
-            } else if (wrapper instanceof XSReplicating) {
-               List<Integer> slaves = ((XSReplicating) wrapper).getSlaves();
+            } else if (control instanceof XSReplicating) {
+               List<Integer> slaves = ((XSReplicating) control).getSlaves();
                expectedNumberOfSlaves = slaves != null ? slaves.size() : clusterValidation.activeSlaveCount;
             } else {
                expectedNumberOfSlaves = clusterValidation.activeSlaveCount;
@@ -89,7 +86,7 @@ public class StartHelper {
 
             long clusterFormationDeadline = System.currentTimeMillis() + clusterFormationTimeout;
             for (;;) {
-               int numMembers = wrapper.getNumMembers();
+               int numMembers = control.getNumMembers();
                if (numMembers != expectedNumberOfSlaves) {
                   String msg = "Number of members=" + numMembers + " is not the one expected: " + expectedNumberOfSlaves;
                   log.info(msg);
@@ -100,12 +97,12 @@ public class StartHelper {
                      return;
                   }
                } else {
-                  log.info("Number of members is the one expected: " + wrapper.getNumMembers());
+                  log.info("Number of members is the one expected: " + control.getNumMembers());
                   break;
                }
             }
          }
-         if (wrapper.isRunning()) {
+         if (control.isRunning()) {
             // here is a race so this is rather an optimization
             BackgroundOpsManager.afterCacheWrapperStart(slaveState);
          }
@@ -113,15 +110,16 @@ public class StartHelper {
          log.error("Issues while instantiating/starting cache wrapper", e);
          ack.setError(true);
          ack.setRemoteException(e);
-         if (wrapper != null) {
+         if (control != null) {
             try {
-               wrapper.tearDown();
+               control.tearDown();
             } catch (Exception ignored) {
             }
          }
       }
    }
 
+   @Deprecated
    private static Map<String, String> pickForSite(Map<String, String> configProperties, int slaveIndex) {
       Pattern slavesPattern = Pattern.compile("site\\[(\\d*)\\].slaves");
       Matcher m;
@@ -158,14 +156,5 @@ public class StartHelper {
          }
       }
       return properties;
-   }
-
-   private static String getPluginWrapperClass(String productName, Map<String, String> configProperties) {
-      String wrapperClass = configProperties.get("wrapper");
-      if (wrapperClass != null) {
-         return wrapperClass;
-      } else {
-         return Utils.getCacheWrapperFqnClass(productName);
-      }
    }
 }

@@ -76,7 +76,7 @@ public class JGroupsWrapper extends ReceiverAdapter implements CacheWrapper {
    private boolean anycasting;
 
    @Property(name = "file", doc = "Configuration file for JGroups.", deprecatedName = "config")
-   private String configFile;
+   protected String configFile;
 
    private boolean excludeSelfRequests;
    private boolean noopSelfRequests;

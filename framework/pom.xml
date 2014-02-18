@@ -34,7 +34,7 @@
          <!--<groupId>javax.mail</groupId>-->
          <!--<artifactId>mail</artifactId>-->
          <!--<version>1.4.2</version>-->
-         <!--<type>jar</type>-->
+         <!--<service>jar</service>-->
          <!--<scope>compile</scope>-->
       <!--</dependency>-->
 

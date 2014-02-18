@@ -15,7 +15,7 @@
    <packaging>pom</packaging>
 
    <modules>
-      <module>parent</module>
+      <!--<module>parent</module>-->
       <module>framework</module>
       <!--<module>plugins</module>-->
    </modules>
@@ -221,11 +221,11 @@
                      <goal>run</goal>
                   </goals>
                   <configuration>
-                     <tasks>
+                     <target>
                         <delete dir="target/distribution" />
                         <mkdir dir="target/distribution" />
                         <mkdir dir="${distribution.artifact}" />
-                     </tasks>
+                     </target>
                   </configuration>
                </execution>
 
@@ -236,7 +236,7 @@
                      <goal>run</goal>
                   </goals>
                   <configuration>
-                     <tasks>
+                     <target>
                         <echo message="Generating XSD schema" />
                         <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true">
                            <classpath>
@@ -247,7 +247,7 @@
                            <arg value="framework/src/main/resources" />
                            <arg value="framework/target/distribution/radargun-framework-bin/radargun-framework/lib" />
                         </java>
-                     </tasks>
+                     </target>
                   </configuration>
                </execution>
 

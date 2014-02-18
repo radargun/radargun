@@ -18,13 +18,13 @@
  */
 package org.radargun.stages;
 
+import java.util.Map;
+
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.state.SlaveState;
 import org.radargun.stressors.DataForQueryStressor;
-
-import java.util.Map;
 
 /**
  * Stage for inserting data into indexed cache for processing.
@@ -54,7 +54,7 @@ public class DataForQueryStage extends StressTestStage {
 
       stressTestStressor = new DataForQueryStressor(slaveState);
 
-      stressTestStressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
+      stressTestStressor.setNodeIndex(slaveState.getSlaveIndex(), slaveState.getClusterSize());
       stressTestStressor.setDurationMillis(duration);
       PropertyHelper.copyProperties(this, stressTestStressor);
 

@@ -1,14 +1,13 @@
 package org.radargun.stages;
 
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.state.MasterState;
-
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Collects configuration for JMXClusterValidationStage.
@@ -50,7 +49,7 @@ public class JMXClusterValidationPrepareStage extends AbstractDistStage {
          log.info("Obtaining JMX endpoint info for master...");
          String portProp = System.getProperty("com.sun.management.jmxremote.port");
          if (portProp == null) {
-            ack.setErrorMessage("JMX not enabled on slave " + getSlaveIndex());
+            ack.setErrorMessage("JMX not enabled on slave " + slaveState.getSlaveIndex());
             ack.setError(true);
          } else {
             ack.setPayload(new InetSocketAddress(slaveState.getLocalAddress(), Integer.valueOf(portProp)));
@@ -64,7 +63,7 @@ public class JMXClusterValidationPrepareStage extends AbstractDistStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       List<InetSocketAddress> slaveAddrs = new ArrayList<InetSocketAddress>(acks.size());
       for (DistStageAck ack : acks) {
          DefaultDistStageAck dack = (DefaultDistStageAck) ack;

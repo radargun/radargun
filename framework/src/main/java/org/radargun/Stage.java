@@ -5,6 +5,6 @@ package org.radargun;
  *
  * @author Mircea.Markus@jboss.com
  */
-public interface Stage extends Cloneable{
-   Stage clone();
+// TODO: remove?
+public interface Stage {
 }

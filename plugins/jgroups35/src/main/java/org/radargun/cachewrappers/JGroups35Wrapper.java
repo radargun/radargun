@@ -1,23 +1,30 @@
 package org.radargun.cachewrappers;
 
-import org.jgroups.util.Util;
-import org.radargun.utils.TypedProperties;
-import org.radargun.utils.Utils;
-
+import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.util.Properties;
+import java.util.Set;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
 import javax.management.MBeanServer;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
-import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.util.Properties;
-import java.util.Set;
+
+import org.jgroups.util.Util;
+import org.radargun.config.Property;
+import org.radargun.stages.AbstractStartStage;
+import org.radargun.utils.Utils;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class JGroups35Wrapper extends JGroupsWrapper {
+   @Property(doc = "Dump configuration into property files. Default is false.")
+   protected boolean dumpConfig = false;
+
+   @Property(name = AbstractStartStage.PROP_PLUGIN, doc = "Name of the current plugin.", optional = false)
+   protected String plugin;
+
    @Override
    public void tearDown() throws Exception {
       // the code is same but now it calls Util.close(Closeable)
@@ -26,11 +33,10 @@ public class JGroups35Wrapper extends JGroupsWrapper {
    }
 
    @Override
-   public void setUp(String configName, boolean isLocal, int nodeIndex, TypedProperties confAttributes) throws Exception {
-      super.setUp(configName, isLocal, nodeIndex, confAttributes);
-      if (confAttributes.getBooleanProperty("dumpConfig", false)) {
-         String productName = confAttributes.getProperty("productName", "default");
-         File dumpDir = new File("conf" + File.separator + "normalized" + File.separator + productName + File.separator + configName);
+   public void setUp(boolean isLocal, int nodeIndex) throws Exception {
+      super.setUp(isLocal, nodeIndex);
+      if (dumpConfig) {
+         File dumpDir = new File("conf" + File.separator + "normalized" + File.separator + plugin + File.separator + configFile);
          if (!dumpDir.exists()) {
             dumpDir.mkdirs();
          }

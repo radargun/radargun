@@ -16,7 +16,6 @@ import org.radargun.config.SizeConverter;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.helpers.BucketPolicy;
-import org.radargun.state.MasterState;
 import org.radargun.stressors.*;
 import org.radargun.utils.Fuzzy;
 
@@ -160,7 +159,7 @@ public class StressTestStage extends AbstractDistStage {
          stressor = new StressTestStressor();
       }
       stressor.setSlaveState(slaveState);
-      stressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
+      stressor.setNodeIndex(slaveState.getSlaveIndex(), slaveState.getClusterSize());
       stressor.setDurationMillis(duration);
       setupStatistics(stressor);
       PropertyHelper.copyProperties(this, stressor);
@@ -198,9 +197,9 @@ public class StressTestStage extends AbstractDistStage {
    }
 
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
-      if (slaves != null && !slaves.contains(slaveIndex)) {
-         log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveIndex, slaves));
+      DefaultDistStageAck result = new DefaultDistStageAck(slaveState.getSlaveIndex(), slaveState.getLocalAddress());
+      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
+         log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveState.getSlaveIndex(), slaves));
          return result;
       }
       this.cacheWrapper = slaveState.getCacheWrapper();
@@ -228,10 +227,10 @@ public class StressTestStage extends AbstractDistStage {
     * Important: do not change the format of rhe log below as is is used by ./dist.sh to measure distribution load.
     */
    private String generateSizeInfo() {
-      return "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + super.getActiveSlaveCount() + ", nodeIndex:" + super.getSlaveIndex() + ", cacheSize: " + cacheWrapper.getLocalSize();
+      return "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + slaveState.getClusterSize() + ", nodeIndex:" + slaveState.getSlaveIndex() + ", cacheSize: " + cacheWrapper.getLocalSize();
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       logDurationInfo(acks);
       boolean success = true;
       Map<Integer, Map<String, Object>> results = new HashMap<Integer, Map<String, Object>>();

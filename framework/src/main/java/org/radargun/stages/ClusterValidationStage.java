@@ -8,7 +8,6 @@ import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
 
 /**
@@ -78,11 +77,11 @@ public class ClusterValidationStage extends AbstractDistStage {
    }
 
    private int confirmReplication() throws Exception {
-      wrapper.put(null, confirmationKey(getSlaveIndex()), "true");
+      wrapper.put(null, confirmationKey(slaveState.getSlaveIndex()), "true");
       for (int i : getSlaves()) {
          for (int j = 0; j < 10 && (wrapper.get(null, confirmationKey(i)) == null); j++) {
             tryToPut();
-            wrapper.put(null, confirmationKey(getSlaveIndex()), "true");
+            wrapper.put(null, confirmationKey(slaveState.getSlaveIndex()), "true");
             Thread.sleep(1000);
          }
          if (wrapper.get(null, confirmationKey(i)) == null) {
@@ -98,7 +97,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       return CONFIRMATION_KEY + slaveIndex;
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       logDurationInfo(acks);
       boolean success = true;
       for (DistStageAck ack : acks) {
@@ -134,7 +133,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCount = 0;
       while (tryCount < 5) {
          try {
-            wrapper.put(null, key(getSlaveIndex()), "true");
+            wrapper.put(null, key(slaveState.getSlaveIndex()), "true");
             return;
          } catch (Throwable e) {
             log.warn("Error while trying to put data: ", e);
@@ -165,10 +164,10 @@ public class ClusterValidationStage extends AbstractDistStage {
    }
 
    private int replicationCount() throws Exception {
-      int clusterSize = getActiveSlaveCount();
+      int clusterSize = slaveState.getClusterSize();
       int replicaCount = 0;
       for (int i = 0; i < clusterSize; i++) {
-         int currentSlaveIndex = getSlaveIndex();
+         int currentSlaveIndex = slaveState.getSlaveIndex();
          if (i == currentSlaveIndex) {
             continue;
          }
@@ -200,7 +199,7 @@ public class ClusterValidationStage extends AbstractDistStage {
    public Collection<Integer> getSlaves() {
       if (slaves == null) {
          Collection<Integer> list = new ArrayList<Integer>();
-         for (int i = 0; i < getActiveSlaveCount(); ++i) {
+         for (int i = 0; i < slaveState.getClusterSize(); ++i) {
             list.add(i);
          }
          slaves = list;

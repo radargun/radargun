@@ -1,5 +1,8 @@
 package org.radargun.stages;
 
+import java.util.Date;
+import java.util.List;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
@@ -7,9 +10,6 @@ import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.features.TopologyAware;
 import org.radargun.features.TopologyAware.Event;
-
-import java.util.Date;
-import java.util.List;
 
 /**
  * Controls which topology events have (not) happened recently
@@ -37,7 +37,7 @@ public class CheckTopologyStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      if (!slaves.contains(getSlaveIndex())) {
+      if (!slaves.contains(slaveState.getSlaveIndex())) {
          log.debug("Ignoring this slave");
          return ack;
       }

@@ -16,4 +16,5 @@ public @interface Stage {
    String name() default CLASS_NAME_WITHOUT_STAGE;
    String deprecatedName() default NO_DEPRECATED_NAME;
    String doc();
+   boolean internal() default false;
 }

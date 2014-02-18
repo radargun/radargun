@@ -46,13 +46,11 @@ public class ReportJVMMonitorStage extends AbstractMasterStage {
       if (!sysMonitors.isEmpty()) {
          ReportDesc reportDesc = new ReportDesc();
          LocalJmxMonitor monitor = sysMonitors.values().iterator().next();
-         reportDesc.addReportItem(monitor.getProductName(), monitor.getConfigName());
+         reportDesc.addReportItem(monitor.getConfigName());
          if (reportPrefix == null) {
-            reportDesc.setReportName(monitor.getProductName() + " (" + monitor.getConfigName() + ") on "
-                  + sysMonitors.size() + " node(s)");
+            reportDesc.setReportName(monitor.getConfigName() + " on " + sysMonitors.size() + " node(s)");
          } else {
-            reportDesc.setReportName(reportPrefix + "-" + monitor.getProductName() + " (" + monitor.getConfigName()
-                  + ") on " + sysMonitors.size() + " node(s)");
+            reportDesc.setReportName(reportPrefix + "-" + monitor.getConfigName() + " on " + sysMonitors.size() + " node(s)");
          }
          new LocalSystemMonitorChart(sysMonitors).generate(reportDesc);
          masterState.remove(StartJVMMonitorStage.MONITOR_KEY);

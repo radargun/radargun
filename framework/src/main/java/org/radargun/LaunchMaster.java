@@ -28,8 +28,8 @@ public class LaunchMaster {
       try {
          ConfigParser configParser = ConfigParser.getConfigParser();
          MasterConfig masterConfig = configParser.parseConfig(config);
-         Master server = new Master(masterConfig);
-         server.start();
+         Master master = new Master(masterConfig);
+         master.run();
       } catch (Exception e) {
          e.printStackTrace();
          ShutDownHook.exit(10);
@@ -53,15 +53,6 @@ public class LaunchMaster {
       System.out.println("Usage: master.sh  -config <config-file.xml>");
       System.out.println("       -config : xml file containing benchmark's configuration");
       ShutDownHook.exit(1);
-   }
-
-
-   private static void launchOld(String config) throws Exception {
-      File configFile = new File(config);
-      if (!configFile.exists()) {
-         System.err.println("No such file: " + configFile.getAbsolutePath());
-         printUsageAndExit();
-      }
    }
 
    private static void out(String message) {

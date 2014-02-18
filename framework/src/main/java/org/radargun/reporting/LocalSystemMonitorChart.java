@@ -6,12 +6,12 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesDataItem;
 import org.radargun.local.ReportDesc;
 import org.radargun.local.ReportItem;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.stages.GenerateReportStage;
 import org.radargun.sysmonitor.AbstractActivityMonitor;
 import org.radargun.sysmonitor.CpuUsageMonitor;
@@ -56,7 +56,7 @@ public class LocalSystemMonitorChart {
          for (ReportItem reportItem : reportDesc.getItems()) {
             for (Map.Entry<String, LocalJmxMonitor> e : sysMonitors.entrySet()) {
                LocalJmxMonitor m = e.getValue();
-               if (reportItem.matches(m.getProductName(), m.getConfigName())) {
+               if (reportItem.matches(m.getConfigName())) {
                   filter.put(e.getKey(), e.getValue());
                }
             }

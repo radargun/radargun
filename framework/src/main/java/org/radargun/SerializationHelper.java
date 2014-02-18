@@ -1,14 +1,12 @@
 package org.radargun;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 
 /**
  * Helper class holding serialization logic.
@@ -16,74 +14,27 @@ import java.io.Serializable;
  * @author Mircea.Markus@jboss.com
  */
 public class SerializationHelper {
+   private static final int MIN_REMAINING = 32;
 
-   private static Log log = LogFactory.getLog(SerializationHelper.class);
-
-   public static byte[] serializeObject(Serializable serializable) throws IOException {
-      ByteArrayOutputStream out = new ByteArrayOutputStream();
+   public static ByteBuffer serializeObject(Serializable serializable, ByteBuffer buffer) throws IOException {
+      ByteBufferOutputStream out = new ByteBufferOutputStream(buffer);
       ObjectOutputStream oos = new ObjectOutputStream(out);
       oos.writeObject(serializable);
-      return out.toByteArray();
+      return out.getBuffer();
    }
 
-
-   /*
-    * Returns a byte array containing the two's-complement representation of the integer.<br>
-	 * The byte array will be in big-endian byte-order with a fixes length of 4
-	 * (the least significant byte is in the 4th element).<br>
-	 * <br>
-	 * <b>Example:</b><br>
-	 * <code>intToByteArray(258)</code> will return { 0, 0, 1, 2 },<br>
-	 * <code>BigInteger.valueOf(258).toByteArray()</code> returns { 1, 2 }.
-	 * @param integer The integer to be converted.
-	 * @return The byte array of length 4.
-	 */
-   public static byte[] intToByteArray(final int integer) {
-      int byteNum = (40 - Integer.numberOfLeadingZeros(integer < 0 ? ~integer : integer)) / 8;
-      byte[] byteArray = new byte[4];
-
-      for (int n = 0; n < byteNum; n++)
-         byteArray[3 - n] = (byte) (integer >>> (n * 8));
-
-      return (byteArray);
-   }
-
-
-   /**
-    * Convert the byte array to an int.
-    *
-    * @param b The byte array
-    * @return The integer
-    */
-   public static int byteArrayToInt(byte[] b) {
-      return byteArrayToInt(b, 0);
-   }
-
-   /**
-    * Convert the byte array to an int starting from the given offset.
-    *
-    * @param b      The byte array
-    * @param offset The array offset
-    * @return The integer
-    */
-   public static int byteArrayToInt(byte[] b, int offset) {
-      int value = 0;
-      for (int i = 0; i < 4; i++) {
-         int shift = (4 - 1 - i) * 8;
-         value += (b[i + offset] & 0x000000FF) << shift;
+   public static ByteBuffer serializeObjectWithLength(Serializable serializable, ByteBuffer buffer) throws IOException {
+      if (buffer.remaining() < MIN_REMAINING) {
+         buffer = grow(buffer, MIN_REMAINING);
       }
-      return value;
-   }
-
-   public static void main(String[] args) {
-      for (int i=0; i < Integer.MAX_VALUE; i++) {
-         if (i%10000 == 0) {
-            System.out.println("i = " + i);
-         }
-         byte[] bytes = intToByteArray(i);
-         int value = byteArrayToInt(bytes);
-         assert i == value;
-      }
+      int sizePosition = buffer.position();
+      buffer.position(sizePosition + 4);
+      ByteBufferOutputStream out = new ByteBufferOutputStream(buffer);
+      ObjectOutputStream oos = new ObjectOutputStream(out);
+      oos.writeObject(serializable);
+      buffer = out.getBuffer();
+      buffer.putInt(sizePosition, buffer.position() - sizePosition - 4);
+      return buffer;
    }
 
    public static Object deserialize(byte[] serializedData, int startPos, int length) throws IOException {
@@ -91,17 +42,47 @@ public class SerializationHelper {
       try {
          return ois.readObject();
       } catch (ClassNotFoundException e) {
-         log.error("Unmarshalling exceptions: ", e);
-         throw new IllegalStateException(e);
+         throw new IllegalStateException("Unmarshalling exception", e);
       }
    }
 
-   public static byte[] prepareForSerialization(Serializable towrite) throws IOException {
-      byte[] bytes = serializeObject(towrite);
-      byte[] toSend = new byte[bytes.length + 4];
-      byte[] size = intToByteArray(bytes.length);
-      System.arraycopy(size, 0, toSend, 0, 4);
-      System.arraycopy(bytes, 0, toSend, 4, bytes.length);
-      return toSend;
+   private static ByteBuffer grow(ByteBuffer buffer, int minCapacityIncrease) {
+      ByteBuffer tmp = ByteBuffer.allocate(Math.max(buffer.capacity() << 1, buffer.capacity() + minCapacityIncrease));
+      buffer.flip();
+      tmp.put(buffer);
+      return tmp;
+   }
+
+   private static class ByteBufferOutputStream extends OutputStream {
+
+      private ByteBuffer buffer;
+
+      private ByteBufferOutputStream(ByteBuffer buffer) {
+         this.buffer = buffer;
+      }
+
+      private void grow(int minCapacityIncrease) {
+         buffer = SerializationHelper.grow(buffer, minCapacityIncrease);
+      }
+
+      @Override
+      public void write(int b) throws IOException {
+         if (!buffer.hasRemaining()) {
+            grow(1);
+         }
+         buffer.put((byte) b);
+      }
+
+      @Override
+      public void write(byte[] b, int off, int len) throws IOException {
+         if (buffer.remaining() < len) {
+            grow(len - buffer.remaining());
+         }
+         buffer.put(b, off, len);
+      }
+
+      public ByteBuffer getBuffer() {
+         return buffer;
+      }
    }
 }

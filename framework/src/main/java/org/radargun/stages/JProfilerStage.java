@@ -127,8 +127,8 @@ public class JProfilerStage extends AbstractDistStage {
       case SAVE_SNAPSHOT:
          if (snapshotDirectory == null)
             throw new NullPointerException("snapshotOutput not set");
-         return new Object[] { snapshotDirectory + this.productName + "-" + this.configName + "-node" + this.slaveIndex
-               + "-profiler.jps" };
+         return new Object[] { String.format("%s%s-node%d-profiler.jps",
+               snapshotDirectory, slaveState.getConfigName(), slaveState.getSlaveIndex()) };
       case START_CPU_RECORDING:
          return new Object[] { resetCPUStats };
       case START_MEMORY_RECORDING:

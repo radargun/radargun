@@ -47,7 +47,7 @@ public class XSReplLoadStage extends AbstractDistStage {
       CacheWrapper wrapper = slaveState.getCacheWrapper();
       XSReplicating xsReplicating = (XSReplicating) wrapper;
       String cacheName = xsReplicating.getMainCache();
-      Range myRange = Range.divideRange(numEntries, xsReplicating.getSlaves().size(), xsReplicating.getSlaves().indexOf(getSlaveIndex()));
+      Range myRange = Range.divideRange(numEntries, xsReplicating.getSlaves().size(), xsReplicating.getSlaves().indexOf(slaveState.getSlaveIndex()));
       for (int i = myRange.getStart(); i < myRange.getEnd(); ++i) {
          try {
             if (!delete) {

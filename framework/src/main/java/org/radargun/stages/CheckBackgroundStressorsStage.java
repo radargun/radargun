@@ -20,7 +20,7 @@ public class CheckBackgroundStressorsStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      if (slaves != null && !slaves.contains(slaveIndex)) {
+      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
          return ack;
       }
       BackgroundOpsManager manager = BackgroundOpsManager.getInstance(slaveState);

@@ -20,12 +20,13 @@ public class StageHelper {
 
    private static Log log = LogFactory.getLog(StageHelper.class);
    private static Map<String, Class<? extends org.radargun.Stage>> stages;
+   private static Map<String, Class<? extends org.radargun.Stage>> stagesDashed;
 
    static {
-      stages = getStagesFromJar(AnnotatedHelper.getJAR(StageHelper.class).getPath());
+      stagesDashed = getStagesFromJar(AnnotatedHelper.getJAR(StageHelper.class).getPath(), true);
    }
 
-   public static Map<String, Class<? extends org.radargun.Stage>> getStagesFromJar(String path) {
+   public static Map<String, Class<? extends org.radargun.Stage>> getStagesFromJar(String path, boolean dashNames) {
       System.err.println("Loading JARS from " + path);
       List<Class<? extends org.radargun.Stage>> list = AnnotatedHelper.getClassesFromJar(path, org.radargun.Stage.class, Stage.class);
       Map<String, Class<? extends org.radargun.Stage>> stages = new TreeMap<String, Class<? extends org.radargun.Stage>>();
@@ -41,6 +42,9 @@ public class StageHelper {
             }
             name = clazz.getSimpleName().substring(0, clazz.getSimpleName().length() - 5);
          }
+         if (dashNames) {
+            name = XmlHelper.camelCaseToDash(name);
+         }
          stages.put(name, clazz);
          if (!annotation.deprecatedName().equals(Stage.NO_DEPRECATED_NAME)) {
             stages.put(annotation.deprecatedName(), clazz);
@@ -49,38 +53,34 @@ public class StageHelper {
       return stages;
    }
 
-   public static org.radargun.Stage getStage(String stageName) {
-      Class<? extends org.radargun.Stage> clazz = stages.get(stageName);
-      if (clazz == null) {
-         log.warn("Stage " + stageName + " not registered, trying to find according to class name.");
-         if (stageName.indexOf('.') < 0) {
-            stageName = "org.radargun.stages." + stageName + "Stage";
-         } else {
-            stageName = stageName + "Stage";
-         }
-         try {
-            clazz = (Class<? extends org.radargun.Stage>) Class.forName(stageName);
-         } catch (ClassNotFoundException e) {
-            String s = "Could not find stage class " + stageName;
-            log.error(s);
-            throw new RuntimeException(s, e);
-         } catch (ClassCastException e) {
-            String s = "Class " + stageName + " is not a stage!";
-            log.error(s);
-            throw new RuntimeException(s, e);
-         }
+   public static Class<? extends org.radargun.Stage> getStageClassByDashedName(String stageName) {
+      Class<? extends org.radargun.Stage> clazz = stagesDashed.get(stageName);
+      if (clazz != null) {
+         return clazz;
+      }
+      log.warn("Stage " + stageName + " not registered, trying to find according to class name.");
+      if (stageName.indexOf('.') < 0) {
+         stageName = "org.radargun.stages." + stageName + "Stage";
+      } else {
+         stageName = stageName + "Stage";
       }
       try {
-         return clazz.newInstance();
-      } catch (Exception e) {
-         throw new RuntimeException(e);
+         return (Class<? extends org.radargun.Stage>) Class.forName(stageName);
+      } catch (ClassNotFoundException e) {
+         String s = "Could not find stage class " + stageName;
+         log.error(s);
+         throw new RuntimeException(s, e);
+      } catch (ClassCastException e) {
+         String s = "Class " + stageName + " is not a stage!";
+         log.error(s);
+         throw new RuntimeException(s, e);
       }
    }
 
    public static String toString(org.radargun.Stage stage) {
       StringBuilder sb = new StringBuilder();
       sb.append(getStageName(stage.getClass())).append(" {");
-      Set<Map.Entry<String, Field>> properties = PropertyHelper.getProperties(stage.getClass()).entrySet();
+      Set<Map.Entry<String, Field>> properties = PropertyHelper.getProperties(stage.getClass(), false).entrySet();
 
       for (Iterator<Map.Entry<String,Field>> iterator = properties.iterator(); iterator.hasNext(); ) {
          Map.Entry<String, Field> property = iterator.next();

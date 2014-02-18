@@ -19,6 +19,7 @@
 package org.radargun.stages;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +28,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.helpers.StartHelper;
 import org.radargun.stages.helpers.StartStopTime;
-import org.radargun.state.MasterState;
 
 /**
  * Common base for stages that start slaves.
@@ -37,29 +37,29 @@ import org.radargun.state.MasterState;
 @Stage(doc = "")
 public abstract class AbstractStartStage extends AbstractDistStage {
 
+   public static final String PROP_FILE = "file";
    public static final String PROP_CONFIG_NAME = "configName";
-   public static final String PROP_PRODUCT_NAME = "productName";
-
-   @Property(readonly = true, doc = "Configuration file used for this stage")
-   protected String configFile;
+   public static final String PROP_PLUGIN = "plugin";
 
    @Property(doc = "Set of slaves where the start may fail but this will not cause an error. Default is none.")
    protected Collection<Integer> mayFailOn;
 
+   @Property(readonly = true, doc = "Configuration file used for this stage")
+   protected String configFile;
+   protected String service;
    protected Map<String, String> configProperties;
 
-   public void setProductConfig(String productName, String configName, String configFile) {
+   public void setup(String service, String configFile, Map<String, String> configProperties) {
+      this.service = service;
       this.configFile = configFile;
-      configProperties.put(AbstractStartStage.PROP_PRODUCT_NAME, productName);
-      configProperties.put(AbstractStartStage.PROP_CONFIG_NAME, configName);
-   }  
-   
-   public void setConfigProperties(Map<String, String> configProperties) {
-      this.configProperties = configProperties;
+      this.configProperties = new HashMap<String, String>(configProperties);
+      this.configProperties.put(PROP_CONFIG_NAME, slaveState.getConfigName());
+      this.configProperties.put(PROP_PLUGIN, slaveState.getPlugin());
+      this.configProperties.put(PROP_FILE, configFile);
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       boolean success = true;
       logDurationInfo(acks);
       for (DistStageAck stageAck : acks) {

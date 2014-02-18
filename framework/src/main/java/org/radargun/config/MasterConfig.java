@@ -1,9 +1,8 @@
 package org.radargun.config;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
 
 /**
  * Comntains master's configuration elements.
@@ -11,16 +10,36 @@ import java.util.HashSet;
  * @author Mircea.Markus@jboss.com
  */
 public class MasterConfig {
-   private int port;
-   private String host;
-   private int slavesCount;
+   private final int port;
+   private final String host;
+   private List<Cluster> clusters = new ArrayList<Cluster>();
+   private List<Configuration> configurations = new ArrayList<Configuration>();
+   private Scenario scenario;
+   private List<Reporter> reporters = new ArrayList<Reporter>();
 
-   List<AbstractBenchmarkConfig> benchmarks = new ArrayList<AbstractBenchmarkConfig>();
-
-   public MasterConfig(int port, String host, int slavesCount) {
+   public MasterConfig(int port, String host) {
       this.port = port;
       this.host = host;
-      this.slavesCount = slavesCount;
+   }
+
+   public void addCluster(Cluster cluster) {
+      clusters.add(cluster);
+   }
+
+   public void addConfig(Configuration config) {
+      for (Configuration c : configurations) {
+         if (c.name.equals(config.name))
+            throw new IllegalArgumentException("Cannot have two configurations named " + config.name);
+      }
+      configurations.add(config);
+   }
+
+   public void setScenario(Scenario scenario) {
+      this.scenario = scenario;
+   }
+
+   public void addReporter(Reporter reporter) {
+      this.reporters.add(reporter);
    }
 
    public int getPort() {
@@ -31,24 +50,28 @@ public class MasterConfig {
       return host;
    }
 
-   public int getSlaveCount() {
-      return slavesCount;
+   public boolean isLocal() {
+      return clusters.size() <= 0;
    }
 
-   public List<AbstractBenchmarkConfig> getBenchmarks() {
-      return benchmarks;
+   public List<Cluster> getClusters() {
+      return Collections.unmodifiableList(clusters);
    }
 
-   public void addBenchmark(AbstractBenchmarkConfig config) {
-      benchmarks.add(config);
-   }
-
-   public void validate() {
-      Set<String> allBenchmarkNames = new HashSet<String>();
-      for (AbstractBenchmarkConfig f: benchmarks) {
-         if (!allBenchmarkNames.add(f.getProductName())) {
-            throw new RuntimeException("There are two benchmarks having same name:" + f.getProductName() + ". Benchmark name should be unique!");
-         }
+   public int getMaxClusterSize() {
+      int max = 0;
+      for (Cluster c : clusters) {
+         max = Math.max(max, c.getSize());
       }
+      return max;
    }
+
+   public List<Configuration> getConfigurations() {
+      return Collections.unmodifiableList(configurations);
+   }
+
+   public Scenario getScenario() {
+      return scenario;
+   }
+
 }

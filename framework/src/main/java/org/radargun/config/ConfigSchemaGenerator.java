@@ -5,9 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
@@ -29,7 +28,7 @@ import org.w3c.dom.Element;
  * @author Radim Vansa <rvansa@redhat.com>
  * @version 11/21/12
  */
-public class ConfigSchemaGenerator {
+public class ConfigSchemaGenerator implements ConfigSchema {
    private static final String NS_XS = "http://www.w3.org/2001/XMLSchema";
    private static final String RG_PREFIX = "rg:";
    private static final String XS_ELEMENT = "element";
@@ -54,21 +53,26 @@ public class ConfigSchemaGenerator {
    private static final String XS_DOUBLE = "double";
    private static final String XS_BOOLEAN = "boolean";
    private static final String XS_COMPLEX_CONTENT = "complexContent";
+   private static final String XS_SIMPLE_CONTENT = "simpleContent";
    private static final String XS_EXTENSION = "extension";
    private static final String XS_BASE = "base";
    private static final String XS_VALUE = "value";
    private static final String XS_ABSTRACT = "abstract";
-   private static final String RG_ABSTRACT_PRODUCT = RG_PREFIX + "abstractProduct";
    private static final String XS_CHOICE = "choice";
    private static final String XS_ANNOTATION = "annotation";
    private static final String XS_DOCUMENTATION = "documentation";
-   private static List<String> products = new ArrayList<String>();
+   private static final String TYPE_CLUSTER_BASE = "cluster_base";
+   private static final String TYPE_CLUSTER = "cluster";
+   private static final String TYPE_REPEAT = "repeat";
+   private static final String TYPE_PROPERTY = "property";
+
    private static String stageDirectory;
    private static Set<String> simpleTypes = new HashSet<String>();
+   private static String intType;
 
    public static void generate(String directory) {
       try {
-         PrintWriter writer = new PrintWriter(new File(directory + File.separator + "radargun-1.1.xsd"));
+         PrintWriter writer = new PrintWriter(new File(directory + File.separator + "radargun-2.0.xsd"));
          DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
          DocumentBuilder builder = factory.newDocumentBuilder();
          Document doc = builder.newDocument();
@@ -103,88 +107,85 @@ public class ConfigSchemaGenerator {
       schema.setAttribute("attributeFormDefault", "unqualified");
       schema.setAttribute("elementFormDefault", "qualified");
       schema.setAttribute("version", "1.0");
-      schema.setAttribute("targetNamespace", "urn:radargun:benchmark:1.1");
-      schema.setAttribute("xmlns:rg", "urn:radargun:benchmark:1.1");
+      schema.setAttribute("targetNamespace", "urn:radargun:benchmark:2.0");
+      schema.setAttribute("xmlns:rg", "urn:radargun:benchmark:2.0");
       doc.appendChild(schema);
 
-      Element benchConfig = doc.createElementNS(NS_XS, XS_ELEMENT);
-      benchConfig.setAttribute(XS_NAME, "bench-config");
-      schema.appendChild(benchConfig);
-      Element benchConfigComplex = doc.createElementNS(NS_XS, XS_COMPLEX_TYPE);
-      benchConfig.appendChild(benchConfigComplex);
-      Element benchConfigSequence = createSequence(doc, benchConfigComplex);
+      intType = generateType(doc, schema, int.class, DefaultConverter.class);
 
-      Element masterComplex = createComplexElement(doc, benchConfigSequence, "master", 1, 1);
-      addAttribute(doc, masterComplex, "bindAddress", false);
-      addAttribute(doc, masterComplex, "port", false);
+      Element benchmarkElement = doc.createElementNS(NS_XS, XS_ELEMENT);
+      benchmarkElement.setAttribute(XS_NAME, ELEMENT_BENCHMARK);
+      schema.appendChild(benchmarkElement);
+      Element benchmarkComplex = doc.createElementNS(NS_XS, XS_COMPLEX_TYPE);
+      benchmarkElement.appendChild(benchmarkComplex);
+      Element benchmarkSequence = createSequence(doc, benchmarkComplex);
 
-      Element benchmarkComplex = createComplexElement(doc, benchConfigSequence, "benchmark", 1, 1);
-      Element benchmarkChoice = createChoice(doc, createSequence(doc, benchmarkComplex), 1, -1);
-      Element repeatType = createComplexType(doc, schema, "repeat", null, false, null);
+      Element masterComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_MASTER, 1, 1);
+      addAttribute(doc, masterComplex, ATTR_BIND_ADDRESS, false);
+      addAttribute(doc, masterComplex, ATTR_PORT, intType, null, false);
+
+      Element clustersChoice = createChoice(doc, benchmarkSequence, 0, 1);
+      Element localComplex = createComplexElement(doc, clustersChoice, ELEMENT_LOCAL, 0, 1);
+      Element clustersComplex = createComplexElement(doc, clustersChoice, ELEMENT_CLUSTERS, 0, 1);
+      Element clusterChoice = createChoice(doc, clustersComplex, 1, -1);
+      Element baseClusterType = createComplexType(doc, schema, TYPE_CLUSTER_BASE, null, false, null);
+      Element groupComplex = createComplexElement(doc, createSequence(doc, baseClusterType), ELEMENT_GROUP, 0, -1);
+      Element sizedClusterType = createComplexType(doc, schema, TYPE_CLUSTER, RG_PREFIX + TYPE_CLUSTER_BASE, false, null);
+      Element scaleElement = createComplexElement(doc, clusterChoice, ELEMENT_SCALE, 0, -1);
+      createReference(doc, clusterChoice, ELEMENT_CLUSTER, RG_PREFIX + TYPE_CLUSTER);
+      createReference(doc, createSequence(doc, scaleElement), ELEMENT_CLUSTER, RG_PREFIX + TYPE_CLUSTER_BASE);
+      addAttribute(doc, groupComplex, ATTR_NAME, true);
+      addAttribute(doc, groupComplex, ATTR_SIZE, intType, null, true);
+      addAttribute(doc, sizedClusterType, ATTR_SIZE, intType, null, false);
+      addAttribute(doc, scaleElement, ATTR_FROM, intType, null, true);
+      addAttribute(doc, scaleElement, ATTR_TO, intType, null, true);
+      addAttribute(doc, scaleElement, ATTR_INC, intType, null, false);
+
+      Element propertyType = createComplexType(doc, schema, TYPE_PROPERTY, null, false, null);
+      Element complexContent = doc.createElementNS(NS_XS, XS_COMPLEX_CONTENT);
+      propertyType.appendChild(complexContent);
+      Element simpleTypeElement = doc.createElementNS(NS_XS, XS_SIMPLE_CONTENT);
+      complexContent.appendChild(simpleTypeElement);
+      addAttribute(doc, complexContent, ATTR_NAME, true);
+
+      Element configurationsComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_CONFIGURATIONS, 1, 1);
+      Element configComplex = createComplexElement(doc, createSequence(doc, configurationsComplex), ELEMENT_CONFIG, 1, -1);
+      Element setupComplex = createComplexElement(doc, createSequence(doc, configComplex), ELEMENT_SETUP, 1, -1);
+      createReference(doc, createSequence(doc, setupComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY);
+      addAttribute(doc, configComplex, ATTR_NAME, true);
+      addAttribute(doc, setupComplex, ATTR_PLUGIN, true);
+      addAttribute(doc, setupComplex, ATTR_FILE, true);
+      addAttribute(doc, setupComplex, ATTR_SERVICE, false);
+      addAttribute(doc, setupComplex, ATTR_GROUP, false);
+
+      createReference(doc, benchmarkSequence, ELEMENT_INIT, RG_PREFIX + "scenario-init", 0, 1);
+
+      Element scenarioComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_SCENARIO, 1, 1);
+      Element scenarioChoice = createChoice(doc, createSequence(doc, scenarioComplex), 1, -1);
+      Element repeatType = createComplexType(doc, schema, TYPE_REPEAT, null, false, null);
       Element repeatChoice = createChoice(doc, createSequence(doc, repeatType), 1, -1);
-      addAttribute(doc, repeatType, "times", false);
-      addAttribute(doc, repeatType, "from", false);
-      addAttribute(doc, repeatType, "to", false);
-      addAttribute(doc, repeatType, "inc", false);
-      addAttribute(doc, repeatType, "name", false);
-      createReference(doc, benchmarkChoice, "Repeat", RG_PREFIX + "repeat");
-      createReference(doc, repeatChoice, "Repeat", RG_PREFIX + "repeat");
-      generateStageDefinitions(doc, schema, new Element[]{benchmarkChoice, repeatChoice});
+      createReference(doc, scenarioChoice, ELEMENT_REPEAT, RG_PREFIX + TYPE_REPEAT);
+      createReference(doc, repeatChoice, ELEMENT_REPEAT, RG_PREFIX + TYPE_REPEAT);
+      addAttribute(doc, repeatType, ATTR_TIMES, intType, null, false);
+      addAttribute(doc, repeatType, ATTR_FROM, intType, null, false);
+      addAttribute(doc, repeatType, ATTR_TO, intType, null, false);
+      addAttribute(doc, repeatType, ATTR_INC, intType, null, false);
+      addAttribute(doc, repeatType, ATTR_NAME, false);
+      generateStageDefinitions(doc, schema, new Element[]{scenarioChoice, repeatChoice});
 
-      addAttribute(doc, benchmarkComplex, "initSize", false);
-      addAttribute(doc, benchmarkComplex, "maxSize", false);
-      addAttribute(doc, benchmarkComplex, "increment", false);
+      createReference(doc, benchmarkSequence, ELEMENT_CLEANUP, RG_PREFIX + "scenario-cleanup", 0, 1);
 
-      Element productsComplex = createComplexElement(doc, benchConfigSequence, "products", 1, 1);
-      Element productsSequence = createSequence(doc, productsComplex);
-
-      Element abstractProductType = createComplexType(doc, schema, "abstractProduct", null, true, null);
-      Element abstractProductSequence = createSequence(doc, abstractProductType);
-      Element configComplex = createComplexElement(doc, abstractProductSequence, "config", 1, -1);
-      Element configSequence = createSequence(doc, configComplex);
-      addAttribute(doc, configComplex, "name", false);
-      addAttribute(doc, configComplex, "file", false);
-      addAttribute(doc, configComplex, "cache", false);
-      addAttribute(doc, configComplex, "wrapper", false);
-      Element wrapperType = createComplexType(doc, schema, "wrapper", null, false, null);
-      Element wrapperSequence = createSequence(doc, wrapperType);
-      Element wrapperProperty = createComplexElement(doc, wrapperSequence, "property", 0, -1);
-      addAttribute(doc, wrapperProperty, "name", true);
-      addAttribute(doc, wrapperProperty, "value", true);
-      addAttribute(doc, wrapperType, "class", false);
-      Element wrapper = createReference(doc, configSequence, "wrapper", RG_PREFIX + "wrapper");
-      wrapper.setAttribute(XS_MIN_OCCURS, "0");
-      wrapper.setAttribute(XS_MAX_OCCURS, "1");
-      Element siteComplex = createComplexElement(doc, configSequence, "site", 0, -1);
-      Element siteSequence = createSequence(doc, siteComplex);
-      wrapper = createReference(doc, siteSequence, "wrapper", RG_PREFIX + "wrapper");
-      wrapper.setAttribute(XS_MIN_OCCURS, "0");
-      wrapper.setAttribute(XS_MAX_OCCURS, "1");
-      addAttribute(doc, siteComplex, "name", false);
-      addAttribute(doc, siteComplex, "config", false);
-      addAttribute(doc, siteComplex, "slaves", false);
-      addAttribute(doc, siteComplex, "cache", false);
-
-      Element productChoice = createChoice(doc, productsSequence, 1, -1);
-      Element genericProductType = createComplexType(doc, schema, "product", RG_ABSTRACT_PRODUCT, false, null);
-      addAttribute(doc, genericProductType, "name", false);
-      createReference(doc, productChoice, "product", RG_PREFIX + "product");
-      for (String productName : products) {
-         createComplexType(doc, schema, productName, RG_ABSTRACT_PRODUCT, false, null);
-         createReference(doc, productChoice, productName, RG_PREFIX + productName);
-      }
-
-      Element reportsComplex = createComplexElement(doc, benchConfigSequence, "reports", 1, 1);
-      Element reportsSequence = createSequence(doc, reportsComplex);
-      Element reportComplex = createComplexElement(doc, reportsSequence, "report", 0, -1);
-      Element reportSequence = createSequence(doc, reportComplex);
-      addAttribute(doc, reportComplex, "name", false);
-      addAttribute(doc, reportComplex, "reportDirectory", false);
-      addAttribute(doc, reportComplex, "csvFilesDirectory", false);
-      addAttribute(doc, reportComplex, "includeAll", false);
-      Element itemComplex = createComplexElement(doc, reportSequence, "item", 0, -1);
-      addAttribute(doc, itemComplex, "product", false);
-      addAttribute(doc, itemComplex, "config", false);
+      Element reportsComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_REPORTS, 1, 1);
+      Element reporterComplex = createComplexElement(doc, createSequence(doc, reportsComplex), ELEMENT_REPORTER, 1, -1);
+      Element reporterSequence = createSequence(doc, reporterComplex);
+      Element reportComplex = createComplexElement(doc, reporterSequence, ELEMENT_REPORT, 1, -1);
+      Element propertiesComplex = createComplexElement(doc, reporterSequence, ELEMENT_PROPERTIES, 0, 1);
+      createReference(doc, reportComplex, ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY);
+      createReference(doc, createSequence(doc, propertiesComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY);
+      addAttribute(doc, reporterComplex, ATTR_TYPE, true);
+      String runType = generateType(doc, schema, Reporter.RunCondition.class, DefaultConverter.class);
+      addAttribute(doc, reporterComplex, ATTR_RUN, runType, null, false);
+      addAttribute(doc, reportComplex, ATTR_SOURCE, true);
    }
 
    private static void generateStageDefinitions(Document doc, Element schema, Element[] parents) {
@@ -195,7 +196,7 @@ public class ConfigSchemaGenerator {
       for (File file : dir.listFiles()) {
          if (!file.getName().startsWith("radargun-framework-") || !file.getName().endsWith(".jar")) continue;
          Set<Class> generatedStages = new HashSet<Class>();
-         for (Class<?> stage : StageHelper.getStagesFromJar(file.getPath()).values()) {
+         for (Class<?> stage : StageHelper.getStagesFromJar(file.getPath(), true).values()) {
             generateStage(doc, schema, parents, stage, generatedStages);
          }
       }
@@ -210,18 +211,20 @@ public class ConfigSchemaGenerator {
       org.radargun.config.Stage stageAnnotation = (org.radargun.config.Stage)stage.getAnnotation(org.radargun.config.Stage.class);
       if (stageAnnotation == null) return; // not a proper stage
 
-      String stageName = StageHelper.getStageName(stage);
+      String stageName = XmlHelper.camelCaseToDash(StageHelper.getStageName(stage));
       String stageDocText = stageAnnotation.doc();
       Element stageType = createComplexType(doc, schema, stageName,
-            hasParentStage ? RG_PREFIX + StageHelper.getStageName(stage.getSuperclass()) : null,
+            hasParentStage ? RG_PREFIX + XmlHelper.camelCaseToDash(StageHelper.getStageName(stage.getSuperclass())) : null,
             Modifier.isAbstract(stage.getModifiers()),
             stageDocText);
-      for (Element parent : parents) {
-         createReference(doc, parent, stageName, RG_PREFIX + stageName);
-      }
-      if (!stageAnnotation.deprecatedName().equals(org.radargun.config.Stage.NO_DEPRECATED_NAME)) {
+      if (!Modifier.isAbstract(stage.getModifiers()) && !stageAnnotation.internal()) {
          for (Element parent : parents) {
-            createReference(doc, parent, stageAnnotation.deprecatedName(), RG_PREFIX + stageName);
+            createReference(doc, parent, stageName, RG_PREFIX + stageName);
+         }
+         if (!stageAnnotation.deprecatedName().equals(org.radargun.config.Stage.NO_DEPRECATED_NAME)) {
+            for (Element parent : parents) {
+               createReference(doc, parent, XmlHelper.camelCaseToDash(stageAnnotation.deprecatedName()), RG_PREFIX + stageName);
+            }
          }
       }
       for (Map.Entry<String, Field> property : PropertyHelper.getDeclaredProperties(stage).entrySet()) {
@@ -232,24 +235,17 @@ public class ConfigSchemaGenerator {
             propertyDocText = "*DEPRECATED* " + propertyDocText;
          }
          String type = generateType(doc, schema, property.getValue().getType(), propertyAnnotation.converter());
-         addAttribute(doc, stageType, property.getKey(), type, propertyDocText, !propertyAnnotation.optional());
+         addAttribute(doc, stageType, XmlHelper.camelCaseToDash(property.getKey()), type, propertyDocText, !propertyAnnotation.optional());
       }
       generatedStages.add(stage);
    }
 
    private static String generateType(Document doc, Element schema, Class<?> type, Class<? extends Converter<?>> converterClass) {
-      Converter<?> converter;
-      try {
-         converter = converterClass.newInstance();
-      } catch (Exception e) {
-         System.err.printf("Cannot instantiate converter type %s: %s",
-               converterClass.getName(), e.getMessage());
-         return XS_STRING;
+      String typeName = type.getName().replaceAll("[.$]", "-").toLowerCase(Locale.ENGLISH);
+      if (!DefaultConverter.class.equals(converterClass)) {
+         typeName += "-converted-by-" + converterClass.getName().replaceAll("[.$]", "-").toLowerCase(Locale.ENGLISH);
       }
-      String typeName = type.getName().replaceAll("[.$]", "_");
-      if (!(converter instanceof DefaultConverter)) {
-         typeName += "__" + converter.getClass().getName().replaceAll("[.$]", "_");
-      }
+      typeName = XmlHelper.camelCaseToDash(typeName);
       if (simpleTypes.contains(typeName)) {
          return RG_PREFIX + typeName;
       }
@@ -263,7 +259,15 @@ public class ConfigSchemaGenerator {
       union.appendChild(propertyType);
       Element propertyRestriction = doc.createElementNS(NS_XS, XS_RESTRICTION);
       propertyType.appendChild(propertyRestriction);
-      if (!(converter instanceof DefaultConverter)) {
+      if (!DefaultConverter.class.equals(converterClass)) {
+         Converter<?> converter;
+         try {
+            converter = converterClass.newInstance();
+         } catch (Exception e) {
+            System.err.printf("Cannot instantiate converter service %s: %s",
+                  converterClass.getName(), e.getMessage());
+            return XS_STRING;
+         }
          Element propertyPattern = doc.createElementNS(NS_XS, XS_PATTERN);
          propertyRestriction.appendChild(propertyPattern);
          propertyPattern.setAttribute(XS_VALUE, converter.allowedPattern(type));
@@ -347,9 +351,15 @@ public class ConfigSchemaGenerator {
    }
 
    private static Element createReference(Document doc, Element parent, String name, String type) {
+      return createReference(doc, parent, name, type, -1, -1);
+   }
+
+   private static Element createReference(Document doc, Element parent, String name, String type, int minOccurs, int maxOccurs) {
       Element reference = doc.createElementNS(NS_XS, XS_ELEMENT);
       reference.setAttribute(XS_NAME, name);
       reference.setAttribute(XS_TYPE, type);
+      if (minOccurs >= 0) reference.setAttribute(XS_MIN_OCCURS, String.valueOf(minOccurs));
+      if (maxOccurs >= 0) reference.setAttribute(XS_MAX_OCCURS, String.valueOf(maxOccurs));
       parent.appendChild(reference);
       return reference;
    }
@@ -383,7 +393,6 @@ public class ConfigSchemaGenerator {
       if (args.length < 1) System.err.println("No schema location directory specified!");
       if (args.length < 2) System.err.println("No jar file with stages specified!");
       stageDirectory = args[1];
-      for (int i = 2; i < args.length; ++i) products.add(args[i]);
       generate(args[0]);
    }
 }

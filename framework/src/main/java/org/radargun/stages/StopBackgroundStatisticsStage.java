@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Stage;
-import org.radargun.state.MasterState;
 import org.radargun.stressors.BackgroundOpsManager;
 import org.radargun.stressors.Statistics;
 
@@ -40,7 +39,7 @@ public class StopBackgroundStatisticsStage extends AbstractDistStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       Map<Integer, List<Statistics>> result = new HashMap<Integer, List<Statistics>>();
       for (DistStageAck ack : acks) {
          DefaultDistStageAck dack = (DefaultDistStageAck) ack;

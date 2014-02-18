@@ -1,14 +1,15 @@
 package org.radargun.stages;
 
+import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.jmx.JMXClusterValidator;
+import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
-
-import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Validates formation of the cluster remotely via JMX
@@ -18,8 +19,12 @@ import java.util.List;
 @Stage(doc = "Validates formation of the cluster remotely via JMX.")
 public class JMXClusterValidationStage extends AbstractMasterStage {
 
+   static final String JMX_CLUSTERVALIDATOR = "jmx.clustervalidator";
    @Property(doc = "Indices of slaves that should be up. Default is empty.")
    protected List<Integer> slaves;
+
+   @Property(doc = "Plugin used for class-loading JMX connector.")
+   private String plugin;
 
    @Property(converter = TimeConverter.class, doc = "JMX connection timeout. Default is 3 seconds.")
    private long jmxConnectionTimeout = 3000;
@@ -43,13 +48,7 @@ public class JMXClusterValidationStage extends AbstractMasterStage {
    @Override
    public boolean execute() throws Exception {
       try {
-         String validatorClass = Utils.getCacheProviderProperty(masterState.nameOfTheCurrentBenchmark(),
-               "org.radargun.jmx.clustervalidator");
-         if (validatorClass == null) {
-            throw new IllegalStateException(
-                  "There's no org.radargun.jmx.clustervalidator defined in cacheprovider.properties");
-         }
-         
+         String validatorClass = Utils.getServiceProperty(plugin, JMX_CLUSTERVALIDATOR);
          jmxConnectionTimeout = (Long) masterState.get(JMXClusterValidationPrepareStage.STATE_JMX_CONN_TIMEOUT);
          waitTimeout = (Long) masterState.get(JMXClusterValidationPrepareStage.STATE_WAIT_TIMEOUT);
          @SuppressWarnings("unchecked")
@@ -65,8 +64,9 @@ public class JMXClusterValidationStage extends AbstractMasterStage {
                filteredSlaveJMXEndpoints.add(slaveJMXEndpoints.get(slaveIdx));
             }
          }
-         
-         JMXClusterValidator validator = (JMXClusterValidator) createInstance(validatorClass);
+
+         ClassLoadHelper classLoaderHelper = new ClassLoadHelper(true, this.getClass(), plugin, masterState);
+         JMXClusterValidator validator = (JMXClusterValidator) classLoaderHelper.createInstance(validatorClass);
          validator.init(filteredSlaveJMXEndpoints, jmxConnectionTimeout, prop1, prop2, prop3);
          log.info("Waiting for cluster formation ...");
          return validator.waitUntilClusterFormed(waitTimeout);

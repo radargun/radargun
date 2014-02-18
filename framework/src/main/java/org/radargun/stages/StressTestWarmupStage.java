@@ -1,12 +1,11 @@
 package org.radargun.stages;
 
-import org.radargun.DistStageAck;
-import org.radargun.config.Stage;
-import org.radargun.state.MasterState;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.radargun.DistStageAck;
+import org.radargun.config.Stage;
 
 /**
  * The warmup stage for stress test benchmarks.  This ensures the same access paths are used for the warmup and the
@@ -21,9 +20,9 @@ public class StressTestWarmupStage extends StressTestStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck result = new DefaultDistStageAck(slaveIndex, slaveState.getLocalAddress());
-      if (slaves != null && !slaves.contains(slaveIndex)) {
-         log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveIndex, slaves));
+      DefaultDistStageAck result = new DefaultDistStageAck(slaveState.getSlaveIndex(), slaveState.getLocalAddress());
+      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
+         log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveState.getSlaveIndex(), slaves));
          return result;
       }
       this.cacheWrapper = slaveState.getCacheWrapper();
@@ -57,7 +56,7 @@ public class StressTestWarmupStage extends StressTestStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       logDurationInfo(acks);
       for (DistStageAck ack : acks) {
          DefaultDistStageAck dAck = (DefaultDistStageAck) ack;

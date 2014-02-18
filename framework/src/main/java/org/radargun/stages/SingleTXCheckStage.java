@@ -18,17 +18,17 @@
  */
 package org.radargun.stages;
 
-import org.radargun.CacheWrapper;
-import org.radargun.DistStageAck;
-import org.radargun.config.Property;
-import org.radargun.config.Stage;
-import org.radargun.features.XSReplicating;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.radargun.CacheWrapper;
+import org.radargun.DistStageAck;
+import org.radargun.config.Property;
+import org.radargun.config.Stage;
+import org.radargun.features.XSReplicating;
 
 /**
  * Paired with SingleTXLoadStage. Checks that the previous stage had the expected result.
@@ -53,7 +53,7 @@ public class SingleTXCheckStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      if (slaves != null && !slaves.contains(slaveIndex)) {
+      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
          return ack;
       }
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();

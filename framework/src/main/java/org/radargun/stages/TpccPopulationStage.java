@@ -1,14 +1,13 @@
 
 package org.radargun.stages;
 
+import java.util.List;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.MasterState;
 import org.radargun.stressors.TpccPopulationStressor;
-
-import java.util.List;
 
 /**
  * This stage shuld be run before the <b>TpccBenchmarkStage</b>. It will perform the population of
@@ -57,15 +56,15 @@ public class TpccPopulationStage extends AbstractDistStage{
    private void populate(CacheWrapper wrapper) {
       TpccPopulationStressor populationStressor = new TpccPopulationStressor();
       populationStressor.setNumWarehouses(numWarehouses);
-      populationStressor.setSlaveIndex(getSlaveIndex());
-      populationStressor.setNumSlaves(getActiveSlaveCount());
+      populationStressor.setSlaveIndex(slaveState.getSlaveIndex());
+      populationStressor.setNumSlaves(slaveState.getClusterSize());
       populationStressor.setCLastMask(this.cLastMask);
       populationStressor.setOlIdMask(this.olIdMask);
       populationStressor.setCIdMask(this.cIdMask);
       populationStressor.stress(wrapper);
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       logDurationInfo(acks);
       for (DistStageAck ack : acks) {
          DefaultDistStageAck dAck = (DefaultDistStageAck) ack;

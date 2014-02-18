@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Stage;
-import org.radargun.state.MasterState;
 import org.radargun.sysmonitor.LocalJmxMonitor;
 
 /**
@@ -45,13 +44,13 @@ public class StopJVMMonitorStage extends AbstractDistStage {
          slaveState.remove(StartJVMMonitorStage.MONITOR_KEY);
       } else {
          ack.setError(true);
-         ack.setErrorMessage("No JVMMonitor object found on slave: " + this.slaveIndex);
+         ack.setErrorMessage("No JVMMonitor object found on slave: " + slaveState.getSlaveIndex());
       }
       return ack;
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       log.info("StopJVMMonitor.processAckOnMaster");
       HashMap<String, LocalJmxMonitor> sysMonitors = new HashMap<String, LocalJmxMonitor>();
       for (DistStageAck ack : acks) {

@@ -18,15 +18,15 @@ public class PropertyHelper {
 
    private static Log log = LogFactory.getLog(PropertyHelper.class);
 
-   public static Map<String, Field> getProperties(Class<?> clazz) {
+   public static Map<String, Field> getProperties(Class<?> clazz, boolean useDashedName) {
       Map<String, Field> properties = new TreeMap<String, Field>();
-      addProperties(clazz, properties);
+      addProperties(clazz, properties, useDashedName);
       return properties;
    }
 
    public static Map<String, Field> getDeclaredProperties(Class<?> clazz) {
       Map<String, Field> properties = new TreeMap<String, Field>();
-      addDeclaredProperties(clazz, properties);
+      addDeclaredProperties(clazz, properties, false);
       return properties;
    }
 
@@ -57,28 +57,36 @@ public class PropertyHelper {
       return annotation.name().equals(Property.FIELD_NAME) ? property.getName() : annotation.name();
    }
 
-   private static void addProperties(Class<?> clazz, Map<String, Field> properties) {
+   private static void addProperties(Class<?> clazz, Map<String, Field> properties, boolean useDashedName) {
       if (clazz == null) return;
-      addDeclaredProperties(clazz, properties);
-      addProperties(clazz.getSuperclass(), properties);
+      addDeclaredProperties(clazz, properties, useDashedName);
+      addProperties(clazz.getSuperclass(), properties, useDashedName);
    }
 
-   private static void addDeclaredProperties(Class<?> clazz, Map<String, Field> properties) {
+   private static void addDeclaredProperties(Class<?> clazz, Map<String, Field> properties, boolean useDashedName) {
       for (Field field : clazz.getDeclaredFields()) {
          if (Modifier.isStatic(field.getModifiers())) continue; // property cannot be static
          Property property = field.getAnnotation(Property.class);
          if (property != null) {
-            properties.put(getPropertyName(field, property), field);
-            if (!property.deprecatedName().equals(Property.NO_DEPRECATED_NAME)) {
-               properties.put(property.deprecatedName(), field);
+            String name = getPropertyName(field, property);
+            if (useDashedName) {
+               name = XmlHelper.camelCaseToDash(name);
+            }
+            properties.put(name, field);
+            String deprecatedName = property.deprecatedName();
+            if (!deprecatedName.equals(Property.NO_DEPRECATED_NAME)) {
+               if (useDashedName) {
+                  deprecatedName = XmlHelper.camelCaseToDash(deprecatedName);
+               }
+               properties.put(deprecatedName, field);
             }
          }
       }
    }
 
    public static void copyProperties(Object source, Object destination) {
-      Map<String, Field> sourceProperties = getProperties(source.getClass());
-      Map<String, Field> destProperties = getProperties(destination.getClass());
+      Map<String, Field> sourceProperties = getProperties(source.getClass(), false);
+      Map<String, Field> destProperties = getProperties(destination.getClass(), false);
       for (Map.Entry<String, Field> property : sourceProperties.entrySet()) {
          Field destField = destProperties.get(property.getKey());
          if (destField == null) {
@@ -97,9 +105,9 @@ public class PropertyHelper {
       }
    }
 
-   public static void setProperties(Object target, Map<String, String> propertyMap, boolean ignoreMissingProperty) {
+   public static void setProperties(Object target, Map<String, String> propertyMap, boolean ignoreMissingProperty, boolean useDashedName) {
       Class targetClass = target.getClass();
-      Map<String, Field> properties = getProperties(target.getClass());
+      Map<String, Field> properties = getProperties(target.getClass(), useDashedName);
 
       for (Map.Entry<String, String> entry : propertyMap.entrySet()) {
          String propName = entry.getKey();

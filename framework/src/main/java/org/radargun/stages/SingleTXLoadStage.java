@@ -18,15 +18,15 @@
  */
 package org.radargun.stages;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Performs single transaction in multiple threads on multiple slaves.
@@ -58,7 +58,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      if (slaves != null && !slaves.contains(slaveIndex)) {
+      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
          return ack;
       }
       List<ClientThread> clients = new ArrayList<ClientThread>();
@@ -94,7 +94,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
       public Exception exception;
       
       public ClientThread(int id) {
-         super("ClientThread-" + slaveIndex + "-" + id);
+         super("ClientThread-" + slaveState.getSlaveIndex() + "-" + id);
          this.id = id;
       }
       
@@ -108,7 +108,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
                if (!delete) {
                   try {
                 	 log.trace("Inserting key");
-                     cacheWrapper.put(null, "txKey" + i, "txValue" + i + "@" + slaveIndex + "-" + id);
+                     cacheWrapper.put(null, "txKey" + i, "txValue" + i + "@" + slaveState.getSlaveIndex() + "-" + id);
                      log.trace("Key inserted");
                   } catch (Exception e) {
                      log.error("Failed to insert key txKey" + i, e);
@@ -130,7 +130,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
                   }
                }            
             }
-            boolean successfull = (commitSlave == null || commitSlave.contains(slaveIndex)) && (commitThread == null || commitThread.contains(id));
+            boolean successfull = (commitSlave == null || commitSlave.contains(slaveState.getSlaveIndex())) && (commitThread == null || commitThread.contains(id));
             cacheWrapper.endTransaction(successfull);
             if (successfull) log.trace("Committed transaction");
             else log.debug("Rolled back transaction");

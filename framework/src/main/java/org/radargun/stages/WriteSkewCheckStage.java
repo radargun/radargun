@@ -5,7 +5,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.state.MasterState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,8 +87,8 @@ public class WriteSkewCheckStage extends CheckStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
-      if (!super.processAckOnMaster(acks, masterState)) return false;
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
+      if (!super.processAckOnMaster(acks)) return false;
       long sumIncrements = 0;
       long sumSkews = 0;
       long maxValue = -1;

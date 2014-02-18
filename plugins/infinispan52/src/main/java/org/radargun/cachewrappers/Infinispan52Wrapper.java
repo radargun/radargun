@@ -17,7 +17,6 @@ import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.util.FileLookupFactory;
-import org.radargun.config.DefaultConverter;
 import org.radargun.config.Property;
 import org.radargun.features.DistributedTaskCapable;
 import org.radargun.features.Queryable;
@@ -45,11 +44,11 @@ public class Infinispan52Wrapper extends Infinispan51Wrapper implements Distribu
    @Property(doc = "Dump configuration into property files. Default is false.")
    protected boolean dumpConfig = false;
 
-   @Property(name = AbstractStartStage.PROP_PRODUCT_NAME, doc = "Name of the current product.")
-   protected String productName = "default";
+   @Property(name = AbstractStartStage.PROP_PLUGIN, doc = "Name of the current product.", optional = false)
+   protected String plugin;
 
-   @Property(name = AbstractStartStage.PROP_CONFIG_NAME, doc = "Name of the current config.")
-   protected String configName = "default";
+   @Property(name = AbstractStartStage.PROP_CONFIG_NAME, doc = "Name of the current config.", optional = false)
+   protected String configName;
 
    protected final InfinispanDistributedTask distributedTask;
    protected final InfinispanQueryable queryable;
@@ -105,7 +104,7 @@ public class Infinispan52Wrapper extends Infinispan51Wrapper implements Distribu
       super.setUpCaches();
       // config dumping
       if (dumpConfig) {
-         File dumpDir = new File("conf" + File.separator + "normalized" + File.separator + productName + File.separator + configName);
+         File dumpDir = new File("conf" + File.separator + "normalized" + File.separator + plugin + File.separator + configName);
          if (!dumpDir.exists()) {
             dumpDir.mkdirs();
          }

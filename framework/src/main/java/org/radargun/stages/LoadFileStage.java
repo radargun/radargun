@@ -31,7 +31,6 @@ import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
 
 /**
@@ -60,8 +59,8 @@ public class LoadFileStage extends AbstractDistStage {
    private boolean stringData = false;
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
-      super.processAckOnMaster(acks, masterState);
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
+      super.processAckOnMaster(acks);
       long fileSize = new File(filePath).length();
       log.info("--------------------");
       log.info("Size of file '" + filePath + "' is " + fileSize + " bytes");
@@ -79,8 +78,8 @@ public class LoadFileStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = newDefaultStageAck();
-      int totalWriters = getActiveSlaveCount();
-      long fileOffset = valueSize * getSlaveIndex();// index starts at 0
+      int totalWriters = slaveState.getClusterSize();
+      long fileOffset = valueSize * slaveState.getSlaveIndex();// index starts at 0
       CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
 
       if (cacheWrapper == null) {
@@ -102,7 +101,7 @@ public class LoadFileStage extends AbstractDistStage {
          ByteBuffer buffer = ByteBuffer.allocate(valueSize);
          while (true) {
             long initPos = fileChannel.position();
-            String key = Integer.toString(getSlaveIndex()) + "-" + Long.toString(initPos);
+            String key = Integer.toString(slaveState.getSlaveIndex()) + "-" + Long.toString(initPos);
             int bytesRead = fileChannel.read(buffer);
 
             if (bytesRead != -1) {
@@ -129,7 +128,7 @@ public class LoadFileStage extends AbstractDistStage {
                   cacheWrapper.put(bucket, key, buffer.array());
                }
                if (printWriteStatistics) {
-                  log.info("Put on slave-" + this.getSlaveIndex() + " took "
+                  log.info("Put on slave-" + slaveState.getSlaveIndex() + " took "
                         + Utils.prettyPrintTime(System.nanoTime() - start, TimeUnit.NANOSECONDS));
                }
                putCount++;

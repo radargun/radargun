@@ -25,24 +25,21 @@ import org.radargun.logging.LogFactory;
 import org.radargun.state.StateBase;
 
 public class ClassLoadHelper {
-   
+
+   private static final String PREVIOUS_PLUGIN = "__PREVIOUS_PLUGIN__";
+   private static final String CLASS_LOADER = "__CLASS_LOADER__";
    private static final Log log = LogFactory.getLog(ClassLoadHelper.class);
    
    private boolean useSmartClassLoading;
    private Class<?> instantiator;
-   private String thisProduct;
+   private String plugin;
    private StateBase state;
-   private String prevProductKey;
-   private String classLoaderKey;
-   
-   public ClassLoadHelper(boolean useSmartClassLoading, Class<?> instantiator, String thisProduct, StateBase state,
-         String prevProductKey, String classLoaderKey) {      
+
+   public ClassLoadHelper(boolean useSmartClassLoading, Class<?> instantiator, String plugin, StateBase state) {
       this.useSmartClassLoading = useSmartClassLoading;
       this.instantiator = instantiator;
-      this.thisProduct = thisProduct;
+      this.plugin = plugin;
       this.state = state;
-      this.prevProductKey = prevProductKey;
-      this.classLoaderKey = classLoaderKey;
    }
 
    public Object createInstance(String classFqn) throws Exception {
@@ -50,13 +47,13 @@ public class ClassLoadHelper {
          return Class.forName(classFqn).newInstance();
       }
       URLClassLoader classLoader;
-      String prevProduct = (String) state.get(prevProductKey);
-      if (prevProduct == null || !prevProduct.equals(thisProduct)) {
-         classLoader = Utils.buildProductSpecificClassLoader(thisProduct, instantiator.getClassLoader());
-         state.put(classLoaderKey, classLoader);
-         state.put(prevProductKey, thisProduct);
+      String prevProduct = (String) state.get(PREVIOUS_PLUGIN);
+      if (prevProduct == null || !prevProduct.equals(plugin)) {
+         classLoader = Utils.buildPluginSpecificClassLoader(plugin, instantiator.getClassLoader());
+         state.put(CLASS_LOADER, classLoader);
+         state.put(PREVIOUS_PLUGIN, plugin);
       } else {//same product and there is a class loader
-         classLoader = (URLClassLoader) state.get(classLoaderKey);
+         classLoader = (URLClassLoader) state.get(CLASS_LOADER);
       }
       log.info("Creating newInstance " + classFqn + " with classloader " + classLoader);
       Thread.currentThread().setContextClassLoader(classLoader);

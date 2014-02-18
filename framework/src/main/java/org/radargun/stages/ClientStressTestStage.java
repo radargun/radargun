@@ -48,7 +48,7 @@ public class ClientStressTestStage extends StressTestStage {
    protected Map<String, Object> doWork() {
       log.info("Starting " + getClass().getSimpleName() + ": " + this);
       ClientStressTestStressor stressor = new ClientStressTestStressor();
-      stressor.setNodeIndex(getSlaveIndex(), getActiveSlaveCount());
+      stressor.setNodeIndex(slaveState.getSlaveIndex(), slaveState.getClusterSize());
       stressor.setDurationMillis(duration);
       setupStatistics(stressor);
       PropertyHelper.copyProperties(this, stressor);

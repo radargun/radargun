@@ -31,7 +31,7 @@ public class ClearClusterStage extends AbstractDistStage {
       for (int i = 0; i < 5; i++) {
          try {
             log.info(Utils.printMemoryFootprint(true));
-            if (slaves == null || slaves.contains(getSlaveIndex())) {
+            if (slaves == null || slaves.contains(slaveState.getSlaveIndex())) {
                cacheWrapper.clear(local);
             } else {
                int size;

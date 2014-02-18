@@ -52,8 +52,7 @@ public class StartJVMMonitorStage extends AbstractDistStage {
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
       LocalJmxMonitor monitor = new LocalJmxMonitor();
-      monitor.setProductName(productName);
-      monitor.setConfigName(configName);
+      monitor.setConfigName(slaveState.getConfigName());
       if (interfaceName != null) {
          monitor.setInterfaceName(interfaceName);
       }

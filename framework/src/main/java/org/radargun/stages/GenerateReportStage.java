@@ -38,7 +38,7 @@ import org.radargun.utils.Utils;
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-@Stage(doc = "Stage that generates a chart from a set of csv files.")
+@Stage(internal = true, doc = "Stage that generates a chart from a set of csv files.")
 public class GenerateReportStage extends AbstractMasterStage {
 
    private static Log log = LogFactory.getLog(GenerateReportStage.class);

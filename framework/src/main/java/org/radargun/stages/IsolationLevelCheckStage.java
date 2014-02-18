@@ -5,7 +5,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.state.MasterState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,8 +80,8 @@ public class IsolationLevelCheckStage extends CheckStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
-      if (!super.processAckOnMaster(acks, masterState)) return false;
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
+      if (!super.processAckOnMaster(acks)) return false;
 
       boolean anyValueChangeDetected = false;
       for (DistStageAck ack : acks) {

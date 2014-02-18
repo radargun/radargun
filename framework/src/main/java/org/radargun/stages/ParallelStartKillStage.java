@@ -31,7 +31,6 @@ import org.radargun.stages.helpers.KillHelper;
 import org.radargun.stages.helpers.RoleHelper;
 import org.radargun.stages.helpers.StartHelper;
 import org.radargun.stages.helpers.StartStopTime;
-import org.radargun.state.MasterState;
 
 /**
  * The stage start and kills some nodes concurrently (without waiting for each other).
@@ -68,8 +67,8 @@ public class ParallelStartKillStage extends AbstractStartStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      boolean killMe = kill.contains(getSlaveIndex()) || RoleHelper.hasRole(slaveState, role);
-      boolean startMe = start.contains(getSlaveIndex());
+      boolean killMe = kill.contains(slaveState.getSlaveIndex()) || RoleHelper.hasRole(slaveState, role);
+      boolean startMe = start.contains(slaveState.getSlaveIndex());
       if (!(killMe || startMe)) {
          log.info("Nothing to kill or start...");
       }
@@ -89,8 +88,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
                      log.error("Starting delay was interrupted.", e);
                   }
                }
-               StartHelper.start(productName, configProperties, slaveState, getSlaveIndex(),
-                     null, 0, reachable, classLoadHelper, ack);
+               StartHelper.start(slaveState, service, configProperties, null, 0, reachable, ack);
                if (ack.isError()) return ack;
                startMe = false;               
             }            
@@ -118,7 +116,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       boolean success = true;
       logDurationInfo(acks);
       for (DistStageAck stageAck : acks) {

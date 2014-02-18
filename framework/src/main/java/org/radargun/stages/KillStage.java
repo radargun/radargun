@@ -9,7 +9,6 @@ import org.radargun.config.TimeConverter;
 import org.radargun.stages.helpers.KillHelper;
 import org.radargun.stages.helpers.RoleHelper;
 import org.radargun.stages.helpers.StartStopTime;
-import org.radargun.state.MasterState;
 
 /**
  * 
@@ -47,11 +46,6 @@ public class KillStage extends AbstractDistStage {
       // nada
    }
 
-   @Override
-   public void initOnMaster(MasterState masterState, int slaveIndex) {
-      super.initOnMaster(masterState, slaveIndex);
-   }
-
    public DistStageAck executeOnSlave() {
       log.info("Received kill request from master...");
       DefaultDistStageAck ack = newDefaultStageAck();
@@ -72,7 +66,7 @@ public class KillStage extends AbstractDistStage {
             log.info("No delayed execution found in history.");
          }
       } else if ((role != null && RoleHelper.hasRole(slaveState, role))
-            || (slaves != null && slaves.contains(getSlaveIndex()))) {
+            || (slaves != null && slaves.contains(slaveState.getSlaveIndex()))) {
          if (delayExecution > 0) {
             Thread t = new Thread() {
                @Override
@@ -96,8 +90,8 @@ public class KillStage extends AbstractDistStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
-      if (!super.processAckOnMaster(acks, masterState)) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
+      if (!super.processAckOnMaster(acks)) {
          return false;
       }
       for (DistStageAck ack : acks) {

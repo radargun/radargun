@@ -19,8 +19,8 @@ public class ReportDesc {
       this.reportName = reportName;
    }
 
-   public void addReportItem(String productName, String configuration) {
-      ReportItem reportItem = new ReportItem(productName, configuration);
+   public void addReportItem(String configuration) {
+      ReportItem reportItem = new ReportItem(configuration);
       items.add(reportItem);
    }
 
@@ -34,12 +34,12 @@ public class ReportDesc {
 
    public void updateData(String product, String config, long readsPerSec, long noReads, long writesPerSec, long noWrites) {
       if (includeAll) {
-         ReportItem item = new ReportItem(product, config);
+         ReportItem item = new ReportItem(config);
          updateItem(readsPerSec, noReads, writesPerSec, noWrites, item);
          items.add(item);
       } else {
          for (ReportItem item : items) {
-            if (item.matches(product, config)) {
+            if (item.matches(config)) {
                updateItem(readsPerSec, noReads, writesPerSec, noWrites, item);
             }
          }

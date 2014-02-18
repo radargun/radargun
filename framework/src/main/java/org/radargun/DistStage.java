@@ -1,10 +1,10 @@
 package org.radargun;
 
-import org.radargun.state.SlaveState;
-import org.radargun.state.MasterState;
-
 import java.io.Serializable;
 import java.util.List;
+
+import org.radargun.state.MasterState;
+import org.radargun.state.SlaveState;
 
 /**
  * Defines an stage that will be run on both master and slaves.
@@ -13,14 +13,8 @@ import java.util.List;
  */
 public interface DistStage extends Stage, Serializable {
 
-   /**
-    * After un-marshalling on the slave, this method will be called to setUp the stage with slave's state.
-    */
-   public void initOnSlave(SlaveState slaveState);
-
-   public int getActiveSlaveCount();
-
-   public void setActiveSlavesCount(int activeSlaves);
+   void initOnMaster(MasterState masterState);
+   void initOnSlave(SlaveState slaveState);
 
    /**
     * Do whatever on the slave. This will only be called after {@link #initOnSlave(org.radargun.state.SlaveState)} is called.
@@ -29,17 +23,10 @@ public interface DistStage extends Stage, Serializable {
    DistStageAck executeOnSlave();
 
    /**
-    * Called on master. Master state should not be passed to the slaves.
-    */
-   public void initOnMaster(MasterState masterState, int slaveIndex);
-
-   /**
     * After all slaves replied through {@link #executeOnSlave()}, this method will be called on the master.
     * @return returning false will cause the benchmark to stop.
     */
-   boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState);
-
-   public DistStage clone();
+   boolean processAckOnMaster(List<DistStageAck> acks);
 
    public boolean isRunOnAllSlaves();
 

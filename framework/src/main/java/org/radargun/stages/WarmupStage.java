@@ -1,11 +1,10 @@
 package org.radargun.stages;
 
+import java.util.List;
+
 import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
-import org.radargun.state.MasterState;
 import org.radargun.stressors.WarmupStressor;
-
-import java.util.List;
 
 /**
  * This stage shuld be run before the actual test, in order to activate JIT compiler. It will perform
@@ -45,14 +44,14 @@ public class WarmupStage extends AbstractDistStage {
 
    private void warmup(CacheWrapper wrapper) {
       WarmupStressor warmupStressor = new WarmupStressor();
-      warmupStressor.setBucket("warmup_bucket" + String.valueOf(getSlaveIndex()) + "_");
-      warmupStressor.setKeyPrefix("warmup_key_" + String.valueOf(getSlaveIndex()) + "_");
+      warmupStressor.setBucket("warmup_bucket" + String.valueOf(slaveState.getSlaveIndex()) + "_");
+      warmupStressor.setKeyPrefix("warmup_key_" + String.valueOf(slaveState.getSlaveIndex()) + "_");
       warmupStressor.setOperationCount(operationCount);
       warmupStressor.setNumThreads(numThreads);
       warmupStressor.stress(wrapper);
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       logDurationInfo(acks);
       for (DistStageAck ack : acks) {
          DefaultDistStageAck dAck = (DefaultDistStageAck) ack;

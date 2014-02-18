@@ -28,7 +28,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.features.MapReduceCapable;
-import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
 
 /**
@@ -110,12 +109,12 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    private TimeUnit unit = TimeUnit.MILLISECONDS;
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
-      super.processAckOnMaster(acks, masterState);
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
+      super.processAckOnMaster(acks);
       StringBuilder reportCsvContent = new StringBuilder();
 
       if (masterState.get(FIRST_SCALE_STAGE_KEY) == null) {
-         masterState.put(FIRST_SCALE_STAGE_KEY, masterState.nameOfTheCurrentBenchmark());
+         masterState.put(FIRST_SCALE_STAGE_KEY, masterState.getConfigName());
          reportCsvContent
                .append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, DURATION_NANOSECONDS, KEY_COUNT_IN_RESULT_MAP\n");
       }
@@ -158,12 +157,12 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          return result;
       }
 
-      if (getSlaveIndex() == 0) {
+      if (slaveState.getSlaveIndex() == 0) {
          @SuppressWarnings("unchecked")
          MapReduceCapable<KOut, VOut, R> mapReduceCapable = (MapReduceCapable<KOut, VOut, R>) cacheWrapper;
          result = executeMapReduceTask(cacheWrapper, mapReduceCapable);
       } else {
-         String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
+         String payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
                + ", 0, -1";
          result.setPayload(payload);
       }
@@ -204,16 +203,16 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          log.info(mapReduceCapable.getClass().getName() + " does not support MapReduceCapable.setCombiner()");
       }
       try {
-         String payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
+         String payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
                + ", noDuration, noResultSize";
          result.setPayload(payload);
          if (collatorFqn != null) {
             start = System.nanoTime();
-            payloadObject = mapReduceCapable.executeMapReduceTask(classLoadHelper, mapperFqn, reducerFqn, collatorFqn);
+            payloadObject = mapReduceCapable.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn, collatorFqn);
             durationNanos = System.nanoTime() - start;
             log.info("MapReduce task with Collator completed in "
                   + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
-            payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize() + ", "
+            payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize() + ", "
                   + durationNanos + ", -1";
             result.setPayload(payload);
             if (printResult) {
@@ -228,13 +227,13 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             }
          } else {
             start = System.nanoTime();
-            payloadMap = mapReduceCapable.executeMapReduceTask(classLoadHelper, mapperFqn, reducerFqn);
+            payloadMap = mapReduceCapable.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn);
             durationNanos = System.nanoTime() - start;
 
             if (payloadMap != null) {
                log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
                log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
-               payload = this.slaveIndex + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
+               payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
                      + ", " + durationNanos + ", " + payloadMap.keySet().size();
                result.setPayload(payload);
                if (printResult) {

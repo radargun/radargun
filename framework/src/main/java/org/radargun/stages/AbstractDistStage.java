@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.radargun.DistStage;
 import org.radargun.DistStageAck;
-import org.radargun.config.MasterConfig;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.logging.Log;
@@ -27,9 +26,14 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
    private static final String PREV_PRODUCT = "AbstractDistStage.previousProduct";
    public static final String CLASS_LOADER = "AbstractDistStage.classLoader";
 
-   protected transient SlaveState slaveState;
-
-   protected transient MasterConfig masterConfig;
+   /**
+    * This field is filled in only on master node, on slave it is set to null
+    */
+   protected MasterState masterState;
+   /**
+    * This field is filled in only on slave node, on master it is set to null
+    */
+   protected SlaveState slaveState;
 
    @Property(doc = "Specifies on which slaves should this stage actively run. Default is stage-dependent (usually all or none).")
    protected Collection<Integer> slaves;
@@ -43,28 +47,14 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
    @Property(doc = "If set to true the stage should be run on maxSlaves (applies to scaling benchmarks). Default is false.")
    private boolean runOnAllSlaves;
 
-   protected int slaveIndex;
-   private int activeSlavesCount;
-   private int totalSlavesCount;
-   protected String productName;
-   protected String configName;
-   protected ClassLoadHelper classLoadHelper;
-
-   public void initOnSlave(SlaveState slaveState) {
-      this.slaveState = slaveState;
-      classLoadHelper = new ClassLoadHelper(useSmartClassLoading, getClass(), productName, slaveState, PREV_PRODUCT, CLASS_LOADER);
+   @Override
+   public void initOnMaster(MasterState masterState) {
+      this.masterState = masterState;
    }
 
-   public void initOnMaster(MasterState masterState, int slaveIndex) {
-      this.masterConfig = masterState.getConfig();
-      this.slaveIndex = slaveIndex;
-      assert masterConfig != null;
-      this.totalSlavesCount = masterState.getConfig().getSlaveCount();
-      if (isRunOnAllSlaves()) {
-         setActiveSlavesCount(totalSlavesCount);
-      }
-      this.productName = masterState.nameOfTheCurrentBenchmark();      
-      this.configName = masterState.configNameOfTheCurrentBenchmark();
+   @Override
+   public void initOnSlave(SlaveState slaveState) {
+      this.slaveState = slaveState;
    }
 
    public boolean isRunOnAllSlaves() {
@@ -80,14 +70,10 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
    }
 
    protected DefaultDistStageAck newDefaultStageAck() {
-      return new DefaultDistStageAck(getSlaveIndex(), slaveState.getLocalAddress());
+      return new DefaultDistStageAck(slaveState.getSlaveIndex(), slaveState.getLocalAddress());
    }
 
-   public DistStage clone() {
-       return (DistStage) super.clone();
-   }
-
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       boolean success = true;
       logDurationInfo(acks);
       for (DistStageAck stageAck : acks) {
@@ -117,19 +103,11 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       log.info("Received responses from all " + acks.size() + " slaves. " + processingDuration + "]");
    }
 
-   public int getActiveSlaveCount() {
-      return activeSlavesCount;
+   protected DistStageAck errorResponse(String message, Exception e) {
+      return newDefaultStageAck().error(message, e);
    }
 
-   public void setActiveSlavesCount(int activeSlaves) {
-      this.activeSlavesCount = activeSlaves;
-   }
-
-   public int getSlaveIndex() {
-      return slaveIndex;
-   }
-
-   protected Object createInstance(String classFqn) throws Exception {
-      return classLoadHelper.createInstance(classFqn);
+   protected DistStageAck successfulResponse() {
+      return newDefaultStageAck();
    }
 }

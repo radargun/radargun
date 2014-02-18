@@ -1,16 +1,15 @@
 package org.radargun.config;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.radargun.Master;
-import org.radargun.Stage;
-import org.radargun.stages.AbstractStartStage;
-import org.radargun.stages.GenerateReportStage;
-import org.radargun.utils.Utils;
+import org.radargun.Properties;
+import org.radargun.stages.ScenarioCleanupStage;
+import org.radargun.stages.ScenarioInitStage;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -21,8 +20,11 @@ import org.w3c.dom.NodeList;
 /**
  * @author Mircea.Markus@jboss.com
  */
-public class DomConfigParser extends ConfigParser {
-   
+public class DomConfigParser extends ConfigParser implements ConfigSchema {
+
+   String PROPERTY_PREFIX_REPEAT = "repeat.";
+   String PROPERTY_SUFFIX_COUNTER = "counter";
+
    public MasterConfig parseConfig(String config) throws Exception {
       //the content in the new file is too dynamic, let's just use DOM for now
 
@@ -36,256 +38,314 @@ public class DomConfigParser extends ConfigParser {
          throw new IllegalStateException(e);
       }
 
-      Element configRoot = (Element) document.getElementsByTagName("bench-config").item(0);
+      Element root = (Element) document.getElementsByTagName(ELEMENT_BENCHMARK).item(0);
+      NodeList childNodes = root.getChildNodes();
+      int index = 0;
+      index = nextElement(childNodes, index);
+      MasterConfig masterConfig = parseMaster((Element) childNodes.item(index));
+      index = nextElement(childNodes, index + 1);
+      parseClusters(masterConfig, (Element) childNodes.item(index));
+      index = nextElement(childNodes, index + 1);
+      parseConfigurations(masterConfig, (Element) childNodes.item(index));
+      index = nextElement(childNodes, index + 1);
 
-      ScalingBenchmarkConfig prototype = buildBenchmarkPrototype(configRoot);
-      MasterConfig masterConfig = parseMaster(configRoot, prototype);
+      Scenario scenario = new Scenario();
+      Map<String, String> initProperties = Collections.EMPTY_MAP;
+      if (ELEMENT_INIT.equals(childNodes.item(index).getNodeName())) {
+         initProperties = parseProperties(((Element) childNodes.item(index)));
+         index = nextElement(childNodes, index + 1);
+      }
+      scenario.addStage(ScenarioInitStage.class, initProperties, Collections.EMPTY_MAP);
 
-      parseProductsElement(configRoot, prototype, masterConfig);
+      parseScenario(scenario, (Element) childNodes.item(index));
+      masterConfig.setScenario(scenario);
 
-      //now add the reporting
-      parseReporting(configRoot, masterConfig);
+      index = nextElement(childNodes, index + 1);
+      Map<String, String> cleanupProperties = Collections.EMPTY_MAP;
+      if (ELEMENT_CLEANUP.equals(childNodes.item(index).getNodeName())) {
+         cleanupProperties = parseProperties((Element) childNodes.item(index));
+         index = nextElement(childNodes, index + 1);
+      }
+      scenario.addStage(ScenarioCleanupStage.class, cleanupProperties, Collections.EMPTY_MAP);
+      parseReporting(masterConfig, (Element) childNodes.item(index));
 
       return masterConfig;
-
    }
 
+   private int nextElement(NodeList nodeList, int start) {
+      for (int i = start; i < nodeList.getLength(); ++i) {
+         if (nodeList.item(i) instanceof Element) {
+            return i;
+         }
+      }
+      return -1;
+   }
 
-   private void parseReporting(Element configRoot, MasterConfig masterConfig) {
-      Element reportsEl = (Element) configRoot.getElementsByTagName("reports").item(0);
-      NodeList reportElList = reportsEl.getElementsByTagName("report");
-      FixedSizeBenchmarkConfig reportBenchmark = new FixedSizeBenchmarkConfig();
-      reportBenchmark.setProductName("report");
+   private void assertName(String name, Element element) {
+      if (!name.equals(element.getNodeName())) {
+         throw new IllegalArgumentException("Found '" + element.getNodeName() + "', expected '"  + name  + "'");
+      }
+   }
 
-      masterConfig.addBenchmark(reportBenchmark);
-      for (int i = 0; i < reportElList.getLength(); i++) {
-         if (reportElList.item(i) instanceof Element) {
-            Element thisReportEl = (Element) reportElList.item(i);
-            GenerateReportStage generateReportStage = new GenerateReportStage();
-            reportBenchmark.addStage(generateReportStage);
+   private String getAttribute(Element element, String attribute) {
+      String value = Evaluator.parseString(element.getAttribute(attribute));
+      if (value == null || value.isEmpty()) {
+         throw new IllegalArgumentException("Element '" + attribute + "' must be defined.");
+      }
+      return value;
+   }
 
-            NamedNodeMap attributes = thisReportEl.getAttributes();
-            Map<String, String> attrToSet = new HashMap<String, String>();
-            boolean includeAll = false;
-            for (int attrIndex = 0; attrIndex < attributes.getLength(); attrIndex++) {
-               Attr attr = (Attr) attributes.item(attrIndex);
-               if ("includeAll".equals(attr.getName())) {
-                  includeAll = "true".equalsIgnoreCase(attr.getValue());
-               } else {
-                  attrToSet.put(attr.getName(), Evaluator.parseString(attr.getValue()));
+   private String getAttribute(Element element, String attribute, String def) {
+      String value = Evaluator.parseString(element.getAttribute(attribute));
+      if (value == null || value.isEmpty()) {
+         return def;
+      }
+      return value;
+   }
+
+   private MasterConfig parseMaster(Element masterElement) {
+      assertName(ELEMENT_MASTER, masterElement);
+      String bindAddress = getAttribute(masterElement, ATTR_BIND_ADDRESS, "localhost");
+      String portString = getAttribute(masterElement, ATTR_PORT, "-1");
+      return new MasterConfig(Integer.parseInt(portString), bindAddress);
+   }
+
+   private void parseClusters(MasterConfig masterConfig, Element clustersElement) {
+      if (ELEMENT_LOCAL.equals(clustersElement.getNodeName())) {
+         // no clusters, leave empty
+         return;
+      } else if (!ELEMENT_CLUSTERS.equals(clustersElement.getNodeName())) {
+         throwExpected(clustersElement.getNodeName(), new String[] { ELEMENT_LOCAL, ELEMENT_CLUSTERS });
+      }
+      String clusterSizeBackup = System.getProperty(Properties.PROPERTY_CLUSTER_SIZE);
+      NodeList clusters = clustersElement.getChildNodes();
+      for (int i = 0; i < clusters.getLength(); ++i) {
+         if (!(clusters.item(i) instanceof Element)) continue;
+         Element childElement = (Element) clusters.item(i);
+         if (ELEMENT_CLUSTER.equals(childElement.getNodeName())) {
+            int size = Integer.parseInt(getAttribute(childElement, ATTR_SIZE, "0"));
+            System.setProperty(Properties.PROPERTY_CLUSTER_SIZE, String.valueOf(size));
+            addCluster(masterConfig, childElement, size);
+         } else if (ELEMENT_SCALE.equals(childElement.getNodeName())) {
+            int initSize = Integer.parseInt(getAttribute(childElement, ATTR_FROM));
+            int maxSize = Integer.parseInt(getAttribute(childElement, ATTR_TO));
+            int increment = Integer.parseInt(getAttribute(childElement, ATTR_INC, "1"));
+            if (increment <= 0) throw new IllegalArgumentException("Increment must be > 0!");
+            NodeList scaledElements = childElement.getChildNodes();
+            for (int size = initSize; size <= maxSize; size += increment) {
+               System.setProperty(Properties.PROPERTY_CLUSTER_SIZE, String.valueOf(size));
+               for (int j = 0; j < scaledElements.getLength(); ++j) {
+                  if (!(scaledElements.item(j) instanceof Element)) continue;
+                  Element clusterElement = (Element) scaledElements.item(j);
+                  assertName(ELEMENT_CLUSTER, clusterElement);
+                  addCluster(masterConfig, clusterElement, size);
                }
             }
-            PropertyHelper.setProperties(generateReportStage, attrToSet, false);
-            InitHelper.init(generateReportStage);
-            if (includeAll) {
-               continue;
-            }
+         } else {
+            throwExpected(childElement.getNodeName(), new String[] { ELEMENT_CLUSTER, ELEMENT_SCALE} );
+         }
+         System.setProperty(Properties.PROPERTY_CLUSTER_SIZE, "");
+      }
+      if (clusterSizeBackup != null)
+         System.setProperty(Properties.PROPERTY_CLUSTER_SIZE, clusterSizeBackup);
+   }
 
-            NodeList itemsEl = thisReportEl.getElementsByTagName("item");
-            for (int j = 0; j < itemsEl.getLength(); j++) {
-               Element itemEl = (Element) itemsEl.item(j);
-               String productName = Evaluator.parseString(itemEl.getAttribute("product"));
-               String productConfig = Evaluator.parseString(itemEl.getAttribute("config"));
-               generateReportStage.addReportFilter(productName, productConfig);
+   private void addCluster(MasterConfig masterConfig, Element clusterElement, int size) {
+      Cluster cluster = new Cluster();
+      NodeList groups = clusterElement.getChildNodes();
+      for (int j = 0; j < groups.getLength(); ++j) {
+         if (!(groups.item(j) instanceof Element)) continue;
+         Element groupElement = (Element) groups.item(j);
+         assertName(ELEMENT_GROUP, groupElement);
+         String name = getAttribute(groupElement, ATTR_NAME);
+         String groupSize = getAttribute(groupElement, ATTR_SIZE);
+         cluster.addGroup(name, Integer.parseInt(groupSize));
+      }
+      if (size > 0) {
+         if (cluster.getSize() <= 0) {
+            cluster.setSize(size);
+         } else if (cluster.getSize() != size) {
+            throw new IllegalArgumentException("Total size for cluster is not the one specified as size! " + cluster);
+         }
+      }
+      masterConfig.addCluster(cluster);
+   }
+
+   private void parseConfigurations(MasterConfig masterConfig, Element configsElement) {
+      assertName(ELEMENT_CONFIGURATIONS, configsElement);
+      NodeList configs = configsElement.getChildNodes();
+      for (int i = 0; i < configs.getLength(); ++i) {
+         if (!(configs.item(i) instanceof Element)) continue;
+         Element configElement = (Element) configs.item(i);
+         assertName(ELEMENT_CONFIG, configElement);
+         String configName = getAttribute(configElement, ATTR_NAME);
+         Configuration config = new Configuration(configName);
+         NodeList setups = configElement.getChildNodes();
+         for (int j = 0; j < setups.getLength(); ++j) {
+            if (!(setups.item(j) instanceof Element)) continue;
+            Element setupElement = (Element) setups.item(j);
+            assertName(ELEMENT_SETUP, setupElement);
+            String plugin = getAttribute(setupElement, ATTR_PLUGIN);
+            String file = getAttribute(setupElement, ATTR_FILE);
+            String service = getAttribute(setupElement, ATTR_SERVICE, Configuration.DEFAULT_SERVICE);
+            String group = getAttribute(setupElement, ATTR_GROUP, Cluster.DEFAULT_GROUP);
+            Configuration.Setup setup = config.addSetup(plugin, file, service, group);
+            NodeList properties = setupElement.getChildNodes();
+            for (int k = 0; k < properties.getLength(); ++k) {
+               if (!(properties.item(k) instanceof Element)) continue;
+               Element propertyElement = (Element) properties.item(k);
+               assertName(ELEMENT_PROPERTY, propertyElement);
+               String propertyName = getAttribute(propertyElement, ATTR_NAME);
+               String content = propertyElement.getTextContent();
+               if (content == null) {
+                  throw new IllegalArgumentException("Property cannot have null content!");
+               }
+               setup.addProperty(propertyName, Evaluator.parseString(content.trim()));
             }
+         }
+         masterConfig.addConfig(config);
+      }
+   }
+
+   private void parseScenario(Scenario scenario, Element scenarioElement) {
+      assertName(ELEMENT_SCENARIO, scenarioElement);
+      NodeList childNodes = scenarioElement.getChildNodes();
+      for (int i = 0; i < childNodes.getLength(); i++) {
+         Node child = childNodes.item(i);
+         if (child instanceof Element) {
+            addScenarioItem(scenario, (Element) child, Collections.EMPTY_MAP);
          }
       }
    }
 
-   private void parseProductsElement(Element configRoot, ScalingBenchmarkConfig prototype, MasterConfig masterConfig) {
-      Element productsEl = (Element) configRoot.getElementsByTagName("products").item(0);
-      NodeList productsChildEl = productsEl.getChildNodes();
-      for (int i = 0; i < productsChildEl.getLength(); i++) {
-         Node node = productsChildEl.item(i);
-         if (node instanceof Element) {
-            Element nodeEl = (Element) node;
-            String productName = nodeEl.getNodeName();
-            if ("product".equalsIgnoreCase(productName)) {
-               productName = Evaluator.parseString(nodeEl.getAttribute("name"));
-            }
-            NodeList configs = nodeEl.getElementsByTagName("config");
-            for (int configIndex = 0; configIndex < configs.getLength(); configIndex++) {
-               Element configEl = (Element) configs.item(configIndex);
-               String config = configEl.getAttribute("name");
-               String configName = Utils.fileName2Config(config);
-               String configFile = configEl.getAttribute("file");
-               if (configFile.isEmpty()) configFile = config;
-
-               Map<String, String> properties = new HashMap<String, String>();
-               addDirectAttributes(properties, configEl, ""); // parse own
-               addWrapperAttributes(properties, configEl, "");
-               addSitesAttributes(properties, configEl);
-
-               ScalingBenchmarkConfig clone = prototype.clone();
-               masterConfig.addBenchmark(clone);
-               clone.setProductName(productName);
-               clone.setConfigName(configName);
-               updateStartupStage(configFile, clone, properties);
-            }
-         }
-      }
-   }
-
-   public static void addDirectAttributes(Map<String, String> properties, Element element, String prefix) {
+   private Map<String, String> parseProperties(Element element) {
       NamedNodeMap attributes = element.getAttributes();
-      for (int j = 0; j < attributes.getLength(); j++) {
-         String name = attributes.item(j).getNodeName();
-         String value = Evaluator.parseString(attributes.item(j).getNodeValue());
-         properties.put(prefix + name, value);
+      Map<String, String> properties = new HashMap<String, String>();
+      for (int attrIndex = 0; attrIndex < attributes.getLength(); attrIndex++) {
+         Attr attr = (Attr) attributes.item(attrIndex);
+         properties.put(attr.getName(), attr.getValue());
       }
+      return properties;
    }
 
-   public static void addWrapperAttributes(Map<String, String> properties, Element element, String prefix) {
-      NodeList childList = element.getChildNodes();
-      for (int i = 0; i < childList.getLength(); ++i) {
-         if (childList.item(i) instanceof Element) {
-            Element child = (Element) childList.item(i);
-            if (child.getNodeName().equalsIgnoreCase("wrapper")) {
-               String wrapperClass = child.getAttribute("class");
-               if (wrapperClass != null && !wrapperClass.isEmpty()) {
-                  properties.put(prefix + "wrapper", wrapperClass);
+   private void parseReporting(MasterConfig masterConfig, Element reportsElement) {
+      assertName(ELEMENT_REPORTS, reportsElement);
+      NodeList childNodes = reportsElement.getChildNodes();
+      for (int i = 0; i < childNodes.getLength(); i++) {
+         if (!(childNodes.item(i) instanceof Element)) continue;
+         Element reporterElement = (Element) childNodes.item(i);
+         assertName(ELEMENT_REPORTER, reporterElement);
+         String type = getAttribute(reporterElement, ATTR_TYPE);
+         String run = getAttribute(reporterElement, ATTR_RUN, Reporter.RunCondition.ALWAYS.name());
+         Reporter reporter = new Reporter(type, Reporter.RunCondition.valueOf(run.toUpperCase(Locale.ENGLISH)));
+         NodeList reportElements = reporterElement.getChildNodes();
+         Map<String, String> commonProperties = new HashMap<String, String>();
+         for (int j = 0; j < reportElements.getLength(); ++j) {
+            if (!(reportElements.item(j) instanceof Element)) continue;
+            Element reportElement = (Element) reportElements.item(j);
+            if (ELEMENT_REPORT.equals(reportElement.getNodeName())) {
+               String source = getAttribute(reportElement, ATTR_SOURCE);
+               Reporter.Report report = reporter.addReport(source);
+               NodeList properties = reportElement.getChildNodes();
+               for (int k = 0; k < properties.getLength(); ++k) {
+                  if (!(properties.item(k) instanceof Element)) continue;
+                  Element propertyElement = (Element) properties.item(k);
+                  assertName(ELEMENT_PROPERTY, propertyElement);
+                  String propertyName = getAttribute(propertyElement, ATTR_NAME);
+                  String content = propertyElement.getTextContent();
+                  if (content == null) {
+                     throw new IllegalArgumentException("Property cannot have null content!");
+                  }
+                  report.addProperty(propertyName, Evaluator.parseString(content.trim()));
                }
-               NodeList wrapperProps = child.getChildNodes();
-               for (int j = 0; j < wrapperProps.getLength(); ++j) {
-                  if (wrapperProps.item(j) instanceof Element) {
-                     Element prop = (Element) wrapperProps.item(j);
-                     if (!prop.getNodeName().equalsIgnoreCase("property")) {
-                        throw new IllegalArgumentException();
-                     }
-                     String name = prop.getAttribute("name");
-                     String value = Evaluator.parseString(prop.getAttribute("value"));
-                     if (name == null || name.isEmpty()) throw new IllegalArgumentException();
-                     properties.put(prefix + name, value);
+            } else if (ELEMENT_PROPERTIES.equals(reportElement.getNodeName())) {
+               NodeList properties = reportElement.getChildNodes();
+               for (int k = 0; k < properties.getLength(); ++k) {
+                  if (!(properties.item(k) instanceof Element)) continue;
+                  Element propertyElement = (Element) properties.item(k);
+                  assertName(ELEMENT_PROPERTY, propertyElement);
+                  String propertyName = getAttribute(propertyElement, ATTR_NAME);
+                  String content = propertyElement.getTextContent();
+                  if (content == null) {
+                     throw new IllegalArgumentException("Property cannot have null content!");
+                  }
+                  if (commonProperties.put(propertyName, Evaluator.parseString(content.trim())) != null) {
+                     throw new IllegalArgumentException("Property '" + propertyName + "' already defined!");
                   }
                }
+            } else {
+               throwExpected(reportElement.getNodeName(), new String[] { ELEMENT_REPORT, ELEMENT_PROPERTIES });
             }
+         }
+         for (Reporter.Report report : reporter.getReports()) {
+            for (Map.Entry<String, String> property : commonProperties.entrySet()) {
+               report.addProperty(property.getKey(), property.getValue());
+            }
+         }
+         if (reporter.getReports().isEmpty()) {
+            throw new IllegalArgumentException("Reporter " + reporter.type + " must define at least one report.");
+         } else {
+            masterConfig.addReporter(reporter);
          }
       }
    }
 
-   public static void addSitesAttributes(Map<String, String> properties, Element configEl) {
-      NodeList childList = configEl.getChildNodes();
-      int siteIndex = 0;
-      for (int i = 0; i < childList.getLength(); ++i) {
-         if (childList.item(i) instanceof Element) {
-            Element child = (Element) childList.item(i);
-            if (child.getNodeName().equalsIgnoreCase("site")) {
-               addDirectAttributes(properties, child, "site[" + siteIndex + "].");
-               addWrapperAttributes(properties, child, "site[" + siteIndex + "].");
-               siteIndex++;
-            }
+   private void throwExpected(String found, String[] expected) {
+      StringBuilder sb = new StringBuilder("Found '").append(found).append("', expected one of ");
+      for (int i = 0; i < expected.length; ++i) {
+         sb.append('\'').append(expected[i]).append('\'');
+         if (i != expected.length - 1) sb.append(", ");
+      }
+      throw new IllegalArgumentException(sb.toString());
+   }
+
+   private void addScenarioItem(Scenario scenario, Element element, Map<String, String> extras) {
+      if (element.getNodeName().equalsIgnoreCase(ELEMENT_REPEAT)) {
+         addRepeat(scenario, element, extras);
+      } else {
+         scenario.addStage(StageHelper.getStageClassByDashedName(element.getNodeName()), parseProperties(element), extras);
+      }
+   }
+
+   private void addRepeat(Scenario scenario, Element element, Map<String, String> extras) {
+      String timesStr = getAttribute(element, ATTR_TIMES, "");
+      String fromStr = getAttribute(element, ATTR_FROM, "");
+      String toStr = getAttribute(element, ATTR_TO, "");
+      String incStr = getAttribute(element, ATTR_INC, "");
+      String repeatName = getAttribute(element, ATTR_NAME, "");
+      if ((timesStr.isEmpty() && (fromStr.isEmpty() || toStr.isEmpty()))
+            || (!timesStr.isEmpty() && (!fromStr.isEmpty() || !toStr.isEmpty() || !incStr.isEmpty()))) {
+         throw new IllegalArgumentException("Define either times or from, to, [inc]");
+      }
+      int from = 0, to = 1, inc = 1;
+      if (!timesStr.isEmpty()) {
+         to = parseRepeatArg(timesStr, ATTR_TIMES, repeatName) - 1;
+      } else {
+         from = parseRepeatArg(fromStr, ATTR_FROM, repeatName);
+         to = parseRepeatArg(toStr, ATTR_TO, repeatName);
+         if (!incStr.isEmpty()) {
+            inc = parseRepeatArg(incStr, ATTR_INC, repeatName);
          }
       }
-   }
-
-   private MasterConfig parseMaster(Element configRoot, ScalingBenchmarkConfig prototype) {
-      MasterConfig masterConfig;
-      Element masterEl = (Element) configRoot.getElementsByTagName("master").item(0);
-      String bindAddress = Evaluator.parseString(masterEl.getAttribute("bindAddress"));
-      int port = masterEl.getAttribute("port") != null ? Evaluator.parseInt(masterEl.getAttribute("port")) : Master.DEFAULT_PORT;
-      masterConfig = new MasterConfig(port, bindAddress, prototype.getMaxSize());
-      return masterConfig;
-   }
-
-   private void updateStartupStage(String configFile, ScalingBenchmarkConfig scaling, Map<String, String> properties) {
-      for (FixedSizeBenchmarkConfig fixed : scaling.getBenchmarks()) {
-         for (Stage st : fixed.getStages()) {
-            if (st instanceof AbstractStartStage) {
-               AbstractStartStage ass = (AbstractStartStage) st;
-               ass.setConfigProperties(properties);
-               ass.setProductConfig(scaling.getProductName(), scaling.getConfigName(), configFile);
-            }
-         }
-      }
-   }
-
-   private ScalingBenchmarkConfig buildBenchmarkPrototype(Element configRoot) {
-      ScalingBenchmarkConfig prototype;
-      prototype = new ScalingBenchmarkConfig();
-      Element benchmarkEl = (Element) configRoot.getElementsByTagName("benchmark").item(0);
-      prototype.setInitSize(Evaluator.parseInt(benchmarkEl.getAttribute("initSize")));
-      prototype.setMaxSize(Evaluator.parseInt(benchmarkEl.getAttribute("maxSize")));
-      String inc = Evaluator.parseString(benchmarkEl.getAttribute("increment")).trim();
-      ScalingBenchmarkConfig.IncrementMethod incMethod = ScalingBenchmarkConfig.IncrementMethod.ADD;
-      int incCount = 0;
-      if (inc.startsWith("*")) {
-         inc = inc.substring(1).trim();
-         incMethod = ScalingBenchmarkConfig.IncrementMethod.MULTIPLY;
-      }
-      try {
-         incCount = Integer.parseInt(inc);
-      } catch (NumberFormatException e) {
-         throw new IllegalArgumentException("Cannot parse increment!", e);
-      }
-      prototype.setIncrement(incCount, incMethod);
-      Collection<FixedSizeBenchmarkConfig> benchmarks = prototype.initBenchmarks();
-
-      NodeList childNodes = benchmarkEl.getChildNodes();
-      for (FixedSizeBenchmarkConfig fixedPrototype : benchmarks) {
-         System.setProperty("benchmark.activeSize", String.valueOf(fixedPrototype.getSize()));
-         System.setProperty("benchmark.maxSize", String.valueOf(fixedPrototype.getMaxSize()));
+      Map<String, String> repeatExtras = new HashMap<String, String>(extras);
+      NodeList childNodes = element.getChildNodes();
+      for (int counter = from; counter <= to; counter += inc) {
+         String repeatProperty = PROPERTY_PREFIX_REPEAT + (repeatName.isEmpty() ? PROPERTY_SUFFIX_COUNTER : repeatName + '.' + PROPERTY_SUFFIX_COUNTER);
+         repeatExtras.put(repeatProperty, String.valueOf(counter));
          for (int i = 0; i < childNodes.getLength(); i++) {
             Node child = childNodes.item(i);
             if (child instanceof Element) {
-               addStage(fixedPrototype, (Element) child);
+               addScenarioItem(scenario, (Element) child, repeatExtras);
             }
          }
       }
-      return prototype;
    }
-
-
-   private void addStage(FixedSizeBenchmarkConfig prototype, Element element) {
-      if (element.getNodeName().equalsIgnoreCase("Repeat")) {
-         String timesStr = element.getAttribute("times");
-         String fromStr = element.getAttribute("from");
-         String toStr = element.getAttribute("to");
-         String incStr = element.getAttribute("inc");
-         String repeatName = element.getAttribute("name");
-         if ((timesStr.isEmpty() && (fromStr.isEmpty() || toStr.isEmpty()))
-               || (!timesStr.isEmpty() && (!fromStr.isEmpty() || !toStr.isEmpty() || !incStr.isEmpty()))) {
-            throw new IllegalArgumentException("Define either times or from, to, [inc]");
-         }
-         int from = 0, to = 1, inc = 1;
-         if (!timesStr.isEmpty()) {
-            to = parseRepeatArg(timesStr, "times", repeatName) - 1;
-         } else {
-            from = parseRepeatArg(fromStr, "from", repeatName);
-            to = parseRepeatArg(toStr, "to", repeatName);
-            if (!incStr.isEmpty()) {
-               inc = parseRepeatArg(incStr, "inc", repeatName);           
-            }
-         }                  
-         NodeList childNodes = element.getChildNodes();
-         for (int counter = from; counter <= to; counter += inc) {
-            System.getProperties().setProperty("repeat." + (repeatName.isEmpty() ? "counter" : repeatName + ".counter"), String.valueOf(counter));
-            for (int i = 0; i < childNodes.getLength(); i++) {
-               Node child = childNodes.item(i);
-               if (child instanceof Element) {
-                  addStage(prototype, (Element) child);            
-               }
-            }
-         }         
-      } else {
-         Stage st = StageHelper.getStage(element.getNodeName());
-         prototype.addStage(st);
-         NamedNodeMap attributes = element.getAttributes();
-         Map<String, String> attrToSet = new HashMap<String, String>();
-         for (int attrIndex = 0; attrIndex < attributes.getLength(); attrIndex++) {
-            Attr attr = (Attr) attributes.item(attrIndex);
-            attrToSet.put(attr.getName(), Evaluator.parseString(attr.getValue()));
-         }
-         PropertyHelper.setProperties(st, attrToSet, false);
-         InitHelper.init(st);
-      }
-   }
-
 
    private int parseRepeatArg(String value, String name, String repeatName) {
       try {
          return Integer.parseInt(value);
       } catch (NumberFormatException e) {
-         throw new IllegalArgumentException(String.format("Attribute %s=%s on %s is not an integer!", name, value, repeatName != null ? repeatName : "repeat"), e);
+         throw new IllegalArgumentException(String.format("Attribute %s=%s on %s is not an integer!", name, value, repeatName != null ? repeatName : ELEMENT_REPEAT), e);
       }
    }
 }

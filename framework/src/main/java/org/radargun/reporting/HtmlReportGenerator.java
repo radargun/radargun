@@ -22,22 +22,23 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.radargun.config.InitHelper;
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.radargun.Stage;
-import org.radargun.config.AbstractBenchmarkConfig;
-import org.radargun.config.FixedSizeBenchmarkConfig;
+import org.radargun.config.Cluster;
+import org.radargun.config.Configuration;
+import org.radargun.config.InitHelper;
 import org.radargun.config.MasterConfig;
 import org.radargun.config.PropertyHelper;
-import org.radargun.config.ScalingBenchmarkConfig;
+import org.radargun.config.Scenario;
 import org.radargun.config.StageHelper;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.stressors.SimpleStatistics;
 
 public class HtmlReportGenerator {
@@ -47,12 +48,12 @@ public class HtmlReportGenerator {
    private BenchmarkResult result;
    private final String directory;
    private final String prefix;
-   private final MasterConfig config;
+   private final MasterConfig masterConfig;
    private PrintWriter writer;
    private int elementCounter = 0;
 
-   public HtmlReportGenerator(MasterConfig config, BenchmarkResult result, String directory, String prefix) {
-      this.config = config;
+   public HtmlReportGenerator(MasterConfig masterConfig, BenchmarkResult result, String directory, String prefix) {
+      this.masterConfig = masterConfig;
       this.result = result;
       this.directory = directory;
       this.prefix = prefix;
@@ -84,7 +85,7 @@ public class HtmlReportGenerator {
          writer.print("    }\n}\n");
          writer.print("</SCRIPT></HEAD>\n<BODY>");
          printTag("h1", "RadarGun benchmark report");
-         if (config != null) {
+         if (masterConfig != null) {
             reportDescription();
          }
          printTag("h2", "Benchmark results");
@@ -107,34 +108,22 @@ public class HtmlReportGenerator {
    private void reportDescription() {
       printTag("h2", "Benchmark description");
       writer.write("The benchmark was executed on following products, configurations and cluster sizes:\n<ul>");
-      for (AbstractBenchmarkConfig benchmark : config.getBenchmarks()) {
-         if ("report".equals(benchmark.getProductName())) continue;
-
+      for (Configuration config : masterConfig.getConfigurations()) {
          StringBuilder sb = new StringBuilder();
-         sb.append("<li>Product ").append(benchmark.getProductName());
-         sb.append(", configuration ").append(benchmark.getConfigName());
-         if (benchmark instanceof ScalingBenchmarkConfig) {
-            ScalingBenchmarkConfig scaling = (ScalingBenchmarkConfig) benchmark;
-            for (int i = scaling.getInitSize(); i <= scaling.getMaxSize(); i += scaling.getIncrement()) {
-               sb.append(", ").append(i);
+         sb.append("<li>Configuration ").append(config.name);
+         List<Cluster> clusters = masterConfig.getClusters();
+         for (int i = 0; i < clusters.size(); ++i) {
+            sb.append(clusters.get(i).getSize());
+            if (i != clusters.size() - 1) {
+               sb.append(", ");
             }
-         } else {
-            FixedSizeBenchmarkConfig fixed = (FixedSizeBenchmarkConfig) benchmark;
-            sb.append(", ").append(fixed.getSize());
          }
          writer.write(sb.append(" nodes</li>\n").toString());
       }
       writer.print("</ul>\nThese stages have been used for the benchmark:\n<ul>");
-      AbstractBenchmarkConfig firstBenchmark = config.getBenchmarks().get(0);
-      List<Stage> stages;
-      if (firstBenchmark instanceof ScalingBenchmarkConfig) {
-         ScalingBenchmarkConfig scaling = (ScalingBenchmarkConfig) firstBenchmark;
-         stages = ((FixedSizeBenchmarkConfig) scaling.getBenchmarks().toArray(new AbstractBenchmarkConfig[0])[0]).getStages();
-      } else {
-         stages = ((FixedSizeBenchmarkConfig) firstBenchmark).getStages();
-      }
-      for (Stage stage : stages) {
-         reportStage(stage);
+      Scenario scenario = masterConfig.getScenario();
+      for (int i = 0; i < scenario.getStageCount(); ++i) {
+         reportStage(scenario.getStage(i, Collections.EMPTY_MAP));
       }
       writer.print("</ul>\n");
    }
@@ -168,7 +157,7 @@ public class HtmlReportGenerator {
          log.error("Cannot instantiate default stage for " + stageClass.getName(), e);
       }
       writer.write("<li style=\"cursor: pointer\" onClick=\"");
-      Set<Map.Entry<String,Field>> properties = PropertyHelper.getProperties(stageClass).entrySet();
+      Set<Map.Entry<String,Field>> properties = PropertyHelper.getProperties(stageClass, true).entrySet();
       for (int i = 0; i < properties.size(); ++i) {
          writer.write("switch_li_display('e" + (elementCounter + i) + "');");
       }

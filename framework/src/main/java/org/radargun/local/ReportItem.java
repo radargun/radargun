@@ -1,7 +1,5 @@
 package org.radargun.local;
 
-import org.radargun.utils.Utils;
-
 /**
  * // TODO: Mircea - Document this!
  *
@@ -9,7 +7,6 @@ import org.radargun.utils.Utils;
  */
 public class ReportItem {
 
-   String product;
    String configuration;
 
    long readsPerSec;
@@ -20,8 +17,7 @@ public class ReportItem {
    long noReads;
 
 
-   public ReportItem(String product, String configuration) {
-      this.product = product;
+   public ReportItem(String configuration) {
       this.configuration = configuration;
    }
 
@@ -65,11 +61,11 @@ public class ReportItem {
       this.noReads = noReads;
    }
 
-   public boolean matches(String product, String config) {
-      return this.product.equals(product) && this.configuration.equals(config);
+   public boolean matches(String config) {
+      return this.configuration.equals(config);
    }
 
    public Comparable description() {
-      return product + "(" + Utils.fileName2Config(configuration) + ")";
+      return configuration;
    }
 }

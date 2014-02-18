@@ -99,7 +99,7 @@ public class StartBackgroundStressorsStage extends AbstractDistStage {
       try {
          BackgroundOpsManager instance =
                BackgroundOpsManager.getOrCreateInstance(slaveState, puts, gets, removes, numEntries,
-                     entrySize, bucketId, numThreads, delayBetweenRequests, getActiveSlaveCount(), getSlaveIndex(),
+                     entrySize, bucketId, numThreads, delayBetweenRequests, slaveState.getClusterSize(), slaveState.getSlaveIndex(),
                      transactionSize, loadDataOnSlaves, loadDataForDeadSlaves, loadOnly, loadWithPutIfAbsent,
                      useLogValues, logCheckingThreads, logValueMaxSize, logCounterUpdatePeriod, logCheckersNoProgressTimeout,
                      ignoreDeadCheckers, deadSlaveTimeout, sharedKeys);

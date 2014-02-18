@@ -1,7 +1,7 @@
 package org.radargun.state;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Support class for master and slave states.
@@ -9,7 +9,35 @@ import java.util.HashMap;
  * @author Mircea.Markus@jboss.com
  */
 public class StateBase {
+
    private Map<Object, Object> stateMap = new HashMap<Object, Object>();
+   private String configName;
+   private int clusterSize;
+   private int maxClusterSize;
+
+   public String getConfigName() {
+      return configName;
+   }
+
+   public void setConfigName(String configName) {
+      this.configName = configName;
+   }
+
+   public int getClusterSize() {
+      return clusterSize;
+   }
+
+   public void setClusterSize(int clusterSize) {
+      this.clusterSize = clusterSize;
+   }
+
+   public int getMaxClusterSize() {
+      return maxClusterSize;
+   }
+
+   public void setMaxClusterSize(int maxClusterSize) {
+      this.maxClusterSize = maxClusterSize;
+   }
 
    public void remove(Object key) {
       stateMap.remove(key);

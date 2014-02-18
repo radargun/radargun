@@ -1,7 +1,6 @@
 package org.radargun.stages;
 
 import org.radargun.DistStageAck;
-import org.radargun.state.MasterState;
 
 import java.util.List;
 
@@ -23,7 +22,7 @@ public class DummyStage extends AbstractDistStage{
       return newDefaultStageAck();
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks, MasterState masterState) {
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
       log.trace("Stage " + name + "was acknowledged: " + acks);
       return true;
    }

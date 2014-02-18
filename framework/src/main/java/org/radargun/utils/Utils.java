@@ -30,9 +30,11 @@ import org.radargun.stages.GenerateReportStage;
  */
 public class Utils {
 
+
    private static Log log = LogFactory.getLog(Utils.class);
    public static final String PLUGINS_DIR = "plugins";
    public static final String SPECIFIC_DIR = "specific";
+   public static final String PROPERTIES_FILE = "plugin.properties";
    private static final NumberFormat NF = new DecimalFormat("##,###");
    private static final NumberFormat MEM_FMT = new DecimalFormat("##,###.##");
 
@@ -81,10 +83,6 @@ public class Utils {
       }
    }
 
-   public static long getFreeMemoryKb() {
-      return kb(Runtime.getRuntime().freeMemory());
-   }
-
    private static String format(long bytes) {
       double val = bytes;
       int mag = 0;
@@ -108,28 +106,16 @@ public class Utils {
       }
    }
 
-   public static long kb(long memBytes) {
-      return memBytes / 1024;
-   }
-
    public static String kbString(long memBytes) {
       return MEM_FMT.format(memBytes / 1024) + " kb";
    }
 
-   public static String memString(long mem, String suffix) {
-      return MEM_FMT.format(mem) + " " + suffix;
-   }
-
-   public static String memString(long memInBytes) {
-      return format(memInBytes);
-   }
-
-   public static URLClassLoader buildProductSpecificClassLoader(String productName, ClassLoader parent) throws Exception {
+   public static URLClassLoader buildPluginSpecificClassLoader(String plugin, ClassLoader parent) throws Exception {
       log.trace("Using smart class loading");
       List<URL> jars = new ArrayList<URL>();
-      addJars(new File(PLUGINS_DIR + File.separator + productName + File.separator + "lib"), jars);
+      addJars(new File(PLUGINS_DIR + File.separator + plugin + File.separator + "lib"), jars);
       addJars(new File(SPECIFIC_DIR), jars);
-      File confDir = new File(PLUGINS_DIR + File.separator + productName + File.separator + "conf/");
+      File confDir = new File(PLUGINS_DIR + File.separator + plugin + File.separator + "conf/");
       jars.add(confDir.toURI().toURL());
       return new URLClassLoader(jars.toArray(new URL[jars.size()]), parent);
    }
@@ -164,8 +150,8 @@ public class Utils {
       }
    }
 
-   public static String getCacheProviderProperty(String productName, String propertyName) {
-      File file = new File(PLUGINS_DIR + File.separator + productName + File.separator + "conf" + File.separator + "cacheprovider.properties");
+   public static String getServiceProperty(String plugin, String propertyName) {
+      File file = new File(PLUGINS_DIR + File.separator + plugin + File.separator + "conf" + File.separator + PROPERTIES_FILE);
       if (!file.exists()) {
          log.warn("Could not find a plugin descriptor : " + file);
          return null;
@@ -175,7 +161,11 @@ public class Utils {
       try {
          inStream = new FileInputStream(file);
          properties.load(inStream);
-         return properties.getProperty(propertyName);
+         String value = properties.getProperty(propertyName);
+         if (value == null) {
+            throw new IllegalStateException(String.format("Property %s could not be found in %s/" + Utils.PROPERTIES_FILE, propertyName, plugin));
+         }
+         return value;
       } catch (IOException e) {
          throw new RuntimeException(e);
       } finally {
@@ -186,10 +176,6 @@ public class Utils {
                log.warn("Error closing properties stream", e);
             }
       }
-   }
-
-   public static String getCacheWrapperFqnClass(String productName) {
-      return getCacheProviderProperty(productName, "org.radargun.wrapper");
    }
 
    public static File createOrReplaceFile(File parentDir, String actualFileName) throws IOException {
@@ -253,7 +239,7 @@ public class Utils {
       return nf.format(toPrint) + " hours";
    }
 
-   public static void seep(long duration) {
+   public static void sleep(long duration) {
       try {
          Thread.sleep(duration);
       } catch (InterruptedException e) {
