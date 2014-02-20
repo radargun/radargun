@@ -1,5 +1,15 @@
 package org.radargun.config;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -10,22 +20,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.radargun.Stage;
 import org.w3c.dom.Document;
@@ -69,9 +63,8 @@ public class ConfigSchemaGenerator {
    private static final String XS_ANNOTATION = "annotation";
    private static final String XS_DOCUMENTATION = "documentation";
    private static List<String> products = new ArrayList<String>();
-   private static String stageJarFile;
+   private static String stageDirectory;
    private static Set<String> simpleTypes = new HashSet<String>();
-
 
    public static void generate(String directory) {
       try {
@@ -195,9 +188,16 @@ public class ConfigSchemaGenerator {
    }
 
    private static void generateStageDefinitions(Document doc, Element schema, Element[] parents) {
-      Set<Class> generatedStages = new HashSet<Class>();
-      for (Class<?> stage : StageHelper.getStagesFromJar(stageJarFile).values()) {
-         generateStage(doc, schema, parents, stage, generatedStages);
+      File dir = new File(stageDirectory);
+      if (!dir.exists() || !dir.isDirectory()) {
+         throw new IllegalArgumentException(dir + " is not an existing directory!");
+      }
+      for (File file : dir.listFiles()) {
+         if (!file.getName().startsWith("radargun-framework-") || !file.getName().endsWith(".jar")) continue;
+         Set<Class> generatedStages = new HashSet<Class>();
+         for (Class<?> stage : StageHelper.getStagesFromJar(file.getPath()).values()) {
+            generateStage(doc, schema, parents, stage, generatedStages);
+         }
       }
    }
 
@@ -303,26 +303,6 @@ public class ConfigSchemaGenerator {
       return RG_PREFIX + typeName;
    }
 
-   private static List<String> getStageNames() {
-      List<String> stageNames = new ArrayList<String>();
-      try {
-         ZipInputStream inputStream = new ZipInputStream(new FileInputStream(stageJarFile));
-         Pattern pattern = Pattern.compile("org/radargun/stages/(.*)Stage.class");
-         for(;;) {
-            ZipEntry entry = inputStream.getNextEntry();
-            if (entry == null) break;
-            Matcher m = pattern.matcher(entry.getName());
-            if (m.matches()) {
-               stageNames.add(m.group(1));
-            }
-         }
-      } catch (IOException e) {
-         System.err.println("Failed to open " + stageJarFile);
-         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-      }
-      return stageNames;
-   }
-
    private static Element createSequence(Document doc, Element parentComplex) {
       Element sequence = doc.createElementNS(NS_XS, XS_SEQUENCE);
       parentComplex.appendChild(sequence);
@@ -402,7 +382,7 @@ public class ConfigSchemaGenerator {
    public static void main(String[] args) {
       if (args.length < 1) System.err.println("No schema location directory specified!");
       if (args.length < 2) System.err.println("No jar file with stages specified!");
-      stageJarFile = args[1];
+      stageDirectory = args[1];
       for (int i = 2; i < args.length; ++i) products.add(args[i]);
       generate(args[0]);
    }

@@ -319,7 +319,7 @@
                               </fileset>
                            </classpath>
                            <arg value="framework/src/main/resources" />
-                           <arg value="framework/target/distribution/radargun-framework-bin/radargun-framework/lib/radargun-framework-1.1.0-SNAPSHOT.jar" />
+                           <arg value="framework/target/distribution/radargun-framework-bin/radargun-framework/lib" />
                            <arg value="hazelcast2" />
                            <arg value="hazelcast3" />
                            <arg value="infinispan4" />
