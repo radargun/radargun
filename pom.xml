@@ -17,25 +17,7 @@
    <modules>
       <module>parent</module>
       <module>framework</module>
-      <module>plugins</module>
-      <module>plugins/hazelcast2</module>
-      <module>plugins/hazelcast3</module>
-      <module>plugins/infinispan4</module>
-      <module>plugins/infinispan50</module>
-      <module>plugins/infinispan51</module>
-      <module>plugins/infinispan52</module>
-      <module>plugins/infinispan53</module>
-      <module>plugins/infinispan60</module>
-      <module>plugins/jgroups30</module>
-      <module>plugins/jgroups32</module>
-      <module>plugins/jgroups33</module>
-      <module>plugins/jgroups34</module>
-      <module>plugins/jbosscache2</module>
-      <module>plugins/jbosscache3</module>
-      <module>plugins/ehcache25</module>
-      <module>plugins/ehcache26</module>
-      <module>plugins/terracotta3</module>
-      <module>plugins/chm</module>
+      <!--<module>plugins</module>-->
    </modules>
 
    <scm>
@@ -48,181 +30,195 @@
    <properties>
       <distribution.name>RadarGun-${project.version}</distribution.name>
       <distribution.artifact>target/distribution/${distribution.name}</distribution.artifact>
-      <distribution.zipfile>target/distribution/${distribution.name}.zip</distribution.zipfile>
+      <plugins.chm/>
+      <plugins.ehcache/>
+      <plugins.hazelcast/>
+      <plugins.jbosscache/>
+      <plugins.jgroups/>
+      <plugins.terracotta/>
+      <plugins.infinispan/>
+      <plugins.jdg/>
+      <plugins.coherence/>
    </properties>
 
    <profiles>
       <profile>
          <id>jpa</id>
          <activation>
-            <activeByDefault>false</activeByDefault>
+            <property>
+               <name>jpa</name>
+            </property>
          </activation>
          <modules>
             <module>jpa</module>
          </modules>
       </profile>
       <profile>
-         <!-- TODO: temporary profile for infinispan70, once there's a first release, add it among standard modules 
-              after this is done, also leave a infinispan70-snapshot profile for building the plugin with SNAPSHOT version
-              similar to how it's done in infinispan60 plugin -->
+         <id>chm</id>
+         <activation>
+            <property>
+               <name>!no-chm</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/chm</module>
+         </modules>
+         <properties>
+            <plugins.chm>chm</plugins.chm>
+         </properties>
+      </profile>
+      <profile>
+         <id>ehcache</id>
+         <activation>
+            <property>
+               <name>!no-ehcache</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/ehcache25</module>
+            <module>plugins/ehcache26</module>
+         </modules>
+         <properties>
+            <plugins.ehcache>ehcache25,ehcache26</plugins.ehcache>
+         </properties>
+      </profile>
+      <profile>
+         <id>hazelcast</id>
+         <activation>
+            <property>
+               <name>!no-hazelcast</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/hazelcast2</module>
+            <module>plugins/hazelcast3</module>
+         </modules>
+         <properties>
+            <plugins.hazelcast>hazelcast2,hazelcast3</plugins.hazelcast>
+         </properties>
+      </profile>
+      <profile>
+         <id>jbosscache</id>
+         <activation>
+            <property>
+               <name>!no-jbosscache</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/jbosscache2</module>
+            <module>plugins/jbosscache3</module>
+         </modules>
+         <properties>
+            <plugins.jbosscache>jbosscache2,jbosscache3</plugins.jbosscache>
+         </properties>
+      </profile>
+      <profile>
+         <id>jgroups</id>
+         <activation>
+            <property>
+               <name>!no-jgroups</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/jgroups30</module>
+            <module>plugins/jgroups32</module>
+            <module>plugins/jgroups33</module>
+            <module>plugins/jgroups34</module>
+         </modules>
+         <properties>
+            <plugins.jgroups>jgroups30,jgroups32,jgroups33,jgroups34</plugins.jgroups>
+         </properties>
+      </profile>
+      <profile>
+         <id>jgroups35</id>
+         <activation>
+            <property>
+               <name>jgroups35</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/jgroups35</module>
+         </modules>
+         <properties>
+            <plugins.jgroups>jgroups30,jgroups32,jgroups33,jgroups34,jgroups35</plugins.jgroups>
+         </properties>
+      </profile>
+      <profile>
+         <id>infinispan</id>
+         <activation>
+            <property>
+               <name>!no-infinispan</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/infinispan4</module>
+            <module>plugins/infinispan50</module>
+            <module>plugins/infinispan51</module>
+            <module>plugins/infinispan52</module>
+            <module>plugins/infinispan53</module>
+            <module>plugins/infinispan60</module>
+         </modules>
+         <properties>
+            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60</plugins.infinispan>
+         </properties>
+      </profile>
+      <profile>
          <id>infinispan70-snapshot</id>
          <activation>
-            <activeByDefault>false</activeByDefault>
+            <property>
+               <name>infinispan70-snapshot</name>
+            </property>
          </activation>
          <modules>
             <module>plugins/infinispan70</module>
          </modules>
-         <build>
-            <plugins>
-               <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-antrun-plugin</artifactId>
-                  <version>1.3</version>
-                  <executions>
-                     <execution>
-                        <id>prepare_infinispan70_plugin</id>
-                        <phase>verify</phase>
-                        <goals>
-                           <goal>run</goal>
-                        </goals>
-                        <configuration>
-                           <tasks>
-                              <echo message="Packaging the infinispan70 plugin" />
-                              <copy todir="${distribution.artifact}/plugins/infinispan70">
-                                 <fileset dir="plugins/infinispan70/target/distribution/plugin-infinispan70-bin/plugin-infinispan70">
-                                   <include name="**/*" />
-                                 </fileset>
-                              </copy>
-                           </tasks>
-                        </configuration>
-                     </execution>
-                  </executions>
-               </plugin>
-            </plugins>
-         </build>
+         <properties>
+            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70</plugins.infinispan>
+         </properties>
+      </profile>
+      <profile>
+         <id>terracotta</id>
+         <activation>
+            <property>
+               <name>!no-terracotta</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/terracotta3</module>
+         </modules>
+         <properties>
+            <plugins.terracotta>terracotta3</plugins.terracotta>
+         </properties>
       </profile>
       <profile>
          <id>coherence</id>
          <activation>
-            <activeByDefault>false</activeByDefault>
+            <property>
+               <name>coherence</name>
+            </property>
          </activation>
          <modules>
             <module>plugins/coherence3</module>
          </modules>
-         <build>
-            <plugins>
-               <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-antrun-plugin</artifactId>
-                  <version>1.3</version>
-                  <executions>
-                     <execution>
-                        <id>prepare_coherence_plugin</id>
-                        <phase>verify</phase>
-                        <goals>
-                           <goal>run</goal>
-                        </goals>
-                        <configuration>
-                           <tasks>
-                              <echo message="Packaging the coherence3 plugin" />
-                              <copy todir="${distribution.artifact}/plugins/coherence3">
-                                 <fileset dir="plugins/coherence3/target/distribution/plugin-coherence3-bin/plugin-coherence3">
-                                    <include name="**/*" />
-                                 </fileset>
-                              </copy>
-                           </tasks>
-                        </configuration>
-                     </execution>
-                  </executions>
-               </plugin>
-            </plugins>
-         </build>
+         <properties>
+            <plugins.coherence>coherence3</plugins.coherence>
+         </properties>
       </profile>
       <profile>
          <id>jdg</id>
          <activation>
-            <activeByDefault>false</activeByDefault>
+            <property>
+               <name>jdg</name>
+            </property>
          </activation>
          <modules>
             <module>plugins/jdg60</module>
             <module>plugins/jdg61</module>
             <module>plugins/jdg62</module>
          </modules>
-         <build>
-            <plugins>
-               <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-antrun-plugin</artifactId>
-                  <version>1.3</version>
-                  <executions>
-                     <execution>
-                        <id>prepare_jdg_plugin</id>
-                        <phase>verify</phase>
-                        <goals>
-                           <goal>run</goal>
-                        </goals>
-                        <configuration>
-                           <tasks>
-                              <echo message="Packaging the JDG 6.0.x, 6.1.x, and 6.2.x plugins" />
-                              <copy todir="${distribution.artifact}/plugins/jdg60">
-                                 <fileset dir="plugins/jdg60/target/distribution/plugin-jdg60-bin/plugin-jdg60">
-                                    <include name="**/*" />
-                                 </fileset>
-                              </copy>
-                              <copy todir="${distribution.artifact}/plugins/jdg61">
-                                 <fileset dir="plugins/jdg61/target/distribution/plugin-jdg61-bin/plugin-jdg61">
-                                    <include name="**/*" />
-                                 </fileset>
-                              </copy>
-                              <copy todir="${distribution.artifact}/plugins/jdg62">
-                                 <fileset dir="plugins/jdg62/target/distribution/plugin-jdg62-bin/plugin-jdg62">
-                                    <include name="**/*" />
-                                 </fileset>
-                              </copy>
-                           </tasks>
-                        </configuration>
-                     </execution>
-                  </executions>
-               </plugin>
-            </plugins>
-         </build>
-      </profile>
-      <profile>
-         <id>jgroups35</id>
-         <activation>
-            <activeByDefault>false</activeByDefault>
-         </activation>
-         <modules>
-            <module>plugins/jgroups35</module>
-         </modules>
-         <build>
-            <plugins>
-               <plugin>
-                  <groupId>org.apache.maven.plugins</groupId>
-                  <artifactId>maven-antrun-plugin</artifactId>
-                  <version>1.3</version>
-                  <executions>
-                     <execution>
-                        <id>prepare_jgroups35_plugin</id>
-                        <phase>verify</phase>
-                        <goals>
-                           <goal>run</goal>
-                        </goals>
-                        <configuration>
-                           <tasks>
-                              <echo message="Packaging the JGroups 3.5.x plugin" />
-                              <copy todir="${distribution.artifact}/plugins/jgroups35">
-                                 <fileset dir="plugins/jgroups35/target/distribution/plugin-jgroups35-bin/plugin-jgroups35">
-                                    <include name="**/*" />
-                                 </fileset>
-                              </copy>
-                           </tasks>
-                        </configuration>
-                     </execution>
-                  </executions>
-               </plugin>
-            </plugins>
-         </build>
+         <properties>
+            <plugins.jdg>jdg60,jdg61,jdg62,</plugins.jdg>
+         </properties>
       </profile>
    </profiles>
 
@@ -231,11 +227,11 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
-            <version>1.3</version>
+            <version>1.7</version>
             <executions>
                <execution>
                   <id>prepare_distribution</id>
-                  <phase>post-integration-test</phase>
+                  <phase>prepare-package</phase>
                   <goals>
                      <goal>run</goal>
                   </goals>
@@ -249,8 +245,8 @@
                </execution>
 
                <execution>
-                  <id>prepare_plugins</id>
-                  <phase>verify</phase>
+                  <id>generate_xsd</id>
+                  <phase>prepare-package</phase>
                   <goals>
                      <goal>run</goal>
                   </goals>
@@ -265,142 +261,67 @@
                            </classpath>
                            <arg value="framework/src/main/resources" />
                            <arg value="framework/target/distribution/radargun-framework-bin/radargun-framework/lib" />
-                           <arg value="hazelcast2" />
-                           <arg value="hazelcast3" />
-                           <arg value="infinispan4" />
-                           <arg value="infinispan50" />
-                           <arg value="infinispan51" />
-                           <arg value="infinispan52" />
-                           <arg value="infinispan53" />
-                           <arg value="infinispan60" />
-                           <arg value="infinispan70" />
-                           <arg value="jgroups30" />
-                           <arg value="jgroups32" />
-                           <arg value="jgroups33" />
-                           <arg value="jgroups34" />
-                           <arg value="jgroups35" />
-                           <arg value="jbosscache2" />
-                           <arg value="jbosscache3" />
-                           <arg value="ehcache25" />
-                           <arg value="ehcache26" />
-                           <arg value="terracota3" />
-                           <arg value="chm" />
-                           <arg value="coherence3" />
-                           <arg value="jdg60" />
-                           <arg value="jdg61" />
-                           <arg value="jdg62" />
                         </java>
-
-                        <echo message="Packaging the framework, and the following plugins: hazelcast2, hazelcast3, infinispan4, infinispan50, infinispan51, infinispan52, infinispan53, infinispan60, jbosscache2, jbosscache3, ehcache25, ehcache26, terracotta3" />
-
-                        <copy todir="${distribution.artifact}/plugins/hazelcast2">
-                           <fileset dir="plugins/hazelcast2/target/distribution/plugin-hazelcast2-bin/plugin-hazelcast2">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/hazelcast3">
-                           <fileset dir="plugins/hazelcast3/target/distribution/plugin-hazelcast3-bin/plugin-hazelcast3">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/infinispan4">
-                           <fileset dir="plugins/infinispan4/target/distribution/plugin-infinispan4-bin/plugin-infinispan4">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/infinispan50">
-                           <fileset dir="plugins/infinispan50/target/distribution/plugin-infinispan50-bin/plugin-infinispan50">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/infinispan51">
-                           <fileset dir="plugins/infinispan51/target/distribution/plugin-infinispan51-bin/plugin-infinispan51">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/infinispan52">
-                           <fileset dir="plugins/infinispan52/target/distribution/plugin-infinispan52-bin/plugin-infinispan52">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/infinispan53">
-                           <fileset dir="plugins/infinispan53/target/distribution/plugin-infinispan53-bin/plugin-infinispan53">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/infinispan60">
-                           <fileset dir="plugins/infinispan60/target/distribution/plugin-infinispan60-bin/plugin-infinispan60">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/jgroups30">
-                           <fileset dir="plugins/jgroups30/target/distribution/plugin-jgroups30-bin/plugin-jgroups30">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/jgroups32">
-                           <fileset dir="plugins/jgroups32/target/distribution/plugin-jgroups32-bin/plugin-jgroups32">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/jgroups33">
-                           <fileset dir="plugins/jgroups33/target/distribution/plugin-jgroups33-bin/plugin-jgroups33">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/jgroups34">
-                           <fileset dir="plugins/jgroups34/target/distribution/plugin-jgroups34-bin/plugin-jgroups34">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/jbosscache3">
-                           <fileset dir="plugins/jbosscache3/target/distribution/plugin-jbosscache3-bin/plugin-jbosscache3">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/jbosscache2">
-                           <fileset dir="plugins/jbosscache2/target/distribution/plugin-jbosscache2-bin/plugin-jbosscache2">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/ehcache25">
-                           <fileset dir="plugins/ehcache25/target/distribution/plugin-ehcache25-bin/plugin-ehcache25">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/ehcache26">
-                           <fileset dir="plugins/ehcache26/target/distribution/plugin-ehcache26-bin/plugin-ehcache26">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/terracotta3">
-                           <fileset dir="plugins/terracotta3/target/distribution/plugin-terracotta3-bin/plugin-terracotta3">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-
-                        <copy todir="${distribution.artifact}/plugins/chm">
-                           <fileset dir="plugins/chm/target/distribution/plugin-chm-bin/plugin-chm">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
                      </tasks>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <id>prepare_plugins</id>
+                  <phase>verify</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <target>
+                        <macrodef name="copy-plugin">
+                           <attribute name="plugin"/>
+                           <sequential>
+                              <copy todir="${distribution.artifact}/plugins/@{plugin}">
+                                 <fileset dir="plugins/@{plugin}/target/distribution/plugin-@{plugin}-bin/plugin-@{plugin}">
+                                    <include name="**/*" />
+                                 </fileset>
+                              </copy>
+                           </sequential>
+                        </macrodef>
+
+                        <macrodef name="copy-plugin-links">
+                           <attribute name="plugin"/>
+                           <sequential>
+                              <copy todir="${distribution.artifact}/plugins/@{plugin}">
+                                 <fileset dir="plugins/@{plugin}/target/distribution/plugin-@{plugin}-bin/plugin-@{plugin}">
+                                    <include name="**/*" />
+                                    <exclude name="**/*.jar" />
+                                 </fileset>
+                              </copy>
+                              <copy todir="${distribution.artifact}/plugin-dependencies">
+                                 <fileset dir="plugins/@{plugin}/target/distribution/plugin-@{plugin}-bin/plugin-@{plugin}/lib">
+                                    <include name="*.jar" />
+                                 </fileset>
+                              </copy>
+                              <exec executable="bash" failonerror="true">
+                                 <arg value="-c"/>
+                                 <arg value="for FILE in `ls plugins/@{plugin}/target/distribution/plugin-@{plugin}-bin/plugin-@{plugin}/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/@{plugin}/lib/; done;"/>
+                              </exec>
+                           </sequential>
+                        </macrodef>
+
+                        <echo message="Packaging the framework, and the following plugins: " />
+                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.terracotta},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                           <sequential>
+                              <echo message="Packaging plugin @{plugin}..." />
+                              <ac:if>
+                                 <isset property="zip-links"/>
+                              <ac:then>
+                                 <copy-plugin-links plugin="@{plugin}"/>
+                              </ac:then>
+                              <ac:else>
+                                 <copy-plugin plugin="@{plugin}"/>
+                              </ac:else>
+                              </ac:if>
+                           </sequential>
+                        </ac:for>
+                     </target>
                   </configuration>
                </execution>
 
@@ -434,13 +355,41 @@
                               <include name="**/*.py" />
                            </fileset>
                         </chmod>
-                        <zip destfile="${distribution.zipfile}" basedir="target/distribution" excludes="**/bin/**">
-                           <zipfileset dir="${distribution.artifact}/bin" filemode="755" prefix="${distribution.name}/bin" />
-                        </zip>
+
+                        <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+                           <isset property="zip-links"/>
+                           <ac:then>
+                              <!-- This cannot be executed on all platforms and the produced zip may be non-portable either -->
+                              <echo message="Building zip file ${distribution.name}.zip"/>
+                              <exec executable="zip" failonerror="true" dir="target/distribution" logError="true" output="/dev/null">
+                                 <arg value="-ry"/>
+                                 <arg value="${distribution.name}.zip"/>
+                                 <arg value="${distribution.name}/"/>
+                              </exec>
+                           </ac:then>
+                           <ac:else>
+                              <zip destfile="target/distribution/${distribution.name}.zip" basedir="target/distribution" excludes="**/bin/**,radargun-aggregator-bin/**">
+                                 <zipfileset dir="${distribution.artifact}/bin" filemode="755" prefix="${distribution.name}/bin" />
+                              </zip>
+                           </ac:else>
+                        </ac:if>
                      </tasks>
                   </configuration>
                </execution>
             </executions>
+            <dependencies>
+               <dependency>
+                  <groupId>ant-contrib</groupId>
+                  <artifactId>ant-contrib</artifactId>
+                  <version>1.0b3</version>
+                  <exclusions>
+                     <exclusion>
+                        <groupId>ant</groupId>
+                        <artifactId>ant</artifactId>
+                     </exclusion>
+                  </exclusions>
+               </dependency>
+            </dependencies>
          </plugin>
       </plugins>
    </build>
