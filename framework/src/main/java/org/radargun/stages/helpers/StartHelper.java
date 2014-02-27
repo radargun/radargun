@@ -34,7 +34,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
-import org.radargun.stressors.BackgroundOpsManager;
+import org.radargun.stages.cache.background.BackgroundOpsManager;
 import org.radargun.utils.Utils;
 
 public class StartHelper {

@@ -24,6 +24,7 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.local.ReportDesc;
 import org.radargun.reporting.LocalSystemMonitorChart;
+import org.radargun.stages.monitor.StartJVMMonitorStage;
 import org.radargun.sysmonitor.LocalJmxMonitor;
 
 /**
@@ -33,6 +34,7 @@ import org.radargun.sysmonitor.LocalJmxMonitor;
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 @Stage(doc = "Generate charts for JVM statistics on each slave node.")
+@Deprecated
 public class ReportJVMMonitorStage extends AbstractMasterStage {
 
    @Property(doc = "A prefix that will be added to the report name. Default is null.")

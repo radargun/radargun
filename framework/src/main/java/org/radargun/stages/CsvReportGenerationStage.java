@@ -15,7 +15,7 @@ import java.util.TreeSet;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.MasterState;
-import org.radargun.stressors.SimpleStatistics;
+import org.radargun.stats.SimpleStatistics;
 import org.radargun.utils.Utils;
 
 /**
@@ -25,6 +25,7 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt; (modifications)
  */
 @Stage(doc = "Generates report in CSV format from the latest StressTest results")
+@Deprecated
 public class CsvReportGenerationStage extends AbstractMasterStage {
 
    public static final String RESULTS = "results";

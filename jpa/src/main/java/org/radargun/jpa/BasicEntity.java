@@ -2,7 +2,7 @@ package org.radargun.jpa;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.stressors.JpaValueGenerator;
+import org.radargun.stages.cache.generators.JpaValueGenerator;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

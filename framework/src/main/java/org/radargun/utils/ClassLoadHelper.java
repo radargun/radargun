@@ -46,17 +46,21 @@ public class ClassLoadHelper {
       if (!useSmartClassLoading) {
          return Class.forName(classFqn).newInstance();
       }
-      URLClassLoader classLoader;
-      String prevProduct = (String) state.get(PREVIOUS_PLUGIN);
-      if (prevProduct == null || !prevProduct.equals(plugin)) {
-         classLoader = Utils.buildPluginSpecificClassLoader(plugin, instantiator.getClassLoader());
-         state.put(CLASS_LOADER, classLoader);
-         state.put(PREVIOUS_PLUGIN, plugin);
-      } else {//same product and there is a class loader
-         classLoader = (URLClassLoader) state.get(CLASS_LOADER);
-      }
+      ClassLoader classLoader = getLoader();
       log.info("Creating newInstance " + classFqn + " with classloader " + classLoader);
       Thread.currentThread().setContextClassLoader(classLoader);
       return classLoader.loadClass(classFqn).newInstance();
+   }
+
+   public ClassLoader getLoader() {
+      String prevProduct = (String) state.get(PREVIOUS_PLUGIN);
+      if (prevProduct == null || !prevProduct.equals(plugin)) {
+         URLClassLoader classLoader = Utils.buildPluginSpecificClassLoader(plugin, instantiator.getClassLoader());
+         state.put(CLASS_LOADER, classLoader);
+         state.put(PREVIOUS_PLUGIN, plugin);
+         return classLoader;
+      } else {//same product and there is a class loader
+         return (URLClassLoader) state.get(CLASS_LOADER);
+      }
    }
 }

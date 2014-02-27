@@ -84,7 +84,6 @@
                         <element name="cluster-validation" type="rg:cluster-validation"/>
                         <element name="csv-report-generation" type="rg:csv-report-generation"/>
                         <element name="data-for-query" type="rg:data-for-query"/>
-                        <element name="destroy-wrapper" type="rg:destroy-wrapper"/>
                         <element name="distributed-task" type="rg:distributed-task"/>
                         <element name="isolation-level-check" type="rg:isolation-level-check"/>
                         <element name="j-profiler" type="rg:j-profiler"/>
@@ -191,7 +190,6 @@
             <element name="cluster-validation" type="rg:cluster-validation"/>
             <element name="csv-report-generation" type="rg:csv-report-generation"/>
             <element name="data-for-query" type="rg:data-for-query"/>
-            <element name="destroy-wrapper" type="rg:destroy-wrapper"/>
             <element name="distributed-task" type="rg:distributed-task"/>
             <element name="isolation-level-check" type="rg:isolation-level-check"/>
             <element name="j-profiler" type="rg:j-profiler"/>
@@ -258,11 +256,6 @@
                   <documentation>Specifies on which slaves should this stage actively run. Default is stage-dependent (usually all or none).</documentation>
                </annotation>
             </attribute>
-            <attribute name="use-smart-class-loading" type="rg:boolean">
-               <annotation>
-                  <documentation>Smart class loading loads libraries specific for the product. Default is true.</documentation>
-               </annotation>
-            </attribute>
          </extension>
       </complexContent>
    </complexType>
@@ -292,11 +285,6 @@
             <attribute name="bulk-size" type="rg:int">
                <annotation>
                   <documentation>Number of keys inserted/retrieved within one operation. Applicable only when the cache wrappersupports bulk operations. Default is 1 (no bulk operations).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="cache-specific-key-generator" type="rg:boolean">
-               <annotation>
-                  <documentation>Specifies whether the key generator is produced by a cache wrapper and therefore is product-specific. Default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="commit-transactions" type="rg:boolean">
@@ -349,6 +337,11 @@
                   <documentation>This option is valid only for sharedKeys=true. It forces local loading of all keys (not only numEntries/numNodes). Default is false.</documentation>
                </annotation>
             </attribute>
+            <attribute name="log-period" type="rg:int">
+               <annotation>
+                  <documentation>Number of operations after which a log entry should be written. Default is 50000.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="num-bytes" type="rg:long-converted-by-org-radargun-config-sizeconverter">
                <annotation>
                   <documentation>Applicable only with fixedKeys=false, makes sense for entrySize with multiple values. Replaces numEntries; requested number of bytes in values set by the stressor. By default not set.</documentation>
@@ -359,12 +352,7 @@
                   <documentation>Number of key-value entries per each client thread which should be used. Default is 100.</documentation>
                </annotation>
             </attribute>
-            <attribute name="num-of-threads" type="rg:int">
-               <annotation>
-                  <documentation>*DEPRECATED* The number of threads that will work on this slave. Default is 10.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="num-requests" type="rg:int">
+            <attribute name="num-requests" type="rg:long">
                <annotation>
                   <documentation>Total number of request to be made against this session: reads + writes. If duration is specified this value is ignored. Default is 50000.</documentation>
                </annotation>
@@ -372,21 +360,6 @@
             <attribute name="num-threads" type="rg:int">
                <annotation>
                   <documentation>The number of threads that will work on this slave. Default is 10.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="number-of-attributes" type="rg:int">
-               <annotation>
-                  <documentation>*DEPRECATED* Number of key-value entries per each client thread which should be used. Default is 100.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="number-of-requests" type="rg:int">
-               <annotation>
-                  <documentation>*DEPRECATED* Total number of request to be made against this session: reads + writes. If duration is specified this value is ignored. Default is 50000.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="ops-count-status-log" type="rg:int">
-               <annotation>
-                  <documentation>Number of operations after which a log entry should be written. Default is 5000.</documentation>
                </annotation>
             </attribute>
             <attribute name="pool-keys" type="rg:boolean">
@@ -397,6 +370,11 @@
             <attribute name="prefer-async-operations" type="rg:boolean">
                <annotation>
                   <documentation>When executing bulk operations, prefer version with multiple async operations over native implementation. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="remove-invalid-percentage" type="rg:int">
+               <annotation>
+                  <documentation>Used only when useAtomics=true: The frequency of conditional removes that should fail (percentage). Default is 10%</documentation>
                </annotation>
             </attribute>
             <attribute name="remove-percentage" type="rg:int">
@@ -412,11 +390,6 @@
             <attribute name="shared-keys" type="rg:boolean">
                <annotation>
                   <documentation>By default each client thread operates on his private set of keys. Setting this to true introduces contention between the threads, the numThreads property says total amount of entries that are used by all threads. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="size-of-an-attribute" type="rg:org-radargun-utils-fuzzy-converted-by-org-radargun-utils-fuzzy-integerconverter">
-               <annotation>
-                  <documentation>*DEPRECATED* Size of the value in bytes. Default is 1000.</documentation>
                </annotation>
             </attribute>
             <attribute name="statistics-period" type="rg:long-converted-by-org-radargun-config-timeconverter">
@@ -523,6 +496,18 @@
          </simpleType>
       </union>
    </simpleType>
+   <simpleType name="long">
+      <union>
+         <simpleType>
+            <restriction base="long"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <simpleType name="java-lang-boolean">
       <union>
          <simpleType>
@@ -594,7 +579,7 @@
    </complexType>
    <complexType name="check-data">
       <annotation>
-         <documentation>Stage for checking presence or absence of data uploaded by BackgroundStressors</documentation>
+         <documentation>Stage for checking presence or absence of data entered in other stages.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:abstract-dist">
@@ -692,7 +677,7 @@
                   <documentation>The period in milliseconds which is checked. Default is infinite.</documentation>
                </annotation>
             </attribute>
-            <attribute name="type" type="rg:org-radargun-stages-checktopologystage-type">
+            <attribute name="type" type="rg:org-radargun-stages-topology-checktopologystage-type">
                <annotation>
                   <documentation>What does this stage control. Default is both DataRehashed and TopologyChanged events.</documentation>
                </annotation>
@@ -700,7 +685,7 @@
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="org-radargun-stages-checktopologystage-type">
+   <simpleType name="org-radargun-stages-topology-checktopologystage-type">
       <union>
          <simpleType>
             <restriction base="string">
@@ -808,12 +793,12 @@
       </annotation>
       <complexContent>
          <extension base="rg:stress-test">
-            <attribute name="data-path" type="string">
+            <attribute name="data-path" type="string" use="required">
                <annotation>
                   <documentation>Specifies the full path of the property file which contains different words for querying. No default value is provided. This property is mandatory.</documentation>
                </annotation>
             </attribute>
-            <attribute name="is-wild-card" type="rg:boolean">
+            <attribute name="is-wildcard" type="rg:boolean">
                <annotation>
                   <documentation>Specifies whether the key generation should be done according to wildcard logic or no. Default is false.</documentation>
                </annotation>
@@ -821,30 +806,6 @@
             <attribute name="property-length" type="rg:int">
                <annotation>
                   <documentation>The length of the generated indexed entry. Default is 100.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="destroy-wrapper">
-      <annotation>
-         <documentation>Distributed stage that will stop the cache wrapper on each slave.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="enforce-memory-thrash-hold" type="rg:boolean">
-               <annotation>
-                  <documentation>Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="heap-dump-dir" type="string">
-               <annotation>
-                  <documentation>Directory where the heap dump will be produced if the memory threshold is hit. By default the dump will not be produced.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="memory-threshold" type="string">
-               <annotation>
-                  <documentation>If the free memory after wrapper destroy and System.gc() is below percentage specified in this property the benchmark will stop. Default is 95.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -1212,18 +1173,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="long">
-      <union>
-         <simpleType>
-            <restriction base="long"/>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
    <simpleType name="java-util-concurrent-timeunit">
       <union>
          <simpleType>
@@ -1503,7 +1452,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:abstract-dist">
-            <attribute name="partitions" type="rg:java-util-list-converted-by-org-radargun-stages-setpartitionsstage-uniquecheckerconverter" use="required">
+            <attribute name="partitions" type="rg:java-util-list-converted-by-org-radargun-stages-topology-setpartitionsstage-uniquecheckerconverter" use="required">
                <annotation>
                   <documentation>Set of sets of partitions,e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.</documentation>
                </annotation>
@@ -1511,7 +1460,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="java-util-list-converted-by-org-radargun-stages-setpartitionsstage-uniquecheckerconverter">
+   <simpleType name="java-util-list-converted-by-org-radargun-stages-topology-setpartitionsstage-uniquecheckerconverter">
       <union>
          <simpleType>
             <restriction>
@@ -1958,7 +1907,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:abstract-dist">
-            <attribute name="condition" type="rg:org-radargun-stages-waitfortopologyeventstage-condition">
+            <attribute name="condition" type="rg:org-radargun-stages-topology-waitfortopologyeventstage-condition">
                <annotation>
                   <documentation>Condition we are waiting for. Default is END.</documentation>
                </annotation>
@@ -1983,7 +1932,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</documentation>
                </annotation>
             </attribute>
-            <attribute name="type" type="rg:org-radargun-stages-waitfortopologyeventstage-type">
+            <attribute name="type" type="rg:org-radargun-stages-topology-waitfortopologyeventstage-type">
                <annotation>
                   <documentation>Type of event we are detecting. Default is REHASH.</documentation>
                </annotation>
@@ -1996,7 +1945,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="org-radargun-stages-waitfortopologyeventstage-condition">
+   <simpleType name="org-radargun-stages-topology-waitfortopologyeventstage-condition">
       <union>
          <simpleType>
             <restriction base="string">
@@ -2011,7 +1960,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </simpleType>
       </union>
    </simpleType>
-   <simpleType name="org-radargun-stages-waitfortopologyeventstage-type">
+   <simpleType name="org-radargun-stages-topology-waitfortopologyeventstage-type">
       <union>
          <simpleType>
             <restriction base="string">

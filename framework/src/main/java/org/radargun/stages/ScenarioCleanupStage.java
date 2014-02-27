@@ -8,7 +8,7 @@ import org.radargun.DistStageAck;
 import org.radargun.Slave;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stressors.BackgroundOpsManager;
+import org.radargun.stages.cache.background.BackgroundOpsManager;
 import org.radargun.utils.Utils;
 
 /**

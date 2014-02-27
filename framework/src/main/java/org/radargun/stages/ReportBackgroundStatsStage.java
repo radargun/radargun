@@ -14,8 +14,8 @@ import java.util.Set;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.CSVChart;
-import org.radargun.stressors.BackgroundOpsManager;
-import org.radargun.stressors.SimpleStatistics;
+import org.radargun.stages.cache.background.BackgroundOpsManager;
+import org.radargun.stats.SimpleStatistics;
 
 /**
  * Generates reports from Statistics.
@@ -23,6 +23,7 @@ import org.radargun.stressors.SimpleStatistics;
  * @author Michal Linhard <mlinhard@redhat.com>
  */
 @Stage(doc = "Generates reports from Statistics.")
+@Deprecated
 public class ReportBackgroundStatsStage extends AbstractMasterStage {
    public static final Format NUMFORMAT = new DecimalFormat("0.000");
    private static final SimpleDateFormat DATEFORMAT = new SimpleDateFormat("HH:mm:ss,SSS");

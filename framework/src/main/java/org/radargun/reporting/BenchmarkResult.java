@@ -8,7 +8,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.radargun.stressors.SimpleStatistics;
+import org.radargun.stats.SimpleStatistics;
 import org.radargun.utils.Table;
 
 /**

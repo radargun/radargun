@@ -1,0 +1,492 @@
+package org.radargun.stages.cache.stresstest;
+
+import static java.lang.Double.parseDouble;
+import static org.radargun.utils.Utils.numberFormat;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.radargun.CacheWrapper;
+import org.radargun.DistStageAck;
+import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
+import org.radargun.stages.cache.generators.KeyGenerator;
+import org.radargun.stages.cache.generators.StringKeyGenerator;
+import org.radargun.stages.cache.generators.ValueGenerator;
+import org.radargun.stages.cache.generators.WrappedArrayValueGenerator;
+import org.radargun.config.Init;
+import org.radargun.config.Property;
+import org.radargun.config.SizeConverter;
+import org.radargun.config.Stage;
+import org.radargun.config.TimeConverter;
+import org.radargun.features.AtomicOperationsCapable;
+import org.radargun.features.BulkOperationsCapable;
+import org.radargun.stages.AbstractDistStage;
+import org.radargun.stages.CsvReportGenerationStage;
+import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.stages.helpers.BucketPolicy;
+import org.radargun.stats.AllRecordingStatistics;
+import org.radargun.stats.HistogramStatistics;
+import org.radargun.stats.MultiStatistics;
+import org.radargun.stats.PeriodicStatistics;
+import org.radargun.stats.SimpleStatistics;
+import org.radargun.stats.Statistics;
+import org.radargun.utils.Fuzzy;
+import org.radargun.utils.Utils;
+
+/**
+ * Simulates the work with a distributed web sessions.
+ *
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
+@Stage(doc = "Benchmark where several client threads access cache limited by time or number of requests.",
+      deprecatedName = "WebSessionBenchmark")
+public class StressTestStage extends AbstractDistStage {
+
+   private static final String SIZE_INFO = "SIZE_INFO";
+
+   @Property(doc = "Number of operations after which a log entry should be written. Default is 50000.")
+   protected int logPeriod = 50000;
+
+   @Property(doc = "Total number of request to be made against this session: reads + writes. If duration " +
+         "is specified this value is ignored. Default is 50000.")
+   protected long numRequests = 50000;
+
+   @Property(doc = "Number of key-value entries per each client thread which should be used. Default is 100.")
+   protected int numEntries = 100;
+
+   @Property(doc = "Applicable only with fixedKeys=false, makes sense for entrySize with multiple values. " +
+         "Replaces numEntries; requested number of bytes in values set by the stressor. By default not set.", converter = SizeConverter.class)
+   protected long numBytes = 0;
+
+   @Property(doc = "Size of the value in bytes. Default is 1000.", converter = Fuzzy.IntegerConverter.class)
+   protected Fuzzy<Integer> entrySize = Fuzzy.always(1000);
+
+   @Property(doc = "Ratio of writes = PUT requests (percentage). Default is 20%")
+   protected int writePercentage = 20;
+
+   @Property(doc = "The frequency of removes (percentage). Default is 0%")
+   protected int removePercentage = 0;
+
+   @Property(doc = "In case we test replace performance, the frequency of replaces that should fail (percentage). Default is 40%")
+   protected int replaceInvalidPercentage = 40;
+
+   @Property(doc = "Used only when useAtomics=true: The frequency of conditional removes that should fail (percentage). Default is 10%")
+   protected int removeInvalidPercentage = 10;
+
+   @Property(doc = "The number of threads that will work on this slave. Default is 10.")
+   protected int numThreads = 10;
+
+   @Property(doc = "Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.")
+   protected String keyGeneratorClass = StringKeyGenerator.class.getName();
+
+   @Property(doc = "Used to initialize the key generator. Null by default.")
+   protected String keyGeneratorParam = null;
+
+   @Property(doc = "Full class name of the value generator. Default is org.radargun.stressors.ByteArrayValueGenerator if useAtomics=false and org.radargun.stressors.WrappedArrayValueGenerator otherwise.")
+   protected String valueGeneratorClass = null;
+
+   @Property(doc = "Used to initialize the value generator. Null by default.")
+   protected String valueGeneratorParam = null;
+
+   @Property(doc = "Specifies if the requests should be explicitely wrapped in transactions. By default" +
+         "the cachewrapper is queried whether it does support the transactions, if it does," +
+         "transactions are used, otherwise these are not.")
+   protected Boolean useTransactions = null;
+
+   @Property(doc = "Specifies whether the transactions should be committed (true) or rolled back (false). " +
+         "Default is true")
+   protected boolean commitTransactions = true;
+
+   @Property(doc = "Number of requests in one transaction. Default is 1.")
+   protected int transactionSize = 1;
+
+   @Property(doc = "Number of keys inserted/retrieved within one operation. Applicable only when the cache wrapper" +
+         "supports bulk operations. Default is 1 (no bulk operations).")
+   protected int bulkSize = 1;
+
+   @Property(doc = "When executing bulk operations, prefer version with multiple async operations over native implementation. Default is false.")
+   protected boolean preferAsyncOperations = false;
+
+   @Property(converter = TimeConverter.class, doc = "Benchmark duration. This takes precedence over numRequests. By default switched off.")
+   protected long duration = -1;
+
+   @Property(doc = "By default each client thread operates on his private set of keys. Setting this to true " +
+         "introduces contention between the threads, the numThreads property says total amount of entries that are " +
+         "used by all threads. Default is false.")
+   protected boolean sharedKeys = false;
+
+   @Property(doc = "Which buckets will the stressors use. Available is 'none' (no buckets = null)," +
+         "'thread' (each thread will use bucked_/threadId/) or " +
+         "'all:/bucketName/' (all threads will use bucketName). Default is 'none'.",
+         converter = BucketPolicy.Converter.class)
+   protected BucketPolicy bucketPolicy = new BucketPolicy(BucketPolicy.Type.NONE, null);
+
+   @Property(doc = "This option is valid only for sharedKeys=true. It forces local loading of all keys (not only numEntries/numNodes). Default is false.")
+   protected boolean loadAllKeys = false;
+
+   @Property(doc = "The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.")
+   protected boolean fixedKeys = true;
+
+   @Property(doc = "Due to configuration (eviction, expiration), some keys may spuriously disappear. Do not issue a warning for this situation. Default is false.")
+   protected boolean expectLostKeys = false;
+
+   @Property(doc = "If true, putIfAbsent and replace operations are used. Default is false.")
+   protected boolean useAtomics = false;
+
+   @Property(doc = "Keep all keys in a pool - do not generate the keys for each request anew. Default is true.")
+   protected boolean poolKeys = true;
+
+   @Property(doc = "Generate a range for histogram with operations statistics (for use in next stress tests). Default is false.")
+   protected boolean generateHistogramRange = false;
+
+   @Property(doc = "The test will produce operation statistics in histogram. Default is false.")
+   protected boolean useHistogramStatistics = false;
+
+   @Property(doc = "The test will produce operation statistics as average values. Default is true.")
+   protected boolean useSimpleStatistics = true;
+
+   @Property(doc = "Period of single statistics result. By default periodic statistics are not used.", converter = TimeConverter.class)
+   protected long statisticsPeriod = 0;
+
+   @Property(doc = "With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.", converter = TimeConverter.class)
+   protected long entryLifespan = 3600000;
+
+   private transient AtomicInteger txCount = new AtomicInteger(0);
+
+   protected transient volatile KeyGenerator keyGenerator;
+   protected transient volatile ValueGenerator valueGenerator;
+
+   protected transient CacheWrapper cacheWrapper;
+   protected transient AtomicOperationsCapable atomicCacheWrapper;
+   protected transient BulkOperationsCapable bulkCacheWrapper;
+   private transient ArrayList<Object> sharedKeysPool = new ArrayList<Object>();
+   private transient volatile long startNanos;
+   private transient PhaseSynchronizer synchronizer = new PhaseSynchronizer();
+   private transient volatile Completion completion;
+   private transient volatile boolean finished = false;
+   private transient volatile boolean terminated = false;
+
+   protected transient List<Stressor> stressors = new ArrayList<Stressor>(numThreads);
+   private transient Statistics statisticsPrototype = new SimpleStatistics();
+
+   @Init
+   public void init() {
+      if (valueGeneratorClass == null) {
+         if (useAtomics) valueGeneratorClass = WrappedArrayValueGenerator.class.getName();
+         else valueGeneratorClass = ByteArrayValueGenerator.class.getName();
+      }
+   }
+
+   protected Map<String, Object> execute() {
+      log.info("Starting " + toString());
+      setupStatistics();
+      slaveState.put(BucketPolicy.LAST_BUCKET, bucketPolicy.getBucketName(-1));
+      slaveState.put(KeyGenerator.KEY_GENERATOR, getKeyGenerator());
+      slaveState.put(ValueGenerator.VALUE_GENERATOR, getValueGenerator());
+      Map<String, Object> results = stress();
+      if (generateHistogramRange) {
+         slaveState.put(HistogramStatistics.HISTOGRAM_RANGES, results);
+      }
+      return results;
+   }
+
+   protected void setupStatistics() {
+      Statistics statistics;
+      if (generateHistogramRange) {
+         statistics = new AllRecordingStatistics();
+      } else if (useHistogramStatistics) {
+         Map<String, Object> ranges = (Map<String, Object>) slaveState.get(HistogramStatistics.HISTOGRAM_RANGES);
+         if (ranges == null) {
+            throw new IllegalStateException("The ranges for histogram statistics are not generated. Please run StressTestWarmup with generateHistogramRange=true");
+         }
+         if (useSimpleStatistics) {
+            statistics = new MultiStatistics(ranges);
+         } else {
+            statistics = new HistogramStatistics(ranges);
+         }
+      } else {
+         statistics = new SimpleStatistics();
+      }
+      if (statisticsPeriod > 0) {
+         statistics = new PeriodicStatistics(statistics, statisticsPeriod);
+      }
+      statisticsPrototype = statistics;
+   }
+
+   public DistStageAck executeOnSlave() {
+      DefaultDistStageAck result = new DefaultDistStageAck(slaveState.getSlaveIndex(), slaveState.getLocalAddress());
+      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
+         log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveState.getSlaveIndex(), slaves));
+         return result;
+      }
+      init(slaveState.getCacheWrapper());
+      if (cacheWrapper == null) {
+         log.info("Not running test on this slave as the wrapper hasn't been configured.");
+         return result;
+      }
+
+      try {
+         Map<String, Object> results = execute();
+         String sizeInfo = generateSizeInfo();
+         log.info(sizeInfo);
+         results.put(SIZE_INFO, sizeInfo);
+         result.setPayload(results);
+         return result;
+      } catch (Exception e) {
+         log.warn("Exception while initializing the test", e);
+         result.setError(true);
+         result.setRemoteException(e);
+         return result;
+      }
+   }
+
+   /**
+    * Important: do not change the format of rhe log below as is is used by ./dist.sh to measure distribution load.
+    */
+   @Deprecated
+   private String generateSizeInfo() {
+      return "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + slaveState.getClusterSize() + ", nodeIndex:" + slaveState.getSlaveIndex() + ", cacheSize: " + cacheWrapper.getLocalSize();
+   }
+
+   public PhaseSynchronizer getSynchronizer() {
+      return synchronizer;
+   }
+
+   public Completion getCompletion() {
+      return completion;
+   }
+
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
+      logDurationInfo(acks);
+      boolean success = true;
+      Map<Integer, Map<String, Object>> results = new HashMap<Integer, Map<String, Object>>();
+      masterState.put(CsvReportGenerationStage.RESULTS, results);
+      for (DistStageAck ack : acks) {
+         DefaultDistStageAck wAck = (DefaultDistStageAck) ack;
+         if (wAck.isError()) {
+            success = false;
+            log.warn("Received error ack: " + wAck);
+         } else {
+            if (log.isTraceEnabled())
+               log.trace("Received success ack: " + wAck);
+         }
+         Map<String, Object> benchResult = (Map<String, Object>) wAck.getPayload();
+         if (benchResult != null) {
+            results.put(ack.getSlaveIndex(), benchResult);
+            Object reqPerSec = benchResult.get(Statistics.REQ_PER_SEC);
+            Object sizeInfo = benchResult.remove(SIZE_INFO);
+            if (reqPerSec != null) {
+               log.info("Received " + sizeInfo);
+               log.info("Slave #" + ack.getSlaveIndex() + ": " + numberFormat(parseDouble(reqPerSec.toString())) + " requests per second.");
+            }
+         } else {
+            log.trace("No report received from slave: " + ack.getSlaveIndex());
+         }
+      }
+      return success;
+   }
+
+   protected void init(CacheWrapper wrapper) {
+      this.cacheWrapper = wrapper;
+      if (wrapper instanceof AtomicOperationsCapable) {
+         atomicCacheWrapper = (AtomicOperationsCapable) wrapper;
+      }
+      if (wrapper instanceof BulkOperationsCapable) {
+         bulkCacheWrapper = (BulkOperationsCapable) wrapper;
+      }
+      startNanos = System.nanoTime();
+      log.info("Executing: " + this.toString());
+   }
+
+   public Map<String, Object> stress() {
+      Completion completion;
+      if (duration > 0) {
+         completion = new TimeStressorCompletion(duration);
+      } else {
+         completion = new OperationCountCompletion(numRequests, logPeriod);
+      }
+      setStressorCompletion(completion);
+
+      if (!startOperations()) return Collections.EMPTY_MAP;
+      try {
+         executeOperations();
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+
+      Map<String, Object> results = processResults();
+      finishOperations();
+      return results;
+   }
+
+   protected boolean startOperations() {
+      try {
+         synchronizer.masterPhaseStart();
+      } catch (InterruptedException e) {
+         return false;
+      }
+      return true;
+   }
+
+   protected boolean isTerminated() {
+      return terminated;
+   }
+
+   protected Map<String, Object> processResults() {
+      Statistics stats = createStatistics();
+
+      for (Stressor stressor : stressors) {
+         stats.merge(stressor.getStats());
+      }
+
+      Map<String, Object> results = stats.getResultsMap(numThreads, "");
+      results.put(Statistics.REQ_PER_SEC, numThreads * stats.getOperationsPerSecond(true));
+
+      log.info("Finished generating report. Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
+      return results;
+   }
+
+   protected Statistics createStatistics() {
+      return statisticsPrototype.copy();
+   }
+
+   protected void executeOperations() throws InterruptedException {
+      synchronizer.setSlaveCount(numThreads);
+      for (int threadIndex = stressors.size(); threadIndex < numThreads; threadIndex++) {
+         Stressor stressor = new Stressor(this, getLogic(), threadIndex, slaveState.getSlaveIndex(), slaveState.getClusterSize());
+         stressors.add(stressor);
+         stressor.start();
+      }
+      log.info("Cache wrapper info is: " + cacheWrapper.getInfo());
+      synchronizer.masterPhaseEnd();
+      // wait until all slaves have initialized keys
+      synchronizer.masterPhaseStart();
+      // nothing to do here
+      synchronizer.masterPhaseEnd();
+      log.info("Started " + stressors.size() + " stressor threads.");
+      // wait until all threads have finished
+      synchronizer.masterPhaseStart();
+   }
+
+   protected void finishOperations() {
+      finished = true;
+      synchronizer.masterPhaseEnd();
+      for (Stressor s : stressors) {
+         try {
+            s.join();
+         } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+         }
+      }
+      stressors.clear();
+   }
+
+   protected boolean isFinished() {
+      return finished;
+   }
+
+   protected void setStressorCompletion(Completion completion) {
+      this.completion = completion;
+   }
+
+   public OperationLogic getLogic() {
+      if (fixedKeys && numBytes > 0) {
+         throw new IllegalArgumentException("numBytes can be set only for fixedKeys=false");
+      } else if (sharedKeys && !fixedKeys) {
+         throw new IllegalArgumentException("Cannot use both shared and non-fixed keys - not implemented");
+      } else if (!fixedKeys) {
+         if (!poolKeys) {
+            throw new IllegalArgumentException("Keys have to be pooled with changing set.");
+         }
+         if (bulkSize != 1 || useAtomics) {
+            throw new IllegalArgumentException("Replace/bulk operations on changing set not supported.");
+         }
+         if (removePercentage > 0) {
+            throw new IllegalArgumentException("Removes cannot be configured in when using non-fixed keys");
+         }
+         return new ChangingSetOperationLogic(this);
+      } else if (bulkSize != 1) {
+         if (bulkSize > 1 && bulkSize <= numEntries) {
+            if (cacheWrapper instanceof BulkOperationsCapable) {
+               if (sharedKeys) {
+                  return new BulkOperationLogic(this, new FixedSetSharedOperationLogic(this, sharedKeysPool), preferAsyncOperations);
+               } else {
+                  return new BulkOperationLogic(this, new FixedSetPerThreadOperationLogic(this), preferAsyncOperations);
+               }
+            } else {
+               throw new IllegalArgumentException("Cache wrapper " + cacheWrapper.toString() + " does not support bulk operations.");
+            }
+         } else {
+            throw new IllegalArgumentException("Invalid bulk size, must be 1 < bulkSize(" + bulkSize + ") < numEntries(" + numEntries + ")");
+         }
+      } else if (useAtomics) {
+         if (sharedKeys) {
+            throw new IllegalArgumentException("Atomics on shared keys are not supported.");
+         } else if (cacheWrapper instanceof AtomicOperationsCapable) {
+            if (!poolKeys) {
+               log.warn("Keys are not pooled, but last values must be recorded!");
+            }
+            return new FixedSetAtomicOperationLogic(this);
+         } else {
+            throw new IllegalArgumentException("Atomics can be executed only on wrapper which supports atomic operations.");
+         }
+      } else if (sharedKeys) {
+         return new FixedSetSharedOperationLogic(this, sharedKeysPool);
+      } else {
+         return new FixedSetPerThreadOperationLogic(this);
+      }
+   }
+
+   public void setTerminated() {
+      this.terminated = true;
+   }
+
+   protected Object generateValue(Object key, int maxValueSize) {
+      Random random = ThreadLocalRandom.current();
+      int size = entrySize.next(random);
+      size = Math.min(size, maxValueSize);
+      return getValueGenerator().generateValue(key, size, random);
+   }
+
+   public KeyGenerator getKeyGenerator() {
+      if (keyGenerator == null) {
+         synchronized (this) {
+            if (keyGenerator != null) return keyGenerator;
+            log.info("Using key generator " + keyGeneratorClass + ", param " + keyGeneratorParam);
+            ClassLoader classLoader = slaveState.getClassLoadHelper().getLoader();
+            keyGenerator = (KeyGenerator) Utils.instantiate(keyGeneratorClass, classLoader);
+            keyGenerator.init(keyGeneratorParam, classLoader);
+         }
+      }
+      return keyGenerator;
+   }
+
+   public ValueGenerator getValueGenerator() {
+      if (valueGenerator == null) {
+         synchronized (this) {
+            if (valueGenerator != null) return valueGenerator;
+            log.info("Using value generator " + valueGeneratorClass + ", param " + valueGeneratorParam);
+            ClassLoader classLoader = slaveState.getClassLoadHelper().getLoader();
+            valueGenerator = (ValueGenerator) Utils.instantiate(valueGeneratorClass, classLoader);
+            valueGenerator.init(valueGeneratorParam, classLoader);
+         }
+      }
+      return valueGenerator;
+   }
+
+   public boolean isUseTransactions() {
+      return useTransactions == null ? cacheWrapper.isTransactional(null) : useTransactions;
+   }
+
+   protected static void avoidJit(Object result) {
+      //this line was added just to make sure JIT doesn't skip call to cacheWrapper.get
+      if (result != null && System.identityHashCode(result) == result.hashCode()) System.out.print("");
+   }
+}

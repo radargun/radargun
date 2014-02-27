@@ -39,7 +39,7 @@ import org.radargun.config.Scenario;
 import org.radargun.config.StageHelper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.stressors.SimpleStatistics;
+import org.radargun.stats.SimpleStatistics;
 
 public class HtmlReportGenerator {
 

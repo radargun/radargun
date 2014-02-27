@@ -110,13 +110,17 @@ public class Utils {
       return MEM_FMT.format(memBytes / 1024) + " kb";
    }
 
-   public static URLClassLoader buildPluginSpecificClassLoader(String plugin, ClassLoader parent) throws Exception {
+   public static URLClassLoader buildPluginSpecificClassLoader(String plugin, ClassLoader parent) {
       log.trace("Using smart class loading");
       List<URL> jars = new ArrayList<URL>();
-      addJars(new File(PLUGINS_DIR + File.separator + plugin + File.separator + "lib"), jars);
-      addJars(new File(SPECIFIC_DIR), jars);
-      File confDir = new File(PLUGINS_DIR + File.separator + plugin + File.separator + "conf/");
-      jars.add(confDir.toURI().toURL());
+      try {
+         addJars(new File(PLUGINS_DIR + File.separator + plugin + File.separator + "lib"), jars);
+         addJars(new File(SPECIFIC_DIR), jars);
+         File confDir = new File(PLUGINS_DIR + File.separator + plugin + File.separator + "conf/");
+         jars.add(confDir.toURI().toURL());
+      } catch (MalformedURLException e) {
+         throw new IllegalArgumentException(e);
+      }
       return new URLClassLoader(jars.toArray(new URL[jars.size()]), parent);
    }
 
@@ -255,11 +259,11 @@ public class Utils {
       return NF.format(d);
    }
 
-   public static Object instantiate(String name) {
+   public static Object instantiate(String name, ClassLoader classLoader) {
       try {
-         return Class.forName(name).newInstance();
+         return classLoader.loadClass(name).newInstance();
       } catch (Exception e) {
-         throw new IllegalStateException(e);
+         throw new IllegalArgumentException(e);
       }
    }
    

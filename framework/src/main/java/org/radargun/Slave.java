@@ -9,7 +9,7 @@ import org.radargun.config.Configuration;
 import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.stages.AbstractStartStage;
+import org.radargun.stages.lifecycle.AbstractStartStage;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
 

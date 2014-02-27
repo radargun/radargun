@@ -1,5 +1,6 @@
 package org.radargun.cachewrappers;
 
+import org.radargun.stages.cache.generators.ObjectKeyGenerator;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.infinispan.distribution.ch.ConsistentHash;
@@ -7,7 +8,6 @@ import org.infinispan.distribution.ch.DefaultConsistentHash;
 import org.infinispan.distribution.ch.TopologyInfo;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.util.Immutables;
-import org.radargun.stressors.ObjectKey;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +43,7 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
 
    @Override
    public List<Address> locate(Object key, int replCount) {
-      if(! (key instanceof ObjectKey)) {
+      if(! (key instanceof ObjectKeyGenerator.ObjectKey)) {
          if (log.isTraceEnabled()) log.trace("Delegating key " + key + " to default CH");
          return existing.locate(key, replCount);
       }
@@ -53,7 +53,7 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
       Set<Address> caches = existing.getCaches();
       int clusterSize = caches.size();
 
-      long keyIndexInCluster = getSequenceNumber((ObjectKey) key);
+      long keyIndexInCluster = getSequenceNumber((ObjectKeyGenerator.ObjectKey) key);
       int firstIndex = (int)(keyIndexInCluster % caches.size());
 
       List<Address> result = new ArrayList<Address>();
@@ -70,7 +70,7 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
       return Collections.unmodifiableList(result);
    }
 
-   private long getSequenceNumber(ObjectKey key) {
+   private long getSequenceNumber(ObjectKeyGenerator.ObjectKey key) {
       return key.getKeyIndexInCluster(threadCountPerNode, keysPerThread);
    }
 

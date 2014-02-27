@@ -11,7 +11,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
-import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
 
 /**
@@ -21,10 +20,7 @@ import org.radargun.utils.Utils;
  */
 @Stage(doc = "")
 public abstract class AbstractDistStage extends AbstractStage implements DistStage {
-
    protected Log log = LogFactory.getLog(getClass());
-   private static final String PREV_PRODUCT = "AbstractDistStage.previousProduct";
-   public static final String CLASS_LOADER = "AbstractDistStage.classLoader";
 
    /**
     * This field is filled in only on master node, on slave it is set to null
@@ -37,9 +33,6 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
 
    @Property(doc = "Specifies on which slaves should this stage actively run. Default is stage-dependent (usually all or none).")
    protected Collection<Integer> slaves;
-
-   @Property(doc = "Smart class loading loads libraries specific for the product. Default is true.")
-   private boolean useSmartClassLoading = true;
 
    @Property(doc = "Should the benchmark fail if one of the slaves sends error acknowledgement? Default is false.")
    private boolean exitBenchmarkOnSlaveFailure = false;

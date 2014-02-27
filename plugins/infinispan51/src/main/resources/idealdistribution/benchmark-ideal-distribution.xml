@@ -13,7 +13,7 @@
          do more work than others.
        -->
       <WebSessionBenchmark numRequests="2500" opsCountStatusLog="500" numThreads="2" numEntries="10"
-                           keyGeneratorClass="org.radargun.stressors.ObjectKeyGenerator" />
+                           keyGeneratorClass="org.radargun.stages.cache.generators.ObjectKeyGenerator" />
       <CsvReportGeneration/>
    </benchmark>
 

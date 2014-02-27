@@ -23,10 +23,10 @@ import org.radargun.logging.LogFactory;
 import org.radargun.CacheWrapper;
 import org.radargun.features.Killable;
 import org.radargun.stages.DefaultDistStageAck;
-import org.radargun.stages.KillStage;
-import org.radargun.stages.ParallelStartKillStage;
+import org.radargun.stages.lifecycle.KillStage;
+import org.radargun.stages.lifecycle.ParallelStartKillStage;
 import org.radargun.state.SlaveState;
-import org.radargun.stressors.BackgroundOpsManager;
+import org.radargun.stages.cache.background.BackgroundOpsManager;
 
 /**
  * 

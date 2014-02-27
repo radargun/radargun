@@ -16,20 +16,18 @@ import org.infinispan.transaction.LockingMode;
 import org.infinispan.transaction.TransactionMode;
 import org.radargun.config.Property;
 import org.radargun.features.BulkOperationsCapable;
-import org.radargun.features.KeyGeneratorAware;
 import org.radargun.features.Killable;
 import org.radargun.features.MapReduceCapable;
 import org.radargun.features.Partitionable;
 import org.radargun.features.PersistentStorageCapable;
 import org.radargun.features.TopologyAware;
-import org.radargun.stressors.KeyGenerator;
 import org.radargun.utils.ClassLoadHelper;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Infinispan51Wrapper extends InfinispanWrapper
-      implements BulkOperationsCapable, KeyGeneratorAware, Killable, MapReduceCapable, Partitionable, PersistentStorageCapable, TopologyAware {
+      implements BulkOperationsCapable, Killable, MapReduceCapable, Partitionable, PersistentStorageCapable, TopologyAware {
    @Property(doc = "Explicitely lock each modification. Default is false.")
    protected boolean explicitLocking = false;
 
@@ -38,16 +36,21 @@ public class Infinispan51Wrapper extends InfinispanWrapper
 
    protected final InfinispanPartitionableLifecycle partitionable;
    protected final InfinispanBulkOperations bulkOperations;
-   protected final InfinispanKeyGeneratorAware keyGeneratorAware;
    protected final InfinispanMapReduce mapReduce;
    protected InfinispanPersistentStorage persistentStorage;
    protected InfinispanTopologyAware topologyAware;
 
+   // rather dirty hack to replace KeyGeneratorAware
+   private static Infinispan51Wrapper instance;
+   static Infinispan51Wrapper getInstance() {
+      return instance;
+   }
+
    public Infinispan51Wrapper() {
       this.bulkOperations = createBulkOperations();
-      this.keyGeneratorAware = createKeyGeneratorAware();
       this.mapReduce = createMapReduce();
       this.partitionable = (InfinispanPartitionableLifecycle) lifecycle;
+      instance = this;
    }
 
    @Override
@@ -67,10 +70,6 @@ public class Infinispan51Wrapper extends InfinispanWrapper
 
    protected InfinispanBulkOperations createBulkOperations() {
       return new InfinispanBulkOperations(this);
-   }
-
-   protected InfinispanKeyGeneratorAware createKeyGeneratorAware() {
-      return new InfinispanKeyGeneratorAware(this);
    }
 
    protected InfinispanMapReduce createMapReduce() {
@@ -181,11 +180,6 @@ public class Infinispan51Wrapper extends InfinispanWrapper
    @Override
    public Map<Object, Object> removeAll(String bucket, Set<Object> keys, boolean preferAsync) throws Exception {
       return bulkOperations.removeAll(bucket, keys, preferAsync);
-   }
-
-   @Override
-   public KeyGenerator getKeyGenerator(int keyBufferSize) {
-      return keyGeneratorAware.getKeyGenerator(keyBufferSize);
    }
 
    @Override

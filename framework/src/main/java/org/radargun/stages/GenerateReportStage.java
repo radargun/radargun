@@ -24,7 +24,7 @@ import org.radargun.reporting.ClusterReport;
 import org.radargun.reporting.ComparisonChartGenerator;
 import org.radargun.reporting.HistogramData;
 import org.radargun.reporting.HtmlReportGenerator;
-import org.radargun.stressors.SimpleStatistics;
+import org.radargun.stats.SimpleStatistics;
 import org.radargun.utils.Utils;
 
 /**
@@ -39,6 +39,7 @@ import org.radargun.utils.Utils;
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Stage(internal = true, doc = "Stage that generates a chart from a set of csv files.")
+@Deprecated
 public class GenerateReportStage extends AbstractMasterStage {
 
    private static Log log = LogFactory.getLog(GenerateReportStage.class);

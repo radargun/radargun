@@ -1,0 +1,71 @@
+package org.radargun.stages.cache.stresstest;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+
+import org.radargun.stats.Operation;
+
+/**
+* @author Radim Vansa &lt;rvansa@redhat.com&gt;
+*/
+class BulkOperationLogic implements OperationLogic {
+   private final FixedSetOperationLogic initLogic;
+   private final Operation putOperation;
+   private final Operation removeOperation;
+   private final Operation getOperation;
+   private StressTestStage stage;
+
+   public BulkOperationLogic(StressTestStage stage, FixedSetOperationLogic initLogic, boolean preferAsyncOperations) {
+      this.stage = stage;
+      this.initLogic = initLogic;
+      if (preferAsyncOperations) {
+         putOperation = Operation.PUT_ALL_VIA_ASYNC;
+         removeOperation = Operation.REMOVE_ALL_VIA_ASYNC;
+         getOperation = Operation.GET_ALL_VIA_ASYNC;
+      } else {
+         putOperation = Operation.PUT_ALL;
+         removeOperation = Operation.REMOVE_ALL;
+         getOperation = Operation.GET_ALL;
+      }
+   }
+
+   @Override
+   public void init(String bucketId, int threadIndex, int nodeIndex, int numNodes) {
+      initLogic.init(bucketId, threadIndex, nodeIndex, numNodes);
+   }
+
+   @Override
+   public Object run(Stressor stressor) throws RequestException {
+      Random r = ThreadLocalRandom.current();
+      int randomAction = r.nextInt(100);
+      if (randomAction < stage.writePercentage) {
+         Map<Object, Object> map = new HashMap<Object, Object>(stage.bulkSize);
+         for (int i = 0; i < stage.bulkSize;) {
+            Object key = initLogic.getKey(r.nextInt(stage.numEntries - 1), stressor.getThreadIndex());
+            if (!map.containsKey(key)) {
+               map.put(key, stage.generateValue(key, Integer.MAX_VALUE));
+               ++i;
+            }
+         }
+         return stressor.makeRequest(putOperation, map);
+      } else {
+         Set<Object> set = new HashSet<Object>(stage.bulkSize);
+         for (int i = 0; i < stage.bulkSize; ) {
+            Object key = initLogic.getKey(r.nextInt(stage.numEntries - 1), stressor.getThreadIndex());
+            if (!set.contains(key)) {
+               set.add(key);
+               ++i;
+            }
+         }
+         if (randomAction < stage.writePercentage + stage.removePercentage) {
+            return stressor.makeRequest(removeOperation, set);
+         } else {
+            return stressor.makeRequest(getOperation, set);
+         }
+      }
+   }
+}

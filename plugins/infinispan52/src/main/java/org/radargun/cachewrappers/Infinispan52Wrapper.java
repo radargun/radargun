@@ -21,7 +21,7 @@ import org.radargun.config.Property;
 import org.radargun.features.DistributedTaskCapable;
 import org.radargun.features.Queryable;
 import org.radargun.features.XSReplicating;
-import org.radargun.stages.AbstractStartStage;
+import org.radargun.stages.lifecycle.AbstractStartStage;
 import org.radargun.utils.ClassLoadHelper;
 
 /**
