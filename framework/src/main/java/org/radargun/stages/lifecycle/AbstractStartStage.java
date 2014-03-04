@@ -19,9 +19,7 @@
 package org.radargun.stages.lifecycle;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
@@ -40,26 +38,8 @@ import org.radargun.stages.helpers.StartStopTime;
 @Stage(doc = "")
 public abstract class AbstractStartStage extends AbstractDistStage {
 
-   public static final String PROP_FILE = "file";
-   public static final String PROP_CONFIG_NAME = "configName";
-   public static final String PROP_PLUGIN = "plugin";
-
    @Property(doc = "Set of slaves where the start may fail but this will not cause an error. Default is none.")
    protected Collection<Integer> mayFailOn;
-
-   @Property(readonly = true, doc = "Configuration file used for this stage")
-   protected String configFile;
-   protected String service;
-   protected Map<String, String> configProperties;
-
-   public void setup(String service, String configFile, Map<String, String> configProperties) {
-      this.service = service;
-      this.configFile = configFile;
-      this.configProperties = new HashMap<String, String>(configProperties);
-      this.configProperties.put(PROP_CONFIG_NAME, slaveState.getConfigName());
-      this.configProperties.put(PROP_PLUGIN, slaveState.getPlugin());
-      this.configProperties.put(PROP_FILE, configFile);
-   }
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {

@@ -25,13 +25,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.features.DistributedTaskCapable;
+import org.radargun.traits.CacheInformation;
+import org.radargun.traits.Clustered;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.traits.DistributedTaskExecutor;
+import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Utils;
 
 /**
@@ -71,6 +73,15 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          + " must be public and take a String parameter.")
    private String distributedExecutionParams = null;
 
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private DistributedTaskExecutor executor;
+
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private CacheInformation cacheInformation;
+
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private Clustered clustered;
+
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       super.processAckOnMaster(acks);
@@ -98,48 +109,37 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck result = newDefaultStageAck();
-      CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
+      if (!isServiceRunnning()) {
+         return errorResponse("Service not running", null);
+      }
 
       if (distributedCallableFqn == null) {
-         result.setError(true);
-         result.setErrorMessage("The distributed task or callable class must be specified.");
-         return result;
-      }
-
-      if (cacheWrapper == null) {
-         result.setError(true);
-         result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
-         return result;
-      }
-
-      if (!(cacheWrapper instanceof DistributedTaskCapable)) {
-         result.setError(true);
-         result.setErrorMessage("Distributed Execution is not supported by this cache");
-         return result;
+         return errorResponse("The distributed task or callable class must be specified.", null);
       }
 
       if (slaveState.getSlaveIndex() == 0) {
-         result = executeTask(cacheWrapper);
+         return executeTask();
       } else {
-         String payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
-               + ", 0";
-         result.setPayload(payload);
+         DefaultDistStageAck result = newDefaultStageAck();
+         result.setPayload(getPayload(0));
+         return result;
       }
-      return result;
    }
 
-   private DefaultDistStageAck executeTask(CacheWrapper cacheWrapper) {
+   private String getPayload(long durationNanos) {
+      return slaveState.getSlaveIndex() + ", " + clustered.getClusteredNodes() + ", " + cacheInformation.getCache(null).getLocalSize() + ", " + durationNanos;
+   }
+
+   private DefaultDistStageAck executeTask() {
       List<Future<T>> futureList = null;
       List<T> resultList = new ArrayList<T>();
       DefaultDistStageAck result = newDefaultStageAck();
 
       log.info("--------------------");
       @SuppressWarnings("unchecked")
-      DistributedTaskCapable<T> distributedTaskCapable = (DistributedTaskCapable<T>) cacheWrapper;
       long durationNanos;
       long start = System.nanoTime();
-      futureList = distributedTaskCapable.executeDistributedTask(slaveState.getClassLoadHelper(), distributedCallableFqn,
+      futureList = executor.executeDistributedTask(slaveState.getClassLoadHelper(), distributedCallableFqn,
             executionPolicyName, failoverPolicyFqn, nodeAddress, Utils.parseParams(distributedExecutionParams));
       if (futureList == null) {
          result.setError(true);
@@ -160,14 +160,10 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          }
       }
       durationNanos = System.nanoTime() - start;
-      String payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
-            + ", " + durationNanos;
-      result.setPayload(payload);
+      result.setPayload(getPayload(durationNanos));
 
       log.info("Distributed Execution task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
-      log.info(cacheWrapper.getNumMembers() + " nodes were used. " + cacheWrapper.getLocalSize()
-            + " entries on this node");
-      log.info(cacheWrapper.getInfo());
+      log.info(clustered.getClusteredNodes() + " nodes were used. " + cacheInformation.getCache(null).getLocalSize() + " entries on this node");
       log.info("Distributed execution results:");
       log.info("--------------------");
       for (T t : resultList) {

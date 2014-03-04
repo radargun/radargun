@@ -30,7 +30,7 @@ class ChangingSetOperationLogic implements OperationLogic {
    }
 
    @Override
-   public void init(String bucketId, int threadIndex, int nodeIndex, int numNodes) {
+   public void init(int threadIndex, int nodeIndex, int numNodes) {
       this.numNodes = numNodes;
       keysLoaded.compareAndSet(0, nodeIndex);
       double averageSize = 0;

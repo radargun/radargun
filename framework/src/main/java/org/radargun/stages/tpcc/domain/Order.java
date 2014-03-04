@@ -1,6 +1,6 @@
 package org.radargun.stages.tpcc.domain;
 
-import org.radargun.CacheWrapper;
+import org.radargun.traits.BasicOperations;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -110,24 +110,19 @@ public class Order implements Serializable, Comparable {
       return "ORDER_" + this.o_w_id + "_" + this.o_d_id + "_" + this.o_id;
    }
 
-   public void store(CacheWrapper wrapper) throws Throwable {
-
-      wrapper.put(null, this.getKey(), this);
+   public void store(BasicOperations.Cache wrapper) throws Throwable {
+      wrapper.put(this.getKey(), this);
    }
 
-   public boolean load(CacheWrapper wrapper) throws Throwable {
-
-      Order loaded = (Order) wrapper.get(null, this.getKey());
-
+   public boolean load(BasicOperations.Cache basicCache) throws Throwable {
+      Order loaded = (Order) basicCache.get(this.getKey());
       if (loaded == null) return false;
-
 
       this.o_c_id = loaded.o_c_id;
       this.o_carrier_id = loaded.o_carrier_id;
       this.o_entry_d = loaded.o_entry_d;
       this.o_ol_cnt = loaded.o_ol_cnt;
       this.o_all_local = loaded.o_all_local;
-
 
       return true;
    }

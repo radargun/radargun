@@ -26,7 +26,7 @@ class SharedLogChecker extends LogChecker {
       for (int i = 0; i < 100; ++i) {
          prev2Value = prevValue;
          prevValue = value;
-         value = cacheWrapper.get(bucketId, keyGenerator.generateKey(keyId));
+         value = basicCache.get(keyGenerator.generateKey(keyId));
          if (containsOperation(value, record) || (value != null && value.equals(prev2Value))) {
             break;
          }

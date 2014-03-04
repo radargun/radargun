@@ -4,12 +4,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Utils;
 
 /**
@@ -45,17 +46,19 @@ public class ClusterValidationStage extends AbstractDistStage {
    @Property(doc = "Delay between attempts to retrieve the control entry.")
    private int replicationTimeSleep = 2000;
 
-   private CacheWrapper wrapper;
-   private static final String BUCKET = "clusterValidation";
+   @InjectTrait
+   private BasicOperations basicOperations;
+
+   private BasicOperations.Cache cache;
 
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck response = newDefaultStageAck();
       try {
-         wrapper = slaveState.getCacheWrapper();
-         if (wrapper == null) {
+         if (!isServiceRunnning()) {
             log.info("Missing wrapper, not participating on validation");
             return response;
          }
+         cache = basicOperations.getCache(null);
          int replResult = checkReplicationSeveralTimes();
          if (!partialReplication) {
             if (replResult > 0) {//only executes this on the slaves on which replication happened.
@@ -79,14 +82,14 @@ public class ClusterValidationStage extends AbstractDistStage {
    }
 
    private int confirmReplication() throws Exception {
-      wrapper.put(null, confirmationKey(slaveState.getSlaveIndex()), "true");
+      cache.put(confirmationKey(slaveState.getSlaveIndex()), "true");
       for (int i : getSlaves()) {
-         for (int j = 0; j < 10 && (wrapper.get(null, confirmationKey(i)) == null); j++) {
+         for (int j = 0; j < 10 && (cache.get(confirmationKey(i)) == null); j++) {
             tryToPut();
-            wrapper.put(null, confirmationKey(slaveState.getSlaveIndex()), "true");
+            cache.put(confirmationKey(slaveState.getSlaveIndex()), "true");
             Thread.sleep(1000);
          }
-         if (wrapper.get(null, confirmationKey(i)) == null) {
+         if (cache.get(confirmationKey(i)) == null) {
             log.warn("Confirm phase unsuccessful. Slave " + i + " hasn't acknowledged the test");
             return i;
          }
@@ -135,7 +138,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCount = 0;
       while (tryCount < 5) {
          try {
-            wrapper.put(null, key(slaveState.getSlaveIndex()), "true");
+            cache.put(key(slaveState.getSlaveIndex()), "true");
             return;
          } catch (Throwable e) {
             log.warn("Error while trying to put data: ", e);
@@ -190,7 +193,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int tryCont = 0;
       while (tryCont < 5) {
          try {
-            return wrapper.getReplicatedData(null, key(i));
+            return cache.get(key(i));
          } catch (Throwable e) {
             tryCont++;
          }

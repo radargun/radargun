@@ -3,15 +3,15 @@ package org.radargun.stages.topology;
 import java.util.Date;
 import java.util.List;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.features.TopologyAware;
-import org.radargun.features.TopologyAware.Event;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.TopologyHistory;
+import org.radargun.traits.TopologyHistory.Event;
 
 /**
  * Controls which topology events have (not) happened recently
@@ -35,7 +35,10 @@ public class CheckTopologyStage extends AbstractDistStage {
 
    @Property(doc = "The check controls if this event has happened (true) or not happened (false). Defaults to true.")
    private boolean changed = true;
-   
+
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private TopologyHistory topologyHistory;
+
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
@@ -43,17 +46,8 @@ public class CheckTopologyStage extends AbstractDistStage {
          log.debug("Ignoring this slave");
          return ack;
       }
-      CacheWrapper wrapper = slaveState.getCacheWrapper();
-      if (!(wrapper instanceof TopologyAware)) {
-         String message = "CacheWrapper is not aware of topology/hash changes";
-         log.error(message);
-         ack.setError(true);
-         ack.setErrorMessage(message);
-         return ack;
-      }
-      TopologyAware ta = (TopologyAware) wrapper;
       if (type == Type.HASH_AND_TOPOLOGY || type == Type.TOPOLOGY) {
-         List<Event> history = ta.getTopologyChangeHistory(); 
+         List<Event> history = topologyHistory.getTopologyChangeHistory();
          if (!check(history)) {
             String message = "Topology check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1));
             log.error(message);
@@ -65,7 +59,7 @@ public class CheckTopologyStage extends AbstractDistStage {
          }
       }
       if (type == Type.HASH_AND_TOPOLOGY || type == Type.HASH) {
-         List<Event> history = ta.getRehashHistory(); 
+         List<Event> history = topologyHistory.getRehashHistory();
          if (!check(history)) {
             String message = "Hash check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1));
             log.error(message);

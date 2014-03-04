@@ -23,13 +23,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.features.MapReduceCapable;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.CacheInformation;
+import org.radargun.traits.Clustered;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.MapReducer;
 import org.radargun.utils.Utils;
 
 /**
@@ -110,6 +113,18 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          + "property. The default is TimeUnit.MILLISECONDS")
    private TimeUnit unit = TimeUnit.MILLISECONDS;
 
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private MapReducer mapReducer;
+
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private Clustered clustered;
+
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private CacheInformation cacheInformation;
+
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private BasicOperations basicOperations;
+
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       super.processAckOnMaster(acks);
@@ -138,41 +153,28 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
+      if (!isServiceRunnning()) {
+         return errorResponse("Service is not runnning", null);
+      }
       DefaultDistStageAck result = newDefaultStageAck();
-      CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-
-      if (cacheWrapper == null) {
-         result.setError(true);
-         result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
-         return result;
-      }
-
-      if (!(cacheWrapper instanceof MapReduceCapable)) {
-         result.setError(true);
-         result.setErrorMessage("MapReduce tasks are not supported by this cache");
-         return result;
-      }
 
       if (mapperFqn == null || reducerFqn == null) {
-         result.setError(true);
-         result.setErrorMessage("Both the mapper and reducer class must be specified.");
-         return result;
+         return errorResponse("Both the mapper and reducer class must be specified.", null);
       }
 
       if (slaveState.getSlaveIndex() == 0) {
-         @SuppressWarnings("unchecked")
-         MapReduceCapable<KOut, VOut, R> mapReduceCapable = (MapReduceCapable<KOut, VOut, R>) cacheWrapper;
-         result = executeMapReduceTask(cacheWrapper, mapReduceCapable);
+         result = executeMapReduceTask(mapReducer);
       } else {
-         String payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
-               + ", 0, -1";
-         result.setPayload(payload);
+         result.setPayload(getPayload("0", "-1"));
       }
       return result;
    }
 
-   private DefaultDistStageAck executeMapReduceTask(CacheWrapper cacheWrapper,
-         MapReduceCapable<KOut, VOut, R> mapReduceCapable) {
+   private String getPayload(String duration, String resultSize) {
+      return slaveState.getSlaveIndex() + ", " + clustered.getClusteredNodes() + ", " + cacheInformation.getCache(null).getLocalSize() + ", " + duration + ", " + resultSize;
+   }
+
+   private DefaultDistStageAck executeMapReduceTask(MapReducer<KOut, VOut, R> mapReducer) {
       DefaultDistStageAck result = newDefaultStageAck();
       Map<KOut, VOut> payloadMap = null;
       R payloadObject = null;
@@ -180,64 +182,58 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       long start;
 
       log.info("--------------------");
-      mapReduceCapable.setParameters(Utils.parseParams(mapperParams), Utils.parseParams(reducerParams),
+      mapReducer.setParameters(Utils.parseParams(mapperParams), Utils.parseParams(reducerParams),
             Utils.parseParams(combinerParams), Utils.parseParams(collatorParams));
-      if (mapReduceCapable.setDistributeReducePhase(distributeReducePhase)) {
-         log.info(mapReduceCapable.getClass().getName() + " supports MapReduceCapable.setDistributeReducePhase()");
+      if (mapReducer.setDistributeReducePhase(distributeReducePhase)) {
+         log.info(mapReducer.getClass().getName() + " supports MapReducer.setDistributeReducePhase()");
       } else {
-         log.info(mapReduceCapable.getClass().getName()
-               + " does not support MapReduceCapable.setDistributeReducePhase()");
+         log.info(mapReducer.getClass().getName()
+               + " does not support MapReducer.setDistributeReducePhase()");
       }
-      if (mapReduceCapable.setUseIntermediateSharedCache(useIntermediateSharedCache)) {
-         log.info(mapReduceCapable.getClass().getName() + " supports MapReduceCapable.setUseIntermediateSharedCache()");
+      if (mapReducer.setUseIntermediateSharedCache(useIntermediateSharedCache)) {
+         log.info(mapReducer.getClass().getName() + " supports MapReducer.setUseIntermediateSharedCache()");
       } else {
-         log.info(mapReduceCapable.getClass().getName()
-               + " does not support MapReduceCapable.setUseIntermediateSharedCache()");
+         log.info(mapReducer.getClass().getName()
+               + " does not support MapReducer.setUseIntermediateSharedCache()");
       }
-      if (mapReduceCapable.setTimeout(timeout, unit)) {
-         log.info(mapReduceCapable.getClass().getName() + " supports MapReduceCapable.setTimeout()");
+      if (mapReducer.setTimeout(timeout, unit)) {
+         log.info(mapReducer.getClass().getName() + " supports MapReducer.setTimeout()");
       } else {
-         log.info(mapReduceCapable.getClass().getName() + " does not support MapReduceCapable.setTimeout()");
+         log.info(mapReducer.getClass().getName() + " does not support MapReducer.setTimeout()");
       }
-      if (mapReduceCapable.setCombiner(combinerFqn)) {
-         log.info(mapReduceCapable.getClass().getName() + " supports MapReduceCapable.setCombiner()");
+      if (mapReducer.setCombiner(combinerFqn)) {
+         log.info(mapReducer.getClass().getName() + " supports MapReducer.setCombiner()");
       } else {
-         log.info(mapReduceCapable.getClass().getName() + " does not support MapReduceCapable.setCombiner()");
+         log.info(mapReducer.getClass().getName() + " does not support MapReducer.setCombiner()");
       }
       try {
-         String payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
-               + ", noDuration, noResultSize";
-         result.setPayload(payload);
+         result.setPayload(getPayload("noDuration", "noResultSize"));
          if (collatorFqn != null) {
             start = System.nanoTime();
-            payloadObject = mapReduceCapable.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn, collatorFqn);
+            payloadObject = mapReducer.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn, collatorFqn);
             durationNanos = System.nanoTime() - start;
             log.info("MapReduce task with Collator completed in "
                   + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
-            payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize() + ", "
-                  + durationNanos + ", -1";
-            result.setPayload(payload);
+            result.setPayload(getPayload(String.valueOf(durationNanos), "-1"));
             if (printResult) {
                log.info("MapReduce result: " + payloadObject.toString());
             }
             if (storeResultInCache) {
                try {
-                  cacheWrapper.put(null, MAPREDUCE_RESULT_KEY, payloadObject);
+                  basicOperations.getCache(null).put(MAPREDUCE_RESULT_KEY, payloadObject);
                } catch (Exception e) {
                   log.error("Failed to put collated result object into cache", e);
                }
             }
          } else {
             start = System.nanoTime();
-            payloadMap = mapReduceCapable.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn);
+            payloadMap = mapReducer.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn);
             durationNanos = System.nanoTime() - start;
 
             if (payloadMap != null) {
                log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
                log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
-               payload = slaveState.getSlaveIndex() + ", " + cacheWrapper.getNumMembers() + ", " + cacheWrapper.getLocalSize()
-                     + ", " + durationNanos + ", " + payloadMap.keySet().size();
-               result.setPayload(payload);
+               result.setPayload(getPayload(String.valueOf(durationNanos), String.valueOf(payloadMap.keySet().size())));
                if (printResult) {
                   log.info("MapReduce result:");
                   for (Map.Entry<KOut, VOut> entry : payloadMap.entrySet()) {
@@ -246,7 +242,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                }
                if (storeResultInCache) {
                   try {
-                     cacheWrapper.put(null, MAPREDUCE_RESULT_KEY, payloadMap);
+                     basicOperations.getCache(null).put(MAPREDUCE_RESULT_KEY, payloadMap);
                   } catch (Exception e) {
                      log.error("Failed to put result map into cache", e);
                   }
@@ -262,9 +258,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          result.setRemoteException(e1);
          log.error("executeMapReduceTask() returned an exception", e1);
       }
-      log.info(cacheWrapper.getNumMembers() + " nodes were used. " + cacheWrapper.getLocalSize()
-            + " entries on this node");
-      log.info(cacheWrapper.getInfo());
+      log.info(clustered.getClusteredNodes() + " nodes were used. " + cacheInformation.getCache(null).getLocalSize() + " entries on this node");
       log.info("--------------------");
 
       return result;

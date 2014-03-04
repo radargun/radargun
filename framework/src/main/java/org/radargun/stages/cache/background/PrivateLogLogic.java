@@ -1,0 +1,172 @@
+package org.radargun.stages.cache.background;
+
+import org.radargun.stages.helpers.Range;
+import org.radargun.stats.Operation;
+
+/**
+* @author Radim Vansa &lt;rvansa@redhat.com&gt;
+*/
+class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
+
+   private final int keyRangeStart;
+   private final int keyRangeEnd;
+
+   PrivateLogLogic(BackgroundOpsManager manager, long seed, Range range) {
+      super(manager, seed);
+      this.keyRangeStart = range.getStart();
+      this.keyRangeEnd = range.getEnd();
+   }
+
+   @Override
+   protected long nextKeyId() {
+      return keySelectorRandom.nextInt(keyRangeEnd - keyRangeStart) + keyRangeStart;
+   }
+
+   @Override
+   protected boolean invokeLogic(long keyId) throws Exception {
+      Operation operation = manager.getOperation(operationTypeRandom);
+
+      // first we have to get the value
+      PrivateLogValue prevValue = checkedGetValue(keyId);
+      // now for modify operations, execute it
+      if (prevValue == null || operation == Operation.PUT) {
+         PrivateLogValue nextValue;
+         PrivateLogValue backupValue = null;
+         if (prevValue != null) {
+            nextValue = getNextValue(prevValue);
+         } else {
+            // the value may have been removed, look for backup
+             backupValue = checkedGetValue(~keyId);
+            if (backupValue == null) {
+               nextValue = new PrivateLogValue(stressor.id, operationId);
+            } else {
+               nextValue = getNextValue(backupValue);
+            }
+         }
+         if (nextValue == null) {
+            return false;
+         }
+         checkedPutValue(keyId, nextValue);
+         if (backupValue != null) {
+            delayedRemoveValue(~keyId, backupValue);
+         }
+      } else if (operation == Operation.REMOVE) {
+         PrivateLogValue nextValue = getNextValue(prevValue);
+         if (nextValue == null) {
+            return false;
+         }
+         checkedPutValue(~keyId, nextValue);
+         delayedRemoveValue(keyId, prevValue);
+      } else {
+         // especially GETs are not allowed here, because these would break the deterministic order
+         // - each operationId must be written somewhere
+         throw new UnsupportedOperationException("Only PUT and REMOVE operations are allowed for this logic.");
+      }
+      return true;
+   }
+
+   private PrivateLogValue getNextValue(PrivateLogValue prevValue) throws InterruptedException, BreakTxRequest {
+      if (prevValue.size() >= manager.getLogValueMaxSize()) {
+         int checkedValues;
+         // TODO some limit after which the stressor will terminate
+         for (;;) {
+            if (stressor.isInterrupted() || stressor.isTerminated()) {
+               return null;
+            }
+            long minReadOperationId;
+            try {
+               minReadOperationId = getCheckedOperation(stressor.id, prevValue.getOperationId(0));
+            } catch (StressorException e) {
+               return null;
+            }
+            if (prevValue.getOperationId(0) <= minReadOperationId) {
+               for (checkedValues = 1; checkedValues < prevValue.size() && prevValue.getOperationId(checkedValues) <= minReadOperationId; ++checkedValues) {
+                  log.trace(String.format("Discarding operation %d (minReadOperationId is %d)", prevValue.getOperationId(checkedValues), minReadOperationId));
+               }
+               break;
+            } else {
+               try {
+                  Thread.sleep(100);
+               } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                  return null;
+               }
+            }
+         }
+         return prevValue.shift(checkedValues, operationId);
+      } else {
+         return prevValue.with(operationId);
+      }
+   }
+
+   private PrivateLogValue checkedGetValue(long keyId) throws Exception {
+      DelayedRemove removed = delayedRemoves.get(keyId);
+      if (removed != null) {
+         return null;
+      }
+      Object prevValue;
+      long startTime = System.nanoTime();
+      try {
+         prevValue = basicCache.get(keyGenerator.generateKey(keyId));
+      } catch (Exception e) {
+         stressor.stats.registerError(System.nanoTime() - startTime, 0, Operation.GET);
+         throw e;
+      }
+      long endTime = System.nanoTime();
+      if (prevValue != null && !(prevValue instanceof PrivateLogValue)) {
+         stressor.stats.registerError(endTime - startTime, 0, Operation.GET);
+         log.error("Value is not an instance of PrivateLogValue: " + prevValue);
+         throw new IllegalStateException();
+      } else {
+         stressor.stats.registerRequest(endTime - startTime, 0, prevValue == null ? Operation.GET_NULL : Operation.GET);
+         return (PrivateLogValue) prevValue;
+      }
+   }
+
+   @Override
+   protected boolean checkedRemoveValue(long keyId, PrivateLogValue expectedValue) throws Exception {
+      Object prevValue;
+      long startTime = System.nanoTime();
+      try {
+         prevValue = basicCache.remove(keyGenerator.generateKey(keyId));
+      } catch (Exception e) {
+         stressor.stats.registerError(System.nanoTime() - startTime, 0, Operation.REMOVE);
+         throw e;
+      }
+      long endTime = System.nanoTime();
+      boolean successful = false;
+      if (prevValue != null) {
+         if (!(prevValue instanceof PrivateLogValue)) {
+            log.error("Value is not an instance of PrivateLogValue: " + prevValue);
+         } else if (!prevValue.equals(expectedValue)) {
+            log.error("Value is not the expected one: expected=" + expectedValue + ", found=" + prevValue);
+         } else {
+            successful = true;
+         }
+      } else if (expectedValue == null) {
+         successful = true;
+      } else {
+         log.error("Expected to remove " + expectedValue + " but found " + prevValue);
+      }
+      if (successful) {
+         stressor.stats.registerRequest(endTime - startTime, 0, Operation.REMOVE);
+         return true;
+      } else {
+         stressor.stats.registerError(endTime - startTime, 0, Operation.REMOVE);
+         throw new IllegalStateException();
+      }
+   }
+
+   private void checkedPutValue(long keyId, PrivateLogValue value) throws Exception {
+      long startTime = System.nanoTime();
+      try {
+         basicCache.put(keyGenerator.generateKey(keyId), value);
+      } catch (Exception e) {
+         stressor.stats.registerError(System.nanoTime() - startTime, 0, Operation.PUT);
+         throw e;
+      }
+      long endTime = System.nanoTime();
+      stressor.stats.registerRequest(endTime - startTime, 0, Operation.PUT);
+   }
+
+}

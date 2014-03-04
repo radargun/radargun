@@ -9,21 +9,27 @@ import java.util.Map;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
+import org.radargun.config.InitHelper;
 import org.radargun.config.Scenario;
 import org.radargun.config.StageHelper;
-import org.radargun.stages.lifecycle.AbstractStartStage;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
+import org.radargun.traits.TraitHelper;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class LocalSlaveConnection implements SlaveConnection {
+   private static final Log log = LogFactory.getLog(LocalSlaveConnection.class);
 
    private SlaveState slaveState = new SlaveState();
    private Scenario scenario;
    private Configuration configuration;
    private Map<String, String> extras = new HashMap<String, String>();
+   private Object service;
+   private Map<Class<?>, Object> traits;
 
    public LocalSlaveConnection() {
       extras.put(Properties.PROPERTY_CLUSTER_SIZE, "1");
@@ -34,6 +40,7 @@ public class LocalSlaveConnection implements SlaveConnection {
       slaveState.setClusterSize(1);
       slaveState.setMaxClusterSize(1);
       slaveState.setSlaveIndex(0);
+      slaveState.setIndexInGroup(0);
       slaveState.setLocalAddress(InetAddress.getLoopbackAddress());
    }
 
@@ -56,9 +63,14 @@ public class LocalSlaveConnection implements SlaveConnection {
       this.configuration = configuration;
       extras.put(Properties.PROPERTY_CONFIG_NAME, configuration.name);
       String plugin = setups.get(0).plugin;
+      String service = setups.get(0).service;
       extras.put(Properties.PROPERTY_PLUGIN_NAME, plugin);
       slaveState.setPlugin(plugin);
+      slaveState.setService(service);
       slaveState.setConfigName(configuration.name);
+      this.service = ServiceHelper.createService(slaveState.getClassLoadHelper().getLoader(), plugin, service, configuration.name, setups.get(0).file, setups.get(0).getProperties());
+      this.traits = TraitHelper.retrieve(this.service);
+      slaveState.setTraits(traits);
    }
 
    @Override
@@ -72,13 +84,18 @@ public class LocalSlaveConnection implements SlaveConnection {
          return Collections.singletonList((DistStageAck) new DefaultDistStageAck(0, slaveState.getLocalAddress()));
       }
       Stage stage = scenario.getStage(stageId, extras);
+      TraitHelper.InjectResult result = TraitHelper.inject(stage, traits);
+      if (result == TraitHelper.InjectResult.FAILURE) {
+         return Collections.singletonList((DistStageAck) new DefaultDistStageAck(0, InetAddress.getLoopbackAddress())
+               .error("The stage missed some mandatory traits.", null));
+      } else if (result == TraitHelper.InjectResult.SKIP) {
+         log.info("Stage " + StageHelper.getStageName(stage.getClass()) + " was skipped as it was missing some traits.");
+      }
+
+      InitHelper.init(stage);
       if (stage instanceof DistStage) {
          DistStage distStage = (DistStage) stage;
          distStage.initOnSlave(slaveState);
-         if (stage instanceof AbstractStartStage) {
-            List<Configuration.Setup> setups = configuration.getSetups();
-            ((AbstractStartStage) stage).setup(setups.get(0).service, setups.get(0).file, setups.get(0).getProperties());
-         }
          DistStageAck ack = distStage.executeOnSlave();
          return Collections.singletonList(ack);
       } else {

@@ -16,7 +16,7 @@ import org.radargun.stages.helpers.StartStopTime;
 /**
  * 
  * Will simulate a node kill on specified nodes. If the used CacheWrapper doesn't implement killable
- * it will only do tearDown()
+ * it will only do graceful()
  * 
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -26,8 +26,8 @@ public class KillStage extends AbstractDistStage {
 
    private static final String KILL_DELAY_THREAD = "_KILL_DELAY_THREAD_";
 
-   @Property(doc = "If set to true, the nodes should be shutdown. Default is false = simulate node crash.")
-   private boolean tearDown = false;
+   @Property(doc = "If set to true, the nodes should be shutdown gracefully. Default is false = simulate node crash.")
+   private boolean graceful = false;
 
    @Property(doc = "If set to true the benchmark will not wait until the node is killed. Default is false.")
    private boolean async = false;
@@ -78,13 +78,13 @@ public class KillStage extends AbstractDistStage {
                      Thread.sleep(delayExecution);
                   } catch (InterruptedException e) {                    
                   }
-                  KillHelper.kill(slaveState, tearDown, async, null);
+                  KillHelper.kill(slaveState, graceful, async, null);
                }
             };
             slaveState.put(KILL_DELAY_THREAD, t);
             t.start();
          } else {
-            KillHelper.kill(slaveState, tearDown, async, ack);
+            KillHelper.kill(slaveState, graceful, async, ack);
          }
       } else {
          log.trace("Ignoring kill request, not targeted for this slave");

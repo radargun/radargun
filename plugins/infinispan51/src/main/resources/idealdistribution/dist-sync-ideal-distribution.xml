@@ -18,7 +18,7 @@
       <clustering mode="d">
          <sync replTimeout="60000"/>
          <l1 enabled="false" />
-         <hash numOwners="2" rehashEnabled="false" rehashRpcTimeout="60000" class="org.radargun.cachewrappers.EvenSpreadingConsistentHash"/>
+         <hash numOwners="2" rehashEnabled="false" rehashRpcTimeout="60000" class="org.radargun.service.EvenSpreadingConsistentHash"/>
       </clustering>
 
    </default>

@@ -28,9 +28,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.radargun.CacheWrapper;
+import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Queryable;
 
 /**
  * Stage for inserting data into indexed cache for processing.
@@ -53,16 +55,26 @@ public class DataForQueryStage extends StressTestStage {
    @Property(doc = "Specifies the full path of the property file which contains different words for querying. No default value is provided. This property is mandatory.", optional = false)
    private String dataPath = null;
 
+   @InjectTrait
+   private Queryable queryable;
+
    private transient List<String> wordsFromFile = null;
    private transient Map<String, Integer> matchingWords = new Hashtable<String, Integer>();
 
-   @Override
-   protected void init(CacheWrapper wrapper) {
-      super.init(wrapper);
+   @Init
+   public void init() {
       wordsFromFile = readDataFromFile();
    }
 
    @Override
+   protected Stressor createStressor(int threadIndex) {
+      Stressor stressor = super.createStressor(threadIndex);
+      stressor.setQueryable(queryable);
+      return stressor;
+   }
+
+   @Override
+   // TODO: replace this with custom value generator
    public Object generateValue(Object key, int maxValueSize) {
       char[] letters = "abcdefghijklmnopqrstuvw 1234567890".toCharArray();
       Random rand = ThreadLocalRandom.current();

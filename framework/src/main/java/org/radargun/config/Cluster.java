@@ -54,6 +54,18 @@ public class Cluster implements Serializable {
       throw new IllegalStateException("Slave index is " + slaveIndex + ", cluster is " + toString());
    }
 
+   public int getIndexInGroup(int slaveIndex) {
+      int index = slaveIndex;
+      for (Group g : groups) {
+         if (index < g.size) {
+            return index;
+         }
+         index -= g.size;
+      }
+      throw new IllegalStateException("Slave index is " + slaveIndex + ", cluster is " + toString());
+   }
+
+
    @Override
    public String toString() {
       StringBuilder sb = new StringBuilder("Cluster[");

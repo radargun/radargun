@@ -6,12 +6,13 @@ import java.util.Map;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
+import org.radargun.config.InitHelper;
 import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.stages.lifecycle.AbstractStartStage;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
+import org.radargun.traits.TraitHelper;
 
 /**
  * Slave being coordinated by a single {@link Master} object in order to run benchmarks.
@@ -47,6 +48,7 @@ public class Slave {
       state.setLocalAddress(address);
       while (true) {
          Object object = connection.receiveObject();
+         log.trace("Received " + object);
          if (object == null) {
             log.info("Master shutdown!");
             break;
@@ -60,24 +62,38 @@ public class Slave {
             int stageId;
             Map<String, String> extras = getCurrentExtras(configuration, cluster);
             Cluster.Group group = cluster.getGroup(state.getSlaveIndex());
+            Configuration.Setup setup = configuration.getSetup(group.name);
             state.setClusterSize(cluster.getSize());
             state.setGroupSize(group.size);
-            state.setPlugin(configuration.getSetup(group.name).plugin);
-            Configuration.Setup setup = configuration.getSetup(group.name);
+            state.setGroupCount(configuration.getSetups().size());
+            state.setIndexInGroup(cluster.getIndexInGroup(slaveIndex));
+            state.setPlugin(setup.plugin);
+            state.setService(setup.service);
+            Object service = ServiceHelper.createService(state.getClassLoadHelper().getLoader(), setup.plugin, setup.service, configuration.name, setup.file, setup.getProperties());
+            Map<Class<?>, Object> traits = TraitHelper.retrieve(service);
+            state.setTraits(traits);
             while ((stageId = connection.receiveNextStageId()) >= 0) {
+               log.trace("Received stage ID " + stageId);
                DistStage stage = (DistStage) scenario.getStage(stageId, extras);
-               stage.initOnSlave(state);
-               if (stage instanceof AbstractStartStage) {
-                  ((AbstractStartStage) stage).setup(setup.service, setup.file, setup.getProperties());
-               }
+               TraitHelper.InjectResult result = TraitHelper.inject(stage, traits);
                DistStageAck response;
-               try {
-                  long start =System.currentTimeMillis();
-                  response = stage.executeOnSlave();
-                  response.setDuration(System.currentTimeMillis() - start);
-               } catch (Exception e) {
-                  log.error("Stage execution has failed", e);
-                  response = new DefaultDistStageAck(state.getSlaveIndex(), state.getLocalAddress()).error("Stage execution has failed", e);
+               if (result == TraitHelper.InjectResult.FAILURE) {
+                  response = new DefaultDistStageAck(slaveIndex, state.getLocalAddress())
+                        .error("The stage was not executed because it missed some mandatory traits.", null);
+               } else if (result == TraitHelper.InjectResult.SKIP) {
+                  response  = new DefaultDistStageAck(slaveIndex, state.getLocalAddress());
+                  log.info("Stage was skipped because it was missing some traits");
+               } else {
+                  InitHelper.init(stage);
+                  stage.initOnSlave(state);
+                  try {
+                     long start =System.currentTimeMillis();
+                     response = stage.executeOnSlave();
+                     response.setDuration(System.currentTimeMillis() - start);
+                  } catch (Exception e) {
+                     log.error("Stage execution has failed", e);
+                     response = new DefaultDistStageAck(state.getSlaveIndex(), state.getLocalAddress()).error("Stage execution has failed", e);
+                  }
                }
                connection.sendReponse(response);
             }

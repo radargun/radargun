@@ -3,14 +3,13 @@ package org.radargun.stages.topology;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.features.TopologyAware;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.TopologyHistory;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -60,25 +59,17 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
    @Property(doc = "The maximum number of slaves that participated in this event. Default is indefinite.")
    private int maxMembers = Integer.MAX_VALUE;
 
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private TopologyHistory topologyHistory;
+
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
-      CacheWrapper wrapper = slaveState.getCacheWrapper();
-      if (wrapper == null) {
-         return ack;
+      if (!isServiceRunnning()) {
+         return successfulResponse();
       }
-      if (!(wrapper instanceof TopologyAware)) {
-         String message = "This wrapper is not topology aware! Cannot use this stage.";
-         log.error(message);
-         ack.setErrorMessage(message);
-         ack.setError(true);
-         return ack;
-      }
-      TopologyAware taWrapper = (TopologyAware) wrapper;
-
-      List<TopologyAware.Event> history = getEventHistory(taWrapper);
+      List<TopologyHistory.Event> history = getEventHistory(topologyHistory);
       if (wait) {
-         TopologyAware.Event setEvent = (TopologyAware.Event) slaveState.get(type.getKey());
+         TopologyHistory.Event setEvent = (TopologyHistory.Event) slaveState.get(type.getKey());
          long startWaiting = System.currentTimeMillis();
 
          wait_loop:
@@ -87,7 +78,7 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
             if (history.size() > 0) {
                if (condition == Condition.END) {
                   for (int i = history.size() - 1; i >= 0; --i) {
-                     TopologyAware.Event e = history.get(i);
+                     TopologyHistory.Event e = history.get(i);
                      if (setEvent != null && setEvent.getEnded() != null && !e.getStarted().after(setEvent.getStarted())) break;
                      if (e.getEnded() != null && e.getMembersAtEnd() >= minMembers && e.getMembersAtEnd() <= maxMembers) {
                         break wait_loop;
@@ -95,7 +86,7 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
                   }
                } else if (condition == Condition.START) {
                   for (int i = history.size() - 1; i >= 0; --i) {
-                     TopologyAware.Event e = history.get(i);
+                     TopologyHistory.Event e = history.get(i);
                      if (setEvent != null && !e.getStarted().after(setEvent.getStarted())) break;
                      if (e.getMembersAtEnd() >= minMembers && e.getMembersAtEnd() <= maxMembers) {
                         break wait_loop;
@@ -108,34 +99,29 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
             } catch (InterruptedException e) {
                String message = "Waiting was interrupted";
                log.error(message, e);
-               ack.setErrorMessage(message);
-               ack.setError(true);
-               ack.setRemoteException(e);
-               return ack;
+               return errorResponse(message, e);
             }
-            history = getEventHistory(taWrapper);
+            history = getEventHistory(topologyHistory);
          }
          /* end of wait_loop */
          if (timeout > 0 && System.currentTimeMillis() > startWaiting + timeout) {
             String message = "Waiting has timed out";
             log.error(message);
-            ack.setError(true);
-            ack.setErrorMessage(message);
-            return ack;
+            return errorResponse(message, null);
          }
       }
       if (set) {
          slaveState.put(type.getKey(), history.isEmpty() ? null : history.get(history.size() - 1));
       }
-      return ack;
+      return successfulResponse();
    }
 
-   private List<TopologyAware.Event> getEventHistory(TopologyAware wrapper) {
+   private List<TopologyHistory.Event> getEventHistory(TopologyHistory wrapper) {
       switch (type) {
          case REHASH:
-            return new ArrayList<TopologyAware.Event>(wrapper.getRehashHistory());
+            return new ArrayList<TopologyHistory.Event>(wrapper.getRehashHistory());
          case TOPOLOGY_UPDATE:
-            return new ArrayList<TopologyAware.Event>(wrapper.getTopologyChangeHistory());
+            return new ArrayList<TopologyHistory.Event>(wrapper.getTopologyChangeHistory());
       }
       throw new IllegalStateException();
    }

@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Transactional;
 
 /**
  * Stage for testing guaranties of isolation levels.
@@ -42,6 +44,12 @@ public class IsolationLevelCheckStage extends CheckStage {
    private volatile boolean finished;
    private volatile boolean valueChangeDetected = false;
 
+   @InjectTrait
+   private BasicOperations basicOperations;
+
+   @InjectTrait
+   private Transactional transactional;
+
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
@@ -50,9 +58,9 @@ public class IsolationLevelCheckStage extends CheckStage {
       } else if (!expectedLevel.equalsIgnoreCase(REPEATABLE_READ) && !expectedLevel.equalsIgnoreCase(READ_COMMITTED)) {
          return exception(ack, "Expected level should be one of " + READ_COMMITTED + " and " + REPEATABLE_READ, null);
       }
-      CacheWrapper wrapper = slaveState.getCacheWrapper();
+      BasicOperations.Cache<Object, Object> cache = basicOperations.getCache(null);
       try {
-         wrapper.put(null, ISOLATION_CHECK_KEY, new Long(0));
+         cache.put(ISOLATION_CHECK_KEY, new Long(0));
       } catch (Exception e) {
          exception(ack, "Failed to insert first value", e);
          return ack;
@@ -105,18 +113,19 @@ public class IsolationLevelCheckStage extends CheckStage {
    private class WriterThread extends ClientThread {
       @Override
       public void run() {
-         CacheWrapper wrapper = slaveState.getCacheWrapper();
+         BasicOperations.Cache cache = basicOperations.getCache(null);
+         Transactional.Resource txCache = transactional.getResource(null);
          Random rand = new Random();
          while (!finished) {
             try {
                log.trace("Starting transaction");
-               wrapper.startTransaction();
-               wrapper.put(null, ISOLATION_CHECK_KEY, -1);
+               txCache.startTransaction();
+               cache.put(ISOLATION_CHECK_KEY, -1);
                Thread.sleep(10);
                long value = rand.nextInt(1000);
-               wrapper.put(null, ISOLATION_CHECK_KEY, value);
+               cache.put(ISOLATION_CHECK_KEY, value);
                log.trace("Inserted value " + value);
-               wrapper.endTransaction(true);
+               txCache.endTransaction(true);
                log.trace("Ended transaction");
             } catch (Exception e) {
                exception = e;
@@ -129,18 +138,19 @@ public class IsolationLevelCheckStage extends CheckStage {
    private class ReaderThread extends ClientThread {
       @Override
       public void run() {
-         CacheWrapper wrapper = slaveState.getCacheWrapper();
+         BasicOperations.Cache cache = basicOperations.getCache(null);
+         Transactional.Resource txCache = transactional.getResource(null);
          while (!finished) {
             log.trace("Starting transaction");
-            wrapper.startTransaction();
+            txCache.startTransaction();
             Object lastValue = null;
             for (int i = 0; i < transactionSize; ++i) {
                try {
-                  Object value = wrapper.get(null, ISOLATION_CHECK_KEY);
+                  Object value = cache.get(ISOLATION_CHECK_KEY);
                   log.trace("Read value " + value + ", previous value is " + lastValue);
                   if (!(value instanceof Long) || ((Long) value) < 0) {
                      exception = new IllegalStateException("Unexpected value " + value);
-                     wrapper.endTransaction(false);
+                     txCache.endTransaction(false);
                      return;
                   }
                   if (lastValue != null && !lastValue.equals(value)) {
@@ -154,7 +164,7 @@ public class IsolationLevelCheckStage extends CheckStage {
                   return;
                }
             }
-            wrapper.endTransaction(true);
+            txCache.endTransaction(true);
             log.trace("Ended transaction");
          }
       }

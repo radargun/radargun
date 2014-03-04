@@ -3,11 +3,15 @@ package org.radargun.stages.cache.stresstest;
 import java.util.Map;
 import java.util.Set;
 
-import org.radargun.features.Queryable;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.BulkOperations;
+import org.radargun.traits.ConditionalOperations;
+import org.radargun.traits.Queryable;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stats.Operation;
 import org.radargun.stats.Statistics;
+import org.radargun.traits.Transactional;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -18,7 +22,6 @@ class Stressor extends Thread {
    private int threadIndex;
    private int nodeIndex;
    private int numNodes;
-   private final String bucketId;
    private int txRemainingOperations = 0;
    private long transactionDuration = 0;
    private Statistics stats;
@@ -27,6 +30,12 @@ class Stressor extends Thread {
    private StressTestStage stage;
    private PhaseSynchronizer synchronizer;
    private Completion completion;
+   private BasicOperations.Cache basicCache;
+   private ConditionalOperations.Cache conditionalCache;
+   private BulkOperations.Cache bulkNativeCache;
+   private BulkOperations.Cache bulkAsyncCache;
+   private Transactional.Resource txCache;
+   private Queryable queryable;
 
    public Stressor(StressTestStage stage, OperationLogic logic, int threadIndex, int nodeIndex, int numNodes) {
       super("Stressor-" + threadIndex);
@@ -35,10 +44,23 @@ class Stressor extends Thread {
       this.nodeIndex = nodeIndex;
       this.numNodes = numNodes;
       this.logic = logic;
-      this.bucketId = stage.bucketPolicy.getBucketName(threadIndex);
-      useTransactions = stage.isUseTransactions();
       synchronizer = stage.getSynchronizer();
       completion = stage.getCompletion();
+
+      String cacheName = stage.bucketPolicy.getBucketName(threadIndex);
+      basicCache = stage.basicOperations == null ? null : stage.basicOperations.getCache(cacheName);
+      conditionalCache = stage.conditionalOperations == null ? null : stage.conditionalOperations.getCache(cacheName);
+      if (stage.bulkOperations != null) {
+         bulkNativeCache = stage.bulkOperations.getCache(cacheName, false);
+         bulkAsyncCache = stage.bulkOperations.getCache(cacheName, true);
+      }
+      useTransactions = stage.useTransactions != null ? stage.useTransactions :
+            stage.transactional == null ? false : stage.transactional.isTransactional(cacheName);
+      txCache = useTransactions ? stage.transactional.getResource(cacheName) : txCache;
+   }
+
+   public void setQueryable(Queryable queryable) {
+      this.queryable = queryable;
    }
 
    @Override
@@ -51,7 +73,7 @@ class Stressor extends Thread {
                break;
             }
             if (!stage.isTerminated()) {
-               logic.init(bucketId, threadIndex, nodeIndex, numNodes);
+               logic.init(threadIndex, nodeIndex, numNodes);
             }
             stats = stage.createStatistics();
             synchronizer.slavePhaseEnd();
@@ -112,7 +134,7 @@ class Stressor extends Thread {
       }
 
       Object result = null;
-      boolean successfull = true;
+      boolean successful = true;
       Exception exception = null;
       long start = System.nanoTime();
       long operationDuration;
@@ -120,49 +142,55 @@ class Stressor extends Thread {
          switch (operation) {
             case GET:
             case GET_NULL:
-               result = stage.cacheWrapper.get(bucketId, keysAndValues[0]);
+               result = basicCache.get(keysAndValues[0]);
                operation = (result != null ? Operation.GET : Operation.GET_NULL);
                break;
             case PUT:
-               stage.cacheWrapper.put(bucketId, keysAndValues[0], keysAndValues[1]);
+               basicCache.put(keysAndValues[0], keysAndValues[1]);
                break;
             case QUERY:
-               result = ((Queryable) stage.cacheWrapper).executeQuery((Map<String, Object>) keysAndValues[0]);
+               result = queryable.executeQuery((Map<String, Object>) keysAndValues[0]);
                break;
             case REMOVE:
-               result = stage.cacheWrapper.remove(bucketId, keysAndValues[0]);
+               result = basicCache.remove(keysAndValues[0]);
                break;
             case REMOVE_VALID:
-               successfull = stage.atomicCacheWrapper.remove(bucketId, keysAndValues[0], keysAndValues[1]);
+               successful = conditionalCache.remove(keysAndValues[0], keysAndValues[1]);
                break;
             case REMOVE_INVALID:
-               successfull = !stage.atomicCacheWrapper.remove(bucketId, keysAndValues[0], keysAndValues[1]);
+               successful = !conditionalCache.remove(keysAndValues[0], keysAndValues[1]);
                break;
             case PUT_IF_ABSENT_IS_ABSENT:
-               result = stage.atomicCacheWrapper.putIfAbsent(bucketId, keysAndValues[0], keysAndValues[1]);
-               successfull = result == null;
+               result = conditionalCache.putIfAbsent(keysAndValues[0], keysAndValues[1]);
+               successful = result == null;
                break;
             case PUT_IF_ABSENT_NOT_ABSENT:
-               result = stage.atomicCacheWrapper.putIfAbsent(bucketId, keysAndValues[0], keysAndValues[1]);
-               successfull = keysAndValues[2].equals(result);
+               result = conditionalCache.putIfAbsent(keysAndValues[0], keysAndValues[1]);
+               successful = keysAndValues[2].equals(result);
                break;
             case REPLACE_VALID:
-               successfull = stage.atomicCacheWrapper.replace(bucketId, keysAndValues[0], keysAndValues[1], keysAndValues[2]);
+               successful = conditionalCache.replace(keysAndValues[0], keysAndValues[1], keysAndValues[2]);
                break;
             case REPLACE_INVALID:
-               successfull = !stage.atomicCacheWrapper.replace(bucketId, keysAndValues[0], keysAndValues[1], keysAndValues[2]);
+               successful = !conditionalCache.replace(keysAndValues[0], keysAndValues[1], keysAndValues[2]);
                break;
             case GET_ALL:
+               result = bulkNativeCache.getAll((Set<Object>) keysAndValues[0]);
+               break;
             case GET_ALL_VIA_ASYNC:
-               result = stage.bulkCacheWrapper.getAll(bucketId, (Set<Object>) keysAndValues[0], operation == Operation.GET_ALL_VIA_ASYNC);
+               result = bulkAsyncCache.getAll((Set<Object>) keysAndValues[0]);
                break;
             case PUT_ALL:
+               bulkNativeCache.putAll((Map<Object, Object>) keysAndValues[0]);
+               break;
             case PUT_ALL_VIA_ASYNC:
-               stage.bulkCacheWrapper.putAll(bucketId, (Map<Object, Object>) keysAndValues[0], operation == Operation.PUT_ALL_VIA_ASYNC);
+               bulkAsyncCache.putAll((Map<Object, Object>) keysAndValues[0]);
                break;
             case REMOVE_ALL:
+               bulkNativeCache.removeAll((Set<Object>) keysAndValues[0]);
+               break;
             case REMOVE_ALL_VIA_ASYNC:
-               result = stage.bulkCacheWrapper.removeAll(bucketId, (Set<Object>) keysAndValues[0], operation == Operation.REMOVE_ALL_VIA_ASYNC);
+               bulkAsyncCache.removeAll((Set<Object>) keysAndValues[0]);
                break;
             default:
                throw new IllegalArgumentException();
@@ -172,7 +200,7 @@ class Stressor extends Thread {
       } catch (Exception e) {
          operationDuration = System.nanoTime() - start;
          log.warn("Error in request", e);
-         successfull = false;
+         successful = false;
          txRemainingOperations = 0;
          exception = e;
       }
@@ -188,7 +216,7 @@ class Stressor extends Thread {
             stats.registerError(transactionDuration + endTxTime, 0, Operation.TRANSACTION);
          }
       }
-      if (successfull) {
+      if (successful) {
          stats.registerRequest(operationDuration, startTxTime + endTxTime, operation);
       } else {
          stats.registerError(operationDuration, startTxTime + endTxTime, operation);
@@ -223,7 +251,7 @@ class Stressor extends Thread {
    private long startTransaction() throws TransactionException {
       long start = System.nanoTime();
       try {
-         stage.cacheWrapper.startTransaction();
+         txCache.startTransaction();
       } catch (Exception e) {
          long time = System.nanoTime() - start;
          log.error("Failed to start transaction", e);
@@ -235,7 +263,7 @@ class Stressor extends Thread {
    private long endTransaction() throws TransactionException {
       long start = System.nanoTime();
       try {
-         stage.cacheWrapper.endTransaction(stage.commitTransactions);
+         txCache.endTransaction(stage.commitTransactions);
       } catch (Exception e) {
          long time = System.nanoTime() - start;
          log.error("Failed to end transaction", e);

@@ -18,24 +18,16 @@
  */
 package org.radargun.stages.helpers;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.radargun.CacheWrapper;
-import org.radargun.config.DefaultConverter;
-import org.radargun.config.PropertyHelper;
-import org.radargun.features.Partitionable;
-import org.radargun.features.XSReplicating;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.DefaultDistStageAck;
-import org.radargun.state.SlaveState;
 import org.radargun.stages.cache.background.BackgroundOpsManager;
-import org.radargun.utils.Utils;
+import org.radargun.state.SlaveState;
+import org.radargun.traits.Clustered;
+import org.radargun.traits.Lifecycle;
+import org.radargun.traits.Partitionable;
 
 public class StartHelper {
 
@@ -45,48 +37,27 @@ public class StartHelper {
    
    private static final Log log = LogFactory.getLog(StartHelper.class);
    
-   public static class ClusterValidation {
-      Integer expectedSlaves;
-      int activeSlaveCount;
-      
-      public ClusterValidation(Integer expectedSlaves, int activeSlaveCount) {
-         super();
-         this.expectedSlaves = expectedSlaves;
-         this.activeSlaveCount = activeSlaveCount;
-      }
-   }
-   
-   public static void start(SlaveState slaveState, String service, Map<String, String> configProperties,
-                            ClusterValidation clusterValidation, long clusterFormationTimeout,
+   public static void start(SlaveState slaveState, boolean validate, Integer expectedSlaves, long clusterFormationTimeout,
                             Set<Integer> reachable, DefaultDistStageAck ack) {
-      CacheWrapper control = null;
+      Lifecycle lifecycle = slaveState.getTrait(Lifecycle.class);
+      Clustered clustered = slaveState.getTrait(Clustered.class);
+      Partitionable partitionable = slaveState.getTrait(Partitionable.class);
       try {
-         String controlClass = Utils.getServiceProperty(slaveState.getPlugin(), "service." + service);
-         control = (CacheWrapper) slaveState.getClassLoadHelper().createInstance(controlClass);
-         PropertyHelper.setProperties(control, configProperties, true, true);
-         if (control instanceof Partitionable) {
-            ((Partitionable) control).setStartWithReachable(slaveState.getSlaveIndex(), reachable);
+         if (partitionable != null) {
+            partitionable.setStartWithReachable(slaveState.getSlaveIndex(), reachable);
          }
-         slaveState.setCacheWrapper(control);
+
          long startingTime = System.nanoTime();
-         control.setUp(false, slaveState.getSlaveIndex());
+         lifecycle.start();
          long startedTime = System.nanoTime();
          ack.setPayload(StartStopTime.withStartTime(startedTime - startingTime, ack.getPayload()));
-         if (clusterValidation != null) {
+         if (validate && clustered != null) {
             
-            int expectedNumberOfSlaves;
-            if (clusterValidation.expectedSlaves != null) {
-               expectedNumberOfSlaves = clusterValidation.expectedSlaves;
-            } else if (control instanceof XSReplicating) {
-               List<Integer> slaves = ((XSReplicating) control).getSlaves();
-               expectedNumberOfSlaves = slaves != null ? slaves.size() : clusterValidation.activeSlaveCount;
-            } else {
-               expectedNumberOfSlaves = clusterValidation.activeSlaveCount;
-            }
+            int expectedNumberOfSlaves = expectedSlaves != null ? expectedSlaves : slaveState.getGroupSize();
 
             long clusterFormationDeadline = System.currentTimeMillis() + clusterFormationTimeout;
             for (;;) {
-               int numMembers = control.getNumMembers();
+               int numMembers = clustered.getClusteredNodes();
                if (numMembers != expectedNumberOfSlaves) {
                   String msg = "Number of members=" + numMembers + " is not the one expected: " + expectedNumberOfSlaves;
                   log.info(msg);
@@ -97,12 +68,12 @@ public class StartHelper {
                      return;
                   }
                } else {
-                  log.info("Number of members is the one expected: " + control.getNumMembers());
+                  log.info("Number of members is the one expected: " + clustered.getClusteredNodes());
                   break;
                }
             }
          }
-         if (control.isRunning()) {
+         if (lifecycle.isRunning()) {
             // here is a race so this is rather an optimization
             BackgroundOpsManager.afterCacheWrapperStart(slaveState);
          }
@@ -110,51 +81,12 @@ public class StartHelper {
          log.error("Issues while instantiating/starting cache wrapper", e);
          ack.setError(true);
          ack.setRemoteException(e);
-         if (control != null) {
+         if (lifecycle != null) {
             try {
-               control.tearDown();
+               lifecycle.stop();
             } catch (Exception ignored) {
             }
          }
       }
-   }
-
-   @Deprecated
-   private static Map<String, String> pickForSite(Map<String, String> configProperties, int slaveIndex) {
-      Pattern slavesPattern = Pattern.compile("site\\[(\\d*)\\].slaves");
-      Matcher m;
-      int mySiteIndex = -1;
-      Map<String, String> properties = new HashMap<String, String>();
-      for (Map.Entry<String, String> entry : configProperties.entrySet()) {
-         if ((m = slavesPattern.matcher(entry.getKey())).matches()) {
-            List<Integer> slaves = (List<Integer>) DefaultConverter.staticConvert(entry.getValue(), DefaultConverter.parametrized(List.class, Integer.class));
-            properties.put("slaves", entry.getValue());
-            if (slaves.contains(slaveIndex)) {
-               if (mySiteIndex >= 0) throw new IllegalArgumentException("Slave set up in multiple sites!");
-               try {
-                  mySiteIndex = Integer.parseInt(m.group(1));
-               } catch (NumberFormatException e) {
-                  log.debug("Cannot parse site index from " + entry.getKey());
-               }
-            }
-         } else if (!entry.getKey().startsWith("site[")) {
-            properties.put(entry.getKey(), entry.getValue());
-         }
-      }
-      // site properties override global ones
-      if (mySiteIndex >= 0) {
-         properties.put("siteIndex", String.valueOf(mySiteIndex));
-         String prefix = "site[" + mySiteIndex + "].";
-         for (Map.Entry<String, String> entry: configProperties.entrySet()) {
-            if (entry.getKey().startsWith(prefix)) {
-               if (entry.getKey().equalsIgnoreCase(prefix + "name")) {
-                  properties.put("siteName", entry.getValue());
-               } else {
-                  properties.put(entry.getKey().substring(prefix.length()), entry.getValue());
-               }
-            }
-         }
-      }
-      return properties;
    }
 }

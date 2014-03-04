@@ -24,13 +24,14 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.features.XSReplicating;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.CacheInformation;
+import org.radargun.traits.InjectTrait;
 
 /**
  * Paired with SingleTXLoadStage. Checks that the previous stage had the expected result.
@@ -51,6 +52,12 @@ public class SingleTXCheckStage extends AbstractDistStage {
 
    @Property(doc = "If this is set to true, REMOVE operation should have been executed. Default is false.")
    private boolean deleted = false;
+
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private BasicOperations basicOperations;
+
+   @InjectTrait
+   private CacheInformation cacheInformation;
    
    @Override
    public DistStageAck executeOnSlave() {
@@ -58,23 +65,22 @@ public class SingleTXCheckStage extends AbstractDistStage {
       if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
          return ack;
       }
-      CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-      List<String> caches = new ArrayList<String>();      
-      if (cacheWrapper instanceof XSReplicating) {
-    	  caches.add(((XSReplicating) cacheWrapper).getMainCache());
-    	  caches.addAll(((XSReplicating) cacheWrapper).getBackupCaches());
+      List<String> caches = new ArrayList<String>();
+      if (cacheInformation == null) {
+         caches.add(null);
       } else {
-    	  caches.add(null); //the default cache
+         caches.addAll(cacheInformation.getCacheNames());
       }
 
       for (String cacheName : caches) {
-          if (cacheName != null) {
-        	  log.info("Checking cache " + cacheName);
-          }
-    	  String committer = null;    	  
+         if (cacheName != null) {
+            log.info("Checking cache " + cacheName);
+         }
+         BasicOperations.Cache cache = basicOperations.getCache(cacheName);
+    	   String committer = null;
 	      for (int i = 0; i < transactionSize; ++i) {
 	         try {
-	            Object value = cacheWrapper.get(cacheName, "txKey" + i);
+	            Object value = cache.get("txKey" + i);
 	               if (!deleted) {
 	               Matcher m;
 	               if (value != null && value instanceof String && (m = txValue.matcher((String) value)).matches()) {

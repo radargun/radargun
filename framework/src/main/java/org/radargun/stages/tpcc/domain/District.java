@@ -1,8 +1,8 @@
 package org.radargun.stages.tpcc.domain;
 
-import org.radargun.CacheWrapper;
-
 import java.io.Serializable;
+
+import org.radargun.traits.BasicOperations;
 
 /**
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
@@ -149,15 +149,12 @@ public class District implements Serializable {
       return "DISTRICT_" + this.d_w_id + "_" + this.d_id;
    }
 
-   public void store(CacheWrapper wrapper) throws Throwable {
-
-      wrapper.put(null, this.getKey(), this);
+   public void store(BasicOperations.Cache basicCache) throws Throwable {
+      basicCache.put(this.getKey(), this);
    }
 
-   public boolean load(CacheWrapper wrapper) throws Throwable {
-
-      District loaded = (District) wrapper.get(null, this.getKey());
-
+   public boolean load(BasicOperations.Cache basicCache) throws Throwable {
+      District loaded = (District) basicCache.get(this.getKey());
       if (loaded == null) return false;
 
       this.d_city = loaded.d_city;
@@ -169,7 +166,6 @@ public class District implements Serializable {
       this.d_tax = loaded.d_tax;
       this.d_ytd = loaded.d_ytd;
       this.d_zip = loaded.d_zip;
-
 
       return true;
    }

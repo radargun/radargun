@@ -25,7 +25,7 @@ public class PrivateLogChecker extends LogChecker {
       Object value = null;
       long keyId = record.getKeyId();
       for (int i = 0; i < 100; ++i) {
-         value = cacheWrapper.get(bucketId, keyGenerator.generateKey(keyId));
+         value = basicCache.get(keyGenerator.generateKey(keyId));
          if (value == null) {
             if (keyId < 0 && record.getLastStressorOperation() < record.getOperationId()) {
                // do not poll it 100x when we're not sure that the operation is written, try just twice

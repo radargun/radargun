@@ -34,8 +34,8 @@ class BulkOperationLogic implements OperationLogic {
    }
 
    @Override
-   public void init(String bucketId, int threadIndex, int nodeIndex, int numNodes) {
-      initLogic.init(bucketId, threadIndex, nodeIndex, numNodes);
+   public void init(int threadIndex, int nodeIndex, int numNodes) {
+      initLogic.init(threadIndex, nodeIndex, numNodes);
    }
 
    @Override

@@ -61,7 +61,7 @@ public class ClientStressTestStage extends StressTestStage {
          } else {
             completion = new OperationCountCompletion(duration / iterations, logPeriod);
          }
-         setStressorCompletion(completion);
+         setCompletion(completion);
 
          numThreads = threads;
          try {

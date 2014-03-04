@@ -22,13 +22,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Transactional;
 
 /**
  * Performs single transaction in multiple threads on multiple slaves.
@@ -56,7 +58,13 @@ public class SingleTXLoadStage extends AbstractDistStage {
 
    @Property(doc = "The threads by default do the PUT request, if this is set to true they will do REMOVE. Default is false.")
    private boolean delete;
-   
+
+   @InjectTrait
+   private BasicOperations basicOperations;
+
+   @InjectTrait
+   private Transactional transactional;
+
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
@@ -94,23 +102,26 @@ public class SingleTXLoadStage extends AbstractDistStage {
    private class ClientThread extends Thread {
       private int id;
       public Exception exception;
+      public BasicOperations.Cache cache;
+      public Transactional.Resource txCache;
       
       public ClientThread(int id) {
          super("ClientThread-" + slaveState.getSlaveIndex() + "-" + id);
          this.id = id;
+         this.cache = basicOperations.getCache(null);
+         this.txCache = transactional.getResource(null);
       }
       
       @Override
       public void run() {
          try {
-            CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
             log.trace("Beginning transaction");
-            cacheWrapper.startTransaction();
+            txCache.startTransaction();
             for (int i = 0; i < transactionSize; ++i) {
                if (!delete) {
                   try {
                 	 log.trace("Inserting key");
-                     cacheWrapper.put(null, "txKey" + i, "txValue" + i + "@" + slaveState.getSlaveIndex() + "-" + id);
+                     cache.put("txKey" + i, "txValue" + i + "@" + slaveState.getSlaveIndex() + "-" + id);
                      log.trace("Key inserted");
                   } catch (Exception e) {
                      log.error("Failed to insert key txKey" + i, e);
@@ -118,7 +129,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
                   }
                } else {
                   try {
-                  cacheWrapper.remove(null, "txKey" + i);
+                  cache.remove("txKey" + i);
                   } catch (Exception e) {
                      log.error("Failed to remove key txKey" + i, e);
                      throw e;
@@ -133,7 +144,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
                }            
             }
             boolean successfull = (commitSlave == null || commitSlave.contains(slaveState.getSlaveIndex())) && (commitThread == null || commitThread.contains(id));
-            cacheWrapper.endTransaction(successfull);
+            txCache.endTransaction(successfull);
             if (successfull) log.trace("Committed transaction");
             else log.debug("Rolled back transaction");
          } catch (Exception e) {

@@ -1,10 +1,10 @@
 package org.radargun.stages.tpcc.domain;
 
-import org.radargun.CacheWrapper;
-
 import java.io.Serializable;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.radargun.traits.BasicOperations;
 
 /**
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
@@ -117,9 +117,9 @@ public class History implements Serializable {
       return String.valueOf(slaveIndex) + String.valueOf(History.idGenerator.incrementAndGet());
    }
 
-   public void store(CacheWrapper wrapper, int slaveIndex) throws Throwable {
+   public void store(BasicOperations.Cache basicCache, int slaveIndex) throws Throwable {
       String id = generateId(slaveIndex);
-      wrapper.put(null, id, this);
+      basicCache.put(id, this);
    }
 
    @Override

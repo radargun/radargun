@@ -35,8 +35,18 @@ public class RemoteMasterConnection {
    public InetAddress connectToMaster(int slaveIndex) throws IOException {
       InetSocketAddress socketAddress = new InetSocketAddress(masterHost, masterPort);
       log.info("Attempting to connect to master " + masterHost + ":" + masterPort);
-      socketChannel = SocketChannel.open();
-      socketChannel.connect(socketAddress);
+      for (int i = 0;; ++i) {
+         try {
+            socketChannel = SocketChannel.open();
+            socketChannel.connect(socketAddress);
+            break;
+         } catch (IOException e) {
+            log.trace("Connect attempt " + i + " failed", e);
+            if (i >= 10) {
+               throw e;
+            }
+         }
+      }
       log.info("Successfully established connection with master at: " + masterHost + ":" + masterPort);
 
       writeInt(slaveIndex);

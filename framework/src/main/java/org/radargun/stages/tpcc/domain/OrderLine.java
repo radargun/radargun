@@ -1,9 +1,9 @@
 package org.radargun.stages.tpcc.domain;
 
-import org.radargun.CacheWrapper;
-
 import java.io.Serializable;
 import java.util.Date;
+
+import org.radargun.traits.BasicOperations;
 
 /**
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
@@ -131,15 +131,12 @@ public class OrderLine implements Serializable {
       return "ORDERLINE_" + this.ol_w_id + "_" + this.ol_d_id + "_" + this.ol_o_id + "_" + this.ol_number;
    }
 
-   public void store(CacheWrapper wrapper) throws Throwable {
-
-      wrapper.put(null, this.getKey(), this);
+   public void store(BasicOperations.Cache basicCache) throws Throwable {
+      basicCache.put(this.getKey(), this);
    }
 
-   public boolean load(CacheWrapper wrapper) throws Throwable {
-
-      OrderLine loaded = (OrderLine) wrapper.get(null, this.getKey());
-
+   public boolean load(BasicOperations.Cache basicCache) throws Throwable {
+      OrderLine loaded = (OrderLine) basicCache.get(this.getKey());
       if (loaded == null) return false;
 
       this.ol_i_id = loaded.ol_i_id;
@@ -148,7 +145,6 @@ public class OrderLine implements Serializable {
       this.ol_quantity = loaded.ol_quantity;
       this.ol_amount = loaded.ol_amount;
       this.ol_dist_info = loaded.ol_dist_info;
-
 
       return true;
    }

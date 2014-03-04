@@ -1,6 +1,7 @@
 package org.radargun.stages.tpcc.transaction;
 
-import org.radargun.CacheWrapper;
+import java.util.Date;
+
 import org.radargun.stages.tpcc.ElementNotFoundException;
 import org.radargun.stages.tpcc.TpccTools;
 import org.radargun.stages.tpcc.domain.Customer;
@@ -11,8 +12,7 @@ import org.radargun.stages.tpcc.domain.Order;
 import org.radargun.stages.tpcc.domain.OrderLine;
 import org.radargun.stages.tpcc.domain.Stock;
 import org.radargun.stages.tpcc.domain.Warehouse;
-
-import java.util.Date;
+import org.radargun.traits.BasicOperations;
 
 /**
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
@@ -70,9 +70,9 @@ public class NewOrderTransaction implements TpccTransaction {
    }
 
    @Override
-   public void executeTransaction(CacheWrapper cacheWrapper) throws Throwable {
+   public void executeTransaction(BasicOperations.Cache basicCache) throws Throwable {
 
-      newOrderTransaction(cacheWrapper, terminalWarehouseID, districtID, customerID, numItems, allLocal, itemIDs, supplierWarehouseIDs, orderQuantities);
+      newOrderTransaction(basicCache, terminalWarehouseID, districtID, customerID, numItems, allLocal, itemIDs, supplierWarehouseIDs, orderQuantities);
 
 
    }
@@ -82,7 +82,7 @@ public class NewOrderTransaction implements TpccTransaction {
       return false;
    }
 
-   private void newOrderTransaction(CacheWrapper cacheWrapper, long w_id, long d_id, long c_id, int o_ol_cnt, int o_all_local, long[] itemIDs, long[] supplierWarehouseIDs, long[] orderQuantities) throws Throwable {
+   private void newOrderTransaction(BasicOperations.Cache basicCache, long w_id, long d_id, long c_id, int o_ol_cnt, int o_all_local, long[] itemIDs, long[] supplierWarehouseIDs, long[] orderQuantities) throws Throwable {
 
 
       long o_id = -1, s_quantity;
@@ -106,14 +106,14 @@ public class NewOrderTransaction implements TpccTransaction {
       c.setC_d_id(d_id);
       c.setC_w_id(w_id);
 
-      boolean found = c.load(cacheWrapper);
+      boolean found = c.load(basicCache);
 
       if (!found)
          throw new ElementNotFoundException("W_ID=" + w_id + " C_D_ID=" + d_id + " C_ID=" + c_id + " not found!");
 
       w.setW_id(w_id);
 
-      found = w.load(cacheWrapper);
+      found = w.load(basicCache);
       if (!found) throw new ElementNotFoundException("W_ID=" + w_id + " not found!");
 
 
@@ -123,7 +123,7 @@ public class NewOrderTransaction implements TpccTransaction {
 
       d.setD_id(d_id);
       d.setD_w_id(w_id);
-      found = d.load(cacheWrapper);
+      found = d.load(basicCache);
       if (!found) throw new ElementNotFoundException("D_ID=" + d_id + " D_W_ID=" + w_id + " not found!");
 
 
@@ -132,16 +132,16 @@ public class NewOrderTransaction implements TpccTransaction {
 
       NewOrder no = new NewOrder(o_id, d_id, w_id);
 
-      no.store(cacheWrapper);
+      no.store(basicCache);
 
       d.setD_next_o_id(d.getD_next_o_id() + 1);
 
-      d.store(cacheWrapper);
+      d.store(basicCache);
 
 
       Order o = new Order(o_id, d_id, w_id, c_id, new Date(), -1, o_ol_cnt, o_all_local);
 
-      o.store(cacheWrapper);
+      o.store(basicCache);
 
 
       // see clause 2.4.2.2 (dot 8)
@@ -153,7 +153,7 @@ public class NewOrderTransaction implements TpccTransaction {
          // clause 2.4.2.2 (dot 8.1)
          Item i = new Item();
          i.setI_id(ol_i_id);
-         found = i.load(cacheWrapper);
+         found = i.load(basicCache);
          if (!found) throw new ElementNotFoundException("I_ID=" + ol_i_id + " not found!");
 
 
@@ -164,7 +164,7 @@ public class NewOrderTransaction implements TpccTransaction {
          Stock s = new Stock();
          s.setS_i_id(ol_i_id);
          s.setS_w_id(ol_supply_w_id);
-         found = s.load(cacheWrapper);
+         found = s.load(basicCache);
          if (!found) throw new ElementNotFoundException("I_ID=" + ol_i_id + " not found!");
 
 
@@ -187,7 +187,7 @@ public class NewOrderTransaction implements TpccTransaction {
          s.setS_ytd(s.getS_ytd() + ol_quantity);
          s.setS_remote_cnt(s.getS_remote_cnt() + s_remote_cnt_increment);
          s.setS_order_cnt(s.getS_order_cnt() + 1);
-         s.store(cacheWrapper);
+         s.store(basicCache);
 
 
          // clause 2.4.2.2 (dot 8.3)
@@ -238,7 +238,7 @@ public class NewOrderTransaction implements TpccTransaction {
          // clause 2.4.2.2 (dot 8.5)
 
          OrderLine ol = new OrderLine(o_id, d_id, w_id, ol_number, ol_i_id, ol_supply_w_id, null, ol_quantity, ol_amount, ol_dist_info);
-         ol.store(cacheWrapper);
+         ol.store(basicCache);
 
       }
 

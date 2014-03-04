@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Transactional;
 
 /**
  * Stage checking the write skew detection in transactional caches.
@@ -33,14 +35,19 @@ public class WriteSkewCheckStage extends CheckStage {
    private AtomicLong totalCounter = new AtomicLong(0);
    private AtomicLong skewCounter = new AtomicLong(0);
 
+   @InjectTrait
+   private BasicOperations basicOperations;
+
+   @InjectTrait
+   private Transactional transactional;
+
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      CacheWrapper wrapper = slaveState.getCacheWrapper();
-
+      BasicOperations.Cache cache = basicOperations.getCache(null);
       if (!testNull) {
          try {
-            wrapper.put(null, WRITE_SKEW_CHECK_KEY, new Long(0));
+            cache.put(WRITE_SKEW_CHECK_KEY, new Long(0));
          } catch (Exception e) {
             return exception(ack, "Failed to insert initial zero", e);
          }
@@ -72,7 +79,7 @@ public class WriteSkewCheckStage extends CheckStage {
 
       Long ispnCounter;
       try {
-         Object value = wrapper.get(null, WRITE_SKEW_CHECK_KEY);
+         Object value = cache.get(WRITE_SKEW_CHECK_KEY);
          if (!(value instanceof Long)) {
             exception(ack, "Counter is not a long: it is " + value, null);
             return ack;
@@ -114,27 +121,28 @@ public class WriteSkewCheckStage extends CheckStage {
    private class WriteSkewThread extends ClientThread {
       @Override
       public void run() {
-         CacheWrapper wrapper = slaveState.getCacheWrapper();
+         BasicOperations.Cache cache = basicOperations.getCache(null);
+         Transactional.Resource txCache = transactional.getResource(null);
          while (!finished) {
             log.trace("Starting transaction");
-            wrapper.startTransaction();
+            txCache.startTransaction();
             Object value = null;
             try {
-               value = wrapper.get(null, WRITE_SKEW_CHECK_KEY);
+               value = cache.get(WRITE_SKEW_CHECK_KEY);
                if (value == null) {
                   value = new Long(0);
                } else if (!(value instanceof Long)) {
                   exception = new IllegalStateException("Counter is not a long: it is " + value);
                   return;
                }
-               wrapper.put(null, WRITE_SKEW_CHECK_KEY, ((Long) value) + 1);
+               cache.put(WRITE_SKEW_CHECK_KEY, ((Long) value) + 1);
             } catch (Exception e) {
                exception = e;
                return;
             }
             boolean skew = false;
             try {
-               wrapper.endTransaction(true);
+               txCache.endTransaction(true);
             } catch (Exception e) {
                log.trace("Skew detected");
                skewCounter.incrementAndGet();

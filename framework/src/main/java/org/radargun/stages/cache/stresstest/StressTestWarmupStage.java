@@ -26,14 +26,12 @@ public class StressTestWarmupStage extends StressTestStage {
          log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveState.getSlaveIndex(), slaves));
          return result;
       }
-      this.cacheWrapper = slaveState.getCacheWrapper();
-      if (cacheWrapper == null) {
+      if (isServiceRunnning()) {
          log.info("Not running test on this slave as the wrapper hasn't been configured.");
          return result;
       }
 
-      String configName = cacheWrapper.getClass().getName() + " - " + cacheWrapper.getInfo();
-
+      String configName = slaveState.getServiceName() + "-" + slaveState.getConfigName();
       if (!WARMED_UP_CONFIGS.contains(configName)) {
 
          try {

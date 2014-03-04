@@ -22,13 +22,11 @@ import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.features.XSReplicating;
-import org.radargun.stages.DefaultDistStageAck;
-import org.radargun.stages.cache.CheckDataStage;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.Debugable;
 
 /**
  * Checks data loaded in XSReplLoadStage.
@@ -36,57 +34,58 @@ import org.radargun.stages.cache.CheckDataStage;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Checks data loaded in XSReplLoadStage.")
-public class XSReplCheckStage extends CheckDataStage {
+public class XSReplCheckStage extends CheckCacheDataStage {
 
    @Property(doc = "Postfix part of the value contents. Default is empty string.")
    private String valuePostFix = "";
 
-   private transient XSReplicating xswrapper;
-   private transient String[] backupCaches;
+   private transient BasicOperations.Cache[] backupCaches;
+   private transient Debugable.Cache[] backupDebugable;
    private transient BackupCacheValueChecker[] backupCheckers;
 
    @Override
    public DistStageAck executeOnSlave() {
-      if (!(slaveState.getCacheWrapper() instanceof XSReplicating)) {
-         String message = "This stage requires wrapper that supports cross-site replication";
-         log.error(message);
-         DefaultDistStageAck ack = newDefaultStageAck();
-         ack.setErrorMessage(message);
-         ack.setError(true);
-         return ack;
-      }
-      xswrapper = (XSReplicating) slaveState.getCacheWrapper();
-      int numBackups = xswrapper.getBackupCaches().size();
-      backupCaches = new String[numBackups];
+      int numBackups = slaveState.getGroupCount();
+      backupCaches = new BasicOperations.Cache[numBackups];
       backupCheckers = new BackupCacheValueChecker[numBackups];
-      Iterator<String> iterator = xswrapper.getBackupCaches().iterator();
+      if (debugable != null) {
+         backupDebugable = new Debugable.Cache[numBackups];
+      }
+      String mainCacheName = cacheInformation.getDefaultCacheName();
+      Iterator<String> iterator = cacheInformation.getCacheNames().iterator();
       for (int i = 0; i < numBackups; ++i) {
          String cacheName = iterator.next();
-         backupCaches[i] = cacheName;
+         if (cacheName.equals(mainCacheName)) {
+            --i;
+            continue;
+         }
+         backupCaches[i] = basicOperations.getCache(cacheName);
          backupCheckers[i] = new BackupCacheValueChecker(cacheName);
+         if (debugable != null) {
+            backupDebugable[i] = debugable.getCache(cacheName);
+         }
       }
-      return super.executeOnSlave();    // TODO: Customise this generated block
+      return super.executeOnSlave();
    }
 
    @Override
-   protected boolean checkKey(CacheWrapper wrapper, String bucketId, int keyIndex, CheckResult result, ValueChecker checker) {
-      boolean retval = super.checkKey(wrapper, null, keyIndex, result, new MainCacheValueChecker());
+   protected boolean checkKey(BasicOperations.Cache basicCache, Debugable.Cache debugableCache, int keyIndex, CheckResult result, ValueChecker checker) {
+      boolean retval = super.checkKey(basicCache, debugableCache, keyIndex, result, new MainCacheValueChecker());
       for (int i = 0; i < backupCaches.length; ++i) {
-         retval = retval && super.checkKey(wrapper, backupCaches[i], keyIndex, result, backupCheckers[i]);
+         retval = retval && super.checkKey(backupCaches[i], backupDebugable[i], keyIndex, result, backupCheckers[i]);
       }
       return retval;
    }
 
    @Override
    protected int getExpectedNumEntries() {
-      XSReplicating wrapper = (XSReplicating) slaveState.getCacheWrapper();
-      return getNumEntries() * (wrapper.getBackupCaches().size() + 1);
+      return getNumEntries() * cacheInformation.getCacheNames().size();
    }
 
    private class MainCacheValueChecker implements ValueChecker {
       @Override
       public boolean check(int keyIndex, Object value) {
-         return value.equals("value" + keyIndex + valuePostFix + "@" + xswrapper.getMainCache());
+         return value.equals("value" + keyIndex + valuePostFix + "@" + cacheInformation.getDefaultCacheName());
       }
    }
 

@@ -8,10 +8,7 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
 
 /**
- * // TODO: Document this
- *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- * @since 1/4/13
  */
 @Stage(doc = "Starts collection of statistics from background threads and cache size.")
 public class StartBackgroundStatisticsStage extends AbstractDistStage {

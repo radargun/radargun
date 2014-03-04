@@ -27,14 +27,15 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.features.ProvidesMemoryOverhead;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.CacheInformation;
+import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Utils;
 
 /**
@@ -116,6 +117,12 @@ public class RandomDataStage extends AbstractDistStage {
          + "the code assumes this is an even multiple of (2 * valueSize) plus valueByteOverhead.")
    private long targetMemoryUse = -1;
 
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private BasicOperations basicOperations;
+
+   @InjectTrait
+   private CacheInformation cacheInformation;
+
    private Random random;
 
    private String[][] words = null;
@@ -174,13 +181,6 @@ public class RandomDataStage extends AbstractDistStage {
    public DistStageAck executeOnSlave() {
       random = new Random(randomSeed + slaveState.getSlaveIndex());
       DefaultDistStageAck result = newDefaultStageAck();
-      CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-
-      if (cacheWrapper == null) {
-         result.setError(true);
-         result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
-         return result;
-      }
 
       if (ramPercentage > 0 && valueCount > 0) {
          result.setError(true);
@@ -206,7 +206,7 @@ public class RandomDataStage extends AbstractDistStage {
          return result;
       }
 
-      if (valueByteOverhead == -1 && !(cacheWrapper instanceof ProvidesMemoryOverhead)) {
+      if (valueByteOverhead == -1 && cacheInformation == null) {
          result.setError(true);
          result.setErrorMessage("The valueByteOverhead property must be supplied for this cache.");
          return result;
@@ -216,8 +216,8 @@ public class RandomDataStage extends AbstractDistStage {
        * If valueByteOverhead is not specified, then try to retrieve the byte overhead from the
        * CacheWrapper
        */
-      if (valueByteOverhead == -1 && cacheWrapper instanceof ProvidesMemoryOverhead) {
-         valueByteOverhead = ((ProvidesMemoryOverhead) cacheWrapper).getValueByteOverhead();
+      if (valueByteOverhead == -1 && cacheInformation != null) {
+         valueByteOverhead = cacheInformation.getCache(null).getEntryOverhead();
       }
 
       runtime = Runtime.getRuntime();
@@ -258,6 +258,7 @@ public class RandomDataStage extends AbstractDistStage {
 
       long putCount = nodePutCount;
       long bytesWritten = 0;
+      BasicOperations.Cache cache = basicOperations.getCache(bucket);
       try {
          byte[] buffer = new byte[valueSize];
          while (putCount > 0) {
@@ -272,7 +273,7 @@ public class RandomDataStage extends AbstractDistStage {
                String cacheData = generateRandomStringData(valueSize);
                bytesWritten += (valueSize * 2);
                start = System.nanoTime();
-               cacheWrapper.put(bucket, key, cacheData);
+               cache.put(key, cacheData);
             } else {
                if (putCount % 5000 == 0) {
                   log.info("Writing " + valueSize + " bytes to cache key: " + key);
@@ -281,7 +282,7 @@ public class RandomDataStage extends AbstractDistStage {
                random.nextBytes(buffer);
                bytesWritten += valueSize;
                start = System.nanoTime();
-               cacheWrapper.put(bucket, key, buffer);
+               cache.put(key, buffer);
             }
             if (printWriteStatistics) {
                log.info("Put on slave" + slaveState.getSlaveIndex() + " took "

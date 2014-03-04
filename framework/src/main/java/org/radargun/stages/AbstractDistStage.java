@@ -11,6 +11,8 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Lifecycle;
 import org.radargun.utils.Utils;
 
 /**
@@ -34,11 +36,11 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
    @Property(doc = "Specifies on which slaves should this stage actively run. Default is stage-dependent (usually all or none).")
    protected Collection<Integer> slaves;
 
-   @Property(doc = "Should the benchmark fail if one of the slaves sends error acknowledgement? Default is false.")
-   private boolean exitBenchmarkOnSlaveFailure = false;
-
    @Property(doc = "If set to true the stage should be run on maxSlaves (applies to scaling benchmarks). Default is false.")
    private boolean runOnAllSlaves;
+
+   @InjectTrait
+   protected Lifecycle lifecycle;
 
    @Override
    public void initOnMaster(MasterState masterState) {
@@ -50,16 +52,12 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       this.slaveState = slaveState;
    }
 
+   public boolean isServiceRunnning() {
+      return lifecycle == null || lifecycle.isRunning();
+   }
+
    public boolean isRunOnAllSlaves() {
       return runOnAllSlaves;
-   }
-
-   public boolean isExitBenchmarkOnSlaveFailure() {
-      return exitBenchmarkOnSlaveFailure;
-   }
-
-   public void setExitBenchmarkOnSlaveFailure(boolean exitOnFailure) {
-      this.exitBenchmarkOnSlaveFailure = exitOnFailure;
    }
 
    protected DefaultDistStageAck newDefaultStageAck() {

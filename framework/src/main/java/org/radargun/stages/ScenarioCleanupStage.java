@@ -3,7 +3,6 @@ package org.radargun.stages;
 import java.io.File;
 import java.util.List;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.Slave;
 import org.radargun.config.Property;
@@ -30,22 +29,14 @@ public class ScenarioCleanupStage extends AbstractDistStage {
 
    public DistStageAck executeOnSlave() {
       log.info("Scenario finished, running cleanup...");
-      DefaultDistStageAck ack = newDefaultStageAck();
       try {
-         CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-         if (cacheWrapper != null) {
+         if (lifecycle.isRunning()) {
             // TODO: generalize to lifecycle listeners
             BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, true);
-            cacheWrapper.tearDown();
-            for (int i = 0; i < 120; i++) {
-               if (cacheWrapper.getNumMembers() <= 0) break; //negative value might be returned by impl that do not support this method
-               log.info("There are still: " + cacheWrapper.getNumMembers() + " members in the cluster. Waiting for them to turn off.");
-               Thread.sleep(1000);
-            }
-            slaveState.setCacheWrapper(null);
+            lifecycle.stop();
             //reset the class loader to SystemClassLoader
             Thread.currentThread().setContextClassLoader(Slave.class.getClassLoader());
-            log.info("Cache wrapper successfully tearDown. Number of members is the cluster is: " + cacheWrapper.getNumMembers());
+            log.info("Service successfully stopped.");
          } else {
             log.info("No cache wrapper deployed on this slave, nothing to do.");
             return successfulResponse();

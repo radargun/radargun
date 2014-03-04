@@ -3,12 +3,13 @@ package org.radargun.stages.tpcc;
 
 import java.util.List;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.InjectTrait;
 
 /**
  * This stage shuld be run before the <b>TpccBenchmarkStage</b>. It will perform the population of
@@ -39,17 +40,19 @@ public class TpccPopulationStage extends AbstractDistStage {
    @Property(doc = "Mask used to generate non-uniformly distributed random customer numbers. Default is 1023.")
    private long cIdMask = 1023;
 
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private BasicOperations basicOperations;
+
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      CacheWrapper wrapper = slaveState.getCacheWrapper();
-      if (wrapper == null) {
-         log.info("Not executing any test as the wrapper is not set up on this slave ");
+      if (isServiceRunnning()) {
+         log.info("Not executing any test as the service is not running on this slave ");
          return ack;
       }
       long startTime = System.currentTimeMillis();
       try {
          log.info("Performing Population Operations");
-         new TpccPopulation(wrapper, numWarehouses, slaveState.getSlaveIndex(), slaveState.getClusterSize(), cLastMask, olIdMask, cIdMask);
+         new TpccPopulation(basicOperations.getCache(null), numWarehouses, slaveState.getSlaveIndex(), slaveState.getClusterSize(), cLastMask, olIdMask, cIdMask);
       } catch (Exception e) {
          log.warn("Received exception during cache population" + e.getMessage());
       }

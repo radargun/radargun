@@ -20,13 +20,13 @@ package org.radargun.stages.helpers;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.CacheWrapper;
-import org.radargun.features.Killable;
+import org.radargun.traits.Killable;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.stages.lifecycle.KillStage;
 import org.radargun.stages.lifecycle.ParallelStartKillStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stages.cache.background.BackgroundOpsManager;
+import org.radargun.traits.Lifecycle;
 
 /**
  * 
@@ -44,28 +44,30 @@ public class KillHelper {
   
    private static final Log log = LogFactory.getLog(KillHelper.class);
    
-   public static void kill(SlaveState slaveState, boolean tearDown, boolean async, DefaultDistStageAck ack) {
+   public static void kill(SlaveState slaveState, boolean graceful, boolean async, DefaultDistStageAck ack) {
+      Lifecycle lifecycle = slaveState.getTrait(Lifecycle.class);
+      if (lifecycle == null) throw new IllegalArgumentException();
+      Killable killable = slaveState.getTrait(Killable.class);
       try {
-         CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-         if (cacheWrapper != null) {
+         if (lifecycle.isRunning()) {
             BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, false);
             long stoppingTime;
-            if (tearDown) {
-               log.info("Tearing down cache wrapper.");
+            if (graceful) {
+               log.info("Stopping service.");
                stoppingTime = System.nanoTime();
-               cacheWrapper.tearDown();
-            } else if (cacheWrapper instanceof Killable) {
-               log.info("Killing cache wrapper.");
+               lifecycle.stop();
+            } else if (killable != null) {
+               log.info("Killing service.");
                stoppingTime = System.nanoTime();
                if (async) {
-                  ((Killable) cacheWrapper).killAsync();
+                  killable.killAsync();
                } else {
-                  ((Killable) cacheWrapper).kill();
+                  killable.kill();
                }
             } else {
-               log.info("CacheWrapper is not killable, calling tearDown instead");
+               log.info("Service is not Killable, stopping instead");
                stoppingTime = System.nanoTime();
-               cacheWrapper.tearDown();
+               lifecycle.stop();
             }
             long stoppedTime = System.nanoTime();
             if (ack != null) {
@@ -74,7 +76,6 @@ public class KillHelper {
          } else {
             log.info("No cache wrapper deployed on this slave, nothing to do.");
          }
-         slaveState.setCacheWrapper(null);
          // in case of concurrent start and kill the stats could be still running
          BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, false);
       } catch (Exception e) {

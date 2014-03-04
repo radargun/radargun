@@ -1,8 +1,8 @@
 package org.radargun.state;
 
 import java.net.InetAddress;
+import java.util.Map;
 
-import org.radargun.CacheWrapper;
 import org.radargun.utils.ClassLoadHelper;
 
 /**
@@ -13,11 +13,15 @@ import org.radargun.utils.ClassLoadHelper;
 public class SlaveState extends StateBase {
 
    private InetAddress localAddress;
-   private CacheWrapper cacheWrapper;
    private int slaveIndex = -1;
    private int groupSize = 0;
+   private int groupCount = 1;
    private String plugin;
    private ClassLoadHelper classLoadHelper;
+   private String serviceName;
+   private Object service;
+   private int indexInGroup;
+   private Map<Class<?>, Object> traits;
 
    public void setLocalAddress(InetAddress localAddress) {
       this.localAddress = localAddress;
@@ -43,14 +47,6 @@ public class SlaveState extends StateBase {
       return groupSize;
    }
 
-   public void setCacheWrapper(CacheWrapper wrapper) {
-      this.cacheWrapper = wrapper;
-   }
-
-   public CacheWrapper getCacheWrapper() {
-      return cacheWrapper;
-   }
-
    public ClassLoadHelper getClassLoadHelper() {
       return classLoadHelper;
    }
@@ -62,5 +58,37 @@ public class SlaveState extends StateBase {
    public void setPlugin(String plugin) {
       this.plugin = plugin;
       classLoadHelper = new ClassLoadHelper(true, this.getClass(), plugin, this);
+   }
+
+   public String getServiceName() {
+      return serviceName;
+   }
+
+   public void setService(String service) {
+      this.serviceName = plugin + "/" + serviceName;
+   }
+
+   public int getGroupCount() {
+      return groupCount;
+   }
+
+   public void setGroupCount(int groupCount) {
+      this.groupCount = groupCount;
+   }
+
+   public int getIndexInGroup() {
+      return indexInGroup;
+   }
+
+   public void setIndexInGroup(int indexInGroup) {
+      this.indexInGroup = indexInGroup;
+   }
+
+   public void setTraits(Map<Class<?>, Object> traits) {
+      this.traits = traits;
+   }
+
+   public <T> T getTrait(Class<? extends T> traitClass) {
+      return (T) traits.get(traitClass);
    }
 }

@@ -40,7 +40,6 @@ public class Scenario implements Serializable {
       setProperties(localExtras);
       PropertyHelper.setProperties(stage, description.properties, false, true);
       setProperties(backups);
-      InitHelper.init(stage);
       return stage;
    }
 

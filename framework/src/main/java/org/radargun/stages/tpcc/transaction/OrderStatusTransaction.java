@@ -1,6 +1,9 @@
 package org.radargun.stages.tpcc.transaction;
 
-import org.radargun.CacheWrapper;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
 import org.radargun.stages.tpcc.ElementNotFoundException;
 import org.radargun.stages.tpcc.TpccTerminal;
 import org.radargun.stages.tpcc.TpccTools;
@@ -10,10 +13,7 @@ import org.radargun.stages.tpcc.dac.OrderLineDAC;
 import org.radargun.stages.tpcc.domain.Customer;
 import org.radargun.stages.tpcc.domain.Order;
 import org.radargun.stages.tpcc.domain.OrderLine;
-
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import org.radargun.traits.BasicOperations;
 
 /**
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
@@ -54,9 +54,8 @@ public class OrderStatusTransaction implements TpccTransaction {
    }
 
    @Override
-   public void executeTransaction(CacheWrapper cacheWrapper) throws Throwable {
-
-      orderStatusTransaction(cacheWrapper, terminalWarehouseID, districtID, customerID, customerLastName, customerByName);
+   public void executeTransaction(BasicOperations.Cache basicCache) throws Throwable {
+      orderStatusTransaction(basicCache, terminalWarehouseID, districtID, customerID, customerLastName, customerByName);
    }
 
    @Override
@@ -68,13 +67,13 @@ public class OrderStatusTransaction implements TpccTransaction {
       return TpccTerminal.nameTokens[num / 100] + TpccTerminal.nameTokens[(num / 10) % 10] + TpccTerminal.nameTokens[num % 10];
    }
 
-   private void orderStatusTransaction(CacheWrapper cacheWrapper, long w_id, long d_id, long c_id, String c_last, boolean c_by_name) throws Throwable {
+   private void orderStatusTransaction(BasicOperations.Cache basicCache, long w_id, long d_id, long c_id, String c_last, boolean c_by_name) throws Throwable {
       long namecnt;
 
       boolean found = false;
       Customer c = null;
       if (c_by_name) {
-         List<Customer> cList = CustomerDAC.loadByCLast(cacheWrapper, w_id, d_id, c_last);
+         List<Customer> cList = CustomerDAC.loadByCLast(basicCache, w_id, d_id, c_last);
          if (cList == null || cList.isEmpty())
             throw new ElementNotFoundException("C_LAST=" + c_last + " C_D_ID=" + d_id + " C_W_ID=" + w_id + " not found!");
          Collections.sort(cList);
@@ -98,17 +97,17 @@ public class OrderStatusTransaction implements TpccTransaction {
          c.setC_id(c_id);
          c.setC_d_id(d_id);
          c.setC_w_id(w_id);
-         found = c.load(cacheWrapper);
+         found = c.load(basicCache);
          if (!found)
             throw new ElementNotFoundException("C_ID=" + c_id + " C_D_ID=" + d_id + " C_W_ID=" + w_id + " not found!");
 
       }
 
       // clause 2.6.2.2 (dot 4)
-      Order o = OrderDAC.loadByGreatestId(cacheWrapper, w_id, d_id, c_id);
+      Order o = OrderDAC.loadByGreatestId(basicCache, w_id, d_id, c_id);
 
       // clause 2.6.2.2 (dot 5)
-      List<OrderLine> o_lines = OrderLineDAC.loadByOrder(cacheWrapper, o);
+      List<OrderLine> o_lines = OrderLineDAC.loadByOrder(basicCache, o);
 
 
    }

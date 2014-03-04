@@ -27,12 +27,13 @@ import java.nio.channels.FileChannel;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Utils;
 
 /**
@@ -60,6 +61,9 @@ public class LoadFileStage extends AbstractDistStage {
    @Property(doc = "If true, then String objects are written to the cache. The default is false")
    private boolean stringData = false;
 
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private BasicOperations basicOperations;
+
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       super.processAckOnMaster(acks);
@@ -82,13 +86,6 @@ public class LoadFileStage extends AbstractDistStage {
       DefaultDistStageAck result = newDefaultStageAck();
       int totalWriters = slaveState.getClusterSize();
       long fileOffset = valueSize * slaveState.getSlaveIndex();// index starts at 0
-      CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-
-      if (cacheWrapper == null) {
-         result.setError(true);
-         result.setErrorMessage("Not running test on this slave as the wrapper hasn't been configured.");
-         return result;
-      }
 
       RandomAccessFile file = null;
       FileChannel fileChannel = null;
@@ -101,6 +98,7 @@ public class LoadFileStage extends AbstractDistStage {
          fileChannel.position(fileOffset);
 
          ByteBuffer buffer = ByteBuffer.allocate(valueSize);
+         BasicOperations.Cache cache = basicOperations.getCache(bucket);
          while (true) {
             long initPos = fileChannel.position();
             String key = Integer.toString(slaveState.getSlaveIndex()) + "-" + Long.toString(initPos);
@@ -125,9 +123,9 @@ public class LoadFileStage extends AbstractDistStage {
                if (stringData) {
                   String cacheData = buffer.asCharBuffer().toString();
                   start = System.nanoTime();
-                  cacheWrapper.put(bucket, key, cacheData);
+                  cache.put(key, cacheData);
                } else {
-                  cacheWrapper.put(bucket, key, buffer.array());
+                  cache.put(key, buffer.array());
                }
                if (printWriteStatistics) {
                   log.info("Put on slave-" + slaveState.getSlaveIndex() + " took "

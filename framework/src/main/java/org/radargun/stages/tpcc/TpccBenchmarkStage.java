@@ -14,18 +14,21 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.CsvReportGenerationStage;
 import org.radargun.stages.DefaultDistStageAck;
-import org.radargun.stats.Statistics;
 import org.radargun.stages.tpcc.transaction.NewOrderTransaction;
 import org.radargun.stages.tpcc.transaction.OrderStatusTransaction;
 import org.radargun.stages.tpcc.transaction.PaymentTransaction;
 import org.radargun.stages.tpcc.transaction.TpccTransaction;
+import org.radargun.stats.Statistics;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.CacheInformation;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Transactional;
 import org.radargun.utils.Utils;
 
 /**
@@ -63,28 +66,39 @@ public class TpccBenchmarkStage extends AbstractDistStage {
    @Property(doc = "Percentage of Order Status transactions. Default is 5 %.")
    private double orderStatusWeight = 5.0D;
 
-   private transient CacheWrapper cacheWrapper;
-   private transient static Random r = new Random();
-   private transient long startTime;
-   private transient volatile CountDownLatch startPoint;
-   private transient AtomicLong completedThread;
-   private transient BlockingQueue<RequestType> queue;
-   private transient AtomicLong countJobs;
-   private transient Producer[] producers;
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private BasicOperations basicOperations;
+
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private CacheInformation cacheInformation;
+
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private Transactional transactional;
+
+   private static Random r = new Random();
+   private long startTime;
+   private volatile CountDownLatch startPoint;
+   private AtomicLong completedThread;
+   private BlockingQueue<RequestType> queue;
+   private AtomicLong countJobs;
+   private Producer[] producers;
+   private BasicOperations.Cache<Object, Object> basicCache;
+   private Transactional.Resource txCache;
 
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = new DefaultDistStageAck(slaveState.getSlaveIndex(), slaveState.getLocalAddress());
-      this.cacheWrapper = slaveState.getCacheWrapper();
-      if (cacheWrapper == null) {
-         log.info("Not running test on this slave as the wrapper hasn't been configured.");
+      if (!isServiceRunnning()) {
+         log.info("Not running test on this slave.");
          return result;
       }
+      basicCache = basicOperations.getCache(null);
+      txCache = transactional.getResource(null);
 
       log.info("Starting TpccBenchmarkStage: " + this.toString());
 
       try {
          Map<String, Object> results = stress();
-         String sizeInfo = "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + slaveState.getClusterSize() + ", nodeIndex:" + slaveState.getSlaveIndex() + ", cacheSize: " + cacheWrapper.getLocalSize();
+         String sizeInfo = "clusterSize:" + slaveState.getClusterSize() + ", nodeIndex:" + slaveState.getSlaveIndex() + ", cacheSize: " + cacheInformation.getCache(null).getLocalSize();
          log.info(sizeInfo);
          results.put(SIZE_INFO, sizeInfo);
          result.setPayload(results);
@@ -158,15 +172,11 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       return processResults(stressors);
    }
 
-   public void destroy() throws Exception {
-      cacheWrapper = null;
-   }
-
    private void initializeToolsParameters() {
       try {
-         TpccTools.C_C_LAST = (Long) cacheWrapper.get(null, "C_C_LAST");
-         TpccTools.C_C_ID = (Long) cacheWrapper.get(null, "C_C_ID");
-         TpccTools.C_OL_I_ID = (Long) cacheWrapper.get(null, "C_OL_ID");
+         TpccTools.C_C_LAST = (Long) basicCache.get( "C_C_LAST");
+         TpccTools.C_C_ID = (Long) basicCache.get("C_C_ID");
+         TpccTools.C_OL_I_ID = (Long) basicCache.get("C_OL_ID");
       } catch (Exception e) {
          log.error("Error", e);
       }
@@ -405,7 +415,6 @@ public class TpccBenchmarkStage extends AbstractDistStage {
          stressors.add(stressor);
          stressor.start();
       }
-      log.info("Cache wrapper info is: " + cacheWrapper.getInfo());
       startPoint.countDown();
       for (Stressor stressor : stressors) {
          stressor.join();
@@ -531,9 +540,9 @@ public class TpccBenchmarkStage extends AbstractDistStage {
             isReadOnly = transaction.isReadOnly();
 
             long startService = System.nanoTime();
-            cacheWrapper.startTransaction();
+            txCache.startTransaction();
             try {
-               transaction.executeTransaction(cacheWrapper);
+               transaction.executeTransaction(basicCache);
             } catch (Throwable e) {
                successful = false;
                log.warn("Transaction failed:", e);
@@ -556,7 +565,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
                   measureCommitTime = true;
                }
 
-               cacheWrapper.endTransaction(successful);
+               txCache.endTransaction(successful);
 
                if (!successful) {
                   nrFailures++;

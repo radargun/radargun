@@ -77,9 +77,9 @@
                         <element name="stress-test-warmup" type="rg:stress-test-warmup"/>
                         <element name="web-session-warmup" type="rg:stress-test-warmup"/>
                         <element name="check-background-stressors" type="rg:check-background-stressors"/>
-                        <element name="check-data" type="rg:check-data"/>
+                        <element name="check-cache-data" type="rg:check-cache-data"/>
                         <element name="check-topology" type="rg:check-topology"/>
-                        <element name="clear-cluster" type="rg:clear-cluster"/>
+                        <element name="clear-cache" type="rg:clear-cache"/>
                         <element name="client-stress-test" type="rg:client-stress-test"/>
                         <element name="cluster-validation" type="rg:cluster-validation"/>
                         <element name="csv-report-generation" type="rg:csv-report-generation"/>
@@ -183,9 +183,9 @@
             <element name="stress-test-warmup" type="rg:stress-test-warmup"/>
             <element name="web-session-warmup" type="rg:stress-test-warmup"/>
             <element name="check-background-stressors" type="rg:check-background-stressors"/>
-            <element name="check-data" type="rg:check-data"/>
+            <element name="check-cache-data" type="rg:check-cache-data"/>
             <element name="check-topology" type="rg:check-topology"/>
-            <element name="clear-cluster" type="rg:clear-cluster"/>
+            <element name="clear-cache" type="rg:clear-cache"/>
             <element name="client-stress-test" type="rg:client-stress-test"/>
             <element name="cluster-validation" type="rg:cluster-validation"/>
             <element name="csv-report-generation" type="rg:csv-report-generation"/>
@@ -241,11 +241,6 @@
       </annotation>
       <complexContent>
          <extension base="rg:abstract">
-            <attribute name="exit-benchmark-on-slave-failure" type="rg:boolean">
-               <annotation>
-                  <documentation>Should the benchmark fail if one of the slaves sends error acknowledgement? Default is false.</documentation>
-               </annotation>
-            </attribute>
             <attribute name="run-on-all-slaves" type="rg:boolean">
                <annotation>
                   <documentation>If set to true the stage should be run on maxSlaves (applies to scaling benchmarks). Default is false.</documentation>
@@ -374,7 +369,7 @@
             </attribute>
             <attribute name="remove-invalid-percentage" type="rg:int">
                <annotation>
-                  <documentation>Used only when useAtomics=true: The frequency of conditional removes that should fail (percentage). Default is 10%</documentation>
+                  <documentation>Used only when useConditionalOperations=true: The frequency of conditional removes that should fail (percentage). Default is 10%</documentation>
                </annotation>
             </attribute>
             <attribute name="remove-percentage" type="rg:int">
@@ -402,7 +397,7 @@
                   <documentation>Number of requests in one transaction. Default is 1.</documentation>
                </annotation>
             </attribute>
-            <attribute name="use-atomics" type="rg:boolean">
+            <attribute name="use-conditional-operations" type="rg:boolean">
                <annotation>
                   <documentation>If true, putIfAbsent and replace operations are used. Default is false.</documentation>
                </annotation>
@@ -424,7 +419,7 @@
             </attribute>
             <attribute name="value-generator-class" type="string">
                <annotation>
-                  <documentation>Full class name of the value generator. Default is org.radargun.stressors.ByteArrayValueGenerator if useAtomics=false and org.radargun.stressors.WrappedArrayValueGenerator otherwise.</documentation>
+                  <documentation>Full class name of the value generator. Default is org.radargun.stressors.ByteArrayValueGenerator if useConditionalOperations=false and org.radargun.stressors.WrappedArrayValueGenerator otherwise.</documentation>
                </annotation>
             </attribute>
             <attribute name="value-generator-param" type="string">
@@ -577,7 +572,7 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="check-data">
+   <complexType name="check-cache-data">
       <annotation>
          <documentation>Stage for checking presence or absence of data entered in other stages.</documentation>
       </annotation>
@@ -648,11 +643,6 @@
                   <documentation>Number of entries with key in form specified by the last used key generator, in the cache.</documentation>
                </annotation>
             </attribute>
-            <attribute name="num-owners" type="rg:int">
-               <annotation>
-                  <documentation>Number of owners of one key (primary + backups). If negative the number is multiplied by cluster size, therefore, -1 means full replication. Default is -1.</documentation>
-               </annotation>
-            </attribute>
             <attribute name="step-entry-count" type="rg:int">
                <annotation>
                   <documentation>Number of entries stepped in each step. Default is 1.</documentation>
@@ -701,15 +691,25 @@
          </simpleType>
       </union>
    </simpleType>
-   <complexType name="clear-cluster">
+   <complexType name="clear-cache">
       <annotation>
          <documentation>Removes all data from the cache</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:abstract-dist">
+            <attribute name="cache-name" type="string">
+               <annotation>
+                  <documentation>Name of the cache to be cleared. Default is the default cache.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="local" type="rg:boolean">
                <annotation>
                   <documentation>Execute local variant of clear on each slave. Default value is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="use-transaction" type="rg:boolean">
+               <annotation>
+                  <documentation>Execute the clear inside explicit transaction.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -1027,14 +1027,14 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>If this value is positive the stage will spawn a thread which will kill the node after the delay. The stage will not wait for anything. By default the kill is immediate and synchronous.</documentation>
                </annotation>
             </attribute>
+            <attribute name="graceful" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, the nodes should be shutdown gracefully. Default is false = simulate node crash.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="role" type="rg:org-radargun-stages-helpers-rolehelper-role">
                <annotation>
                   <documentation>Instead of specifying concrete slaves we may choose a victim based on his role in the cluster. Supported roles are [COORDINATOR, BRIDGE]. By default no role is specified.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="tear-down" type="rg:boolean">
-               <annotation>
-                  <documentation>If set to true, the nodes should be shutdown. Default is false = simulate node crash.</documentation>
                </annotation>
             </attribute>
             <attribute name="wait-for-delayed" type="rg:boolean">
@@ -1050,7 +1050,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <simpleType>
             <restriction base="string">
                <enumeration value="COORDINATOR"/>
-               <enumeration value="BRIDGE"/>
             </restriction>
          </simpleType>
          <simpleType>
@@ -1610,9 +1609,9 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:abstract-dist">
-            <attribute name="bucket-id" type="string">
+            <attribute name="cache-name" type="string">
                <annotation>
-                  <documentation>Bucket where the entries should be inserted. Default is null (default).</documentation>
+                  <documentation>Cache used for the background operations. Default is null (default).</documentation>
                </annotation>
             </attribute>
             <attribute name="dead-slave-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
@@ -2004,7 +2003,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <documentation>Checks data loaded in XSReplLoadStage.</documentation>
       </annotation>
       <complexContent>
-         <extension base="rg:check-data">
+         <extension base="rg:check-cache-data">
             <attribute name="value-post-fix" type="string">
                <annotation>
                   <documentation>Postfix part of the value contents. Default is empty string.</documentation>

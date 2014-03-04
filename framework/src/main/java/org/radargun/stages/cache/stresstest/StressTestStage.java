@@ -1,8 +1,5 @@
 package org.radargun.stages.cache.stresstest;
 
-import static java.lang.Double.parseDouble;
-import static org.radargun.utils.Utils.numberFormat;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,25 +7,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import org.radargun.CacheWrapper;
 import org.radargun.DistStageAck;
-import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
-import org.radargun.stages.cache.generators.KeyGenerator;
-import org.radargun.stages.cache.generators.StringKeyGenerator;
-import org.radargun.stages.cache.generators.ValueGenerator;
-import org.radargun.stages.cache.generators.WrappedArrayValueGenerator;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.SizeConverter;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.features.AtomicOperationsCapable;
-import org.radargun.features.BulkOperationsCapable;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.CsvReportGenerationStage;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
+import org.radargun.stages.cache.generators.KeyGenerator;
+import org.radargun.stages.cache.generators.StringKeyGenerator;
+import org.radargun.stages.cache.generators.ValueGenerator;
+import org.radargun.stages.cache.generators.WrappedArrayValueGenerator;
 import org.radargun.stages.helpers.BucketPolicy;
 import org.radargun.stats.AllRecordingStatistics;
 import org.radargun.stats.HistogramStatistics;
@@ -36,6 +29,11 @@ import org.radargun.stats.MultiStatistics;
 import org.radargun.stats.PeriodicStatistics;
 import org.radargun.stats.SimpleStatistics;
 import org.radargun.stats.Statistics;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.BulkOperations;
+import org.radargun.traits.ConditionalOperations;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Transactional;
 import org.radargun.utils.Fuzzy;
 import org.radargun.utils.Utils;
 
@@ -48,8 +46,6 @@ import org.radargun.utils.Utils;
 @Stage(doc = "Benchmark where several client threads access cache limited by time or number of requests.",
       deprecatedName = "WebSessionBenchmark")
 public class StressTestStage extends AbstractDistStage {
-
-   private static final String SIZE_INFO = "SIZE_INFO";
 
    @Property(doc = "Number of operations after which a log entry should be written. Default is 50000.")
    protected int logPeriod = 50000;
@@ -77,7 +73,7 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "In case we test replace performance, the frequency of replaces that should fail (percentage). Default is 40%")
    protected int replaceInvalidPercentage = 40;
 
-   @Property(doc = "Used only when useAtomics=true: The frequency of conditional removes that should fail (percentage). Default is 10%")
+   @Property(doc = "Used only when useConditionalOperations=true: The frequency of conditional removes that should fail (percentage). Default is 10%")
    protected int removeInvalidPercentage = 10;
 
    @Property(doc = "The number of threads that will work on this slave. Default is 10.")
@@ -89,7 +85,7 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "Used to initialize the key generator. Null by default.")
    protected String keyGeneratorParam = null;
 
-   @Property(doc = "Full class name of the value generator. Default is org.radargun.stressors.ByteArrayValueGenerator if useAtomics=false and org.radargun.stressors.WrappedArrayValueGenerator otherwise.")
+   @Property(doc = "Full class name of the value generator. Default is org.radargun.stressors.ByteArrayValueGenerator if useConditionalOperations=false and org.radargun.stressors.WrappedArrayValueGenerator otherwise.")
    protected String valueGeneratorClass = null;
 
    @Property(doc = "Used to initialize the value generator. Null by default.")
@@ -138,7 +134,7 @@ public class StressTestStage extends AbstractDistStage {
    protected boolean expectLostKeys = false;
 
    @Property(doc = "If true, putIfAbsent and replace operations are used. Default is false.")
-   protected boolean useAtomics = false;
+   protected boolean useConditionalOperations = false;
 
    @Property(doc = "Keep all keys in a pool - do not generate the keys for each request anew. Default is true.")
    protected boolean poolKeys = true;
@@ -158,14 +154,18 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.", converter = TimeConverter.class)
    protected long entryLifespan = 3600000;
 
-   private transient AtomicInteger txCount = new AtomicInteger(0);
+   @InjectTrait
+   protected BasicOperations basicOperations;
+   @InjectTrait
+   protected ConditionalOperations conditionalOperations;
+   @InjectTrait
+   protected BulkOperations bulkOperations;
+   @InjectTrait
+   protected Transactional transactional;
 
    protected transient volatile KeyGenerator keyGenerator;
    protected transient volatile ValueGenerator valueGenerator;
 
-   protected transient CacheWrapper cacheWrapper;
-   protected transient AtomicOperationsCapable atomicCacheWrapper;
-   protected transient BulkOperationsCapable bulkCacheWrapper;
    private transient ArrayList<Object> sharedKeysPool = new ArrayList<Object>();
    private transient volatile long startNanos;
    private transient PhaseSynchronizer synchronizer = new PhaseSynchronizer();
@@ -179,7 +179,7 @@ public class StressTestStage extends AbstractDistStage {
    @Init
    public void init() {
       if (valueGeneratorClass == null) {
-         if (useAtomics) valueGeneratorClass = WrappedArrayValueGenerator.class.getName();
+         if (useConditionalOperations) valueGeneratorClass = WrappedArrayValueGenerator.class.getName();
          else valueGeneratorClass = ByteArrayValueGenerator.class.getName();
       }
    }
@@ -226,17 +226,16 @@ public class StressTestStage extends AbstractDistStage {
          log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveState.getSlaveIndex(), slaves));
          return result;
       }
-      init(slaveState.getCacheWrapper());
-      if (cacheWrapper == null) {
-         log.info("Not running test on this slave as the wrapper hasn't been configured.");
+      if (!isServiceRunnning()) {
+         log.info("Not running test on this slave as service is not running.");
          return result;
       }
 
+      log.info("Executing: " + this.toString());
+      startNanos = System.nanoTime();
+
       try {
          Map<String, Object> results = execute();
-         String sizeInfo = generateSizeInfo();
-         log.info(sizeInfo);
-         results.put(SIZE_INFO, sizeInfo);
          result.setPayload(results);
          return result;
       } catch (Exception e) {
@@ -245,22 +244,6 @@ public class StressTestStage extends AbstractDistStage {
          result.setRemoteException(e);
          return result;
       }
-   }
-
-   /**
-    * Important: do not change the format of rhe log below as is is used by ./dist.sh to measure distribution load.
-    */
-   @Deprecated
-   private String generateSizeInfo() {
-      return "size info: " + cacheWrapper.getInfo() + ", clusterSize:" + slaveState.getClusterSize() + ", nodeIndex:" + slaveState.getSlaveIndex() + ", cacheSize: " + cacheWrapper.getLocalSize();
-   }
-
-   public PhaseSynchronizer getSynchronizer() {
-      return synchronizer;
-   }
-
-   public Completion getCompletion() {
-      return completion;
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks) {
@@ -280,29 +263,11 @@ public class StressTestStage extends AbstractDistStage {
          Map<String, Object> benchResult = (Map<String, Object>) wAck.getPayload();
          if (benchResult != null) {
             results.put(ack.getSlaveIndex(), benchResult);
-            Object reqPerSec = benchResult.get(Statistics.REQ_PER_SEC);
-            Object sizeInfo = benchResult.remove(SIZE_INFO);
-            if (reqPerSec != null) {
-               log.info("Received " + sizeInfo);
-               log.info("Slave #" + ack.getSlaveIndex() + ": " + numberFormat(parseDouble(reqPerSec.toString())) + " requests per second.");
-            }
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }
       }
       return success;
-   }
-
-   protected void init(CacheWrapper wrapper) {
-      this.cacheWrapper = wrapper;
-      if (wrapper instanceof AtomicOperationsCapable) {
-         atomicCacheWrapper = (AtomicOperationsCapable) wrapper;
-      }
-      if (wrapper instanceof BulkOperationsCapable) {
-         bulkCacheWrapper = (BulkOperationsCapable) wrapper;
-      }
-      startNanos = System.nanoTime();
-      log.info("Executing: " + this.toString());
    }
 
    public Map<String, Object> stress() {
@@ -312,7 +277,7 @@ public class StressTestStage extends AbstractDistStage {
       } else {
          completion = new OperationCountCompletion(numRequests, logPeriod);
       }
-      setStressorCompletion(completion);
+      setCompletion(completion);
 
       if (!startOperations()) return Collections.EMPTY_MAP;
       try {
@@ -333,10 +298,6 @@ public class StressTestStage extends AbstractDistStage {
          return false;
       }
       return true;
-   }
-
-   protected boolean isTerminated() {
-      return terminated;
    }
 
    protected Map<String, Object> processResults() {
@@ -360,11 +321,10 @@ public class StressTestStage extends AbstractDistStage {
    protected void executeOperations() throws InterruptedException {
       synchronizer.setSlaveCount(numThreads);
       for (int threadIndex = stressors.size(); threadIndex < numThreads; threadIndex++) {
-         Stressor stressor = new Stressor(this, getLogic(), threadIndex, slaveState.getSlaveIndex(), slaveState.getClusterSize());
+         Stressor stressor = createStressor(threadIndex);
          stressors.add(stressor);
          stressor.start();
       }
-      log.info("Cache wrapper info is: " + cacheWrapper.getInfo());
       synchronizer.masterPhaseEnd();
       // wait until all slaves have initialized keys
       synchronizer.masterPhaseStart();
@@ -373,6 +333,10 @@ public class StressTestStage extends AbstractDistStage {
       log.info("Started " + stressors.size() + " stressor threads.");
       // wait until all threads have finished
       synchronizer.masterPhaseStart();
+   }
+
+   protected Stressor createStressor(int threadIndex) {
+      return new Stressor(this, getLogic(), threadIndex, slaveState.getSlaveIndex(), slaveState.getClusterSize());
    }
 
    protected void finishOperations() {
@@ -392,8 +356,24 @@ public class StressTestStage extends AbstractDistStage {
       return finished;
    }
 
-   protected void setStressorCompletion(Completion completion) {
+   protected boolean isTerminated() {
+      return terminated;
+   }
+
+   public void setTerminated() {
+      this.terminated = true;
+   }
+
+   protected void setCompletion(Completion completion) {
       this.completion = completion;
+   }
+
+   public Completion getCompletion() {
+      return completion;
+   }
+
+   public PhaseSynchronizer getSynchronizer() {
+      return synchronizer;
    }
 
    public OperationLogic getLogic() {
@@ -405,7 +385,7 @@ public class StressTestStage extends AbstractDistStage {
          if (!poolKeys) {
             throw new IllegalArgumentException("Keys have to be pooled with changing set.");
          }
-         if (bulkSize != 1 || useAtomics) {
+         if (bulkSize != 1 || useConditionalOperations) {
             throw new IllegalArgumentException("Replace/bulk operations on changing set not supported.");
          }
          if (removePercentage > 0) {
@@ -414,26 +394,26 @@ public class StressTestStage extends AbstractDistStage {
          return new ChangingSetOperationLogic(this);
       } else if (bulkSize != 1) {
          if (bulkSize > 1 && bulkSize <= numEntries) {
-            if (cacheWrapper instanceof BulkOperationsCapable) {
+            if (bulkOperations != null) {
                if (sharedKeys) {
                   return new BulkOperationLogic(this, new FixedSetSharedOperationLogic(this, sharedKeysPool), preferAsyncOperations);
                } else {
                   return new BulkOperationLogic(this, new FixedSetPerThreadOperationLogic(this), preferAsyncOperations);
                }
             } else {
-               throw new IllegalArgumentException("Cache wrapper " + cacheWrapper.toString() + " does not support bulk operations.");
+               throw new IllegalArgumentException("Service " + slaveState.getServiceName() + " does not support bulk operations.");
             }
          } else {
             throw new IllegalArgumentException("Invalid bulk size, must be 1 < bulkSize(" + bulkSize + ") < numEntries(" + numEntries + ")");
          }
-      } else if (useAtomics) {
+      } else if (useConditionalOperations) {
          if (sharedKeys) {
             throw new IllegalArgumentException("Atomics on shared keys are not supported.");
-         } else if (cacheWrapper instanceof AtomicOperationsCapable) {
+         } else if (conditionalOperations != null) {
             if (!poolKeys) {
                log.warn("Keys are not pooled, but last values must be recorded!");
             }
-            return new FixedSetAtomicOperationLogic(this);
+            return new FixedSetConditionalOperationLogic(this);
          } else {
             throw new IllegalArgumentException("Atomics can be executed only on wrapper which supports atomic operations.");
          }
@@ -442,10 +422,6 @@ public class StressTestStage extends AbstractDistStage {
       } else {
          return new FixedSetPerThreadOperationLogic(this);
       }
-   }
-
-   public void setTerminated() {
-      this.terminated = true;
    }
 
    protected Object generateValue(Object key, int maxValueSize) {
@@ -479,10 +455,6 @@ public class StressTestStage extends AbstractDistStage {
          }
       }
       return valueGenerator;
-   }
-
-   public boolean isUseTransactions() {
-      return useTransactions == null ? cacheWrapper.isTransactional(null) : useTransactions;
    }
 
    protected static void avoidJit(Object result) {

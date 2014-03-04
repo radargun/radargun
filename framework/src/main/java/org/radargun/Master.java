@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
+import org.radargun.config.InitHelper;
 import org.radargun.config.MasterConfig;
 import org.radargun.config.StageHelper;
 import org.radargun.logging.Log;
@@ -60,25 +61,29 @@ public class Master {
                state.setClusterSize(cluster.getSize());
                state.setMaxClusterSize(masterConfig.getMaxClusterSize());
                long clusterStart = System.currentTimeMillis();
-               for (int stageId = 0; stageId < masterConfig.getScenario().getStageCount(); ++stageId) {
-                  Stage stage = masterConfig.getScenario().getStage(stageId, getCurrentExtras(masterConfig, configuration, cluster));
-                  if (stage instanceof MasterStage) {
-                     if (!executeMasterStage((MasterStage) stage, configuration, cluster.getSize(), masterConfig.getMaxClusterSize())) break;
-                  } else if (stage instanceof DistStage) {
-                     if (!executeDistStage(connection, stageId, (DistStage) stage)) break;
-                  } else {
-                     log.error("Stage '" + StageHelper.getStageName(stage.getClass()) + "' is neither master nor distributed");
-                     break;
+               try {
+                  for (int stageId = 0; stageId < masterConfig.getScenario().getStageCount(); ++stageId) {
+                     Stage stage = masterConfig.getScenario().getStage(stageId, getCurrentExtras(masterConfig, configuration, cluster));
+                     InitHelper.init(stage);
+                     if (stage instanceof MasterStage) {
+                        if (!executeMasterStage((MasterStage) stage)) break;
+                     } else if (stage instanceof DistStage) {
+                        if (!executeDistStage(connection, stageId, (DistStage) stage)) break;
+                     } else {
+                        log.error("Stage '" + StageHelper.getStageName(stage.getClass()) + "' is neither master nor distributed");
+                        break;
+                     }
                   }
+               } finally {
+                  connection.runStage(-1, cluster.getSize());
                }
-               connection.runStage(-1, cluster.getSize());
                log.info("Finished scenario on " + cluster + " in " + Utils.getMillisDurationString(System.currentTimeMillis() - clusterStart));
             }
             log.info("Finished benchmarking configuraion '" + configuration.name + "' in "
                   + Utils.getMillisDurationString(System.currentTimeMillis() - configStart));
          }
-         log.info("Successfully executed all benchmarks in " + Utils.getMillisDurationString(System.currentTimeMillis() - benchmarkStart) + ", exiting.");
-      } catch (IOException e) {
+         log.info("Executed all benchmarks in " + Utils.getMillisDurationString(System.currentTimeMillis() - benchmarkStart) + ", exiting.");
+      } catch (Throwable e) {
          log.error("Exception in Master.run: ", e);
          returnCode = 1;
       } finally {
@@ -102,7 +107,7 @@ public class Master {
       return extras;
    }
 
-   private boolean executeMasterStage(MasterStage stage, Configuration config, int clusterSize, int maxClusterSize) throws Exception {
+   private boolean executeMasterStage(MasterStage stage) throws Exception {
       stage.init(state);
       if (log.isDebugEnabled())
          log.debug("Starting '" + StageHelper.getStageName(stage.getClass()) + "' on master node only. Details:" + stage);
@@ -138,16 +143,12 @@ public class Master {
             return (thisVal < anotherVal ? -1 : (thisVal == anotherVal ? 0 : 1));
          }
       });
-      boolean stageOk = stage.processAckOnMaster(responses);
-      if (stageOk) return true;
-      if (!stage.isExitBenchmarkOnSlaveFailure()) {
-         log.warn("Execution error for current benchmark, skipping rest of the stages");
+      if (stage.processAckOnMaster(responses)) {
+         log.trace("Stage " + StageHelper.getStageName(stage.getClass()) + " successfully executed.");
          return true;
       } else {
-         log.info("Exception error on current stage, and exiting (stage's exitBenchmarkOnSlaveFailure is set to true).");
-         log.error("Exiting because issues processing current stage: " + StageHelper.getStageName(stage.getClass()));
+         log.warn("Execution error for current benchmark, skipping rest of the stages");
          return false;
       }
    }
-
 }

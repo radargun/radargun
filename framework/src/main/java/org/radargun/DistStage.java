@@ -29,6 +29,4 @@ public interface DistStage extends Stage, Serializable {
    boolean processAckOnMaster(List<DistStageAck> acks);
 
    public boolean isRunOnAllSlaves();
-
-   public boolean isExitBenchmarkOnSlaveFailure();
 }

@@ -5,7 +5,6 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.util.Date;
 
-import org.radargun.CacheWrapper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.tpcc.domain.Customer;
@@ -17,6 +16,7 @@ import org.radargun.stages.tpcc.domain.Order;
 import org.radargun.stages.tpcc.domain.OrderLine;
 import org.radargun.stages.tpcc.domain.Stock;
 import org.radargun.stages.tpcc.domain.Warehouse;
+import org.radargun.traits.BasicOperations;
 
 /**
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
@@ -26,56 +26,34 @@ public class TpccPopulation {
    private static Log log = LogFactory.getLog(TpccPopulation.class);
 
    private long POP_C_LAST = TpccTools.NULL_NUMBER;
-
    private long POP_C_ID = TpccTools.NULL_NUMBER;
-
    private long POP_OL_I_ID = TpccTools.NULL_NUMBER;
-
    private boolean _new_order = false;
-
    private int _seqIdCustomer[];
 
-   private CacheWrapper wrapper;
-
    private MemoryMXBean memoryBean;
-
    private int numWarehouses;
-
    private int slaveIndex;
-
    private int numSlaves;
-
    private long cLastMask;
-
    private long olIdMask;
-
    private long cIdMask;
 
+   private BasicOperations.Cache basicCache;
 
-   public TpccPopulation(CacheWrapper wrapper, int numWarehouses, int slaveIndex, int numSlaves, long cLastMask, long olIdMask, long cIdMask) {
-
-      this.wrapper = wrapper;
-
+   public TpccPopulation(BasicOperations.Cache basicCache, int numWarehouses, int slaveIndex, int numSlaves, long cLastMask, long olIdMask, long cIdMask) {
+      this.basicCache = basicCache;
       this._seqIdCustomer = new int[TpccTools.NB_MAX_CUSTOMER];
-
       this.memoryBean = ManagementFactory.getMemoryMXBean();
-
       this.numWarehouses = numWarehouses;
-
       this.slaveIndex = slaveIndex;
-
       this.numSlaves = numSlaves;
-
       this.cLastMask = cLastMask;
-
       this.olIdMask = olIdMask;
-
       this.cIdMask = cIdMask;
 
       initializeToolsParameters();
-
       populateItem();
-
       populateWarehouses();
 
       System.gc();
@@ -83,8 +61,6 @@ public class TpccPopulation {
 
 
    public void initializeToolsParameters() {
-
-
       TpccTools.NB_WAREHOUSES = this.numWarehouses;
       TpccTools.A_C_LAST = this.cLastMask;
       TpccTools.A_OL_I_ID = this.olIdMask;
@@ -98,7 +74,7 @@ public class TpccPopulation {
          boolean successful = false;
          while (!successful) {
             try {
-               wrapper.put(null, "C_C_LAST", c_c_last);
+               basicCache.put("C_C_LAST", c_c_last);
                successful = true;
             } catch (Throwable e) {
                log.warn("C_C_LAST", e);
@@ -108,7 +84,7 @@ public class TpccPopulation {
          successful = false;
          while (!successful) {
             try {
-               wrapper.put(null, "C_C_ID", c_c_id);
+               basicCache.put("C_C_ID", c_c_id);
                successful = true;
             } catch (Throwable e) {
                log.warn("C_C_ID", e);
@@ -118,7 +94,7 @@ public class TpccPopulation {
          successful = false;
          while (!successful) {
             try {
-               wrapper.put(null, "C_OL_ID", c_ol_i_id);
+               basicCache.put("C_OL_ID", c_ol_i_id);
                successful = true;
             } catch (Throwable e) {
                log.warn("C_OL_ID", e);
@@ -189,7 +165,7 @@ public class TpccPopulation {
          boolean successful = false;
          while (!successful) {
             try {
-               newItem.store(wrapper);
+               newItem.store(basicCache);
                successful = true;
             } catch (Throwable e) {
                log.warn("Storing new item failed:", e);
@@ -219,11 +195,10 @@ public class TpccPopulation {
                                                                           Float.valueOf("0.2000").floatValue(), 4),
                                                       TpccTools.WAREHOUSE_YTD);
 
-
                boolean successful = false;
                while (!successful) {
                   try {
-                     newWarehouse.store(wrapper);
+                     newWarehouse.store(basicCache);
                      successful = true;
                   } catch (Throwable e) {
                      log.warn("Storing new warehouse failed", e);
@@ -241,7 +216,6 @@ public class TpccPopulation {
 
          }
       }
-
    }
 
    private void populateStock(int id_wharehouse) {
@@ -261,8 +235,6 @@ public class TpccPopulation {
             if (slaveIndex == numSlaves - 1) {
                num_of_items += reminder;
             }
-
-
          }
          log.info(" STOCK for Warehouse " + id_wharehouse + " - ITEMS=" + init_id_item + ",...," + (init_id_item - 1 + num_of_items));
          for (long i = init_id_item; i <= (init_id_item - 1 + num_of_items); i++) {
@@ -285,18 +257,15 @@ public class TpccPopulation {
                                        0,
                                        TpccTools.sData());
 
-
             boolean successful = false;
             while (!successful) {
                try {
-                  newStock.store(wrapper);
+                  newStock.store(basicCache);
                   successful = true;
                } catch (Throwable e) {
                   log.warn("Storing new stock failed", e);
                }
             }
-
-
          }
       }
    }
@@ -338,11 +307,10 @@ public class TpccPopulation {
                                                 TpccTools.WAREHOUSE_YTD,
                                                 3001);
 
-
             boolean successful = false;
             while (!successful) {
                try {
-                  newDistrict.store(wrapper);
+                  newDistrict.store(basicCache);
                   successful = true;
                } catch (Throwable e) {
                   log.warn("Storing new district failed", e);
@@ -383,13 +351,12 @@ public class TpccPopulation {
             boolean successful = false;
             while (!successful) {
                try {
-                  newCustomer.store(wrapper);
+                  newCustomer.store(basicCache);
                   successful = true;
                } catch (Throwable e) {
                   log.warn("Storing new customer failed", e);
                }
             }
-
 
             populateHistory(i, id_wharehouse, id_district);
          }
@@ -398,22 +365,19 @@ public class TpccPopulation {
 
    private void populateHistory(int id_customer, int id_wharehouse, int id_district) {
       //log.info("populate history");
-      if (id_customer < 0 || id_wharehouse < 0 || id_district < 0) return;
-      else {
-
+      if (id_customer < 0 || id_wharehouse < 0 || id_district < 0) {
+         return;
+      } else {
          History newHistory = new History(id_customer, id_district, id_wharehouse, id_district, id_wharehouse, new Date(System.currentTimeMillis()), 10, TpccTools.aleaChainec(12, 24));
-
-
          boolean successful = false;
          while (!successful) {
             try {
-               newHistory.store(wrapper, this.slaveIndex);
+               newHistory.store(basicCache, this.slaveIndex);
                successful = true;
             } catch (Throwable e) {
                log.warn("Storing new history failed", e);
             }
          }
-
       }
    }
 
@@ -436,11 +400,10 @@ public class TpccPopulation {
                                     o_ol_cnt,
                                     1);
 
-
          boolean successful = false;
          while (!successful) {
             try {
-               newOrder.store(wrapper);
+               newOrder.store(basicCache);
                successful = true;
             } catch (Throwable e) {
                log.warn("Storing new order failed", e);
@@ -468,7 +431,6 @@ public class TpccPopulation {
             delivery_date = aDate;
          }
 
-
          OrderLine newOrderLine = new OrderLine(id_order,
                                                 id_district,
                                                 id_wharehouse,
@@ -480,17 +442,15 @@ public class TpccPopulation {
                                                 amount,
                                                 TpccTools.aleaChainel(12, 24));
 
-
          boolean successful = false;
          while (!successful) {
             try {
-               newOrderLine.store(wrapper);
+               newOrderLine.store(basicCache);
                successful = true;
             } catch (Throwable e) {
                log.warn("Storing new order line failed", e);
             }
          }
-
       }
    }
 
@@ -503,7 +463,7 @@ public class TpccPopulation {
       boolean successful = false;
       while (!successful) {
          try {
-            newNewOrder.store(wrapper);
+            newNewOrder.store(basicCache);
             successful = true;
          } catch (Throwable e) {
             log.warn("Storing new order failed", e);

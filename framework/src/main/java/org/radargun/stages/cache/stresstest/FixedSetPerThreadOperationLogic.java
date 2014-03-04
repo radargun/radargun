@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.traits.BasicOperations;
 
 /**
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -26,22 +27,21 @@ class FixedSetPerThreadOperationLogic extends FixedSetOperationLogic {
    }
 
    @Override
-   public void init(String bucketId, int threadIndex, int nodeIndex, int numNodes) {
+   public void init(int threadIndex, int nodeIndex, int numNodes) {
       this.nodeIndex = nodeIndex;
       if (stage.poolKeys) {
          if (pooledKeys.size() == stage.numEntries) return;
       } else {
          if (myLoadedKeys == stage.numEntries) return;
       }
+      BasicOperations.Cache cache = stage.basicOperations.getCache(stage.bucketPolicy.getBucketName(threadIndex));
       KeyGenerator keyGenerator = stage.getKeyGenerator();
       for (int keyIndex = 0; keyIndex < stage.numEntries; keyIndex++) {
-         Object key = null;
-
-         key = keyGenerator.generateKey((nodeIndex * stage.numThreads + threadIndex) * stage.numEntries + keyIndex);
+         Object key = keyGenerator.generateKey((nodeIndex * stage.numThreads + threadIndex) * stage.numEntries + keyIndex);
          Object value = stage.generateValue(key, Integer.MAX_VALUE);
          addPooledKey(key, value);
          try {
-            stage.cacheWrapper.put(bucketId, key, value);
+            cache.put(key, value);
             long loaded = keysLoaded.incrementAndGet();
             if (loaded % 100000 == 0) {
                Runtime runtime = Runtime.getRuntime();

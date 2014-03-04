@@ -107,7 +107,7 @@
       <priority value="WARN"/>
    </category>
 
-   <category name="org.radargun.cachewrappers.EHCacheWrapper">
+   <category name="org.radargun.service.EHCacheService">
       <priority value="TRACE"/>
    </category>
 

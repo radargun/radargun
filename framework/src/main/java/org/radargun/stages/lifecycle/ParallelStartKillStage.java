@@ -33,6 +33,9 @@ import org.radargun.stages.helpers.KillHelper;
 import org.radargun.stages.helpers.RoleHelper;
 import org.radargun.stages.helpers.StartHelper;
 import org.radargun.stages.helpers.StartStopTime;
+import org.radargun.traits.Clustered;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Partitionable;
 
 /**
  * The stage start and kills some nodes concurrently (without waiting for each other).
@@ -65,10 +68,14 @@ public class ParallelStartKillStage extends AbstractStartStage {
    @Property(doc = "Another way how to specify killed nodes is by role. Available roles are "
          + RoleHelper.SUPPORTED_ROLES + ". By default this is not used.")
    private RoleHelper.Role role;
-   
+
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
+      if (lifecycle == null) {
+         log.warn("No lifecycle for service " + slaveState.getServiceName());
+         return ack;
+      }
       boolean killMe = kill.contains(slaveState.getSlaveIndex()) || RoleHelper.hasRole(slaveState, role);
       boolean startMe = start.contains(slaveState.getSlaveIndex());
       if (!(killMe || startMe)) {
@@ -76,7 +83,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
       }
       while (killMe || startMe) {
          if (startMe) {
-            if (slaveState.getCacheWrapper() != null) {
+            if (lifecycle.isRunning()) {
                if (!killMe) {
                   log.info("Wrapper already set on this slave, not starting it again.");
                   startMe = false;
@@ -90,13 +97,13 @@ public class ParallelStartKillStage extends AbstractStartStage {
                      log.error("Starting delay was interrupted.", e);
                   }
                }
-               StartHelper.start(slaveState, service, configProperties, null, 0, reachable, ack);
+               StartHelper.start(slaveState, false, null, 0, reachable, ack);
                if (ack.isError()) return ack;
                startMe = false;               
             }            
          }
          if (killMe) {
-            if (slaveState.getCacheWrapper() == null) {
+            if (!lifecycle.isRunning()) {
                if (!startMe) {
                   log.info("Wrapper is dead, nothing to kill");
                   killMe = false;

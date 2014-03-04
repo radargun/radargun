@@ -1,8 +1,8 @@
 package org.radargun.stages.tpcc.domain;
 
-import org.radargun.CacheWrapper;
-
 import java.io.Serializable;
+
+import org.radargun.traits.BasicOperations;
 
 /**
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
@@ -55,14 +55,12 @@ public class NewOrder implements Serializable {
       return "NEWORDER_" + this.no_w_id + "_" + this.no_d_id + "_" + this.no_o_id;
    }
 
-   public void store(CacheWrapper wrapper) throws Throwable {
-
-      wrapper.put(null, this.getKey(), this);
+   public void store(BasicOperations.Cache basicCache) throws Throwable {
+      basicCache.put(this.getKey(), this);
    }
 
-   public void insert(CacheWrapper wrapper) throws Throwable {
-
-      wrapper.put(null, this.getKey(), this);
+   public void insert(BasicOperations.Cache basicCache) throws Throwable {
+      basicCache.put(this.getKey(), this);
    }
 
    @Override

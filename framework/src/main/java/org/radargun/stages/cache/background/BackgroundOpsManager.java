@@ -5,16 +5,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.radargun.stages.cache.generators.KeyGenerator;
-import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.CacheWrapper;
+import org.radargun.stages.cache.generators.KeyGenerator;
+import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.helpers.Range;
 import org.radargun.state.SlaveState;
+import org.radargun.stats.Operation;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.SynchronizedStatistics;
-import org.radargun.stats.Operation;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.CacheInformation;
+import org.radargun.traits.ConditionalOperations;
+import org.radargun.traits.Debugable;
+import org.radargun.traits.Lifecycle;
+import org.radargun.traits.Transactional;
 
 /**
  * 
@@ -22,43 +27,22 @@ import org.radargun.stats.Operation;
  * to the fullest, they just apply mild continuous load (with wait between requests) to have some
  * statistics about cache throughput during resilience/elasticity tests.
  * 
- * @author Michal Linhard <mlinhard@redhat.com>
- * 
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class BackgroundOpsManager {
    /**
-    * Bucket name for CacheWrapper requests, also key to SlaveState to retrieve BackgroundOpsManager
-    * instance and to MasterState to retrieve results.
+    * Key to SlaveState to retrieve BackgroundOpsManager instance and to MasterState to retrieve results.
     */
    public static final String NAME = "BackgroundOpsManager";
 
    private static Log log = LogFactory.getLog(BackgroundOpsManager.class);
 
-   private int puts;
-   private int gets;
-   private int removes;
+   private StartBackgroundStressorsStage stressorConfiguration;
    private int operations;
-   private int numEntries;
-   private int entrySize;
-   private String bucketId;
-   private int numThreads;
-   private long delayBetweenRequests;
-   private int numSlaves;
-   private int slaveIndex;
-   private int transactionSize;
-   private List<Integer> loadDataOnSlaves;
-   private List<Integer> loadDataForDeadSlaves;
-   private boolean loadOnly;
-   private boolean loadWithPutIfAbsent;
-   private boolean useLogValues;
-   private int logCheckingThreads;
-   private int logValueMaxSize;
-   private long logCounterUpdatePeriod;
-   private long logCheckersNoProgressTimeout;
-   private boolean sharedKeys;
 
    private SlaveState slaveState;
-   private volatile BackgroundStressor[] stressorThreads;
+   private volatile Stressor[] stressorThreads;
    private SizeThread sizeThread;
    private KeepAliveThread keepAliveThread;
    private List<Statistics> stats;
@@ -67,8 +51,13 @@ public class BackgroundOpsManager {
    private boolean loaded = false;
    private LogChecker[] logCheckers;
    private LogChecker.Pool logCheckerPool;
-   private boolean ignoreDeadCheckers;
-   private long deadSlaveTimeout;
+
+   private Lifecycle lifecycle;
+   private BasicOperations.Cache basicCache;
+   private CacheInformation cacheInformation;
+   private Debugable.Cache debugableCache;
+   private Transactional.Resource transactionalCache;
+   private ConditionalOperations.Cache conditionalCache;
 
    public static BackgroundOpsManager getInstance(SlaveState slaveState) {
       return (BackgroundOpsManager) slaveState.get(NAME);
@@ -88,40 +77,19 @@ public class BackgroundOpsManager {
       slaveState.remove(NAME);
    }
 
-   public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, int puts, int gets, int removes,
-                                                          int numEntries, int entrySize, String bucketId, int numThreads,
-                                                          long delayBetweenRequests, int numSlaves, int slaveIndex,
-                                                          int transactionSize, List<Integer> loadDataOnSlaves,
-                                                          List<Integer> loadDataForDeadSlaves, boolean loadOnly,
-                                                          boolean loadWithPutIfAbsent, boolean useLogValues, int logCheckingThreads,
-                                                          int logValueMaxSize, long logCounterUpdatePeriod,
-                                                          long logCheckersNoProgressTimeout, boolean ignoreDeadCheckers,
-                                                          long deadSlaveTimeout, boolean sharedKeys) {
+   public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, StartBackgroundStressorsStage stage) {
       BackgroundOpsManager instance = getOrCreateInstance(slaveState);
-      instance.puts = puts;
-      instance.gets = gets;
-      instance.removes = removes;
-      instance.operations = puts + gets + removes;
-      instance.numEntries = numEntries;
-      instance.entrySize = entrySize;
-      instance.bucketId = bucketId;
-      instance.numThreads = numThreads;
-      instance.delayBetweenRequests = delayBetweenRequests;
-      instance.numSlaves = numSlaves;
-      instance.slaveIndex = slaveIndex;
-      instance.transactionSize = transactionSize;
-      instance.loadDataOnSlaves = loadDataOnSlaves;
-      instance.loadDataForDeadSlaves = loadDataForDeadSlaves;
-      instance.loadOnly = loadOnly;
-      instance.loadWithPutIfAbsent = loadWithPutIfAbsent;
-      instance.useLogValues = useLogValues;
-      instance.logCheckingThreads = logCheckingThreads;
-      instance.logValueMaxSize = logValueMaxSize;
-      instance.logCounterUpdatePeriod = logCounterUpdatePeriod;
-      instance.logCheckersNoProgressTimeout = logCheckersNoProgressTimeout;
-      instance.ignoreDeadCheckers = ignoreDeadCheckers;
-      instance.deadSlaveTimeout = deadSlaveTimeout;
-      instance.sharedKeys = sharedKeys;
+      instance.stressorConfiguration = stage;
+      instance.operations = stage.puts + stage.gets + stage.removes;
+
+      instance.lifecycle = slaveState.getTrait(Lifecycle.class);
+      instance.basicCache = slaveState.getTrait(BasicOperations.class).getCache(stage.cacheName);
+      ConditionalOperations conditionalOperations = slaveState.getTrait(ConditionalOperations.class);
+      instance.conditionalCache = conditionalOperations == null ? null : conditionalOperations.getCache(stage.cacheName);
+      instance.cacheInformation = slaveState.getTrait(CacheInformation.class);
+      Debugable debugable = slaveState.getTrait(Debugable.class);
+      instance.debugableCache = debugable == null ? null : debugable.getCache(stage.cacheName);
+      instance.transactionalCache = slaveState.getTrait(Transactional.class).getResource(stage.cacheName);
       return instance;
    }
 
@@ -136,15 +104,17 @@ public class BackgroundOpsManager {
 
    public Operation getOperation(Random rand) {
       int r = rand.nextInt(operations);
-      if (r < gets) {
+      if (r < stressorConfiguration.gets) {
          return Operation.GET;
-      } else if (r < gets + puts) {
+      } else if (r < stressorConfiguration.gets + stressorConfiguration.puts) {
          return Operation.PUT;
       } else return Operation.REMOVE;
    }
 
    public synchronized void startBackgroundThreads() {
-      if (loadDataOnSlaves != null && !loadDataOnSlaves.isEmpty() && !loadDataOnSlaves.contains(slaveIndex)) {
+      if (stressorConfiguration.loadDataOnSlaves != null
+            && !stressorConfiguration.loadDataOnSlaves.isEmpty()
+            && !stressorConfiguration.loadDataOnSlaves.contains(slaveState.getSlaveIndex())) {
          log.info("This slave is not loading any data.");
          return;
       }
@@ -152,65 +122,85 @@ public class BackgroundOpsManager {
          log.warn("Can't start stressors, they're already running.");
          return;
       }
-      if (slaveState.getCacheWrapper() == null) {
-         log.warn("Can't start stressors, cache wrapper not available");
+      if (lifecycle != null && !lifecycle.isRunning()) {
+         log.warn("Can't start stressors, service is not running");
          return;
       }
       startStressorThreads();
-      if (useLogValues) {
+      if (stressorConfiguration.useLogValues) {
          startCheckers();
       }
-      if (ignoreDeadCheckers) {
+      if (stressorConfiguration.ignoreDeadCheckers) {
          keepAliveThread = new KeepAliveThread();
          keepAliveThread.start();
       }
    }
 
    private synchronized void startStressorThreads() {
-      stressorThreads = new BackgroundStressor[numThreads];
-      if (numThreads <= 0) {
+      stressorThreads = new Stressor[stressorConfiguration.numThreads];
+      if (stressorConfiguration.numThreads <= 0) {
          log.warn("Stressor thread number set to 0!");
          return;
       }
-      Range slaveKeyRange = Range.divideRange(numEntries, numSlaves, slaveIndex);
-
-      List<List<Range>> rangesForThreads = null;
-      int liveId = slaveIndex;
-      if (!loaded && loadDataForDeadSlaves != null && !loadDataForDeadSlaves.isEmpty()) {
-         List<Range> deadSlavesKeyRanges = new ArrayList<Range>(loadDataForDeadSlaves.size());
-         for (int deadSlave : loadDataForDeadSlaves) {
-            deadSlavesKeyRanges.add(Range.divideRange(numEntries, numSlaves, deadSlave)); // key range for the current dead slave
-            if (deadSlave < slaveIndex) liveId--;
-         }
-         rangesForThreads = Range.balance(deadSlavesKeyRanges, (numSlaves - loadDataForDeadSlaves.size()) * numThreads);
-      }
-
       for (int i = 0; i < stressorThreads.length; i++) {
-         Range threadKeyRange = Range.divideRange(slaveKeyRange.getSize(), numThreads, i);
-         Range myKeyRange = threadKeyRange.shift(slaveKeyRange.getStart());
-         stressorThreads[i] = new BackgroundStressor(this, slaveState, myKeyRange,
-               rangesForThreads == null ? null : rangesForThreads.get(i + numThreads * liveId), slaveIndex, i);
+         stressorThreads[i] = new Stressor(this, createLogic(i), i);
          stressorThreads[i].setLoaded(this.loaded);
          stressorThreads[i].start();
       }
    }
 
+   private Logic createLogic(int index) {
+      if (stressorConfiguration.sharedKeys) {
+         if (stressorConfiguration.useLogValues) {
+            return new SharedLogLogic(this, index, stressorConfiguration.numEntries);
+         } else {
+            throw new IllegalArgumentException("Legacy logic cannot use shared keys.");
+         }
+      } else {
+         int numThreads = stressorConfiguration.numThreads;
+         int totalThreads = numThreads * slaveState.getClusterSize();
+         Range range = Range.divideRange(stressorConfiguration.numEntries, totalThreads, numThreads * slaveState.getSlaveIndex() + index);
+         if (stressorConfiguration.useLogValues) {
+            return new PrivateLogLogic(this, index, range);
+         } else {
+            List<Integer> deadSlaves = stressorConfiguration.loadDataForDeadSlaves;
+            List<List<Range>> rangesForThreads = null;
+            int liveId = slaveState.getSlaveIndex();
+            if (!loaded && deadSlaves != null && !deadSlaves.isEmpty()) {
+               List<Range> deadSlavesKeyRanges = new ArrayList<Range>(deadSlaves.size() * numThreads);
+               for (int deadSlave : deadSlaves) {
+                  // key ranges for the current dead slave
+                  for (int deadThread = 0; deadThread < numThreads; ++deadThread) {
+                     deadSlavesKeyRanges.add(Range.divideRange(stressorConfiguration.numEntries, totalThreads, deadSlave * numThreads + deadThread));
+                  }
+                  if (deadSlave < slaveState.getSlaveIndex()) liveId--;
+               }
+               rangesForThreads = Range.balance(deadSlavesKeyRanges, (slaveState.getClusterSize() - deadSlaves.size()) * numThreads);
+            }
+            List<Range> deadRanges = rangesForThreads == null ? null : rangesForThreads.get(index + numThreads * liveId);
+            return new LegacyLogic(this, range, deadRanges);
+         }
+      }
+   }
+
    private synchronized void startCheckers() {
-      if (logCheckingThreads <= 0) {
+      if (stressorConfiguration.logCheckingThreads <= 0) {
          log.error("LogValue checker set to 0!");
-      } else if (sharedKeys) {
-         logCheckers = new LogChecker[logCheckingThreads];
-         SharedLogChecker.Pool pool = new SharedLogChecker.Pool(numSlaves, numThreads, numEntries, this);
+      } else if (stressorConfiguration.sharedKeys) {
+         logCheckers = new LogChecker[stressorConfiguration.logCheckingThreads];
+         SharedLogChecker.Pool pool = new SharedLogChecker.Pool(
+               slaveState.getClusterSize(), stressorConfiguration.numThreads, stressorConfiguration.numEntries, this);
          logCheckerPool = pool;
-         for (int i = 0; i < logCheckingThreads; ++i) {
+         for (int i = 0; i < stressorConfiguration.logCheckingThreads; ++i) {
             logCheckers[i] = new SharedLogChecker(i, pool, this);
             logCheckers[i].start();
          }
       } else {
-         logCheckers = new LogChecker[logCheckingThreads];
-         PrivateLogChecker.Pool pool = new PrivateLogChecker.Pool(numSlaves, numThreads, numEntries, this);
+         logCheckers = new LogChecker[stressorConfiguration.logCheckingThreads];
+         PrivateLogChecker.Pool pool = new PrivateLogChecker.Pool(
+               slaveState.getClusterSize(), stressorConfiguration.numThreads, stressorConfiguration.numEntries, this);
          logCheckerPool = pool;
-         for (int i = 0; i < logCheckingThreads; ++i) {
+         for (int i = 0; i < stressorConfiguration.logCheckingThreads; ++i) {
             logCheckers[i] = new PrivateLogChecker(i, pool, this);
             logCheckers[i].start();
          }
@@ -231,7 +221,7 @@ public class BackgroundOpsManager {
       boolean loaded = false;
       while (!loaded) {
          loaded = true;
-         for (BackgroundStressor st : stressorThreads) {
+         for (Stressor st : stressorThreads) {
             if (!st.isLoaded()) {
                loaded = false;
             }
@@ -247,11 +237,11 @@ public class BackgroundOpsManager {
          log.warn("No log checker pool or active checkers.");
          return null;
       }
-      BackgroundStressor[] stressors = stressorThreads;
+      Stressor[] stressors = stressorThreads;
       if (stressors != null) {
          stopBackgroundThreads(true, false, false);
       }
-      String error = logCheckerPool.waitUntilChecked(logCheckersNoProgressTimeout);
+      String error = logCheckerPool.waitUntilChecked(stressorConfiguration.logCheckersNoProgressTimeout);
       if (error != null) {
          return error;
       }
@@ -368,33 +358,7 @@ public class BackgroundOpsManager {
       return statsToReturn;
    }
 
-   public boolean getLoadOnly() {
-      return loadOnly;
-   }
 
-   public boolean getLoadWithPutIfAbsent() {
-      return loadWithPutIfAbsent;
-   }
-
-   public int getSlaveIndex() {
-      return slaveIndex;
-   }
-
-   public int getNumSlaves() {
-      return numSlaves;
-   }
-
-   public int getLogCheckingThreads() {
-      return logCheckingThreads;
-   }
-
-   public int getLogValueMaxSize() {
-      return logValueMaxSize;
-   }
-
-   public long getLogCounterUpdatePeriod() {
-      return logCounterUpdatePeriod;
-   }
 
    public KeyGenerator getKeyGenerator() {
       KeyGenerator keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
@@ -406,15 +370,15 @@ public class BackgroundOpsManager {
    }
 
    public String getError() {
-      if (useLogValues) {
+      if (stressorConfiguration.useLogValues) {
          if (logCheckerPool != null && logCheckerPool.getMissingOperations() > 0) {
             return "Background stressors report " + logCheckerPool.getMissingOperations() + " missing operations!";
          }
          if (logCheckers != null) {
             long lastProgress = System.currentTimeMillis() - logCheckerPool.getLastStoredOperationTimestamp();
-            if (lastProgress > logCheckersNoProgressTimeout) {
+            if (lastProgress > stressorConfiguration.logCheckersNoProgressTimeout) {
                StringBuilder sb = new StringBuilder(1000).append("Current stressors info:\n");
-               for (BackgroundStressor stressor : stressorThreads) {
+               for (Stressor stressor : stressorThreads) {
                   sb.append(stressor.getStatus()).append(", stacktrace:\n");
                   for (StackTraceElement ste : stressor.getStackTrace()) {
                      sb.append(ste).append("\n");
@@ -437,27 +401,31 @@ public class BackgroundOpsManager {
       return null;
    }
 
-   public int getNumThreads() {
-      return numThreads;
-   }
-
-   public int getNumEntries() {
-      return numEntries;
-   }
-
-   public boolean isIgnoreDeadCheckers() {
-      return ignoreDeadCheckers;
-   }
-
    public boolean isSlaveAlive(int slaveId) {
       Object value = null;
       try {
-         value = getCacheWrapper().get(getBucketId(), "__keepAlive_" + slaveId);
+         value = basicCache.get("__keepAlive_" + slaveId);
       } catch (Exception e) {
          log.error("Failed to retrieve the keep alive timestamp", e);
          return true;
       }
-      return value != null &&  value instanceof Long && ((Long) value) > System.currentTimeMillis() - deadSlaveTimeout;
+      return value != null &&  value instanceof Long && ((Long) value) > System.currentTimeMillis() - stressorConfiguration.deadSlaveTimeout;
+   }
+
+   public BasicOperations.Cache getBasicCache() {
+      return basicCache;
+   }
+
+   public Debugable.Cache getDebugableCache() {
+      return debugableCache;
+   }
+
+   public Transactional.Resource getTransactionalCache() {
+      return transactionalCache;
+   }
+
+   public ConditionalOperations.Cache getConditionalCache() {
+      return conditionalCache;
    }
 
    private class KeepAliveThread extends Thread {
@@ -471,7 +439,7 @@ public class BackgroundOpsManager {
       public void run() {
          while (!terminate && !isInterrupted()) {
             try {
-               getCacheWrapper().put(getBucketId(), "__keepAlive_" + getSlaveIndex(), System.currentTimeMillis());
+               basicCache.put("__keepAlive_" + getSlaveIndex(), System.currentTimeMillis());
             } catch (Exception e) {
                log.error("Failed to place keep alive timestamp", e);
             }
@@ -511,7 +479,7 @@ public class BackgroundOpsManager {
 
       private SynchronizedStatistics gatherStats() {
          long now = System.currentTimeMillis();
-         BackgroundStressor[] threads = stressorThreads;
+         Stressor[] threads = stressorThreads;
          if (threads == null) {
             return nodeDownStats.snapshot(true, now);
          } else {
@@ -550,6 +518,7 @@ public class BackgroundOpsManager {
       @Override
       public void run() {
          try {
+            CacheInformation.Cache info = cacheInformation.getCache(stressorConfiguration.cacheName);
             while (!isInterrupted()) {
                synchronized (this) {
                   while (!getSize) {
@@ -557,9 +526,8 @@ public class BackgroundOpsManager {
                   }
                   getSize = false;
                }
-               CacheWrapper cacheWrapper = slaveState.getCacheWrapper();
-               if (cacheWrapper != null && cacheWrapper.isRunning()) {
-                  size = slaveState.getCacheWrapper().getLocalSize();
+               if (cacheInformation != null && lifecycle.isRunning()) {
+                  size = info.getLocalSize();
                } else {
                   size = 0;
                }
@@ -606,32 +574,48 @@ public class BackgroundOpsManager {
    public void setLoaded(boolean loaded) {
       this.loaded = loaded;
    }
-   
-   public String getBucketId() {
-      return bucketId;
+
+   public int getSlaveIndex() {
+      return slaveState.getSlaveIndex();
    }
 
+   public int getClusterSize() {
+      return slaveState.getClusterSize();
+   }
+
+   public int getNumThreads() {
+      return stressorConfiguration.numThreads;
+   }
+
+   public boolean isIgnoreDeadCheckers() {
+      return stressorConfiguration.ignoreDeadCheckers;
+   }
+
+   public boolean getLoadOnly() {
+      return stressorConfiguration.loadOnly;
+   }
+
+   public boolean getLoadWithPutIfAbsent() {
+      return stressorConfiguration.loadWithPutIfAbsent;
+   }
+
+   public int getLogValueMaxSize() {
+      return stressorConfiguration.logValueMaxSize;
+   }
+
+   public long getLogCounterUpdatePeriod() {
+      return stressorConfiguration.logCounterUpdatePeriod;
+   }
+   
    public int getTransactionSize() {
-      return transactionSize;
+      return stressorConfiguration.transactionSize;
    }
 
    public int getEntrySize() {
-      return entrySize;
+      return stressorConfiguration.entrySize;
    }
 
    public long getDelayBetweenRequests() {
-      return delayBetweenRequests;
-   }
-
-   public boolean isUseLogValues() {
-      return useLogValues;
-   }
-
-   public boolean isSharedKeys() {
-      return sharedKeys;
-   }
-
-   public CacheWrapper getCacheWrapper() {
-      return slaveState.getCacheWrapper();
+      return stressorConfiguration.delayBetweenRequests;
    }
 }

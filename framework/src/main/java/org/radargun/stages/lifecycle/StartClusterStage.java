@@ -39,14 +39,13 @@ public class StartClusterStage extends AbstractStartStage {
    @Property(doc = "Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.")
    private Set<Integer> reachable = null;
 
-   public StartClusterStage() {
-      super.setExitBenchmarkOnSlaveFailure(true);
-   }
-
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      if (slaveState.getCacheWrapper() != null) {
-         log.info("Wrapper already set on this slave, not starting it again.");
+      if (lifecycle == null) {
+         log.warn("Service " + slaveState.getServiceName() + " does not support lifecycle management.");
+         return ack;
+      } else if (lifecycle.isRunning()) {
+         log.info("Service " + slaveState.getServiceName() + " is already running.");
          return ack;
       }
       if (slaves != null) {
@@ -67,11 +66,9 @@ public class StartClusterStage extends AbstractStartStage {
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
             + ". This slave's index is: " + slaveState.getSlaveIndex());
       
-      StartHelper.start(slaveState, service, configProperties,
-            validateCluster ? new StartHelper.ClusterValidation(expectNumSlaves, slaveState.getClusterSize()) : null,
-            clusterFormationTimeout, reachable, ack);
+      StartHelper.start(slaveState, validateCluster, expectNumSlaves, clusterFormationTimeout, reachable, ack);
       if (!ack.isError()) {
-         log.info("Successfully started cache wrapper on slave " + slaveState.getSlaveIndex() + ": " + slaveState.getCacheWrapper());
+         log.info("Successfully started cache service " + slaveState.getServiceName() + " on slave " + slaveState.getSlaveIndex());
       }
       return ack;
    }

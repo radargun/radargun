@@ -1,9 +1,9 @@
 package org.radargun.stages.tpcc.domain;
 
-import org.radargun.CacheWrapper;
-
 import java.io.Serializable;
 import java.util.Date;
+
+import org.radargun.traits.BasicOperations;
 
 /**
  * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
@@ -254,15 +254,12 @@ public class Customer implements Serializable, Comparable {
       return "CUSTOMER_" + this.c_w_id + "_" + this.c_d_id + "_" + this.c_id;
    }
 
-   public void store(CacheWrapper wrapper) throws Throwable {
-
-      wrapper.put(null, this.getKey(), this);
+   public void store(BasicOperations.Cache basicCache) throws Throwable {
+      basicCache.put(this.getKey(), this);
    }
 
-   public boolean load(CacheWrapper wrapper) throws Throwable {
-
-      Customer loaded = (Customer) wrapper.get(null, this.getKey());
-
+   public boolean load(BasicOperations.Cache basicCache) throws Throwable {
+      Customer loaded = (Customer) basicCache.get(this.getKey());
       if (loaded == null) return false;
 
       this.c_balance = loaded.c_balance;
@@ -283,7 +280,6 @@ public class Customer implements Serializable, Comparable {
       this.c_street2 = loaded.c_street2;
       this.c_ytd_payment = loaded.c_ytd_payment;
       this.c_zip = loaded.c_zip;
-
 
       return true;
    }

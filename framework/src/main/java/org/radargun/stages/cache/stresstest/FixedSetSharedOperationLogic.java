@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.traits.BasicOperations;
 
 /**
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -31,7 +32,7 @@ class FixedSetSharedOperationLogic extends FixedSetOperationLogic {
    }
 
    @Override
-   public void init(String bucketId, int threadIndex, int nodeIndex, int numNodes) {
+   public void init(int threadIndex, int nodeIndex, int numNodes) {
       if (stage.poolKeys) {
          synchronized (sharedKeys) {
             // no point in doing this in parallel, too much overhead in synchronization
@@ -65,16 +66,17 @@ class FixedSetSharedOperationLogic extends FixedSetOperationLogic {
          keyIndex = threadIndex + nodeIndex * stage.numThreads;
       }
       if (threadIndex == 0) {
-         log.info(String.format("We have loaded %d keys, expecting %d locally loaded, %d in cache",
-               keysLoaded.get(), loadedEntryCount, stage.cacheWrapper.getLocalSize()));
+         log.info(String.format("We have loaded %d keys, expecting %d locally loaded",
+               keysLoaded.get(), loadedEntryCount));
       }
       if (keysLoaded.get() >= loadedEntryCount) {
          return;
       }
+      BasicOperations.Cache cache = stage.basicOperations.getCache(stage.bucketPolicy.getBucketName(threadIndex));
       for (; keyIndex < stage.numEntries; keyIndex += loadingThreads) {
          try {
             Object key = getKey(keyIndex, threadIndex);
-            stage.cacheWrapper.put(null, key, stage.generateValue(key, Integer.MAX_VALUE));
+            cache.put(key, stage.generateValue(key, Integer.MAX_VALUE));
             long loaded = keysLoaded.incrementAndGet();
             if (loaded % 100000 == 0) {
                Runtime runtime = Runtime.getRuntime();

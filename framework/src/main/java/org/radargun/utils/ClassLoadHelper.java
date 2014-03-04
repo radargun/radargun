@@ -48,7 +48,6 @@ public class ClassLoadHelper {
       }
       ClassLoader classLoader = getLoader();
       log.info("Creating newInstance " + classFqn + " with classloader " + classLoader);
-      Thread.currentThread().setContextClassLoader(classLoader);
       return classLoader.loadClass(classFqn).newInstance();
    }
 

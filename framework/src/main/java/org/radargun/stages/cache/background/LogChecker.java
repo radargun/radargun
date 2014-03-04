@@ -6,11 +6,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import org.radargun.CacheWrapper;
-import org.radargun.stages.cache.generators.KeyGenerator;
-import org.radargun.features.Debugable;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.stages.cache.generators.KeyGenerator;
+import org.radargun.traits.BasicOperations;
+import org.radargun.traits.Debugable;
 import org.radargun.utils.Utils;
 
 /**
@@ -20,22 +20,22 @@ public abstract class LogChecker extends Thread {
    protected static final Log log = LogFactory.getLog(LogChecker.class);
    protected static final boolean trace = log.isTraceEnabled();
    protected static final long UNSUCCESSFUL_CHECK_MIN_DELAY_MS = 10;
-   protected final String bucketId;
    protected final KeyGenerator keyGenerator;
    protected final int slaveIndex;
    protected final long logCounterUpdatePeriod;
    protected final Pool pool;
-   protected final CacheWrapper cacheWrapper;
+   protected final BasicOperations.Cache basicCache;
+   protected final Debugable.Cache debugableCache;
    protected volatile boolean terminate = false;
 
    public LogChecker(String name, BackgroundOpsManager manager, Pool logCheckerPool) {
       super(name);
-      bucketId = manager.getBucketId();
       keyGenerator = manager.getKeyGenerator();
       slaveIndex = manager.getSlaveIndex();
       logCounterUpdatePeriod = manager.getLogCounterUpdatePeriod();
       pool = logCheckerPool;
-      cacheWrapper = manager.getCacheWrapper();
+      this.basicCache = manager.getBasicCache();
+      this.debugableCache = manager.getDebugableCache();
    }
 
    public static String checkerKey(int checkerSlaveId, int slaveAndThreadId) {
@@ -71,18 +71,18 @@ public abstract class LogChecker extends Thread {
             delayedKeys = 0;
             if (record.getLastUnsuccessfulCheckTimestamp() > Long.MIN_VALUE) {
                // the last check was unsuccessful -> grab lastOperation BEFORE the value to check if we've lost that
-               Object last = cacheWrapper.get(bucketId, lastOperationKey(record.getThreadId()));
+               Object last = basicCache.get(lastOperationKey(record.getThreadId()));
                if (last != null) {
                   record.setLastStressorOperation(((LastOperation) last).getOperationId());
                }
             }
             if (record.getOperationId() == 0) {
-               Object last = cacheWrapper.get(bucketId, checkerKey(slaveIndex, record.getThreadId()));
+               Object last = basicCache.get(checkerKey(slaveIndex, record.getThreadId()));
                if (last != null) {
                   LastOperation lastCheck = (LastOperation) last;
                   record = newRecord(record, lastCheck.getOperationId(), lastCheck.getSeed());
                }
-               Object ignored = cacheWrapper.get(bucketId, ignoredKey(slaveIndex, record.getThreadId()));
+               Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
                if (ignored != null && record.getOperationId() <= (Long) ignored) {
                   log.debug(String.format("Ignoring operations %d - %d for thread %d", record.getOperationId(), ignored, record.getThreadId()));
                   while (record.getOperationId() <= (Long) ignored) {
@@ -104,7 +104,7 @@ public abstract class LogChecker extends Thread {
                   log.trace(String.format("Found operation %d for thread %d", record.getOperationId(), record.getThreadId()));
                }
                if (record.getOperationId() % logCounterUpdatePeriod == 0) {
-                  cacheWrapper.put(bucketId, checkerKey(slaveIndex, record.getThreadId()),
+                  basicCache.put(checkerKey(slaveIndex, record.getThreadId()),
                         new LastOperation(record.getOperationId(), Utils.getRandomSeed(record.rand)));
                }
                record.next();
@@ -113,7 +113,7 @@ public abstract class LogChecker extends Thread {
             } else {
                if (record.getLastStressorOperation() >= record.getOperationId()) {
                   // one more check to see whether some operations should not be ignored
-                  Object ignored = cacheWrapper.get(bucketId, ignoredKey(slaveIndex, record.getThreadId()));
+                  Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
                   if (ignored != null && record.getOperationId() <= (Long) ignored) {
                      log.debug(String.format("Operations %d - %d for thread %d are ignored.", record.getOperationId(), ignored, record.threadId));
                      while (record.getOperationId() <= (Long) ignored) {
@@ -130,10 +130,10 @@ public abstract class LogChecker extends Thread {
                      log.trace("Not found in " + value);
                   }
                   pool.reportMissingOperation();
-                  if (cacheWrapper instanceof Debugable) {
-                     ((Debugable) cacheWrapper).debugInfo(bucketId);
-                     ((Debugable) cacheWrapper).debugKey(bucketId, keyGenerator.generateKey(record.getKeyId()));
-                     ((Debugable) cacheWrapper).debugKey(bucketId, keyGenerator.generateKey(~record.getKeyId()));
+                  if (debugableCache != null) {
+                     debugableCache.debugInfo();
+                     debugableCache.debugKey(keyGenerator.generateKey(record.getKeyId()));
+                     debugableCache.debugKey(keyGenerator.generateKey(~record.getKeyId()));
                   }
                   record.next();
                } else {
@@ -168,13 +168,14 @@ public abstract class LogChecker extends Thread {
       private final ConcurrentLinkedQueue<AbstractStressorRecord> records = new ConcurrentLinkedQueue<AbstractStressorRecord>();
       private final BackgroundOpsManager manager;
       private final AtomicLong missingOperations = new AtomicLong();
+      private final BasicOperations.Cache cache;
       private volatile long lastStoredOperationTimestamp = Long.MIN_VALUE;
-
 
       public Pool(int numThreads, int numSlaves, BackgroundOpsManager manager) {
          totalThreads = numThreads * numSlaves;
          allRecords = new AtomicReferenceArray<AbstractStressorRecord>(totalThreads);
          this.manager = manager;
+         this.cache = manager.getBasicCache();
       }
 
       public long getMissingOperations() {
@@ -211,7 +212,7 @@ public abstract class LogChecker extends Thread {
             AbstractStressorRecord record = allRecords.get(i);
             if (record == null) continue;
             try {
-               LastOperation lastOperation = (LastOperation) manager.getCacheWrapper().get(manager.getBucketId(), lastOperationKey(record.getThreadId()));
+               LastOperation lastOperation = (LastOperation) cache.get(lastOperationKey(record.getThreadId()));
                if (lastOperation == null) {
                   log.trace("Thread " + record.getThreadId() + " has no recorded operation.");
                } else {

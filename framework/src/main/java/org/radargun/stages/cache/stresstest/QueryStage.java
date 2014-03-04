@@ -21,11 +21,12 @@ package org.radargun.stages.cache.stresstest;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.radargun.CacheWrapper;
+import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.features.Queryable;
 import org.radargun.stats.Operation;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Queryable;
 
 /**
  * Executes Queries using Infinispan-Query API against the cache.
@@ -41,22 +42,32 @@ public class QueryStage extends StressTestStage {
    @Property(optional = false, doc = "The name of the field for which the query should be executed.")
    private String onField;
 
+   @InjectTrait
+   private Queryable queryable;
+
    private transient Queryable.QueryResult previousQueryResult = null;
    private transient String matchingWord = null;
 
-   @Override
-   protected void init(CacheWrapper wrapper) {
-      super.init(wrapper);
+   @Init
+   public void init() {
       this.matchingWord = (String) slaveState.get(DataForQueryStage.MATCH_WORD_PROP_NAME);
    }
 
+   @Override
+   protected Stressor createStressor(int threadIndex) {
+      Stressor stressor = super.createStressor(threadIndex);
+      stressor.setQueryable(queryable);
+      return stressor;
+   }
+
+   @Override
    public OperationLogic getLogic() {
       return new QueryRunnerLogic();
    }
 
    protected class QueryRunnerLogic implements OperationLogic {
       @Override
-      public void init(String bucketId, int threadIndex, int nodeIndex, int numNodes) {
+      public void init(int threadIndex, int nodeIndex, int numNodes) {
       }
 
       @Override
