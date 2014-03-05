@@ -35,7 +35,6 @@
       <plugins.hazelcast/>
       <plugins.jbosscache/>
       <plugins.jgroups/>
-      <plugins.terracotta/>
       <plugins.infinispan/>
       <plugins.jdg/>
       <plugins.coherence/>
@@ -177,20 +176,6 @@
          </properties>
       </profile>
       <profile>
-         <id>terracotta</id>
-         <activation>
-            <property>
-               <name>!no-terracotta</name>
-            </property>
-         </activation>
-         <modules>
-            <module>plugins/terracotta3</module>
-         </modules>
-         <properties>
-            <plugins.terracotta>terracotta3</plugins.terracotta>
-         </properties>
-      </profile>
-      <profile>
          <id>coherence</id>
          <activation>
             <property>
@@ -307,7 +292,7 @@
                         </macrodef>
 
                         <echo message="Packaging the framework, and the following plugins: " />
-                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.terracotta},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>
