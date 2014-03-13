@@ -5,6 +5,8 @@ package org.radargun;
  *
  * @author Mircea.Markus@jboss.com
  */
-// TODO: remove?
 public interface Stage {
+   String STAGE = "Stage";
+
+   String getName();
 }

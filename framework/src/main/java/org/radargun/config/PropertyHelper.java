@@ -18,29 +18,23 @@ public class PropertyHelper {
 
    private static Log log = LogFactory.getLog(PropertyHelper.class);
 
-   public static Map<String, Field> getProperties(Class<?> clazz, boolean useDashedName) {
-      Map<String, Field> properties = new TreeMap<String, Field>();
-      addProperties(clazz, properties, useDashedName);
+   public static Map<String, Path> getProperties(Class<?> clazz, boolean useDashedName) {
+      Map<String, Path> properties = new TreeMap<String, Path>();
+      addProperties(clazz, properties, useDashedName, "", null);
       return properties;
    }
 
-   public static Map<String, Field> getDeclaredProperties(Class<?> clazz) {
-      Map<String, Field> properties = new TreeMap<String, Field>();
-      addDeclaredProperties(clazz, properties, false);
+   public static Map<String, Path> getDeclaredProperties(Class<?> clazz) {
+      Map<String, Path> properties = new TreeMap<String, Path>();
+      addDeclaredProperties(clazz, properties, false, "", null);
       return properties;
    }
 
-   public static String getPropertyName(Field property) {
-      Property annotation = property.getAnnotation(Property.class);
-      return getPropertyName(property, annotation);
-   }
-
-   public static String getPropertyString(Field propertyField, Object source) {
-      propertyField.setAccessible(true);
+   public static String getPropertyString(Path path, Object source) {
       Object value = null;
       try {
-         value = propertyField.get(source);
-         Converter converter = propertyField.getAnnotation(Property.class).converter().newInstance();
+         value = path.get(source);
+         Converter converter = path.getTargetAnnotation().converter().newInstance();
          return converter.convertToString(value);
       } catch (IllegalAccessException e) {
          return "<not accessible>";
@@ -57,79 +51,85 @@ public class PropertyHelper {
       return annotation.name().equals(Property.FIELD_NAME) ? property.getName() : annotation.name();
    }
 
-   private static void addProperties(Class<?> clazz, Map<String, Field> properties, boolean useDashedName) {
+   private static void addProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, String prefix, Path path) {
       if (clazz == null) return;
-      addDeclaredProperties(clazz, properties, useDashedName);
-      addProperties(clazz.getSuperclass(), properties, useDashedName);
+      addDeclaredProperties(clazz, properties, useDashedName, prefix, path);
+      addProperties(clazz.getSuperclass(), properties, useDashedName, prefix, path);
    }
 
-   private static void addDeclaredProperties(Class<?> clazz, Map<String, Field> properties, boolean useDashedName) {
+   private static void addDeclaredProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, String prefix, Path path) {
       for (Field field : clazz.getDeclaredFields()) {
          if (Modifier.isStatic(field.getModifiers())) continue; // property cannot be static
          Property property = field.getAnnotation(Property.class);
+         PropertyDelegate delegate = field.getAnnotation(PropertyDelegate.class);
+         if (property != null && delegate != null) {
+            // TODO: this is not necessary, but setting more fields from one property would be complicated
+            throw new IllegalArgumentException(String.format("Field %s.%s cannot be declared with both @Property and @PropertyDelegate", clazz.getName(), field.getName()));
+         }
          if (property != null) {
-            String name = getPropertyName(field, property);
+            String name = prefix + getPropertyName(field, property);
             if (useDashedName) {
                name = XmlHelper.camelCaseToDash(name);
             }
-            properties.put(name, field);
+            Path newPath = path == null ? new Path(field) : path.with(field);
+            properties.put(name, newPath);
             String deprecatedName = property.deprecatedName();
             if (!deprecatedName.equals(Property.NO_DEPRECATED_NAME)) {
                if (useDashedName) {
                   deprecatedName = XmlHelper.camelCaseToDash(deprecatedName);
                }
-               properties.put(deprecatedName, field);
+               properties.put(deprecatedName, newPath);
             }
+         }
+         if (delegate != null) {
+            // TODO: delegate properties are added according to field type, this does not allow polymorphism
+            addProperties(field.getType(), properties, useDashedName,
+                  prefix + delegate.prefix(), path == null ? new Path(field) : path.with(field));
          }
       }
    }
 
    public static void copyProperties(Object source, Object destination) {
-      Map<String, Field> sourceProperties = getProperties(source.getClass(), false);
-      Map<String, Field> destProperties = getProperties(destination.getClass(), false);
-      for (Map.Entry<String, Field> property : sourceProperties.entrySet()) {
-         Field destField = destProperties.get(property.getKey());
-         if (destField == null) {
+      Map<String, Path> sourceProperties = getProperties(source.getClass(), false);
+      Map<String, Path> destProperties = getProperties(destination.getClass(), false);
+      for (Map.Entry<String, Path> property : sourceProperties.entrySet()) {
+         Path destPath = destProperties.get(property.getKey());
+         if (destPath == null) {
             log.trace("Property " + property.getKey() + " not found on destination, skipping");
             continue;
          }
-         property.getValue().setAccessible(true);
-         destField.setAccessible(true);
          try {
-            destField.set(destination, property.getValue().get(source));
+            destPath.set(destination, property.getValue().get(source));
          } catch (IllegalAccessException e) {
-            log.error(String.format("Failed to copy %s.%s (%s) to %s.%s (%s)",
-               source.getClass().getSimpleName(), property.getValue().getName(), source,
-               destination.getClass().getSimpleName(), destField.getName(), destination), e);
+            log.error(String.format("Failed to copy %s (%s) to %s.%s (%s)",
+               property.getValue(), source, destPath, destination), e);
          }
       }
    }
 
    public static void setProperties(Object target, Map<String, String> propertyMap, boolean ignoreMissingProperty, boolean useDashedName) {
       Class targetClass = target.getClass();
-      Map<String, Field> properties = getProperties(target.getClass(), useDashedName);
+      Map<String, Path> properties = getProperties(target.getClass(), useDashedName);
 
       for (Map.Entry<String, String> entry : propertyMap.entrySet()) {
          String propName = entry.getKey();
 
-         Field field = properties.get(propName);
-         if (field != null) {
-            Property property = field.getAnnotation(Property.class);
-            if (property.readonly()) {
-               throw new IllegalArgumentException("Property " + propName + " on class [" + targetClass + "] is readonly and therefore cannot be set!");
+         Path path = properties.get(propName);
+         if (path != null) {
+            if (path.getTargetAnnotation().readonly()) {
+               throw new IllegalArgumentException("Property " + propName + " -> " + path + " is readonly and therefore cannot be set!");
             }
-            Class<? extends Converter> converterClass = property.converter();
+            Class<? extends Converter> converterClass = path.getTargetAnnotation().converter();
             try {
                Converter converter = converterClass.newInstance();
-               field.setAccessible(true);
-               field.set(target, converter.convert(entry.getValue(), field.getGenericType()));
+               path.set(target, converter.convert(entry.getValue(), path.getTargetGenericType()));
                continue;
             } catch (InstantiationException e) {
-               log.error(String.format("Cannot instantiate converter %s for setting %s.%s (%s): %s",
-                     converterClass.getName(), target.getClass().getName(), field.getName(), propName, e));
+               log.error(String.format("Cannot instantiate converter %s for setting %s (%s): %s",
+                     converterClass.getName(), path, propName, e));
             } catch (IllegalAccessException e) {
-               log.error(String.format("Cannot access converter %s for setting %s.%s (%s): %s",
-                     converterClass.getName(), target.getClass().getName(), field.getName(), propName, e));
+               log.error(String.format("Cannot access converter %s for setting %s (%s): %s",
+                     converterClass.getName(), path, propName, e));
             } catch (Throwable t) {
                log.error("Failed to convert value " + entry.getValue() + ": " + t);
             }
@@ -141,4 +141,5 @@ public class PropertyHelper {
          }
       }
    }
+
 }

@@ -2,9 +2,7 @@ package org.radargun.stages.cache.stresstest;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -14,8 +12,8 @@ import org.radargun.config.Property;
 import org.radargun.config.SizeConverter;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
+import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.CsvReportGenerationStage;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
 import org.radargun.stages.cache.generators.KeyGenerator;
@@ -23,12 +21,8 @@ import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.cache.generators.WrappedArrayValueGenerator;
 import org.radargun.stages.helpers.BucketPolicy;
-import org.radargun.stats.AllRecordingStatistics;
-import org.radargun.stats.HistogramStatistics;
-import org.radargun.stats.MultiStatistics;
-import org.radargun.stats.PeriodicStatistics;
-import org.radargun.stats.SimpleStatistics;
-import org.radargun.stats.Statistics;
+import org.radargun.stats.*;
+import org.radargun.stats.representation.Histogram;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.ConditionalOperations;
@@ -46,6 +40,9 @@ import org.radargun.utils.Utils;
 @Stage(doc = "Benchmark where several client threads access cache limited by time or number of requests.",
       deprecatedName = "WebSessionBenchmark")
 public class StressTestStage extends AbstractDistStage {
+
+   @Property(doc = "Name of the test as used for reporting. Default is StressTest.")
+   protected String testName = "StressTest";
 
    @Property(doc = "Number of operations after which a log entry should be written. Default is 50000.")
    protected int logPeriod = 50000;
@@ -174,7 +171,7 @@ public class StressTestStage extends AbstractDistStage {
    private transient volatile boolean terminated = false;
 
    protected transient List<Stressor> stressors = new ArrayList<Stressor>(numThreads);
-   private transient Statistics statisticsPrototype = new SimpleStatistics();
+   private transient Statistics statisticsPrototype = new DefaultStatistics(new DefaultOperationStats());
 
    @Init
    public void init() {
@@ -184,40 +181,54 @@ public class StressTestStage extends AbstractDistStage {
       }
    }
 
-   protected Map<String, Object> execute() {
+   protected List<List<Statistics>> execute() {
       log.info("Starting " + toString());
-      setupStatistics();
+      loadStatistics();
       slaveState.put(BucketPolicy.LAST_BUCKET, bucketPolicy.getBucketName(-1));
       slaveState.put(KeyGenerator.KEY_GENERATOR, getKeyGenerator());
       slaveState.put(ValueGenerator.VALUE_GENERATOR, getValueGenerator());
-      Map<String, Object> results = stress();
-      if (generateHistogramRange) {
-         slaveState.put(HistogramStatistics.HISTOGRAM_RANGES, results);
-      }
+      List<List<Statistics>> results = stress();
+      storeStatistics(results);
       return results;
    }
 
-   protected void setupStatistics() {
+   protected void loadStatistics() {
       Statistics statistics;
       if (generateHistogramRange) {
-         statistics = new AllRecordingStatistics();
+         statistics = new DefaultStatistics(new AllRecordingOperationStats());
       } else if (useHistogramStatistics) {
-         Map<String, Object> ranges = (Map<String, Object>) slaveState.get(HistogramStatistics.HISTOGRAM_RANGES);
-         if (ranges == null) {
-            throw new IllegalStateException("The ranges for histogram statistics are not generated. Please run StressTestWarmup with generateHistogramRange=true");
+         Histogram[] histograms = (Histogram[]) slaveState.get(Histogram.OPERATIONS_HISTOGRAMS);
+         if (histograms == null) {
+            throw new IllegalStateException("The histogram statistics are not generated. Please run StressTestWarmup with generateHistogramRange=true");
          }
-         if (useSimpleStatistics) {
-            statistics = new MultiStatistics(ranges);
-         } else {
-            statistics = new HistogramStatistics(ranges);
+         OperationStats[] histogramProtypes = new OperationStats[histograms.length];
+         for (int i = 0; i < histograms.length; ++i) {
+            if (useSimpleStatistics) {
+               histogramProtypes[i] = new MultiOperationStats(new DefaultOperationStats(), new HistogramOperationStats(histograms[i]));
+            } else {
+               histogramProtypes[i] = new HistogramOperationStats(histograms[i]);
+            }
          }
+         statistics = new HistogramStatistics(histogramProtypes, new DefaultOperationStats());
       } else {
-         statistics = new SimpleStatistics();
+         statistics = new DefaultStatistics(new DefaultOperationStats());
       }
       if (statisticsPeriod > 0) {
          statistics = new PeriodicStatistics(statistics, statisticsPeriod);
       }
       statisticsPrototype = statistics;
+   }
+
+   private void storeStatistics(List<List<Statistics>> results) {
+      if (generateHistogramRange) {
+         Statistics statistics = statisticsPrototype.copy();
+         for (List<Statistics> iteration : results) {
+            for (Statistics s : iteration) {
+               s.merge(statistics);
+            }
+         }
+         slaveState.put(Histogram.OPERATIONS_HISTOGRAMS, statistics.getRepresentations(Histogram.class));
+      }
    }
 
    public DistStageAck executeOnSlave() {
@@ -235,7 +246,7 @@ public class StressTestStage extends AbstractDistStage {
       startNanos = System.nanoTime();
 
       try {
-         Map<String, Object> results = execute();
+         List<List<Statistics>> results = execute();
          result.setPayload(results);
          return result;
       } catch (Exception e) {
@@ -249,8 +260,8 @@ public class StressTestStage extends AbstractDistStage {
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       logDurationInfo(acks);
       boolean success = true;
-      Map<Integer, Map<String, Object>> results = new HashMap<Integer, Map<String, Object>>();
-      masterState.put(CsvReportGenerationStage.RESULTS, results);
+      Report report = masterState.getReport();
+      Report.Test test = report.createTest(testName);
       for (DistStageAck ack : acks) {
          DefaultDistStageAck wAck = (DefaultDistStageAck) ack;
          if (wAck.isError()) {
@@ -260,9 +271,9 @@ public class StressTestStage extends AbstractDistStage {
             if (log.isTraceEnabled())
                log.trace("Received success ack: " + wAck);
          }
-         Map<String, Object> benchResult = (Map<String, Object>) wAck.getPayload();
-         if (benchResult != null) {
-            results.put(ack.getSlaveIndex(), benchResult);
+         List<List<Statistics>> iterations = (List<List<Statistics>>) wAck.getPayload();
+         if (iterations != null) {
+            test.addIterations(ack.getSlaveIndex(), iterations);
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }
@@ -270,7 +281,7 @@ public class StressTestStage extends AbstractDistStage {
       return success;
    }
 
-   public Map<String, Object> stress() {
+   public List<List<Statistics>> stress() {
       Completion completion;
       if (duration > 0) {
          completion = new TimeStressorCompletion(duration);
@@ -279,16 +290,31 @@ public class StressTestStage extends AbstractDistStage {
       }
       setCompletion(completion);
 
-      if (!startOperations()) return Collections.EMPTY_MAP;
+      if (!startOperations()) return Collections.EMPTY_LIST;
       try {
          executeOperations();
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
+      log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
 
-      Map<String, Object> results = processResults();
+      List<Statistics> results = gatherResults();
       finishOperations();
-      return results;
+      if (statisticsPeriod > 0) {
+         /* expand the periodic statistics into iterations */
+         List<List<Statistics>> all = new ArrayList<List<Statistics>>();
+         for (Statistics s : results) {
+            int iteration = 0;
+            for (Statistics s2 : ((PeriodicStatistics) s).asList()) {
+               while (iteration >= all.size()) {
+                  all.add(new ArrayList<Statistics>(results.size()));
+               }
+               all.get(iteration++).add(s2);
+            }
+         }
+         return all;
+      }
+      return Collections.singletonList(results);
    }
 
    protected boolean startOperations() {
@@ -300,18 +326,12 @@ public class StressTestStage extends AbstractDistStage {
       return true;
    }
 
-   protected Map<String, Object> processResults() {
-      Statistics stats = createStatistics();
-
+   protected List<Statistics> gatherResults() {
+      List<Statistics> stats = new ArrayList<Statistics>(stressors.size());
       for (Stressor stressor : stressors) {
-         stats.merge(stressor.getStats());
+         stats.add(stressor.getStats());
       }
-
-      Map<String, Object> results = stats.getResultsMap(numThreads, "");
-      results.put(Statistics.REQ_PER_SEC, numThreads * stats.getOperationsPerSecond(true));
-
-      log.info("Finished generating report. Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
-      return results;
+      return stats;
    }
 
    protected Statistics createStatistics() {

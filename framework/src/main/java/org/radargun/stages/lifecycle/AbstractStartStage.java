@@ -25,10 +25,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.CsvReportGenerationStage;
 import org.radargun.stages.DefaultDistStageAck;
-import org.radargun.stages.helpers.StartHelper;
-import org.radargun.stages.helpers.StartStopTime;
 
 /**
  * Common base for stages that start slaves.
@@ -54,11 +51,6 @@ public abstract class AbstractStartStage extends AbstractDistStage {
             log.info("Received allowed error ack " + defaultStageAck);
          } else {
             log.trace("Received success ack " + defaultStageAck);
-            StartStopTime times = ((StartStopTime) defaultStageAck.getPayload());
-            if (times != null && times.getStartTime() >= 0) {
-               CsvReportGenerationStage.addResult(masterState, stageAck.getSlaveIndex(), StartHelper.START_TIME,
-                     times.getStartTime());
-            }
          }
       }
       if (log.isTraceEnabled())

@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.Timeline;
 
 /**
  * Parse the /proc/net/dev file for a value on the specified network interface
@@ -49,16 +50,16 @@ public class NetworkBytesMonitor extends AbstractActivityMonitor implements Seri
    int valueIndex = -1;
    BigDecimal initialValue;
 
-   public static NetworkBytesMonitor createReceiveMonitor(String iface) {
-      return new NetworkBytesMonitor(iface, RECEIVE_BYTES_INDEX);
+   public static NetworkBytesMonitor createReceiveMonitor(String iface, Timeline timeline) {
+      return new NetworkBytesMonitor(iface, RECEIVE_BYTES_INDEX, timeline);
    }
 
-   public static NetworkBytesMonitor createTransmitMonitor(String iface) {
-      return new NetworkBytesMonitor(iface, TRANSMIT_BYTES_INDEX);
+   public static NetworkBytesMonitor createTransmitMonitor(String iface, Timeline timeline) {
+      return new NetworkBytesMonitor(iface, TRANSMIT_BYTES_INDEX, timeline);
    }
 
-   private NetworkBytesMonitor(String iface, int valueIndex) {
-      super();
+   private NetworkBytesMonitor(String iface, int valueIndex, Timeline timeline) {
+      super(timeline);
       this.iface = iface;
       this.valueIndex = valueIndex;
    }
@@ -82,9 +83,9 @@ public class NetworkBytesMonitor extends AbstractActivityMonitor implements Seri
                      // Start monitoring from zero and then increase
                      if (initialValue == null) {
                         initialValue = new BigDecimal(vals[valueIndex]);
-                        this.addMeasurement(new BigDecimal(0));
+                        timeline.addValue(getCategory(), new Timeline.Value(0));
                      } else {
-                        this.addMeasurement(new BigDecimal(vals[valueIndex]).subtract(initialValue));
+                        timeline.addValue(getCategory(), new Timeline.Value(new BigDecimal(vals[valueIndex]).subtract(initialValue)));
                      }
                      break;
                   }
@@ -106,6 +107,10 @@ public class NetworkBytesMonitor extends AbstractActivityMonitor implements Seri
             log.error("File /proc/net/dev was not found!", e);
          }
       }
+   }
+
+   private String getCategory() {
+      return String.format("Network %s on %s", valueIndex == TRANSMIT_BYTES_INDEX ? "TX" : "RX", iface);
    }
 
 }

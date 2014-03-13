@@ -3,14 +3,14 @@ package org.radargun.stages.cache.stresstest;
 import java.util.Map;
 import java.util.Set;
 
+import org.radargun.Operation;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+import org.radargun.stats.Statistics;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.Queryable;
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-import org.radargun.stats.Operation;
-import org.radargun.stats.Statistics;
 import org.radargun.traits.Transactional;
 
 /**
@@ -81,12 +81,14 @@ class Stressor extends Thread {
             try {
                if (!stage.isTerminated()) {
                   log.trace("Starting thread: " + getName());
+                  stats.begin();
                   runInternal();
                }
             } catch (Exception e) {
                stage.setTerminated();
                log.error("Unexpected error in stressor!", e);
             } finally {
+               stats.end();
                synchronizer.slavePhaseEnd();
             }
          }
@@ -112,9 +114,11 @@ class Stressor extends Thread {
       if (txRemainingOperations > 0) {
          try {
             long endTxTime = endTransaction();
-            stats.registerRequest(transactionDuration + endTxTime, 0, Operation.TRANSACTION);
+            stats.registerRequest(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
+            stats.registerRequest(transactionDuration + endTxTime, Transactional.DURATION);
          } catch (TransactionException e) {
-            stats.registerError(transactionDuration + e.getOperationDuration(), 0, Operation.TRANSACTION);
+            stats.registerError(e.getOperationDuration(), stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
+            stats.registerError(transactionDuration + e.getOperationDuration(), Transactional.DURATION);
          }
          transactionDuration = 0;
       }
@@ -127,8 +131,9 @@ class Stressor extends Thread {
             startTxTime = startTransaction();
             transactionDuration = startTxTime;
             txRemainingOperations = stage.transactionSize;
+            stats.registerRequest(startTxTime, Transactional.BEGIN);
          } catch (TransactionException e) {
-            stats.registerError(e.getOperationDuration(), 0, Operation.TRANSACTION);
+            stats.registerError(e.getOperationDuration(), Transactional.BEGIN);
             return null;
          }
       }
@@ -139,61 +144,43 @@ class Stressor extends Thread {
       long start = System.nanoTime();
       long operationDuration;
       try {
-         switch (operation) {
-            case GET:
-            case GET_NULL:
-               result = basicCache.get(keysAndValues[0]);
-               operation = (result != null ? Operation.GET : Operation.GET_NULL);
-               break;
-            case PUT:
-               basicCache.put(keysAndValues[0], keysAndValues[1]);
-               break;
-            case QUERY:
-               result = queryable.executeQuery((Map<String, Object>) keysAndValues[0]);
-               break;
-            case REMOVE:
-               result = basicCache.remove(keysAndValues[0]);
-               break;
-            case REMOVE_VALID:
-               successful = conditionalCache.remove(keysAndValues[0], keysAndValues[1]);
-               break;
-            case REMOVE_INVALID:
-               successful = !conditionalCache.remove(keysAndValues[0], keysAndValues[1]);
-               break;
-            case PUT_IF_ABSENT_IS_ABSENT:
-               result = conditionalCache.putIfAbsent(keysAndValues[0], keysAndValues[1]);
-               successful = result == null;
-               break;
-            case PUT_IF_ABSENT_NOT_ABSENT:
-               result = conditionalCache.putIfAbsent(keysAndValues[0], keysAndValues[1]);
-               successful = keysAndValues[2].equals(result);
-               break;
-            case REPLACE_VALID:
-               successful = conditionalCache.replace(keysAndValues[0], keysAndValues[1], keysAndValues[2]);
-               break;
-            case REPLACE_INVALID:
-               successful = !conditionalCache.replace(keysAndValues[0], keysAndValues[1], keysAndValues[2]);
-               break;
-            case GET_ALL:
-               result = bulkNativeCache.getAll((Set<Object>) keysAndValues[0]);
-               break;
-            case GET_ALL_VIA_ASYNC:
-               result = bulkAsyncCache.getAll((Set<Object>) keysAndValues[0]);
-               break;
-            case PUT_ALL:
-               bulkNativeCache.putAll((Map<Object, Object>) keysAndValues[0]);
-               break;
-            case PUT_ALL_VIA_ASYNC:
-               bulkAsyncCache.putAll((Map<Object, Object>) keysAndValues[0]);
-               break;
-            case REMOVE_ALL:
-               bulkNativeCache.removeAll((Set<Object>) keysAndValues[0]);
-               break;
-            case REMOVE_ALL_VIA_ASYNC:
-               bulkAsyncCache.removeAll((Set<Object>) keysAndValues[0]);
-               break;
-            default:
-               throw new IllegalArgumentException();
+         if (operation == BasicOperations.GET || operation == BasicOperations.GET_NULL) {
+            result = basicCache.get(keysAndValues[0]);
+            operation = (result != null ? BasicOperations.GET : BasicOperations.GET_NULL);
+         } else if (operation == BasicOperations.PUT) {
+            basicCache.put(keysAndValues[0], keysAndValues[1]);
+         } else if (operation == Queryable.QUERY) {
+            result = queryable.executeQuery((Map<String, Object>) keysAndValues[0]);
+         } else if (operation == BasicOperations.REMOVE) {
+            result = basicCache.remove(keysAndValues[0]);
+         } else if (operation == ConditionalOperations.REMOVE_EXEC) {
+            successful = conditionalCache.remove(keysAndValues[0], keysAndValues[1]);
+         } else if (operation == ConditionalOperations.REMOVE_NOTEX) {
+            successful = !conditionalCache.remove(keysAndValues[0], keysAndValues[1]);
+         } else if (operation == ConditionalOperations.PUT_IF_ABSENT_EXEC) {
+            result = conditionalCache.putIfAbsent(keysAndValues[0], keysAndValues[1]);
+            successful = result == null;
+         } else if (operation == ConditionalOperations.PUT_IF_ABSENT_NOTEX) {
+            result = conditionalCache.putIfAbsent(keysAndValues[0], keysAndValues[1]);
+            successful = keysAndValues[2].equals(result);
+         } else if (operation == ConditionalOperations.REPLACE_EXEC) {
+            successful = conditionalCache.replace(keysAndValues[0], keysAndValues[1], keysAndValues[2]);
+         } else if (operation == ConditionalOperations.REPLACE_NOTEX) {
+            successful = !conditionalCache.replace(keysAndValues[0], keysAndValues[1], keysAndValues[2]);
+         } else if (operation == BulkOperations.GET_ALL_NATIVE) {
+            result = bulkNativeCache.getAll((Set<Object>) keysAndValues[0]);
+         } else if (operation == BulkOperations.GET_ALL_ASYNC) {
+            result = bulkAsyncCache.getAll((Set<Object>) keysAndValues[0]);
+         } else if (operation == BulkOperations.PUT_ALL_NATIVE) {
+            bulkNativeCache.putAll((Map<Object, Object>) keysAndValues[0]);
+         } else if (operation == BulkOperations.PUT_ALL_ASYNC) {
+            bulkAsyncCache.putAll((Map<Object, Object>) keysAndValues[0]);
+         } else if (operation == BulkOperations.REMOVE_ALL_NATIVE) {
+            bulkNativeCache.removeAll((Set<Object>) keysAndValues[0]);
+         } else if (operation == BulkOperations.REMOVE_ALL_ASYNC) {
+            bulkAsyncCache.removeAll((Set<Object>) keysAndValues[0]);
+         } else {
+            throw new IllegalArgumentException();
          }
          operationDuration = System.nanoTime() - start;
          txRemainingOperations--;
@@ -210,16 +197,24 @@ class Stressor extends Thread {
       if (useTransactions && txRemainingOperations <= 0) {
          try {
             endTxTime = endTransaction();
-            stats.registerRequest(transactionDuration + endTxTime, 0, Operation.TRANSACTION);
+            stats.registerRequest(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
+            stats.registerRequest(transactionDuration + endTxTime, Transactional.DURATION);
          } catch (TransactionException e) {
             endTxTime = e.getOperationDuration();
-            stats.registerError(transactionDuration + endTxTime, 0, Operation.TRANSACTION);
+            stats.registerError(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
+            stats.registerError(transactionDuration + endTxTime, Transactional.DURATION);
          }
       }
       if (successful) {
-         stats.registerRequest(operationDuration, startTxTime + endTxTime, operation);
+         stats.registerRequest(operationDuration, operation);
+         if (useTransactions && stage.transactionSize == 1) {
+            stats.registerRequest(startTxTime + operationDuration + endTxTime, operation.derive("TX"));
+         }
       } else {
-         stats.registerError(operationDuration, startTxTime + endTxTime, operation);
+         stats.registerError(operationDuration, operation);
+         if (useTransactions && stage.transactionSize == 1) {
+            stats.registerError(startTxTime + operationDuration + endTxTime, operation.derive("TX"));
+         }
       }
       if (exception != null) {
          throw new OperationLogic.RequestException(exception);

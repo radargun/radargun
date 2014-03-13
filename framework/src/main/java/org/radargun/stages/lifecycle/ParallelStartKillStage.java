@@ -27,15 +27,10 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.stages.CsvReportGenerationStage;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.stages.helpers.KillHelper;
 import org.radargun.stages.helpers.RoleHelper;
 import org.radargun.stages.helpers.StartHelper;
-import org.radargun.stages.helpers.StartStopTime;
-import org.radargun.traits.Clustered;
-import org.radargun.traits.InjectTrait;
-import org.radargun.traits.Partitionable;
 
 /**
  * The stage start and kills some nodes concurrently (without waiting for each other).
@@ -71,10 +66,9 @@ public class ParallelStartKillStage extends AbstractStartStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
       if (lifecycle == null) {
          log.warn("No lifecycle for service " + slaveState.getServiceName());
-         return ack;
+         return successfulResponse();
       }
       boolean killMe = kill.contains(slaveState.getSlaveIndex()) || RoleHelper.hasRole(slaveState, role);
       boolean startMe = start.contains(slaveState.getSlaveIndex());
@@ -87,7 +81,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
                if (!killMe) {
                   log.info("Wrapper already set on this slave, not starting it again.");
                   startMe = false;
-                  return ack;
+                  return successfulResponse();
                } 
             } else {
                if (startDelay > 0) {
@@ -97,9 +91,12 @@ public class ParallelStartKillStage extends AbstractStartStage {
                      log.error("Starting delay was interrupted.", e);
                   }
                }
-               StartHelper.start(slaveState, false, null, 0, reachable, ack);
-               if (ack.isError()) return ack;
-               startMe = false;               
+               try {
+                  StartHelper.start(slaveState, false, null, 0, reachable);
+               } catch (RuntimeException e) {
+                  return errorResponse("Issues while instantiating/starting cache wrapper", e);
+               }
+               startMe = false;
             }            
          }
          if (killMe) {
@@ -107,7 +104,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
                if (!startMe) {
                   log.info("Wrapper is dead, nothing to kill");
                   killMe = false;
-                  return ack;
+                  return successfulResponse();
                }
             } else {
                try {
@@ -115,13 +112,16 @@ public class ParallelStartKillStage extends AbstractStartStage {
                } catch (InterruptedException e) {
                   log.error("Killing delay was interrupted.", e);
                }
-               KillHelper.kill(slaveState, tearDown, false, ack);
-               if (ack.isError()) return ack;
+               try {
+                  KillHelper.kill(slaveState, tearDown, false);
+               } catch (RuntimeException e) {
+                  return errorResponse("Failed to kill the service", e);
+               }
                killMe = false;
             }
          }
       }
-      return ack;
+      return successfulResponse();
    }
 
    @Override
@@ -137,15 +137,6 @@ public class ParallelStartKillStage extends AbstractStartStage {
             log.info("Received allowed error ack " + defaultStageAck);
          } else {
             log.trace("Received success ack " + defaultStageAck);
-            StartStopTime times = (StartStopTime) defaultStageAck.getPayload();
-            if (times != null) {
-               if (times.getStartTime() >= 0) {
-                  CsvReportGenerationStage.addResult(masterState, stageAck.getSlaveIndex(), StartHelper.START_TIME, times.getStartTime());
-               }
-               if (times.getStopTime() >= 0) {
-                  CsvReportGenerationStage.addResult(masterState, stageAck.getSlaveIndex(), KillHelper.STOP_TIME, times.getStopTime());
-               }
-            }
          }
       }
       if (log.isTraceEnabled())

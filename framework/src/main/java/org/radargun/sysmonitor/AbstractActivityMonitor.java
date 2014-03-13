@@ -2,16 +2,13 @@ package org.radargun.sysmonitor;
 
 import java.io.Serializable;
 import java.lang.management.ManagementFactory;
-import java.math.BigDecimal;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import javax.management.AttributeNotFoundException;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
+import org.radargun.reporting.Timeline;
 
 /**
  * @author Mircea Markus <mircea.markus@gmail.com>
@@ -25,7 +22,11 @@ public abstract class AbstractActivityMonitor implements Runnable, Serializable 
    static final ObjectName RUNTIME_NAME = getRuntimeName();
    static final NumberFormat PERCENT_FORMATTER = NumberFormat.getPercentInstance();
 
-   protected final List<BigDecimal> measurements = new ArrayList<BigDecimal>();
+   protected final Timeline timeline;
+
+   public AbstractActivityMonitor(Timeline timeline) {
+      this.timeline = timeline;
+   }
 
    private static ObjectName getRuntimeName() {
       try {
@@ -51,35 +52,5 @@ public abstract class AbstractActivityMonitor implements Runnable, Serializable 
          num = 1;
       }
       return num.longValue();
-   }
-
-   public static String formatPercent(double value) {
-      return PERCENT_FORMATTER.format(value / 100);
-   }
-
-   public final void addMeasurement(BigDecimal value) {
-      measurements.add(value);
-   }
-
-   protected void addMeasurementAsPercentage(long v) {
-      addMeasurement(new BigDecimal(v).divide(new BigDecimal(10)));
-   }
-
-   public LinkedHashMap<Integer, BigDecimal> formatForGraph(int interval, int xCount) {
-      int x = 0;
-      LinkedHashMap<Integer, BigDecimal> map = new LinkedHashMap<Integer, BigDecimal>(measurements.size());
-      for (BigDecimal y : measurements) {
-         map.put(x, y);
-         x += interval;
-      }
-      return map;
-   }
-
-   public Integer getMeasurementCount() {
-      return measurements.size();
-   }
-
-   public List<BigDecimal> getMeasurements() {
-      return measurements;
    }
 }

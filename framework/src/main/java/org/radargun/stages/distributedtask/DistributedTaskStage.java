@@ -87,6 +87,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
       super.processAckOnMaster(acks);
       StringBuilder reportCsvContent = new StringBuilder();
 
+      // TODO: move this into test report
       if (masterState.get(FIRST_SCALE_STAGE_KEY) == null) {
          masterState.put(FIRST_SCALE_STAGE_KEY, masterState.getConfigName());
          reportCsvContent.append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, DURATION_NANOSECONDS\n");

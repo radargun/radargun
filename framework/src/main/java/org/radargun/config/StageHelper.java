@@ -1,6 +1,5 @@
 package org.radargun.config;
 
-import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -80,14 +79,14 @@ public class StageHelper {
    public static String toString(org.radargun.Stage stage) {
       StringBuilder sb = new StringBuilder();
       sb.append(getStageName(stage.getClass())).append(" {");
-      Set<Map.Entry<String, Field>> properties = PropertyHelper.getProperties(stage.getClass(), false).entrySet();
+      Set<Map.Entry<String, Path>> properties = PropertyHelper.getProperties(stage.getClass(), false).entrySet();
 
-      for (Iterator<Map.Entry<String,Field>> iterator = properties.iterator(); iterator.hasNext(); ) {
-         Map.Entry<String, Field> property = iterator.next();
+      for (Iterator<Map.Entry<String, Path>> iterator = properties.iterator(); iterator.hasNext(); ) {
+         Map.Entry<String, Path> property = iterator.next();
          String propertyName = property.getKey();
-         Field propertyField = property.getValue();
+         Path path = property.getValue();
          sb.append(propertyName).append('=');
-         sb.append(PropertyHelper.getPropertyString(propertyField, stage));
+         sb.append(PropertyHelper.getPropertyString(path, stage));
          if (iterator.hasNext()) {
             sb.append(", ");
          }

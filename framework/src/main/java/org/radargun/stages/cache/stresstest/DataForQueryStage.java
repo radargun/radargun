@@ -31,6 +31,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Queryable;
 
@@ -137,7 +138,7 @@ public class DataForQueryStage extends StressTestStage {
    }
 
    @Override
-   protected Map<String, Object> processResults() {
+   protected List<Statistics> gatherResults() {
       //Writing the most used word into the slave state object
       int max = 0;
       String key = null;
@@ -148,6 +149,6 @@ public class DataForQueryStage extends StressTestStage {
          }
       }
       slaveState.put(MATCH_WORD_PROP_NAME, key);
-      return super.processResults();
+      return super.gatherResults();
    }
 }

@@ -9,7 +9,7 @@
    </parent>
 
    <artifactId>radargun-framework</artifactId>
-   <name>The RadarGun framework</name>
+   <name>RadarGun core</name>
    <packaging>jar</packaging>
 
    <properties>
@@ -37,12 +37,6 @@
          <!--<service>jar</service>-->
          <!--<scope>compile</scope>-->
       <!--</dependency>-->
-
-      <dependency>
-         <groupId>jfree</groupId>
-         <artifactId>jfreechart</artifactId>
-         <version>1.0.12</version>
-      </dependency>
 
       <dependency>
          <groupId>log4j</groupId>

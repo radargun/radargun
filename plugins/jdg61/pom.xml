@@ -46,10 +46,6 @@
                <groupId>org.jboss.logging</groupId>
                <artifactId>jboss-logging-spi</artifactId>
             </exclusion>
-            <exclusion>
-               <groupId>org.jfree</groupId>
-               <artifactId>jfreechart</artifactId>
-            </exclusion>            
          </exclusions>
       </dependency>
 

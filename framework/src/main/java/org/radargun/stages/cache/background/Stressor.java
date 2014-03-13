@@ -2,6 +2,7 @@ package org.radargun.stages.cache.background;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.stats.DefaultOperationStats;
 import org.radargun.stats.SynchronizedStatistics;
 
 /**
@@ -19,7 +20,7 @@ class Stressor extends Thread {
    private final Logic logic;
    private final long delayBetweenRequests;
    private final boolean loadOnly;
-   protected final SynchronizedStatistics stats = new SynchronizedStatistics();
+   protected final SynchronizedStatistics stats = new SynchronizedStatistics(new DefaultOperationStats());
 
    private volatile boolean terminate = false;
    private boolean loaded;
@@ -31,6 +32,7 @@ class Stressor extends Thread {
       this.delayBetweenRequests = manager.getDelayBetweenRequests();
       this.loadOnly = manager.getLoadOnly();
       logic.setStressor(this);
+      stats.begin();
    }
 
    @Override
@@ -71,8 +73,8 @@ class Stressor extends Thread {
       return terminate;
    }
 
-   public SynchronizedStatistics getStatsSnapshot(boolean reset, long time) {
-      SynchronizedStatistics snapshot = stats.snapshot(reset,  time);
+   public SynchronizedStatistics getStatsSnapshot(boolean reset) {
+      SynchronizedStatistics snapshot = stats.snapshot(reset);
       return snapshot;
    }
 

@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.radargun.stats.Operation;
+import org.radargun.traits.ConditionalOperations;
 
 /**
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -28,19 +28,19 @@ class FixedSetConditionalOperationLogic extends FixedSetPerThreadOperationLogic 
       int probability = 0;
       if (lastValue == null) {
          lastValues.put(key, newValue);
-         return stressor.makeRequest(Operation.PUT_IF_ABSENT_IS_ABSENT, key, newValue);
+         return stressor.makeRequest(ConditionalOperations.PUT_IF_ABSENT_EXEC, key, newValue);
       } else if (randomAction < (probability += stage.writePercentage)) {
-         return stressor.makeRequest(Operation.PUT_IF_ABSENT_NOT_ABSENT, key, newValue, lastValue);
+         return stressor.makeRequest(ConditionalOperations.PUT_IF_ABSENT_NOTEX, key, newValue, lastValue);
       } else if (randomAction < (probability += stage.removePercentage)) {
          lastValues.remove(key);
-         return stressor.makeRequest(Operation.REMOVE_VALID, key, lastValue);
+         return stressor.makeRequest(ConditionalOperations.REMOVE_EXEC, key, lastValue);
       } else if (randomAction < (probability += stage.removeInvalidPercentage)) {
-         return stressor.makeRequest(Operation.REMOVE_INVALID, key, stage.generateValue(key, Integer.MAX_VALUE));
+         return stressor.makeRequest(ConditionalOperations.REMOVE_NOTEX, key, stage.generateValue(key, Integer.MAX_VALUE));
       } else if (randomAction < (probability += stage.replaceInvalidPercentage)) {
-         return stressor.makeRequest(Operation.REPLACE_INVALID, key, stage.generateValue(key, Integer.MAX_VALUE), newValue);
+         return stressor.makeRequest(ConditionalOperations.REPLACE_NOTEX, key, stage.generateValue(key, Integer.MAX_VALUE), newValue);
       } else {
          lastValues.put(key, newValue);
-         return stressor.makeRequest(Operation.REPLACE_VALID, key, lastValue, newValue);
+         return stressor.makeRequest(ConditionalOperations.REPLACE_EXEC, key, lastValue, newValue);
       }
    }
 

@@ -18,8 +18,8 @@
  */
 package org.radargun.stages.cache.stresstest;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
@@ -42,13 +42,13 @@ public class ClientStressTestStage extends StressTestStage {
    @Property(doc = "Number of threads which should be added in each iteration. Default is 1.")
    private int increment = 1;
 
-   private double requestPerSec = 0;
+   // TODO: override loadStatistics and storeStatistics to get proper histograms
 
-   public Map<String, Object> stress() {
+   public List<List<Statistics>> stress() {
       log.info("Client stress test with " + initThreads + " - " + maxThreads + " (increment " + increment + ")");
       int iterations = (maxThreads + increment - 1 - initThreads) / increment + 1;
 
-      Map<String, Object> results = new LinkedHashMap<String, Object>();
+      List<List<Statistics>> results = new ArrayList<List<Statistics>>();
       int iteration = 0;
 
       if (!startOperations()) return results;
@@ -72,21 +72,10 @@ public class ClientStressTestStage extends StressTestStage {
          if (isTerminated()) {
             break;
          }
-         processResults(String.format("%03d", iteration), threads, results);
+         results.add(gatherResults());
       }
-      results.put(Statistics.REQ_PER_SEC, requestPerSec);
 
       finishOperations();
-      return results;
-   }
-
-   protected Map<String, Object> processResults(String iteration, int threads, Map<String, Object> results) {
-      Statistics stats = createStatistics();
-      for (Stressor stressor : stressors) {
-         stats.merge(stressor.getStats());
-      }
-      results.putAll(stats.getResultsMap(threads, iteration + "."));
-      requestPerSec = Math.max(requestPerSec, stats.getOperationsPerSecond(true));
       return results;
    }
 }

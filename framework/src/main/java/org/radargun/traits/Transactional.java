@@ -1,10 +1,18 @@
 package org.radargun.traits;
 
+import org.radargun.Operation;
+
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Trait(doc = "Trait providing transactional operations.")
 public interface Transactional {
+   String TRAIT = Transactional.class.getSimpleName();
+   Operation BEGIN =    Operation.register(TRAIT + ".Begin");
+   Operation COMMIT =   Operation.register(TRAIT + ".Commit");
+   Operation ROLLBACK = Operation.register(TRAIT + ".Rollback");
+   Operation DURATION = Operation.register(TRAIT + ".Duration");
+
    /**
     * @return True if the cache is configured to use transactions.
     */

@@ -3,7 +3,7 @@ package org.radargun.stages.cache.stresstest;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.radargun.stats.Operation;
+import org.radargun.traits.BasicOperations;
 
 /**
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -23,11 +23,11 @@ abstract class FixedSetOperationLogic implements OperationLogic {
       Object key = getKey(randomKeyInt, stressor.getThreadIndex());
 
       if (randomAction < stage.writePercentage) {
-         return stressor.makeRequest(Operation.PUT, key, stage.generateValue(key, Integer.MAX_VALUE));
+         return stressor.makeRequest(BasicOperations.PUT, key, stage.generateValue(key, Integer.MAX_VALUE));
       } else if (randomAction < stage.writePercentage + stage.removePercentage) {
-         return stressor.makeRequest(Operation.REMOVE, key);
+         return stressor.makeRequest(BasicOperations.REMOVE, key);
       } else {
-         return stressor.makeRequest(Operation.GET, key);
+         return stressor.makeRequest(BasicOperations.GET, key);
       }
    }
 

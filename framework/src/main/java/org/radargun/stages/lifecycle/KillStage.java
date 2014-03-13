@@ -1,17 +1,13 @@
 package org.radargun.stages.lifecycle;
 
-import java.util.List;
-
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.CsvReportGenerationStage;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.stages.helpers.KillHelper;
 import org.radargun.stages.helpers.RoleHelper;
-import org.radargun.stages.helpers.StartStopTime;
 
 /**
  * 
@@ -78,31 +74,17 @@ public class KillStage extends AbstractDistStage {
                      Thread.sleep(delayExecution);
                   } catch (InterruptedException e) {                    
                   }
-                  KillHelper.kill(slaveState, graceful, async, null);
+                  KillHelper.kill(slaveState, graceful, async);
                }
             };
             slaveState.put(KILL_DELAY_THREAD, t);
             t.start();
          } else {
-            KillHelper.kill(slaveState, graceful, async, ack);
+            KillHelper.kill(slaveState, graceful, async);
          }
       } else {
          log.trace("Ignoring kill request, not targeted for this slave");
       }
       return ack;
-   }
-
-   @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) {
-         return false;
-      }
-      for (DistStageAck ack : acks) {
-         StartStopTime times = ((StartStopTime) ((DefaultDistStageAck) ack).getPayload());
-         if (times != null && times.getStopTime() >= 0) {
-            CsvReportGenerationStage.addResult(masterState, ack.getSlaveIndex(), KillHelper.STOP_TIME, times.getStopTime());
-         }
-      }
-      return true;
    }
 }

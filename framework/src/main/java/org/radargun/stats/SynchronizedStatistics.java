@@ -1,25 +1,24 @@
 package org.radargun.stats;
 
+import org.radargun.Operation;
+
 /**
  * Wrapper over SimpleStatistics that provides synchronized access and sealing.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  * @since 1/28/13
  */
-public class SynchronizedStatistics extends SimpleStatistics {
+public class SynchronizedStatistics extends DefaultStatistics {
 
    protected boolean snapshot = false;
 
-   public SynchronizedStatistics(boolean nodeUp) {
-      super(nodeUp);
-   }
-
-   public SynchronizedStatistics() {
+   public SynchronizedStatistics(OperationStats prototype) {
+      super(prototype);
    }
 
    @Override
-   protected SynchronizedStatistics create() {
-      return new SynchronizedStatistics();
+   public SynchronizedStatistics newInstance() {
+      return new SynchronizedStatistics(prototype);
    }
 
    public boolean isSnapshot() {
@@ -38,37 +37,33 @@ public class SynchronizedStatistics extends SimpleStatistics {
       }
    }
 
-   public synchronized SynchronizedStatistics snapshot(boolean reset, long time) {
+   public synchronized SynchronizedStatistics snapshot(boolean reset) {
       ensureNotSnapshot();
-      SynchronizedStatistics result = create();
-
-      fillCopy(result);
-
-      result.intervalEndTime = time;
-      result.snapshot = true;
-      result.nodeUp = nodeUp;
+      SynchronizedStatistics copy = copy();
+      copy.end();
+      copy.snapshot = true;
       if (reset) {
-         reset(time);
+         reset();
       }
-      return result;
+      return copy;
    }
 
    @Override
-   public synchronized void registerRequest(long responseTime, long txOverhead, Operation operation) {
+   public synchronized void registerRequest(long responseTime, Operation operation) {
       ensureNotSnapshot();
-      super.registerRequest(responseTime, 0, operation);
+      super.registerRequest(responseTime, operation);
    }
 
    @Override
-   public synchronized void registerError(long responseTime, long txOverhead, Operation operation) {
+   public synchronized void registerError(long responseTime, Operation operation) {
       ensureNotSnapshot();
-      super.registerError(responseTime, 0, operation);
+      super.registerError(responseTime, operation);
    }
 
    @Override
-   public synchronized void reset(long time) {
+   public synchronized void reset() {
       ensureNotSnapshot();
-      super.reset(time);
+      super.reset();
    }
 
    @Override
@@ -80,40 +75,16 @@ public class SynchronizedStatistics extends SimpleStatistics {
 
    @Override
    public synchronized void merge(Statistics otherStats) {
-      ensureSnapshot();
-      if (otherStats instanceof SynchronizedStatistics) {
-         ((SynchronizedStatistics) otherStats).ensureSnapshot();
-      }
       super.merge(otherStats);
    }
 
    @Override
-   public synchronized long getNumberOfRequests() {
-      return super.getNumberOfRequests();
+   public synchronized long getBegin() {
+      return super.getBegin();
    }
 
    @Override
-   public synchronized double getAvgResponseTime() {
-      return super.getAvgResponseTime();
-   }
-
-   @Override
-   public synchronized long getDuration() {
-      return super.getDuration();
-   }
-
-   @Override
-   public synchronized long getIntervalBeginTime() {
-      return super.getIntervalBeginTime();
-   }
-
-   @Override
-   public synchronized long getIntervalEndTime() {
-      return super.getIntervalEndTime();
-   }
-
-   @Override
-   public synchronized double getThroughput() {
-      return super.getThroughput();
+   public synchronized long getEnd() {
+      return super.getEnd();
    }
 }

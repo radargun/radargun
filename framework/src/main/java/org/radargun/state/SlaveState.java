@@ -3,6 +3,7 @@ package org.radargun.state;
 import java.net.InetAddress;
 import java.util.Map;
 
+import org.radargun.reporting.Timeline;
 import org.radargun.utils.ClassLoadHelper;
 
 /**
@@ -22,6 +23,7 @@ public class SlaveState extends StateBase {
    private Object service;
    private int indexInGroup;
    private Map<Class<?>, Object> traits;
+   private Timeline timeline;
 
    public void setLocalAddress(InetAddress localAddress) {
       this.localAddress = localAddress;
@@ -90,5 +92,13 @@ public class SlaveState extends StateBase {
 
    public <T> T getTrait(Class<? extends T> traitClass) {
       return (T) traits.get(traitClass);
+   }
+
+   public Timeline getTimeline() {
+      return timeline;
+   }
+
+   public void setTimeline(Timeline timeline) {
+      this.timeline = timeline;
    }
 }

@@ -51,7 +51,7 @@
                               <element maxOccurs="unbounded" minOccurs="1" name="setup">
                                  <complexType>
                                     <sequence>
-                                       <element name="property" type="rg:property"/>
+                                       <element maxOccurs="unbounded" minOccurs="0" name="property" type="rg:property"/>
                                     </sequence>
                                     <attribute name="plugin" type="string" use="required"/>
                                     <attribute name="file" type="string" use="required"/>
@@ -82,7 +82,6 @@
                         <element name="clear-cache" type="rg:clear-cache"/>
                         <element name="client-stress-test" type="rg:client-stress-test"/>
                         <element name="cluster-validation" type="rg:cluster-validation"/>
-                        <element name="csv-report-generation" type="rg:csv-report-generation"/>
                         <element name="data-for-query" type="rg:data-for-query"/>
                         <element name="distributed-task" type="rg:distributed-task"/>
                         <element name="isolation-level-check" type="rg:isolation-level-check"/>
@@ -95,8 +94,6 @@
                         <element name="parallel-start-kill" type="rg:parallel-start-kill"/>
                         <element name="query" type="rg:query"/>
                         <element name="random-data" type="rg:random-data"/>
-                        <element name="report-background-stats" type="rg:report-background-stats"/>
-                        <element name="report-jvm-monitor" type="rg:report-jvm-monitor"/>
                         <element name="set-log-level" type="rg:set-log-level"/>
                         <element name="set-partitions" type="rg:set-partitions"/>
                         <element name="single-tx-check" type="rg:single-tx-check"/>
@@ -127,10 +124,9 @@
                      <element maxOccurs="unbounded" minOccurs="1" name="reporter">
                         <complexType>
                            <sequence>
-                              <element maxOccurs="unbounded" minOccurs="1" name="report">
+                              <element maxOccurs="unbounded" minOccurs="0" name="report">
                                  <complexType>
                                     <element name="property" type="rg:property"/>
-                                    <attribute name="source" type="string" use="required"/>
                                  </complexType>
                               </element>
                               <element maxOccurs="1" minOccurs="0" name="properties">
@@ -142,7 +138,7 @@
                               </element>
                            </sequence>
                            <attribute name="type" type="string" use="required"/>
-                           <attribute name="run" type="rg:org-radargun-config-reporter-runcondition"/>
+                           <attribute name="run" type="rg:org-radargun-config-reporterconfiguration-runcondition"/>
                         </complexType>
                      </element>
                   </sequence>
@@ -188,7 +184,6 @@
             <element name="clear-cache" type="rg:clear-cache"/>
             <element name="client-stress-test" type="rg:client-stress-test"/>
             <element name="cluster-validation" type="rg:cluster-validation"/>
-            <element name="csv-report-generation" type="rg:csv-report-generation"/>
             <element name="data-for-query" type="rg:data-for-query"/>
             <element name="distributed-task" type="rg:distributed-task"/>
             <element name="isolation-level-check" type="rg:isolation-level-check"/>
@@ -201,8 +196,6 @@
             <element name="parallel-start-kill" type="rg:parallel-start-kill"/>
             <element name="query" type="rg:query"/>
             <element name="random-data" type="rg:random-data"/>
-            <element name="report-background-stats" type="rg:report-background-stats"/>
-            <element name="report-jvm-monitor" type="rg:report-jvm-monitor"/>
             <element name="set-log-level" type="rg:set-log-level"/>
             <element name="set-partitions" type="rg:set-partitions"/>
             <element name="single-tx-check" type="rg:single-tx-check"/>
@@ -390,6 +383,11 @@
             <attribute name="statistics-period" type="rg:long-converted-by-org-radargun-config-timeconverter">
                <annotation>
                   <documentation>Period of single statistics result. By default periodic statistics are not used.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="test-name" type="string">
+               <annotation>
+                  <documentation>Name of the test as used for reporting. Default is StressTest.</documentation>
                </annotation>
             </attribute>
             <attribute name="transaction-size" type="rg:int">
@@ -763,30 +761,6 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="csv-report-generation">
-      <annotation>
-         <documentation>Generates report in CSV format from the latest StressTest results</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-master">
-            <attribute name="compute-average" type="rg:boolean">
-               <annotation>
-                  <documentation>Adds a line with average results. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="ignore" type="string">
-               <annotation>
-                  <documentation>Slaves whose results will be ignored.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="target-dir" type="string">
-               <annotation>
-                  <documentation>Directory into which will be report files written.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
    <complexType name="data-for-query">
       <annotation>
          <documentation>Stage which executes puts/gets indexed entries against index enabled cache.</documentation>
@@ -840,30 +814,6 @@
             <attribute name="node-address" type="string">
                <annotation>
                   <documentation>The node address where the task will be executed. The default is null, and tasks will be executed against all nodes in the cluster.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="generate-report">
-      <annotation>
-         <documentation>Stage that generates a chart from a set of csv files.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-master">
-            <attribute name="csv-files-directory" type="string">
-               <annotation>
-                  <documentation>Path to directory where are the (input) CSV files. Default is 'reports'.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="name" type="string">
-               <annotation>
-                  <documentation>Name (prefix) for the report.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="report-directory" type="string">
-               <annotation>
-                  <documentation>Path to directory where the report (output) should be generated. Default is 'reports'.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -1341,54 +1291,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </simpleType>
       </union>
    </simpleType>
-   <complexType name="report-background-stats">
-      <annotation>
-         <documentation>Generates reports from Statistics.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-master">
-            <attribute name="chart-height" type="rg:int">
-               <annotation>
-                  <documentation>Height of the produced charts. Default is 600px.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="chart-width" type="rg:int">
-               <annotation>
-                  <documentation>Width of the produced charts. Default is 800px.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="generate-interval-time-data" type="rg:boolean">
-               <annotation>
-                  <documentation>Generate files for verifying time synchronization of slaves. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="ignore" type="string">
-               <annotation>
-                  <documentation>Set of slaves whose results should be ignored. Default is empty.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="target-dir" type="string">
-               <annotation>
-                  <documentation>Directory where the reports should be written. Default is 'reports'</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="report-jvm-monitor">
-      <annotation>
-         <documentation>Generate charts for JVM statistics on each slave node.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-master">
-            <attribute name="report-prefix" type="string">
-               <annotation>
-                  <documentation>A prefix that will be added to the report name. Default is null.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
    <complexType name="scenario-cleanup">
       <annotation>
          <documentation>DO NOT USE DIRECTLY. This stage is automatically inserted after the last stage in each scenario. You can alter the properties in &amp;lt;cleanup/&amp;gt element.</documentation>
@@ -1812,7 +1714,13 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <documentation>Stop Statistics and return collected statistics to master.</documentation>
       </annotation>
       <complexContent>
-         <extension base="rg:abstract-dist"/>
+         <extension base="rg:abstract-dist">
+            <attribute name="test-name" type="string">
+               <annotation>
+                  <documentation>Name of the test used for reports. Default is 'BackgroundStats'.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
       </complexContent>
    </complexType>
    <complexType name="stop-background-stressors">
@@ -2036,13 +1944,13 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="org-radargun-config-reporter-runcondition">
+   <simpleType name="org-radargun-config-reporterconfiguration-runcondition">
       <union>
          <simpleType>
             <restriction base="string">
                <enumeration value="ALWAYS"/>
+               <enumeration value="CLUSTER_SUCCESSFUL"/>
                <enumeration value="CONFIG_SUCCESSFUL"/>
-               <enumeration value="CLUSTERS_SUCCESSFUL"/>
                <enumeration value="ALL_SUCCESSFUL"/>
             </restriction>
          </simpleType>

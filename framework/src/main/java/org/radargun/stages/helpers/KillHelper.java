@@ -20,12 +20,12 @@ package org.radargun.stages.helpers;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.traits.Killable;
-import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.reporting.Timeline;
+import org.radargun.stages.cache.background.BackgroundOpsManager;
 import org.radargun.stages.lifecycle.KillStage;
 import org.radargun.stages.lifecycle.ParallelStartKillStage;
 import org.radargun.state.SlaveState;
-import org.radargun.stages.cache.background.BackgroundOpsManager;
+import org.radargun.traits.Killable;
 import org.radargun.traits.Lifecycle;
 
 /**
@@ -36,57 +36,44 @@ import org.radargun.traits.Lifecycle;
  * @author Radim Vansa rvansa@redhat.com
  * @since September 2012
  */
+//TODO: merge StartHelper and KillHelper -> LifecycleHelper
 public class KillHelper {
-
-   public static final String STOP_TIME = "STOP_TIME";
 
    private KillHelper() {}
   
    private static final Log log = LogFactory.getLog(KillHelper.class);
    
-   public static void kill(SlaveState slaveState, boolean graceful, boolean async, DefaultDistStageAck ack) {
+   public static void kill(SlaveState slaveState, boolean graceful, boolean async) {
       Lifecycle lifecycle = slaveState.getTrait(Lifecycle.class);
       if (lifecycle == null) throw new IllegalArgumentException();
       Killable killable = slaveState.getTrait(Killable.class);
-      try {
-         if (lifecycle.isRunning()) {
-            BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, false);
-            long stoppingTime;
-            if (graceful) {
-               log.info("Stopping service.");
-               stoppingTime = System.nanoTime();
-               lifecycle.stop();
-            } else if (killable != null) {
-               log.info("Killing service.");
-               stoppingTime = System.nanoTime();
-               if (async) {
-                  killable.killAsync();
-               } else {
-                  killable.kill();
-               }
+      if (lifecycle.isRunning()) {
+         BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, false);
+         long stoppingTime;
+         if (graceful) {
+            log.info("Stopping service.");
+            stoppingTime = System.currentTimeMillis();
+            lifecycle.stop();
+         } else if (killable != null) {
+            log.info("Killing service.");
+            stoppingTime = System.currentTimeMillis();
+            if (async) {
+               killable.killAsync();
             } else {
-               log.info("Service is not Killable, stopping instead");
-               stoppingTime = System.nanoTime();
-               lifecycle.stop();
-            }
-            long stoppedTime = System.nanoTime();
-            if (ack != null) {
-               ack.setPayload(StartStopTime.withStopTime(stoppedTime - stoppingTime, ack.getPayload()));
+               killable.kill();
             }
          } else {
-            log.info("No cache wrapper deployed on this slave, nothing to do.");
+            log.info("Service is not Killable, stopping instead");
+            stoppingTime = System.currentTimeMillis();
+            lifecycle.stop();
          }
-         // in case of concurrent start and kill the stats could be still running
-         BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, false);
-      } catch (Exception e) {
-         log.error("Error while killing slave", e);
-         if (ack != null) {
-            ack.setError(true);
-            ack.setErrorMessage(e.getMessage());
-            ack.setRemoteException(e);
-         }
-      } finally {
-         System.gc();
+         long stoppedTime = System.currentTimeMillis();
+         slaveState.getTimeline().addEvent(StartHelper.LIFECYCLE, new Timeline.IntervalEvent(stoppingTime, "Stop", stoppedTime - stoppingTime));
+      } else {
+         log.info("No cache wrapper deployed on this slave, nothing to do.");
       }
+      // in case of concurrent start and kill the stats could be still running
+      BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, false);
+      System.gc();
    }
 }

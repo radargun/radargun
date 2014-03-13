@@ -6,7 +6,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.stages.helpers.StartHelper;
 
 /**
@@ -40,18 +39,17 @@ public class StartClusterStage extends AbstractStartStage {
    private Set<Integer> reachable = null;
 
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
       if (lifecycle == null) {
          log.warn("Service " + slaveState.getServiceName() + " does not support lifecycle management.");
-         return ack;
+         return successfulResponse();
       } else if (lifecycle.isRunning()) {
          log.info("Service " + slaveState.getServiceName() + " is already running.");
-         return ack;
+         return successfulResponse();
       }
       if (slaves != null) {
          if (!slaves.contains(slaveState.getSlaveIndex())) {
             log.trace("Start request not targeted for this slave, ignoring.");
-            return ack;
+            return successfulResponse();
          } else {
             int index = 0;
             for (Integer slave : slaves) {
@@ -65,12 +63,13 @@ public class StartClusterStage extends AbstractStartStage {
       }
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
             + ". This slave's index is: " + slaveState.getSlaveIndex());
-      
-      StartHelper.start(slaveState, validateCluster, expectNumSlaves, clusterFormationTimeout, reachable, ack);
-      if (!ack.isError()) {
-         log.info("Successfully started cache service " + slaveState.getServiceName() + " on slave " + slaveState.getSlaveIndex());
+      try {
+         StartHelper.start(slaveState, validateCluster, expectNumSlaves, clusterFormationTimeout, reachable);
+      } catch (RuntimeException e) {
+         return errorResponse("Issues while instantiating/starting cache wrapper", e);
       }
-      return ack;
+      log.info("Successfully started cache service " + slaveState.getServiceName() + " on slave " + slaveState.getSlaveIndex());
+      return successfulResponse();
    }
 
    private void staggerStartup(int thisNodeIndex, int numSlavesToStart) {

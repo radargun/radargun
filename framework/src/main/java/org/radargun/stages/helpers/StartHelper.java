@@ -22,7 +22,7 @@ import java.util.Set;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.reporting.Timeline;
 import org.radargun.stages.cache.background.BackgroundOpsManager;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.Clustered;
@@ -31,14 +31,14 @@ import org.radargun.traits.Partitionable;
 
 public class StartHelper {
 
-   public static final String START_TIME = "START_TIME";
+   protected static final String LIFECYCLE = "Lifecycle";
 
    private StartHelper() {}
    
    private static final Log log = LogFactory.getLog(StartHelper.class);
    
    public static void start(SlaveState slaveState, boolean validate, Integer expectedSlaves, long clusterFormationTimeout,
-                            Set<Integer> reachable, DefaultDistStageAck ack) {
+                            Set<Integer> reachable) {
       Lifecycle lifecycle = slaveState.getTrait(Lifecycle.class);
       Clustered clustered = slaveState.getTrait(Clustered.class);
       Partitionable partitionable = slaveState.getTrait(Partitionable.class);
@@ -47,10 +47,10 @@ public class StartHelper {
             partitionable.setStartWithReachable(slaveState.getSlaveIndex(), reachable);
          }
 
-         long startingTime = System.nanoTime();
+         long startingTime = System.currentTimeMillis();
          lifecycle.start();
-         long startedTime = System.nanoTime();
-         ack.setPayload(StartStopTime.withStartTime(startedTime - startingTime, ack.getPayload()));
+         long startedTime = System.currentTimeMillis();
+         slaveState.getTimeline().addEvent(StartHelper.LIFECYCLE, new Timeline.IntervalEvent(startingTime, "Start", startedTime - startingTime));
          if (validate && clustered != null) {
             
             int expectedNumberOfSlaves = expectedSlaves != null ? expectedSlaves : slaveState.getGroupSize();
@@ -61,11 +61,13 @@ public class StartHelper {
                if (numMembers != expectedNumberOfSlaves) {
                   String msg = "Number of members=" + numMembers + " is not the one expected: " + expectedNumberOfSlaves;
                   log.info(msg);
-                  Thread.sleep(1000);
+                  try {
+                     Thread.sleep(1000);
+                  } catch (InterruptedException ie) {
+                     Thread.currentThread().interrupt();
+                  }
                   if (System.currentTimeMillis() > clusterFormationDeadline) {
-                     ack.setError(true);
-                     ack.setErrorMessage(msg);
-                     return;
+                     throw new ClusterFormationTimeoutException(msg);
                   }
                } else {
                   log.info("Number of members is the one expected: " + clustered.getClusteredNodes());
@@ -77,16 +79,20 @@ public class StartHelper {
             // here is a race so this is rather an optimization
             BackgroundOpsManager.afterCacheWrapperStart(slaveState);
          }
-      } catch (Exception e) {
-         log.error("Issues while instantiating/starting cache wrapper", e);
-         ack.setError(true);
-         ack.setRemoteException(e);
-         if (lifecycle != null) {
-            try {
-               lifecycle.stop();
-            } catch (Exception ignored) {
-            }
+      } catch (RuntimeException e) {
+         log.trace("Failed to start", e);
+         try {
+            lifecycle.stop();
+         } catch (Exception ignored) {
+            log.trace("Failed to stop after start failed", ignored);
          }
+         throw e;
+      }
+   }
+
+   private static class ClusterFormationTimeoutException extends RuntimeException {
+      public ClusterFormationTimeoutException(String msg) {
+         super(msg);
       }
    }
 }

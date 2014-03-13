@@ -21,11 +21,14 @@ package org.radargun.traits;
 import java.util.List;
 import java.util.Map;
 
+import org.radargun.Operation;
+
 /**
  * @author Anna Manukyan
  */
 @Trait(doc = "Allows running queries on the node.")
 public interface Queryable {
+   Operation QUERY = Operation.register(Queryable.class.getSimpleName() + ".Query");
 
    /**
     * The parameter name, which value is the field name which should be queried.

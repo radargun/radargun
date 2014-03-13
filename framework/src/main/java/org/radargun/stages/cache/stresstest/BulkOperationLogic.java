@@ -7,7 +7,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.radargun.stats.Operation;
+import org.radargun.Operation;
+import org.radargun.traits.BulkOperations;
 
 /**
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -23,13 +24,13 @@ class BulkOperationLogic implements OperationLogic {
       this.stage = stage;
       this.initLogic = initLogic;
       if (preferAsyncOperations) {
-         putOperation = Operation.PUT_ALL_VIA_ASYNC;
-         removeOperation = Operation.REMOVE_ALL_VIA_ASYNC;
-         getOperation = Operation.GET_ALL_VIA_ASYNC;
+         putOperation = BulkOperations.PUT_ALL_ASYNC;
+         removeOperation = BulkOperations.REMOVE_ALL_ASYNC;
+         getOperation = BulkOperations.GET_ALL_ASYNC;
       } else {
-         putOperation = Operation.PUT_ALL;
-         removeOperation = Operation.REMOVE_ALL;
-         getOperation = Operation.GET_ALL;
+         putOperation = BulkOperations.PUT_ALL_NATIVE;
+         removeOperation = BulkOperations.REMOVE_ALL_NATIVE;
+         getOperation = BulkOperations.GET_ALL_NATIVE;
       }
    }
 

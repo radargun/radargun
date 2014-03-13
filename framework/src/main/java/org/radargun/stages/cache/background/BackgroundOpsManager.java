@@ -1,19 +1,20 @@
 package org.radargun.stages.cache.background;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.Timeline;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.helpers.Range;
 import org.radargun.state.SlaveState;
-import org.radargun.stats.Operation;
 import org.radargun.stats.Statistics;
-import org.radargun.stats.SynchronizedStatistics;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.ConditionalOperations;
@@ -35,6 +36,7 @@ public class BackgroundOpsManager {
     * Key to SlaveState to retrieve BackgroundOpsManager instance and to MasterState to retrieve results.
     */
    public static final String NAME = "BackgroundOpsManager";
+   private static final String CACHE_SIZE = "Cache size";
 
    private static Log log = LogFactory.getLog(BackgroundOpsManager.class);
 
@@ -45,7 +47,7 @@ public class BackgroundOpsManager {
    private volatile Stressor[] stressorThreads;
    private SizeThread sizeThread;
    private KeepAliveThread keepAliveThread;
-   private List<Statistics> stats;
+   private List<List<Statistics>> stats;
    private BackgroundStatsThread backgroundStatsThread;
    private long statsIteration;
    private boolean loaded = false;
@@ -54,10 +56,10 @@ public class BackgroundOpsManager {
 
    private Lifecycle lifecycle;
    private BasicOperations.Cache basicCache;
-   private CacheInformation cacheInformation;
    private Debugable.Cache debugableCache;
    private Transactional.Resource transactionalCache;
    private ConditionalOperations.Cache conditionalCache;
+   private CacheInformation.Cache cacheInfo;
 
    public static BackgroundOpsManager getInstance(SlaveState slaveState) {
       return (BackgroundOpsManager) slaveState.get(NAME);
@@ -83,14 +85,25 @@ public class BackgroundOpsManager {
       instance.operations = stage.puts + stage.gets + stage.removes;
 
       instance.lifecycle = slaveState.getTrait(Lifecycle.class);
-      instance.basicCache = slaveState.getTrait(BasicOperations.class).getCache(stage.cacheName);
-      ConditionalOperations conditionalOperations = slaveState.getTrait(ConditionalOperations.class);
-      instance.conditionalCache = conditionalOperations == null ? null : conditionalOperations.getCache(stage.cacheName);
-      instance.cacheInformation = slaveState.getTrait(CacheInformation.class);
-      Debugable debugable = slaveState.getTrait(Debugable.class);
-      instance.debugableCache = debugable == null ? null : debugable.getCache(stage.cacheName);
-      instance.transactionalCache = slaveState.getTrait(Transactional.class).getResource(stage.cacheName);
+      instance.loadCaches();
       return instance;
+   }
+
+   private void loadCaches() {
+      basicCache = slaveState.getTrait(BasicOperations.class).getCache(stressorConfiguration.cacheName);
+      ConditionalOperations conditionalOperations = slaveState.getTrait(ConditionalOperations.class);
+      conditionalCache = conditionalOperations == null ? null : conditionalOperations.getCache(stressorConfiguration.cacheName);
+      Debugable debugable = slaveState.getTrait(Debugable.class);
+      debugableCache = debugable == null ? null : debugable.getCache(stressorConfiguration.cacheName);
+      if (stressorConfiguration.transactionSize > 0) {
+         Transactional transactional = slaveState.getTrait(Transactional.class);
+         if (transactional == null || transactional.isTransactional(stressorConfiguration.cacheName)) {
+            throw new IllegalArgumentException("Transactions are set on but the cache is not configured as transactional");
+         }
+         transactionalCache = transactional.getResource(stressorConfiguration.cacheName);
+      }
+      CacheInformation cacheInformation = slaveState.getTrait(CacheInformation.class);
+      cacheInfo = cacheInformation == null ? null : cacheInformation.getCache(stressorConfiguration.cacheName);
    }
 
    public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, long statsIteration) {
@@ -105,10 +118,10 @@ public class BackgroundOpsManager {
    public Operation getOperation(Random rand) {
       int r = rand.nextInt(operations);
       if (r < stressorConfiguration.gets) {
-         return Operation.GET;
+         return BasicOperations.GET;
       } else if (r < stressorConfiguration.gets + stressorConfiguration.puts) {
-         return Operation.PUT;
-      } else return Operation.REMOVE;
+         return BasicOperations.PUT;
+      } else return BasicOperations.REMOVE;
    }
 
    public synchronized void startBackgroundThreads() {
@@ -328,7 +341,7 @@ public class BackgroundOpsManager {
 
    public synchronized void startStats() {
       if (stats == null) {
-         stats = new ArrayList<Statistics>();
+         stats = new ArrayList<List<Statistics>>();
       }
       if (sizeThread == null) {
          sizeThread = new SizeThread();
@@ -340,7 +353,7 @@ public class BackgroundOpsManager {
       }
    }
 
-   public synchronized List<Statistics> stopStats() {
+   public synchronized List<List<Statistics>> stopStats() {
       if (backgroundStatsThread == null || stats == null) {
          throw new IllegalStateException("Stat thread not running");
       }
@@ -353,7 +366,7 @@ public class BackgroundOpsManager {
       } catch (InterruptedException e) {
          log.error("Interrupted while waiting for stat thread to end.");
       }
-      List<Statistics> statsToReturn = stats;
+      List<List<Statistics>> statsToReturn = stats;
       stats = null;
       return statsToReturn;
    }
@@ -458,9 +471,6 @@ public class BackgroundOpsManager {
    }
 
    private class BackgroundStatsThread extends Thread {
-
-      private SynchronizedStatistics nodeDownStats = new SynchronizedStatistics(false);
-
       public BackgroundStatsThread() {
          super("BackgroundStatsThread");
       }
@@ -477,26 +487,19 @@ public class BackgroundOpsManager {
          }
       }
 
-      private SynchronizedStatistics gatherStats() {
-         long now = System.currentTimeMillis();
+      private List<Statistics> gatherStats() {
          Stressor[] threads = stressorThreads;
          if (threads == null) {
-            return nodeDownStats.snapshot(true, now);
+            return Collections.EMPTY_LIST;
          } else {
-            nodeDownStats.reset(now); // we need to reset should we need them in next round
-            SynchronizedStatistics r = null;
+            List<Statistics> stats = new ArrayList<Statistics>(threads.length);
             for (int i = 0; i < threads.length; i++) {
-               SynchronizedStatistics threadStats = threads[i].getStatsSnapshot(true, now);
-               if (r == null) {
-                  r = threadStats;
-               } else {
-                  r.merge(threadStats);
+               if (threads[i] != null) {
+                  stats.add(threads[i].getStatsSnapshot(true));
                }
             }
-            if (r != null) {
-               r.setCacheSize(sizeThread.getAndResetSize());
-            }
-            return r;
+            slaveState.getTimeline().addValue(CACHE_SIZE, new Timeline.Value(sizeThread.getAndResetSize()));
+            return stats;
          }
       }
    }
@@ -518,7 +521,6 @@ public class BackgroundOpsManager {
       @Override
       public void run() {
          try {
-            CacheInformation.Cache info = cacheInformation.getCache(stressorConfiguration.cacheName);
             while (!isInterrupted()) {
                synchronized (this) {
                   while (!getSize) {
@@ -526,8 +528,8 @@ public class BackgroundOpsManager {
                   }
                   getSize = false;
                }
-               if (cacheInformation != null && lifecycle.isRunning()) {
-                  size = info.getLocalSize();
+               if (cacheInfo != null && lifecycle.isRunning()) {
+                  size = cacheInfo.getLocalSize();
                } else {
                   size = 0;
                }
@@ -560,6 +562,7 @@ public class BackgroundOpsManager {
       BackgroundOpsManager instance = getInstance(slaveState);
       if (instance != null) {
          instance.setLoaded(true); // don't load data at this stage
+         instance.loadCaches();
          instance.startBackgroundThreads();
       }
    }

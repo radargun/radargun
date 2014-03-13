@@ -16,6 +16,10 @@ public abstract class AbstractStage implements org.radargun.Stage {
 
    protected Log log = LogFactory.getLog(getClass());
 
+   public String getName() {
+      return StageHelper.getStageName(getClass());
+   }
+
    @Override
    public String toString() {
       return StageHelper.toString(this);

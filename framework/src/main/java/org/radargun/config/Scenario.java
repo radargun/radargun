@@ -43,6 +43,10 @@ public class Scenario implements Serializable {
       return stage;
    }
 
+   public Map<String, String> getPropertiesDefinitions(int stageId) {
+      return stages.get(stageId).properties;
+   }
+
    private void setProperties(Map<String, String> properties) {
       for (Map.Entry<String, String> property : properties.entrySet()) {
          System.setProperty(property.getKey(), property.getValue() == null ? "" : property.getValue());

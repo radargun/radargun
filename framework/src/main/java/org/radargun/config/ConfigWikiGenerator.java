@@ -22,7 +22,6 @@
 
 package org.radargun.config;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Map;
 
@@ -39,8 +38,8 @@ public class ConfigWikiGenerator {
          if (Modifier.isAbstract(entry.getValue().getModifiers())) continue;
          System.out.println("## " + entry.getKey());
          System.out.println(entry.getValue().getAnnotation(org.radargun.config.Stage.class).doc());
-         for (Map.Entry<String, Field> property : PropertyHelper.getProperties(entry.getValue(), true).entrySet()) {
-            Property propertyAnnotation = property.getValue().getAnnotation(Property.class);
+         for (Map.Entry<String, Path> property : PropertyHelper.getProperties(entry.getValue(), true).entrySet()) {
+            Property propertyAnnotation = property.getValue().getTargetAnnotation();
             if (property.getKey().equals(propertyAnnotation.deprecatedName()) || propertyAnnotation.readonly()) continue;
             System.out.println("* " + property.getKey()
                                      + (propertyAnnotation.optional() ? " [optional]" : " [mandatory]") + ": " + propertyAnnotation.doc());

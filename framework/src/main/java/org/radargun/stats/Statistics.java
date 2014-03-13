@@ -25,25 +25,30 @@ package org.radargun.stats;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.radargun.Operation;
+
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface Statistics extends Serializable {
-   long NS_IN_SEC = 1000 * 1000 * 1000;
-   long NS_IN_MS = 1000 * 1000;
-   String REQ_PER_SEC = "REQ_PER_SEC";
+   void begin();
+   void end();
+   void reset();
 
-   void registerRequest(long responseTime, long txOverhead, Operation operation);
+   void registerRequest(long responseTime, Operation operation);
+   void registerError(long responseTime, Operation operation);
 
-   void registerError(long responseTime, long txOverhead, Operation operation);
-
-   void reset(long time);
-
+   Statistics newInstance();
    Statistics copy();
-
    void merge(Statistics otherStats);
 
-   Map<String, Object> getResultsMap(int threads, String prefix);
 
-   double getOperationsPerSecond(boolean includeOverhead);
+   long getBegin();
+   long getEnd();
+
+   /* We return it by name as the ids can differ on nodes */
+   Map<String, OperationStats> getOperationsStats();
+
+   /* Util method, execute only on the same node */
+   <T> T[] getRepresentations(Class<T> clazz);
 }

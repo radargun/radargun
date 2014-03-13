@@ -18,13 +18,11 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.CsvReportGenerationStage;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.stages.tpcc.transaction.NewOrderTransaction;
 import org.radargun.stages.tpcc.transaction.OrderStatusTransaction;
 import org.radargun.stages.tpcc.transaction.PaymentTransaction;
 import org.radargun.stages.tpcc.transaction.TpccTransaction;
-import org.radargun.stats.Statistics;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
@@ -50,6 +48,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
    
    private static final String SIZE_INFO = "SIZE_INFO";
    public static final String SESSION_PREFIX = "SESSION";
+   private static final String REQ_PER_SEC = "REQ_PER_SEC";
 
    @Property(doc = "Number of threads that will work on this slave. Default is 10.")
    private int numThreads = 10;
@@ -115,7 +114,8 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       logDurationInfo(acks);
       boolean success = true;
       Map<Integer, Map<String, Object>> results = new HashMap<Integer, Map<String, Object>>();
-      masterState.put(CsvReportGenerationStage.RESULTS, results);
+      // TODO: move this into test report
+      masterState.put("results", results);
       for (DistStageAck ack : acks) {
          DefaultDistStageAck wAck = (DefaultDistStageAck) ack;
          if (wAck.isError()) {
@@ -128,7 +128,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
          Map<String, Object> benchResult = (Map<String, Object>) wAck.getPayload();
          if (benchResult != null) {
             results.put(ack.getSlaveIndex(), benchResult);
-            Object reqPerSes = benchResult.get(Statistics.REQ_PER_SEC);
+            Object reqPerSes = benchResult.get(REQ_PER_SEC);
             if (reqPerSes == null) {
                throw new IllegalStateException("This should be there!");
             }
@@ -286,7 +286,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       Map<String, Object> results = new LinkedHashMap<String, Object>();
       results.put("DURATION (msec)", (duration / numThreads));
       double requestPerSec = (reads + writes) / ((duration / numThreads) / 1000.0);
-      results.put(Statistics.REQ_PER_SEC, requestPerSec);
+      results.put(REQ_PER_SEC, requestPerSec);
 
       double wrtPerSec = 0;
       double rdPerSec = 0;

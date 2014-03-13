@@ -1,7 +1,8 @@
 package org.radargun.stages.cache.background;
 
 import org.radargun.stages.helpers.Range;
-import org.radargun.stats.Operation;
+import org.radargun.Operation;
+import org.radargun.traits.BasicOperations;
 
 /**
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -29,7 +30,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       // first we have to get the value
       PrivateLogValue prevValue = checkedGetValue(keyId);
       // now for modify operations, execute it
-      if (prevValue == null || operation == Operation.PUT) {
+      if (prevValue == null || operation == BasicOperations.PUT) {
          PrivateLogValue nextValue;
          PrivateLogValue backupValue = null;
          if (prevValue != null) {
@@ -50,7 +51,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
          if (backupValue != null) {
             delayedRemoveValue(~keyId, backupValue);
          }
-      } else if (operation == Operation.REMOVE) {
+      } else if (operation == BasicOperations.REMOVE) {
          PrivateLogValue nextValue = getNextValue(prevValue);
          if (nextValue == null) {
             return false;
@@ -109,16 +110,16 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       try {
          prevValue = basicCache.get(keyGenerator.generateKey(keyId));
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, 0, Operation.GET);
+         stressor.stats.registerError(System.nanoTime() - startTime, BasicOperations.GET);
          throw e;
       }
       long endTime = System.nanoTime();
       if (prevValue != null && !(prevValue instanceof PrivateLogValue)) {
-         stressor.stats.registerError(endTime - startTime, 0, Operation.GET);
+         stressor.stats.registerError(endTime - startTime, BasicOperations.GET);
          log.error("Value is not an instance of PrivateLogValue: " + prevValue);
          throw new IllegalStateException();
       } else {
-         stressor.stats.registerRequest(endTime - startTime, 0, prevValue == null ? Operation.GET_NULL : Operation.GET);
+         stressor.stats.registerRequest(endTime - startTime, prevValue == null ? BasicOperations.GET_NULL : BasicOperations.GET);
          return (PrivateLogValue) prevValue;
       }
    }
@@ -130,7 +131,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       try {
          prevValue = basicCache.remove(keyGenerator.generateKey(keyId));
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, 0, Operation.REMOVE);
+         stressor.stats.registerError(System.nanoTime() - startTime, BasicOperations.REMOVE);
          throw e;
       }
       long endTime = System.nanoTime();
@@ -149,10 +150,10 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
          log.error("Expected to remove " + expectedValue + " but found " + prevValue);
       }
       if (successful) {
-         stressor.stats.registerRequest(endTime - startTime, 0, Operation.REMOVE);
+         stressor.stats.registerRequest(endTime - startTime, BasicOperations.REMOVE);
          return true;
       } else {
-         stressor.stats.registerError(endTime - startTime, 0, Operation.REMOVE);
+         stressor.stats.registerError(endTime - startTime, BasicOperations.REMOVE);
          throw new IllegalStateException();
       }
    }
@@ -162,11 +163,11 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       try {
          basicCache.put(keyGenerator.generateKey(keyId), value);
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, 0, Operation.PUT);
+         stressor.stats.registerError(System.nanoTime() - startTime, BasicOperations.PUT);
          throw e;
       }
       long endTime = System.nanoTime();
-      stressor.stats.registerRequest(endTime - startTime, 0, Operation.PUT);
+      stressor.stats.registerRequest(endTime - startTime, BasicOperations.PUT);
    }
 
 }

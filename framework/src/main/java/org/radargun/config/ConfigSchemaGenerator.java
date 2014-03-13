@@ -3,7 +3,6 @@ package org.radargun.config;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Locale;
@@ -120,7 +119,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       benchmarkElement.appendChild(benchmarkComplex);
       Element benchmarkSequence = createSequence(doc, benchmarkComplex);
 
-      Element masterComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_MASTER, 1, 1);
+      Element masterComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_MASTER, 0, 1);
       addAttribute(doc, masterComplex, ATTR_BIND_ADDRESS, false);
       addAttribute(doc, masterComplex, ATTR_PORT, intType, null, false);
 
@@ -151,7 +150,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       Element configurationsComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_CONFIGURATIONS, 1, 1);
       Element configComplex = createComplexElement(doc, createSequence(doc, configurationsComplex), ELEMENT_CONFIG, 1, -1);
       Element setupComplex = createComplexElement(doc, createSequence(doc, configComplex), ELEMENT_SETUP, 1, -1);
-      createReference(doc, createSequence(doc, setupComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY);
+      createReference(doc, createSequence(doc, setupComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY, 0, -1);
       addAttribute(doc, configComplex, ATTR_NAME, true);
       addAttribute(doc, setupComplex, ATTR_PLUGIN, true);
       addAttribute(doc, setupComplex, ATTR_FILE, true);
@@ -178,14 +177,13 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       Element reportsComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_REPORTS, 1, 1);
       Element reporterComplex = createComplexElement(doc, createSequence(doc, reportsComplex), ELEMENT_REPORTER, 1, -1);
       Element reporterSequence = createSequence(doc, reporterComplex);
-      Element reportComplex = createComplexElement(doc, reporterSequence, ELEMENT_REPORT, 1, -1);
+      Element reportComplex = createComplexElement(doc, reporterSequence, ELEMENT_REPORT, 0, -1);
       Element propertiesComplex = createComplexElement(doc, reporterSequence, ELEMENT_PROPERTIES, 0, 1);
       createReference(doc, reportComplex, ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY);
       createReference(doc, createSequence(doc, propertiesComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY);
       addAttribute(doc, reporterComplex, ATTR_TYPE, true);
-      String runType = generateType(doc, schema, Reporter.RunCondition.class, DefaultConverter.class);
+      String runType = generateType(doc, schema, ReporterConfiguration.RunCondition.class, DefaultConverter.class);
       addAttribute(doc, reporterComplex, ATTR_RUN, runType, null, false);
-      addAttribute(doc, reportComplex, ATTR_SOURCE, true);
    }
 
    private static void generateStageDefinitions(Document doc, Element schema, Element[] parents) {
@@ -227,14 +225,14 @@ public class ConfigSchemaGenerator implements ConfigSchema {
             }
          }
       }
-      for (Map.Entry<String, Field> property : PropertyHelper.getDeclaredProperties(stage).entrySet()) {
-         Property propertyAnnotation = property.getValue().getAnnotation(Property.class);
+      for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(stage).entrySet()) {
+         Property propertyAnnotation = property.getValue().getTargetAnnotation();
          if (propertyAnnotation.readonly()) continue; // cannot be configured
          String propertyDocText = propertyAnnotation.doc();
          if (property.getKey().equals(propertyAnnotation.deprecatedName())) {
             propertyDocText = "*DEPRECATED* " + propertyDocText;
          }
-         String type = generateType(doc, schema, property.getValue().getType(), propertyAnnotation.converter());
+         String type = generateType(doc, schema, property.getValue().getTargetType(), propertyAnnotation.converter());
          addAttribute(doc, stageType, XmlHelper.camelCaseToDash(property.getKey()), type, propertyDocText, !propertyAnnotation.optional());
       }
       generatedStages.add(stage);
@@ -359,7 +357,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       reference.setAttribute(XS_NAME, name);
       reference.setAttribute(XS_TYPE, type);
       if (minOccurs >= 0) reference.setAttribute(XS_MIN_OCCURS, String.valueOf(minOccurs));
-      if (maxOccurs >= 0) reference.setAttribute(XS_MAX_OCCURS, String.valueOf(maxOccurs));
+      if (maxOccurs >= 0 || minOccurs >= 0) reference.setAttribute(XS_MAX_OCCURS, maxOccurs < 0 ? "unbounded" : String.valueOf(maxOccurs));
       parent.appendChild(reference);
       return reference;
    }

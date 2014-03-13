@@ -1,5 +1,7 @@
 package org.radargun.traits;
 
+import org.radargun.Operation;
+
 /**
  * Partially taken from JSR-107 Cache specification
  *
@@ -7,6 +9,15 @@ package org.radargun.traits;
  */
 @Trait(doc ="The most basic operations on cache.")
 public interface BasicOperations {
+   String TRAIT = BasicOperations.class.getSimpleName();
+   Operation GET =            Operation.register(TRAIT + ".Get");
+   Operation GET_NULL =       Operation.register(TRAIT + ".GetNull");
+   Operation CONTAINS_KEY =   Operation.register(TRAIT + ".ContainsKey");
+   Operation PUT =            Operation.register(TRAIT + ".Put");
+   Operation GET_AND_PUT =    Operation.register(TRAIT + ".GetAndPut");
+   Operation REMOVE =         Operation.register(TRAIT + ".Remove");
+   Operation GET_AND_REMOVE = Operation.register(TRAIT + ".GetAndRemove");
+   Operation CLEAR =          Operation.register(TRAIT + ".Clear");
 
    <K, V> Cache<K, V> getCache(String cacheName);
 

@@ -15,7 +15,7 @@ public class MasterConfig {
    private List<Cluster> clusters = new ArrayList<Cluster>();
    private List<Configuration> configurations = new ArrayList<Configuration>();
    private Scenario scenario;
-   private List<Reporter> reporters = new ArrayList<Reporter>();
+   private List<ReporterConfiguration> reporters = new ArrayList<ReporterConfiguration>();
 
    public MasterConfig(int port, String host) {
       this.port = port;
@@ -38,7 +38,7 @@ public class MasterConfig {
       this.scenario = scenario;
    }
 
-   public void addReporter(Reporter reporter) {
+   public void addReporter(ReporterConfiguration reporter) {
       this.reporters.add(reporter);
    }
 
@@ -74,4 +74,7 @@ public class MasterConfig {
       return scenario;
    }
 
+   public List<ReporterConfiguration> getReporters() {
+      return Collections.unmodifiableList(reporters);
+   }
 }

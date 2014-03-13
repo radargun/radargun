@@ -2,6 +2,7 @@ package org.radargun.config;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -9,7 +10,7 @@ import java.util.List;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Cluster implements Serializable {
+public class Cluster implements Serializable, Comparable<Cluster> {
 
    public final static String DEFAULT_GROUP = "default";
 
@@ -78,6 +79,40 @@ public class Cluster implements Serializable {
       return sb.append("]").toString();
    }
 
+   public List<Group> getGroups() {
+      return Collections.unmodifiableList(groups);
+   }
+
+   @Override
+   public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      Cluster cluster = (Cluster) o;
+
+      if (!groups.equals(cluster.groups)) return false;
+
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      return groups.hashCode();
+   }
+
+   @Override
+   public int compareTo(Cluster c) {
+      int compare = Integer.compare(getSize(), c.getSize());
+      if (compare != 0) return compare;
+      compare = Integer.compare(groups.size(), c.groups.size());
+      if (compare != 0) return compare;
+      for (int i = 0; i < groups.size(); ++i) {
+         compare = Integer.compare(groups.get(i).size, c.groups.get(i).size);
+         if (compare != 0) return compare;
+      }
+      return 0;
+   }
+
    public class Group implements Serializable {
       public final String name;
       public final int size;
@@ -85,6 +120,19 @@ public class Cluster implements Serializable {
       public Group(String name, int size) {
          this.name = name;
          this.size = size;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+         if (this == o) return true;
+         if (o == null || getClass() != o.getClass()) return false;
+
+         Group group = (Group) o;
+
+         if (size != group.size) return false;
+         if (!name.equals(group.name)) return false;
+
+         return true;
       }
    }
 }

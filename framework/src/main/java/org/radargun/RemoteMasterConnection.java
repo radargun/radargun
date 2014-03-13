@@ -1,6 +1,7 @@
 package org.radargun;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -88,6 +89,7 @@ public class RemoteMasterConnection {
    public Object receiveObject() throws IOException {
       // we must expect that more than one object is sent, so read only the first one
       int objectSize = readInt();
+      log.trace("Expecting object with size " + objectSize);
       if (objectSize == 0) return null;
       if (objectSize > buffer.capacity()) {
          buffer = ByteBuffer.allocate(objectSize);
@@ -97,6 +99,7 @@ public class RemoteMasterConnection {
       buffer.limit(objectSize);
       while (buffer.hasRemaining()) {
          int read = socketChannel.read(buffer);
+         log.trace("Read " + read + " bytes");
          if (read < 0) {
             throw new IOException("Cannot read from socket!");
          }
@@ -104,7 +107,7 @@ public class RemoteMasterConnection {
       return SerializationHelper.deserialize(buffer.array(), 0, objectSize);
    }
 
-   public void sendReponse(DistStageAck response) throws IOException {
+   public void sendResponse(Serializable response) throws IOException {
       buffer.clear();
       buffer = SerializationHelper.serializeObjectWithLength(response, buffer);
       log.trace("Sending response to the master, response has " + buffer.position() + " bytes.");

@@ -1,5 +1,7 @@
 package org.radargun.traits;
 
+import org.radargun.Operation;
+
 /**
  * Partially taken from JSR-107 Cache
  *
@@ -7,6 +9,18 @@ package org.radargun.traits;
  */
 @Trait(doc = "Operations that are executed depending on the current value in the cache")
 public interface ConditionalOperations {
+   String TRAIT = ConditionalOperations.class.getSimpleName();
+   // from performance perspective, executed and not executed conditional operation can have very different results
+   Operation PUT_IF_ABSENT_EXEC =      Operation.register(TRAIT + ".PutIfAbsent.Exec");
+   Operation PUT_IF_ABSENT_NOTEX =     Operation.register(TRAIT + ".PutIfAbsent.NotEx");
+   Operation REMOVE_EXEC =             Operation.register(TRAIT + ".Remove.Exec");
+   Operation REMOVE_NOTEX =            Operation.register(TRAIT + ".Remove.NotEx");
+   Operation REPLACE_EXEC =            Operation.register(TRAIT + ".Replace.Exec");
+   Operation REPLACE_NOTEX =           Operation.register(TRAIT + ".Replace.NotEx");
+   Operation REPLACE_ANY_EXEC =        Operation.register(TRAIT + ".ReplaceAny.Exec");
+   Operation REPLACE_ANY_NOTEX =       Operation.register(TRAIT + ".ReplaceAny.NotEx");
+   Operation GET_AND_REPLACE_EXEC =    Operation.register(TRAIT + ".GetAndReplace.Exec");
+   Operation GET_AND_REPLACE_NOTEX =   Operation.register(TRAIT + ".GetAndReplace.NotEx");
 
    <K, V> Cache<K, V> getCache(String cacheName);
 

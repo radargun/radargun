@@ -1,36 +1,33 @@
 package org.radargun.stats;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+
+import org.radargun.Operation;
 
 /**
  * Statistics for tests where the request response time is expected to change during the test execution.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class PeriodicStatistics implements Statistics {
+public class PeriodicStatistics extends IntervalStatistics {
    private final Statistics prototype;
    private final long period;
    private final List<Statistics> buckets;
-   private long start = Long.MIN_VALUE;
-   private final AtomicLong commonStart;
 
    public PeriodicStatistics(Statistics prototype, long period) {
       this.prototype = prototype;
       this.period = TimeUnit.MILLISECONDS.toNanos(period);
       this.buckets = new ArrayList<Statistics>();
-      this.commonStart = new AtomicLong(Long.MIN_VALUE);
    }
 
    public PeriodicStatistics(PeriodicStatistics other) {
       this.prototype = other.prototype;
       this.period = other.period;
       this.buckets = new ArrayList<Statistics>(other.buckets.size());
-      this.commonStart = other.commonStart;
       for (Statistics s : other.buckets) {
          this.buckets.add(s.copy());
       }
@@ -38,14 +35,7 @@ public class PeriodicStatistics implements Statistics {
 
    private Statistics getCurrentBucket() {
       long currentTime = System.nanoTime();
-      if (start == Long.MIN_VALUE) {
-         if (commonStart.compareAndSet(Long.MIN_VALUE, currentTime)) {
-            start = currentTime;
-         } else {
-            start = commonStart.get();
-         }
-      }
-      int bucket = (int)((currentTime - start) / period);
+      int bucket = (int)((currentTime - getBegin()) / period);
       while (buckets.size() <= bucket) {
          buckets.add(prototype.copy());
       }
@@ -53,17 +43,22 @@ public class PeriodicStatistics implements Statistics {
    }
 
    @Override
-   public void registerRequest(long responseTime, long txOverhead, Operation operation) {
-      getCurrentBucket().registerRequest(responseTime, txOverhead, operation);
+   public void registerRequest(long responseTime, Operation operation) {
+      getCurrentBucket().registerRequest(responseTime, operation);
    }
 
    @Override
-   public void registerError(long responseTime, long txOverhead, Operation operation) {
-      getCurrentBucket().registerError(responseTime, txOverhead, operation);
+   public void registerError(long responseTime, Operation operation) {
+      getCurrentBucket().registerError(responseTime, operation);
    }
 
    @Override
-   public void reset(long time) {
+   public Statistics newInstance() {
+      return new PeriodicStatistics(prototype, period);
+   }
+
+   @Override
+   public void reset() {
       buckets.clear();
    }
 
@@ -74,44 +69,20 @@ public class PeriodicStatistics implements Statistics {
 
    @Override
    public void merge(Statistics otherStats) {
-      if (!(otherStats instanceof PeriodicStatistics)) {
-         throw new IllegalArgumentException();
-      }
-      PeriodicStatistics other = (PeriodicStatistics) otherStats;
-
-      if (other.period != this.period) {
-         throw new IllegalArgumentException(String.format("Period: this = %d, other = %d", this.period, other.period));
-      }
-      if (this.start == Long.MIN_VALUE) {
-         this.start = other.start;
-      } else if (other.start != this.start) {
-         throw new IllegalArgumentException(String.format("Start: this = %d, other = %d", this.start, other.start));
-      }
-
-      int minSize = Math.min(this.buckets.size(), other.buckets.size());
-      for (int i = 0; i < minSize; ++i) {
-         this.buckets.get(i).merge(other.buckets.get(i));
-      }
-      for (int i = this.buckets.size(); i < other.buckets.size(); ++i) {
-         this.buckets.add(other.buckets.get(i).copy());
-      }
+      throw new UnsupportedOperationException();
    }
 
    @Override
-   public Map<String, Object> getResultsMap(int threads, String prefix) {
-      HashMap<String, Object> results = new HashMap<String, Object>();
-      for (int i = 0; i < buckets.size(); ++i) {
-         results.putAll(buckets.get(i).getResultsMap(threads, String.format("%s%d.", prefix, i)));
-      }
-      return results;
+   public Map<String, OperationStats> getOperationsStats() {
+      throw new UnsupportedOperationException();
    }
 
    @Override
-   public double getOperationsPerSecond(boolean includeOverhead) {
-      double sum = 0;
-      for (Statistics s : buckets) {
-         sum += s.getOperationsPerSecond(includeOverhead);
-      }
-      return sum / buckets.size();
+   public <T> T[] getRepresentations(Class<T> clazz) {
+      throw new UnsupportedOperationException();
+   }
+
+   public List<Statistics> asList() {
+      return Collections.unmodifiableList(buckets);
    }
 }

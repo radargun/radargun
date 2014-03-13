@@ -17,6 +17,7 @@
    <modules>
       <!--<module>parent</module>-->
       <module>framework</module>
+      <module>reporters</module>
       <!--<module>plugins</module>-->
    </modules>
 
@@ -38,6 +39,7 @@
       <plugins.infinispan/>
       <plugins.jdg/>
       <plugins.coherence/>
+      <reporter.default>reporter-default</reporter.default>
    </properties>
 
    <profiles>
@@ -253,7 +255,7 @@
 
                <execution>
                   <id>prepare_plugins</id>
-                  <phase>verify</phase>
+                  <phase>prepare-package</phase>
                   <goals>
                      <goal>run</goal>
                   </goals>
@@ -291,7 +293,7 @@
                            </sequential>
                         </macrodef>
 
-                        <echo message="Packaging the framework, and the following plugins: " />
+                        <echo message="Packaging plugins: " />
                         <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
@@ -311,14 +313,44 @@
                </execution>
 
                <execution>
-                  <id>build_distro</id>
-                  <phase>install</phase>
+                  <id>prepare_reporters</id>
+                  <phase>prepare-package</phase>
                   <goals>
                      <goal>run</goal>
                   </goals>
                   <configuration>
-                     <tasks>
-                        <echo message="Packaging the framework, common scripts and building archive" />
+                     <target>
+                        <echo message="Packaging reporters: " />
+
+                        <fileset id="core_jars" dir="framework/target/distribution/radargun-framework-bin/radargun-framework/lib">
+                           <include name="*.jar" />
+                        </fileset>
+                        <pathconvert pathsep="," property="core_jar_list" refid="core_jars">
+                           <mapper type="flatten" />
+                        </pathconvert>
+                        <echo message="Core jars are ${core_jar_list}"/>
+
+                        <ac:for list="${reporter.default}" param="reporter" xmlns:ac="antlib:net.sf.antcontrib">
+                           <sequential>
+                              <echo message="Packaging reporter @{reporter}..." />
+                              <copy todir="${distribution.artifact}/reporters/@{reporter}">
+                                 <fileset dir="reporters/@{reporter}/target/distribution/@{reporter}-bin/@{reporter}/lib" excludes="${core_jar_list}"/>
+                              </copy>
+                           </sequential>
+                        </ac:for>
+                     </target>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <id>prepare_core</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <target>
+                        <echo message="Packaging the framework and common scripts" />
                         <copy todir="${distribution.artifact}">
                            <fileset dir="framework/target/distribution/radargun-framework-bin/radargun-framework">
                               <include name="**/*" />
@@ -340,7 +372,19 @@
                               <include name="**/*.py" />
                            </fileset>
                         </chmod>
+                     </target>
+                  </configuration>
+               </execution>
 
+               <execution>
+                  <id>build_distro</id>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <tasks>
+                        <echo message="Building distribution archive" />
                         <ac:if xmlns:ac="antlib:net.sf.antcontrib">
                            <isset property="zip-links"/>
                            <ac:then>

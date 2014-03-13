@@ -24,7 +24,6 @@ import java.util.Map;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stats.Operation;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Queryable;
 
@@ -77,7 +76,7 @@ public class QueryStage extends StressTestStage {
          paramMap.put(Queryable.MATCH_STRING, matchingWord);
          paramMap.put(Queryable.IS_WILDCARD, isWildcardQuery);
 
-         Queryable.QueryResult queryResult = (Queryable.QueryResult) stressor.makeRequest(Operation.QUERY, paramMap);
+         Queryable.QueryResult queryResult = (Queryable.QueryResult) stressor.makeRequest(Queryable.QUERY, paramMap);
 
          if (previousQueryResult != null) {
             if (queryResult.size() != previousQueryResult.size()) {

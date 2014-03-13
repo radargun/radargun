@@ -1,23 +1,24 @@
 package org.radargun.stages.cache.background;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.radargun.DistStageAck;
+import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.stats.Statistics;
 
 /**
- * // TODO: Document this
- *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  * @since 1/4/13
  */
 @Stage(doc = "Stop Statistics and return collected statistics to master.")
 public class StopBackgroundStatisticsStage extends AbstractDistStage {
+
+   @Property(doc = "Name of the test used for reports. Default is 'BackgroundStats'.")
+   private String testName = "BackgroundStats";
 
    @Override
    public DistStageAck executeOnSlave() {
@@ -41,15 +42,15 @@ public class StopBackgroundStatisticsStage extends AbstractDistStage {
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
-      Map<Integer, List<Statistics>> result = new HashMap<Integer, List<Statistics>>();
+      Report report = masterState.getReport();
+      Report.Test test = report.createTest(testName);
       for (DistStageAck ack : acks) {
          DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-         result.put(dack.getSlaveIndex(), (List<Statistics>) dack.getPayload());
+         test.addIterations(dack.getSlaveIndex(), (List<List<Statistics>>) dack.getPayload());
          if (dack.isError()) {
             return false;
          }
       }
-      masterState.put(BackgroundOpsManager.NAME, result);
       return true;
    }
 }

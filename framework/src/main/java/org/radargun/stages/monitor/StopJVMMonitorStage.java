@@ -18,9 +18,6 @@
  */
 package org.radargun.stages.monitor;
 
-import java.util.HashMap;
-import java.util.List;
-
 import org.radargun.DistStageAck;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
@@ -42,25 +39,10 @@ public class StopJVMMonitorStage extends AbstractDistStage {
       LocalJmxMonitor monitor = (LocalJmxMonitor) slaveState.get(StartJVMMonitorStage.MONITOR_KEY);
       if (monitor != null) {
          monitor.stopMonitoringLocal();
-         ack.setPayload(monitor);
-         slaveState.remove(StartJVMMonitorStage.MONITOR_KEY);
       } else {
          ack.setError(true);
          ack.setErrorMessage("No JVMMonitor object found on slave: " + slaveState.getSlaveIndex());
       }
       return ack;
-   }
-
-   @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      log.info("StopJVMMonitor.processAckOnMaster");
-      HashMap<String, LocalJmxMonitor> sysMonitors = new HashMap<String, LocalJmxMonitor>();
-      for (DistStageAck ack : acks) {
-         DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-         LocalJmxMonitor monitor = (LocalJmxMonitor) dack.getPayload();
-         sysMonitors.put("slave-" + dack.getSlaveIndex(), monitor);
-      }
-      masterState.put(StartJVMMonitorStage.MONITOR_KEY, sysMonitors);
-      return true;
    }
 }

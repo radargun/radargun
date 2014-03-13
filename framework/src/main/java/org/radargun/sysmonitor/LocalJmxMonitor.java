@@ -18,13 +18,13 @@
  */
 package org.radargun.sysmonitor;
 
-import java.io.Serializable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.Timeline;
 
 /**
  * This program is designed to show how remote JMX calls can be used to retrieve metrics of remote
@@ -37,12 +37,11 @@ import org.radargun.logging.LogFactory;
  * 
  * @author Galder Zamarreno
  */
-public class LocalJmxMonitor implements Serializable {
+public class LocalJmxMonitor /* implements Serializable */ {
 
    /** The serialVersionUID */
    private static final long serialVersionUID = 2530981300271084693L;
 
-   private String configName;
    private String interfaceName;
 
    private static Log log = LogFactory.getLog(LocalJmxMonitor.class);
@@ -57,20 +56,28 @@ public class LocalJmxMonitor implements Serializable {
 
    ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
 
+   private final Timeline timeline;
+   private final int slaveIndex;
+
+   public LocalJmxMonitor(Timeline timeline, int slaveIndex) {
+      this.timeline = timeline;
+      this.slaveIndex = slaveIndex;
+   }
+
    public void startMonitoringLocal() {
 
       log.info("Gathering statistics every " + measuringFrequency + " " + measuringUnit.name());
       try {
-         cpuMonitor = new CpuUsageMonitor();
+         cpuMonitor = new CpuUsageMonitor(timeline);
          exec.scheduleAtFixedRate(cpuMonitor, 0, measuringFrequency, measuringUnit);
-         memoryMonitor = new MemoryUsageMonitor();
+         memoryMonitor = new MemoryUsageMonitor(timeline, slaveIndex);
          exec.scheduleAtFixedRate(memoryMonitor, 0, measuringFrequency, measuringUnit);
-         gcMonitor = new GcMonitor();
+         gcMonitor = new GcMonitor(timeline);
          exec.scheduleAtFixedRate(gcMonitor, 0, measuringFrequency, measuringUnit);
          if (interfaceName != null) {
-            netInMonitor = NetworkBytesMonitor.createReceiveMonitor(interfaceName);
+            netInMonitor = NetworkBytesMonitor.createReceiveMonitor(interfaceName, timeline);
             exec.scheduleAtFixedRate(netInMonitor, 0, measuringFrequency, measuringUnit);
-            netOutMonitor = NetworkBytesMonitor.createTransmitMonitor(interfaceName);
+            netOutMonitor = NetworkBytesMonitor.createTransmitMonitor(interfaceName, timeline);
             exec.scheduleAtFixedRate(netOutMonitor, 0, measuringFrequency, measuringUnit);
          }
       } catch (Exception e) {
@@ -88,13 +95,13 @@ public class LocalJmxMonitor implements Serializable {
       }
       exec.shutdownNow();
       this.exec = null;
-      StringBuffer result = new StringBuffer("Cpu measurements = " + cpuMonitor.getMeasurementCount() + ", memory measurements = "
-            + memoryMonitor.getMeasurementCount() + ", gc measurements = " + gcMonitor.getMeasurementCount());
-      if (interfaceName != null) {
-         result.append(", network inbound measurements = " + netInMonitor.getMeasurementCount());
-         result.append(", network outbound measurements = " + netOutMonitor.getMeasurementCount());
-      }
-      log.trace(result.toString());
+//      StringBuffer result = new StringBuffer("Cpu measurements = " + cpuMonitor.getMeasurementCount() + ", memory measurements = "
+//            + memoryMonitor.getMeasurementCount() + ", gc measurements = " + gcMonitor.getMeasurementCount());
+//      if (interfaceName != null) {
+//         result.append(", network inbound measurements = " + netInMonitor.getMeasurementCount());
+//         result.append(", network outbound measurements = " + netOutMonitor.getMeasurementCount());
+//      }
+//      log.trace(result.toString());
    }
 
    public CpuUsageMonitor getCpuMonitor() {
@@ -117,13 +124,13 @@ public class LocalJmxMonitor implements Serializable {
       return netOutMonitor;
    }
 
-   public String getConfigName() {
-      return configName;
-   }
-
-   public void setConfigName(String configName) {
-      this.configName = configName;
-   }
+//   public String getConfigName() {
+//      return configName;
+//   }
+//
+//   public void setConfigName(String configName) {
+//      this.configName = configName;
+//   }
 
    public String getInterfaceName() {
       return this.interfaceName;

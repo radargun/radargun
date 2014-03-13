@@ -2,7 +2,8 @@ package org.radargun.stages.cache.background;
 
 import java.util.Map;
 
-import org.radargun.stats.Operation;
+import org.radargun.Operation;
+import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 
 /**
@@ -43,7 +44,7 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
          if (stressor.isTerminated() || stressor.isInterrupted()) return false;
       } while (nextValue == null);
       // now for modify operations, execute it
-      if (operation == Operation.PUT) {
+      if (operation == BasicOperations.PUT) {
          if (checkedPutValue(keyId, prevValue, nextValue)) {
             if (backupValue != null) {
                delayedRemoveValue(~keyId, backupValue);
@@ -51,7 +52,7 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
          } else {
             return false;
          }
-      } else if (operation == Operation.REMOVE) {
+      } else if (operation == BasicOperations.REMOVE) {
          if (checkedPutValue(~keyId, backupValue, nextValue)) {
             if (prevValue != null) {
                delayedRemoveValue(keyId, prevValue);
@@ -102,16 +103,16 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
       try {
          prevValue = basicCache.get(keyGenerator.generateKey(keyId));
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, 0, Operation.GET);
+         stressor.stats.registerError(System.nanoTime() - startTime, BasicOperations.GET);
          throw e;
       }
       long endTime = System.nanoTime();
       if (prevValue != null && !(prevValue instanceof SharedLogValue)) {
-         stressor.stats.registerError(endTime - startTime, 0, Operation.GET);
+         stressor.stats.registerError(endTime - startTime, BasicOperations.GET);
          log.error("Value is not an instance of SharedLogValue: " + prevValue);
          throw new IllegalStateException();
       } else {
-         stressor.stats.registerRequest(endTime - startTime, 0, prevValue == null ? Operation.GET_NULL : Operation.GET);
+         stressor.stats.registerRequest(endTime - startTime, prevValue == null ? BasicOperations.GET_NULL : BasicOperations.GET);
          return (SharedLogValue) prevValue;
       }
    }
@@ -119,18 +120,21 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
    private boolean checkedPutValue(long keyId, SharedLogValue oldValue, SharedLogValue newValue) throws Exception {
       boolean returnValue;
       long startTime = System.nanoTime();
+      Operation operation = Operation.UNKNOWN;
       try {
          if (oldValue == null) {
+            operation = ConditionalOperations.PUT_IF_ABSENT_EXEC;
             returnValue = conditionalCache.putIfAbsent(keyGenerator.generateKey(keyId), newValue);
          } else {
+            operation = ConditionalOperations.REPLACE_EXEC;
             returnValue = conditionalCache.replace(keyGenerator.generateKey(keyId), oldValue, newValue);
          }
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, 0, Operation.PUT);
+         stressor.stats.registerError(System.nanoTime() - startTime, operation);
          throw e;
       }
       long endTime = System.nanoTime();
-      stressor.stats.registerRequest(endTime - startTime, 0, Operation.PUT);
+      stressor.stats.registerRequest(endTime - startTime, operation);
       return returnValue;
    }
 
@@ -140,10 +144,10 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
       try {
          boolean returnValue = conditionalCache.remove(keyGenerator.generateKey(keyId), oldValue);
          long endTime = System.nanoTime();
-         stressor.stats.registerRequest(endTime - startTime, 0, Operation.REMOVE);
+         stressor.stats.registerRequest(endTime - startTime, ConditionalOperations.REMOVE_EXEC);
          return returnValue;
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, 0, Operation.REMOVE);
+         stressor.stats.registerError(System.nanoTime() - startTime, ConditionalOperations.REMOVE_EXEC);
          throw e;
       }
    }

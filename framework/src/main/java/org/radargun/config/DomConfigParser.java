@@ -236,16 +236,15 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          Element reporterElement = (Element) childNodes.item(i);
          assertName(ELEMENT_REPORTER, reporterElement);
          String type = getAttribute(reporterElement, ATTR_TYPE);
-         String run = getAttribute(reporterElement, ATTR_RUN, Reporter.RunCondition.ALWAYS.name());
-         Reporter reporter = new Reporter(type, Reporter.RunCondition.valueOf(run.toUpperCase(Locale.ENGLISH)));
+         String run = getAttribute(reporterElement, ATTR_RUN, ReporterConfiguration.RunCondition.ALWAYS.name());
+         ReporterConfiguration reporter = new ReporterConfiguration(type, ReporterConfiguration.RunCondition.valueOf(run.toUpperCase(Locale.ENGLISH)));
          NodeList reportElements = reporterElement.getChildNodes();
          Map<String, String> commonProperties = new HashMap<String, String>();
          for (int j = 0; j < reportElements.getLength(); ++j) {
             if (!(reportElements.item(j) instanceof Element)) continue;
             Element reportElement = (Element) reportElements.item(j);
             if (ELEMENT_REPORT.equals(reportElement.getNodeName())) {
-               String source = getAttribute(reportElement, ATTR_SOURCE);
-               Reporter.Report report = reporter.addReport(source);
+               ReporterConfiguration.Report report = reporter.addReport();
                NodeList properties = reportElement.getChildNodes();
                for (int k = 0; k < properties.getLength(); ++k) {
                   if (!(properties.item(k) instanceof Element)) continue;
@@ -277,16 +276,15 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                throwExpected(reportElement.getNodeName(), new String[] { ELEMENT_REPORT, ELEMENT_PROPERTIES });
             }
          }
-         for (Reporter.Report report : reporter.getReports()) {
+         if (reporter.getReports().isEmpty()) {
+            reporter.addReport(); // default one
+         }
+         for (ReporterConfiguration.Report report : reporter.getReports()) {
             for (Map.Entry<String, String> property : commonProperties.entrySet()) {
                report.addProperty(property.getKey(), property.getValue());
             }
          }
-         if (reporter.getReports().isEmpty()) {
-            throw new IllegalArgumentException("Reporter " + reporter.type + " must define at least one report.");
-         } else {
-            masterConfig.addReporter(reporter);
-         }
+         masterConfig.addReporter(reporter);
       }
    }
 

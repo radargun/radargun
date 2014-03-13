@@ -23,7 +23,6 @@ import javax.management.MBeanServer;
 import com.sun.management.HotSpotDiagnosticMXBean;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.stages.GenerateReportStage;
 
 /**
  * @author Mircea.Markus@jboss.com
@@ -128,28 +127,30 @@ public class Utils {
       if (!libFolder.isDirectory()) {
          log.info("Could not find lib directory: " + libFolder.getAbsolutePath());
       } else {
-         String[] jarsSrt = libFolder.list(new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-               String fileName = name.toUpperCase();
-               if (fileName.endsWith("JAR") || fileName.toUpperCase().endsWith("ZIP")) {
-                  if (log.isTraceEnabled()) {
-                     log.trace("Accepting file: " + fileName);
-                  }
-                  return true;
-               } else {
-                  if (log.isTraceEnabled()) {
-                     log.trace("Rejecting file: " + fileName);
-                  }
-                  return false;
-               }
-            }
-         });
+         String[] jarsSrt = libFolder.list(new JarFilenameFilter());
          for (String file : jarsSrt) {
             File aJar = new File(libFolder, file);
             if (!aJar.exists() || !aJar.isFile()) {
                throw new IllegalStateException();
             }
             jars.add(aJar.toURI().toURL());
+         }
+      }
+   }
+
+   public static class JarFilenameFilter implements FilenameFilter {
+      public boolean accept(File dir, String name) {
+         String fileName = name.toUpperCase(Locale.ENGLISH);
+         if (fileName.endsWith("JAR") || fileName.endsWith("ZIP")) {
+            if (log.isTraceEnabled()) {
+               log.trace("Accepting file: " + fileName);
+            }
+            return true;
+         } else {
+            if (log.isTraceEnabled()) {
+               log.trace("Rejecting file: " + fileName);
+            }
+            return false;
          }
       }
    }
@@ -301,12 +302,14 @@ public class Utils {
       return durationMillis;
    }
 
+   @Deprecated
    public static void createOutputFile(String fileName, String fileContent) throws IOException {
       createOutputFile(fileName, fileContent, true);
    }
 
+   @Deprecated
    public static void createOutputFile(String fileName, String fileContent, boolean doBackup) throws IOException {
-      File parentDir = new File(GenerateReportStage.REPORTS);
+      File parentDir = new File("reports");
       if (!parentDir.exists() && !parentDir.mkdirs()) {
          log.error("Directory '" + parentDir.getAbsolutePath() + "' could not be created");
          /*

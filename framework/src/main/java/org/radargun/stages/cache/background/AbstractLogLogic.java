@@ -79,7 +79,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
       long currentTime = System.currentTimeMillis();
       return String.format("current[id=%d, key=%s], lastSuccessfulOpTime=%d",
             operationId, keyGenerator.generateKey(keyId), lastSuccessfulOpTimestamp - currentTime)
-            + (manager.getTransactionSize() > 0 ?
+            + (transactionSize > 0 ?
                String.format(", txStart[id=%d, key=%s], remainingTxOps=%d, lastSuccessfulTxTime=%d",
                      txStartOperationId, keyGenerator.generateKey(txStartKeyId), remainingTxOps,
                      lastSuccessfulTxTimestamp - currentTime) : "");
@@ -165,7 +165,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          } else {
             log.error("Cache operation error", e);
          }
-         if (manager.getTransactionSize() > 0) {
+         if (transactionSize > 0) {
             try {
                txCache.endTransaction(false);
                log.info("Transaction rolled back");
@@ -173,7 +173,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                log.error("Error while rolling back transaction", e1);
             } finally {
                log.info("Restarting from operation " + txStartOperationId);
-               remainingTxOps = manager.getTransactionSize();
+               remainingTxOps = transactionSize;
                txRolledBack = true;
                afterRollback();
             }

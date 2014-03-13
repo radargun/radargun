@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -20,6 +22,7 @@ import org.radargun.config.Configuration;
 import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.Timeline;
 
 /**
  * Connection to slaves in different JVMs
@@ -40,7 +43,7 @@ public class RemoteSlaveConnection implements SlaveConnection {
    private ByteBuffer mcastBuffer;
    private Map<SocketChannel, ByteBuffer> writeBufferMap = new HashMap<SocketChannel, ByteBuffer>();
    private Map<SocketChannel, ByteBuffer> readBufferMap = new HashMap<SocketChannel, ByteBuffer>();
-   private List<DistStageAck> responses = new ArrayList<DistStageAck>();
+   private List<Object> responses = new ArrayList<Object>();
    private Selector communicationSelector;
    private Selector discoverySelector;
    private Map<SocketChannel, Integer> slave2Index = new HashMap<SocketChannel, Integer>();
@@ -103,46 +106,59 @@ public class RemoteSlaveConnection implements SlaveConnection {
    @Override
    public void sendScenario(Scenario scenario) throws IOException {
       mcastObject(scenario, slaves.length);
+      flushBuffers(0);
    }
 
    @Override
    public void sendConfiguration(Configuration configuration) throws IOException {
       mcastObject(configuration, slaves.length);
+      flushBuffers(0);
    }
 
    @Override
    public void sendCluster(Cluster cluster) throws IOException {
       mcastObject(cluster, cluster.getSize());
+      flushBuffers(0);
    }
 
    private void mcastObject(Serializable object, int numSlaves) throws IOException {
       if (!writeBufferMap.isEmpty()) {
          throw new IllegalStateException("Something not sent to slaves yet: " + writeBufferMap);
       }
-
       mcastBuffer.clear();
       mcastBuffer = SerializationHelper.serializeObjectWithLength(object, mcastBuffer);
       for (int i = 0; i < numSlaves; ++i) {
          writeBufferMap.put(slaves[i], ByteBuffer.wrap(mcastBuffer.array(), 0, mcastBuffer.position()));
          slaves[i].register(communicationSelector, SelectionKey.OP_WRITE);
       }
-      flushBuffers(0);
+   }
+
+   private void mcastInt(int value, int numSlaves) throws ClosedChannelException {
+      if (!writeBufferMap.isEmpty()) {
+         throw new IllegalStateException("Something not sent to slaves yet: " + writeBufferMap);
+      }
+      mcastBuffer.clear();
+      mcastBuffer.putInt(value);
+      for (int i = 0; i < numSlaves; ++i) {
+         writeBufferMap.put(slaves[i], ByteBuffer.wrap(mcastBuffer.array(), 0, 4));
+         slaves[i].register(communicationSelector, SelectionKey.OP_WRITE);
+      }
    }
 
    @Override
    public List<DistStageAck> runStage(int stageId, int numSlaves) throws IOException {
       responses.clear();
-      if (!writeBufferMap.isEmpty()) {
-         throw new IllegalStateException("Something not sent to slaves yet: " + writeBufferMap);
-      }
-      mcastBuffer.clear();
-      mcastBuffer.putInt(stageId);
-      for (int i = 0; i < numSlaves; ++i) {
-         writeBufferMap.put(slaves[i], ByteBuffer.wrap(mcastBuffer.array(), 0, 4));
-         slaves[i].register(communicationSelector, SelectionKey.OP_WRITE);
-      }
+      mcastInt(stageId, numSlaves);
       flushBuffers(numSlaves);
-      return responses;
+      return Arrays.asList(responses.toArray(new DistStageAck[numSlaves]));
+   }
+
+   @Override
+   public List<Timeline> receiveTimelines(int numSlaves) throws IOException {
+      responses.clear();
+      mcastObject(new Timeline.Request(), numSlaves);
+      flushBuffers(numSlaves);
+      return Arrays.asList(responses.toArray(new Timeline[numSlaves]));
    }
 
    private void flushBuffers(int numResponses) throws IOException {
@@ -208,10 +224,10 @@ public class RemoteSlaveConnection implements SlaveConnection {
          if (log.isTraceEnabled())
             log.trace("Expected size: " + expectedSize + ". byteBuffer.position() == " + byteBuffer.position());
          if (byteBuffer.position() == expectedSize + 4) {
-            log.trace("Received ACK from " + socketChannel);
-            DistStageAck ack = (DistStageAck) SerializationHelper.deserialize(byteBuffer.array(), 4, expectedSize);
+            log.trace("Received response from " + socketChannel);
+            Object response = SerializationHelper.deserialize(byteBuffer.array(), 4, expectedSize);
             byteBuffer.clear();
-            responses.add(ack);
+            responses.add(response);
          }
       }
    }
@@ -220,6 +236,7 @@ public class RemoteSlaveConnection implements SlaveConnection {
    public void release() {
       try {
          mcastObject(null, slaves.length);
+         flushBuffers(0);
       } catch (Exception e) {
          log.warn("Failed to send termination to slaves.", e);
       }

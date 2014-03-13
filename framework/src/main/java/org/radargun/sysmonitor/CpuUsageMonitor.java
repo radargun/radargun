@@ -8,6 +8,7 @@ import javax.management.MBeanServerConnection;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.Timeline;
 
 /**
  * @author Galder Zamarreno
@@ -16,6 +17,7 @@ public class CpuUsageMonitor extends AbstractActivityMonitor implements Serializ
 
    /** The serialVersionUID */
    private static final long serialVersionUID = 6632071089421842090L;
+   protected static final String CPU_USAGE = "CPU usage";
 
    private static Log log = LogFactory.getLog(CpuUsageMonitor.class);
    static final String PROCESS_CPU_TIME_ATTR = "ProcessCpuTime";
@@ -30,6 +32,10 @@ public class CpuUsageMonitor extends AbstractActivityMonitor implements Serializ
    static {
       PERCENT_FORMATTER.setMinimumFractionDigits(1);
       PERCENT_FORMATTER.setMaximumIntegerDigits(3);
+   }
+
+   public CpuUsageMonitor(Timeline timeline) {
+      super(timeline);
    }
 
    public void stop() {
@@ -62,9 +68,8 @@ public class CpuUsageMonitor extends AbstractActivityMonitor implements Serializ
             long cpuUsage = upTimeDiff > 0 ? Math.min((long) (1000 * (float) procTimeDiff / (float) upTimeDiff), 1000)
                   : 0;
 
-            addMeasurementAsPercentage(cpuUsage);
-
-            log.trace("Cpu usage: " + formatPercent(cpuUsage * 0.1d));
+            // TODO: remove that decimal !@#%$
+            timeline.addValue(CPU_USAGE, new Timeline.Value(cpuUsage * 0.1d));
          } catch (Exception e) {
             log.error("Exception!", e);
          }

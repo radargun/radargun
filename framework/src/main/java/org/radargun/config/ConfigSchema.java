@@ -17,7 +17,6 @@ interface ConfigSchema {
    String ATTR_RUN = "run";
    String ATTR_SERVICE = "service";
    String ATTR_SIZE = "size";
-   String ATTR_SOURCE = "source";
    String ATTR_TO = "to";
    String ATTR_TIMES = "times";
    String ATTR_TYPE = "type";

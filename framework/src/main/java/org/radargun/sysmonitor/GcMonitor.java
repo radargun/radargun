@@ -16,6 +16,7 @@ import javax.management.ObjectName;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.Timeline;
 
 /**
  * @author Galder Zamarreno
@@ -26,6 +27,7 @@ public class GcMonitor extends AbstractActivityMonitor implements Serializable {
    private static final long serialVersionUID = 8983759071129628827L;
 
    private static Log log = LogFactory.getLog(GcMonitor.class);
+   private static final String GC_USAGE = "GC CPU usage";
 
    boolean running = true;
 
@@ -33,6 +35,10 @@ public class GcMonitor extends AbstractActivityMonitor implements Serializable {
    long prevGcTime;
    long upTime;
    long prevUpTime;
+
+   public GcMonitor(Timeline timeline) {
+      super(timeline);
+   }
 
    public void stop() {
       running = false;
@@ -67,9 +73,11 @@ public class GcMonitor extends AbstractActivityMonitor implements Serializable {
             long gcUsage = upTimeDiff > 0 ? Math.min((long) (1000 * (float) processGcTimeDiff / (float) upTimeDiff),
                   1000) : 0;
 
-            addMeasurementAsPercentage(gcUsage);
+            //addMeasurementAsPercentage(gcUsage);
+            // TODO: remove that decimal !@#%$
+            timeline.addValue(GC_USAGE, new Timeline.Value(gcUsage * 0.1d));
 
-            log.trace("GC activity: " + formatPercent(gcUsage * 0.1d));
+            //log.trace("GC activity: " + formatPercent(gcUsage * 0.1d));
          } catch (Exception e) {
             log.error(e.getMessage(), e);
          }

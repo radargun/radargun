@@ -3,8 +3,8 @@ package org.radargun.stages.cache.background;
 import java.util.List;
 import java.util.Random;
 
+import org.radargun.Operation;
 import org.radargun.stages.helpers.Range;
-import org.radargun.stats.Operation;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 
@@ -80,26 +80,22 @@ class LegacyLogic extends AbstractLogic {
          if (currentKey == keyRangeEnd) {
             currentKey = keyRangeStart;
          }
-         int transactionSize = manager.getTransactionSize();
          if (transactionSize > 0 && remainingTxOps == transactionSize) {
             txCache.startTransaction();
          }
          startTime = System.nanoTime();
          Object result;
-         switch (operation)
-         {
-         case GET:
+         if (operation == BasicOperations.GET) {
             result = basicCache.get(key);
-            if (result == null) operation = Operation.GET_NULL;
-            break;
-         case PUT:
+            if (result == null) operation = BasicOperations.GET_NULL;
+         } else if (operation == BasicOperations.PUT) {
             basicCache.put(key, generateRandomEntry(rand, manager.getEntrySize()));
-            break;
-         case REMOVE:
+         } else if (operation == BasicOperations.REMOVE) {
             basicCache.remove(key);
-            break;
+         } else {
+            throw new IllegalArgumentException();
          }
-         stressor.stats.registerRequest(System.nanoTime() - startTime, 0, operation);
+         stressor.stats.registerRequest(System.nanoTime() - startTime, operation);
          if (transactionSize > 0) {
             remainingTxOps--;
             if (remainingTxOps == 0) {
@@ -116,15 +112,15 @@ class LegacyLogic extends AbstractLogic {
          } else {
             log.error("Cache operation error", e);
          }
-         if (manager.getTransactionSize() > 0) {
+         if (transactionSize > 0) {
             try {
                txCache.endTransaction(false);
             } catch (Exception e1) {
                log.error("Error while ending transaction", e);
             }
-            remainingTxOps = manager.getTransactionSize();
+            remainingTxOps = transactionSize;
          }
-         stressor.stats.registerError(startTime <= 0 ? 0 : System.nanoTime() - startTime, 0, operation);
+         stressor.stats.registerError(startTime <= 0 ? 0 : System.nanoTime() - startTime, operation);
       }
    }
 

@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.radargun.config.SizeConverter;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.stats.Operation;
+import org.radargun.traits.BasicOperations;
 
 /**
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -63,7 +63,7 @@ class ChangingSetOperationLogic implements OperationLogic {
          pair = load.scheduledKeys.pollFirst();
          Object value;
          try {
-            value = stressor.makeRequest(Operation.REMOVE, pair.key);
+            value = stressor.makeRequest(BasicOperations.REMOVE, pair.key);
          } catch (RequestException e) {
             load.scheduledKeys.add(pair);
             return null;
@@ -85,7 +85,7 @@ class ChangingSetOperationLogic implements OperationLogic {
             return null;
          }
          pair = getRandomPair(load.scheduledKeys, timestamp, r);
-         Object value = stressor.makeRequest(Operation.GET, pair.key);
+         Object value = stressor.makeRequest(BasicOperations.GET, pair.key);
          if (value == null) {
             if (stage.expectLostKeys) {
                load.scheduledKeys.remove(pair);
@@ -108,12 +108,12 @@ class ChangingSetOperationLogic implements OperationLogic {
             pair = getRandomPair(load.scheduledKeys, timestamp, r);
          }
          try {
-            return stressor.makeRequest(Operation.PUT, pair.key, value);
+            return stressor.makeRequest(BasicOperations.PUT, pair.key, value);
          } catch (RequestException e) {
             load.scheduledKeys.remove(pair);
             for (;;) {
                try {
-                  return stressor.makeRequest(Operation.REMOVE, pair.key);
+                  return stressor.makeRequest(BasicOperations.REMOVE, pair.key);
                } catch (RequestException e1) {
                }
             }

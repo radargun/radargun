@@ -130,6 +130,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       super.processAckOnMaster(acks);
       StringBuilder reportCsvContent = new StringBuilder();
 
+      // TODO: move this into test report
       if (masterState.get(FIRST_SCALE_STAGE_KEY) == null) {
          masterState.put(FIRST_SCALE_STAGE_KEY, masterState.getConfigName());
          reportCsvContent

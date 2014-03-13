@@ -10,6 +10,7 @@ import org.radargun.config.InitHelper;
 import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.Timeline;
 import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.TraitHelper;
@@ -69,6 +70,7 @@ public class Slave {
             state.setIndexInGroup(cluster.getIndexInGroup(slaveIndex));
             state.setPlugin(setup.plugin);
             state.setService(setup.service);
+            state.setTimeline(new Timeline(slaveIndex));
             Object service = ServiceHelper.createService(state.getClassLoadHelper().getLoader(), setup.plugin, setup.service, configuration.name, setup.file, setup.getProperties());
             Map<Class<?>, Object> traits = TraitHelper.retrieve(service);
             state.setTraits(traits);
@@ -86,18 +88,30 @@ public class Slave {
                } else {
                   InitHelper.init(stage);
                   stage.initOnSlave(state);
+                  if (log.isDebugEnabled()) {
+                     log.info("Starting stage " + stage);
+                  } else {
+                     log.info("Starting stage " + stage.getName());
+                  }
+                  long start = System.currentTimeMillis();
+                  long end;
                   try {
-                     long start =System.currentTimeMillis();
                      response = stage.executeOnSlave();
-                     response.setDuration(System.currentTimeMillis() - start);
+                     end = System.currentTimeMillis();
+                     log.info("Finished stage " + stage.getName());
+                     response.setDuration(end - start);
                   } catch (Exception e) {
+                     end = System.currentTimeMillis();
                      log.error("Stage execution has failed", e);
                      response = new DefaultDistStageAck(state.getSlaveIndex(), state.getLocalAddress()).error("Stage execution has failed", e);
                   }
+                  state.getTimeline().addEvent(Stage.STAGE, new Timeline.IntervalEvent(start, stage.getName(), end - start));
                }
-               connection.sendReponse(response);
+               connection.sendResponse(response);
             }
-            connection.sendReponse(new DefaultDistStageAck(state.getSlaveIndex(), state.getLocalAddress()));
+            connection.sendResponse(new DefaultDistStageAck(state.getSlaveIndex(), state.getLocalAddress()));
+         } else if (object instanceof Timeline.Request) {
+            connection.sendResponse(state.getTimeline());
          }
       }
       ShutDownHook.exit(0);
