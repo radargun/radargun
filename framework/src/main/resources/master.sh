@@ -4,7 +4,7 @@
 if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DIRNAME/..; pwd` ; fi; export RADARGUN_HOME
 . ${RADARGUN_HOME}/bin/includes.sh
 
-CONFIG=./conf/benchmark.xml
+CONFIG=./conf/benchmark-dist.xml
 SLAVE_COUNT_ARG=""
 TAILF=false
 RADARGUN_MASTER_PID=""
@@ -18,7 +18,7 @@ help_and_exit() {
   wrappedecho "Usage: "
   wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT] [-status] [-stop]'
   wrappedecho ""
-  wrappedecho "   -c       Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark.xml"
+  wrappedecho "   -c       Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark-dist.xml"
   wrappedecho ""
   wrappedecho "   -s       Number of slaves.  Defaults to maxSize attribute in framework configuration XML file."
   wrappedecho ""

@@ -6,5 +6,5 @@ if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DI
 
 rm *.out > /dev/null
 rm *.log > /dev/null
-rm -rf reports > /dev/null
+rm -rf results > /dev/null
 

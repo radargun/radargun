@@ -19,5 +19,5 @@
       </clustering>
    </default>
 
-   <namedCache name="x" />
+   <namedCache name="testCache" />
 </infinispan>

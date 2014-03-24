@@ -48,7 +48,7 @@ public class Master {
       try {
          if (masterConfig.isLocal()) {
             connection = new LocalSlaveConnection();
-            masterConfig.addCluster(null); // dummy cluster, not used
+            masterConfig.addCluster(Cluster.LOCAL);
          } else {
             connection = new RemoteSlaveConnection(masterConfig.getMaxClusterSize(), masterConfig.getHost(), masterConfig.getPort());
          }
@@ -161,14 +161,16 @@ public class Master {
       int numSlaves = stage.isRunOnAllSlaves() ? state.getMaxClusterSize() : state.getClusterSize();
       stage.initOnMaster(state);
       List<DistStageAck> responses = connection.runStage(stageId, numSlaves);
-      Collections.sort(responses, new Comparator<DistStageAck>() {
-         @Override
-         public int compare(DistStageAck o1, DistStageAck o2) {
-            int thisVal = o1.getSlaveIndex();
-            int anotherVal = o2.getSlaveIndex();
-            return (thisVal < anotherVal ? -1 : (thisVal == anotherVal ? 0 : 1));
-         }
-      });
+      if (responses.size() > 1) {
+         Collections.sort(responses, new Comparator<DistStageAck>() {
+            @Override
+            public int compare(DistStageAck o1, DistStageAck o2) {
+               int thisVal = o1.getSlaveIndex();
+               int anotherVal = o2.getSlaveIndex();
+               return (thisVal < anotherVal ? -1 : (thisVal == anotherVal ? 0 : 1));
+            }
+         });
+      }
       if (stage.processAckOnMaster(responses)) {
          log.trace("Stage " + stage.getName() + " successfully executed.");
          return true;

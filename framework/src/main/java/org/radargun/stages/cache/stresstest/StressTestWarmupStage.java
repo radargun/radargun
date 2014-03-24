@@ -26,8 +26,8 @@ public class StressTestWarmupStage extends StressTestStage {
          log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveState.getSlaveIndex(), slaves));
          return result;
       }
-      if (isServiceRunnning()) {
-         log.info("Not running test on this slave as the wrapper hasn't been configured.");
+      if (!isServiceRunnning()) {
+         log.info("Not running test on this slave as the service is not running.");
          return result;
       }
 
@@ -35,10 +35,8 @@ public class StressTestWarmupStage extends StressTestStage {
       if (!WARMED_UP_CONFIGS.contains(configName)) {
 
          try {
-            long startTime = System.currentTimeMillis();
+            startNanos = System.nanoTime();
             execute();
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("The warmup took: " + (duration / 1000) + " seconds.");
             result.setPayload(duration);
             WARMED_UP_CONFIGS.add(configName);
             return result;

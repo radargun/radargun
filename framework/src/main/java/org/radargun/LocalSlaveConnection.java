@@ -38,6 +38,7 @@ public class LocalSlaveConnection implements SlaveConnection {
       extras.put(Properties.PROPERTY_GROUP_NAME, Cluster.DEFAULT_GROUP);
       extras.put(Properties.PROPERTY_GROUP_SIZE, "1");
       slaveState.setClusterSize(1);
+      slaveState.setGroupSize(1);
       slaveState.setMaxClusterSize(1);
       slaveState.setSlaveIndex(0);
       slaveState.setIndexInGroup(0);

@@ -14,7 +14,7 @@
    <element name="benchmark">
       <complexType>
          <sequence>
-            <element maxOccurs="1" minOccurs="1" name="master">
+            <element maxOccurs="1" minOccurs="0" name="master">
                <complexType>
                   <attribute name="bindAddress" type="string"/>
                   <attribute name="port" type="rg:int"/>
@@ -327,7 +327,7 @@
             </attribute>
             <attribute name="log-period" type="rg:int">
                <annotation>
-                  <documentation>Number of operations after which a log entry should be written. Default is 50000.</documentation>
+                  <documentation>Number of operations after which a log entry should be written. Default is 10000.</documentation>
                </annotation>
             </attribute>
             <attribute name="num-bytes" type="rg:long-converted-by-org-radargun-config-sizeconverter">

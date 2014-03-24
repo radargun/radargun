@@ -13,8 +13,13 @@ import java.util.List;
 public class Cluster implements Serializable, Comparable<Cluster> {
 
    public final static String DEFAULT_GROUP = "default";
+   public final static Cluster LOCAL = new Cluster();
 
-   List<Group> groups = new ArrayList<Group>();
+   static {
+      LOCAL.addGroup("local", 1);
+   }
+
+   private List<Group> groups = new ArrayList<Group>();
 
    public void addGroup(String name, int size) {
       if (!groups.isEmpty() && DEFAULT_GROUP.equals(groups.get(0).name)) {

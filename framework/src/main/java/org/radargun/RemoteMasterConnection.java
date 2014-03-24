@@ -46,6 +46,12 @@ public class RemoteMasterConnection {
             if (i >= 10) {
                throw e;
             }
+            try {
+               Thread.sleep(2000);
+            } catch (InterruptedException interruptedException) {
+               Thread.currentThread().interrupt();
+               log.warn("Slave thread interrupted", interruptedException);
+            }
          }
       }
       log.info("Successfully established connection with master at: " + masterHost + ":" + masterPort);

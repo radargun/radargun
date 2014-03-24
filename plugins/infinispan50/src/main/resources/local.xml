@@ -5,11 +5,7 @@
 
    <default/>
 
-   <namedCache name="noTx"/>
-
-   <namedCache name="tx">
+   <namedCache name="testCache">
       <transaction transactionManagerLookupClass="org.infinispan.transaction.lookup.DummyTransactionManagerLookup"/>
    </namedCache>
-
-   <namedCache name="x" />
 </infinispan>

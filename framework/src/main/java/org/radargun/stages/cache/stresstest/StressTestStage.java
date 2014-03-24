@@ -44,8 +44,8 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "Name of the test as used for reporting. Default is StressTest.")
    protected String testName = "StressTest";
 
-   @Property(doc = "Number of operations after which a log entry should be written. Default is 50000.")
-   protected int logPeriod = 50000;
+   @Property(doc = "Number of operations after which a log entry should be written. Default is 10000.")
+   protected int logPeriod = 10000;
 
    @Property(doc = "Total number of request to be made against this session: reads + writes. If duration " +
          "is specified this value is ignored. Default is 50000.")
@@ -108,7 +108,7 @@ public class StressTestStage extends AbstractDistStage {
    protected boolean preferAsyncOperations = false;
 
    @Property(converter = TimeConverter.class, doc = "Benchmark duration. This takes precedence over numRequests. By default switched off.")
-   protected long duration = -1;
+   protected long duration = 0;
 
    @Property(doc = "By default each client thread operates on his private set of keys. Setting this to true " +
          "introduces contention between the threads, the numThreads property says total amount of entries that are " +
@@ -164,7 +164,7 @@ public class StressTestStage extends AbstractDistStage {
    protected transient volatile ValueGenerator valueGenerator;
 
    private transient ArrayList<Object> sharedKeysPool = new ArrayList<Object>();
-   private transient volatile long startNanos;
+   protected transient volatile long startNanos;
    private transient PhaseSynchronizer synchronizer = new PhaseSynchronizer();
    private transient volatile Completion completion;
    private transient volatile boolean finished = false;

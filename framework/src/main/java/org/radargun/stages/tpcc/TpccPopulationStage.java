@@ -45,7 +45,7 @@ public class TpccPopulationStage extends AbstractDistStage {
 
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      if (isServiceRunnning()) {
+      if (!isServiceRunnning()) {
          log.info("Not executing any test as the service is not running on this slave ");
          return ack;
       }

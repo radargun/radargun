@@ -42,7 +42,7 @@ public class Slave {
    private void run(int slaveIndex) throws Exception {
       InetAddress address = connection.connectToMaster(slaveIndex);
       // the provided slaveIndex is just a "recommendation"
-      state.setSlaveIndex(connection.receiveSlaveIndex());
+      state.setSlaveIndex(slaveIndex = connection.receiveSlaveIndex());
       log.info("Received slave index " + state.getSlaveIndex());
       state.setMaxClusterSize(connection.receiveSlaveCount());
       log.info("Received slave count " + state.getMaxClusterSize());

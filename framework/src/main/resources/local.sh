@@ -4,7 +4,7 @@
 if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DIRNAME/..; pwd` ; fi; export RADARGUN_HOME
 . ${RADARGUN_HOME}/bin/includes.sh
 
-CONFIG=./conf/local-benchmark.xml
+CONFIG=./conf/benchmark-local.xml
 
 help_and_exit() {
   echo "Usage: "
@@ -36,4 +36,4 @@ done
 
 add_fwk_to_classpath
 set_env
-${JAVA} ${JVM_OPTS} -XX:+HeapDumpOnOutOfMemoryError -classpath $CP -Dbind.address=${BIND_ADDRESS} org.radargun.local.LaunchLocal -config ${CONFIG}
+${JAVA} ${JVM_OPTS} -classpath $CP org.radargun.LaunchMaster -config ${CONFIG}

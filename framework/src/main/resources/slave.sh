@@ -16,13 +16,13 @@ default_master() {
                            s/}".*//
                            s/:.*//
                            p
-                           }' ${RADARGUN_HOME}/conf/benchmark.xml`
+                           }' ${RADARGUN_HOME}/conf/benchmark-dist.xml`
   MASTER_PORT=`sed -n -e '/port="/{
                            s/.*port="${//
                            s/}".*//
                            s/:.*//
                            p
-                           }' ${RADARGUN_HOME}/conf/benchmark.xml`
+                           }' ${RADARGUN_HOME}/conf/benchmark-dist.xml`
 }
 
 default_master
@@ -32,7 +32,7 @@ help_and_exit() {
   echo "Usage: "
   echo '  $ slave.sh [-m host:port] [-p log4j_file_prefix]'
   echo ""
-  echo "   -m        Master host and port. Optional, defaults to ${MASTER}. (this value is taken from ./conf/benchmark.xml)."
+  echo "   -m        Master host and port. Optional, defaults to ${MASTER}. (this value is taken from ./conf/benchmark-dist.xml)."
   echo ""
   echo "   -n        Name of this slave (used for log files and to select a slave configuration from environment.sh). Optional."
   echo ""

@@ -8,6 +8,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.radargun.Properties;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.stages.ScenarioCleanupStage;
 import org.radargun.stages.ScenarioInitStage;
 import org.w3c.dom.Attr;
@@ -21,6 +23,8 @@ import org.w3c.dom.NodeList;
  * @author Mircea.Markus@jboss.com
  */
 public class DomConfigParser extends ConfigParser implements ConfigSchema {
+
+   private static Log log = LogFactory.getLog(DomConfigParser.class);
 
    String PROPERTY_PREFIX_REPEAT = "repeat.";
    String PROPERTY_SUFFIX_COUNTER = "counter";
@@ -42,8 +46,13 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       NodeList childNodes = root.getChildNodes();
       int index = 0;
       index = nextElement(childNodes, index);
-      MasterConfig masterConfig = parseMaster((Element) childNodes.item(index));
-      index = nextElement(childNodes, index + 1);
+      MasterConfig masterConfig;
+      if (ELEMENT_MASTER.equals(childNodes.item(index).getNodeName())) {
+         masterConfig = parseMaster((Element) childNodes.item(index));
+         index = nextElement(childNodes, index + 1);
+      } else {
+         masterConfig = new MasterConfig(0, null);
+      }
       parseClusters(masterConfig, (Element) childNodes.item(index));
       index = nextElement(childNodes, index + 1);
       parseConfigurations(masterConfig, (Element) childNodes.item(index));
@@ -112,10 +121,16 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
    private void parseClusters(MasterConfig masterConfig, Element clustersElement) {
       if (ELEMENT_LOCAL.equals(clustersElement.getNodeName())) {
+         if (masterConfig.getPort() != 0 || masterConfig.getHost() != null) {
+            log.warn("Master element will be ignored for local configuration.");
+         }
          // no clusters, leave empty
          return;
       } else if (!ELEMENT_CLUSTERS.equals(clustersElement.getNodeName())) {
          throwExpected(clustersElement.getNodeName(), new String[] { ELEMENT_LOCAL, ELEMENT_CLUSTERS });
+      }
+      if (masterConfig.getPort() == 0 || masterConfig.getHost() == null) {
+         throw new IllegalArgumentException("Master not configured for distributed scenario!");
       }
       String clusterSizeBackup = System.getProperty(Properties.PROPERTY_CLUSTER_SIZE);
       NodeList clusters = clustersElement.getChildNodes();
