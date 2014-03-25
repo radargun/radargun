@@ -6,15 +6,14 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.stages.helpers.StartHelper;
 
 /**
  * Stage that starts a CacheWrapper on each slave.
  * 
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-@Stage(doc = "Starts cache wrappers on specified slaves")
-public class StartClusterStage extends AbstractStartStage {
+@Stage(doc = "Starts services on specified slaves")
+public class ServiceStartStage extends AbstractServiceStartStage {
 
    @Property(doc = "Specifies whether the cluster formation should be checked after cache wrapper startup. Default is true.")
    private boolean validateCluster = true;
@@ -64,7 +63,7 @@ public class StartClusterStage extends AbstractStartStage {
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
             + ". This slave's index is: " + slaveState.getSlaveIndex());
       try {
-         StartHelper.start(slaveState, validateCluster, expectNumSlaves, clusterFormationTimeout, reachable);
+         LifecycleHelper.start(slaveState, validateCluster, expectNumSlaves, clusterFormationTimeout, reachable);
       } catch (RuntimeException e) {
          return errorResponse("Issues while instantiating/starting cache wrapper", e);
       }

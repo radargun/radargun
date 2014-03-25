@@ -6,26 +6,25 @@ import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
-import org.radargun.stages.helpers.KillHelper;
 import org.radargun.stages.helpers.RoleHelper;
 
 /**
  * 
- * Will simulate a node kill on specified nodes. If the used CacheWrapper doesn't implement killable
- * it will only do graceful()
+ * Will simulate a node stop on specified nodes. If the used Service does not provide Killable trait
+ * it will always stop the node gracefully.
  * 
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Stage(doc = "Shutdowns or kills (simulates node crash) one or more nodes.")
-public class KillStage extends AbstractDistStage {
+@Stage(doc = "Stops or kills (simulates node crash) one or more nodes.")
+public class ServiceStopStage extends AbstractDistStage {
 
-   private static final String KILL_DELAY_THREAD = "_KILL_DELAY_THREAD_";
+   private static final String STOP_DELAY_THREAD = "_STOP_DELAY_THREAD_";
 
-   @Property(doc = "If set to true, the nodes should be shutdown gracefully. Default is false = simulate node crash.")
-   private boolean graceful = false;
+   @Property(doc = "If set to false, the node crash should be simulated. By default node should be shutdown gracefully.")
+   private boolean graceful = true;
 
-   @Property(doc = "If set to true the benchmark will not wait until the node is killed. Default is false.")
+   @Property(doc = "If set to true the benchmark will not wait until the node is stopped. Default is false.")
    private boolean async = false;
 
    @Property(doc = "Instead of specifying concrete slaves we may choose a victim based on his role in the cluster. " +
@@ -33,27 +32,23 @@ public class KillStage extends AbstractDistStage {
    private RoleHelper.Role role;
 
    @Property(converter = TimeConverter.class, doc = "If this value is positive the stage will spawn a thread which " +
-         "will kill the node after the delay. The stage will not wait for anything. By default the kill is immediate " +
+         "will stop the node after the delay. The stage will not wait for anything. By default the stop is immediate " +
          "and synchronous.")
    private long delayExecution;
 
-   @Property(doc="If set, the stage will not kill any node but will wait until the delayed execution is finished. " +
+   @Property(doc="If set, the stage will not stop any node but will wait until the delayed execution is finished. " +
          "Default is false")
    private boolean waitForDelayed = false;
-
-   public KillStage() {
-      // nada
-   }
 
    public DistStageAck executeOnSlave() {
       log.info("Received kill request from master...");
       DefaultDistStageAck ack = newDefaultStageAck();
       if (waitForDelayed) {
-         Thread t = (Thread) slaveState.get(KILL_DELAY_THREAD);
+         Thread t = (Thread) slaveState.get(STOP_DELAY_THREAD);
          if (t != null) {
             try {
                t.join();
-               slaveState.remove(KILL_DELAY_THREAD);
+               slaveState.remove(STOP_DELAY_THREAD);
             } catch (InterruptedException e) {
                String error = "Interrupted while waiting for kill to be finished.";
                log.error(error, e);
@@ -74,13 +69,13 @@ public class KillStage extends AbstractDistStage {
                      Thread.sleep(delayExecution);
                   } catch (InterruptedException e) {                    
                   }
-                  KillHelper.kill(slaveState, graceful, async);
+                  LifecycleHelper.stop(slaveState, graceful, async);
                }
             };
-            slaveState.put(KILL_DELAY_THREAD, t);
+            slaveState.put(STOP_DELAY_THREAD, t);
             t.start();
          } else {
-            KillHelper.kill(slaveState, graceful, async);
+            LifecycleHelper.stop(slaveState, graceful, async);
          }
       } else {
          log.trace("Ignoring kill request, not targeted for this slave");

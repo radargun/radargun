@@ -34,7 +34,7 @@ public class MemoryUsageMonitor extends AbstractActivityMonitor implements Seria
       DECIMAL_FORMATTER.setMaximumFractionDigits(2);
    }
 
-   public MemoryUsageMonitor(Timeline timeline, int slaveIndex) {
+   public MemoryUsageMonitor(Timeline timeline) {
       super(timeline);
    }
 

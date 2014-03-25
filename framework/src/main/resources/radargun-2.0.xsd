@@ -76,6 +76,10 @@
                         <element name="web-session-benchmark" type="rg:stress-test"/>
                         <element name="stress-test-warmup" type="rg:stress-test-warmup"/>
                         <element name="web-session-warmup" type="rg:stress-test-warmup"/>
+                        <element name="background-statistics-start" type="rg:background-statistics-start"/>
+                        <element name="background-statistics-stop" type="rg:background-statistics-stop"/>
+                        <element name="background-stressors-start" type="rg:background-stressors-start"/>
+                        <element name="background-stressors-stop" type="rg:background-stressors-stop"/>
                         <element name="check-background-stressors" type="rg:check-background-stressors"/>
                         <element name="check-cache-data" type="rg:check-cache-data"/>
                         <element name="check-topology" type="rg:check-topology"/>
@@ -88,25 +92,21 @@
                         <element name="j-profiler" type="rg:j-profiler"/>
                         <element name="jmx-cluster-validation" type="rg:jmx-cluster-validation"/>
                         <element name="jmx-cluster-validation-prepare" type="rg:jmx-cluster-validation-prepare"/>
-                        <element name="kill" type="rg:kill"/>
+                        <element name="jvm-monitor-start" type="rg:jvm-monitor-start"/>
+                        <element name="jvm-monitor-stop" type="rg:jvm-monitor-stop"/>
                         <element name="load-file" type="rg:load-file"/>
                         <element name="map-reduce" type="rg:map-reduce"/>
-                        <element name="parallel-start-kill" type="rg:parallel-start-kill"/>
+                        <element name="parallel-start-stop" type="rg:parallel-start-stop"/>
                         <element name="query" type="rg:query"/>
                         <element name="random-data" type="rg:random-data"/>
+                        <element name="service-start" type="rg:service-start"/>
+                        <element name="service-stop" type="rg:service-stop"/>
                         <element name="set-log-level" type="rg:set-log-level"/>
                         <element name="set-partitions" type="rg:set-partitions"/>
                         <element name="single-tx-check" type="rg:single-tx-check"/>
                         <element name="single-tx-load" type="rg:single-tx-load"/>
                         <element name="sleep" type="rg:sleep"/>
                         <element name="stack-trace-watchdog" type="rg:stack-trace-watchdog"/>
-                        <element name="start-background-statistics" type="rg:start-background-statistics"/>
-                        <element name="start-background-stressors" type="rg:start-background-stressors"/>
-                        <element name="start-cluster" type="rg:start-cluster"/>
-                        <element name="start-jvm-monitor" type="rg:start-jvm-monitor"/>
-                        <element name="stop-background-statistics" type="rg:stop-background-statistics"/>
-                        <element name="stop-background-stressors" type="rg:stop-background-stressors"/>
-                        <element name="stop-jvm-monitor" type="rg:stop-jvm-monitor"/>
                         <element name="tpcc-benchmark" type="rg:tpcc-benchmark"/>
                         <element name="tpcc-population" type="rg:tpcc-population"/>
                         <element name="wait-for-topology-event" type="rg:wait-for-topology-event"/>
@@ -178,6 +178,10 @@
             <element name="web-session-benchmark" type="rg:stress-test"/>
             <element name="stress-test-warmup" type="rg:stress-test-warmup"/>
             <element name="web-session-warmup" type="rg:stress-test-warmup"/>
+            <element name="background-statistics-start" type="rg:background-statistics-start"/>
+            <element name="background-statistics-stop" type="rg:background-statistics-stop"/>
+            <element name="background-stressors-start" type="rg:background-stressors-start"/>
+            <element name="background-stressors-stop" type="rg:background-stressors-stop"/>
             <element name="check-background-stressors" type="rg:check-background-stressors"/>
             <element name="check-cache-data" type="rg:check-cache-data"/>
             <element name="check-topology" type="rg:check-topology"/>
@@ -190,25 +194,21 @@
             <element name="j-profiler" type="rg:j-profiler"/>
             <element name="jmx-cluster-validation" type="rg:jmx-cluster-validation"/>
             <element name="jmx-cluster-validation-prepare" type="rg:jmx-cluster-validation-prepare"/>
-            <element name="kill" type="rg:kill"/>
+            <element name="jvm-monitor-start" type="rg:jvm-monitor-start"/>
+            <element name="jvm-monitor-stop" type="rg:jvm-monitor-stop"/>
             <element name="load-file" type="rg:load-file"/>
             <element name="map-reduce" type="rg:map-reduce"/>
-            <element name="parallel-start-kill" type="rg:parallel-start-kill"/>
+            <element name="parallel-start-stop" type="rg:parallel-start-stop"/>
             <element name="query" type="rg:query"/>
             <element name="random-data" type="rg:random-data"/>
+            <element name="service-start" type="rg:service-start"/>
+            <element name="service-stop" type="rg:service-stop"/>
             <element name="set-log-level" type="rg:set-log-level"/>
             <element name="set-partitions" type="rg:set-partitions"/>
             <element name="single-tx-check" type="rg:single-tx-check"/>
             <element name="single-tx-load" type="rg:single-tx-load"/>
             <element name="sleep" type="rg:sleep"/>
             <element name="stack-trace-watchdog" type="rg:stack-trace-watchdog"/>
-            <element name="start-background-statistics" type="rg:start-background-statistics"/>
-            <element name="start-background-stressors" type="rg:start-background-stressors"/>
-            <element name="start-cluster" type="rg:start-cluster"/>
-            <element name="start-jvm-monitor" type="rg:start-jvm-monitor"/>
-            <element name="stop-background-statistics" type="rg:stop-background-statistics"/>
-            <element name="stop-background-stressors" type="rg:stop-background-stressors"/>
-            <element name="stop-jvm-monitor" type="rg:stop-jvm-monitor"/>
             <element name="tpcc-benchmark" type="rg:tpcc-benchmark"/>
             <element name="tpcc-population" type="rg:tpcc-population"/>
             <element name="wait-for-topology-event" type="rg:wait-for-topology-event"/>
@@ -529,7 +529,7 @@
          <extension base="rg:abstract"/>
       </complexContent>
    </complexType>
-   <complexType abstract="true" name="abstract-start">
+   <complexType abstract="true" name="abstract-service-start">
       <annotation>
          <documentation/>
       </annotation>
@@ -538,6 +538,172 @@
             <attribute name="may-fail-on" type="string">
                <annotation>
                   <documentation>Set of slaves where the start may fail but this will not cause an error. Default is none.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="background-statistics-start">
+      <annotation>
+         <documentation>Starts collection of statistics from background threads and cache size.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="stats-iteration-duration" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Delay between statistics snapshots. Default is 5 seconds.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="background-statistics-stop">
+      <annotation>
+         <documentation>Stop Statistics and return collected statistics to master.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="test-name" type="string">
+               <annotation>
+                  <documentation>Name of the test used for reports. Default is 'BackgroundStats'.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="background-stressors-start">
+      <annotation>
+         <documentation>Starts background stressor threads.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="cache-name" type="string">
+               <annotation>
+                  <documentation>Cache used for the background operations. Default is null (default).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="dead-slave-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Period after which a slave is considered to be dead. Default is 90 s.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delay-between-requests" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="entry-size" type="rg:int">
+               <annotation>
+                  <documentation>Size of value used in the entry. Default is 1024 bytes.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="gets" type="rg:int">
+               <annotation>
+                  <documentation>Ratio of GET requests. Default is 2.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="ignore-dead-checkers" type="rg:boolean">
+               <annotation>
+                  <documentation>When the log value is full, the stressor needs to wait until all checkers confirm that the records have been checked before discarding oldest records. With ignoreDeadCheckers=true the stressor does not wait for checkers on dead nodes. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-data-for-dead-slaves" type="string">
+               <annotation>
+                  <documentation>List of slaves whose data should be loaded by other threads because these slaves are not alive. Default is empty.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-data-on-slaves" type="string">
+               <annotation>
+                  <documentation>List of slaves where the data should be loaded (others immediately start executing requests). Default is all live slaves).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-only" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, the stressor does not execute any requests after loading the data. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-with-put-if-absent" type="rg:boolean">
+               <annotation>
+                  <documentation>Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Maximum time for which are the log value checkers allowed to show no new checked values (error is thrown in CheckBackgroundStressors stage). Default is one minute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-checking-threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of threads on each node that are checking whether all operations from stressor threads have been logged. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-counter-update-period" type="rg:long">
+               <annotation>
+                  <documentation>Number of operations after which will the stressor or checker update in-cache operation counter. Default is 50.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-value-max-size" type="rg:int">
+               <annotation>
+                  <documentation>Maximum number of records in one entry before the older ones have to be truncated. Default is 100.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="no-loading" type="rg:boolean">
+               <annotation>
+                  <documentation>Do not execute the loading, start usual request right away.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-entries" type="rg:int">
+               <annotation>
+                  <documentation>Amount of entries (key-value pairs) inserted into the cache. Default is 1024.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of stressor threads. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="puts" type="rg:int">
+               <annotation>
+                  <documentation>Ratio of PUT requests. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="removes" type="rg:int">
+               <annotation>
+                  <documentation>Ratio of REMOVE requests. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="shared-keys" type="rg:boolean">
+               <annotation>
+                  <documentation>By default each thread accesses only its private set of keys. This allows all threads all values. Atomic operations are required for this functionality. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="transaction-size" type="rg:int">
+               <annotation>
+                  <documentation>Amount of request wrapped into single transaction. By default transactions are not used (explicitely).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="use-log-values" type="rg:boolean">
+               <annotation>
+                  <documentation>Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait-until-loaded" type="rg:boolean">
+               <annotation>
+                  <documentation>Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="background-stressors-stop">
+      <annotation>
+         <documentation>Stop BackgroundStressors.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="wait-until-loaded" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, the phase does not finish until all stressors stop loading its data. Default is false.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -961,45 +1127,41 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="kill">
+   <complexType name="jvm-monitor-start">
       <annotation>
-         <documentation>Shutdowns or kills (simulates node crash) one or more nodes.</documentation>
+         <documentation>Starts collecting JVM statistics locally on each slave node.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:abstract-dist">
-            <attribute name="async" type="rg:boolean">
+            <attribute name="frequency" type="rg:int">
                <annotation>
-                  <documentation>If set to true the benchmark will not wait until the node is killed. Default is false.</documentation>
+                  <documentation>An integer that specifies the frequency that statistics are collected. The default is one.</documentation>
                </annotation>
             </attribute>
-            <attribute name="delay-execution" type="rg:long-converted-by-org-radargun-config-timeconverter">
+            <attribute name="interface-name" type="string">
                <annotation>
-                  <documentation>If this value is positive the stage will spawn a thread which will kill the node after the delay. The stage will not wait for anything. By default the kill is immediate and synchronous.</documentation>
+                  <documentation>Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.</documentation>
                </annotation>
             </attribute>
-            <attribute name="graceful" type="rg:boolean">
+            <attribute name="time-unit" type="rg:java-util-concurrent-timeunit">
                <annotation>
-                  <documentation>If set to true, the nodes should be shutdown gracefully. Default is false = simulate node crash.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="role" type="rg:org-radargun-stages-helpers-rolehelper-role">
-               <annotation>
-                  <documentation>Instead of specifying concrete slaves we may choose a victim based on his role in the cluster. Supported roles are [COORDINATOR, BRIDGE]. By default no role is specified.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="wait-for-delayed" type="rg:boolean">
-               <annotation>
-                  <documentation>If set, the stage will not kill any node but will wait until the delayed execution is finished. Default is false</documentation>
+                  <documentation>Specifies the time unit that statistics are collected. One of: MILLISECONDS, SECONDS, MINUTES, or HOURS. The default is SECONDS.</documentation>
                </annotation>
             </attribute>
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="org-radargun-stages-helpers-rolehelper-role">
+   <simpleType name="java-util-concurrent-timeunit">
       <union>
          <simpleType>
             <restriction base="string">
-               <enumeration value="COORDINATOR"/>
+               <enumeration value="NANOSECONDS"/>
+               <enumeration value="MICROSECONDS"/>
+               <enumeration value="MILLISECONDS"/>
+               <enumeration value="SECONDS"/>
+               <enumeration value="MINUTES"/>
+               <enumeration value="HOURS"/>
+               <enumeration value="DAYS"/>
             </restriction>
          </simpleType>
          <simpleType>
@@ -1009,6 +1171,14 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </simpleType>
       </union>
    </simpleType>
+   <complexType name="jvm-monitor-stop">
+      <annotation>
+         <documentation>Stop collecting JVM statistics on each slave node and return collected statistics to the master node.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist"/>
+      </complexContent>
+   </complexType>
    <complexType name="load-file">
       <annotation>
          <documentation>Loads the contents of a file into the cache.</documentation>
@@ -1122,40 +1292,15 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="java-util-concurrent-timeunit">
-      <union>
-         <simpleType>
-            <restriction base="string">
-               <enumeration value="NANOSECONDS"/>
-               <enumeration value="MICROSECONDS"/>
-               <enumeration value="MILLISECONDS"/>
-               <enumeration value="SECONDS"/>
-               <enumeration value="MINUTES"/>
-               <enumeration value="HOURS"/>
-               <enumeration value="DAYS"/>
-            </restriction>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
-   <complexType name="parallel-start-kill">
+   <complexType name="parallel-start-stop">
       <annotation>
-         <documentation>The stage start and kills some nodes concurrently (without waiting for each other).</documentation>
+         <documentation>The stage start and stops some nodes concurrently (without waiting for each other).</documentation>
       </annotation>
       <complexContent>
-         <extension base="rg:abstract-start">
-            <attribute name="kill" type="string">
+         <extension base="rg:abstract-service-start">
+            <attribute name="graceful" type="rg:boolean">
                <annotation>
-                  <documentation>Set of slaves which should be killed in this stage. Default is empty.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="kill-delay" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Delay before the slaves are killed. Default is 0.</documentation>
+                  <documentation>If set to false, the node crash should be simulated. By default node should be shutdown gracefully.</documentation>
                </annotation>
             </attribute>
             <attribute name="reachable" type="string">
@@ -1165,7 +1310,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             </attribute>
             <attribute name="role" type="rg:org-radargun-stages-helpers-rolehelper-role">
                <annotation>
-                  <documentation>Another way how to specify killed nodes is by role. Available roles are [COORDINATOR, BRIDGE]. By default this is not used.</documentation>
+                  <documentation>Another way how to specify stopped nodes is by role. Available roles are [COORDINATOR]. By default this is not used.</documentation>
                </annotation>
             </attribute>
             <attribute name="start" type="string">
@@ -1178,14 +1323,33 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Delay before the slaves are started. Default is 0.</documentation>
                </annotation>
             </attribute>
-            <attribute name="tear-down" type="rg:boolean">
+            <attribute name="stop" type="string">
                <annotation>
-                  <documentation>If set to true, the nodes should be shutdown. Default is false = simulate node crash.</documentation>
+                  <documentation>Set of slaves which should be stopped in this stage. Default is empty.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="stop-delay" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Delay before the slaves are stopped. Default is 0.</documentation>
                </annotation>
             </attribute>
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="org-radargun-stages-helpers-rolehelper-role">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="COORDINATOR"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <complexType name="query">
       <annotation>
          <documentation>Stage which executes a Query using Infinispan-query API against all keys in the cache.</documentation>
@@ -1321,6 +1485,96 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:abstract-dist"/>
+      </complexContent>
+   </complexType>
+   <complexType name="service-start">
+      <annotation>
+         <documentation>Starts services on specified slaves</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-service-start">
+            <attribute name="cluster-formation-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Time allowed the cluster to reach `expectNumSlaves` members. Default is 3 minutes.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delay-after-first-slave-starts" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delay-between-starting-slaves" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="expect-num-slaves" type="rg:java-lang-integer">
+               <annotation>
+                  <documentation>The number of slaves that should be up after all slaves are started. Applicable only with validateCluster=true. Default is all slaves in the cluster (in the same site in case of multi-site configuration).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reachable" type="string">
+               <annotation>
+                  <documentation>Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="stagger-slave-startup" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="validate-cluster" type="rg:boolean">
+               <annotation>
+                  <documentation>Specifies whether the cluster formation should be checked after cache wrapper startup. Default is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="java-lang-integer">
+      <union>
+         <simpleType>
+            <restriction base="integer"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <complexType name="service-stop">
+      <annotation>
+         <documentation>Stops or kills (simulates node crash) one or more nodes.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="async" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true the benchmark will not wait until the node is stopped. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delay-execution" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>If this value is positive the stage will spawn a thread which will stop the node after the delay. The stage will not wait for anything. By default the stop is immediate and synchronous.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="graceful" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to false, the node crash should be simulated. By default node should be shutdown gracefully.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="role" type="rg:org-radargun-stages-helpers-rolehelper-role">
+               <annotation>
+                  <documentation>Instead of specifying concrete slaves we may choose a victim based on his role in the cluster. Supported roles are [COORDINATOR]. By default no role is specified.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait-for-delayed" type="rg:boolean">
+               <annotation>
+                  <documentation>If set, the stage will not stop any node but will wait until the delayed execution is finished. Default is false</documentation>
+               </annotation>
+            </attribute>
+         </extension>
       </complexContent>
    </complexType>
    <complexType name="set-log-level">
@@ -1489,260 +1743,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                </annotation>
             </attribute>
          </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="start-background-statistics">
-      <annotation>
-         <documentation>Starts collection of statistics from background threads and cache size.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="stats-iteration-duration" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Delay between statistics snapshots. Default is 5 seconds.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="start-background-stressors">
-      <annotation>
-         <documentation>Starts background stressor threads.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="cache-name" type="string">
-               <annotation>
-                  <documentation>Cache used for the background operations. Default is null (default).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="dead-slave-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Period after which a slave is considered to be dead. Default is 90 s.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="delay-between-requests" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="entry-size" type="rg:int">
-               <annotation>
-                  <documentation>Size of value used in the entry. Default is 1024 bytes.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="gets" type="rg:int">
-               <annotation>
-                  <documentation>Ratio of GET requests. Default is 2.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="ignore-dead-checkers" type="rg:boolean">
-               <annotation>
-                  <documentation>When the log value is full, the stressor needs to wait until all checkers confirm that the records have been checked before discarding oldest records. With ignoreDeadCheckers=true the stressor does not wait for checkers on dead nodes. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="load-data-for-dead-slaves" type="string">
-               <annotation>
-                  <documentation>List of slaves whose data should be loaded by other threads because these slaves are not alive. Default is empty.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="load-data-on-slaves" type="string">
-               <annotation>
-                  <documentation>List of slaves where the data should be loaded (others immediately start executing requests). Default is all live slaves).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="load-only" type="rg:boolean">
-               <annotation>
-                  <documentation>If set to true, the stressor does not execute any requests after loading the data. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="load-with-put-if-absent" type="rg:boolean">
-               <annotation>
-                  <documentation>Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="log-checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Maximum time for which are the log value checkers allowed to show no new checked values (error is thrown in CheckBackgroundStressors stage). Default is one minute.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="log-checking-threads" type="rg:int">
-               <annotation>
-                  <documentation>Number of threads on each node that are checking whether all operations from stressor threads have been logged. Default is 10.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="log-counter-update-period" type="rg:long">
-               <annotation>
-                  <documentation>Number of operations after which will the stressor or checker update in-cache operation counter. Default is 50.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="log-value-max-size" type="rg:int">
-               <annotation>
-                  <documentation>Maximum number of records in one entry before the older ones have to be truncated. Default is 100.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="no-loading" type="rg:boolean">
-               <annotation>
-                  <documentation>Do not execute the loading, start usual request right away.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="num-entries" type="rg:int">
-               <annotation>
-                  <documentation>Amount of entries (key-value pairs) inserted into the cache. Default is 1024.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="num-threads" type="rg:int">
-               <annotation>
-                  <documentation>Number of stressor threads. Default is 10.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="puts" type="rg:int">
-               <annotation>
-                  <documentation>Ratio of PUT requests. Default is 1.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="removes" type="rg:int">
-               <annotation>
-                  <documentation>Ratio of REMOVE requests. Default is 0.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="shared-keys" type="rg:boolean">
-               <annotation>
-                  <documentation>By default each thread accesses only its private set of keys. This allows all threads all values. Atomic operations are required for this functionality. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="transaction-size" type="rg:int">
-               <annotation>
-                  <documentation>Amount of request wrapped into single transaction. By default transactions are not used (explicitely).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="use-log-values" type="rg:boolean">
-               <annotation>
-                  <documentation>Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="wait-until-loaded" type="rg:boolean">
-               <annotation>
-                  <documentation>Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="start-cluster">
-      <annotation>
-         <documentation>Starts cache wrappers on specified slaves</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-start">
-            <attribute name="cluster-formation-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Time allowed the cluster to reach `expectNumSlaves` members. Default is 3 minutes.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="delay-after-first-slave-starts" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="delay-between-starting-slaves" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="expect-num-slaves" type="rg:java-lang-integer">
-               <annotation>
-                  <documentation>The number of slaves that should be up after all slaves are started. Applicable only with validateCluster=true. Default is all slaves in the cluster (in the same site in case of multi-site configuration).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="reachable" type="string">
-               <annotation>
-                  <documentation>Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="stagger-slave-startup" type="rg:boolean">
-               <annotation>
-                  <documentation>If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="validate-cluster" type="rg:boolean">
-               <annotation>
-                  <documentation>Specifies whether the cluster formation should be checked after cache wrapper startup. Default is true.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <simpleType name="java-lang-integer">
-      <union>
-         <simpleType>
-            <restriction base="integer"/>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
-   <complexType name="start-jvm-monitor">
-      <annotation>
-         <documentation>Starts collecting JVM statistics locally on each slave node.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="frequency" type="rg:int">
-               <annotation>
-                  <documentation>An integer that specifies the frequency that statistics are collected. The default is one.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="interface-name" type="string">
-               <annotation>
-                  <documentation>Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="time-unit" type="rg:java-util-concurrent-timeunit">
-               <annotation>
-                  <documentation>Specifies the time unit that statistics are collected. One of: MILLISECONDS, SECONDS, MINUTES, or HOURS. The default is SECONDS.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="stop-background-statistics">
-      <annotation>
-         <documentation>Stop Statistics and return collected statistics to master.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="test-name" type="string">
-               <annotation>
-                  <documentation>Name of the test used for reports. Default is 'BackgroundStats'.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="stop-background-stressors">
-      <annotation>
-         <documentation>Stop BackgroundStressors.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="wait-until-loaded" type="rg:boolean">
-               <annotation>
-                  <documentation>If true, the phase does not finish until all stressors stop loading its data. Default is false.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="stop-jvm-monitor">
-      <annotation>
-         <documentation>Stop collecting JVM statistics on each slave node and return collected statistics to the master node.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist"/>
       </complexContent>
    </complexType>
    <complexType name="tpcc-benchmark">

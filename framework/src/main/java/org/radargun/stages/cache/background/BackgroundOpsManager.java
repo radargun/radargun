@@ -13,6 +13,7 @@ import org.radargun.reporting.Timeline;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.helpers.Range;
+import org.radargun.state.ServiceListener;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.BasicOperations;
@@ -31,7 +32,7 @@ import org.radargun.traits.Transactional;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class BackgroundOpsManager {
+public class BackgroundOpsManager implements ServiceListener {
    /**
     * Key to SlaveState to retrieve BackgroundOpsManager instance and to MasterState to retrieve results.
     */
@@ -40,7 +41,7 @@ public class BackgroundOpsManager {
 
    private static Log log = LogFactory.getLog(BackgroundOpsManager.class);
 
-   private StartBackgroundStressorsStage stressorConfiguration;
+   private BackgroundStressorsStartStage stressorConfiguration;
    private int operations;
 
    private SlaveState slaveState;
@@ -49,7 +50,7 @@ public class BackgroundOpsManager {
    private KeepAliveThread keepAliveThread;
    private List<List<Statistics>> stats;
    private BackgroundStatsThread backgroundStatsThread;
-   private long statsIteration;
+   private long statsIterationDuration;
    private boolean loaded = false;
    private LogChecker[] logCheckers;
    private LogChecker.Pool logCheckerPool;
@@ -71,21 +72,24 @@ public class BackgroundOpsManager {
          instance = new BackgroundOpsManager();
          instance.slaveState = slaveState;
          slaveState.put(NAME, instance);
+         slaveState.addServiceListener(instance);
       }
       return instance;
    }
 
-   public void destroy() {
-      slaveState.remove(NAME);
-   }
-
-   public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, StartBackgroundStressorsStage stage) {
+   public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, BackgroundStressorsStartStage stage) {
       BackgroundOpsManager instance = getOrCreateInstance(slaveState);
       instance.stressorConfiguration = stage;
       instance.operations = stage.puts + stage.gets + stage.removes;
 
       instance.lifecycle = slaveState.getTrait(Lifecycle.class);
       instance.loadCaches();
+      return instance;
+   }
+
+   public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, long statsIterationDuration) {
+      BackgroundOpsManager instance = getOrCreateInstance(slaveState);
+      instance.statsIterationDuration = statsIterationDuration;
       return instance;
    }
 
@@ -104,12 +108,6 @@ public class BackgroundOpsManager {
       }
       CacheInformation cacheInformation = slaveState.getTrait(CacheInformation.class);
       cacheInfo = cacheInformation == null ? null : cacheInformation.getCache(stressorConfiguration.cacheName);
-   }
-
-   public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, long statsIteration) {
-      BackgroundOpsManager instance = getOrCreateInstance(slaveState);
-      instance.statsIteration = statsIteration;
-      return instance;
    }
 
    private BackgroundOpsManager() {
@@ -271,7 +269,7 @@ public class BackgroundOpsManager {
 
    /**
     * 
-    * Stops the stressors, call this before tearing down or killing CacheWrapper.
+    * Stops the stressors, call this before stopping CacheWrapper.
     * 
     */
    public synchronized void stopBackgroundThreads() {
@@ -354,17 +352,28 @@ public class BackgroundOpsManager {
    }
 
    public synchronized List<List<Statistics>> stopStats() {
-      if (backgroundStatsThread == null || stats == null) {
-         throw new IllegalStateException("Stat thread not running");
+      if (backgroundStatsThread != null) {
+         log.debug("Interrupting statistics thread");
+         backgroundStatsThread.interrupt();
+         sizeThread.interrupt();
+         try {
+            backgroundStatsThread.join();
+            sizeThread.join();
+         } catch (InterruptedException e) {
+            log.error("Interrupted while waiting for stat thread to end.");
+         }
+         backgroundStatsThread = null;
+         sizeThread = null;
       }
-      log.debug("Interrupting statistics threads");
-      backgroundStatsThread.interrupt();
-      sizeThread.interrupt();
-      try {
-         backgroundStatsThread.join();
-         sizeThread.join();
-      } catch (InterruptedException e) {
-         log.error("Interrupted while waiting for stat thread to end.");
+      if (sizeThread != null) {
+         log.debug("Interrupting size thread");
+         sizeThread.interrupt();
+         try {
+            sizeThread.join();
+         } catch (InterruptedException e) {
+            log.error("Interrupted while waiting for stat thread to end.");
+         }
+         sizeThread = null;
       }
       List<List<Statistics>> statsToReturn = stats;
       stats = null;
@@ -441,6 +450,41 @@ public class BackgroundOpsManager {
       return conditionalCache;
    }
 
+   // TODO:
+   // a) clear listener on the BasicOperations trait
+   // b) deal with the fact that the clear can be executed
+   public static void beforeCacheClear(SlaveState slaveState) {
+      BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState);
+      if (instance != null) {
+         instance.setLoaded(false);
+      }
+   }
+
+   @Override
+   public void beforeServiceStart() {}
+
+   @Override
+   public void afterServiceStart() {
+      setLoaded(true); // don't load data at this stage
+      loadCaches(); // the object returned by a trait may be invalid after restart
+      startBackgroundThreads();
+   }
+
+   @Override
+   public void beforeServiceStop(boolean graceful) {
+      stopBackgroundThreads();
+   }
+
+   @Override
+   public void afterServiceStop(boolean graceful) {}
+
+   @Override
+   public void serviceDestroyed() {
+      stopStats();
+      slaveState.remove(NAME);
+      slaveState.removeServiceListener(this);
+   }
+
    private class KeepAliveThread extends Thread {
       private volatile boolean terminate;
 
@@ -479,7 +523,7 @@ public class BackgroundOpsManager {
          try {
             gatherStats(); // throw away first stats
             while (true) {
-               sleep(statsIteration);
+               sleep(statsIterationDuration);
                stats.add(gatherStats());
             }
          } catch (InterruptedException e) {
@@ -545,32 +589,6 @@ public class BackgroundOpsManager {
          getSize = true;
          notify();
          return rSize;
-      }
-   }
-
-   public static void beforeCacheWrapperDestroy(SlaveState slaveState, boolean destroyAll) {
-      BackgroundOpsManager instance = getInstance(slaveState);
-      if (instance != null) {
-         instance.stopBackgroundThreads();
-         if (destroyAll) {
-            instance.destroy();
-         }
-      }
-   }
-
-   public static void afterCacheWrapperStart(SlaveState slaveState) {
-      BackgroundOpsManager instance = getInstance(slaveState);
-      if (instance != null) {
-         instance.setLoaded(true); // don't load data at this stage
-         instance.loadCaches();
-         instance.startBackgroundThreads();
-      }
-   }
-
-   public static void beforeCacheWrapperClear(SlaveState slaveState) {
-      BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState);
-      if (instance != null) {
-         instance.setLoaded(false);
       }
    }
 

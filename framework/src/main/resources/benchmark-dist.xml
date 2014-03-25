@@ -27,9 +27,9 @@
    <!-- Sequence of stages executed on the cluster -->
    <scenario>
       <!-- Start services on all nodes -->
-      <start-cluster />
+      <service-start />
       <!-- Begin monitoring of CPU, memory usage and GC -->
-      <start-jvm-monitor />
+      <jvm-monitor-start />
       <!-- 5 threads will execute total of 100,000 random requests against the default cache ('testCache')-->
       <stress-test-warmup num-requests="100000" num-threads="5" />
       <!-- Remove all data from the default cache -->
@@ -37,7 +37,7 @@
       <!-- 10 threads will execute random request for 1 minute against the default cache ('testCache') -->
       <stress-test duration="60s" num-threads="10" />
       <!-- Stop JVM monitoring -->
-      <stop-jvm-monitor />
+      <jvm-monitor-stop />
    </scenario>
 
    <!-- How the statistics are reported -->

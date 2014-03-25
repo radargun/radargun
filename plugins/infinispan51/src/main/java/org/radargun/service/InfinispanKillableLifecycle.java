@@ -58,7 +58,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
             state = State.STOPPED;
          }
       } catch (Exception e) {
-         log.error("Wrapper kill failed");
+         log.error("Service kill failed");
          if (!stateLock.isHeldByCurrentThread()) {
             stateLock.lock();
          }
@@ -88,7 +88,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
                   stateLock.lock();
                   state = State.STOPPED;
                } catch (Exception e) {
-                  log.error("Wrapper async kill failed. Exception while async killing", e);
+                  log.error("Service async kill failed. Exception while async killing", e);
                   if (!stateLock.isHeldByCurrentThread()) {
                      stateLock.lock();
                   }

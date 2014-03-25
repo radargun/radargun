@@ -27,7 +27,7 @@ public class RoleHelper {
       COORDINATOR
    }
 
-   public final static String SUPPORTED_ROLES = "[COORDINATOR, BRIDGE]";
+   public final static String SUPPORTED_ROLES = "[COORDINATOR]";
 
    private RoleHelper() {}
 

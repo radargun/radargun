@@ -24,7 +24,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.reporting.Timeline;
+import org.radargun.state.ServiceListener;
+import org.radargun.state.SlaveState;
 
 /**
  * This program is designed to show how remote JMX calls can be used to retrieve metrics of remote
@@ -37,55 +38,48 @@ import org.radargun.reporting.Timeline;
  * 
  * @author Galder Zamarreno
  */
-public class LocalJmxMonitor /* implements Serializable */ {
-
-   /** The serialVersionUID */
-   private static final long serialVersionUID = 2530981300271084693L;
+public class LocalJmxMonitor implements ServiceListener {
+   private static Log log = LogFactory.getLog(LocalJmxMonitor.class);
 
    private String interfaceName;
+   private int frequency = 1;
+   private TimeUnit timeUnit = TimeUnit.SECONDS;
 
-   private static Log log = LogFactory.getLog(LocalJmxMonitor.class);
-   private int measuringFrequency = 1;
-   private TimeUnit measuringUnit = TimeUnit.SECONDS;
+   private CpuUsageMonitor cpuMonitor;
+   private MemoryUsageMonitor memoryMonitor;
+   private GcMonitor gcMonitor;
+   private NetworkBytesMonitor netInMonitor;
+   private NetworkBytesMonitor netOutMonitor;
+   private ScheduledExecutorService exec;
 
-   private volatile CpuUsageMonitor cpuMonitor;
-   private volatile MemoryUsageMonitor memoryMonitor;
-   private volatile GcMonitor gcMonitor;
-   private volatile NetworkBytesMonitor netInMonitor;
-   private volatile NetworkBytesMonitor netOutMonitor;
+   private final SlaveState slaveState;
 
-   ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
-
-   private final Timeline timeline;
-   private final int slaveIndex;
-
-   public LocalJmxMonitor(Timeline timeline, int slaveIndex) {
-      this.timeline = timeline;
-      this.slaveIndex = slaveIndex;
+   public LocalJmxMonitor(SlaveState slaveState) {
+      this.slaveState = slaveState;
    }
 
-   public void startMonitoringLocal() {
-
-      log.info("Gathering statistics every " + measuringFrequency + " " + measuringUnit.name());
+   public synchronized void startMonitoringLocal() {
+      exec = Executors.newScheduledThreadPool(1);
+      log.info("Gathering statistics every " + frequency + " " + timeUnit.name());
       try {
-         cpuMonitor = new CpuUsageMonitor(timeline);
-         exec.scheduleAtFixedRate(cpuMonitor, 0, measuringFrequency, measuringUnit);
-         memoryMonitor = new MemoryUsageMonitor(timeline, slaveIndex);
-         exec.scheduleAtFixedRate(memoryMonitor, 0, measuringFrequency, measuringUnit);
-         gcMonitor = new GcMonitor(timeline);
-         exec.scheduleAtFixedRate(gcMonitor, 0, measuringFrequency, measuringUnit);
+         cpuMonitor = new CpuUsageMonitor(slaveState.getTimeline());
+         exec.scheduleAtFixedRate(cpuMonitor, 0, frequency, timeUnit);
+         memoryMonitor = new MemoryUsageMonitor(slaveState.getTimeline());
+         exec.scheduleAtFixedRate(memoryMonitor, 0, frequency, timeUnit);
+         gcMonitor = new GcMonitor(slaveState.getTimeline());
+         exec.scheduleAtFixedRate(gcMonitor, 0, frequency, timeUnit);
          if (interfaceName != null) {
-            netInMonitor = NetworkBytesMonitor.createReceiveMonitor(interfaceName, timeline);
-            exec.scheduleAtFixedRate(netInMonitor, 0, measuringFrequency, measuringUnit);
-            netOutMonitor = NetworkBytesMonitor.createTransmitMonitor(interfaceName, timeline);
-            exec.scheduleAtFixedRate(netOutMonitor, 0, measuringFrequency, measuringUnit);
+            netInMonitor = NetworkBytesMonitor.createReceiveMonitor(interfaceName, slaveState.getTimeline());
+            exec.scheduleAtFixedRate(netInMonitor, 0, frequency, timeUnit);
+            netOutMonitor = NetworkBytesMonitor.createTransmitMonitor(interfaceName, slaveState.getTimeline());
+            exec.scheduleAtFixedRate(netOutMonitor, 0, frequency, timeUnit);
          }
       } catch (Exception e) {
          log.error(e.getMessage(), e);
       }
    }
    
-   public void stopMonitoringLocal() {
+   public synchronized void stopMonitoringLocal() {
       cpuMonitor.stop();
       memoryMonitor.stop();
       gcMonitor.stop();
@@ -95,64 +89,36 @@ public class LocalJmxMonitor /* implements Serializable */ {
       }
       exec.shutdownNow();
       this.exec = null;
-//      StringBuffer result = new StringBuffer("Cpu measurements = " + cpuMonitor.getMeasurementCount() + ", memory measurements = "
-//            + memoryMonitor.getMeasurementCount() + ", gc measurements = " + gcMonitor.getMeasurementCount());
-//      if (interfaceName != null) {
-//         result.append(", network inbound measurements = " + netInMonitor.getMeasurementCount());
-//         result.append(", network outbound measurements = " + netOutMonitor.getMeasurementCount());
-//      }
-//      log.trace(result.toString());
-   }
 
-   public CpuUsageMonitor getCpuMonitor() {
-      return cpuMonitor;
-   }
-
-   public MemoryUsageMonitor getMemoryMonitor() {
-      return memoryMonitor;
-   }
-
-   public GcMonitor getGcMonitor() {
-      return gcMonitor;
-   }
-
-   public NetworkBytesMonitor getNetworkBytesInMonitor() {
-      return netInMonitor;
-   }
-
-   public NetworkBytesMonitor getNetworkBytesOutMonitor() {
-      return netOutMonitor;
-   }
-
-//   public String getConfigName() {
-//      return configName;
-//   }
-//
-//   public void setConfigName(String configName) {
-//      this.configName = configName;
-//   }
-
-   public String getInterfaceName() {
-      return this.interfaceName;
    }
 
    public void setInterfaceName(String interfaceName) {
       this.interfaceName = interfaceName;
    }
 
-   public TimeUnit getMeasuringUnit() {
-      return measuringUnit;
+   public void setTimeUnit(TimeUnit timeUnit) {
+      this.timeUnit = timeUnit;
    }
 
-   public void setMeasuringUnit(TimeUnit measuringUnit) {
-      this.measuringUnit = measuringUnit;
+   public void setFrequency(int frequency) {
+      this.frequency = frequency;
    }
 
-   public int getMeasuringFrequency() {
-      return measuringFrequency;
-   }
+   @Override
+   public void beforeServiceStart() {}
 
-   public void setMeasuringFrequency(int measuringFrequency) {
-      this.measuringFrequency = measuringFrequency;
+   @Override
+   public void afterServiceStart() {}
+
+   @Override
+   public void beforeServiceStop(boolean graceful) {}
+
+   @Override
+   public void afterServiceStop(boolean graceful) {}
+
+   @Override
+   public void serviceDestroyed() {
+      stopMonitoringLocal();
+      slaveState.removeServiceListener(this);
    }
 }

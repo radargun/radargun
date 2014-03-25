@@ -35,7 +35,7 @@ import org.radargun.sysmonitor.LocalJmxMonitor;
  */
 
 @Stage(doc = "Starts collecting JVM statistics locally on each slave node.")
-public class StartJVMMonitorStage extends AbstractDistStage {
+public class JVMMonitorStartStage extends AbstractDistStage {
 
    public static final String MONITOR_KEY = "JVMMonitor";
 
@@ -53,15 +53,13 @@ public class StartJVMMonitorStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      LocalJmxMonitor monitor = new LocalJmxMonitor(slaveState.getTimeline(), slaveState.getSlaveIndex());
-//      monitor.setConfigName(slaveState.getConfigName());
-      if (interfaceName != null) {
-         monitor.setInterfaceName(interfaceName);
-      }
-      monitor.setMeasuringFrequency(frequency);
-      monitor.setMeasuringUnit(timeUnit);
+      LocalJmxMonitor monitor = new LocalJmxMonitor(slaveState);
+      monitor.setFrequency(frequency);
+      monitor.setTimeUnit(timeUnit);
+      monitor.setInterfaceName(interfaceName);
       monitor.startMonitoringLocal();
       slaveState.put(MONITOR_KEY, monitor);
+      slaveState.addServiceListener(monitor);
       return ack;
    }
 }

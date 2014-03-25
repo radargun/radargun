@@ -18,7 +18,7 @@ import org.radargun.stages.helpers.BucketPolicy;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Starts background stressor threads.")
-public class StartBackgroundStressorsStage extends AbstractDistStage {
+public class BackgroundStressorsStartStage extends AbstractDistStage {
 
    @Property(doc = "Ratio of PUT requests. Default is 1.")
    protected int puts = 1;

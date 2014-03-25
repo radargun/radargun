@@ -44,7 +44,7 @@ public class ClearCacheStage extends AbstractDistStage {
    private CacheInformation cacheInformation;
 
    public DistStageAck executeOnSlave() {
-      BackgroundOpsManager.beforeCacheWrapperClear(slaveState);
+      BackgroundOpsManager.beforeCacheClear(slaveState);
       if (!isServiceRunnning()) {
          log.info("This slave is dead, cannot clear cache.");
          return successfulResponse();

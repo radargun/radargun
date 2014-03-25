@@ -28,26 +28,24 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.DefaultDistStageAck;
-import org.radargun.stages.helpers.KillHelper;
 import org.radargun.stages.helpers.RoleHelper;
-import org.radargun.stages.helpers.StartHelper;
 
 /**
  * The stage start and kills some nodes concurrently (without waiting for each other).
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Stage(doc = "The stage start and kills some nodes concurrently (without waiting for each other).")
-public class ParallelStartKillStage extends AbstractStartStage {
+@Stage(doc = "The stage start and stops some nodes concurrently (without waiting for each other).")
+public class ParallelStartStopStage extends AbstractServiceStartStage {
 
-   @Property(doc = "Set of slaves which should be killed in this stage. Default is empty.")
-   private Collection<Integer> kill = new ArrayList<Integer>();
+   @Property(doc = "Set of slaves which should be stopped in this stage. Default is empty.")
+   private Collection<Integer> stop = new ArrayList<Integer>();
 
-   @Property(converter = TimeConverter.class, doc = "Delay before the slaves are killed. Default is 0.")
-   private long killDelay = 0;
+   @Property(converter = TimeConverter.class, doc = "Delay before the slaves are stopped. Default is 0.")
+   private long stopDelay = 0;
 
-   @Property(doc = "If set to true, the nodes should be shutdown. Default is false = simulate node crash.")
-   private boolean tearDown = false;
+   @Property(doc = "If set to false, the node crash should be simulated. By default node should be shutdown gracefully.")
+   private boolean graceful = true;
 
    @Property(doc = "Set of slaves which should be started in this stage. Default is empty.")
    private Collection<Integer> start = new ArrayList<Integer>();
@@ -60,7 +58,7 @@ public class ParallelStartKillStage extends AbstractStartStage {
    private Set<Integer> reachable = null;
 
    /* Note: having role for start has no sense as the dead nodes cannot have any role in the cluster */
-   @Property(doc = "Another way how to specify killed nodes is by role. Available roles are "
+   @Property(doc = "Another way how to specify stopped nodes is by role. Available roles are "
          + RoleHelper.SUPPORTED_ROLES + ". By default this is not used.")
    private RoleHelper.Role role;
 
@@ -70,15 +68,15 @@ public class ParallelStartKillStage extends AbstractStartStage {
          log.warn("No lifecycle for service " + slaveState.getServiceName());
          return successfulResponse();
       }
-      boolean killMe = kill.contains(slaveState.getSlaveIndex()) || RoleHelper.hasRole(slaveState, role);
+      boolean stopMe = stop.contains(slaveState.getSlaveIndex()) || RoleHelper.hasRole(slaveState, role);
       boolean startMe = start.contains(slaveState.getSlaveIndex());
-      if (!(killMe || startMe)) {
+      if (!(stopMe || startMe)) {
          log.info("Nothing to kill or start...");
       }
-      while (killMe || startMe) {
+      while (stopMe || startMe) {
          if (startMe) {
             if (lifecycle.isRunning()) {
-               if (!killMe) {
+               if (!stopMe) {
                   log.info("Wrapper already set on this slave, not starting it again.");
                   startMe = false;
                   return successfulResponse();
@@ -92,32 +90,32 @@ public class ParallelStartKillStage extends AbstractStartStage {
                   }
                }
                try {
-                  StartHelper.start(slaveState, false, null, 0, reachable);
+                  LifecycleHelper.start(slaveState, false, null, 0, reachable);
                } catch (RuntimeException e) {
                   return errorResponse("Issues while instantiating/starting cache wrapper", e);
                }
                startMe = false;
             }            
          }
-         if (killMe) {
+         if (stopMe) {
             if (!lifecycle.isRunning()) {
                if (!startMe) {
                   log.info("Wrapper is dead, nothing to kill");
-                  killMe = false;
+                  stopMe = false;
                   return successfulResponse();
                }
             } else {
                try {
-                  Thread.sleep(killDelay);
+                  Thread.sleep(stopDelay);
                } catch (InterruptedException e) {
                   log.error("Killing delay was interrupted.", e);
                }
                try {
-                  KillHelper.kill(slaveState, tearDown, false);
+                  LifecycleHelper.stop(slaveState, graceful, false);
                } catch (RuntimeException e) {
                   return errorResponse("Failed to kill the service", e);
                }
-               killMe = false;
+               stopMe = false;
             }
          }
       }

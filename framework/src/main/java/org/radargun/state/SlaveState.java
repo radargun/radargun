@@ -1,7 +1,10 @@
 package org.radargun.state;
 
 import java.net.InetAddress;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.radargun.reporting.Timeline;
 import org.radargun.utils.ClassLoadHelper;
@@ -24,6 +27,7 @@ public class SlaveState extends StateBase {
    private int indexInGroup;
    private Map<Class<?>, Object> traits;
    private Timeline timeline;
+   private List<ServiceListener> serviceListeners = new CopyOnWriteArrayList<ServiceListener>();
 
    public void setLocalAddress(InetAddress localAddress) {
       this.localAddress = localAddress;
@@ -100,5 +104,17 @@ public class SlaveState extends StateBase {
 
    public void setTimeline(Timeline timeline) {
       this.timeline = timeline;
+   }
+
+   public void addServiceListener(ServiceListener listener) {
+      serviceListeners.add(listener);
+   }
+
+   public void removeServiceListener(ServiceListener listener) {
+      serviceListeners.remove(listener);
+   }
+
+   public Iterable<ServiceListener> getServiceListeners() {
+      return Collections.unmodifiableCollection(serviceListeners);
    }
 }

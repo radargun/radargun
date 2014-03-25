@@ -31,12 +31,12 @@ import org.radargun.sysmonitor.LocalJmxMonitor;
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 @Stage(doc = "Stop collecting JVM statistics on each slave node and return collected statistics to the master node.")
-public class StopJVMMonitorStage extends AbstractDistStage {
+public class JVMMonitorStopStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck ack = newDefaultStageAck();
-      LocalJmxMonitor monitor = (LocalJmxMonitor) slaveState.get(StartJVMMonitorStage.MONITOR_KEY);
+      LocalJmxMonitor monitor = (LocalJmxMonitor) slaveState.get(JVMMonitorStartStage.MONITOR_KEY);
       if (monitor != null) {
          monitor.stopMonitoringLocal();
       } else {

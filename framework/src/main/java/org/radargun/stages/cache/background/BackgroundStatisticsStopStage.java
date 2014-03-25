@@ -15,7 +15,7 @@ import org.radargun.stats.Statistics;
  * @since 1/4/13
  */
 @Stage(doc = "Stop Statistics and return collected statistics to master.")
-public class StopBackgroundStatisticsStage extends AbstractDistStage {
+public class BackgroundStatisticsStopStage extends AbstractDistStage {
 
    @Property(doc = "Name of the test used for reports. Default is 'BackgroundStats'.")
    private String testName = "BackgroundStats";

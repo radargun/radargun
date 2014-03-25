@@ -12,6 +12,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
 import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.state.ServiceListener;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.TraitHelper;
 
@@ -110,6 +111,9 @@ public class Slave {
                connection.sendResponse(response);
             }
             connection.sendResponse(new DefaultDistStageAck(state.getSlaveIndex(), state.getLocalAddress()));
+            for (ServiceListener listener : state.getServiceListeners()) {
+               listener.serviceDestroyed();
+            }
          } else if (object instanceof Timeline.Request) {
             connection.sendResponse(state.getTimeline());
          }

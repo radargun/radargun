@@ -4,10 +4,9 @@ import java.io.File;
 import java.util.List;
 
 import org.radargun.DistStageAck;
-import org.radargun.Slave;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.cache.background.BackgroundOpsManager;
+import org.radargun.stages.lifecycle.LifecycleHelper;
 import org.radargun.utils.Utils;
 
 /**
@@ -30,12 +29,10 @@ public class ScenarioCleanupStage extends AbstractDistStage {
    public DistStageAck executeOnSlave() {
       log.info("Scenario finished, running cleanup...");
       try {
-         if (lifecycle.isRunning()) {
-            // TODO: generalize to lifecycle listeners
-            BackgroundOpsManager.beforeCacheWrapperDestroy(slaveState, true);
-            lifecycle.stop();
+         if (lifecycle != null && lifecycle.isRunning()) {
+            LifecycleHelper.stop(slaveState, true, false);
             //reset the class loader to SystemClassLoader
-            Thread.currentThread().setContextClassLoader(Slave.class.getClassLoader());
+            Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
             log.info("Service successfully stopped.");
          } else {
             log.info("No cache wrapper deployed on this slave, nothing to do.");

@@ -33,7 +33,7 @@ import org.radargun.stages.DefaultDistStageAck;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "")
-public abstract class AbstractStartStage extends AbstractDistStage {
+public abstract class AbstractServiceStartStage extends AbstractDistStage {
 
    @Property(doc = "Set of slaves where the start may fail but this will not cause an error. Default is none.")
    protected Collection<Integer> mayFailOn;

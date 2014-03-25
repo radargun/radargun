@@ -11,7 +11,7 @@ import org.radargun.stages.DefaultDistStageAck;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Starts collection of statistics from background threads and cache size.")
-public class StartBackgroundStatisticsStage extends AbstractDistStage {
+public class BackgroundStatisticsStartStage extends AbstractDistStage {
    @Property(converter = TimeConverter.class, doc = "Delay between statistics snapshots. Default is 5 seconds.")
    private long statsIterationDuration = 5000;
 
