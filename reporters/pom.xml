@@ -22,7 +22,7 @@
    <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>radargun-framework</artifactId>
+         <artifactId>radargun-core</artifactId>
          <version>${project.version}</version>
       </dependency>
    </dependencies>

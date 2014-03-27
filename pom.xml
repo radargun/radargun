@@ -15,10 +15,8 @@
    <packaging>pom</packaging>
 
    <modules>
-      <!--<module>parent</module>-->
-      <module>framework</module>
+      <module>core</module>
       <module>reporters</module>
-      <!--<module>plugins</module>-->
    </modules>
 
    <scm>
@@ -242,12 +240,12 @@
                         <echo message="Generating XSD schema" />
                         <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true">
                            <classpath>
-                              <fileset dir="framework/target/distribution/radargun-framework-bin/radargun-framework/lib">
+                              <fileset dir="core/target/distribution/radargun-core-bin/radargun-core/lib">
                                  <include name="*.jar" />
                               </fileset>
                            </classpath>
-                           <arg value="framework/src/main/resources" />
-                           <arg value="framework/target/distribution/radargun-framework-bin/radargun-framework/lib" />
+                           <arg value="core/src/main/resources" />
+                           <arg value="core/target/distribution/radargun-core-bin/radargun-core/lib" />
                         </java>
                      </target>
                   </configuration>
@@ -322,7 +320,7 @@
                      <target>
                         <echo message="Packaging reporters: " />
 
-                        <fileset id="core_jars" dir="framework/target/distribution/radargun-framework-bin/radargun-framework/lib">
+                        <fileset id="core_jars" dir="core/target/distribution/radargun-core-bin/radargun-core/lib">
                            <include name="*.jar" />
                         </fileset>
                         <pathconvert pathsep="," property="core_jar_list" refid="core_jars">
@@ -350,9 +348,9 @@
                   </goals>
                   <configuration>
                      <target>
-                        <echo message="Packaging the framework and common scripts" />
+                        <echo message="Packaging the Core and common scripts" />
                         <copy todir="${distribution.artifact}">
-                           <fileset dir="framework/target/distribution/radargun-framework-bin/radargun-framework">
+                           <fileset dir="core/target/distribution/radargun-core-bin/radargun-core">
                               <include name="**/*" />
                            </fileset>
                         </copy>

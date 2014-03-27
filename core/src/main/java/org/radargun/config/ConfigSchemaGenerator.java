@@ -192,7 +192,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
          throw new IllegalArgumentException(dir + " is not an existing directory!");
       }
       for (File file : dir.listFiles()) {
-         if (!file.getName().startsWith("radargun-framework-") || !file.getName().endsWith(".jar")) continue;
+         if (!file.getName().startsWith("radargun-core-") || !file.getName().endsWith(".jar")) continue;
          Set<Class> generatedStages = new HashSet<Class>();
          for (Class<?> stage : StageHelper.getStagesFromJar(file.getPath(), true).values()) {
             generateStage(doc, schema, parents, stage, generatedStages);

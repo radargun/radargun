@@ -8,7 +8,7 @@
       <relativePath>../parent/pom.xml</relativePath>
    </parent>
 
-   <artifactId>radargun-framework</artifactId>
+   <artifactId>radargun-core</artifactId>
    <name>RadarGun core</name>
    <packaging>jar</packaging>
 
