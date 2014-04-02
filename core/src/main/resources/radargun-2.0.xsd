@@ -72,10 +72,6 @@
                   <sequence>
                      <choice maxOccurs="unbounded" minOccurs="1">
                         <element name="repeat" type="rg:repeat"/>
-                        <element name="stress-test" type="rg:stress-test"/>
-                        <element name="web-session-benchmark" type="rg:stress-test"/>
-                        <element name="stress-test-warmup" type="rg:stress-test-warmup"/>
-                        <element name="web-session-warmup" type="rg:stress-test-warmup"/>
                         <element name="background-statistics-start" type="rg:background-statistics-start"/>
                         <element name="background-statistics-stop" type="rg:background-statistics-stop"/>
                         <element name="background-stressors-start" type="rg:background-stressors-start"/>
@@ -84,14 +80,17 @@
                         <element name="check-cache-data" type="rg:check-cache-data"/>
                         <element name="check-topology" type="rg:check-topology"/>
                         <element name="clear-cache" type="rg:clear-cache"/>
+                        <element name="stress-test" type="rg:stress-test"/>
+                        <element name="web-session-benchmark" type="rg:stress-test"/>
                         <element name="client-stress-test" type="rg:client-stress-test"/>
                         <element name="cluster-validation" type="rg:cluster-validation"/>
                         <element name="data-for-query" type="rg:data-for-query"/>
                         <element name="distributed-task" type="rg:distributed-task"/>
+                        <element name="example" type="rg:example"/>
                         <element name="isolation-level-check" type="rg:isolation-level-check"/>
-                        <element name="j-profiler" type="rg:j-profiler"/>
-                        <element name="jmx-cluster-validation" type="rg:jmx-cluster-validation"/>
                         <element name="jmx-cluster-validation-prepare" type="rg:jmx-cluster-validation-prepare"/>
+                        <element name="jmx-cluster-validation" type="rg:jmx-cluster-validation"/>
+                        <element name="j-profiler" type="rg:j-profiler"/>
                         <element name="jvm-monitor-start" type="rg:jvm-monitor-start"/>
                         <element name="jvm-monitor-stop" type="rg:jvm-monitor-stop"/>
                         <element name="load-file" type="rg:load-file"/>
@@ -107,6 +106,8 @@
                         <element name="single-tx-load" type="rg:single-tx-load"/>
                         <element name="sleep" type="rg:sleep"/>
                         <element name="stack-trace-watchdog" type="rg:stack-trace-watchdog"/>
+                        <element name="stress-test-warmup" type="rg:stress-test-warmup"/>
+                        <element name="web-session-warmup" type="rg:stress-test-warmup"/>
                         <element name="tpcc-benchmark" type="rg:tpcc-benchmark"/>
                         <element name="tpcc-population" type="rg:tpcc-population"/>
                         <element name="wait-for-topology-event" type="rg:wait-for-topology-event"/>
@@ -174,10 +175,6 @@
       <sequence>
          <choice maxOccurs="unbounded" minOccurs="1">
             <element name="repeat" type="rg:repeat"/>
-            <element name="stress-test" type="rg:stress-test"/>
-            <element name="web-session-benchmark" type="rg:stress-test"/>
-            <element name="stress-test-warmup" type="rg:stress-test-warmup"/>
-            <element name="web-session-warmup" type="rg:stress-test-warmup"/>
             <element name="background-statistics-start" type="rg:background-statistics-start"/>
             <element name="background-statistics-stop" type="rg:background-statistics-stop"/>
             <element name="background-stressors-start" type="rg:background-stressors-start"/>
@@ -186,14 +183,17 @@
             <element name="check-cache-data" type="rg:check-cache-data"/>
             <element name="check-topology" type="rg:check-topology"/>
             <element name="clear-cache" type="rg:clear-cache"/>
+            <element name="stress-test" type="rg:stress-test"/>
+            <element name="web-session-benchmark" type="rg:stress-test"/>
             <element name="client-stress-test" type="rg:client-stress-test"/>
             <element name="cluster-validation" type="rg:cluster-validation"/>
             <element name="data-for-query" type="rg:data-for-query"/>
             <element name="distributed-task" type="rg:distributed-task"/>
+            <element name="example" type="rg:example"/>
             <element name="isolation-level-check" type="rg:isolation-level-check"/>
-            <element name="j-profiler" type="rg:j-profiler"/>
-            <element name="jmx-cluster-validation" type="rg:jmx-cluster-validation"/>
             <element name="jmx-cluster-validation-prepare" type="rg:jmx-cluster-validation-prepare"/>
+            <element name="jmx-cluster-validation" type="rg:jmx-cluster-validation"/>
+            <element name="j-profiler" type="rg:j-profiler"/>
             <element name="jvm-monitor-start" type="rg:jvm-monitor-start"/>
             <element name="jvm-monitor-stop" type="rg:jvm-monitor-stop"/>
             <element name="load-file" type="rg:load-file"/>
@@ -209,6 +209,8 @@
             <element name="single-tx-load" type="rg:single-tx-load"/>
             <element name="sleep" type="rg:sleep"/>
             <element name="stack-trace-watchdog" type="rg:stack-trace-watchdog"/>
+            <element name="stress-test-warmup" type="rg:stress-test-warmup"/>
+            <element name="web-session-warmup" type="rg:stress-test-warmup"/>
             <element name="tpcc-benchmark" type="rg:tpcc-benchmark"/>
             <element name="tpcc-population" type="rg:tpcc-population"/>
             <element name="wait-for-topology-event" type="rg:wait-for-topology-event"/>
@@ -223,11 +225,13 @@
       <attribute name="inc" type="rg:int"/>
       <attribute name="name" type="string"/>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.AbstractStage-->
    <complexType abstract="true" name="abstract">
       <annotation>
          <documentation/>
       </annotation>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.AbstractDistStage-->
    <complexType abstract="true" name="abstract-dist">
       <annotation>
          <documentation/>
@@ -259,6 +263,402 @@
          </simpleType>
       </union>
    </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.AbstractMasterStage-->
+   <complexType abstract="true" name="abstract-master">
+      <annotation>
+         <documentation/>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract"/>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.lifecycle.AbstractServiceStartStage-->
+   <complexType abstract="true" name="abstract-service-start">
+      <annotation>
+         <documentation/>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="may-fail-on" type="string">
+               <annotation>
+                  <documentation>Set of slaves where the start may fail but this will not cause an error. Default is none.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.BackgroundStatisticsStartStage-->
+   <complexType name="background-statistics-start">
+      <annotation>
+         <documentation>Starts collection of statistics from background threads and cache size.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="stats-iteration-duration" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Delay between statistics snapshots. Default is 5 seconds.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="long-converted-by-org-radargun-config-timeconverter">
+      <union>
+         <simpleType>
+            <restriction>
+               <pattern value="[0-9]+\s*[mMsS]?"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.BackgroundStatisticsStopStage-->
+   <complexType name="background-statistics-stop">
+      <annotation>
+         <documentation>Stop Statistics and return collected statistics to master.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="test-name" type="string">
+               <annotation>
+                  <documentation>Name of the test used for reports. Default is 'BackgroundStats'.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.BackgroundStressorsStartStage-->
+   <complexType name="background-stressors-start">
+      <annotation>
+         <documentation>Starts background stressor threads.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="cache-name" type="string">
+               <annotation>
+                  <documentation>Cache used for the background operations. Default is null (default).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="dead-slave-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Period after which a slave is considered to be dead. Default is 90 s.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delay-between-requests" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="entry-size" type="rg:int">
+               <annotation>
+                  <documentation>Size of value used in the entry. Default is 1024 bytes.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="gets" type="rg:int">
+               <annotation>
+                  <documentation>Ratio of GET requests. Default is 2.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="ignore-dead-checkers" type="rg:boolean">
+               <annotation>
+                  <documentation>When the log value is full, the stressor needs to wait until all checkers confirm that the records have been checked before discarding oldest records. With ignoreDeadCheckers=true the stressor does not wait for checkers on dead nodes. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-data-for-dead-slaves" type="string">
+               <annotation>
+                  <documentation>List of slaves whose data should be loaded by other threads because these slaves are not alive. Default is empty.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-data-on-slaves" type="string">
+               <annotation>
+                  <documentation>List of slaves where the data should be loaded (others immediately start executing requests). Default is all live slaves).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-only" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, the stressor does not execute any requests after loading the data. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-with-put-if-absent" type="rg:boolean">
+               <annotation>
+                  <documentation>Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Maximum time for which are the log value checkers allowed to show no new checked values (error is thrown in CheckBackgroundStressors stage). Default is one minute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-checking-threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of threads on each node that are checking whether all operations from stressor threads have been logged. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-counter-update-period" type="rg:long">
+               <annotation>
+                  <documentation>Number of operations after which will the stressor or checker update in-cache operation counter. Default is 50.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-value-max-size" type="rg:int">
+               <annotation>
+                  <documentation>Maximum number of records in one entry before the older ones have to be truncated. Default is 100.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="no-loading" type="rg:boolean">
+               <annotation>
+                  <documentation>Do not execute the loading, start usual request right away.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-entries" type="rg:int">
+               <annotation>
+                  <documentation>Amount of entries (key-value pairs) inserted into the cache. Default is 1024.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of stressor threads. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="puts" type="rg:int">
+               <annotation>
+                  <documentation>Ratio of PUT requests. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="removes" type="rg:int">
+               <annotation>
+                  <documentation>Ratio of REMOVE requests. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="shared-keys" type="rg:boolean">
+               <annotation>
+                  <documentation>By default each thread accesses only its private set of keys. This allows all threads all values. Atomic operations are required for this functionality. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="transaction-size" type="rg:int">
+               <annotation>
+                  <documentation>Amount of request wrapped into single transaction. By default transactions are not used (explicitely).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="use-log-values" type="rg:boolean">
+               <annotation>
+                  <documentation>Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait-until-loaded" type="rg:boolean">
+               <annotation>
+                  <documentation>Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="long">
+      <union>
+         <simpleType>
+            <restriction base="long"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.BackgroundStressorsStopStage-->
+   <complexType name="background-stressors-stop">
+      <annotation>
+         <documentation>Stop BackgroundStressors.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="wait-until-loaded" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, the phase does not finish until all stressors stop loading its data. Default is false.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.CheckBackgroundStressorsStage-->
+   <complexType name="check-background-stressors">
+      <annotation>
+         <documentation>Stage that checks the progress in background stressors and fails if something went wrong.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="resume-after-checked" type="rg:boolean">
+               <annotation>
+                  <documentation>Resume writers after we have stopped them in order to let checkers check everything. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait-until-checked" type="rg:boolean">
+               <annotation>
+                  <documentation>Do not write additional operations until all operations are confirmed. Default is false.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.CheckCacheDataStage-->
+   <complexType name="check-cache-data">
+      <annotation>
+         <documentation>Stage for checking presence or absence of data entered in other stages.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="check-entry-count" type="rg:int">
+               <annotation>
+                  <documentation>Number of entries that will be checked in each step. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="check-threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of thread per node which check data validity. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="debug-null" type="rg:boolean">
+               <annotation>
+                  <documentation>If the GET request results in null response, call wrapper-specific functions to show debug info. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="deleted" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="entry-size" type="rg:int" use="required">
+               <annotation>
+                  <documentation>Number of bytes carried in single entry.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="extra-entries" type="string">
+               <annotation>
+                  <documentation>Entries that do not have the expected form but occur in the cluster. This string specifies a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries.Defaults to 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="fail-on-null" type="rg:boolean">
+               <annotation>
+                  <documentation>If entry is null, fail immediatelly. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="first-entry-offset" type="rg:int">
+               <annotation>
+                  <documentation>Index of key of first entry. This number will be multiplied by slaveIndex. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="ignore-sum" type="rg:boolean">
+               <annotation>
+                  <documentation>Usually the test checks that sum of local nodes = numOwners * numEntries + extraEntries.This option disables such behaviour. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="live-slaves-hint" type="rg:int">
+               <annotation>
+                  <documentation>Hint how many slaves are currently alive - if set to &gt; 0 then the query for amount of entries inthis cache is postponed until the cache appears to be fully replicated. By default this is disabled.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-checks-count" type="rg:int">
+               <annotation>
+                  <documentation>Number of queries after which a DEBUG log message is printed. Default is 10000.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="memory-only" type="rg:boolean">
+               <annotation>
+                  <documentation>If the cache wrapper supports persistent storage and this is set to true, the check will be executed only against in-memory data. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-entries" type="rg:int" use="required">
+               <annotation>
+                  <documentation>Number of entries with key in form specified by the last used key generator, in the cache.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="step-entry-count" type="rg:int">
+               <annotation>
+                  <documentation>Number of entries stepped in each step. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.CheckStage-->
+   <complexType abstract="true" name="check">
+      <annotation>
+         <documentation/>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist"/>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.topology.CheckTopologyStage-->
+   <complexType name="check-topology">
+      <annotation>
+         <documentation>Controls which topology events have (not) happened recently</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="changed" type="rg:boolean">
+               <annotation>
+                  <documentation>The check controls if this event has happened (true) or not happened (false). Defaults to true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="period" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>The period in milliseconds which is checked. Default is infinite.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="type" type="rg:org-radargun-stages-topology-checktopologystage-type">
+               <annotation>
+                  <documentation>What does this stage control. Default is both DataRehashed and TopologyChanged events.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="org-radargun-stages-topology-checktopologystage-type">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="HASH_AND_TOPOLOGY"/>
+               <enumeration value="HASH"/>
+               <enumeration value="TOPOLOGY"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.ClearCacheStage-->
+   <complexType name="clear-cache">
+      <annotation>
+         <documentation>Removes all data from the cache</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="cache-name" type="string">
+               <annotation>
+                  <documentation>Name of the cache to be cleared. Default is the default cache.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="local" type="rg:boolean">
+               <annotation>
+                  <documentation>Execute local variant of clear on each slave. Default value is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="use-transaction" type="rg:boolean">
+               <annotation>
+                  <documentation>Execute the clear inside explicit transaction.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.stresstest.StressTestStage-->
    <complexType name="stress-test">
       <annotation>
          <documentation>Benchmark where several client threads access cache limited by time or number of requests.</documentation>
@@ -447,20 +847,6 @@
          </simpleType>
       </union>
    </simpleType>
-   <simpleType name="long-converted-by-org-radargun-config-timeconverter">
-      <union>
-         <simpleType>
-            <restriction>
-               <pattern value="[0-9]+\s*[mMsS]?"/>
-            </restriction>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
    <simpleType name="org-radargun-utils-fuzzy-converted-by-org-radargun-utils-fuzzy-integerconverter">
       <union>
          <simpleType>
@@ -489,18 +875,6 @@
          </simpleType>
       </union>
    </simpleType>
-   <simpleType name="long">
-      <union>
-         <simpleType>
-            <restriction base="long"/>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
    <simpleType name="java-lang-boolean">
       <union>
          <simpleType>
@@ -513,372 +887,7 @@
          </simpleType>
       </union>
    </simpleType>
-   <complexType name="stress-test-warmup">
-      <annotation>
-         <documentation>Warmup stage for stress test benchmarks.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:stress-test"/>
-      </complexContent>
-   </complexType>
-   <complexType abstract="true" name="abstract-master">
-      <annotation>
-         <documentation/>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract"/>
-      </complexContent>
-   </complexType>
-   <complexType abstract="true" name="abstract-service-start">
-      <annotation>
-         <documentation/>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="may-fail-on" type="string">
-               <annotation>
-                  <documentation>Set of slaves where the start may fail but this will not cause an error. Default is none.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="background-statistics-start">
-      <annotation>
-         <documentation>Starts collection of statistics from background threads and cache size.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="stats-iteration-duration" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Delay between statistics snapshots. Default is 5 seconds.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="background-statistics-stop">
-      <annotation>
-         <documentation>Stop Statistics and return collected statistics to master.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="test-name" type="string">
-               <annotation>
-                  <documentation>Name of the test used for reports. Default is 'BackgroundStats'.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="background-stressors-start">
-      <annotation>
-         <documentation>Starts background stressor threads.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="cache-name" type="string">
-               <annotation>
-                  <documentation>Cache used for the background operations. Default is null (default).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="dead-slave-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Period after which a slave is considered to be dead. Default is 90 s.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="delay-between-requests" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="entry-size" type="rg:int">
-               <annotation>
-                  <documentation>Size of value used in the entry. Default is 1024 bytes.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="gets" type="rg:int">
-               <annotation>
-                  <documentation>Ratio of GET requests. Default is 2.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="ignore-dead-checkers" type="rg:boolean">
-               <annotation>
-                  <documentation>When the log value is full, the stressor needs to wait until all checkers confirm that the records have been checked before discarding oldest records. With ignoreDeadCheckers=true the stressor does not wait for checkers on dead nodes. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="load-data-for-dead-slaves" type="string">
-               <annotation>
-                  <documentation>List of slaves whose data should be loaded by other threads because these slaves are not alive. Default is empty.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="load-data-on-slaves" type="string">
-               <annotation>
-                  <documentation>List of slaves where the data should be loaded (others immediately start executing requests). Default is all live slaves).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="load-only" type="rg:boolean">
-               <annotation>
-                  <documentation>If set to true, the stressor does not execute any requests after loading the data. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="load-with-put-if-absent" type="rg:boolean">
-               <annotation>
-                  <documentation>Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="log-checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Maximum time for which are the log value checkers allowed to show no new checked values (error is thrown in CheckBackgroundStressors stage). Default is one minute.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="log-checking-threads" type="rg:int">
-               <annotation>
-                  <documentation>Number of threads on each node that are checking whether all operations from stressor threads have been logged. Default is 10.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="log-counter-update-period" type="rg:long">
-               <annotation>
-                  <documentation>Number of operations after which will the stressor or checker update in-cache operation counter. Default is 50.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="log-value-max-size" type="rg:int">
-               <annotation>
-                  <documentation>Maximum number of records in one entry before the older ones have to be truncated. Default is 100.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="no-loading" type="rg:boolean">
-               <annotation>
-                  <documentation>Do not execute the loading, start usual request right away.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="num-entries" type="rg:int">
-               <annotation>
-                  <documentation>Amount of entries (key-value pairs) inserted into the cache. Default is 1024.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="num-threads" type="rg:int">
-               <annotation>
-                  <documentation>Number of stressor threads. Default is 10.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="puts" type="rg:int">
-               <annotation>
-                  <documentation>Ratio of PUT requests. Default is 1.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="removes" type="rg:int">
-               <annotation>
-                  <documentation>Ratio of REMOVE requests. Default is 0.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="shared-keys" type="rg:boolean">
-               <annotation>
-                  <documentation>By default each thread accesses only its private set of keys. This allows all threads all values. Atomic operations are required for this functionality. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="transaction-size" type="rg:int">
-               <annotation>
-                  <documentation>Amount of request wrapped into single transaction. By default transactions are not used (explicitely).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="use-log-values" type="rg:boolean">
-               <annotation>
-                  <documentation>Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="wait-until-loaded" type="rg:boolean">
-               <annotation>
-                  <documentation>Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="background-stressors-stop">
-      <annotation>
-         <documentation>Stop BackgroundStressors.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="wait-until-loaded" type="rg:boolean">
-               <annotation>
-                  <documentation>If true, the phase does not finish until all stressors stop loading its data. Default is false.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType abstract="true" name="check">
-      <annotation>
-         <documentation/>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist"/>
-      </complexContent>
-   </complexType>
-   <complexType name="check-background-stressors">
-      <annotation>
-         <documentation>Stage that checks the progress in background stressors and fails if something went wrong.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="resume-after-checked" type="rg:boolean">
-               <annotation>
-                  <documentation>Resume writers after we have stopped them in order to let checkers check everything. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="wait-until-checked" type="rg:boolean">
-               <annotation>
-                  <documentation>Do not write additional operations until all operations are confirmed. Default is false.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="check-cache-data">
-      <annotation>
-         <documentation>Stage for checking presence or absence of data entered in other stages.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="check-entry-count" type="rg:int">
-               <annotation>
-                  <documentation>Number of entries that will be checked in each step. Default is 1.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="check-threads" type="rg:int">
-               <annotation>
-                  <documentation>Number of thread per node which check data validity. Default is 1.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="debug-null" type="rg:boolean">
-               <annotation>
-                  <documentation>If the GET request results in null response, call wrapper-specific functions to show debug info. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="deleted" type="rg:boolean">
-               <annotation>
-                  <documentation>If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="entry-size" type="rg:int" use="required">
-               <annotation>
-                  <documentation>Number of bytes carried in single entry.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="extra-entries" type="string">
-               <annotation>
-                  <documentation>Entries that do not have the expected form but occur in the cluster. This string specifies a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries.Defaults to 0.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="fail-on-null" type="rg:boolean">
-               <annotation>
-                  <documentation>If entry is null, fail immediatelly. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="first-entry-offset" type="rg:int">
-               <annotation>
-                  <documentation>Index of key of first entry. This number will be multiplied by slaveIndex. Default is 0.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="ignore-sum" type="rg:boolean">
-               <annotation>
-                  <documentation>Usually the test checks that sum of local nodes = numOwners * numEntries + extraEntries.This option disables such behaviour. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="live-slaves-hint" type="rg:int">
-               <annotation>
-                  <documentation>Hint how many slaves are currently alive - if set to &gt; 0 then the query for amount of entries inthis cache is postponed until the cache appears to be fully replicated. By default this is disabled.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="log-checks-count" type="rg:int">
-               <annotation>
-                  <documentation>Number of queries after which a DEBUG log message is printed. Default is 10000.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="memory-only" type="rg:boolean">
-               <annotation>
-                  <documentation>If the cache wrapper supports persistent storage and this is set to true, the check will be executed only against in-memory data. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="num-entries" type="rg:int" use="required">
-               <annotation>
-                  <documentation>Number of entries with key in form specified by the last used key generator, in the cache.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="step-entry-count" type="rg:int">
-               <annotation>
-                  <documentation>Number of entries stepped in each step. Default is 1.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <complexType name="check-topology">
-      <annotation>
-         <documentation>Controls which topology events have (not) happened recently</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="changed" type="rg:boolean">
-               <annotation>
-                  <documentation>The check controls if this event has happened (true) or not happened (false). Defaults to true.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="period" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>The period in milliseconds which is checked. Default is infinite.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="type" type="rg:org-radargun-stages-topology-checktopologystage-type">
-               <annotation>
-                  <documentation>What does this stage control. Default is both DataRehashed and TopologyChanged events.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <simpleType name="org-radargun-stages-topology-checktopologystage-type">
-      <union>
-         <simpleType>
-            <restriction base="string">
-               <enumeration value="HASH_AND_TOPOLOGY"/>
-               <enumeration value="HASH"/>
-               <enumeration value="TOPOLOGY"/>
-            </restriction>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
-   <complexType name="clear-cache">
-      <annotation>
-         <documentation>Removes all data from the cache</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="cache-name" type="string">
-               <annotation>
-                  <documentation>Name of the cache to be cleared. Default is the default cache.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="local" type="rg:boolean">
-               <annotation>
-                  <documentation>Execute local variant of clear on each slave. Default value is true.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="use-transaction" type="rg:boolean">
-               <annotation>
-                  <documentation>Execute the clear inside explicit transaction.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.stresstest.ClientStressTestStage-->
    <complexType name="client-stress-test">
       <annotation>
          <documentation>Repeats the StressTest logic with increasing amount of client threads.</documentation>
@@ -903,6 +912,7 @@
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.ClusterValidationStage-->
    <complexType name="cluster-validation">
       <annotation>
          <documentation>Verifies that the cluster is formed by injecting an entry into the cache and then reading it from other nodes.</documentation>
@@ -927,6 +937,7 @@
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.stresstest.DataForQueryStage-->
    <complexType name="data-for-query">
       <annotation>
          <documentation>Stage which executes puts/gets indexed entries against index enabled cache.</documentation>
@@ -951,6 +962,7 @@
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.distributedtask.DistributedTaskStage-->
    <complexType name="distributed-task">
       <annotation>
          <documentation>Stage which executes a MapReduce Task against all keys in the cache.</documentation>
@@ -985,6 +997,27 @@
          </extension>
       </complexContent>
    </complexType>
+   <!--From extension-example-2.0.0-SNAPSHOT.jar/org.radargun.stages.ExampleStage-->
+   <complexType name="example">
+      <annotation>
+         <documentation>Example stage in different module</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="delay" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Example property delaying the stage executions. Default is 5 seconds.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="foo" type="string" use="required">
+               <annotation>
+                  <documentation>Example property that must be set</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.IsolationLevelCheckStage-->
    <complexType name="isolation-level-check">
       <annotation>
          <documentation>Stage for testing guaranties of isolation levels.</documentation>
@@ -1019,36 +1052,42 @@
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="j-profiler">
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.JMXClusterValidationPrepareStage-->
+   <complexType name="jmx-cluster-validation-prepare">
       <annotation>
-         <documentation>Stage for invoking operations on JProfiler.
-Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=100,config=/path/to/configuration.xml"</documentation>
+         <documentation>Collects configuration for JMXClusterValidationStage.</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:abstract-dist">
-            <attribute name="operations" type="string" use="required">
+            <attribute name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
                <annotation>
-                  <documentation>Operations that should be invoked on the Controller</documentation>
+                  <documentation>JMX Connection timeout. Default is 3 seconds.</documentation>
                </annotation>
             </attribute>
-            <attribute name="reset-cpu-stats" type="rg:boolean">
+            <attribute name="prop1" type="string">
                <annotation>
-                  <documentation>If true, any previously accumulated CPU profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_CPU_RECORDING and STOP_CPU_RECORDING. Default is false.</documentation>
+                  <documentation>Generic property 1.</documentation>
                </annotation>
             </attribute>
-            <attribute name="reset-memory-stats" type="rg:boolean">
+            <attribute name="prop2" type="string">
                <annotation>
-                  <documentation>If true, any previously accumulated Memory profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_MEMORY_RECORDING and STOP_MEMORY_RECORDING. Default is false.</documentation>
+                  <documentation>Generic property 2.</documentation>
                </annotation>
             </attribute>
-            <attribute name="snapshot-directory" type="string">
+            <attribute name="prop3" type="string">
                <annotation>
-                  <documentation>Directory where the snapshot should be written (for SAVE_SNAPSHOT).</documentation>
+                  <documentation>Generic property 3.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Cluster validation timeout. Default is 1 minute.</documentation>
                </annotation>
             </attribute>
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.JMXClusterValidationStage-->
    <complexType name="jmx-cluster-validation">
       <annotation>
          <documentation>Validates formation of the cluster remotely via JMX.</documentation>
@@ -1093,40 +1132,38 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
-   <complexType name="jmx-cluster-validation-prepare">
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.JProfilerStage-->
+   <complexType name="j-profiler">
       <annotation>
-         <documentation>Collects configuration for JMXClusterValidationStage.</documentation>
+         <documentation>Stage for invoking operations on JProfiler.
+Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=100,config=/path/to/configuration.xml"</documentation>
       </annotation>
       <complexContent>
          <extension base="rg:abstract-dist">
-            <attribute name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+            <attribute name="operations" type="string" use="required">
                <annotation>
-                  <documentation>JMX Connection timeout. Default is 3 seconds.</documentation>
+                  <documentation>Operations that should be invoked on the Controller</documentation>
                </annotation>
             </attribute>
-            <attribute name="prop1" type="string">
+            <attribute name="reset-cpu-stats" type="rg:boolean">
                <annotation>
-                  <documentation>Generic property 1.</documentation>
+                  <documentation>If true, any previously accumulated CPU profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_CPU_RECORDING and STOP_CPU_RECORDING. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="prop2" type="string">
+            <attribute name="reset-memory-stats" type="rg:boolean">
                <annotation>
-                  <documentation>Generic property 2.</documentation>
+                  <documentation>If true, any previously accumulated Memory profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_MEMORY_RECORDING and STOP_MEMORY_RECORDING. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="prop3" type="string">
+            <attribute name="snapshot-directory" type="string">
                <annotation>
-                  <documentation>Generic property 3.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="wait-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Cluster validation timeout. Default is 1 minute.</documentation>
+                  <documentation>Directory where the snapshot should be written (for SAVE_SNAPSHOT).</documentation>
                </annotation>
             </attribute>
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.JVMMonitorStartStage-->
    <complexType name="jvm-monitor-start">
       <annotation>
          <documentation>Starts collecting JVM statistics locally on each slave node.</documentation>
@@ -1171,6 +1208,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </simpleType>
       </union>
    </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.JVMMonitorStopStage-->
    <complexType name="jvm-monitor-stop">
       <annotation>
          <documentation>Stop collecting JVM statistics on each slave node and return collected statistics to the master node.</documentation>
@@ -1179,6 +1217,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <extension base="rg:abstract-dist"/>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.LoadFileStage-->
    <complexType name="load-file">
       <annotation>
          <documentation>Loads the contents of a file into the cache.</documentation>
@@ -1213,6 +1252,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.mapreduce.MapReduceStage-->
    <complexType name="map-reduce">
       <annotation>
          <documentation>Stage which executes a MapReduce Task against all keys in the cache.</documentation>
@@ -1292,6 +1332,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.lifecycle.ParallelStartStopStage-->
    <complexType name="parallel-start-stop">
       <annotation>
          <documentation>The stage start and stops some nodes concurrently (without waiting for each other).</documentation>
@@ -1350,6 +1391,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </simpleType>
       </union>
    </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.stresstest.QueryStage-->
    <complexType name="query">
       <annotation>
          <documentation>Stage which executes a Query using Infinispan-query API against all keys in the cache.</documentation>
@@ -1369,6 +1411,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.RandomDataStage-->
    <complexType name="random-data">
       <annotation>
          <documentation>Generates random data to fill the cache.</documentation>
@@ -1455,6 +1498,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </simpleType>
       </union>
    </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.ScenarioCleanupStage-->
    <complexType name="scenario-cleanup">
       <annotation>
          <documentation>DO NOT USE DIRECTLY. This stage is automatically inserted after the last stage in each scenario. You can alter the properties in &amp;lt;cleanup/&amp;gt element.</documentation>
@@ -1479,6 +1523,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.ScenarioInitStage-->
    <complexType name="scenario-init">
       <annotation>
          <documentation>DO NOT USE DIRECTLY. This stage is automatically inserted before the beginning of scenario.</documentation>
@@ -1487,6 +1532,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          <extension base="rg:abstract-dist"/>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.lifecycle.ServiceStartStage-->
    <complexType name="service-start">
       <annotation>
          <documentation>Starts services on specified slaves</documentation>
@@ -1543,6 +1589,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </simpleType>
       </union>
    </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.lifecycle.ServiceStopStage-->
    <complexType name="service-stop">
       <annotation>
          <documentation>Stops or kills (simulates node crash) one or more nodes.</documentation>
@@ -1577,6 +1624,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.SetLogLevelStage-->
    <complexType name="set-log-level">
       <annotation>
          <documentation>Debugging stage: changes log priorities</documentation>
@@ -1601,6 +1649,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.topology.SetPartitionsStage-->
    <complexType name="set-partitions">
       <annotation>
          <documentation>Partitions the cluster into several parts that cannot communicate.</documentation>
@@ -1629,6 +1678,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </simpleType>
       </union>
    </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.SingleTXCheckStage-->
    <complexType name="single-tx-check">
       <annotation>
          <documentation>Paired with SingleTXLoadStage. Checks that the previous stage had the expected result</documentation>
@@ -1658,6 +1708,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.SingleTXLoadStage-->
    <complexType name="single-tx-load">
       <annotation>
          <documentation>Performs single transaction with requests on key0 .. keyN in multiple threads on multiple slaves.</documentation>
@@ -1697,6 +1748,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.SleepStage-->
    <complexType name="sleep">
       <annotation>
          <documentation>Sleeps specified number of milliseconds.</documentation>
@@ -1711,6 +1763,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.StackTraceWatchdogStage-->
    <complexType name="stack-trace-watchdog">
       <annotation>
          <documentation>Debug usage only. Periodically check for all thread stack traces and print them out.</documentation>
@@ -1745,6 +1798,16 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.stresstest.StressTestWarmupStage-->
+   <complexType name="stress-test-warmup">
+      <annotation>
+         <documentation>Warmup stage for stress test benchmarks.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:stress-test"/>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.tpcc.TpccBenchmarkStage-->
    <complexType name="tpcc-benchmark">
       <annotation>
          <documentation>Simulate the activities found in complex OLTP application environments.</documentation>
@@ -1779,6 +1842,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.tpcc.TpccPopulationStage-->
    <complexType name="tpcc-population">
       <annotation>
          <documentation>This stage shuld be run before the TpccBenchmarkStage.</documentation>
@@ -1808,6 +1872,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.topology.WaitForTopologyEventStage-->
    <complexType name="wait-for-topology-event">
       <annotation>
          <documentation>Waits until some event occurs. Note that the initial rehash is not recorded in this manner, therefore waiting for that will result in timeout.</documentation>
@@ -1882,6 +1947,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </simpleType>
       </union>
    </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.WriteSkewCheckStage-->
    <complexType name="write-skew-check">
       <annotation>
          <documentation>Stage checking the write skew detection in transactional caches.</documentation>
@@ -1906,6 +1972,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.XSReplCheckStage-->
    <complexType name="xs-repl-check">
       <annotation>
          <documentation>Checks data loaded in XSReplLoadStage.</documentation>
@@ -1920,6 +1987,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.XSReplLoadStage-->
    <complexType name="xs-repl-load">
       <annotation>
          <documentation>Loads data into the cache with input cache name encoded into the value.</documentation>

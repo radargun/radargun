@@ -1,5 +1,7 @@
 package org.radargun.config;
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +10,7 @@ import java.util.TreeMap;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.utils.Utils;
 
 /**
  * Instantiates stages based on annotations
@@ -18,11 +21,16 @@ import org.radargun.logging.LogFactory;
 public class StageHelper {
 
    private static Log log = LogFactory.getLog(StageHelper.class);
-   private static Map<String, Class<? extends org.radargun.Stage>> stages;
    private static Map<String, Class<? extends org.radargun.Stage>> stagesDashed;
 
    static {
-      stagesDashed = getStagesFromJar(AnnotatedHelper.getJAR(StageHelper.class).getPath(), true);
+      stagesDashed = new HashMap<String, Class<? extends org.radargun.Stage>>();
+      File libDir = new File("lib");
+      if (libDir.exists() && libDir.isDirectory()) {
+         for (File jar : libDir.listFiles(new Utils.JarFilenameFilter())) {
+            stagesDashed.putAll(getStagesFromJar(jar.getPath(), true));
+         }
+      }
    }
 
    public static Map<String, Class<? extends org.radargun.Stage>> getStagesFromJar(String path, boolean dashNames) {
@@ -61,7 +69,7 @@ public class StageHelper {
       if (stageName.indexOf('.') < 0) {
          stageName = "org.radargun.stages." + stageName + "Stage";
       } else {
-         stageName = stageName + "Stage";
+         stageName = XmlHelper.dashToCamelCase(stageName, true) + "Stage";
       }
       try {
          return (Class<? extends org.radargun.Stage>) Class.forName(stageName);

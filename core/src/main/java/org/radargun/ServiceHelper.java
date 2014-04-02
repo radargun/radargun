@@ -20,8 +20,8 @@ public class ServiceHelper {
       Class<?> serviceClazz = null;
       try {
          serviceClazz = classLoader.loadClass(serviceClassName);
-      } catch (ClassNotFoundException e) {
-         throw new IllegalArgumentException("Cannot load class " + serviceClassName, e);
+      } catch (Throwable t) {
+         throw new IllegalArgumentException("Cannot load class " + serviceClassName + " from plugin " + plugin, t);
       }
       boolean isService = false;
       for (Annotation annotation : serviceClazz.getDeclaredAnnotations()) {

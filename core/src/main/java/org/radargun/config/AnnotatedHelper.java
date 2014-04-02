@@ -3,6 +3,8 @@ package org.radargun.config;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.util.ArrayList;
@@ -22,6 +24,11 @@ import org.radargun.logging.LogFactory;
 public class AnnotatedHelper {
 
    private static Log log = LogFactory.getLog(AnnotatedHelper.class);
+   private static final PrintStream NULL_PRINT_STREAM = new PrintStream(new OutputStream() {
+      @Override
+      public void write(int b) throws IOException {}
+   });
+   private static final PrintStream ERR_PRINT_STREAM = System.err;
 
    public static URL getJAR(Class clazz) {
       return clazz.getProtectionDomain().getCodeSource().getLocation();
@@ -38,22 +45,24 @@ public class AnnotatedHelper {
             if (entry == null) break;
             if (!entry.getName().endsWith(".class")) continue;
             String className = entry.getName().replace('/', '.').substring(0, entry.getName().length() - 6);
+            Class<?> clazz;
             try {
-               Class<?> clazz = Class.forName(className);
-               TAnnotation annotation = clazz.getAnnotation(annotationClass);
-               if (annotation != null) {
-                  if (!loadedClass.isAssignableFrom(clazz)) {
-                     log.warn(clazz.getName() + " is marked with " + annotationClass.getSimpleName() + " but does not implement/extend " + loadedClass);
-                     continue;
-                  }
-                  classes.add((Class<? extends TClass>) clazz);
-               }
-            } catch (NoClassDefFoundError e) {
-               log.warn("Cannot load class " + className);
-            } catch (ClassNotFoundException e) {
-               log.warn("Cannot instantiate class object for " + className);
+               System.setErr(NULL_PRINT_STREAM); // suppress any error output
+               clazz = Class.forName(className);
+               System.setErr(ERR_PRINT_STREAM);
+            } catch (Throwable t) {
+               /* There are other problems during class loading that could lead to Errors -> ignore them */
+               log.trace("Cannot load class " + className);
+               continue;
             }
-
+            TAnnotation annotation = clazz.getAnnotation(annotationClass);
+            if (annotation != null) {
+               if (!loadedClass.isAssignableFrom(clazz)) {
+                  log.warn(clazz.getName() + " is marked with " + annotationClass.getSimpleName() + " but does not implement/extend " + loadedClass);
+                  continue;
+               }
+               classes.add((Class<? extends TClass>) clazz);
+            }
          }
       } catch (FileNotFoundException e) {
          log.error("Cannot load executed JAR file '" + path + "'to find stages.");

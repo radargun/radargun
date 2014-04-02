@@ -4,10 +4,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.lang.reflect.Modifier;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -24,8 +27,18 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
+ * Generates XSD file describing RadarGun 2.0 configuration.
+ *
+ * There are basically two parts: hand-coded stable configuration
+ * (such as cluster & configuration definitions), and stage lists
+ * with properties, converters etc. When stages are added/removed
+ * or properties change, the XSD file is automatically updated to
+ * reflect this.
+ *
+ * This file is expected to be run from command-line, or rather
+ * build script.
+ *
  * @author Radim Vansa <rvansa@redhat.com>
- * @version 11/21/12
  */
 public class ConfigSchemaGenerator implements ConfigSchema {
    private static final String NS_XS = "http://www.w3.org/2001/XMLSchema";
@@ -65,8 +78,15 @@ public class ConfigSchemaGenerator implements ConfigSchema {
    private static final String TYPE_REPEAT = "repeat";
    private static final String TYPE_PROPERTY = "property";
 
-   private static String stageDirectory;
    private static Set<String> simpleTypes = new HashSet<String>();
+   /* Stages classes sorted by name with its source jar */
+   private static Map<Class<? extends Stage>, String> stages = new TreeMap<Class<? extends Stage>, String>(new Comparator<Class<? extends Stage>>() {
+      @Override
+      public int compare(Class<? extends Stage> o1, Class<? extends Stage> o2) {
+         int c = o1.getSimpleName().compareTo(o2.getSimpleName());
+         return c != 0 ? c : o1.getCanonicalName().compareTo(o2.getCanonicalName());
+      }
+   });
    private static String intType;
 
    public static void generate(String directory) {
@@ -187,30 +207,26 @@ public class ConfigSchemaGenerator implements ConfigSchema {
    }
 
    private static void generateStageDefinitions(Document doc, Element schema, Element[] parents) {
-      File dir = new File(stageDirectory);
-      if (!dir.exists() || !dir.isDirectory()) {
-         throw new IllegalArgumentException(dir + " is not an existing directory!");
-      }
-      for (File file : dir.listFiles()) {
-         if (!file.getName().startsWith("radargun-core-") || !file.getName().endsWith(".jar")) continue;
-         Set<Class> generatedStages = new HashSet<Class>();
-         for (Class<?> stage : StageHelper.getStagesFromJar(file.getPath(), true).values()) {
-            generateStage(doc, schema, parents, stage, generatedStages);
-         }
+      Set<Class<? extends Stage>> generatedStages = new HashSet<Class<? extends Stage>>();
+      for (Map.Entry<Class<? extends Stage>, String> entry : stages.entrySet()) {
+         generateStage(doc, schema, parents, entry.getKey(), entry.getValue(), generatedStages);
       }
    }
 
-   private static void generateStage(Document doc, Element schema, Element[] parents, Class stage, Set<Class> generatedStages) {
+   private static void generateStage(Document doc, Element schema, Element[] parents, Class stage, String sourcePath, Set<Class<? extends Stage>> generatedStages) {
       if (generatedStages.contains(stage)) return;
       boolean hasParentStage = Stage.class.isAssignableFrom(stage.getSuperclass());
       if (hasParentStage) {
-         generateStage(doc, schema, parents, stage.getSuperclass(), generatedStages);
+         generateStage(doc, schema, parents, stage.getSuperclass(), stages.get(stage.getSuperclass()), generatedStages);
       }
       org.radargun.config.Stage stageAnnotation = (org.radargun.config.Stage)stage.getAnnotation(org.radargun.config.Stage.class);
       if (stageAnnotation == null) return; // not a proper stage
 
       String stageName = XmlHelper.camelCaseToDash(StageHelper.getStageName(stage));
       String stageDocText = stageAnnotation.doc();
+      if (sourcePath != null) {
+         schema.appendChild(doc.createComment(String.format("From %s/%s", sourcePath, stage.getName())));
+      }
       Element stageType = createComplexType(doc, schema, stageName,
             hasParentStage ? RG_PREFIX + XmlHelper.camelCaseToDash(StageHelper.getStageName(stage.getSuperclass())) : null,
             Modifier.isAbstract(stage.getModifiers()),
@@ -387,10 +403,33 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       }
    }
 
+   /**
+    * Generate the XSD file. First argument is directory where the XSD file should be placed
+    * (it will be named radargun-{version}.xsd, second argument is list of JAR files that
+    * should be searched for stages. This second argument should be the same as classpath
+    * used for running this class.
+    */
    public static void main(String[] args) {
-      if (args.length < 1) System.err.println("No schema location directory specified!");
-      if (args.length < 2) System.err.println("No jar file with stages specified!");
-      stageDirectory = args[1];
+      if (args.length < 1 || args[0] == null)
+         throw new IllegalArgumentException("No schema location directory specified!");
+      if (args.length < 2 || args[1] == null)
+         throw new IllegalArgumentException("No stage jars specified!");
+
+      // ignore jars included multiple times
+      Map<String, String> uniqueJars = new HashMap<String, String>();
+      for (String jar : args[1].split(File.pathSeparator)) {
+         int fileNameIndex = jar.lastIndexOf(File.separator);
+         String filename = fileNameIndex < 0 ? jar : jar.substring(fileNameIndex + 1);
+         if (!uniqueJars.containsKey(filename)) {
+            uniqueJars.put(filename, jar);
+         }
+      }
+
+      for (Map.Entry<String, String> entry : uniqueJars.entrySet()) {
+         for (Class<? extends Stage> stage : StageHelper.getStagesFromJar(entry.getValue(), true).values()) {
+            stages.put(stage, entry.getKey());
+         }
+      }
       generate(args[0]);
    }
 }

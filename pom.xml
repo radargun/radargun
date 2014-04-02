@@ -16,7 +16,6 @@
 
    <modules>
       <module>core</module>
-      <module>reporters</module>
    </modules>
 
    <scm>
@@ -37,10 +36,25 @@
       <plugins.infinispan/>
       <plugins.jdg/>
       <plugins.coherence/>
-      <reporter.default>reporter-default</reporter.default>
+      <reporter.default />
+      <extension.example/>
    </properties>
 
    <profiles>
+      <!-- Extensions -->
+      <profile>
+         <id>extension-example</id>
+         <activation>
+            <activeByDefault>false</activeByDefault>
+         </activation>
+         <modules>
+            <module>extensions/extension-example</module>
+         </modules>
+         <properties>
+            <extension.example>extension-example</extension.example>
+         </properties>
+      </profile>
+      <!-- Plugin-specific -->
       <profile>
          <id>jpa</id>
          <activation>
@@ -52,6 +66,22 @@
             <module>jpa</module>
          </modules>
       </profile>
+      <!-- Reporters -->
+      <profile>
+         <id>reporter-default</id>
+         <activation>
+            <property>
+               <name>!no-reporter-default</name>
+            </property>
+         </activation>
+         <modules>
+            <module>reporters/reporter-default</module>
+         </modules>
+         <properties>
+            <reporter.default>reporter-default</reporter.default>
+         </properties>
+      </profile>
+      <!-- Plugins -->
       <profile>
          <id>chm</id>
          <activation>
@@ -225,14 +255,18 @@
                   <configuration>
                      <target>
                         <echo message="Generating XSD schema" />
-                        <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true">
-                           <classpath>
-                              <fileset dir="core/target/distribution/radargun-core-bin/radargun-core/lib">
-                                 <include name="*.jar" />
-                              </fileset>
-                           </classpath>
+
+                        <path id="core_and_extensions">
+                           <fileset dir="core/target/distribution/radargun-core-bin/radargun-core/lib">
+                              <include name="*.jar" />
+                           </fileset>
+                           <fileset dir="extensions">
+                              <include name="*/target/**/*.jar" />
+                           </fileset>
+                        </path>
+                        <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
                            <arg value="core/src/main/resources" />
-                           <arg value="core/target/distribution/radargun-core-bin/radargun-core/lib" />
+                           <arg pathref="core_and_extensions" />
                         </java>
                      </target>
                   </configuration>
@@ -313,13 +347,41 @@
                         <pathconvert pathsep="," property="core_jar_list" refid="core_jars">
                            <mapper type="flatten" />
                         </pathconvert>
-                        <echo message="Core jars are ${core_jar_list}"/>
 
                         <ac:for list="${reporter.default}" param="reporter" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging reporter @{reporter}..." />
                               <copy todir="${distribution.artifact}/reporters/@{reporter}">
                                  <fileset dir="reporters/@{reporter}/target/distribution/@{reporter}-bin/@{reporter}/lib" excludes="${core_jar_list}"/>
+                              </copy>
+                           </sequential>
+                        </ac:for>
+                     </target>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <id>prepare_extensions</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <target>
+                        <echo message="Packaging extensions: " />
+
+                        <fileset id="core_jars" dir="core/target/distribution/radargun-core-bin/radargun-core/lib">
+                           <include name="*.jar" />
+                        </fileset>
+                        <pathconvert pathsep="," property="core_jar_list" refid="core_jars">
+                           <mapper type="flatten" />
+                        </pathconvert>
+
+                        <ac:for list="${extension.example}" param="extension" xmlns:ac="antlib:net.sf.antcontrib">
+                           <sequential>
+                              <echo message="Packaging extension @{extension}..." />
+                              <copy todir="${distribution.artifact}/lib">
+                                 <fileset dir="extensions/@{extension}/target/distribution/@{extension}-bin/@{extension}/lib" excludes="${core_jar_list}"/>
                               </copy>
                            </sequential>
                         </ac:for>
