@@ -18,18 +18,38 @@ public class PropertyHelper {
 
    private static Log log = LogFactory.getLog(PropertyHelper.class);
 
+   /**
+    * Retrieve all properties from this class and all its superclasses as a map of property name - path pairs.
+    * @see Path for details.
+    *
+    * @param clazz
+    * @param useDashedName Convert property names to dashed form - e.g. myPropertyName becomes my-property-name.
+    * @return
+    */
    public static Map<String, Path> getProperties(Class<?> clazz, boolean useDashedName) {
       Map<String, Path> properties = new TreeMap<String, Path>();
       addProperties(clazz, properties, useDashedName, "", null);
       return properties;
    }
 
+   /**
+    *  Retrieve all properties from this class (*not including its superclasses) as a map of property name - path pairs.
+    * @see Path for details.
+    * @param clazz
+    * @return
+    */
    public static Map<String, Path> getDeclaredProperties(Class<?> clazz) {
       Map<String, Path> properties = new TreeMap<String, Path>();
       addDeclaredProperties(clazz, properties, false, "", null);
       return properties;
    }
 
+   /**
+    * Retrieve string representation of property's value on the source object.
+    * @param path
+    * @param source
+    * @return
+    */
    public static String getPropertyString(Path path, Object source) {
       Object value = null;
       try {
@@ -89,6 +109,12 @@ public class PropertyHelper {
       }
    }
 
+   /**
+    * Copy the values of identical properties from source to destination. No evaluation or conversion occurs.
+    *
+    * @param source
+    * @param destination
+    */
    public static void copyProperties(Object source, Object destination) {
       Map<String, Path> sourceProperties = getProperties(source.getClass(), false);
       Map<String, Path> destProperties = getProperties(destination.getClass(), false);
@@ -107,6 +133,15 @@ public class PropertyHelper {
       }
    }
 
+   /**
+    * Set properties on the target object using values from the propertyMap.
+    * The keys in propertyMap use property name, values are evaluated and converted here.
+    *
+    * @param target The modified object
+    * @param propertyMap Source of the data, not evaluated
+    * @param ignoreMissingProperty If the property is not found on the target object, should we throw and exception?
+    * @param useDashedName Expect that the property names in propertyMap use the dashed form
+    */
    public static void setProperties(Object target, Map<String, String> propertyMap, boolean ignoreMissingProperty, boolean useDashedName) {
       Class targetClass = target.getClass();
       Map<String, Path> properties = getProperties(target.getClass(), useDashedName);
@@ -122,7 +157,7 @@ public class PropertyHelper {
             Class<? extends Converter> converterClass = path.getTargetAnnotation().converter();
             try {
                Converter converter = converterClass.newInstance();
-               path.set(target, converter.convert(entry.getValue(), path.getTargetGenericType()));
+               path.set(target, converter.convert(Evaluator.parseString(entry.getValue()), path.getTargetGenericType()));
                continue;
             } catch (InstantiationException e) {
                log.error(String.format("Cannot instantiate converter %s for setting %s (%s): %s",

@@ -26,8 +26,6 @@ public class Slave {
    private static Log log = LogFactory.getLog(Slave.class);
 
    private SlaveState state = new SlaveState();
-   //private int slaveIndex = -1;
-   //private int slaveCount;
    private RemoteMasterConnection connection;
 
    private Scenario scenario;
@@ -36,7 +34,6 @@ public class Slave {
 
    public Slave(RemoteMasterConnection connection) {
       this.connection = connection;
-      //this.slaveIndex = slaveIndex;
       Runtime.getRuntime().addShutdownHook(new ShutDownHook("Slave process"));
    }
 

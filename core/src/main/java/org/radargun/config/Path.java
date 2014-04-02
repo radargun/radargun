@@ -5,10 +5,11 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 
 /**
-* Location of @Property through delegated classes.
-*
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * Location of @Property through delegated classes.
+ * Effectively a list of fields, where the value of one field is instance of following field's declaring class.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 public class Path {
    private final Field[] fields;
 

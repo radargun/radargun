@@ -11,6 +11,8 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
 /**
+ * Abstracts connection to the master node from slave side.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class RemoteMasterConnection {
@@ -33,6 +35,13 @@ public class RemoteMasterConnection {
       this.buffer = ByteBuffer.allocate(byteBufferSize);
    }
 
+   /**
+    * Connects to the master node, sending requested slave ID.
+    *
+    * @param slaveIndex
+    * @return Local address of the slave.
+    * @throws IOException
+    */
    public InetAddress connectToMaster(int slaveIndex) throws IOException {
       InetSocketAddress socketAddress = new InetSocketAddress(masterHost, masterPort);
       log.info("Attempting to connect to master " + masterHost + ":" + masterPort);
@@ -67,14 +76,30 @@ public class RemoteMasterConnection {
       while (buffer.hasRemaining()) socketChannel.write(buffer);
    }
 
+   /**
+    * Receives final slave ID. Should be called after successful connectToMaster() call.
+    * @return
+    * @throws IOException
+    */
    public int receiveSlaveIndex() throws IOException {
       return readInt();
    }
 
+   /**
+    * Receives total amount of connected slaves. Should be called after receiveSlaveIndex().
+    * @return
+    * @throws IOException
+    */
    public int receiveSlaveCount() throws IOException {
       return readInt();
    }
 
+   /**
+    * Receive ID of stage that should be now executed. List of stage IDs and configurations
+    * was already received as Scenario object.
+    * @return
+    * @throws IOException
+    */
    public int receiveNextStageId() throws IOException {
       return readInt();
    }
@@ -92,6 +117,11 @@ public class RemoteMasterConnection {
       return buffer.getInt();
    }
 
+   /**
+    * Receive any (serializable) object from the master node.
+    * @return
+    * @throws IOException
+    */
    public Object receiveObject() throws IOException {
       // we must expect that more than one object is sent, so read only the first one
       int objectSize = readInt();
@@ -113,6 +143,11 @@ public class RemoteMasterConnection {
       return SerializationHelper.deserialize(buffer.array(), 0, objectSize);
    }
 
+   /**
+    * Send any serializable object to the master node.
+    * @param response
+    * @throws IOException
+    */
    public void sendResponse(Serializable response) throws IOException {
       buffer.clear();
       buffer = SerializationHelper.serializeObjectWithLength(response, buffer);

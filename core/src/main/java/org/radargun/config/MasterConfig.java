@@ -51,7 +51,7 @@ public class MasterConfig {
    }
 
    public boolean isLocal() {
-      return clusters.size() <= 0;
+      return clusters.size() == 0;
    }
 
    public List<Cluster> getClusters() {

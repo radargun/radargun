@@ -16,6 +16,18 @@ import java.nio.ByteBuffer;
 public class SerializationHelper {
    private static final int MIN_REMAINING = 32;
 
+   /**
+    * Write serialized representation of given object to the buffer on the current position.
+    * If the object does not fit to buffer's capacity, a new buffer is allocated, old buffer
+    * is copied into the new buffer and then the object is written into the new buffer.
+    *
+    * Note than the original buffer can be modified even if the object does not fit there.
+    *
+    * @param serializable
+    * @param buffer Buffer with appended serialized representation of the object.
+    * @return
+    * @throws IOException
+    */
    public static ByteBuffer serializeObject(Serializable serializable, ByteBuffer buffer) throws IOException {
       ByteBufferOutputStream out = new ByteBufferOutputStream(buffer);
       ObjectOutputStream oos = new ObjectOutputStream(out);
@@ -23,6 +35,19 @@ public class SerializationHelper {
       return out.getBuffer();
    }
 
+   /**
+    * Write length of serialized representation of given object and the serialized representation
+    * to the buffer on the current position. The length is represented as 4 byte integer in current byte order.
+    * If the object does not fit to buffer's capacity, a new buffer is allocated, old buffer
+    * is copied into the new buffer and then the object is written into the new buffer.
+    *
+    * Note than the original buffer can be modified even if the object does not fit there.
+    *
+    * @param serializable
+    * @param buffer Buffer with appended serialized representation of the object.
+    * @return
+    * @throws IOException
+    */
    public static ByteBuffer serializeObjectWithLength(Serializable serializable, ByteBuffer buffer) throws IOException {
       if (buffer.remaining() < MIN_REMAINING) {
          buffer = grow(buffer, MIN_REMAINING);
@@ -37,6 +62,15 @@ public class SerializationHelper {
       return buffer;
    }
 
+   /**
+    * Deserialize object from given byte array, starting at startPos and using length bytes.
+    *
+    * @param serializedData
+    * @param startPos
+    * @param length
+    * @return
+    * @throws IOException
+    */
    public static Object deserialize(byte[] serializedData, int startPos, int length) throws IOException {
       ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(serializedData, startPos, length));
       try {

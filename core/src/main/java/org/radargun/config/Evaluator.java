@@ -8,14 +8,32 @@ import java.util.Stack;
 import org.radargun.utils.Tokenizer;
 
 /**
+ * Class with only static methods used for evaluation of expressions. Does:
+ * - replace ${property.name} with the actual property value (from System.getProperty())
+ * - replace ${property.name : default.value} with property value or default.value if the property is not defined
+ * - evaluate infix expressions inside #{ expression } block, available operators are:
+ *   '+' (addition), '-' (subtraction), '*' (multiplying), '/' (division), '%' (modulo operation),
+ *   '..' (range generation), ',' (adding to list), '(' and ')' as usual parentheses.
+ *
+ * Examples:
+ * #{ 1..3,5 } -> 1,2,3,5
+ * #{ ( ${x} + 5 ) * 6 } with -Dx=2 -> 42
+ * foo${y}bar with -Dy=goo -> foogoobar
+ *
  * @author Radim Vansa
  */
 public class Evaluator {
 
+   /**
+    * Parse string possibly containing expressions and properties and convert the value to integer.
+    */
    public static int parseInt(String string) {
       return Integer.parseInt(parseString(string));
    }
 
+   /**
+    * Parse string possibly containing expressions and properties.
+    */
    public static String parseString(String string) {
       if (string == null) return null;
       StringBuilder sb = new StringBuilder();
@@ -220,7 +238,7 @@ public class Evaluator {
       String exec(String first, String second);
    }
 
-   public enum Operator {
+   private enum Operator {
       SPACE(" ", 0, true, null),
       TAB("\t", 0, true, null),
       NEWLINE("\n", 0, true, null),

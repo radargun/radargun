@@ -16,11 +16,22 @@ public class Scenario implements Serializable {
 
    List<StageDescription> stages = new ArrayList<StageDescription>();
 
-   // TODO: Properties should later be <String, Object> to accomodate complex types
+   // TODO: Properties should later be <String, Definition> to accommodate complex types
+   /**
+    * @param stageClass
+    * @param properties Stage's attributes as written in configuration - evaluation takes place on slave
+    * @param extras Additional properties (evaluable as ${foo}) specified for this stage
+    */
    public void addStage(Class<? extends org.radargun.Stage> stageClass, Map<String, String> properties, Map<String, String> extras) {
       stages.add(new StageDescription(stageClass, properties, extras));
    }
 
+   /**
+    * Get instance of stage with given ID, using additional properties (evaluable as ${foo}) from localExtras
+    * @param stageId
+    * @param localExtras
+    * @return
+    */
    public org.radargun.Stage getStage(int stageId, Map<String, String> localExtras) {
       StageDescription description = stages.get(stageId);
       org.radargun.Stage stage;
@@ -43,6 +54,12 @@ public class Scenario implements Serializable {
       return stage;
    }
 
+   /**
+    * Retrieve the original definition of Stage's attributes as appeared in config. No evaluation.
+    *
+    * @param stageId
+    * @return
+    */
    public Map<String, String> getPropertiesDefinitions(int stageId) {
       return stages.get(stageId).properties;
    }
@@ -59,6 +76,10 @@ public class Scenario implements Serializable {
       }
    }
 
+   /**
+    * Total amount of stages in the scenario. All stage IDs should be < this number.
+    * @return
+    */
    public int getStageCount() {
       return stages.size();
    }
