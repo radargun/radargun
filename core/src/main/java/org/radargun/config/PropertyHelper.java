@@ -161,11 +161,14 @@ public class PropertyHelper {
             } catch (InstantiationException e) {
                log.error(String.format("Cannot instantiate converter %s for setting %s (%s): %s",
                      converterClass.getName(), path, propName, e));
+               throw new IllegalArgumentException(e);
             } catch (IllegalAccessException e) {
                log.error(String.format("Cannot access converter %s for setting %s (%s): %s",
                      converterClass.getName(), path, propName, e));
+               throw new IllegalArgumentException(e);
             } catch (Throwable t) {
                log.error("Failed to convert value " + entry.getValue() + ": " + t);
+               throw new IllegalArgumentException(t);
             }
          }
          if (ignoreMissingProperty) {
