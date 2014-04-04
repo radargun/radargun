@@ -64,7 +64,7 @@ public class Path {
       StringBuilder sb = new StringBuilder();
       for (int i = 0; i < fields.length; ++i) {
          if (i != 0) sb.append(" -> ");
-         sb.append(fields[i].getDeclaringClass().getSimpleName()).append(fields[i].getName());
+         sb.append(fields[i].getDeclaringClass().getSimpleName()).append('.').append(fields[i].getName());
       }
       return sb.toString();
    }
