@@ -68,18 +68,12 @@ public class Master {
                state.setReport(new Report(configuration, cluster));
                long clusterStart = System.currentTimeMillis();
                try {
-                  for (int stageId = 0; stageId < masterConfig.getScenario().getStageCount(); ++stageId) {
-                     Stage stage = masterConfig.getScenario().getStage(stageId, getCurrentExtras(masterConfig, configuration, cluster));
-                     InitHelper.init(stage);
-                     if (stage instanceof MasterStage) {
-                        if (!executeMasterStage((MasterStage) stage)) break;
-                     } else if (stage instanceof DistStage) {
-                        if (!executeDistStage(connection, stageId, (DistStage) stage)) break;
-                     } else {
-                        log.error("Stage '" + stage.getName() + "' is neither master nor distributed");
-                        break;
-                     }
+                  int stageCount = masterConfig.getScenario().getStageCount();
+                  for (int stageId = 0; stageId < stageCount - 1; ++stageId) {
+                     if (!executeStage(connection, configuration, cluster, stageId)) break;
                   }
+                  // run ScenarioCleanup
+                  executeStage(connection, configuration, cluster, stageCount - 1);
                } finally {
                   connection.runStage(-1, cluster.getSize());
                }
@@ -113,6 +107,20 @@ public class Master {
          }
          ShutDownHook.exit(returnCode);
       }
+   }
+
+   private boolean executeStage(SlaveConnection connection, Configuration configuration, Cluster cluster, int stageId) throws Exception {
+      Stage stage = masterConfig.getScenario().getStage(stageId, getCurrentExtras(masterConfig, configuration, cluster));
+      InitHelper.init(stage);
+      if (stage instanceof MasterStage) {
+         if (!executeMasterStage((MasterStage) stage)) return false;
+      } else if (stage instanceof DistStage) {
+         if (!executeDistStage(connection, stageId, (DistStage) stage)) return false;
+      } else {
+         log.error("Stage '" + stage.getName() + "' is neither master nor distributed");
+         return false;
+      }
+      return true;
    }
 
    private Map<String, String> getCurrentExtras(MasterConfig masterConfig, Configuration configuration, Cluster cluster) {
