@@ -173,7 +173,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       createReference(doc, createSequence(doc, setupComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY, 0, -1);
       addAttribute(doc, configComplex, ATTR_NAME, true);
       addAttribute(doc, setupComplex, ATTR_PLUGIN, true);
-      addAttribute(doc, setupComplex, ATTR_FILE, true);
+      addAttribute(doc, setupComplex, ATTR_FILE, false);
       addAttribute(doc, setupComplex, ATTR_SERVICE, false);
       addAttribute(doc, setupComplex, ATTR_GROUP, false);
 
