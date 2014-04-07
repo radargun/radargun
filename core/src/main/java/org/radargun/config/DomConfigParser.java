@@ -201,7 +201,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
             Element setupElement = (Element) setups.item(j);
             assertName(ELEMENT_SETUP, setupElement);
             String plugin = getAttribute(setupElement, ATTR_PLUGIN);
-            String file = getAttribute(setupElement, ATTR_FILE);
+            String file = getAttribute(setupElement, ATTR_FILE, null);
             String service = getAttribute(setupElement, ATTR_SERVICE, Configuration.DEFAULT_SERVICE);
             String group = getAttribute(setupElement, ATTR_GROUP, Cluster.DEFAULT_GROUP);
             Configuration.Setup setup = config.addSetup(plugin, file, service, group);

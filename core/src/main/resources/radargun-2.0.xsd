@@ -54,7 +54,7 @@
                                        <element maxOccurs="unbounded" minOccurs="0" name="property" type="rg:property"/>
                                     </sequence>
                                     <attribute name="plugin" type="string" use="required"/>
-                                    <attribute name="file" type="string" use="required"/>
+                                    <attribute name="file" type="string"/>
                                     <attribute name="service" type="string"/>
                                     <attribute name="group" type="string"/>
                                  </complexType>

@@ -51,7 +51,9 @@ public class ServiceHelper {
       Map<String, String> configProperties = new HashMap<String, String>(properties);
       configProperties.put(Service.PROP_CONFIG_NAME, configName);
       configProperties.put(Service.PROP_PLUGIN, plugin);
-      configProperties.put(Service.PROP_FILE, configFile);
+      if (configFile != null) {
+         configProperties.put(Service.PROP_FILE, configFile);
+      }
       PropertyHelper.setProperties(instance, configProperties, true, true);
       InitHelper.init(instance);
       return instance;
