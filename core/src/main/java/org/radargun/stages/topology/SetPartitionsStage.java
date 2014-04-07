@@ -53,7 +53,7 @@ public class SetPartitionsStage extends AbstractDistStage {
       return successfulResponse();
    }
 
-   public static class UniqueCheckerConverter extends DefaultConverter {
+   private static class UniqueCheckerConverter extends DefaultConverter {
       @Override
       public Object convert(String string, Type type) {
          Collection setOfSets = (Collection) super.convert(string, type);

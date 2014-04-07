@@ -109,7 +109,7 @@ public class Fuzzy<T extends Serializable> implements Serializable {
       }
    }
 
-   public static abstract class FuzzyConverter<T extends Serializable> implements Converter<Fuzzy<T>> {
+   private static abstract class FuzzyConverter<T extends Serializable> implements Converter<Fuzzy<T>> {
       @Override
       public Fuzzy<T> convert(String string, Type type) {
          string = string.trim();

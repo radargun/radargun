@@ -186,7 +186,7 @@ public class TimelineChart {
       return RegularTimePeriod.createInstance(timePeriodClass, date, GMT);
    }
 
-   public static class TimeUnitConverter implements Converter<Class<? extends RegularTimePeriod>> {
+   private static class TimeUnitConverter implements Converter<Class<? extends RegularTimePeriod>> {
       @Override
       public Class<? extends RegularTimePeriod> convert(String string, Type type) {
          if (string == null) throw new NullPointerException();
