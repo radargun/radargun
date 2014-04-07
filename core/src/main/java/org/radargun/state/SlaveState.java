@@ -71,7 +71,7 @@ public class SlaveState extends StateBase {
    }
 
    public void setService(String service) {
-      this.serviceName = plugin + "/" + serviceName;
+      this.serviceName = plugin + "/" + service;
    }
 
    public int getGroupCount() {

@@ -41,7 +41,7 @@ public class ServiceStopStage extends AbstractDistStage {
    private boolean waitForDelayed = false;
 
    public DistStageAck executeOnSlave() {
-      log.info("Received kill request from master...");
+      log.info("Received stop request from master...");
       DefaultDistStageAck ack = newDefaultStageAck();
       if (waitForDelayed) {
          Thread t = (Thread) slaveState.get(STOP_DELAY_THREAD);
@@ -78,7 +78,7 @@ public class ServiceStopStage extends AbstractDistStage {
             LifecycleHelper.stop(slaveState, graceful, async);
          }
       } else {
-         log.trace("Ignoring kill request, not targeted for this slave");
+         log.trace("Ignoring stop request, not targeted for this slave");
       }
       return ack;
    }
