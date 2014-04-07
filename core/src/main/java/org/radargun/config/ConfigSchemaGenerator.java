@@ -3,6 +3,7 @@ package org.radargun.config;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -276,7 +277,9 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       if (!DefaultConverter.class.equals(converterClass)) {
          Converter<?> converter;
          try {
-            converter = converterClass.newInstance();
+            Constructor<? extends Converter<?>> ctor = converterClass.getDeclaredConstructor();
+            ctor.setAccessible(true);
+            converter = ctor.newInstance();
          } catch (Exception e) {
             System.err.printf("Cannot instantiate converter service %s: %s",
                   converterClass.getName(), e.getMessage());
