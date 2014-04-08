@@ -77,11 +77,17 @@ class Stressor extends Thread {
                synchronizer.slavePhaseEnd();
                break;
             }
-            if (!stage.isTerminated()) {
-               logic.init(threadIndex, nodeIndex, numNodes);
+            try {
+               if (!stage.isTerminated()) {
+                  logic.init(threadIndex, nodeIndex, numNodes);
+               }
+               stats = stage.createStatistics();
+            } catch (RuntimeException e) {
+               stage.setTerminated();
+               log.error("Unexpected error in stressor!", e);
+            } finally {
+               synchronizer.slavePhaseEnd();
             }
-            stats = stage.createStatistics();
-            synchronizer.slavePhaseEnd();
             synchronizer.slavePhaseStart();
             try {
                if (!stage.isTerminated()) {
@@ -93,7 +99,9 @@ class Stressor extends Thread {
                stage.setTerminated();
                log.error("Unexpected error in stressor!", e);
             } finally {
-               stats.end();
+               if (stats != null) {
+                  stats.end();
+               }
                synchronizer.slavePhaseEnd();
             }
          }
