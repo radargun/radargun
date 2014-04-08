@@ -8,6 +8,7 @@ CONFIG=./conf/benchmark-dist.xml
 SLAVE_COUNT_ARG=""
 TAILF=false
 RADARGUN_MASTER_PID=""
+DEBUG=""
 
 master_pid() {
    RADARGUN_MASTER_PID=`ps -ef | grep "org.radargun.LaunchMaster" | grep -v "grep" | awk '{print $2}'`
@@ -16,7 +17,7 @@ master_pid() {
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT] [-status] [-stop]'
+  wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT] [-d [host:]port] [-status] [-stop]'
   wrappedecho ""
   wrappedecho "   -c       Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark-dist.xml"
   wrappedecho ""
@@ -25,6 +26,8 @@ help_and_exit() {
   wrappedecho "   -t       After starting the benchmark it will run 'tail -f' on the master node's log file."
   wrappedecho ""
   wrappedecho "   -m       MASTER host[:port]. An optional override to override the host/port defaults that the master listens on."
+  wrappedecho ""
+  wrappedecho "   -d       Debug master on given port."
   wrappedecho ""
   wrappedecho "   -status  Prints infromation on master's status: running or not."
   wrappedecho ""
@@ -82,6 +85,10 @@ do
     "-t")
       TAILF=true
       ;;
+    "-d")
+      DEBUG=$2
+      shift
+      ;;
     "-h")
       help_and_exit
       ;;
@@ -100,13 +107,17 @@ set_env
 
 D_VARS="-Djava.net.preferIPv4Stack=true"
 
-if ! [ "x${MASTER}" = "x" ] ; then
+if [ "x${MASTER}" != "x" ]; then
   get_port ${MASTER}
   get_host ${MASTER}
   D_VARS="${D_VARS} -Dmaster.address=${HOST}"
-  if ! [ "x${PORT}" = "x" ] ; then
+  if [ "x${PORT}" != "x" ]; then
     D_VARS="${D_VARS} -Dmaster.port=${PORT}"
   fi
+fi
+
+if [ "x${DEBUG}" != "x" ]; then
+  JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG}"
 fi
 
 ${JAVA} ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.radargun.LaunchMaster -config ${CONFIG} > stdout_master.out 2>&1 &

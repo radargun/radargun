@@ -14,12 +14,13 @@ VERBOSE=false
 REMOTE_CMD='ssh -q -o "StrictHostKeyChecking false"'
 MASTER=`hostname`
 SLAVES=""
+DEBUG=""
 SLAVE_COUNT=0
 TAILF=false
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ benchmark.sh [-c config_file] [-u ssh_user] [-w WORKING DIRECTORY] [-m MASTER_IP[:PORT]] SLAVE...'
+  wrappedecho '  $ benchmark.sh [-c config_file] [-u ssh_user] [-w WORKING DIRECTORY] [-m MASTER_IP[:PORT]] [-d port] SLAVE...'
   wrappedecho ""
   wrappedecho "e.g."
   wrappedecho "  $ benchmark.sh node1 node2 node3 node4"
@@ -36,6 +37,8 @@ help_and_exit() {
   wrappedecho "   -r       Command for remote command execution.  Defaults to '$REMOTE_CMD'."
   wrappedecho ""
   wrappedecho "   -t       After starting the benchmark it will run 'tail -f' on the master node's log file."
+  wrappedecho ""
+  wrappedecho "   -d       Open debugging port on each node."
   wrappedecho ""
   wrappedecho "   -h       Displays this help screen"
   wrappedecho ""
@@ -71,7 +74,11 @@ do
       ;;
     "-t")
       TAILF=true
-      ;;      
+      ;;
+    "-d")
+      DEBUG=$2
+      shift
+      ;;
     "-h")
       help_and_exit
       ;;
@@ -96,15 +103,23 @@ fi
 
 
 ####### first start the master
-. ${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG}
-PID_OF_MASTER_PROCESS=$RADARGUN_MASTER_PID
+DEBUG_CMD=""
+if [ "x$DEBUG" != "x" ]; then
+   DEBUG_CMD="-d localhost:$DEBUG"
+fi
+${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD}
 #### Sleep for a few seconds so master can open its port
 
 ####### then start the rest of the nodes
 
+INDEX=0
 for slave in $SLAVES; do
   CMD="source ~/.bash_profile ; cd $WORKING_DIR"
-  CMD="$CMD ; bin/slave.sh -m ${MASTER} -n $slave"
+  CMD="$CMD ; bin/slave.sh -m ${MASTER} -n $slave -i $INDEX"
+  if [ "x$DEBUG" != "x" ]; then
+     CMD="$CMD -d $slave:$DEBUG"
+  fi
+  let INDEX=INDEX+1
 
   # The slave_SLAVE_ADDRESS variable may be defined in environment.sh
   eval SLAVE_ADDRESS=\$${slave}_SLAVE_ADDRESS

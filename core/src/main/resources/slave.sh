@@ -7,6 +7,8 @@ if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DI
 
 MASTER_HOST=""
 MASTER_PORT=""
+SLAVE_INDEX=""
+DEBUG=""
 LOG4J_PREFIX=`hostname`-$RANDOM
 
 
@@ -30,11 +32,15 @@ MASTER=${MASTER_HOST}:${MASTER_PORT}
 
 help_and_exit() {
   echo "Usage: "
-  echo '  $ slave.sh [-m host:port] [-p log4j_file_prefix]'
+  echo '  $ slave.sh [-m host:port] [-p log4j_file_prefix] [-i slaveIndex] [-d [host:]port]'
   echo ""
   echo "   -m        Master host and port. Optional, defaults to ${MASTER}. (this value is taken from ./conf/benchmark-dist.xml)."
   echo ""
   echo "   -n        Name of this slave (used for log files and to select a slave configuration from environment.sh). Optional."
+  echo ""
+  echo "   -i        Index of this slave. Optional."
+  echo ""
+  echo "   -d        Debug address. Optional."
   echo ""
   echo "   -h        Displays this help screen"
   echo ""
@@ -55,6 +61,14 @@ do
       SLAVE_NAME=$2
       shift
       ;;
+    "-i")
+      SLAVE_INDEX=$2
+      shift
+      ;;
+    "-d")
+      DEBUG=$2
+      shift
+      ;;
     "-h")
       help_and_exit
       ;;
@@ -67,6 +81,9 @@ do
 done
 
 CONF="-master $MASTER"
+if [ "x$SLAVE_INDEX" != "x" ]; then
+   CONF="$CONF -slaveIndex $SLAVE_INDEX"
+fi
 
 add_fwk_to_classpath
 set_env
@@ -83,6 +100,9 @@ if [ -n "$SLAVE_NAME" ] ; then
 fi
 
 D_VARS="-Djava.net.preferIPv4Stack=true -Dlog4j.file.prefix=${LOG4J_PREFIX} -Dbind.address=${BIND_ADDRESS} -Djgroups.bind_addr=${BIND_ADDRESS}"
+if [ "x$DEBUG" != "x" ]; then
+   JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG}"
+fi
 echo "${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF}" > stdout_slave_${LOG4J_PREFIX}.out
 echo "--------------------------------------------------------------------------------" >> stdout_slave_${LOG4J_PREFIX}.out
 nohup ${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} >> stdout_slave_${LOG4J_PREFIX}.out 2>&1 &
