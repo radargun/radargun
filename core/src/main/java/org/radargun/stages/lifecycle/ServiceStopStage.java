@@ -60,7 +60,7 @@ public class ServiceStopStage extends AbstractDistStage {
             log.info("No delayed execution found in history.");
          }
       } else if ((role != null && RoleHelper.hasRole(slaveState, role))
-            || (slaves != null && slaves.contains(slaveState.getSlaveIndex()))) {
+            || slaves == null || slaves.contains(slaveState.getSlaveIndex())) {
          if (delayExecution > 0) {
             Thread t = new Thread() {
                @Override
@@ -69,16 +69,24 @@ public class ServiceStopStage extends AbstractDistStage {
                      Thread.sleep(delayExecution);
                   } catch (InterruptedException e) {                    
                   }
-                  LifecycleHelper.stop(slaveState, graceful, async);
+                  if (lifecycle == null || !lifecycle.isRunning()) {
+                     log.info("The service on this node is not running or cannot be stopped");
+                  } else {
+                     LifecycleHelper.stop(slaveState, graceful, async);
+                  }
                }
             };
             slaveState.put(STOP_DELAY_THREAD, t);
             t.start();
          } else {
-            LifecycleHelper.stop(slaveState, graceful, async);
+            if (lifecycle == null || !lifecycle.isRunning()) {
+               log.info("The service on this node is not running or cannot be stopped");
+            } else {
+               LifecycleHelper.stop(slaveState, graceful, async);
+            }
          }
       } else {
-         log.trace("Ignoring stop request, not targeted for this slave");
+         log.info("Ignoring stop request, not targeted for this slave");
       }
       return ack;
    }
