@@ -35,7 +35,7 @@ public class ScenarioCleanupStage extends AbstractDistStage {
             Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
             log.info("Service successfully stopped.");
          } else {
-            log.info("No cache wrapper deployed on this slave, nothing to do.");
+            log.info("No service deployed on this slave, nothing to do.");
             return successfulResponse();
          }
       } catch (Exception e) {
