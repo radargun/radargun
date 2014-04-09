@@ -1,0 +1,58 @@
+<!-- RadarGun 2.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.0">
+
+   <!-- Specifies where should the master open socket  -->
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <!-- List of cluster configurations where the benchmark should run-->
+   <clusters>
+      <cluster size="2">
+         <group name="server" size="1" />
+         <group name="client" size="1" />
+      </cluster>
+   </clusters>
+
+   <!-- List of configurations of the services -->
+   <configurations>
+      <config name="Infinispan 6.0 - client-server">
+         <!-- Configuration for the server group -->
+         <setup group="server"
+                plugin="infinispan60" service="server"
+                file="server.xml">
+            <!-- Properties are evaluated on each slave individually, therefore you can
+                 e.g. specify different bind address for each server in args -->
+            <!-- Home directory for the Infinispan Server -->
+            <property name="home">${env.ISPN_HOME}</property>
+            <!-- Additional arguments passed to ${env.ISPN_HOME}/bin/standalone.sh -->
+            <property name="args">-DudpGroup=224.0.0.1</property>
+         </setup>
+         <!-- Configuration for the HotRod client -->
+         <setup group="client"
+                plugin="infinispan60" service="hotrod">
+            <!-- Clients are not paired with servers automatically - we have to explicitly provide the address -->
+            <property name="servers">127.0.0.1:11222</property>
+         </setup>
+      </config>
+   </configurations>
+
+   <!-- Sequence of stages executed on the cluster -->
+   <scenario>
+      <!-- Start services on all nodes -->
+      <service-start />
+      <!-- Warmup executed only on the slave 1 = client -->
+      <stress-test-warmup slaves="1" num-requests="100000" />
+      <!-- Stress test executed only on the slave 1 = client -->
+      <stress-test slaves="1" duration="60s" />
+      <!-- Stop services on all nodes: in cleanup this would happen anyway -->
+      <service-stop />
+   </scenario>
+
+   <!-- How the statistics are reported -->
+   <reports>
+      <!-- Produce CSV statistics report -->
+      <reporter type="csv" />
+      <!-- Produce HTML statistics report -->
+      <reporter type="html" />
+   </reports>
+
+</benchmark>

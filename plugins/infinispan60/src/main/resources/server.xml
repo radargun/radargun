@@ -1,0 +1,299 @@
+<!--
+  ~ JBoss, Home of Professional Open Source.
+  ~ Copyright 2013, Red Hat, Inc., and individual contributors
+  ~ as indicated by the @author tags. See the copyright.txt file in the
+  ~ distribution for a full listing of individual contributors.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this software; if not, write to the Free
+  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+-->
+<server xmlns="urn:jboss:domain:1.4">
+
+   <extensions>
+      <extension module="org.infinispan.server.endpoint"/>
+      <extension module="org.jboss.as.clustering.infinispan" />
+      <extension module="org.jboss.as.clustering.jgroups" />
+      <extension module="org.jboss.as.threads" />
+      <extension module="org.jboss.as.web" />
+      <extension module="org.jboss.as.logging" />
+      <extension module="org.jboss.as.jmx" />
+      <extension module="org.jboss.as.naming" />
+      <extension module="org.jboss.as.remoting" />
+      <extension module="org.jboss.as.connector" />
+      <extension module="org.jboss.as.security" />
+      <extension module="org.jboss.as.transactions" />
+      <extension module="org.jboss.as.jdr" />
+   </extensions>
+
+   <management>
+      <management-interfaces>
+         <native-interface>
+            <socket-binding native="management-native" />
+         </native-interface>
+      </management-interfaces>
+   </management>
+
+   <profile>
+      <subsystem xmlns="urn:infinispan:server:endpoint:6.0">
+         <hotrod-connector 
+            socket-binding="hotrod"
+            idle-timeout="120000"
+            cache-container="default"
+            worker-threads="160" >
+            <topology-state-transfer
+               lazy-retrieval="false"
+               lock-timeout="1000"
+               replication-timeout="240000" />
+         </hotrod-connector>
+         <memcached-connector
+            socket-binding="memcached"
+            idle-timeout="120000"
+            cache-container="default" />
+         <rest-connector
+            cache-container="default"
+            virtual-server="default-host" />
+      </subsystem>
+      <subsystem xmlns="urn:infinispan:server:core:6.0" >
+         <cache-container name="default"
+            default-cache="testCache">
+            <transport executor="infinispan-transport" lock-timeout="600000" />
+
+            <distributed-cache name="testCache"
+               start="EAGER"
+               mode="SYNC"
+               segments="40"
+               owners="2"
+               l1-lifespan="0"
+               batching="false"
+               remote-timeout="60000" >
+               <transaction mode="NONE" />
+               <eviction
+                  strategy="NONE"
+                  max-entries="0" />
+               <state-transfer
+                  enabled="true"
+                  timeout="600000" />
+            </distributed-cache>
+
+            <distributed-cache name="memcachedCache"
+               start="EAGER"
+               mode="SYNC"
+               segments="40"
+               owners="2"
+               l1-lifespan="0"
+               batching="false"
+               remote-timeout="60000" >
+               <transaction mode="NONE" />
+               <eviction
+                  strategy="NONE"
+                  max-entries="0" />
+               <state-transfer
+                  enabled="true"
+                  timeout="600000" />
+            </distributed-cache>
+
+            <distributed-cache name="namedCache"
+               mode="SYNC" />
+         </cache-container>
+      </subsystem>
+      <subsystem xmlns="urn:jboss:domain:jgroups:1.2" default-stack="udp">
+         <stack name="udp">
+            <transport type="UDP"
+               socket-binding="jgroups-udp">
+               <!-- Thread pool sizes are set externally -->
+               <property name="timer_type">new</property>
+               <property name="timer.min_threads">4</property>
+               <property name="timer.max_threads">4</property>
+               <property name="timer.keep_alive_time">5000000000</property>
+               <property name="timer.queue_max_size">500</property>
+               <property name="thread_pool.enabled">true</property>
+               <property name="thread_pool.min_threads">10</property>
+               <property name="thread_pool.max_threads">100</property>
+               <property name="thread_pool.keep_alive_time">60000</property>
+               <property name="thread_pool.queue_enabled">false</property>
+               <property name="thread_pool.queue_max_size">0</property>
+               <property name="thread_pool.rejection_policy">discard</property>
+               <property name="oob_thread_pool.enabled">true</property>
+               <property name="oob_thread_pool.min_threads">10</property>
+               <property name="oob_thread_pool.max_threads">100</property>
+               <property name="oob_thread_pool.keep_alive_time">1000000000</property>
+               <property name="oob_thread_pool.queue_enabled">false</property>
+               <property name="oob_thread_pool.queue_max_size">0</property>
+               <property name="oob_thread_pool.rejection_policy">discard</property>
+               <property name="bundler_type">old</property>
+            </transport>
+            <protocol type="PING" >
+               <property name="timeout">3000</property>
+            </protocol>
+            <protocol type="MERGE2"> 
+               <property name="max_interval">30000</property>
+               <property name="min_interval">10000</property>
+            </protocol>
+            <protocol type="FD_SOCK" socket-binding="jgroups-udp-fd" />
+            <protocol type="FD_ALL">
+               <property name="timeout">60000</property>
+               <property name="interval">10000</property>
+            </protocol>
+            <protocol type="pbcast.NAKACK2">
+               <property name="xmit_interval">1000</property>
+               <property name="xmit_table_num_rows">100</property>
+               <property name="xmit_table_msgs_per_row">10000</property>
+               <property name="xmit_table_max_compaction_time">10000</property>
+               <property name="max_msg_batch_size">100</property>
+            </protocol>
+            <protocol type="UNICAST3" />
+            <protocol type="pbcast.STABLE">
+               <property name="stability_delay">500</property>
+               <property name="desired_avg_gossip">5000</property>
+               <property name="max_bytes">1m</property>
+            </protocol>
+            <protocol type="pbcast.GMS" />
+            <protocol type="UFC">
+               <property name="max_credits">2m</property>
+               <property name="min_threshold">0.40</property>
+            </protocol>
+            <protocol type="MFC">
+               <property name="max_credits">200k</property>
+               <property name="min_threshold">0.40</property>
+            </protocol>
+            <protocol type="FRAG2">
+               <property name="frag_size">60k</property>
+            </protocol>
+            <protocol type="RSVP">
+                <property name="timeout">600000</property>
+                <property name="resend_interval">500</property>
+                <property name="ack_on_delivery">false</property>
+            </protocol>
+         </stack>
+      </subsystem>
+      <subsystem xmlns="urn:jboss:domain:threads:1.1">
+         <thread-factory name="infinispan-factory" group-name="infinispan" priority="5" />
+         <unbounded-queue-thread-pool name="infinispan-transport">
+            <max-threads count="25"/>
+            <keepalive-time time="0" unit="milliseconds" />
+            <thread-factory name="infinispan-factory" />
+         </unbounded-queue-thread-pool>
+      </subsystem>      
+      <subsystem xmlns="urn:jboss:domain:web:1.1" default-virtual-server="default-host">
+         <connector name="http"
+            scheme="http"
+            protocol="HTTP/1.1"
+            socket-binding="http"
+            max-connections="1000" />
+         <virtual-server name="default-host" enable-welcome-root="false">
+            <alias name="localhost" />
+            <alias name="example.com" />
+         </virtual-server>
+      </subsystem>
+      <subsystem xmlns="urn:jboss:domain:logging:1.1">
+         <console-handler name="CONSOLE">
+            <level name="INFO" />
+            <formatter>
+               <pattern-formatter pattern="%d{HH:mm:ss,SSS} %-5p [%c] (%t) %s%E%n" />
+            </formatter>
+         </console-handler>
+         <logger category="com.arjuna">
+            <level name="WARN" />
+         </logger>
+         <logger category="org.apache.tomcat.util.modeler">
+            <level name="WARN" />
+         </logger>
+         <logger category="sun.rmi">
+            <level name="WARN" />
+         </logger>
+         <logger category="org.infinispan">
+            <level name="INFO" />
+         </logger>
+         <logger category="org.jgroups">
+            <level name="INFO" />
+         </logger>
+         <root-logger>
+            <level name="INFO" />
+            <handlers>
+               <handler name="CONSOLE" />
+            </handlers>
+         </root-logger>
+      </subsystem>
+      <subsystem xmlns="urn:jboss:domain:jmx:1.1">
+         <show-model value="true" />
+         <remoting-connector />
+      </subsystem>
+      <subsystem xmlns="urn:jboss:domain:naming:1.0" />
+      <subsystem xmlns="urn:jboss:domain:remoting:1.1">
+         <connector name="remoting-connector" socket-binding="remoting" />
+      </subsystem>
+      <subsystem xmlns="urn:jboss:domain:resource-adapters:1.0" />
+      <subsystem xmlns="urn:jboss:domain:security:1.1" />
+      <subsystem xmlns="urn:jboss:domain:transactions:1.1">
+         <recovery-environment socket-binding="txn-recovery-environment" status-socket-binding="txn-status-manager" />
+         <core-environment>
+            <process-id>
+               <uuid />
+            </process-id>
+         </core-environment>
+         <coordinator-environment default-timeout="300" />
+      </subsystem>
+      <subsystem xmlns="urn:jboss:domain:jdr:1.0"/>
+      <subsystem xmlns="urn:jboss:domain:jca:1.1">
+         <archive-validation enabled="true" fail-on-error="true" fail-on-warn="false"/>
+         <bean-validation enabled="true"/>
+         <default-workmanager>
+            <short-running-threads>
+               <core-threads count="1"/>
+               <queue-length count="10"/>
+               <max-threads count="2"/>
+               <keepalive-time time="10" unit="seconds"/>
+            </short-running-threads>
+            <long-running-threads>
+               <core-threads count="1"/>
+               <queue-length count="10"/>
+               <max-threads count="2"/>
+               <keepalive-time time="10" unit="seconds"/>
+            </long-running-threads>
+         </default-workmanager>
+         <cached-connection-manager/>
+      </subsystem>
+   </profile>
+
+   <interfaces>
+      <interface name="management">
+         <inet-address value="${iface.management:127.0.0.1}" />
+      </interface>
+      <interface name="public">
+         <inet-address value="${iface.public:127.0.0.1}" />
+      </interface>
+      <interface name="clustering">
+         <inet-address value="${iface.clustering:127.0.0.1}" />
+      </interface>
+   </interfaces>
+
+   <socket-binding-group name="standard-sockets" default-interface="public">
+      <socket-binding name="http" port="8080" />
+      <socket-binding name="https" port="8443" />
+      <socket-binding name="jmx-connector-registry" port="1090" />
+      <socket-binding name="jmx-connector-server" port="1091" />
+      <socket-binding name="jndi" port="1099" />
+      <socket-binding name="remoting" port="4447" />
+      <socket-binding name="txn-recovery-environment" port="4712" />
+      <socket-binding name="txn-status-manager" port="4713" />
+
+      <socket-binding name="jgroups-udp" interface="clustering" multicast-address="${udpGroup}" multicast-port="45688" port="55200" />
+      <socket-binding name="jgroups-udp-fd" interface="clustering" port="54200" />
+      <socket-binding name="hotrod" port="11222" />
+      <socket-binding name="memcached" port="11211" />
+      <socket-binding name="management-native" interface="management" port="9999" />
+      <socket-binding name="management-http" interface="management" port="9990" />
+   </socket-binding-group>
+</server>
