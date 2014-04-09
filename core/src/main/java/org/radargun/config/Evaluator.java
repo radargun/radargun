@@ -129,18 +129,25 @@ public class Evaluator {
    private static String evalProperty(String string, int startIndex, int endIndex) {
       int colonIndex = string.indexOf(':', startIndex);
       String property, value;
+      String def = null;
       if (colonIndex < 0) {
          property = string.substring(startIndex, endIndex).trim();
-         value = System.getProperty(property);
       } else {
          property = string.substring(startIndex, colonIndex).trim();
-         String def = string.substring(colonIndex + 1, endIndex);
-         value = System.getProperty(property, def);
+         def = string.substring(colonIndex + 1, endIndex);
       }
-      if (value == null && property.startsWith("random.")) {
-         return random(property);
-      } else if (value != null) {
+      value = System.getProperty(property);
+      if (value == null) {
+         if (property.startsWith("env.")) {
+            value = System.getenv(property.substring(4));
+         } else if (property.startsWith("random.")) {
+            value = random(property);
+         }
+      }
+      if (value != null) {
          return value;
+      } else if (def != null) {
+         return def;
       } else {
          throw new IllegalArgumentException("Property " + property + " not defined!");
       }
@@ -157,7 +164,7 @@ public class Evaluator {
       } else if (type.equals("random.boolean")) {
          return String.valueOf(random.nextBoolean());
       } else {
-         throw new IllegalArgumentException("Unknown random type: " + type);
+         return null;
       }
    }
 
