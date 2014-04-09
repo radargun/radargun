@@ -59,7 +59,6 @@ public class Slave {
          } else if (object instanceof Cluster) {
             cluster = (Cluster) object;
             int stageId;
-            Map<String, String> extras = getCurrentExtras(configuration, cluster);
             Cluster.Group group = cluster.getGroup(state.getSlaveIndex());
             Configuration.Setup setup = configuration.getSetup(group.name);
             state.setClusterSize(cluster.getSize());
@@ -69,7 +68,8 @@ public class Slave {
             state.setPlugin(setup.plugin);
             state.setService(setup.service);
             state.setTimeline(new Timeline(slaveIndex));
-            Object service = ServiceHelper.createService(state.getClassLoadHelper().getLoader(), setup.plugin, setup.service, configuration.name, setup.file, setup.getProperties());
+            Map<String, String> extras = getCurrentExtras(configuration, cluster);
+            Object service = ServiceHelper.createService(state.getClassLoadHelper().getLoader(), setup.plugin, setup.service, configuration.name, setup.file, slaveIndex, setup.getProperties(), extras);
             Map<Class<?>, Object> traits = TraitHelper.retrieve(service);
             state.setTraits(traits);
             while ((stageId = connection.receiveNextStageId()) >= 0) {

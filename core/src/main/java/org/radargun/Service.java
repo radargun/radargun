@@ -16,9 +16,10 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Service {
 
-   String PROP_FILE = "file";
-   String PROP_CONFIG_NAME = "configName";
-   String PROP_PLUGIN = "plugin";
+   String SLAVE_INDEX = "slaveIndex";
+   String FILE = "file";
+   String CONFIG_NAME = "configName";
+   String PLUGIN = "plugin";
 
    String doc();
 }
