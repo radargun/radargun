@@ -37,6 +37,7 @@
       <plugins.jdg/>
       <plugins.coherence/>
       <plugins.process />
+      <plugins.spymemcached />
       <reporter.default />
       <extension.example/>
    </properties>
@@ -237,6 +238,20 @@
             <plugins.process>process</plugins.process>
          </properties>
       </profile>
+      <profile>
+         <id>spymemcached</id>
+         <activation>
+            <property>
+               <name>!no-spymemcached</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/spymemcached</module>
+         </modules>
+         <properties>
+            <plugins.spymemcached>spymemcached</plugins.spymemcached>
+         </properties>
+      </profile>
    </profiles>
 
    <build>
@@ -343,7 +358,7 @@
                         </macrodef>
 
                         <echo message="Packaging plugins: " />
-                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence},${plugins.process}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>

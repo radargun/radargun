@@ -14,7 +14,7 @@
 
    <!-- List of configurations of the services -->
    <configurations>
-      <config name="Infinispan 6.0 - client-server">
+      <config name="Infinispan 6.0 - HotRod">
          <!-- Configuration for the server group -->
          <setup group="server"
                 plugin="infinispan60" service="server"
@@ -31,6 +31,21 @@
                 plugin="infinispan60" service="hotrod">
             <!-- Clients are not paired with servers automatically - we have to explicitly provide the address -->
             <property name="servers">127.0.0.1:11222</property>
+         </setup>
+      </config>
+      <config name="Infinispan 6.0 - Memcached">
+         <!-- Configuration for the server group - this is identical to HotRod -->
+         <setup group="server"
+                plugin="infinispan60" service="server"
+                file="server.xml">
+            <property name="home">${env.ISPN_HOME}</property>
+            <property name="args">-DudpGroup=224.0.0.1</property>
+         </setup>
+         <!-- Configuration for the HotRod client -->
+         <setup group="client"
+                plugin="spymemcached">
+            <!-- Memcached clients can't find other servers automatically - always specify all servers -->
+            <property name="servers">127.0.0.1:11211</property>
          </setup>
       </config>
    </configurations>
