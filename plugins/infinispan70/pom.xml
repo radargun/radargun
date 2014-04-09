@@ -37,6 +37,12 @@
 
       <dependency>
          <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-client-hotrod</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
          <artifactId>infinispan-query</artifactId>
          <version>${version.infinispan}</version>
       </dependency>
@@ -61,6 +67,10 @@
             <exclusion>
                <groupId>org.infinispan</groupId>
                <artifactId>infinispan-core</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-client-hotrod</artifactId>
             </exclusion>
             <exclusion>
                <groupId>org.infinispan</groupId>
