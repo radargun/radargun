@@ -36,6 +36,7 @@
       <plugins.infinispan/>
       <plugins.jdg/>
       <plugins.coherence/>
+      <plugins.process />
       <reporter.default />
       <extension.example/>
    </properties>
@@ -222,6 +223,20 @@
             <plugins.jdg>jdg60,jdg61,jdg62,</plugins.jdg>
          </properties>
       </profile>
+      <profile>
+         <id>process</id>
+         <activation>
+            <property>
+               <name>!no-process</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/process</module>
+         </modules>
+         <properties>
+            <plugins.process>process</plugins.process>
+         </properties>
+      </profile>
    </profiles>
 
    <build>
@@ -280,6 +295,19 @@
                   </goals>
                   <configuration>
                      <target>
+                        <macrodef name="chmod-if-exists">
+                           <attribute name="dir"/>
+                           <attribute name="perm"/>
+                           <sequential>
+                              <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+                                 <available file="@{dir}" type="dir" />
+                                 <ac:then>
+                                    <chmod dir="@{dir}" perm="@{perm}" includes="**/*"/>
+                                 </ac:then>
+                              </ac:if>
+                           </sequential>
+                        </macrodef>
+
                         <macrodef name="copy-plugin">
                            <attribute name="plugin"/>
                            <sequential>
@@ -288,6 +316,7 @@
                                     <include name="**/*" />
                                  </fileset>
                               </copy>
+                              <chmod-if-exists dir="${distribution.artifact}/plugins/@{plugin}/bin" perm="ugo+x" />
                            </sequential>
                         </macrodef>
 
@@ -300,6 +329,7 @@
                                     <exclude name="**/*.jar" />
                                  </fileset>
                               </copy>
+                              <chmod-if-exists dir="${distribution.artifact}/plugins/@{plugin}/bin" perm="ugo+x" />
                               <copy todir="${distribution.artifact}/plugin-dependencies">
                                  <fileset dir="plugins/@{plugin}/target/distribution/plugin-@{plugin}-bin/plugin-@{plugin}/lib">
                                     <include name="*.jar" />
@@ -313,7 +343,7 @@
                         </macrodef>
 
                         <echo message="Packaging plugins: " />
-                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence},${plugins.process}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>
