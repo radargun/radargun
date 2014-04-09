@@ -30,10 +30,10 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
    @Property(doc = "Dump configuration into property files. Default is false.")
    protected boolean dumpConfig = false;
 
-   @Property(name = Service.PROP_PLUGIN, doc = "Name of the current product.", optional = false)
+   @Property(name = Service.PLUGIN, doc = "Name of the current product.", optional = false)
    protected String plugin;
 
-   @Property(name = Service.PROP_CONFIG_NAME, doc = "Name of the current config.", optional = false)
+   @Property(name = Service.CONFIG_NAME, doc = "Name of the current config.", optional = false)
    protected String configName;
 
    @Override

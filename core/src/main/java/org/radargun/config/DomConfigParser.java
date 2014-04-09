@@ -215,7 +215,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                if (content == null) {
                   throw new IllegalArgumentException("Property cannot have null content!");
                }
-               setup.addProperty(propertyName, Evaluator.parseString(content.trim()));
+               setup.addProperty(propertyName, content.trim());
             }
          }
          masterConfig.addConfig(config);

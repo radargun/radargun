@@ -23,7 +23,7 @@ public class JGroups35Service extends JGroupsService {
    @Property(doc = "Dump configuration into property files. Default is false.")
    protected boolean dumpConfig = false;
 
-   @Property(name = Service.PROP_PLUGIN, doc = "Name of the current plugin.", optional = false)
+   @Property(name = Service.PLUGIN, doc = "Name of the current plugin.", optional = false)
    protected String plugin;
 
    @Override
