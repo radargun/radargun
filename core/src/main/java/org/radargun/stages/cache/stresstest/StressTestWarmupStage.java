@@ -22,8 +22,8 @@ public class StressTestWarmupStage extends StressTestStage {
    @Override
    public DistStageAck executeOnSlave() {
       DefaultDistStageAck result = new DefaultDistStageAck(slaveState.getSlaveIndex(), slaveState.getLocalAddress());
-      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
-         log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveState.getSlaveIndex(), slaves));
+      if (!shouldExecute()) {
+         log.info("The stage should not run on this slave");
          return result;
       }
       if (!isServiceRunnning()) {

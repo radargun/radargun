@@ -38,28 +38,24 @@ public class ServiceStartStage extends AbstractServiceStartStage {
    private Set<Integer> reachable = null;
 
    public DistStageAck executeOnSlave() {
-      if (lifecycle == null) {
+      if (!shouldExecute()) {
+         log.trace("Start request not targeted for this slave, ignoring.");
+         return successfulResponse();
+      } else if (lifecycle == null) {
          log.warn("Service " + slaveState.getServiceName() + " does not support lifecycle management.");
          return successfulResponse();
       } else if (lifecycle.isRunning()) {
          log.info("Service " + slaveState.getServiceName() + " is already running.");
          return successfulResponse();
       }
-      if (slaves != null) {
-         if (!slaves.contains(slaveState.getSlaveIndex())) {
-            log.trace("Start request not targeted for this slave, ignoring.");
-            return successfulResponse();
-         } else {
-            int index = 0;
-            for (Integer slave : slaves) {
-               if (slave.equals(slaveState.getSlaveIndex())) break;
-               index++;
-            }
-            staggerStartup(index, slaves.size());
-         }
-      } else {
-         staggerStartup(slaveState.getSlaveIndex(), slaveState.getClusterSize());
+
+      int index = 0;
+      for (Integer slave : getExecutingSlaves()) {
+         if (slave.equals(slaveState.getSlaveIndex())) break;
+         index++;
       }
+      staggerStartup(index);
+
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
             + ". This slave's index is: " + slaveState.getSlaveIndex());
       try {
@@ -71,7 +67,7 @@ public class ServiceStartStage extends AbstractServiceStartStage {
       return successfulResponse();
    }
 
-   private void staggerStartup(int thisNodeIndex, int numSlavesToStart) {
+   private void staggerStartup(int thisNodeIndex) {
       if (!staggerSlaveStartup) {
          if (log.isTraceEnabled()) {
             log.trace("Not using slave startup staggering");
@@ -79,12 +75,11 @@ public class ServiceStartStage extends AbstractServiceStartStage {
          return;
       }
       if (thisNodeIndex == 0) {
-         log.info("Startup staggering, number of slaves to start is " + numSlavesToStart
-               + " This is the slave with index 0, not sleeping");
+         log.info("Startup staggering, this is the slave with index 0, not sleeping");
          return;
       }
       long toSleep = delayAfterFirstSlaveStarts + thisNodeIndex * delayBetweenStartingSlaves;
-      log.info(" Startup staggering, starting " + numSlavesToStart + " slaves. This is the slave with index "
+      log.info(" Startup staggering, this is the slave with index "
             + thisNodeIndex + ". Sleeping for " + toSleep + " millis.");
       try {
          Thread.sleep(toSleep);

@@ -1,5 +1,7 @@
 package org.radargun.stages.helpers;
 
+import java.util.Collection;
+
 import org.radargun.state.SlaveState;
 import org.radargun.traits.Clustered;
 
@@ -13,12 +15,15 @@ public class RoleHelper {
 
    private RoleHelper() {}
 
-   public static boolean hasRole(SlaveState slaveState, Role role) {
-      if (role == null) return false;
-      if (role == Role.COORDINATOR) {
-         Clustered clustered = slaveState.getTrait(Clustered.class);
-         return clustered != null && clustered.isCoordinator();
+   public static boolean hasAnyRole(SlaveState slaveState, Collection<Role> roles) {
+      for (Role role : roles) {
+         switch (role) {
+            case COORDINATOR:
+               Clustered clustered = slaveState.getTrait(Clustered.class);
+               return clustered != null && clustered.isCoordinator();
+         }
+         throw new IllegalArgumentException("Role " + role + " is not supported");
       }
-      throw new IllegalArgumentException("Role " + role + " is not supported");
+      return false;
    }
 }

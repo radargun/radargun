@@ -10,7 +10,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
@@ -43,9 +42,8 @@ public class SingleTXCheckStage extends AbstractDistStage {
    
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
-      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
-         return ack;
+      if (!shouldExecute()) {
+         return successfulResponse();
       }
       List<String> caches = new ArrayList<String>();
       if (cacheInformation == null) {
@@ -54,6 +52,7 @@ public class SingleTXCheckStage extends AbstractDistStage {
          caches.addAll(cacheInformation.getCacheNames());
       }
 
+      DistStageAck ack = successfulResponse();
       for (String cacheName : caches) {
          if (cacheName != null) {
             log.info("Checking cache " + cacheName);
@@ -67,7 +66,7 @@ public class SingleTXCheckStage extends AbstractDistStage {
 	               Matcher m;
 	               if (value != null && value instanceof String && (m = txValue.matcher((String) value)).matches()) {
 	                  if (Integer.parseInt(m.group(1)) != i) {
-	                     exception(ack, "Unexpected value for txKey" + i + " = " + value, null);
+	                     ack = exception("Unexpected value for txKey" + i + " = " + value, null);
 	                     break;
 	                  }
 	                  if (committer == null) {                  
@@ -81,7 +80,7 @@ public class SingleTXCheckStage extends AbstractDistStage {
 	                           }
 	                        }
 	                        if (!found) {
-	                           exception(ack, "The transaction should be committed by slave " + commitSlave + " but commiter is " + committer, null);
+	                           ack = exception("The transaction should be committed by slave " + commitSlave + " but commiter is " + committer, null);
 	                           break;
 	                        }
 	                     }
@@ -94,25 +93,25 @@ public class SingleTXCheckStage extends AbstractDistStage {
                               }
                            }
 	                        if (!found) {
-	                           exception(ack, "The transaction should be committed by thread " + commitThread + " but commiter is " + committer, null);
+	                           ack = exception("The transaction should be committed by thread " + commitThread + " but commiter is " + committer, null);
 	                           break;
 	                        }
 	                     }
 	                  } else if (!committer.equals(m.group(2))) {
-	                     exception(ack, "Inconsistency: previous committer was " + committer + ", this is " + m.group(2), null);
+	                     ack = exception("Inconsistency: previous committer was " + committer + ", this is " + m.group(2), null);
 	                     break;
 	                  }
 	               } else {
-	                  exception(ack, "Unexpected value for txKey" + i + " = " + value, null);
+	                  ack = exception("Unexpected value for txKey" + i + " = " + value, null);
 	                  break;
 	               }
 	            } else {
 	               if (value != null) {
-	                  exception(ack, "The value for txKey" + i + " should have been deleted, is " + value, null);
+	                  ack = exception("The value for txKey" + i + " should have been deleted, is " + value, null);
 	               }
 	            }
 	         } catch (Exception e) {
-	            exception(ack, "Failed to get key txKey" + i, e);
+	            ack = exception("Failed to get key txKey" + i, e);
 	            break;
 	         }
 	      }
@@ -120,12 +119,8 @@ public class SingleTXCheckStage extends AbstractDistStage {
       return ack;
    }
 
-   private void exception(DefaultDistStageAck ack, String message, Exception e) {
+   private DistStageAck exception(String message, Exception e) {
       log.error(message, e);
-      ack.setError(true);
-      ack.setErrorMessage(message);
-      if (e != null) {
-         ack.setRemoteException(e);
-      }
+      return errorResponse(message, e);
    }
 }

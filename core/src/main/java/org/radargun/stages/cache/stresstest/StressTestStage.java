@@ -21,7 +21,15 @@ import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.cache.generators.WrappedArrayValueGenerator;
 import org.radargun.stages.helpers.BucketPolicy;
-import org.radargun.stats.*;
+import org.radargun.stats.AllRecordingOperationStats;
+import org.radargun.stats.DefaultOperationStats;
+import org.radargun.stats.DefaultStatistics;
+import org.radargun.stats.HistogramOperationStats;
+import org.radargun.stats.HistogramStatistics;
+import org.radargun.stats.MultiOperationStats;
+import org.radargun.stats.OperationStats;
+import org.radargun.stats.PeriodicStatistics;
+import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.Histogram;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.BulkOperations;
@@ -232,19 +240,19 @@ public class StressTestStage extends AbstractDistStage {
    }
 
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck result = new DefaultDistStageAck(slaveState.getSlaveIndex(), slaveState.getLocalAddress());
-      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
-         log.info(String.format("The stage should not run on this slave (%d): slaves=%s", slaveState.getSlaveIndex(), slaves));
-         return result;
+      if (!shouldExecute()) {
+         log.info("The stage should not run on this slave");
+         return successfulResponse();
       }
       if (!isServiceRunnning()) {
          log.info("Not running test on this slave as service is not running.");
-         return result;
+         return successfulResponse();
       }
 
       log.info("Executing: " + this.toString());
       startNanos = System.nanoTime();
 
+      DefaultDistStageAck result = newDefaultStageAck();
       try {
          List<List<Statistics>> results = execute();
          result.setPayload(results);

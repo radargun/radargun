@@ -9,7 +9,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -49,9 +48,8 @@ public class SingleTXLoadStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
-      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
-         return ack;
+      if (!shouldExecute()) {
+         return successfulResponse();
       }
       List<ClientThread> clients = new ArrayList<ClientThread>();
       for (int i = 0; i < threads; ++i) {
@@ -59,26 +57,23 @@ public class SingleTXLoadStage extends AbstractDistStage {
          clients.add(ct);
          ct.start();
       }
+      DistStageAck ack = successfulResponse();
       for (ClientThread ct : clients) {
          try {
             ct.join();
             if (ct.exception != null) {
-               exception(ack, "Exception in client thread", ct.exception);
+               ack = exception("Exception in client thread", ct.exception);
             }
          } catch (InterruptedException e) {
-            exception(ack, "Failed to join " + ct, ct.exception);
+            ack = exception("Failed to join " + ct, ct.exception);
          }
       }
       return ack;
    }
 
-   private void exception(DefaultDistStageAck ack, String message, Exception e) {
+   private DistStageAck exception(String message, Exception e) {
       log.error(message, e);
-      ack.setError(true);
-      ack.setErrorMessage(message);
-      if (e != null) {
-         ack.setRemoteException(e);
-      }
+      return errorResponse(message, e);
    }
 
    private class ClientThread extends Thread {

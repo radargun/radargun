@@ -39,18 +39,13 @@ public class ParallelStartStopStage extends AbstractServiceStartStage {
          "reachable from the new node. Default is all slaves.")
    private Set<Integer> reachable = null;
 
-   /* Note: having role for start has no sense as the dead nodes cannot have any role in the cluster */
-   @Property(doc = "Another way how to specify stopped nodes is by role. Available roles are "
-         + RoleHelper.SUPPORTED_ROLES + ". By default this is not used.")
-   private RoleHelper.Role role;
-
    @Override
    public DistStageAck executeOnSlave() {
       if (lifecycle == null) {
          log.warn("No lifecycle for service " + slaveState.getServiceName());
          return successfulResponse();
       }
-      boolean stopMe = stop.contains(slaveState.getSlaveIndex()) || RoleHelper.hasRole(slaveState, role);
+      boolean stopMe = stop.contains(slaveState.getSlaveIndex()) || RoleHelper.hasAnyRole(slaveState, roles);
       boolean startMe = start.contains(slaveState.getSlaveIndex());
       if (!(stopMe || startMe)) {
          log.info("Nothing to kill or start...");

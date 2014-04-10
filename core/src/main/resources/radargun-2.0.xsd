@@ -238,31 +238,24 @@
       </annotation>
       <complexContent>
          <extension base="rg:abstract">
-            <attribute name="run-on-all-slaves" type="rg:boolean">
+            <attribute name="groups" type="string">
                <annotation>
-                  <documentation>If set to true the stage should be run on maxSlaves (applies to scaling benchmarks). Default is false.</documentation>
+                  <documentation>Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="roles" type="string">
+               <annotation>
+                  <documentation>Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</documentation>
                </annotation>
             </attribute>
             <attribute name="slaves" type="string">
                <annotation>
-                  <documentation>Specifies on which slaves should this stage actively run. Default is stage-dependent (usually all or none).</documentation>
+                  <documentation>Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</documentation>
                </annotation>
             </attribute>
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="boolean">
-      <union>
-         <simpleType>
-            <restriction base="boolean"/>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
    <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.AbstractMasterStage-->
    <complexType abstract="true" name="abstract-master">
       <annotation>
@@ -456,6 +449,18 @@
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <simpleType name="long">
       <union>
          <simpleType>
@@ -1349,11 +1354,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Applicable only for cache wrappers with Partitionable feature. Set of slaves that should bereachable from the new node. Default is all slaves.</documentation>
                </annotation>
             </attribute>
-            <attribute name="role" type="rg:org-radargun-stages-helpers-rolehelper-role">
-               <annotation>
-                  <documentation>Another way how to specify stopped nodes is by role. Available roles are [COORDINATOR]. By default this is not used.</documentation>
-               </annotation>
-            </attribute>
             <attribute name="start" type="string">
                <annotation>
                   <documentation>Set of slaves which should be started in this stage. Default is empty.</documentation>
@@ -1377,20 +1377,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="org-radargun-stages-helpers-rolehelper-role">
-      <union>
-         <simpleType>
-            <restriction base="string">
-               <enumeration value="COORDINATOR"/>
-            </restriction>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
    <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.stresstest.QueryStage-->
    <complexType name="query">
       <annotation>
@@ -1609,11 +1595,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="graceful" type="rg:boolean">
                <annotation>
                   <documentation>If set to false, the node crash should be simulated. By default node should be shutdown gracefully.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="role" type="rg:org-radargun-stages-helpers-rolehelper-role">
-               <annotation>
-                  <documentation>Instead of specifying concrete slaves we may choose a victim based on his role in the cluster. Supported roles are [COORDINATOR]. By default no role is specified.</documentation>
                </annotation>
             </attribute>
             <attribute name="wait-for-delayed" type="rg:boolean">

@@ -1,7 +1,5 @@
 package org.radargun.stages.cache;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.radargun.DistStageAck;
@@ -83,7 +81,7 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    private int confirmReplication() throws Exception {
       cache.put(confirmationKey(slaveState.getSlaveIndex()), "true");
-      for (int i : getSlaves()) {
+      for (int i : getExecutingSlaves()) {
          for (int j = 0; j < 10 && (cache.get(confirmationKey(i)) == null); j++) {
             tryToPut();
             cache.put(confirmationKey(slaveState.getSlaveIndex()), "true");
@@ -122,7 +120,7 @@ public class ClusterValidationStage extends AbstractDistStage {
                success = false;
             }
          } else { //total replication expected
-            int expectedRepl = getSlaves().size() - 1;
+            int expectedRepl = getExecutingSlaves().size() - 1;
             if (!(replCount == expectedRepl)) {
                log.warn("On slave " + ack + " total replication hasn't occurred. Expected " + expectedRepl + " and received " + replCount);
                success = false;
@@ -154,7 +152,7 @@ public class ClusterValidationStage extends AbstractDistStage {
       int replCount = 0;      
       for (int i = 0; i < replicationTryCount; i++) {
          replCount = replicationCount();
-         if ((partialReplication && replCount >= 1) || (!partialReplication && (replCount == getSlaves().size() - 1))) {
+         if ((partialReplication && replCount >= 1) || (!partialReplication && (replCount == getExecutingSlaves().size() - 1))) {
             log.info("Replication test successfully passed. partialReplication? " + partialReplication + ", replicationCount = " + replCount);
             return replCount;
          }
@@ -199,17 +197,6 @@ public class ClusterValidationStage extends AbstractDistStage {
          }
       }
       return null;
-   }
-
-   public Collection<Integer> getSlaves() {
-      if (slaves == null) {
-         Collection<Integer> list = new ArrayList<Integer>();
-         for (int i = 0; i < slaveState.getClusterSize(); ++i) {
-            list.add(i);
-         }
-         slaves = list;
-      }
-      return slaves;
    }
 
    private String key(int slaveIndex) {
