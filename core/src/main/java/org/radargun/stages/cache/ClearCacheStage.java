@@ -58,7 +58,7 @@ public class ClearCacheStage extends AbstractDistStage {
       for (int i = 0; i < 5; i++) {
          try {
             log.info(Utils.printMemoryFootprint(true));
-            if (slaves == null || slaves.contains(slaveState.getSlaveIndex())) {
+            if (shouldExecute()) {
                DistStageAck response = executeClear();
                if (response != null) return response;
             } else {

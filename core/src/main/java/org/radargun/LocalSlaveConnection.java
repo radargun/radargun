@@ -37,11 +37,9 @@ public class LocalSlaveConnection implements SlaveConnection {
       extras.put(Properties.PROPERTY_SLAVE_INDEX, "0");
       extras.put(Properties.PROPERTY_GROUP_NAME, Cluster.DEFAULT_GROUP);
       extras.put(Properties.PROPERTY_GROUP_SIZE, "1");
-      slaveState.setClusterSize(1);
-      slaveState.setGroupSize(1);
       slaveState.setMaxClusterSize(1);
+      slaveState.setCluster(Cluster.LOCAL);
       slaveState.setSlaveIndex(0);
-      slaveState.setIndexInGroup(0);
       slaveState.setLocalAddress(InetAddress.getLoopbackAddress());
    }
 

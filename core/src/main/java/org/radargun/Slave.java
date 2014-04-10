@@ -61,10 +61,7 @@ public class Slave {
             int stageId;
             Cluster.Group group = cluster.getGroup(state.getSlaveIndex());
             Configuration.Setup setup = configuration.getSetup(group.name);
-            state.setClusterSize(cluster.getSize());
-            state.setGroupSize(group.size);
-            state.setGroupCount(configuration.getSetups().size());
-            state.setIndexInGroup(cluster.getIndexInGroup(slaveIndex));
+            state.setCluster(cluster);
             state.setPlugin(setup.plugin);
             state.setService(setup.service);
             state.setTimeline(new Timeline(slaveIndex));

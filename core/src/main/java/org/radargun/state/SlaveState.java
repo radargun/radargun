@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.radargun.config.Cluster;
 import org.radargun.reporting.Timeline;
 import org.radargun.utils.ClassLoadHelper;
 
@@ -18,12 +19,11 @@ public class SlaveState extends StateBase {
 
    private InetAddress localAddress;
    private int slaveIndex = -1;
-   private int groupSize = 0;
-   private int groupCount = 1;
    private String plugin;
    private ClassLoadHelper classLoadHelper;
    private String serviceName;
-   private Object service;
+   private Cluster cluster;
+   private Cluster.Group group;
    private int indexInGroup;
    private Map<Class<?>, Object> traits;
    private Timeline timeline;
@@ -45,12 +45,20 @@ public class SlaveState extends StateBase {
       return slaveIndex;
    }
 
-   public void setGroupSize(int groupSize) {
-      this.groupSize = groupSize;
+   @Override
+   public void setCluster(Cluster cluster) {
+      super.setCluster(cluster);
+      this.cluster = cluster;
+      group = cluster.getGroup(slaveIndex);
+      indexInGroup = cluster.getIndexInGroup(slaveIndex);
+   }
+
+   public String getGroupName() {
+      return group.name;
    }
 
    public int getGroupSize() {
-      return groupSize;
+      return group.size;
    }
 
    public ClassLoadHelper getClassLoadHelper() {
@@ -74,20 +82,16 @@ public class SlaveState extends StateBase {
       this.serviceName = plugin + "/" + service;
    }
 
-   public int getGroupCount() {
-      return groupCount;
+   public String getGroupName(int slaveIndex) {
+      return cluster.getGroup(slaveIndex).name;
    }
 
-   public void setGroupCount(int groupCount) {
-      this.groupCount = groupCount;
+   public int getGroupCount() {
+      return cluster.getGroups().size();
    }
 
    public int getIndexInGroup() {
       return indexInGroup;
-   }
-
-   public void setIndexInGroup(int indexInGroup) {
-      this.indexInGroup = indexInGroup;
    }
 
    public void setTraits(Map<Class<?>, Object> traits) {

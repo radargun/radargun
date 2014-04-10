@@ -6,7 +6,6 @@ import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.DefaultDistStageAck;
-import org.radargun.stages.helpers.RoleHelper;
 
 /**
  * 
@@ -26,10 +25,6 @@ public class ServiceStopStage extends AbstractDistStage {
 
    @Property(doc = "If set to true the benchmark will not wait until the node is stopped. Default is false.")
    private boolean async = false;
-
-   @Property(doc = "Instead of specifying concrete slaves we may choose a victim based on his role in the cluster. " +
-         "Supported roles are " + RoleHelper.SUPPORTED_ROLES + ". By default no role is specified.")
-   private RoleHelper.Role role;
 
    @Property(converter = TimeConverter.class, doc = "If this value is positive the stage will spawn a thread which " +
          "will stop the node after the delay. The stage will not wait for anything. By default the stop is immediate " +
@@ -59,8 +54,7 @@ public class ServiceStopStage extends AbstractDistStage {
          } else {
             log.info("No delayed execution found in history.");
          }
-      } else if ((role != null && RoleHelper.hasRole(slaveState, role))
-            || slaves == null || slaves.contains(slaveState.getSlaveIndex())) {
+      } else if (shouldExecute()) {
          if (delayExecution > 0) {
             Thread t = new Thread() {
                @Override

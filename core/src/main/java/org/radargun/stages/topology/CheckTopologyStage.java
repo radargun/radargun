@@ -8,7 +8,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.TopologyHistory;
 import org.radargun.traits.TopologyHistory.Event;
@@ -41,19 +40,16 @@ public class CheckTopologyStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
-      if (!slaves.contains(slaveState.getSlaveIndex())) {
+      if (!shouldExecute()) {
          log.debug("Ignoring this slave");
-         return ack;
+         return successfulResponse();
       }
       if (type == Type.HASH_AND_TOPOLOGY || type == Type.TOPOLOGY) {
          List<Event> history = topologyHistory.getTopologyChangeHistory();
          if (!check(history)) {
             String message = "Topology check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1));
             log.error(message);
-            ack.setError(true);
-            ack.setErrorMessage(message);
-            return ack;
+            return errorResponse(message, null);
          } else {
             log.debug("Topology check passed.");
          }
@@ -63,14 +59,12 @@ public class CheckTopologyStage extends AbstractDistStage {
          if (!check(history)) {
             String message = "Hash check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1));
             log.error(message);
-            ack.setError(true);
-            ack.setErrorMessage(message);
-            return ack;
+            return errorResponse(message, null);
          } else {
             log.debug("Hash check passed.");
          }
       }
-      return ack;
+      return successfulResponse();
    }
 
    private boolean check(List<Event> history) {

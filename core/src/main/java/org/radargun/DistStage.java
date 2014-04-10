@@ -27,6 +27,4 @@ public interface DistStage extends Stage, Serializable {
     * @return returning false will cause the benchmark to stop.
     */
    boolean processAckOnMaster(List<DistStageAck> acks);
-
-   public boolean isRunOnAllSlaves();
 }

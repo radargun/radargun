@@ -95,13 +95,12 @@ public class CheckCacheDataStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
-      if (slaves != null && !slaves.contains(slaveState.getSlaveIndex())) {
-         return ack;
+      if (!shouldExecute()) {
+         return successfulResponse();
       }
       if (!isServiceRunnning()) {
          // this slave is dead and does not participate on check
-         return ack;
+         return successfulResponse();
       }
       keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
       if (keyGenerator == null) {
@@ -143,14 +142,12 @@ public class CheckCacheDataStage extends AbstractDistStage {
                result.merge(value);
             }
          }
-      } catch (Exception e) {         
+      } catch (Exception e) {
          log.error("Failed to check entries", e);
-         ack.setError(true);
-         ack.setRemoteException(e);
-         ack.setErrorMessage("Failed to check entries");
-         return ack;
+         return errorResponse("Failed to check entries", e);
       }
 
+      DefaultDistStageAck ack = newDefaultStageAck();
       if (!isDeleted()) {
          if (result.found != getExpectedNumEntries()) {
             ack.setError(true);

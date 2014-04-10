@@ -1,7 +1,9 @@
 package org.radargun.stages;
 
-import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.radargun.DistStage;
 import org.radargun.DistStageAck;
@@ -9,6 +11,7 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.stages.helpers.RoleHelper;
 import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.InjectTrait;
@@ -33,11 +36,19 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
     */
    protected SlaveState slaveState;
 
-   @Property(doc = "Specifies on which slaves should this stage actively run. Default is stage-dependent (usually all or none).")
-   protected Collection<Integer> slaves;
+   @Property(doc = "Specifies on which slaves this stage should actively run. " +
+         "The result set is intersection of specified slaves, groups and roles. Default is all slaves.")
+   protected Set<Integer> slaves;
 
-   @Property(doc = "If set to true the stage should be run on maxSlaves (applies to scaling benchmarks). Default is false.")
-   private boolean runOnAllSlaves;
+   @Property(doc = "Specifies in which groups this stage should actively run. " +
+         "The result set is intersection of specified slaves, groups and roles. Default is all groups.")
+   protected Set<String> groups;
+
+   @Property(doc = "Specifies on which slaves this stage should actively run, by their roles. " +
+         "The result set is intersection of specified slaves, groups and roles. " +
+         "Supported roles are " + RoleHelper.SUPPORTED_ROLES + ". Default is all roles.")
+   protected Set<RoleHelper.Role> roles;
+
 
    @InjectTrait
    protected Lifecycle lifecycle;
@@ -56,12 +67,35 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       return lifecycle == null || lifecycle.isRunning();
    }
 
-   public boolean isRunOnAllSlaves() {
-      return runOnAllSlaves;
-   }
-
    protected DefaultDistStageAck newDefaultStageAck() {
       return new DefaultDistStageAck(slaveState.getSlaveIndex(), slaveState.getLocalAddress());
+   }
+
+   protected boolean shouldExecute() {
+      boolean execBySlave = slaves == null || slaves.contains(slaveState.getSlaveIndex());
+      boolean execByGroup = groups == null || groups.contains(slaveState.getGroupName());
+      boolean execByRole = roles == null || RoleHelper.hasAnyRole(slaveState, roles);
+      return execBySlave && execByGroup && execByRole;
+   }
+
+   protected Set<Integer> getExecutingSlaves() {
+      Set<Integer> slaves = this.slaves;
+      if (slaves == null) {
+         slaves = new TreeSet<Integer>();
+         for (int i = 0; i < slaveState.getClusterSize(); ++i) {
+            slaves.add(i);
+         }
+      }
+      if (groups != null) {
+         for (Iterator<Integer> it = slaves.iterator(); it.hasNext();) {
+            int slaveIndex = it.next();
+            if (!groups.contains(slaveState.getGroupName(slaveIndex))) {
+               it.remove();
+            }
+         }
+      }
+      // roles are not supported here as we can't determine if the slave has some role remotely
+      return slaves;
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks) {

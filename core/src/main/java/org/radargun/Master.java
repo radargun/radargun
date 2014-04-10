@@ -54,6 +54,7 @@ public class Master {
          }
          connection.establish();
          connection.sendScenario(masterConfig.getScenario());
+         state.setMaxClusterSize(masterConfig.getMaxClusterSize());
          long benchmarkStart = System.currentTimeMillis();
          for (Configuration configuration : masterConfig.getConfigurations()) {
             log.info("Started benchmarking configuration '" + configuration.name + "'");
@@ -63,8 +64,7 @@ public class Master {
             for (Cluster cluster : masterConfig.getClusters()) {
                log.info("Starting scenario on " + cluster);
                connection.sendCluster(cluster);
-               state.setClusterSize(cluster.getSize());
-               state.setMaxClusterSize(masterConfig.getMaxClusterSize());
+               state.setCluster(cluster);
                state.setReport(new Report(configuration, cluster));
                long clusterStart = System.currentTimeMillis();
                try {
@@ -166,7 +166,7 @@ public class Master {
          log.debug("Starting distributed '" + stage.getName() + "'. Details:" + stage);
       else
          log.info("Starting distributed '" + stage.getName() + "'.");
-      int numSlaves = stage.isRunOnAllSlaves() ? state.getMaxClusterSize() : state.getClusterSize();
+      int numSlaves = state.getClusterSize();
       stage.initOnMaster(state);
       List<DistStageAck> responses = connection.runStage(stageId, numSlaves);
       if (responses.size() > 1) {

@@ -3,6 +3,8 @@ package org.radargun.state;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.radargun.config.Cluster;
+
 /**
  * Support class for master and slave states.
  *
@@ -27,8 +29,8 @@ public class StateBase {
       return clusterSize;
    }
 
-   public void setClusterSize(int clusterSize) {
-      this.clusterSize = clusterSize;
+   public void setCluster(Cluster cluster) {
+      this.clusterSize = cluster.getSize();
    }
 
    public int getMaxClusterSize() {
