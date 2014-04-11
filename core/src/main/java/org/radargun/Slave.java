@@ -11,7 +11,6 @@ import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.ServiceListener;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.TraitHelper;
@@ -75,10 +74,10 @@ public class Slave {
                TraitHelper.InjectResult result = TraitHelper.inject(stage, traits);
                DistStageAck response;
                if (result == TraitHelper.InjectResult.FAILURE) {
-                  response = new DefaultDistStageAck(slaveIndex, state.getLocalAddress())
+                  response = new DistStageAck(state)
                         .error("The stage was not executed because it missed some mandatory traits.", null);
                } else if (result == TraitHelper.InjectResult.SKIP) {
-                  response  = new DefaultDistStageAck(slaveIndex, state.getLocalAddress());
+                  response  = new DistStageAck(state);
                   log.info("Stage was skipped because it was missing some traits");
                } else {
                   InitHelper.init(stage);
@@ -98,13 +97,13 @@ public class Slave {
                   } catch (Exception e) {
                      end = System.currentTimeMillis();
                      log.error("Stage execution has failed", e);
-                     response = new DefaultDistStageAck(state.getSlaveIndex(), state.getLocalAddress()).error("Stage execution has failed", e);
+                     response = new DistStageAck(state).error("Stage execution has failed", e);
                   }
                   state.getTimeline().addEvent(Stage.STAGE, new Timeline.IntervalEvent(start, stage.getName(), end - start));
                }
                connection.sendResponse(response);
             }
-            connection.sendResponse(new DefaultDistStageAck(state.getSlaveIndex(), state.getLocalAddress()));
+            connection.sendResponse(new DistStageAck(state));
             for (ServiceListener listener : state.getServiceListeners()) {
                listener.serviceDestroyed();
             }

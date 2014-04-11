@@ -4,7 +4,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 
 /**
  * 
@@ -20,22 +19,17 @@ public class BackgroundStressorsStopStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
       try {
          BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState);
          if (instance != null) {
             instance.waitUntilLoaded();
             instance.stopBackgroundThreads();
          } else {
-            log.error("No " + BackgroundOpsManager.NAME);
-            ack.setError(true);
+            return errorResponse("No " + BackgroundOpsManager.NAME);
          }
-         return ack;
+         return successfulResponse();
       } catch (Exception e) {
-         log.error("Error while stopping background stats", e);
-         ack.setError(true);
-         ack.setRemoteException(e);
-         return ack;
+         return errorResponse("Error while stopping background stats", e);
       }
    }
 }

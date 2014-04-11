@@ -52,7 +52,6 @@ public class SingleTXCheckStage extends AbstractDistStage {
          caches.addAll(cacheInformation.getCacheNames());
       }
 
-      DistStageAck ack = successfulResponse();
       for (String cacheName : caches) {
          if (cacheName != null) {
             log.info("Checking cache " + cacheName);
@@ -66,8 +65,7 @@ public class SingleTXCheckStage extends AbstractDistStage {
 	               Matcher m;
 	               if (value != null && value instanceof String && (m = txValue.matcher((String) value)).matches()) {
 	                  if (Integer.parseInt(m.group(1)) != i) {
-	                     ack = exception("Unexpected value for txKey" + i + " = " + value, null);
-	                     break;
+	                     return errorResponse("Unexpected value for txKey" + i + " = " + value);
 	                  }
 	                  if (committer == null) {                  
 	                     committer = m.group(2);
@@ -80,8 +78,7 @@ public class SingleTXCheckStage extends AbstractDistStage {
 	                           }
 	                        }
 	                        if (!found) {
-	                           ack = exception("The transaction should be committed by slave " + commitSlave + " but commiter is " + committer, null);
-	                           break;
+	                           return errorResponse("The transaction should be committed by slave " + commitSlave + " but commiter is " + committer);
 	                        }
 	                     }
 	                     if (commitThread != null) {
@@ -93,34 +90,25 @@ public class SingleTXCheckStage extends AbstractDistStage {
                               }
                            }
 	                        if (!found) {
-	                           ack = exception("The transaction should be committed by thread " + commitThread + " but commiter is " + committer, null);
-	                           break;
+	                           return errorResponse("The transaction should be committed by thread " + commitThread + " but commiter is " + committer);
 	                        }
 	                     }
 	                  } else if (!committer.equals(m.group(2))) {
-	                     ack = exception("Inconsistency: previous committer was " + committer + ", this is " + m.group(2), null);
-	                     break;
+	                     return errorResponse("Inconsistency: previous committer was " + committer + ", this is " + m.group(2));
 	                  }
 	               } else {
-	                  ack = exception("Unexpected value for txKey" + i + " = " + value, null);
-	                  break;
+	                  return errorResponse("Unexpected value for txKey" + i + " = " + value);
 	               }
 	            } else {
 	               if (value != null) {
-	                  ack = exception("The value for txKey" + i + " should have been deleted, is " + value, null);
+	                  return errorResponse("The value for txKey" + i + " should have been deleted, is " + value);
 	               }
 	            }
 	         } catch (Exception e) {
-	            ack = exception("Failed to get key txKey" + i, e);
-	            break;
+	            return errorResponse("Failed to get key txKey" + i, e);
 	         }
 	      }
       }
-      return ack;
-   }
-
-   private DistStageAck exception(String message, Exception e) {
-      log.error(message, e);
-      return errorResponse(message, e);
+      return successfulResponse();
    }
 }

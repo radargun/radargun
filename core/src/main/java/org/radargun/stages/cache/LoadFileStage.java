@@ -1,5 +1,7 @@
 package org.radargun.stages.cache;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,7 +15,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Utils;
@@ -48,16 +50,17 @@ public class LoadFileStage extends AbstractDistStage {
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
-      super.processAckOnMaster(acks);
+      if (!super.processAckOnMaster(acks)) {
+         return false;
+      }
       long fileSize = new File(filePath).length();
       log.info("--------------------");
       log.info("Size of file '" + filePath + "' is " + fileSize + " bytes");
       log.info("Value size is '" + valueSize + "' which will produce " + (int) Math.ceil((double) fileSize / valueSize)
             + " keys");
-      for (DistStageAck ack : acks) {
-         long[] result = (long[]) ((DefaultDistStageAck) ack).getPayload();
-         log.info("Slave " + ((DefaultDistStageAck) ack).getSlaveIndex() + " wrote " + result[0]
-               + " values to the cache with a total size of " + result[1] + " bytes");
+      for (ResultAck ack : cast(acks, ResultAck.class)) {
+         log.info("Slave " + ack.getSlaveIndex() + " wrote " + ack.putCount
+               + " values to the cache with a total size of " + ack.totalBytesRead + " bytes");
       }
       log.info("--------------------");
       return true;
@@ -65,7 +68,6 @@ public class LoadFileStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck result = newDefaultStageAck();
       int totalWriters = slaveState.getClusterSize();
       long fileOffset = valueSize * slaveState.getSlaveIndex();// index starts at 0
 
@@ -122,15 +124,11 @@ public class LoadFileStage extends AbstractDistStage {
                break;
             }
          }
-         result.setPayload(new long[] { putCount, totalBytesRead });
+         return new ResultAck(slaveState, putCount, totalBytesRead);
       } catch (FileNotFoundException e) {
-         log.fatal("File not find at path: " + filePath, e);
-         result.setError(true);
-         result.setErrorMessage("File not find at path: " + filePath);
+         return errorResponse("File not find at path: " + filePath, e);
       } catch (Exception e) {
-         log.fatal("An exception occurred", e);
-         result.setError(true);
-         result.setErrorMessage("An exception occurred");
+         return errorResponse("An exception occurred", e);
       } finally {
          if (file != null) {
             try {
@@ -140,7 +138,24 @@ public class LoadFileStage extends AbstractDistStage {
             }
          }
       }
+   }
 
-      return result;
+   private static class ResultAck extends DistStageAck {
+      final long putCount;
+      final long totalBytesRead;
+
+      private ResultAck(SlaveState slaveState, long putCount, long totalBytesRead) {
+         super(slaveState);
+         this.putCount = putCount;
+         this.totalBytesRead = totalBytesRead;
+      }
+
+      @Override
+      public String toString() {
+         return "ResultAck{" +
+               "putCount=" + putCount +
+               ", totalBytesRead=" + totalBytesRead +
+               "} " + super.toString();
+      }
    }
 }

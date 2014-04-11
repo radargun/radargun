@@ -1,5 +1,7 @@
 package org.radargun.stages.distributedtask;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,10 +12,10 @@ import java.util.concurrent.TimeUnit;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.stages.AbstractDistStage;
+import org.radargun.state.SlaveState;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Clustered;
-import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.traits.DistributedTaskExecutor;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Utils;
@@ -75,9 +77,8 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          reportCsvContent.append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, DURATION_NANOSECONDS\n");
       }
 
-      for (DistStageAck ack : acks) {
-         DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-         reportCsvContent.append((String) dack.getPayload()).append("\n");
+      for (TextAck ack : cast(acks, TextAck.class)) {
+         reportCsvContent.append(ack.getText()).append("\n");
       }
       reportCsvContent.append("\n");
 
@@ -103,9 +104,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
       if (slaveState.getSlaveIndex() == 0) {
          return executeTask();
       } else {
-         DefaultDistStageAck result = newDefaultStageAck();
-         result.setPayload(getPayload(0));
-         return result;
+         return new TextAck(slaveState);
       }
    }
 
@@ -113,37 +112,30 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
       return slaveState.getSlaveIndex() + ", " + clustered.getClusteredNodes() + ", " + cacheInformation.getCache(null).getLocalSize() + ", " + durationNanos;
    }
 
-   private DefaultDistStageAck executeTask() {
+   private DistStageAck executeTask() {
       List<Future<T>> futureList = null;
       List<T> resultList = new ArrayList<T>();
-      DefaultDistStageAck result = newDefaultStageAck();
 
       log.info("--------------------");
-      @SuppressWarnings("unchecked")
-      long durationNanos;
       long start = System.nanoTime();
       futureList = executor.executeDistributedTask(slaveState.getClassLoadHelper(), distributedCallableFqn,
             executionPolicyName, failoverPolicyFqn, nodeAddress, Utils.parseParams(distributedExecutionParams));
+      TextAck ack = new TextAck(slaveState);
       if (futureList == null) {
-         result.setError(true);
-         result.setErrorMessage("No future objects returned from executing the distributed task.");
+         ack.error("No future objects returned from executing the distributed task.");
       } else {
          for (Future<T> future : futureList) {
             try {
                resultList.add(future.get());
             } catch (InterruptedException e) {
-               result.setError(true);
-               result.setErrorMessage("The distributed task was interrupted.");
-               result.setRemoteException(e);
+               ack.error("The distributed task was interrupted.", e);
             } catch (ExecutionException e) {
-               result.setError(true);
-               result.setErrorMessage("An error occurred executing the distributed task.");
-               result.setRemoteException(e);
+               ack.error("An error occurred executing the distributed task.", e);
             }
          }
       }
-      durationNanos = System.nanoTime() - start;
-      result.setPayload(getPayload(durationNanos));
+      long durationNanos = System.nanoTime() - start;
+      ack.setText(getPayload(durationNanos));
 
       log.info("Distributed Execution task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
       log.info(clustered.getClusteredNodes() + " nodes were used. " + cacheInformation.getCache(null).getLocalSize() + " entries on this node");
@@ -153,6 +145,23 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          log.info(t.toString());
       }
       log.info("--------------------");
-      return result;
+      return ack;
+   }
+
+   private static class TextAck extends DistStageAck {
+      private String text;
+
+      private TextAck(SlaveState slaveState) {
+         super(slaveState);
+         this.text = text;
+      }
+
+      public void setText(String text) {
+         this.text = text;
+      }
+
+      public String getText() {
+         return text;
+      }
    }
 }

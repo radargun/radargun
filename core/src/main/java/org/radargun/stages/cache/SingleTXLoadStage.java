@@ -62,18 +62,13 @@ public class SingleTXLoadStage extends AbstractDistStage {
          try {
             ct.join();
             if (ct.exception != null) {
-               ack = exception("Exception in client thread", ct.exception);
+               ack = errorResponse("Exception in client thread", ct.exception);
             }
          } catch (InterruptedException e) {
-            ack = exception("Failed to join " + ct, ct.exception);
+            ack = errorResponse("Failed to join " + ct, ct.exception);
          }
       }
       return ack;
-   }
-
-   private DistStageAck exception(String message, Exception e) {
-      log.error(message, e);
-      return errorResponse(message, e);
    }
 
    private class ClientThread extends Thread {

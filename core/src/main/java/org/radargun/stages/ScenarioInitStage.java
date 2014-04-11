@@ -13,6 +13,6 @@ public class ScenarioInitStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       slaveState.put(INITIAL_FREE_MEMORY, Runtime.getRuntime().freeMemory());
-      return newDefaultStageAck();
+      return successfulResponse();
    }
 }

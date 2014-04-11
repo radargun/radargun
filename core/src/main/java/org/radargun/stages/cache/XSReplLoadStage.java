@@ -4,7 +4,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.helpers.Range;
@@ -38,8 +37,7 @@ public class XSReplLoadStage extends AbstractDistStage {
 
 
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
-            KeyGenerator keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
+      KeyGenerator keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
       if (keyGenerator == null) {
          keyGenerator = new StringKeyGenerator();
       }
@@ -57,6 +55,6 @@ public class XSReplLoadStage extends AbstractDistStage {
             log.error("Error inserting key " + i + " into " + cacheName);
          }
       }
-      return ack;
+      return successfulResponse();
    }
 }

@@ -6,7 +6,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.sysmonitor.LocalJmxMonitor;
 
 /**
@@ -34,7 +33,6 @@ public class JVMMonitorStartStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
       LocalJmxMonitor monitor = new LocalJmxMonitor(slaveState);
       monitor.setFrequency(frequency);
       monitor.setTimeUnit(timeUnit);
@@ -42,6 +40,6 @@ public class JVMMonitorStartStage extends AbstractDistStage {
       monitor.startMonitoringLocal();
       slaveState.put(MONITOR_KEY, monitor);
       slaveState.addServiceListener(monitor);
-      return ack;
+      return successfulResponse();
    }
 }

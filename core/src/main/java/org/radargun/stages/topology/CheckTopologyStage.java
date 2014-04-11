@@ -47,9 +47,7 @@ public class CheckTopologyStage extends AbstractDistStage {
       if (type == Type.HASH_AND_TOPOLOGY || type == Type.TOPOLOGY) {
          List<Event> history = topologyHistory.getTopologyChangeHistory();
          if (!check(history)) {
-            String message = "Topology check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1));
-            log.error(message);
-            return errorResponse(message, null);
+            return errorResponse("Topology check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1)));
          } else {
             log.debug("Topology check passed.");
          }
@@ -57,9 +55,7 @@ public class CheckTopologyStage extends AbstractDistStage {
       if (type == Type.HASH_AND_TOPOLOGY || type == Type.HASH) {
          List<Event> history = topologyHistory.getRehashHistory();
          if (!check(history)) {
-            String message = "Hash check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1));
-            log.error(message);
-            return errorResponse(message, null);
+            return errorResponse("Hash check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1)));
          } else {
             log.debug("Hash check passed.");
          }

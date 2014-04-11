@@ -5,7 +5,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -17,19 +16,15 @@ public class BackgroundStatisticsStartStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
       try {
          BackgroundOpsManager instance = BackgroundOpsManager.getOrCreateInstance(slaveState, statsIterationDuration);
 
          log.info("Starting statistics threads");
-            instance.startStats();
+         instance.startStats();
 
-         return ack;
+         return successfulResponse();
       } catch (Exception e) {
-         log.error("Error while starting background stats", e);
-         ack.setError(true);
-         ack.setRemoteException(e);
-         return ack;
+         return errorResponse("Error while starting background stats", e);
       }
    }
 }

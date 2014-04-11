@@ -96,17 +96,13 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
             try {
                Thread.sleep(1000);
             } catch (InterruptedException e) {
-               String message = "Waiting was interrupted";
-               log.error(message, e);
-               return errorResponse(message, e);
+               return errorResponse("Waiting was interrupted", e);
             }
             history = getEventHistory(topologyHistory);
          }
          /* end of wait_loop */
          if (timeout > 0 && System.currentTimeMillis() > startWaiting + timeout) {
-            String message = "Waiting has timed out";
-            log.error(message);
-            return errorResponse(message, null);
+            return errorResponse("Waiting has timed out");
          }
       }
       if (set) {

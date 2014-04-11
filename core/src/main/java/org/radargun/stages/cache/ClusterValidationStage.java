@@ -6,7 +6,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Utils;
@@ -50,11 +50,10 @@ public class ClusterValidationStage extends AbstractDistStage {
    private BasicOperations.Cache cache;
 
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck response = newDefaultStageAck();
       try {
          if (!isServiceRunnning()) {
             log.info("Missing wrapper, not participating on validation");
-            return response;
+            return successfulResponse();
          }
          cache = basicOperations.getCache(null);
          int replResult = checkReplicationSeveralTimes();
@@ -62,21 +61,16 @@ public class ClusterValidationStage extends AbstractDistStage {
             if (replResult > 0) {//only executes this on the slaves on which replication happened.
                int index = confirmReplication();
                if (index >= 0) {
-                  response.setError(true);
-                  response.setErrorMessage("Slave with index " + index + " hasn't confirmed the replication");
-                  return response;
+                  return errorResponse("Slave with index " + index + " hasn't confirmed the replication");
                }
             }
          } else {
             log.info("Using partial replication, skipping confirm phase");
          }
-         response.setPayload(replResult);
+         return new ReplicationAck(slaveState, replResult);
       } catch (Exception e) {
-         response.setError(true);
-         response.setRemoteException(e);
-         return response;
+         return errorResponse("Exception thrown", e);
       }
-      return response;
    }
 
    private int confirmReplication() throws Exception {
@@ -104,25 +98,24 @@ public class ClusterValidationStage extends AbstractDistStage {
       logDurationInfo(acks);
       boolean success = true;
       for (DistStageAck ack : acks) {
-         DefaultDistStageAck defaultStageAck = (DefaultDistStageAck) ack;
-         if (defaultStageAck.isError()) {
-            log.warn("Ack error from remote slave: " + defaultStageAck);
+         if (ack.isError()) {
+            log.warn("Ack error from remote slave: " + ack);
             return false;
          }
-         if (defaultStageAck.getPayload() == null) {
-            log.info("Slave " + defaultStageAck.getSlaveIndex() + " did not sent any response");
+         if (!(ack instanceof ReplicationAck)) {
+            log.info("Slave " + ack.getSlaveIndex() + " did not sent any response");
             continue;
          }
-         int replCount = (Integer) defaultStageAck.getPayload();
+         ReplicationAck replicationAck = (ClusterValidationStage.ReplicationAck) ack;
          if (partialReplication) {
-            if (!(replCount > 0)) {
-               log.warn("Replication hasn't occurred on slave: " + defaultStageAck);
+            if (replicationAck.result <= 0) {
+               log.warn("Replication hasn't occurred on slave: " + ack);
                success = false;
             }
          } else { //total replication expected
             int expectedRepl = getExecutingSlaves().size() - 1;
-            if (!(replCount == expectedRepl)) {
-               log.warn("On slave " + ack + " total replication hasn't occurred. Expected " + expectedRepl + " and received " + replCount);
+            if (!(replicationAck.result == expectedRepl)) {
+               log.warn("On slave " + ack + " total replication hasn't occurred. Expected " + expectedRepl + " and received " + replicationAck.result);
                success = false;
             }
          }
@@ -201,5 +194,14 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    private String key(int slaveIndex) {
       return KEY + slaveIndex;
+   }
+
+   private static class ReplicationAck extends DistStageAck {
+      final int result;
+
+      private ReplicationAck(SlaveState slaveState, int result) {
+         super(slaveState);
+         this.result = result;
+      }
    }
 }

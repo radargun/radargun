@@ -46,9 +46,7 @@ public class SetPartitionsStage extends AbstractDistStage {
       try {
          partitionable.setMembersInPartition(slaveState.getSlaveIndex(), partitions.get(myPartitionIndex));
       } catch (Exception e) {
-         String message = "Error setting members in partition";
-         log.error(message, e);
-         return errorResponse(message, e);
+         return errorResponse("Error setting members in partition", e);
       }
       return successfulResponse();
    }
