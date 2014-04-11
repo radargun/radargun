@@ -13,8 +13,12 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.BasicOperations;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * Contrary to {@link FixedSetOperationLogic}, this logic introduces new keys during its execution.
+ * Properties {@link StressTestStage#numEntries numEntries} or {@link StressTestStage#numBytes numBytes}
+ * impose only upper limit.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 class ChangingSetOperationLogic implements OperationLogic {
    private static Log log = LogFactory.getLog(StressTestStage.class);
 

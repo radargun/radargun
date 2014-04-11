@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 /**
+ * Base class for formatting HTML file.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class HtmlDocument {
@@ -13,12 +15,24 @@ public abstract class HtmlDocument {
    private final String title;
    private final String fileName;
 
+   /**
+    * Start a new document in given directory with specified filename and title.
+    * The file is not created yet upon construction of this object.
+    *
+    * @param directory
+    * @param fileName
+    * @param title
+    */
    public HtmlDocument(String directory, String fileName, String title) {
       this.directory = directory;
       this.fileName = fileName;
       this.title = title;
    }
 
+   /**
+    * Open the document file and write common headers.
+    * @throws IOException
+    */
    public void open() throws IOException {
       File dir = new File(directory);
       if (dir.exists() && !dir.isDirectory()) {
@@ -36,21 +50,39 @@ public abstract class HtmlDocument {
       write("</SCRIPT></HEAD>\n<BODY>");
    }
 
+   /**
+    * Write CSS styles.
+    */
    protected void writeStyle() {
    }
 
+   /**
+    * Write JavaScript scripts used in the document.
+    */
    protected void writeScripts() {
    }
 
+   /**
+    * Write footer and close the file.
+    */
    public void close() {
       writer.println("</BODY></HTML>");
       writer.close();
    }
 
+   /**
+    * Write open tag, content and closing tag
+    * @param tag
+    * @param content
+    */
    protected void writeTag(String tag, String content) {
       writer.write(String.format("<%s>%s</%s>", tag, content, tag));
    }
 
+   /**
+    * Write arbitrary text.
+    * @param text
+    */
    public void write(String text) {
       writer.write(text);
    }

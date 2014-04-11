@@ -1,8 +1,20 @@
 package org.radargun.stats.representation;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * --- <- max regular value
+ *  |
+ * --- <- 75 % values are less than this (q3)
+ * | |
+ * |o| <- mean
+ * | |
+ * --- <- 25 % values are less than this (q1)
+ *  |
+ * --- <- min regular value
+ *
+ * No cats whatsoever.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 public final class BoxAndWhiskers {
    public final double maxRegular;
    public final double q3;

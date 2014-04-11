@@ -1,8 +1,10 @@
 package org.radargun.stats.representation;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * Mean and standard deviation.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 public final class MeanAndDev {
    public final double mean;
    public final double dev;

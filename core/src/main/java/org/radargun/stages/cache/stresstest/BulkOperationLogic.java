@@ -11,8 +11,10 @@ import org.radargun.Operation;
 import org.radargun.traits.BulkOperations;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * Executes bulk operations (operations involving multiple keys) against the cache.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 class BulkOperationLogic implements OperationLogic {
    private final FixedSetOperationLogic initLogic;
    private final Operation putOperation;

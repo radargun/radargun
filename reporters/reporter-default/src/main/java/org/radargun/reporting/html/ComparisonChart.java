@@ -9,6 +9,8 @@ import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
 import org.radargun.stats.representation.MeanAndDev;
 
 /**
+ * Wraps JFree charts for use in reports.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class ComparisonChart {

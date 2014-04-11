@@ -17,6 +17,9 @@ import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
 
 /**
+ * Reporter presenting the statistics and timelines in form of directory
+ * with several linked HTML pages and image files displayed on those pages.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class HtmlReporter implements Reporter {

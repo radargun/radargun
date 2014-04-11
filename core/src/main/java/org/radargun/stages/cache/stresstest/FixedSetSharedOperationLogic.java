@@ -9,8 +9,11 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.BasicOperations;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * All threads execute the operations on shared set of keys.
+ * Therefore, locking conflicts can happen in the underlying cache.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 class FixedSetSharedOperationLogic extends FixedSetOperationLogic {
    private static Log log = LogFactory.getLog(StressTestStage.class);
 

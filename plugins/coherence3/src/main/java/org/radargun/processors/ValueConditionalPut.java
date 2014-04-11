@@ -6,6 +6,8 @@ import com.tangosol.util.InvocableMapHelper;
 import com.tangosol.util.processor.ConditionalPut;
 
 /**
+ * Conditional put returning previous value according to the JSR-107 spec.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ValueConditionalPut extends ConditionalPut {

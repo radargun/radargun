@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.radargun.Operation;
 
 /**
- * Statistics for tests where the request response time is expected to change during the test execution.
+ * Keeps a series of {@link Statistics} instances and records the requests according to current timestamp.
+ * Result retrieval needs special handling using the {@link #asList()} method.
+ *
+ * Useful when the request response time is expected to change during the test execution.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -20,7 +22,7 @@ public class PeriodicStatistics extends IntervalStatistics {
 
    public PeriodicStatistics(Statistics prototype, long period) {
       this.prototype = prototype;
-      this.period = TimeUnit.MILLISECONDS.toNanos(period);
+      this.period = period;
       this.buckets = new ArrayList<Statistics>();
    }
 
@@ -34,7 +36,7 @@ public class PeriodicStatistics extends IntervalStatistics {
    }
 
    private Statistics getCurrentBucket() {
-      long currentTime = System.nanoTime();
+      long currentTime = System.currentTimeMillis();
       int bucket = (int)((currentTime - getBegin()) / period);
       while (buckets.size() <= bucket) {
          buckets.add(prototype.copy());

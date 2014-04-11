@@ -14,6 +14,9 @@ import org.radargun.config.PropertyHelper;
 import org.radargun.reporting.Timeline;
 
 /**
+ * Presents {@link Timeline timelines} from all slaves and master.
+ * Uses {@link TimelineChart} to generate image files.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TimelineDocument extends HtmlDocument {

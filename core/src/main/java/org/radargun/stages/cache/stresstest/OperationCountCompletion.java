@@ -5,8 +5,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.radargun.utils.Utils;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * Completion limited by absolute number of executed operations.
+ * All stressors share the total amount of requested operations.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 public class OperationCountCompletion extends Completion {
 
    private final AtomicLong requestsLeft;
@@ -28,6 +31,7 @@ public class OperationCountCompletion extends Completion {
       return requestsLeft.getAndDecrement() > 0;
    }
 
+   @Override
    public void logProgress(int executedOps) {
       long totalExecuted = numRequests - requestsLeft.get();
       if ((totalExecuted + 1) % logOps != 0) {

@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * Helper class for dealing with traits.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TraitHelper {
@@ -17,6 +19,17 @@ public class TraitHelper {
       SKIP
    }
 
+   /**
+    * Via reflection, inject the provided traits into field on the target
+    * annotated by {@link InjectTrait @InjectTrait}.
+    *
+    * @param target
+    * @param traits
+    * @return
+    *    SUCCESS if all @InjectTrait requests have been satisfied
+    *    FAILURE if a MANDATORY InjectTrait could not be injected (no such trait was provided)
+    *    SKIP if some trait with SKIP InjectTrait could not be injected
+    */
    public static InjectResult inject(Object target, Map<Class<?>, Object> traits) {
       Class<?> targetClass = target.getClass();
       InjectResult result = InjectResult.SUCCESS;
@@ -48,6 +61,14 @@ public class TraitHelper {
       return result;
    }
 
+   /**
+    * Inspect all target's public no-arg methods (including those from superclasses)
+    * annotated by {@link ProvidesTrait @ProvidesTrait} and call them. The return value
+    * is inspected for all implemented interfaces annotated with {@link Trait @Trait}
+    * and the return values are added to the result map with these interfaces as keys.
+    * @param target
+    * @return map of trait classes to objects implementing these traits
+    */
    public static Map<Class<?>, Object> retrieve(Object target) {
       Class<?> targetClass = target.getClass();
       Map<Class<?>, Object> traitMap = new HashMap<Class<?>, Object>();

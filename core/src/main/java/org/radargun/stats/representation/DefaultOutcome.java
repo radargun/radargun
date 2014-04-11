@@ -3,6 +3,8 @@ package org.radargun.stats.representation;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * Representation holding of successful/unsuccessful requests, mean and max response time.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class DefaultOutcome {

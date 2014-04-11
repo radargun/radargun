@@ -1,6 +1,8 @@
 package org.radargun.stats;
 
 /**
+ * Multiplexes calls to several undelying "real" {@link OperationStats}.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class MultiOperationStats implements OperationStats {

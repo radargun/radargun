@@ -37,6 +37,8 @@ import org.radargun.config.Property;
 import org.radargun.reporting.Timeline;
 
 /**
+ * Chart showing the events, intervals and values from {@link Timeline}
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TimelineChart {

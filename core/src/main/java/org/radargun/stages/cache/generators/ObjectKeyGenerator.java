@@ -6,6 +6,8 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
 /**
+ * Generates externalizable keys wrapping long identifier of the key.
+ *
  * @author Mircea.Markus@jboss.com
  */
 public class ObjectKeyGenerator implements KeyGenerator {

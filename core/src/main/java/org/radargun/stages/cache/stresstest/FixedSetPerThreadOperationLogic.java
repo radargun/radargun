@@ -9,8 +9,12 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.BasicOperations;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * The sets of keys for the stressor threads are distinct when using this logic.
+ *
+ * All keys are loaded to the cache in the {@link #init(int, int, int) init} method, prior to test execution.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 class FixedSetPerThreadOperationLogic extends FixedSetOperationLogic {
    private static Log log = LogFactory.getLog(StressTestStage.class);
 

@@ -5,6 +5,9 @@ import java.util.Arrays;
 import org.radargun.stats.representation.Histogram;
 
 /**
+ * Keeps several buckets for response time ranges and stores number of requests falling into this range.
+ * Does not differentiate between successful and error requests.
+ *
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
 */
 public final class HistogramOperationStats implements OperationStats {

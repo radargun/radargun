@@ -1,6 +1,8 @@
 package org.radargun.stats.representation;
 
 /**
+ * Representation holding buckets (time range) with number of results belonging to this bucket.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class Histogram {

@@ -9,6 +9,8 @@ import java.util.Map;
 import org.radargun.Operation;
 
 /**
+ * Implements the Statistics interface using provided {@link OperationStats}.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class DefaultStatistics extends IntervalStatistics {

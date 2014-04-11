@@ -11,12 +11,13 @@ import javax.management.ObjectName;
 import org.radargun.reporting.Timeline;
 
 /**
- * @author Mircea Markus <mircea.markus@gmail.com>
+ * Provides constants for JMX access.
+ *
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public abstract class AbstractActivityMonitor implements Runnable, Serializable {
 
    static final ObjectName OS_NAME = getOSName();
-
    static final String PROCESSING_CAPACITY_ATTR = "ProcessingCapacity";
    static final String PROCESS_UP_TIME = "Uptime";
    static final ObjectName RUNTIME_NAME = getRuntimeName();

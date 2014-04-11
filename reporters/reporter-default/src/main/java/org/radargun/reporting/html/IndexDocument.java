@@ -20,6 +20,9 @@ import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 
 /**
+ * The main document in HTML report.
+ * Shows benchmark configuration and links to timeline & test results.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class IndexDocument extends HtmlDocument {
@@ -38,6 +41,7 @@ public class IndexDocument extends HtmlDocument {
       writeTag("h1", "RadarGun benchmark report");
    }
 
+   @Override
    protected void writeScripts() {
       write("function switch_visibility (id) {\n");
       write("    var element = document.getElementById(id);\n");

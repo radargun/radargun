@@ -12,6 +12,9 @@ import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
 
 /**
+ * In each invocation of the {@link #run()} method, retrieves information
+ * about memory size and usage from JMX and reports it into the {@link Timeline}.
+ *
  * @author Galder Zamarreno
  */
 public class MemoryUsageMonitor extends AbstractActivityMonitor implements Serializable {
@@ -56,7 +59,6 @@ public class MemoryUsageMonitor extends AbstractActivityMonitor implements Seria
             genCapacity = mem.getCommitted();
             genMaxCapacity = mem.getMax();
 
-            //addMeasurement(new BigDecimal(genUsed));
             timeline.addValue(MEMORY_USAGE, new Timeline.Value(System.currentTimeMillis(), genUsed / 1048576));
 
             log.trace("Memory usage: used=" + formatDecimal(genUsed) + " B, size=" + formatDecimal(genCapacity)

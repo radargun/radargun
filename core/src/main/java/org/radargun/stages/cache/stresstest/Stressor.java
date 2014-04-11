@@ -14,6 +14,11 @@ import org.radargun.traits.Queryable;
 import org.radargun.traits.Transactional;
 
 /**
+ * Each stressor operates according to its {@link OperationLogic logic} - the instance is private to each thread.
+ * After finishing the {@linkplain OperationLogic#init(int, int, int) init phase}, all stressors synchronously
+ * execute logic's {@link OperationLogic#run(Stressor) run} method until
+ * the {@link org.radargun.stages.cache.stresstest.Completion#moreToRun()} returns false.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 class Stressor extends Thread {

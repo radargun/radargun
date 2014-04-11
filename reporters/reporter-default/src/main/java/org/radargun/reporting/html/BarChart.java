@@ -6,7 +6,9 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.StatisticalBarRenderer;
 
 /**
- * @author Mircea Markus
+ * Chart showing the values as vertical bars.
+ *
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class BarChart extends ComparisonChart {
    @Override

@@ -6,7 +6,9 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.StatisticalLineAndShapeRenderer;
 
 /**
- * @author Mircea Markus
+ * Chart showing the values as connected lines.
+ *
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class LineChart extends ComparisonChart {
 

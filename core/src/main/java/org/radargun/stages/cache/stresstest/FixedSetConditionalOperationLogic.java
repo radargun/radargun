@@ -8,8 +8,13 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.radargun.traits.ConditionalOperations;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * Executes {@linkplain ConditionalOperations conditional operations} on the cache,
+ * each thread using its private set of keys.
+ * Keeps track of values inserted into the cache and executes also conditional operations
+ * with arguments causing the operation to fail.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 class FixedSetConditionalOperationLogic extends FixedSetPerThreadOperationLogic {
    private Map<Object, Object> lastValues = new HashMap<Object, Object>(stage.numEntries);
 

@@ -19,6 +19,10 @@ import org.radargun.logging.LogFactory;
 import org.radargun.utils.Utils;
 
 /**
+ * Helper class creating reporters (in their own classloaders).
+ * Each reporter module (directory) should contain JAR with file plugin.properties.
+ * This file lists all reporter as reporter./reporter type/ /reporter class/
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ReporterHelper {
@@ -80,10 +84,21 @@ public class ReporterHelper {
       }
    }
 
+   /**
+    * Searches for a reporter with particular name.
+    * @param type Name of the reporter
+    * @return True if reporter with this name was found.
+    */
    public static boolean isRegistered(String type) {
       return reporters.containsKey(type);
    }
 
+   /**
+    * Create a reporter with given type
+    * @param type
+    * @param properties
+    * @return
+    */
    public static Reporter createReporter(String type, Map<String, String> properties) {
       Class<? extends Reporter> clazz = reporters.get(type);
       if (clazz == null) {

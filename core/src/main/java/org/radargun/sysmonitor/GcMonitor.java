@@ -19,6 +19,9 @@ import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
 
 /**
+ * In each invocation of the {@link #run()} method, retrieves information
+ * about garbage collection from JMX and reports it into the {@link Timeline}.
+ *
  * @author Galder Zamarreno
  */
 public class GcMonitor extends AbstractActivityMonitor implements Serializable {
@@ -73,11 +76,9 @@ public class GcMonitor extends AbstractActivityMonitor implements Serializable {
             long gcUsage = upTimeDiff > 0 ? Math.min((long) (1000 * (float) processGcTimeDiff / (float) upTimeDiff),
                   1000) : 0;
 
-            //addMeasurementAsPercentage(gcUsage);
             // TODO: remove that decimal !@#%$
             timeline.addValue(GC_USAGE, new Timeline.Value(gcUsage * 0.1d));
 
-            //log.trace("GC activity: " + formatPercent(gcUsage * 0.1d));
          } catch (Exception e) {
             log.error(e.getMessage(), e);
          }

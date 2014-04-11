@@ -6,7 +6,7 @@ import org.radargun.reporting.html.TimelineDocument;
 import org.testng.annotations.Test;
 
 /**
- * // TODO: Document this
+ * Writes a basic {@link TimelineDocument} with few charts.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

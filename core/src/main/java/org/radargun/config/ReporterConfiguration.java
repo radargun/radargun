@@ -7,10 +7,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Structure holding information parsed from the benchmark configuration file.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ReporterConfiguration {
    public final String type;
+   @Deprecated
    public final RunCondition run;
    public final List<Report> reports = new ArrayList<Report>();
 
@@ -29,6 +32,9 @@ public class ReporterConfiguration {
       return Collections.unmodifiableList(reports);
    }
 
+   /**
+    * Single report - set of properties, in fact.
+    */
    public class Report {
       private final Map<String, String> properties = new HashMap<String, String>();
 
@@ -43,6 +49,7 @@ public class ReporterConfiguration {
       }
    }
 
+   @Deprecated
    public enum RunCondition {
       ALWAYS,
       CLUSTER_SUCCESSFUL,

@@ -9,11 +9,19 @@ import org.radargun.config.PropertyHelper;
 import org.radargun.utils.Utils;
 
 /**
+ * Helper class, the only function is instantiating and initializing the service.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ServiceHelper {
+   /**
+    * Instantiates the service, looking up file plugin.properties for the service name
+    * (in form of service./service name/ /service class/
+    * The service class must have public no-arg constructor.
+    * Then, sets up all properties declared on the service (and its superclasses).
+    * Finally calls any methods of the class annotated by {@link org.radargun.config.Init @Init}.
+    */
    public static Object createService(ClassLoader classLoader, String plugin, String service, String configName, String configFile, Map<String, String> properties) {
-
       Thread.currentThread().setContextClassLoader(classLoader);
 
       String serviceClassName = Utils.getServiceProperty(plugin, "service." + service);
