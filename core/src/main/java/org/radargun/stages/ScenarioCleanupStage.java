@@ -1,5 +1,7 @@
 package org.radargun.stages;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.io.File;
 import java.util.List;
 
@@ -7,6 +9,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.lifecycle.LifecycleHelper;
+import org.radargun.state.SlaveState;
 import org.radargun.utils.Utils;
 
 /**
@@ -36,7 +39,7 @@ public class ScenarioCleanupStage extends AbstractDistStage {
             log.info("Service successfully stopped.");
          } else {
             log.info("No service deployed on this slave, nothing to do.");
-            return successfulResponse();
+            return new MemoryAck(slaveState, Runtime.getRuntime().freeMemory());
          }
       } catch (Exception e) {
          return errorResponse("Problems shutting down the slave", e);
@@ -49,7 +52,7 @@ public class ScenarioCleanupStage extends AbstractDistStage {
          }
          log.info(Utils.printMemoryFootprint(false));
       }
-      return successfulResponse();
+      return new MemoryAck(slaveState, Runtime.getRuntime().freeMemory());
    }
 
 
@@ -58,21 +61,13 @@ public class ScenarioCleanupStage extends AbstractDistStage {
       boolean result = super.processAckOnMaster(acks);
       if (masterState.get(ScenarioInitStage.INITIAL_FREE_MEMORY) == null) {
          masterState.put(ScenarioInitStage.INITIAL_FREE_MEMORY, "");
-         for (DistStageAck distStageAck : acks) {
-            String key = ScenarioInitStage.INITIAL_FREE_MEMORY + "_" + distStageAck.getSlaveIndex();
-            Long freeMemory = (Long) ((DefaultDistStageAck) distStageAck).getPayload();
-            log.info(String.format("Node %d has an initial free memory of: %d kb", distStageAck.getSlaveIndex(), freeMemory / 1024));
-            masterState.put(key, freeMemory);
+         for (MemoryAck ack : cast(acks, MemoryAck.class)) {
+            String key = ScenarioInitStage.INITIAL_FREE_MEMORY + "_" + ack.getSlaveIndex();
+            log.info(String.format("Node %d has final free memory of: %d kb", ack.getSlaveIndex(), ack.freeMemory / 1024));
+            masterState.put(key, ack.freeMemory);
          }
       }
       return result;
-   }
-
-   @Override
-   protected DefaultDistStageAck newDefaultStageAck() {
-      DefaultDistStageAck ack = super.newDefaultStageAck();
-      ack.setPayload(Runtime.getRuntime().freeMemory());
-      return ack;
    }
 
    private void checkMemoryReleased() {
@@ -98,6 +93,15 @@ public class ScenarioCleanupStage extends AbstractDistStage {
             }
          }
          throw new IllegalStateException(msg);
+      }
+   }
+
+   private static class MemoryAck extends DistStageAck {
+      final long freeMemory;
+
+      private MemoryAck(SlaveState slaveState, long freeMemory) {
+         super(slaveState);
+         this.freeMemory = freeMemory;
       }
    }
 }

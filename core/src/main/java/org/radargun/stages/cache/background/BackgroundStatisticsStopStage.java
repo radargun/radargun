@@ -1,5 +1,7 @@
 package org.radargun.stages.cache.background;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.util.List;
 
 import org.radargun.DistStageAck;
@@ -7,7 +9,7 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 
 /**
@@ -21,35 +23,35 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
       try {
          BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState);
          if (instance != null) {
-            ack.setPayload(instance.stopStats());
+            return new StatisticsAck(slaveState, instance.stopStats());
          } else {
-            log.error("No " + BackgroundOpsManager.NAME);
-            ack.setError(true);
+            return errorResponse("No " + BackgroundOpsManager.NAME);
          }
-         return ack;
       } catch (Exception e) {
-         log.error("Error while stopping background statistics", e);
-         ack.setError(true);
-         ack.setRemoteException(e);
-         return ack;
+         return errorResponse("Error while stopping background statistics", e);
       }
    }
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
+      if (!super.processAckOnMaster(acks)) return false;
       Report report = masterState.getReport();
       Report.Test test = report.createTest(testName);
-      for (DistStageAck ack : acks) {
-         DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-         test.addIterations(dack.getSlaveIndex(), (List<List<Statistics>>) dack.getPayload());
-         if (dack.isError()) {
-            return false;
-         }
+      for (StatisticsAck ack : cast(acks, StatisticsAck.class)) {
+         test.addIterations(ack.getSlaveIndex(), ack.iterations);
       }
       return true;
+   }
+
+   private static class StatisticsAck extends DistStageAck {
+      final List<List<Statistics>> iterations;
+
+      private StatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
+         super(slaveState);
+         this.iterations = iterations;
+      }
    }
 }

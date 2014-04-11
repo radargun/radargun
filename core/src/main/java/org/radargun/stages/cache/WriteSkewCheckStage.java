@@ -1,5 +1,7 @@
 package org.radargun.stages.cache;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -8,7 +10,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -43,13 +45,12 @@ public class WriteSkewCheckStage extends CheckStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
       BasicOperations.Cache cache = basicOperations.getCache(null);
       if (!testNull) {
          try {
             cache.put(WRITE_SKEW_CHECK_KEY, new Long(0));
          } catch (Exception e) {
-            return exception(ack, "Failed to insert initial zero", e);
+            return errorResponse("Failed to insert initial zero", e);
          }
          try {
             Thread.sleep(30000);
@@ -70,28 +71,26 @@ public class WriteSkewCheckStage extends CheckStage {
          log.warn("Sleep was interrupted");
       }
       finished = true;
-      if (!checkThreads(ack, threadList)) return ack;
+      DistStageAck error = checkThreads(threadList);
+      if (error != null) return error;
       try {
          Thread.sleep(30000);
       } catch (InterruptedException e) {
          log.warn("Sleep was interrupted");
       }
 
-      Long ispnCounter;
+      long ispnCounter;
       try {
          Object value = cache.get(WRITE_SKEW_CHECK_KEY);
          if (!(value instanceof Long)) {
-            exception(ack, "Counter is not a long: it is " + value, null);
-            return ack;
+            return errorResponse("Counter is not a long: it is " + value);
          } else {
             ispnCounter = (Long) value;
          }
       } catch (Exception e) {
-         exception(ack, "Failed to insert first value", e);
-         return ack;
+         return errorResponse("Failed to insert first value", e);
       }
-      ack.setPayload(new long[] { totalCounter.get(), skewCounter.get(), ispnCounter});
-      return ack;
+      return new Counters(slaveState, totalCounter.get(), skewCounter.get(), ispnCounter);
    }
 
    @Override
@@ -100,12 +99,10 @@ public class WriteSkewCheckStage extends CheckStage {
       long sumIncrements = 0;
       long sumSkews = 0;
       long maxValue = -1;
-      for (DistStageAck ack : acks) {
-         DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-         long[] payload = (long[]) dack.getPayload();
-         sumIncrements += payload[0];
-         sumSkews += payload[1];
-         maxValue = Math.max(maxValue, payload[2]);
+      for (Counters ack : cast(acks, Counters.class)) {
+         sumIncrements += ack.totalCounter;
+         sumSkews += ack.skewCounter;
+         maxValue = Math.max(maxValue, ack.ispnCounter);
       }
       log.info(String.format("Total increments: %d, Skews: %d, DB value: %d", sumIncrements, sumSkews, maxValue));
       if (maxValue + sumSkews != sumIncrements) {
@@ -115,6 +112,28 @@ public class WriteSkewCheckStage extends CheckStage {
       } else {
          log.info(String.format("Performed %d successful increments in %d ms", sumIncrements - sumSkews, duration));
          return true;
+      }
+   }
+
+   private static class Counters extends DistStageAck {
+      long totalCounter;
+      long skewCounter;
+      long ispnCounter;
+
+      private Counters(SlaveState slaveState, long totalCounter, long skewCounter, long ispnCounter) {
+         super(slaveState);
+         this.totalCounter = totalCounter;
+         this.skewCounter = skewCounter;
+         this.ispnCounter = ispnCounter;
+      }
+
+      @Override
+      public String toString() {
+         return "Counters{" +
+               "totalCounter=" + totalCounter +
+               ", skewCounter=" + skewCounter +
+               ", ispnCounter=" + ispnCounter +
+               "} " + super.toString();
       }
    }
 

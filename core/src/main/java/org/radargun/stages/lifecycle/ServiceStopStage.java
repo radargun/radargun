@@ -5,7 +5,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 
 /**
  * 
@@ -37,7 +36,6 @@ public class ServiceStopStage extends AbstractDistStage {
 
    public DistStageAck executeOnSlave() {
       log.info("Received stop request from master...");
-      DefaultDistStageAck ack = newDefaultStageAck();
       if (waitForDelayed) {
          Thread t = (Thread) slaveState.get(STOP_DELAY_THREAD);
          if (t != null) {
@@ -45,11 +43,7 @@ public class ServiceStopStage extends AbstractDistStage {
                t.join();
                slaveState.remove(STOP_DELAY_THREAD);
             } catch (InterruptedException e) {
-               String error = "Interrupted while waiting for kill to be finished.";
-               log.error(error, e);
-               ack.setErrorMessage(error);
-               ack.setRemoteException(e);
-               ack.setError(true);
+               return errorResponse("Interrupted while waiting for kill to be finished.", e);
             }
          } else {
             log.info("No delayed execution found in history.");
@@ -82,6 +76,6 @@ public class ServiceStopStage extends AbstractDistStage {
       } else {
          log.info("Ignoring stop request, not targeted for this slave");
       }
-      return ack;
+      return successfulResponse();
    }
 }

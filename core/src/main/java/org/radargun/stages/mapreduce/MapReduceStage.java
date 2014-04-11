@@ -1,5 +1,7 @@
 package org.radargun.stages.mapreduce;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +11,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Clustered;
@@ -109,7 +111,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
-      super.processAckOnMaster(acks);
+      if (!super.processAckOnMaster(acks)) return false;
       StringBuilder reportCsvContent = new StringBuilder();
 
       // TODO: move this into test report
@@ -119,9 +121,8 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                .append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, DURATION_NANOSECONDS, KEY_COUNT_IN_RESULT_MAP\n");
       }
 
-      for (DistStageAck ack : acks) {
-         DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-         reportCsvContent.append((String) dack.getPayload()).append("\n");
+      for (TextAck ack : cast(acks, TextAck.class)) {
+         reportCsvContent.append(ack.getText()).append("\n");
       }
       reportCsvContent.append("\n");
 
@@ -139,26 +140,23 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       if (!isServiceRunnning()) {
          return errorResponse("Service is not runnning", null);
       }
-      DefaultDistStageAck result = newDefaultStageAck();
 
       if (mapperFqn == null || reducerFqn == null) {
          return errorResponse("Both the mapper and reducer class must be specified.", null);
       }
 
       if (slaveState.getSlaveIndex() == 0) {
-         result = executeMapReduceTask(mapReducer);
+         return executeMapReduceTask(mapReducer);
       } else {
-         result.setPayload(getPayload("0", "-1"));
+         return new TextAck(slaveState).setText(getPayload("0", "-1"));
       }
-      return result;
    }
 
    private String getPayload(String duration, String resultSize) {
       return slaveState.getSlaveIndex() + ", " + clustered.getClusteredNodes() + ", " + cacheInformation.getCache(null).getLocalSize() + ", " + duration + ", " + resultSize;
    }
 
-   private DefaultDistStageAck executeMapReduceTask(MapReducer<KOut, VOut, R> mapReducer) {
-      DefaultDistStageAck result = newDefaultStageAck();
+   private DistStageAck executeMapReduceTask(MapReducer<KOut, VOut, R> mapReducer) {
       Map<KOut, VOut> payloadMap = null;
       R payloadObject = null;
       long durationNanos;
@@ -189,15 +187,16 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       } else {
          log.info(mapReducer.getClass().getName() + " does not support MapReducer.setCombiner()");
       }
+      TextAck ack = new TextAck(slaveState);
       try {
-         result.setPayload(getPayload("noDuration", "noResultSize"));
+         ack.setText(getPayload("noDuration", "noResultSize"));
          if (collatorFqn != null) {
             start = System.nanoTime();
             payloadObject = mapReducer.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn, collatorFqn);
             durationNanos = System.nanoTime() - start;
             log.info("MapReduce task with Collator completed in "
                   + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
-            result.setPayload(getPayload(String.valueOf(durationNanos), "-1"));
+            ack.setText(getPayload(String.valueOf(durationNanos), "-1"));
             if (printResult) {
                log.info("MapReduce result: " + payloadObject.toString());
             }
@@ -216,7 +215,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             if (payloadMap != null) {
                log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
                log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
-               result.setPayload(getPayload(String.valueOf(durationNanos), String.valueOf(payloadMap.keySet().size())));
+               ack.setText(getPayload(String.valueOf(durationNanos), String.valueOf(payloadMap.keySet().size())));
                if (printResult) {
                   log.info("MapReduce result:");
                   for (Map.Entry<KOut, VOut> entry : payloadMap.entrySet()) {
@@ -231,19 +230,33 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                   }
                }
             } else {
-               result.setError(true);
-               result.setErrorMessage("executeMapReduceTask() returned null");
+               ack.error("executeMapReduceTask() returned null");
             }
          }
-      } catch (Exception e1) {
-         result.setError(true);
-         result.setErrorMessage("executeMapReduceTask() threw an exception");
-         result.setRemoteException(e1);
-         log.error("executeMapReduceTask() returned an exception", e1);
+      } catch (Exception e) {
+         ack.error("executeMapReduceTask() threw an exception", e);
+         log.error("executeMapReduceTask() returned an exception", e);
       }
       log.info(clustered.getClusteredNodes() + " nodes were used. " + cacheInformation.getCache(null).getLocalSize() + " entries on this node");
       log.info("--------------------");
 
-      return result;
+      return ack;
+   }
+
+   private static class TextAck extends DistStageAck {
+      String text;
+
+      private TextAck(SlaveState slaveState) {
+         super(slaveState);
+      }
+
+      public String getText() {
+         return text;
+      }
+
+      public TextAck setText(String text) {
+         this.text = text;
+         return this;
+      }
    }
 }

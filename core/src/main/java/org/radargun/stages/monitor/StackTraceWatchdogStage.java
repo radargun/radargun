@@ -1,14 +1,18 @@
 package org.radargun.stages.monitor;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 /**
  * 
@@ -52,7 +56,7 @@ public class StackTraceWatchdogStage extends AbstractDistStage {
    public DistStageAck executeOnSlave() {
       if (!log.isTraceEnabled()) {
          log.warn("Trace is not enabled, nothing to do.");
-         return newDefaultStageAck();
+         return successfulResponse();
       }
       synchronized (StackTraceWatchdogStage.class) {
          if (watchDogThread != null) {
@@ -76,7 +80,7 @@ public class StackTraceWatchdogStage extends AbstractDistStage {
             }
          }
       }
-      return newDefaultStageAck();
+      return successfulResponse();
    }
 
    private class WatchDogThread extends Thread {

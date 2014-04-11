@@ -1,5 +1,7 @@
 package org.radargun.stages.cache;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -8,7 +10,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
-import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -52,18 +54,16 @@ public class IsolationLevelCheckStage extends CheckStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
       if (expectedLevel == null) {
-         return exception(ack, "No expected level set", null);
+         return errorResponse("No expected level set", null);
       } else if (!expectedLevel.equalsIgnoreCase(REPEATABLE_READ) && !expectedLevel.equalsIgnoreCase(READ_COMMITTED)) {
-         return exception(ack, "Expected level should be one of " + READ_COMMITTED + " and " + REPEATABLE_READ, null);
+         return errorResponse("Expected level should be one of " + READ_COMMITTED + " and " + REPEATABLE_READ, null);
       }
       BasicOperations.Cache<Object, Object> cache = basicOperations.getCache(null);
       try {
          cache.put(ISOLATION_CHECK_KEY, new Long(0));
       } catch (Exception e) {
-         exception(ack, "Failed to insert first value", e);
-         return ack;
+         return errorResponse("Failed to insert first value", e);
       }
       List<ClientThread> threads = new ArrayList<ClientThread>();
       for (int i = 0; i < writers; ++i) {
@@ -83,9 +83,9 @@ public class IsolationLevelCheckStage extends CheckStage {
       } catch (InterruptedException e) {
       }
       finished = true;
-      if (!checkThreads(ack, threads)) return ack;
-      ack.setPayload(valueChangeDetected);
-      return ack;
+      DistStageAck error = checkThreads(threads);
+      if (error != null) return error;
+      return new ChangeAck(slaveState, valueChangeDetected);
    }
 
    @Override
@@ -93,21 +93,28 @@ public class IsolationLevelCheckStage extends CheckStage {
       if (!super.processAckOnMaster(acks)) return false;
 
       boolean anyValueChangeDetected = false;
-      for (DistStageAck ack : acks) {
-         DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-         boolean valueChangeDetected = (Boolean) dack.getPayload();
-         log.debug(String.format("Value change detected on slave %d: %s", dack.getSlaveIndex(), valueChangeDetected));
-         if (expectedLevel.equalsIgnoreCase(REPEATABLE_READ) && valueChangeDetected) {
+      for (ChangeAck ack : cast(acks, ChangeAck.class)) {
+         log.debug(String.format("Value change detected on slave %d: %s", ack.getSlaveIndex(), ack.valueChangeDetected));
+         if (expectedLevel.equalsIgnoreCase(REPEATABLE_READ) && ack.valueChangeDetected) {
             log.error("Value change was detected but this should not happen with isolation " + expectedLevel);
             return false;
          }
-         anyValueChangeDetected |= valueChangeDetected;
+         anyValueChangeDetected |= ack.valueChangeDetected;
       }
       if (expectedLevel.equalsIgnoreCase(READ_COMMITTED) && !anyValueChangeDetected) {
          log.error("Value change was expected with isolation " + expectedLevel + " but none was detected");
          return false;
       }
       return true;
+   }
+
+   private static class ChangeAck extends DistStageAck {
+      final boolean valueChangeDetected;
+
+      private ChangeAck(SlaveState slaveState, boolean valueChangeDetected) {
+         super(slaveState);
+         this.valueChangeDetected = valueChangeDetected;
+      }
    }
 
    private class WriterThread extends ClientThread {

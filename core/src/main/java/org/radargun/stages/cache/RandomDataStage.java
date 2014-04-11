@@ -1,5 +1,7 @@
 package org.radargun.stages.cache;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.nio.CharBuffer;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -13,7 +15,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
@@ -42,8 +43,6 @@ import org.radargun.utils.Utils;
  */
 @Stage(doc = "Generates random data to fill the cache.")
 public class RandomDataStage extends AbstractDistStage {
-   private long nodePutCount;
-
    @Property(doc = "The seed to use for the java.util.Random object. "
          + "The default is the return value of Calendar.getInstance().getWeekYear().")
    private long randomSeed = Calendar.getInstance().getWeekYear();
@@ -106,13 +105,10 @@ public class RandomDataStage extends AbstractDistStage {
    private CacheInformation cacheInformation;
 
    private Random random;
-
    private String[][] words = null;
-
-   Runtime runtime = null;
-
+   private Runtime runtime = null;
    private int newlinePunctuationModulo = 10;
-
+   private long nodePutCount;
    private long countOfWordsInData = 0;
    private HashMap<String, Integer> wordCount = new HashMap<String, Integer>();
 
@@ -162,36 +158,25 @@ public class RandomDataStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       random = new Random(randomSeed + slaveState.getSlaveIndex());
-      DefaultDistStageAck result = newDefaultStageAck();
 
       if (ramPercentage > 0 && valueCount > 0) {
-         result.setError(true);
-         result.setErrorMessage("Either valueCount or ramPercentageDataSize should be specified, but not both");
-         return result;
+         return errorResponse("Either valueCount or ramPercentageDataSize should be specified, but not both");
       }
 
       if (ramPercentage > 1) {
-         result.setError(true);
-         result.setErrorMessage("The percentage of RAM can not be greater than one.");
-         return result;
+         return errorResponse("The percentage of RAM can not be greater than one.");
       }
 
       if (shareWords && !limitWordCount) {
-         result.setError(true);
-         result.setErrorMessage("The shareWords property can only be true when limitWordCount is also true.");
-         return result;
+         return errorResponse("The shareWords property can only be true when limitWordCount is also true.");
       }
 
       if (limitWordCount && !stringData) {
-         result.setError(true);
-         result.setErrorMessage("The limitWordCount property can only be true when stringData is also true.");
-         return result;
+         return errorResponse("The limitWordCount property can only be true when stringData is also true.");
       }
 
       if (valueByteOverhead == -1 && cacheInformation == null) {
-         result.setError(true);
-         result.setErrorMessage("The valueByteOverhead property must be supplied for this cache.");
-         return result;
+         return errorResponse("The valueByteOverhead property must be supplied for this cache.");
       }
 
       /*
@@ -278,24 +263,20 @@ public class RandomDataStage extends AbstractDistStage {
                + Utils.kbString(runtime.maxMemory()) + "- total: " + Utils.kbString(runtime.totalMemory()));
          log.debug("nodePutCount = " + nodePutCount + "; bytesWritten = " + bytesWritten + "; targetMemoryUse = "
                + targetMemoryUse + "; countOfWordsInData = " + countOfWordsInData);
-         result.setPayload(new long[] { nodePutCount, bytesWritten, targetMemoryUse, countOfWordsInData });
+         return new DataInsertAck(slaveState, nodePutCount, bytesWritten, targetMemoryUse, countOfWordsInData);
       } catch (Exception e) {
-         log.fatal("An exception occurred", e);
-         result.setError(true);
-         result.setErrorMessage("An exception occurred");
-      }
-
-      // Log the word counts for this node
-      if (stringData && !wordCount.isEmpty()) {
-         log.debug("Word counts for node" + slaveState.getSlaveIndex());
-         log.debug("--------------------");
-         for (Map.Entry<String, Integer> entry : wordCount.entrySet()) {
-            log.debug("key: " + entry.getKey() + "; value: " + entry.getValue());
+         return errorResponse("An exception occurred", e);
+      } finally {
+         // Log the word counts for this node
+         if (stringData && !wordCount.isEmpty()) {
+            log.debug("Word counts for node" + slaveState.getSlaveIndex());
+            log.debug("--------------------");
+            for (Map.Entry<String, Integer> entry : wordCount.entrySet()) {
+               log.debug("key: " + entry.getKey() + "; value: " + entry.getValue());
+            }
+            log.debug("--------------------");
          }
-         log.debug("--------------------");
       }
-
-      return result;
    }
 
    private String generateRandomStringData(int dataSize) {
@@ -396,7 +377,7 @@ public class RandomDataStage extends AbstractDistStage {
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
-      super.processAckOnMaster(acks);
+      if (!super.processAckOnMaster(acks)) return false;
       log.info("--------------------");
       if (ramPercentage > 0) {
          if (stringData) {
@@ -424,23 +405,18 @@ public class RandomDataStage extends AbstractDistStage {
       }
       long totalValues = 0;
       long totalBytes = 0;
-      for (DistStageAck ack : acks) {
-         long[] result = (long[]) ((DefaultDistStageAck) ack).getPayload();
-         if (result != null) {
-            totalValues += result[0];
-            totalBytes += result[1];
-            String logInfo = "Slave " + ((DefaultDistStageAck) ack).getSlaveIndex() + " wrote " + result[0]
-                  + " values to the cache with a total size of " + Utils.kbString(result[1]);
-            if (ramPercentage > 0) {
-               logInfo += "; targetMemoryUse = " + Utils.kbString(result[2]);
-            }
-            if (stringData) {
-               logInfo += "; countOfWordsInData = " + result[3];
-            }
-            log.info(logInfo);
-         } else {
-            log.info("No results retrieved from Slave" + ((DefaultDistStageAck) ack).getSlaveIndex());
+      for (DataInsertAck ack : cast(acks, DataInsertAck.class)) {
+         totalValues += ack.nodePutCount;
+         totalBytes += ack.bytesWritten;
+         String logInfo = "Slave " + ack.getSlaveIndex() + " wrote " + ack.nodePutCount
+               + " values to the cache with a total size of " + Utils.kbString(ack.bytesWritten);
+         if (ramPercentage > 0) {
+            logInfo += "; targetMemoryUse = " + Utils.kbString(ack.targetMemoryUse);
          }
+         if (stringData) {
+            logInfo += "; countOfWordsInData = " + ack.countOfWordsInData;
+         }
+         log.info(logInfo);
       }
       log.info("The cache contains " + totalValues + " values with a total size of " + Utils.kbString(totalBytes));
       if (limitWordCount) {
@@ -452,5 +428,20 @@ public class RandomDataStage extends AbstractDistStage {
       }
       log.info("--------------------");
       return true;
+   }
+
+   private static class DataInsertAck extends DistStageAck {
+      final long nodePutCount;
+      final long bytesWritten;
+      final long targetMemoryUse;
+      final long countOfWordsInData;
+
+      private DataInsertAck(SlaveState slaveState, long nodePutCount, long bytesWritten, long targetMemoryUse, long countOfWordsInData) {
+         super(slaveState);
+         this.nodePutCount = nodePutCount;
+         this.bytesWritten = bytesWritten;
+         this.targetMemoryUse = targetMemoryUse;
+         this.countOfWordsInData = countOfWordsInData;
+      }
    }
 }

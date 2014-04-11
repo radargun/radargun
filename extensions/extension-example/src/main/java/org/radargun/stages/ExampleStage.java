@@ -1,11 +1,14 @@
 package org.radargun.stages;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.util.List;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
+import org.radargun.state.SlaveState;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -27,20 +30,30 @@ public class ExampleStage extends AbstractDistStage {
          log.warn("Stage was interrupted!", e);
       }
       log.info(String.format("Slave %d says: %s", slaveState.getSlaveIndex(), foo));
-      DefaultDistStageAck ack = newDefaultStageAck();
-      ack.setPayload(String.format("Slave %d said: %s", slaveState.getSlaveIndex(), foo));
-      return ack;
+      return new ExampleAck(slaveState, String.format("Slave %d said: %s", slaveState.getSlaveIndex(), foo));
    }
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       boolean successful = super.processAckOnMaster(acks);
       if (successful) {
-         for (DistStageAck ack : acks) {
-            log.info(String.format("Slave %d reports: %s",
-                  ack.getSlaveIndex(), ((DefaultDistStageAck) ack).getPayload()));
+         for (ExampleAck ack : cast(acks, ExampleAck.class)) {
+            log.info(String.format("Slave %d reports: %s", ack.getSlaveIndex(), ack.getExampleMessage()));
          }
       }
       return successful;
+   }
+
+   private static class ExampleAck extends DistStageAck {
+      private String exampleMessage;
+
+      public ExampleAck(SlaveState slaveState, String exampleMessage) {
+         super(slaveState);
+         this.exampleMessage = exampleMessage;
+      }
+
+      public String getExampleMessage() {
+         return exampleMessage;
+      }
    }
 }

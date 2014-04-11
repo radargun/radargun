@@ -18,11 +18,11 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.stages.tpcc.transaction.NewOrderTransaction;
 import org.radargun.stages.tpcc.transaction.OrderStatusTransaction;
 import org.radargun.stages.tpcc.transaction.PaymentTransaction;
 import org.radargun.stages.tpcc.transaction.TpccTransaction;
+import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
@@ -85,10 +85,9 @@ public class TpccBenchmarkStage extends AbstractDistStage {
    private Transactional.Resource txCache;
 
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck result = new DefaultDistStageAck(slaveState.getSlaveIndex(), slaveState.getLocalAddress());
       if (!isServiceRunnning()) {
          log.info("Not running test on this slave.");
-         return result;
+         return successfulResponse();
       }
       basicCache = basicOperations.getCache(null);
       txCache = transactional.getResource(null);
@@ -100,13 +99,9 @@ public class TpccBenchmarkStage extends AbstractDistStage {
          String sizeInfo = "clusterSize:" + slaveState.getClusterSize() + ", nodeIndex:" + slaveState.getSlaveIndex() + ", cacheSize: " + cacheInformation.getCache(null).getLocalSize();
          log.info(sizeInfo);
          results.put(SIZE_INFO, sizeInfo);
-         result.setPayload(results);
-         return result;
+         return new MapAck(slaveState, results);
       } catch (Exception e) {
-         log.warn("Exception while initializing the test", e);
-         result.setError(true);
-         result.setRemoteException(e);
-         return result;
+         return errorResponse("Exception while initializing the test", e);
       }
    }
 
@@ -117,23 +112,21 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       // TODO: move this into test report
       masterState.put("results", results);
       for (DistStageAck ack : acks) {
-         DefaultDistStageAck wAck = (DefaultDistStageAck) ack;
-         if (wAck.isError()) {
+         if (ack.isError()) {
             success = false;
-            log.warn("Received error ack: " + wAck);
-         } else {
-            if (log.isTraceEnabled())
-               log.trace("Received success ack: " + wAck);
+            log.warn("Received error ack: " + ack);
+            continue;
          }
-         Map<String, Object> benchResult = (Map<String, Object>) wAck.getPayload();
-         if (benchResult != null) {
-            results.put(ack.getSlaveIndex(), benchResult);
-            Object reqPerSes = benchResult.get(REQ_PER_SEC);
+         log.trace("Received success ack: " + ack);
+         if (ack instanceof MapAck) {
+            MapAck mapAck = (MapAck) ack;
+            results.put(ack.getSlaveIndex(), mapAck.map);
+            Object reqPerSes = mapAck.map.get(REQ_PER_SEC);
             if (reqPerSes == null) {
                throw new IllegalStateException("This should be there!");
             }
             log.info("On slave " + ack.getSlaveIndex() + " we had " + numberFormat(parseDouble(reqPerSes.toString())) + " requests per second");
-            log.info("Received " +  benchResult.remove(SIZE_INFO));
+            log.info("Received " + mapAck.map.remove(SIZE_INFO));
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }
@@ -684,13 +677,22 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       }
    }
 
-   private class RequestType {
+   private static class RequestType {
       private long timestamp;
       private int transactionType;
 
       public RequestType(long timestamp, int transactionType) {
          this.timestamp = timestamp;
          this.transactionType = transactionType;
+      }
+   }
+
+   private static class MapAck extends DistStageAck {
+      final Map<String, Object> map;
+
+      private MapAck(SlaveState slaveState, Map<String, Object> map) {
+         super(slaveState);
+         this.map = map;
       }
    }
 }

@@ -14,7 +14,6 @@ import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.TraitHelper;
 
@@ -81,13 +80,13 @@ public class LocalSlaveConnection implements SlaveConnection {
    @Override
    public List<DistStageAck> runStage(int stageId, int numSlaves) {
       if (stageId < 0) {
-         return Collections.singletonList((DistStageAck) new DefaultDistStageAck(0, slaveState.getLocalAddress()));
+         return Collections.singletonList(new DistStageAck(slaveState));
       }
       Stage stage = scenario.getStage(stageId, extras);
       TraitHelper.InjectResult result = TraitHelper.inject(stage, traits);
       if (result == TraitHelper.InjectResult.FAILURE) {
-         return Collections.singletonList((DistStageAck) new DefaultDistStageAck(0, InetAddress.getLoopbackAddress())
-               .error("The stage missed some mandatory traits.", null));
+         return Collections.singletonList(new DistStageAck(slaveState)
+               .error("The stage missed some mandatory traits."));
       } else if (result == TraitHelper.InjectResult.SKIP) {
          log.info("Stage " + stage.getName() + " was skipped as it was missing some traits.");
       }
@@ -104,7 +103,7 @@ public class LocalSlaveConnection implements SlaveConnection {
          } catch (Exception e) {
             end = System.currentTimeMillis();
             log.error("Stage execution failed", e);
-            ack = new DefaultDistStageAck(0, InetAddress.getLoopbackAddress()).error("Failure", e);
+            ack = new DistStageAck(slaveState).error("Failure", e);
          }
          slaveState.getTimeline().addEvent(Stage.STAGE, new Timeline.IntervalEvent(start, stage.getName(), end - start));
          return Collections.singletonList(ack);

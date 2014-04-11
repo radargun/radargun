@@ -4,7 +4,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -27,28 +26,20 @@ public class CheckBackgroundStressorsStage extends AbstractDistStage {
       if (manager != null) {
          String error = manager.getError();
          if (error != null) {
-            return fail(error);
+            return errorResponse(error);
          }
          if (waitUntilChecked && resumeAfterChecked) {
-            return fail("Cannot both wait and resume in the same stage; other node may have not finished checking.");
+            return errorResponse("Cannot both wait and resume in the same stage; other node may have not finished checking.");
          }
          if (waitUntilChecked) {
             error = manager.waitUntilChecked();
             if (error != null) {
-               return fail(error);
+               return errorResponse(error);
             }
          } else if (resumeAfterChecked) {
             manager.resumeAfterChecked();
          }
       }
       return successfulResponse();
-   }
-
-   private DistStageAck fail(String error) {
-      DefaultDistStageAck ack = newDefaultStageAck();
-      log.error(error);
-      ack.setError(true);
-      ack.setErrorMessage(error);
-      return ack;
    }
 }

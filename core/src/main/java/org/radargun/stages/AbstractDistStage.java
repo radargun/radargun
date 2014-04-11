@@ -67,10 +67,6 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       return lifecycle == null || lifecycle.isRunning();
    }
 
-   protected DefaultDistStageAck newDefaultStageAck() {
-      return new DefaultDistStageAck(slaveState.getSlaveIndex(), slaveState.getLocalAddress());
-   }
-
    protected boolean shouldExecute() {
       boolean execBySlave = slaves == null || slaves.contains(slaveState.getSlaveIndex());
       boolean execByGroup = groups == null || groups.contains(slaveState.getGroupName());
@@ -98,16 +94,16 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       return slaves;
    }
 
+   @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       boolean success = true;
       logDurationInfo(acks);
-      for (DistStageAck stageAck : acks) {
-         DefaultDistStageAck defaultStageAck = (DefaultDistStageAck) stageAck;
-         if (defaultStageAck.isError()) {
-            log.warn("Received error ack " + defaultStageAck);
+      for (DistStageAck ack : acks) {
+         if (ack.isError()) {
+            log.warn("Received error ack " + ack);
             return false;
          } else {
-            log.trace("Received success ack " + defaultStageAck);
+            log.trace("Received success ack " + ack);
          }
       }
       if (log.isTraceEnabled())
@@ -115,7 +111,7 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       return success;
    }
 
-   protected void logDurationInfo(List<DistStageAck> acks) {
+   protected void logDurationInfo(List<? extends DistStageAck> acks) {
       if (!log.isInfoEnabled()) return;
 
       String processingDuration = "Durations [";
@@ -128,11 +124,17 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       log.info("Received responses from all " + acks.size() + " slaves. " + processingDuration + "]");
    }
 
+   protected DistStageAck errorResponse(String message) {
+      log.error(message);
+      return new DistStageAck(slaveState).error(message, null);
+   }
+
    protected DistStageAck errorResponse(String message, Exception e) {
-      return newDefaultStageAck().error(message, e);
+      log.error(message, e);
+      return new DistStageAck(slaveState).error(message, e);
    }
 
    protected DistStageAck successfulResponse() {
-      return newDefaultStageAck();
+      return new DistStageAck(slaveState);
    }
 }

@@ -14,13 +14,13 @@ import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.cache.generators.WrappedArrayValueGenerator;
 import org.radargun.stages.helpers.BucketPolicy;
+import org.radargun.state.SlaveState;
 import org.radargun.stats.AllRecordingOperationStats;
 import org.radargun.stats.DefaultOperationStats;
 import org.radargun.stats.DefaultStatistics;
@@ -252,16 +252,11 @@ public class StressTestStage extends AbstractDistStage {
       log.info("Executing: " + this.toString());
       startNanos = System.nanoTime();
 
-      DefaultDistStageAck result = newDefaultStageAck();
       try {
          List<List<Statistics>> results = execute();
-         result.setPayload(results);
-         return result;
+         return new StatisticsAck(slaveState, results);
       } catch (Exception e) {
-         log.warn("Exception while initializing the test", e);
-         result.setError(true);
-         result.setRemoteException(e);
-         return result;
+         return errorResponse("Exception while initializing the test", e);
       }
    }
 
@@ -271,22 +266,28 @@ public class StressTestStage extends AbstractDistStage {
       Report report = masterState.getReport();
       Report.Test test = report.createTest(testName);
       for (DistStageAck ack : acks) {
-         DefaultDistStageAck wAck = (DefaultDistStageAck) ack;
-         if (wAck.isError()) {
+         if (ack.isError()) {
             success = false;
-            log.warn("Received error ack: " + wAck);
-         } else {
-            if (log.isTraceEnabled())
-               log.trace("Received success ack: " + wAck);
+            log.warn("Received error ack: " + ack);
+            continue;
          }
-         List<List<Statistics>> iterations = (List<List<Statistics>>) wAck.getPayload();
-         if (iterations != null) {
-            test.addIterations(ack.getSlaveIndex(), iterations);
+         if (!(ack instanceof StatisticsAck)) {
+            log.error("Success ack does not contain statistics");
+            continue;
+         }
+         StatisticsAck sack = (StatisticsAck) ack;
+         log.trace("Received success ack: " + ack);
+         if (sack.iterations != null) {
+            test.addIterations(ack.getSlaveIndex(), sack.iterations);
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }
       }
       return success;
+   }
+
+   protected boolean defaultProcessAck(List<DistStageAck> acks) {
+      return super.processAckOnMaster(acks);
    }
 
    public List<List<Statistics>> stress() {
@@ -488,5 +489,14 @@ public class StressTestStage extends AbstractDistStage {
    protected static void avoidJit(Object result) {
       //this line was added just to make sure JIT doesn't skip call to cacheWrapper.get
       if (result != null && System.identityHashCode(result) == result.hashCode()) System.out.print("");
+   }
+
+   private static class StatisticsAck extends DistStageAck {
+      private final List<List<Statistics>> iterations;
+
+      private StatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
+         super(slaveState);
+         this.iterations = iterations;
+      }
    }
 }

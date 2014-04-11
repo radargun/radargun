@@ -12,13 +12,13 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
 import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.BucketPolicy;
 import org.radargun.stages.helpers.Range;
+import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Debugable;
@@ -143,24 +143,16 @@ public class CheckCacheDataStage extends AbstractDistStage {
             }
          }
       } catch (Exception e) {
-         log.error("Failed to check entries", e);
          return errorResponse("Failed to check entries", e);
       }
 
-      DefaultDistStageAck ack = newDefaultStageAck();
       if (!isDeleted()) {
          if (result.found != getExpectedNumEntries()) {
-            ack.setError(true);
-            ack.setErrorMessage("Found " + result.found + " entries while " + getExpectedNumEntries() + " should be loaded.");
-            ack.setPayload(result);
-            return ack;
+            return new InfoAck(slaveState, result).error("Found " + result.found + " entries while " + getExpectedNumEntries() + " should be loaded.");
          }
       } else {
          if (result.found > 0) {
-            ack.setError(true);
-            ack.setErrorMessage("Found " + result.found + " entries while these should be deleted.");
-            ack.setPayload(result);
-            return ack;
+            return new InfoAck(slaveState, result).error("Found " + result.found + " entries while these should be deleted.");
          }
       }
       CacheInformation.Cache info = cacheInformation.getCache(getCacheName());
@@ -188,8 +180,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
             } else break;
          }
       }
-      ack.setPayload(new int[] { info.getLocalSize(), info.getNumReplicas() });
-      return ack;
+      return new InfoAck(slaveState, info.getLocalSize(), info.getNumReplicas());
    }
 
    private String getCacheName() {
@@ -294,41 +285,39 @@ public class CheckCacheDataStage extends AbstractDistStage {
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       boolean success = super.processAckOnMaster(acks);
-      if (success) {
-         int sumSize = 0;
-         Integer numReplicas = null;
-         for (DistStageAck ack : acks) {
-            DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-            if (dack.getPayload() != null) {
-               int[] payload = (int[]) dack.getPayload();
-               int localSize = payload[0];
-               int replicas = payload[1];
-               log.debug("Slave " + dack.getSlaveIndex() + " has local size " + localSize);
-               sumSize += localSize;
-               if (numReplicas == null) numReplicas = replicas;
-               else if (numReplicas != replicas) {
-                  log.error("Slave " + dack.getSlaveIndex() + " reports " + replicas + " replicas but other slave reported " + numReplicas);
-                  return false;
-               }
+      if (!success) {
+         return false;
+      }
+      int sumSize = 0;
+      Integer numReplicas = null;
+      for (DistStageAck ack : acks) {
+         if (ack instanceof InfoAck) {
+            InfoAck info = (InfoAck) ack;
+            log.debug("Slave " + ack.getSlaveIndex() + " has local size " + info.localSize);
+            sumSize += info.localSize;
+            if (numReplicas == null) numReplicas = info.numReplicas;
+            else if (numReplicas != info.numReplicas) {
+               log.error("Slave " + ack.getSlaveIndex() + " reports " + info.numReplicas + " replicas but other slave reported " + numReplicas);
+               return false;
             }
          }
-         if (ignoreSum) {
-            log.info("The sum size is " + sumSize);
+      }
+      if (ignoreSum) {
+         log.info("The sum size is " + sumSize);
+      } else {
+         int expectedSize;
+         int extraEntries = getExtraEntries();
+         int commonEntries = isDeleted() ? 0 : numEntries;
+         if (numReplicas < 0) {
+            expectedSize = -numReplicas * masterState.getClusterSize() * (commonEntries + extraEntries);
          } else {
-            int expectedSize;
-            int extraEntries = getExtraEntries();
-            int commonEntries = isDeleted() ? 0 : numEntries;            
-            if (numReplicas < 0) {
-               expectedSize = -numReplicas * masterState.getClusterSize() * (commonEntries + extraEntries);
-            } else {
-               expectedSize = numReplicas * (commonEntries + extraEntries);
-            }
-            if (expectedSize != sumSize) {
-               log.error("The cache should contain " + expectedSize + " entries (including backups) but contains " + sumSize + " entries.");
-               return false;
-            } else {
-               log.trace("The sum size is " + sumSize + " entries as expected");
-            }
+            expectedSize = numReplicas * (commonEntries + extraEntries);
+         }
+         if (expectedSize != sumSize) {
+            log.error("The cache should contain " + expectedSize + " entries (including backups) but contains " + sumSize + " entries.");
+            return false;
+         } else {
+            log.trace("The sum size is " + sumSize + " entries as expected");
          }
       }
       return success;
@@ -359,8 +348,33 @@ public class CheckCacheDataStage extends AbstractDistStage {
       return deleted;
    }
 
-   public int getLogChecksCount() {
-      return logChecksCount;
+   protected static class InfoAck extends DistStageAck {
+      final long localSize;
+      final int numReplicas;
+      final CheckResult checkResult;
+
+      public InfoAck(SlaveState slaveState, long localSize, int numReplicas) {
+         super(slaveState);
+         this.localSize = localSize;
+         this.numReplicas = numReplicas;
+         checkResult = null;
+      }
+
+      public InfoAck(SlaveState slaveState, CheckResult checkResult) {
+         super(slaveState);
+         this.checkResult = checkResult;
+         localSize = -1;
+         numReplicas = -1;
+      }
+
+      @Override
+      public String toString() {
+         return "InfoAck{" +
+               "localSize=" + localSize +
+               ", numReplicas=" + numReplicas +
+               ", checkResult=" + checkResult +
+               "} " + super.toString();
+      }
    }
 
    protected static class CheckResult implements Serializable {

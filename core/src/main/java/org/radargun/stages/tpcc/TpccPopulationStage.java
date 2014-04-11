@@ -1,13 +1,15 @@
 
 package org.radargun.stages.tpcc;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.util.List;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 
@@ -44,10 +46,9 @@ public class TpccPopulationStage extends AbstractDistStage {
    private BasicOperations basicOperations;
 
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
       if (!isServiceRunnning()) {
          log.info("Not executing any test as the service is not running on this slave ");
-         return ack;
+         return successfulResponse();
       }
       long startTime = System.currentTimeMillis();
       try {
@@ -58,18 +59,26 @@ public class TpccPopulationStage extends AbstractDistStage {
       }
       long duration = System.currentTimeMillis() - startTime;
       log.info("The population took: " + (duration / 1000) + " seconds.");
-      ack.setPayload(duration);
-      return ack;
+      return new DurationAck(slaveState, duration);
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks) {
+      if (!super.processAckOnMaster(acks)) return false;
       logDurationInfo(acks);
-      for (DistStageAck ack : acks) {
-         DefaultDistStageAck dAck = (DefaultDistStageAck) ack;
+      for (DurationAck ack : cast(acks, DurationAck.class)) {
          if (log.isTraceEnabled()) {
-            log.trace("Tpcc population on slave " + dAck.getSlaveIndex() + " finished in " + dAck.getPayload() + " millis.");
+            log.trace("Tpcc population on slave " + ack.getSlaveIndex() + " finished in " + ack.duration + " millis.");
          }
       }
       return true;
+   }
+
+   private static class DurationAck extends DistStageAck {
+      final long duration;
+
+      private DurationAck(SlaveState slaveState, long duration) {
+         super(slaveState);
+         this.duration = duration;
+      }
    }
 }

@@ -9,7 +9,7 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.DefaultDistStageAck;
+import org.radargun.state.SlaveState;
 
 /**
  * Collects configuration for JMXClusterValidationStage.
@@ -46,21 +46,16 @@ public class JMXClusterValidationPrepareStage extends AbstractDistStage {
    }
 
    public DistStageAck executeOnSlave() {
-      DefaultDistStageAck ack = newDefaultStageAck();
       try {
          log.info("Obtaining JMX endpoint info for master...");
          String portProp = System.getProperty("com.sun.management.jmxremote.port");
          if (portProp == null) {
-            ack.setErrorMessage("JMX not enabled on slave " + slaveState.getSlaveIndex());
-            ack.setError(true);
+            return errorResponse("JMX not enabled on slave " + slaveState.getSlaveIndex());
          } else {
-            ack.setPayload(new InetSocketAddress(slaveState.getLocalAddress(), Integer.valueOf(portProp)));
+            return new AddressAck(slaveState, new InetSocketAddress(slaveState.getLocalAddress(), Integer.valueOf(portProp)));
          }
-         return ack;
       } catch (Exception e) {
-         ack.setRemoteException(e);
-         ack.setError(true);
-         return ack;
+         return errorResponse("Exception thrown", e);
       }
    }
 
@@ -68,14 +63,11 @@ public class JMXClusterValidationPrepareStage extends AbstractDistStage {
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       List<InetSocketAddress> slaveAddrs = new ArrayList<InetSocketAddress>(acks.size());
       for (DistStageAck ack : acks) {
-         DefaultDistStageAck dack = (DefaultDistStageAck) ack;
-         if (dack.isError()) {
-            log.error("Error from slave " + dack.getSlaveIndex() + ": " + dack.getErrorMessage());
+         if (ack.isError()) {
+            log.error("Error from slave " + ack.getSlaveIndex() + ": " + ack);
             return false;
-         } else {
-            if (dack.getPayload() != null) {
-               slaveAddrs.add((InetSocketAddress) dack.getPayload());
-            }
+         } else if (ack instanceof AddressAck) {
+            slaveAddrs.add(((AddressAck) ack).address);
          }
       }
       log.info("Collected JMX endpoints: " + slaveAddrs);
@@ -92,5 +84,14 @@ public class JMXClusterValidationPrepareStage extends AbstractDistStage {
          masterState.put(STATE_PROP3, prop3);
       }
       return true;
+   }
+
+   private static class AddressAck extends DistStageAck {
+      final InetSocketAddress address;
+
+      private AddressAck(SlaveState slaveState, InetSocketAddress address) {
+         super(slaveState);
+         this.address = address;
+      }
    }
 }
