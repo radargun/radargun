@@ -16,11 +16,11 @@ import org.radargun.traits.ProvidesTrait;
 
 /**
  * An implementation of SerializableCacheWrapper that uses EHCache as an underlying implementation.
- * <p/>
+ *
  * Pass in a -Dbind.address=IP_ADDRESS ehcache propery files allows referencing system properties through syntax
  * ${bind.address}.
  *
- * @author Manik Surtani (manik@surtani.org)
+ * @author Manik Surtani &lt;msurtani@gmail.com&gt;
  */
 @Service(doc = "EHCache")
 public class EHCacheService implements Lifecycle, Clustered {

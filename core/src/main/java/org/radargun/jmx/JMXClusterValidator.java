@@ -6,7 +6,7 @@ import java.util.List;
 /**
  * Validates cluster formation via JMX
  * 
- * @author Michal Linhard <mlinhard@redhat.com>
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 public interface JMXClusterValidator {
    /**

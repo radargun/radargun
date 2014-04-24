@@ -9,7 +9,7 @@ import org.radargun.state.SlaveState;
 /**
  * Defines an stage that will be run on both master and slaves.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public interface DistStage extends Stage, Serializable {
 

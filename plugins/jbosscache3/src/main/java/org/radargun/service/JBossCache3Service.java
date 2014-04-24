@@ -5,7 +5,7 @@ import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
 
 /**
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Service(doc = "JBossCache 3.x")
 public class JBossCache3Service extends JBossCache2Service

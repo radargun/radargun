@@ -8,7 +8,7 @@ import java.io.ObjectOutput;
 /**
  * Generates externalizable keys wrapping long identifier of the key.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class ObjectKeyGenerator implements KeyGenerator {
 
@@ -22,7 +22,7 @@ public class ObjectKeyGenerator implements KeyGenerator {
    }
 
    /**
-    * @author Mircea.Markus@jboss.com
+    * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
     */
    public static class ObjectKey implements Externalizable {
 

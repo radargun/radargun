@@ -23,7 +23,7 @@ import org.radargun.traits.InjectTrait;
  *       - cIdMask : mask used to generate non-uniformly distributed random customer numbers.
  * </pre>
  *
- * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
+ * @author Sebastiano Peluso &lt;peluso@gsd.inesc-id.pt, peluso@dis.uniroma1.it&gt;
  */
 @Stage(doc = "This stage shuld be run before the TpccBenchmarkStage.")
 public class TpccPopulationStage extends AbstractDistStage {

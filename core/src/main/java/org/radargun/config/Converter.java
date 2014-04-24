@@ -5,8 +5,7 @@ import java.lang.reflect.Type;
 /**
  * Interface that converts string representation of a collection of objects into java.util.Collection
  *
- * @author rvansa
- * @since 4.0
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface Converter<T> {
    public T convert(String string, Type type);

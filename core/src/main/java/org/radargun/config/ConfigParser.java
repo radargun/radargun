@@ -3,7 +3,7 @@ package org.radargun.config;
 /**
  * Abstracts the logic of parsing an configuration file.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public abstract class ConfigParser {
 

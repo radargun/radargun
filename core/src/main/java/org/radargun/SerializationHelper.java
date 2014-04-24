@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 /**
  * Helper class holding serialization logic.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class SerializationHelper {
    private static final int MIN_REMAINING = 32;

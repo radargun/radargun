@@ -6,7 +6,6 @@ import java.util.concurrent.CountDownLatch;
  * Synchronizes alternation of one master and many slaves. First master phase must start before any slave phase.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- * @since 2/22/13
  */
 public class PhaseSynchronizer {
    boolean masterTurn = true;

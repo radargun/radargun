@@ -12,7 +12,6 @@ import org.radargun.logging.LogFactory;
  * Helper for retrieving properties from the class
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- * @since 12/12/12
  */
 public class PropertyHelper {
 

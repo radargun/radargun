@@ -1,7 +1,7 @@
 package org.radargun.stages.tpcc;
 
 /**
- * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
+ * @author Sebastiano Peluso &lt;peluso@gsd.inesc-id.pt, peluso@dis.uniroma1.it&gt;
  */
 public class ElementNotFoundException extends Exception {
 

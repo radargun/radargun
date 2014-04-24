@@ -7,7 +7,6 @@ import java.util.NoSuchElementException;
  * Tokenizer that allows string delims instead of char delims
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- * @since 12/13/12
  */
 public class Tokenizer implements Enumeration<String> {
 

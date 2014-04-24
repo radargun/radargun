@@ -1,5 +1,12 @@
 package org.radargun.jmx;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.management.MBeanServerConnection;
 import javax.management.Notification;
 import javax.management.NotificationFilterSupport;
@@ -8,13 +15,6 @@ import javax.management.remote.JMXConnectionNotification;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -23,7 +23,7 @@ import org.radargun.logging.LogFactory;
  * 
  * Periodically polls for values exposed via JMX on multiple nodes.
  * 
- * @author <a href="mailto:mlinhard@redhat.com">Michal Linhard</a>
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * 
  */
 public abstract class JMXPoller implements NotificationListener {

@@ -7,7 +7,7 @@ import org.radargun.utils.Utils;
 /**
  * Time-based limitation of the stress test.
  *
- * @author Mircea Marcus
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class TimeStressorCompletion extends Completion {
 

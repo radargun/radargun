@@ -14,7 +14,7 @@ import java.util.*;
  * 
  * Periodically check for all thread stack traces and print them out.
  * 
- * @author Radim Vansa <rvansa@redhat.com>
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Debug usage only. Periodically check for all thread stack traces and print them out.")
 public class StackTraceWatchdogStage extends AbstractDistStage {

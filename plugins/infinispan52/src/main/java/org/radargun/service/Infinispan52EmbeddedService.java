@@ -19,7 +19,7 @@ import org.radargun.traits.ProvidesTrait;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- * @author Michal Linhard (mlinhard@redhat.com)
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
 public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {

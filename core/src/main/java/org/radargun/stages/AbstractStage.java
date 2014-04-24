@@ -9,7 +9,6 @@ import org.radargun.logging.LogFactory;
  * Automatically describes the stage based on the annotations
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- * @since 12/12/12
  */
 @Stage(doc = "")
 public abstract class AbstractStage implements org.radargun.Stage {

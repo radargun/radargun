@@ -17,9 +17,8 @@ import org.radargun.traits.ProvidesTrait;
 /**
  * Oracle Coherence 3.x CacheWrapper implementation.
  * 
- * @author Manik Surtani
- * @author <a href="mailto:mlinhard@redhat.com">Michal Linhard</a>
- * @since 1.0.0
+ * @author Manik Surtani &lt;msurtani@gmail.com&gt;
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 // TODO: implement transactions. Would need to rework the xOperations a bit
 @Service(doc = "Oracle Coherence 3.x CacheWrapper implementation.")

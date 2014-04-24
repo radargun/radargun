@@ -6,7 +6,7 @@ package org.radargun.stages.cache.generators;
  * <p/>
  * Concurrency: methods of this class might be called from multiple threads concurrently.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public interface KeyGenerator {
 

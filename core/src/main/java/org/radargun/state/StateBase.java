@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * Support class for master and slave states.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class StateBase {
 

@@ -19,7 +19,7 @@ import org.radargun.traits.TraitHelper;
 /**
  * Slave being coordinated by a single {@link Master} object in order to run benchmarks.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class Slave {
 

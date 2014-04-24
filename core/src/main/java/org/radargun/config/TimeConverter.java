@@ -1,14 +1,13 @@
 package org.radargun.config;
 
-import org.radargun.utils.Utils;
-
 import java.lang.reflect.Type;
+
+import org.radargun.utils.Utils;
 
 /**
  * Converts string with time suffix into milliseconds
  *
- * @author rvansa
- * @since 2012/12/08
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TimeConverter implements Converter<Long> {
    @Override

@@ -12,7 +12,7 @@ import org.radargun.stages.DefaultDistStageAck;
  * The warmup stage for stress test benchmarks.  This ensures the same access paths are used for the warmup and the
  * actual benchmark.
  *
- * @author Manik Surtani
+ * @author Manik Surtani &lt;msurtani@gmail.com&gt;
  */
 @Stage(doc = "Warmup stage for stress test benchmarks.", deprecatedName = "WebSessionWarmup")
 public class StressTestWarmupStage extends StressTestStage {

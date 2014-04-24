@@ -8,7 +8,7 @@ import org.testng.annotations.Test;
 import static org.testng.AssertJUnit.assertEquals;
 
 /**
- * @author Mircea Markus
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Test
 public class LocalEhCacheTest {

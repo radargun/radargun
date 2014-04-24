@@ -9,7 +9,6 @@ import org.radargun.stats.SynchronizedStatistics;
 * Stressor thread running during many stages.
 *
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
-* @since 1/3/13
 */
 class Stressor extends Thread {
 

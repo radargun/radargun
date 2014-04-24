@@ -5,12 +5,11 @@ import static org.testng.Assert.assertEquals;
 import org.testng.annotations.Test;
 
 /**
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Test
 public class EvaluatorTest {
-
-   
    public void testWithDefaultNoReplacement() {
       assertEquals("aDefaultVal", Evaluator.parseString("${custom.property:aDefaultVal}"));
    }

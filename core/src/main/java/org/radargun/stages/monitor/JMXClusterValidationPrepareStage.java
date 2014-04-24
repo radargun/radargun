@@ -14,7 +14,7 @@ import org.radargun.stages.DefaultDistStageAck;
 /**
  * Collects configuration for JMXClusterValidationStage.
  * 
- * @author Michal Linhard <mlinhard@redhat.com>
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 @Stage(doc = "Collects configuration for JMXClusterValidationStage.")
 public class JMXClusterValidationPrepareStage extends AbstractDistStage {

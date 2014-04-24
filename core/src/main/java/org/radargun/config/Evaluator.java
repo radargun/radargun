@@ -20,7 +20,7 @@ import org.radargun.utils.Tokenizer;
  * #{ ( ${x} + 5 ) * 6 } with -Dx=2 -> 42
  * foo${y}bar with -Dy=goo -> foogoobar
  *
- * @author Radim Vansa
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Evaluator {
 

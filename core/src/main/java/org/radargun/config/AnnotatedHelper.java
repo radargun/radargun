@@ -19,7 +19,6 @@ import org.radargun.logging.LogFactory;
  * Helper for loading the classes from JAR according to annotations.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- * @since 2/19/13
  */
 public class AnnotatedHelper {
 

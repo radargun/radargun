@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Comntains master's configuration elements.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class MasterConfig {
    private final int port;

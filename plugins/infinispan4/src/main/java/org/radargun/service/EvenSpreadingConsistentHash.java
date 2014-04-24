@@ -19,7 +19,7 @@ import org.radargun.logging.LogFactory;
 import org.radargun.stages.cache.generators.ObjectKeyGenerator;
 
 /**
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class EvenSpreadingConsistentHash implements ConsistentHash {
 

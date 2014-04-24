@@ -25,7 +25,7 @@ import org.radargun.utils.Utils;
 /**
  * This is the master that will coordinate the {@link Slave}s in order to run the benchmark.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class Master {
 

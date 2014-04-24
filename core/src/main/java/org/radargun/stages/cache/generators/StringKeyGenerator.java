@@ -1,7 +1,7 @@
 package org.radargun.stages.cache.generators;
 
 /**
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class StringKeyGenerator implements KeyGenerator {
    private String format = "key_%016X";

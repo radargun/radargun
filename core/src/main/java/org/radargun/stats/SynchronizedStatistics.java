@@ -6,7 +6,6 @@ import org.radargun.Operation;
  * Wrapper over DefaultStatistics that provides synchronized access and sealing.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- * @since 1/28/13
  */
 public class SynchronizedStatistics extends DefaultStatistics {
 

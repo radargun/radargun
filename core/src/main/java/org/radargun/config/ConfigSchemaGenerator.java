@@ -38,7 +38,7 @@ import org.w3c.dom.Element;
  * This file is expected to be run from command-line, or rather
  * build script.
  *
- * @author Radim Vansa <rvansa@redhat.com>
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ConfigSchemaGenerator implements ConfigSchema {
    private static final String NS_XS = "http://www.w3.org/2001/XMLSchema";

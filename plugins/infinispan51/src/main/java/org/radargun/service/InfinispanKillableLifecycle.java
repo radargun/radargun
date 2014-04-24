@@ -18,9 +18,9 @@ import org.radargun.traits.Killable;
  * InfinispanEmbeddedService that can kill the cache manager by cutting JGroups communication and is able to
  * perform explicit locking.
  * 
- * @author Michal Linhard <mlinhard@redhat.com>
- * @author Ondrej Nevelik <onevelik@redhat.com>
- * @author Radim Vansa <rvansa@redhat.com>
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
+ * @author Ondrej Nevelik &lt;onevelik@redhat.com&gt;
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InfinispanKillableLifecycle extends InfinispanLifecycle implements Killable {
 

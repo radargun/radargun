@@ -12,7 +12,7 @@ import org.radargun.utils.ClassLoadHelper;
 /**
  * State residing on slave, passed to each's {@link org.radargun.DistStage#initOnSlave(SlaveState)}
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class SlaveState extends StateBase {
 

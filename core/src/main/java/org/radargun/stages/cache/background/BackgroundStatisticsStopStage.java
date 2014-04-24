@@ -12,7 +12,6 @@ import org.radargun.stats.Statistics;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- * @since 1/4/13
  */
 @Stage(doc = "Stop Statistics and return collected statistics to master.")
 public class BackgroundStatisticsStopStage extends AbstractDistStage {

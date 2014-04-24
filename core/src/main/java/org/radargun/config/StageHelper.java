@@ -16,7 +16,6 @@ import org.radargun.utils.Utils;
  * Instantiates stages based on annotations
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- * @since 12/17/12
  */
 public class StageHelper {
 

@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Asck that is sent from each slave to the master containing the result of the slave's processing for a stage.
  *
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public interface DistStageAck extends Serializable {
 

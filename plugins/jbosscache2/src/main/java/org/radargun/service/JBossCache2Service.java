@@ -17,8 +17,7 @@ import org.radargun.traits.ProvidesTrait;
 import org.radargun.traits.Transactional;
 
 /**
- * @author Mircea.Markus@jboss.com
- * @since 2.2
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Service(doc = "JBossCache 2.x")
 public class JBossCache2Service implements Lifecycle, Clustered, Transactional.Resource

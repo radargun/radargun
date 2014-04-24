@@ -25,7 +25,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
 /**
- * @author Mircea.Markus@jboss.com
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class Utils {
 

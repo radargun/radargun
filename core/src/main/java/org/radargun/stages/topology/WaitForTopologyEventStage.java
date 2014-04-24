@@ -13,7 +13,6 @@ import org.radargun.traits.TopologyHistory;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- * @since 2/25/13
  */
 @Stage(doc = "Waits until some event occurs. Note that the initial rehash is not recorded in this manner" +
       ", therefore waiting for that will result in timeout.")

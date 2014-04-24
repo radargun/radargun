@@ -6,8 +6,7 @@ import org.radargun.logging.LogFactory;
 /**
  * // TODO: Document this
  *
- * @author mmarkus
- * @since 4.0
+ * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class ShutDownHook extends Thread {
 

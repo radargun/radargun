@@ -1,7 +1,7 @@
 package org.radargun.traits;
 
 /**
- * @author Michal Linhard <mlinhard@redhat.com>
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 @Trait(doc = "Allows simulation of abrupt shutdown (node crash)")
 public interface Killable {

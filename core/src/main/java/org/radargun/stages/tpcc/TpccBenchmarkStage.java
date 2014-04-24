@@ -41,7 +41,7 @@ import org.radargun.utils.Utils;
  *       - orderStatusWeight : percentage of Order Status transactions.
  * </pre>
  *
- * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
+ * 
  */
 @Stage(doc = "Simulate the activities found in complex OLTP application environments.")
 public class TpccBenchmarkStage extends AbstractDistStage {

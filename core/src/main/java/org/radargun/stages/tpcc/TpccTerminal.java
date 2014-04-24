@@ -7,7 +7,7 @@ import org.radargun.stages.tpcc.transaction.TpccTransaction;
 
 
 /**
- * @author peluso@gsd.inesc-id.pt , peluso@dis.uniroma1.it
+ * @author Sebastiano Peluso &lt;peluso@gsd.inesc-id.pt, peluso@dis.uniroma1.it&gt;
  */
 public class TpccTerminal {
 

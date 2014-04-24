@@ -15,7 +15,7 @@ import org.radargun.utils.Utils;
 /**
  * Validates formation of the cluster remotely via JMX
  * 
- * @author Michal Linhard <mlinhard@redhat.com>
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 @Stage(doc = "Validates formation of the cluster remotely via JMX.")
 public class JMXClusterValidationStage extends AbstractMasterStage {
