@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <parent>
+      <groupId>org.radargun</groupId>
+      <artifactId>radargun-plugin-parent</artifactId>
+      <version>1.1.1-SNAPSHOT</version>
+      <relativePath>../pom.xml</relativePath>
+   </parent>
+
+   <artifactId>plugin-jdg63</artifactId>
+   <name>JDG 6.3.x plugin for RadarGun</name>
+
+   <properties>
+      <version.infinispan>6.1.0.ER1-redhat-1</version.infinispan>
+      <version.jbossts>1.0.1.Final-redhat-2</version.jbossts>
+   </properties>
+
+   <dependencies>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-core</artifactId>
+         <version>${version.infinispan}</version>
+         <exclusions>
+            <exclusion>
+               <groupId>log4j</groupId>
+               <artifactId>log4j</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-query</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-cachestore-jdbc</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.spec.javax.transaction</groupId>
+         <artifactId>jboss-transaction-api_1.1_spec</artifactId>
+         <version>${version.jbossts}</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging-spi</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jfree</groupId>
+               <artifactId>jfreechart</artifactId>
+            </exclusion>            
+         </exclusions>
+      </dependency>
+
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-infinispan60</artifactId>
+         <version>${project.version}</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-core</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-query</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-cachestore-jdbc</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jboss.spec.javax.transaction</groupId>
+               <artifactId>jboss-transaction-api_1.1_spec</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+
+   </dependencies>
+
+</project>

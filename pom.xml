@@ -146,6 +146,7 @@
             <module>plugins/jdg60</module>
             <module>plugins/jdg61</module>
             <module>plugins/jdg62</module>
+            <module>plugins/jdg63</module>
          </modules>
          <build>
             <plugins>
@@ -175,6 +176,11 @@
                               </copy>
                               <copy todir="${distribution.artifact}/plugins/jdg62">
                                  <fileset dir="plugins/jdg62/target/distribution/plugin-jdg62-bin/plugin-jdg62">
+                                    <include name="**/*" />
+                                 </fileset>
+                              </copy>
+                              <copy todir="${distribution.artifact}/plugins/jdg63">
+                                 <fileset dir="plugins/jdg63/target/distribution/plugin-jdg63-bin/plugin-jdg63">
                                     <include name="**/*" />
                                  </fileset>
                               </copy>
@@ -288,6 +294,7 @@
                            <arg value="jdg60" />
                            <arg value="jdg61" />
                            <arg value="jdg62" />
+                           <arg value="jdg63" />
                         </java>
 
                         <echo message="Packaging the framework, and the following plugins: hazelcast2, hazelcast3, infinispan4, infinispan50, infinispan51, infinispan52, infinispan53, infinispan60, jbosscache2, jbosscache3, ehcache25, ehcache26, terracotta3" />

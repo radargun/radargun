@@ -160,6 +160,7 @@
             <module>plugins/jdg60</module>
             <module>plugins/jdg61</module>
             <module>plugins/jdg62</module>
+            <module>plugins/jdg63</module>
          </modules>
          <build>
             <plugins>
@@ -223,6 +224,22 @@
                               <exec executable="bash" failonerror="true">
                                  <arg value="-c"/>
                                  <arg value="for FILE in `ls plugins/jdg62/target/distribution/plugin-jdg62-bin/plugin-jdg62/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/jdg62/lib/; done;"/>
+                              </exec>
+                              
+                              <copy todir="${distribution.artifact}/plugins/jdg63">
+                                 <fileset dir="plugins/jdg63/target/distribution/plugin-jdg63-bin/plugin-jdg63">
+                                    <include name="**/*" />
+                                    <exclude name="**/*.jar" />
+                                 </fileset>
+                              </copy>
+                              <copy todir="${distribution.artifact}/plugin-dependencies">
+                                 <fileset dir="plugins/jdg63/target/distribution/plugin-jdg63-bin/plugin-jdg63/lib">
+                                    <include name="*.jar" />
+                                 </fileset>                        
+                              </copy>
+                              <exec executable="bash" failonerror="true">
+                                 <arg value="-c"/>
+                                 <arg value="for FILE in `ls plugins/jdg63/target/distribution/plugin-jdg63-bin/plugin-jdg63/lib/`; do ln -s ../../../plugin-dependencies/$FILE ${distribution.artifact}/plugins/jdg63/lib/; done;"/>
                               </exec>                    
                            </tasks>
                         </configuration>
@@ -344,6 +361,7 @@
                            <arg value="jdg60" />
                            <arg value="jdg61" />
                            <arg value="jdg62" />
+                           <arg value="jdg63" />
                         </java>
                         <echo message="Packaging the framework, and the following plugins: hazelcast2, hazelcast3, infinispan4, infinispan50, infinispan51, infinispan52, infinispan53, infinispan60, jbosscache2, jbosscache3, ehcache25, ehcache26, terracotta3" />
 

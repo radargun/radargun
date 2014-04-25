@@ -100,6 +100,7 @@
                         <element name="jdg60" type="rg:jdg60"/>
                         <element name="jdg61" type="rg:jdg61"/>
                         <element name="jdg62" type="rg:jdg62"/>
+                        <element name="jdg63" type="rg:jdg63"/>
                      </choice>
                   </sequence>
                </complexType>
@@ -2169,6 +2170,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </complexContent>
    </complexType>
    <complexType name="jdg62">
+      <complexContent>
+         <extension base="rg:abstractProduct"/>
+      </complexContent>
+   </complexType>
+   <complexType name="jdg63">
       <complexContent>
          <extension base="rg:abstractProduct"/>
       </complexContent>
