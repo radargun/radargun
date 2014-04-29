@@ -1,0 +1,51 @@
+<!-- RadarGun 2.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.0">
+
+   <!-- Specifies where should the master open socket  -->
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <!-- List of cluster configurations where the benchmark should run-->
+   <clusters>
+      <!-- Equivalent to <cluster size="2" /><cluster size="3" /><cluster size="4" /> -->
+      <scale from="2" to="${slaves:4}" inc="1">
+         <!-- No groups defined within the cluster -->
+         <cluster />
+      </scale>
+   </clusters>
+
+   <!-- List of configurations of the services -->
+   <configurations>
+      <config name="Infinispan 5.2 - distributed">
+         <!-- All slaves use the same configuration -->
+         <setup plugin="infinispan52" file="dist-sync.xml" />
+      </config>
+      <config name="Infinispan 6.0 - distributed">
+         <setup plugin="infinispan60" file="dist-sync.xml" />
+      </config>
+   </configurations>
+
+   <!-- Sequence of stages executed on the cluster -->
+   <scenario>
+      <!-- Start services on all nodes -->
+      <service-start />
+      <!-- Begin monitoring of CPU, memory usage and GC -->
+      <jvm-monitor-start />
+      <!-- 5 threads will execute total of 100,000 random requests against the default cache ('testCache')-->
+      <stress-test-warmup num-requests="100000" num-threads="5" />
+      <!-- Remove all data from the default cache -->
+      <clear-cache />
+      <!-- 10 threads will execute random request for 1 minute against the default cache ('testCache') -->
+      <stress-test duration="60s" num-threads="10" />
+      <!-- Stop JVM monitoring -->
+      <jvm-monitor-stop />
+   </scenario>
+
+   <!-- How the statistics are reported -->
+   <reports>
+      <!-- Produce CSV statistics report -->
+      <reporter type="csv" />
+      <!-- Produce HTML statistics report -->
+      <reporter type="html" />
+   </reports>
+
+</benchmark>

@@ -6,7 +6,7 @@
    <parent>
       <groupId>org.radargun</groupId>
       <artifactId>radargun-plugin-parent</artifactId>
-      <version>1.1.0-SNAPSHOT</version>
+      <version>2.0.0-SNAPSHOT</version>
       <relativePath>../pom.xml</relativePath>
    </parent>
 
@@ -14,7 +14,7 @@
    <name>Infinispan 7.0.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>7.0.0-SNAPSHOT</version.infinispan>
+      <version.infinispan>7.0.0.Alpha2</version.infinispan>
       <version.jbossts>4.16.3.Final</version.jbossts>
       <version.h2.driver>1.3.166</version.h2.driver>
       <version.hibernate.core>4.2.2.Final</version.hibernate.core>
@@ -92,6 +92,17 @@
    </dependencies>
 
    <profiles>
+      <profile>
+         <id>infinispan70-snapshot</id>
+         <activation>
+            <property>
+               <name>infinispan70-snapshot</name>
+            </property>
+         </activation>
+         <properties>
+            <version.infinispan>7.0.0-SNAPSHOT</version.infinispan>
+         </properties>
+      </profile>
       <profile>
          <id>jpa</id>
          <activation>

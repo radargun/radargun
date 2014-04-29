@@ -1,11 +1,11 @@
 package org.radargun.jmx;
 
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
 import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -14,7 +14,7 @@ import org.radargun.logging.LogFactory;
  * 
  * JMXClusterValidator for Infinispan
  * 
- * @author Michal Linhard <mlinhard@redhat.com>
+ * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * 
  */
 public class InfinispanJMXClusterValidator implements JMXClusterValidator {

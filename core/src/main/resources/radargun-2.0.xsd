@@ -1,0 +1,2032 @@
+<schema xmlns:rg="urn:radargun:benchmark:2.0" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:radargun:benchmark:2.0" version="1.0" xmlns="http://www.w3.org/2001/XMLSchema">
+   <simpleType name="int">
+      <union>
+         <simpleType>
+            <restriction base="integer"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <element name="benchmark">
+      <complexType>
+         <sequence>
+            <element maxOccurs="1" minOccurs="0" name="master">
+               <complexType>
+                  <attribute name="bindAddress" type="string"/>
+                  <attribute name="port" type="rg:int"/>
+               </complexType>
+            </element>
+            <choice maxOccurs="1" minOccurs="0">
+               <element maxOccurs="1" minOccurs="0" name="local">
+                  <complexType/>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="clusters">
+                  <complexType>
+                     <choice maxOccurs="unbounded" minOccurs="1">
+                        <element maxOccurs="unbounded" minOccurs="0" name="scale">
+                           <complexType>
+                              <sequence>
+                                 <element name="cluster" type="rg:cluster_base"/>
+                              </sequence>
+                              <attribute name="from" type="rg:int" use="required"/>
+                              <attribute name="to" type="rg:int" use="required"/>
+                              <attribute name="inc" type="rg:int"/>
+                           </complexType>
+                        </element>
+                        <element name="cluster" type="rg:cluster"/>
+                     </choice>
+                  </complexType>
+               </element>
+            </choice>
+            <element maxOccurs="1" minOccurs="1" name="configurations">
+               <complexType>
+                  <sequence>
+                     <element maxOccurs="unbounded" minOccurs="1" name="config">
+                        <complexType>
+                           <sequence>
+                              <element maxOccurs="unbounded" minOccurs="1" name="setup">
+                                 <complexType>
+                                    <sequence>
+                                       <element maxOccurs="unbounded" minOccurs="0" name="property" type="rg:property"/>
+                                    </sequence>
+                                    <attribute name="plugin" type="string" use="required"/>
+                                    <attribute name="file" type="string" use="required"/>
+                                    <attribute name="service" type="string"/>
+                                    <attribute name="group" type="string"/>
+                                 </complexType>
+                              </element>
+                           </sequence>
+                           <attribute name="name" type="string" use="required"/>
+                        </complexType>
+                     </element>
+                  </sequence>
+               </complexType>
+            </element>
+            <element maxOccurs="1" minOccurs="0" name="init" type="rg:scenario-init"/>
+            <element maxOccurs="1" minOccurs="1" name="scenario">
+               <complexType>
+                  <sequence>
+                     <choice maxOccurs="unbounded" minOccurs="1">
+                        <element name="repeat" type="rg:repeat"/>
+                        <element name="background-statistics-start" type="rg:background-statistics-start"/>
+                        <element name="background-statistics-stop" type="rg:background-statistics-stop"/>
+                        <element name="background-stressors-start" type="rg:background-stressors-start"/>
+                        <element name="background-stressors-stop" type="rg:background-stressors-stop"/>
+                        <element name="check-background-stressors" type="rg:check-background-stressors"/>
+                        <element name="check-cache-data" type="rg:check-cache-data"/>
+                        <element name="check-topology" type="rg:check-topology"/>
+                        <element name="clear-cache" type="rg:clear-cache"/>
+                        <element name="stress-test" type="rg:stress-test"/>
+                        <element name="web-session-benchmark" type="rg:stress-test"/>
+                        <element name="client-stress-test" type="rg:client-stress-test"/>
+                        <element name="cluster-validation" type="rg:cluster-validation"/>
+                        <element name="data-for-query" type="rg:data-for-query"/>
+                        <element name="distributed-task" type="rg:distributed-task"/>
+                        <element name="example" type="rg:example"/>
+                        <element name="isolation-level-check" type="rg:isolation-level-check"/>
+                        <element name="jmx-cluster-validation-prepare" type="rg:jmx-cluster-validation-prepare"/>
+                        <element name="jmx-cluster-validation" type="rg:jmx-cluster-validation"/>
+                        <element name="j-profiler" type="rg:j-profiler"/>
+                        <element name="jvm-monitor-start" type="rg:jvm-monitor-start"/>
+                        <element name="jvm-monitor-stop" type="rg:jvm-monitor-stop"/>
+                        <element name="load-file" type="rg:load-file"/>
+                        <element name="map-reduce" type="rg:map-reduce"/>
+                        <element name="parallel-start-stop" type="rg:parallel-start-stop"/>
+                        <element name="query" type="rg:query"/>
+                        <element name="random-data" type="rg:random-data"/>
+                        <element name="service-start" type="rg:service-start"/>
+                        <element name="service-stop" type="rg:service-stop"/>
+                        <element name="set-log-level" type="rg:set-log-level"/>
+                        <element name="set-partitions" type="rg:set-partitions"/>
+                        <element name="single-tx-check" type="rg:single-tx-check"/>
+                        <element name="single-tx-load" type="rg:single-tx-load"/>
+                        <element name="sleep" type="rg:sleep"/>
+                        <element name="stack-trace-watchdog" type="rg:stack-trace-watchdog"/>
+                        <element name="stress-test-warmup" type="rg:stress-test-warmup"/>
+                        <element name="web-session-warmup" type="rg:stress-test-warmup"/>
+                        <element name="tpcc-benchmark" type="rg:tpcc-benchmark"/>
+                        <element name="tpcc-population" type="rg:tpcc-population"/>
+                        <element name="wait-for-topology-event" type="rg:wait-for-topology-event"/>
+                        <element name="write-skew-check" type="rg:write-skew-check"/>
+                        <element name="xs-repl-check" type="rg:xs-repl-check"/>
+                        <element name="xs-repl-load" type="rg:xs-repl-load"/>
+                     </choice>
+                  </sequence>
+               </complexType>
+            </element>
+            <element maxOccurs="1" minOccurs="0" name="cleanup" type="rg:scenario-cleanup"/>
+            <element maxOccurs="1" minOccurs="1" name="reports">
+               <complexType>
+                  <sequence>
+                     <element maxOccurs="unbounded" minOccurs="1" name="reporter">
+                        <complexType>
+                           <sequence>
+                              <element maxOccurs="unbounded" minOccurs="0" name="report">
+                                 <complexType>
+                                    <element name="property" type="rg:property"/>
+                                 </complexType>
+                              </element>
+                              <element maxOccurs="1" minOccurs="0" name="properties">
+                                 <complexType>
+                                    <sequence>
+                                       <element name="property" type="rg:property"/>
+                                    </sequence>
+                                 </complexType>
+                              </element>
+                           </sequence>
+                           <attribute name="type" type="string" use="required"/>
+                           <attribute name="run" type="rg:org-radargun-config-reporterconfiguration-runcondition"/>
+                        </complexType>
+                     </element>
+                  </sequence>
+               </complexType>
+            </element>
+         </sequence>
+      </complexType>
+   </element>
+   <complexType name="cluster_base">
+      <sequence>
+         <element maxOccurs="unbounded" minOccurs="0" name="group">
+            <complexType>
+               <attribute name="name" type="string" use="required"/>
+               <attribute name="size" type="rg:int" use="required"/>
+            </complexType>
+         </element>
+      </sequence>
+   </complexType>
+   <complexType name="cluster">
+      <complexContent>
+         <extension base="rg:cluster_base">
+            <attribute name="size" type="rg:int"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="property">
+      <complexContent>
+         <simpleContent/>
+         <attribute name="name" type="string" use="required"/>
+      </complexContent>
+   </complexType>
+   <complexType name="repeat">
+      <sequence>
+         <choice maxOccurs="unbounded" minOccurs="1">
+            <element name="repeat" type="rg:repeat"/>
+            <element name="background-statistics-start" type="rg:background-statistics-start"/>
+            <element name="background-statistics-stop" type="rg:background-statistics-stop"/>
+            <element name="background-stressors-start" type="rg:background-stressors-start"/>
+            <element name="background-stressors-stop" type="rg:background-stressors-stop"/>
+            <element name="check-background-stressors" type="rg:check-background-stressors"/>
+            <element name="check-cache-data" type="rg:check-cache-data"/>
+            <element name="check-topology" type="rg:check-topology"/>
+            <element name="clear-cache" type="rg:clear-cache"/>
+            <element name="stress-test" type="rg:stress-test"/>
+            <element name="web-session-benchmark" type="rg:stress-test"/>
+            <element name="client-stress-test" type="rg:client-stress-test"/>
+            <element name="cluster-validation" type="rg:cluster-validation"/>
+            <element name="data-for-query" type="rg:data-for-query"/>
+            <element name="distributed-task" type="rg:distributed-task"/>
+            <element name="example" type="rg:example"/>
+            <element name="isolation-level-check" type="rg:isolation-level-check"/>
+            <element name="jmx-cluster-validation-prepare" type="rg:jmx-cluster-validation-prepare"/>
+            <element name="jmx-cluster-validation" type="rg:jmx-cluster-validation"/>
+            <element name="j-profiler" type="rg:j-profiler"/>
+            <element name="jvm-monitor-start" type="rg:jvm-monitor-start"/>
+            <element name="jvm-monitor-stop" type="rg:jvm-monitor-stop"/>
+            <element name="load-file" type="rg:load-file"/>
+            <element name="map-reduce" type="rg:map-reduce"/>
+            <element name="parallel-start-stop" type="rg:parallel-start-stop"/>
+            <element name="query" type="rg:query"/>
+            <element name="random-data" type="rg:random-data"/>
+            <element name="service-start" type="rg:service-start"/>
+            <element name="service-stop" type="rg:service-stop"/>
+            <element name="set-log-level" type="rg:set-log-level"/>
+            <element name="set-partitions" type="rg:set-partitions"/>
+            <element name="single-tx-check" type="rg:single-tx-check"/>
+            <element name="single-tx-load" type="rg:single-tx-load"/>
+            <element name="sleep" type="rg:sleep"/>
+            <element name="stack-trace-watchdog" type="rg:stack-trace-watchdog"/>
+            <element name="stress-test-warmup" type="rg:stress-test-warmup"/>
+            <element name="web-session-warmup" type="rg:stress-test-warmup"/>
+            <element name="tpcc-benchmark" type="rg:tpcc-benchmark"/>
+            <element name="tpcc-population" type="rg:tpcc-population"/>
+            <element name="wait-for-topology-event" type="rg:wait-for-topology-event"/>
+            <element name="write-skew-check" type="rg:write-skew-check"/>
+            <element name="xs-repl-check" type="rg:xs-repl-check"/>
+            <element name="xs-repl-load" type="rg:xs-repl-load"/>
+         </choice>
+      </sequence>
+      <attribute name="times" type="rg:int"/>
+      <attribute name="from" type="rg:int"/>
+      <attribute name="to" type="rg:int"/>
+      <attribute name="inc" type="rg:int"/>
+      <attribute name="name" type="string"/>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.AbstractStage-->
+   <complexType abstract="true" name="abstract">
+      <annotation>
+         <documentation/>
+      </annotation>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.AbstractDistStage-->
+   <complexType abstract="true" name="abstract-dist">
+      <annotation>
+         <documentation/>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract">
+            <attribute name="run-on-all-slaves" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true the stage should be run on maxSlaves (applies to scaling benchmarks). Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="slaves" type="string">
+               <annotation>
+                  <documentation>Specifies on which slaves should this stage actively run. Default is stage-dependent (usually all or none).</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.AbstractMasterStage-->
+   <complexType abstract="true" name="abstract-master">
+      <annotation>
+         <documentation/>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract"/>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.lifecycle.AbstractServiceStartStage-->
+   <complexType abstract="true" name="abstract-service-start">
+      <annotation>
+         <documentation/>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="may-fail-on" type="string">
+               <annotation>
+                  <documentation>Set of slaves where the start may fail but this will not cause an error. Default is none.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.BackgroundStatisticsStartStage-->
+   <complexType name="background-statistics-start">
+      <annotation>
+         <documentation>Starts collection of statistics from background threads and cache size.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="stats-iteration-duration" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Delay between statistics snapshots. Default is 5 seconds.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="long-converted-by-org-radargun-config-timeconverter">
+      <union>
+         <simpleType>
+            <restriction>
+               <pattern value="[0-9]+\s*[mMsS]?"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.BackgroundStatisticsStopStage-->
+   <complexType name="background-statistics-stop">
+      <annotation>
+         <documentation>Stop Statistics and return collected statistics to master.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="test-name" type="string">
+               <annotation>
+                  <documentation>Name of the test used for reports. Default is 'BackgroundStats'.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.BackgroundStressorsStartStage-->
+   <complexType name="background-stressors-start">
+      <annotation>
+         <documentation>Starts background stressor threads.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="cache-name" type="string">
+               <annotation>
+                  <documentation>Cache used for the background operations. Default is null (default).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="dead-slave-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Period after which a slave is considered to be dead. Default is 90 s.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delay-between-requests" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="entry-size" type="rg:int">
+               <annotation>
+                  <documentation>Size of value used in the entry. Default is 1024 bytes.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="gets" type="rg:int">
+               <annotation>
+                  <documentation>Ratio of GET requests. Default is 2.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="ignore-dead-checkers" type="rg:boolean">
+               <annotation>
+                  <documentation>When the log value is full, the stressor needs to wait until all checkers confirm that the records have been checked before discarding oldest records. With ignoreDeadCheckers=true the stressor does not wait for checkers on dead nodes. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-data-for-dead-slaves" type="string">
+               <annotation>
+                  <documentation>List of slaves whose data should be loaded by other threads because these slaves are not alive. Default is empty.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-data-on-slaves" type="string">
+               <annotation>
+                  <documentation>List of slaves where the data should be loaded (others immediately start executing requests). Default is all live slaves).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-only" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, the stressor does not execute any requests after loading the data. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-with-put-if-absent" type="rg:boolean">
+               <annotation>
+                  <documentation>Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Maximum time for which are the log value checkers allowed to show no new checked values (error is thrown in CheckBackgroundStressors stage). Default is one minute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-checking-threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of threads on each node that are checking whether all operations from stressor threads have been logged. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-counter-update-period" type="rg:long">
+               <annotation>
+                  <documentation>Number of operations after which will the stressor or checker update in-cache operation counter. Default is 50.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-value-max-size" type="rg:int">
+               <annotation>
+                  <documentation>Maximum number of records in one entry before the older ones have to be truncated. Default is 100.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="no-loading" type="rg:boolean">
+               <annotation>
+                  <documentation>Do not execute the loading, start usual request right away.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-entries" type="rg:int">
+               <annotation>
+                  <documentation>Amount of entries (key-value pairs) inserted into the cache. Default is 1024.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of stressor threads. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="puts" type="rg:int">
+               <annotation>
+                  <documentation>Ratio of PUT requests. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="removes" type="rg:int">
+               <annotation>
+                  <documentation>Ratio of REMOVE requests. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="shared-keys" type="rg:boolean">
+               <annotation>
+                  <documentation>By default each thread accesses only its private set of keys. This allows all threads all values. Atomic operations are required for this functionality. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="transaction-size" type="rg:int">
+               <annotation>
+                  <documentation>Amount of request wrapped into single transaction. By default transactions are not used (explicitely).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="use-log-values" type="rg:boolean">
+               <annotation>
+                  <documentation>Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait-until-loaded" type="rg:boolean">
+               <annotation>
+                  <documentation>Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="long">
+      <union>
+         <simpleType>
+            <restriction base="long"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.BackgroundStressorsStopStage-->
+   <complexType name="background-stressors-stop">
+      <annotation>
+         <documentation>Stop BackgroundStressors.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="wait-until-loaded" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, the phase does not finish until all stressors stop loading its data. Default is false.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.CheckBackgroundStressorsStage-->
+   <complexType name="check-background-stressors">
+      <annotation>
+         <documentation>Stage that checks the progress in background stressors and fails if something went wrong.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="resume-after-checked" type="rg:boolean">
+               <annotation>
+                  <documentation>Resume writers after we have stopped them in order to let checkers check everything. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait-until-checked" type="rg:boolean">
+               <annotation>
+                  <documentation>Do not write additional operations until all operations are confirmed. Default is false.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.CheckCacheDataStage-->
+   <complexType name="check-cache-data">
+      <annotation>
+         <documentation>Stage for checking presence or absence of data entered in other stages.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="check-entry-count" type="rg:int">
+               <annotation>
+                  <documentation>Number of entries that will be checked in each step. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="check-threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of thread per node which check data validity. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="debug-null" type="rg:boolean">
+               <annotation>
+                  <documentation>If the GET request results in null response, call wrapper-specific functions to show debug info. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="deleted" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="entry-size" type="rg:int" use="required">
+               <annotation>
+                  <documentation>Number of bytes carried in single entry.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="extra-entries" type="string">
+               <annotation>
+                  <documentation>Entries that do not have the expected form but occur in the cluster. This string specifies a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries.Defaults to 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="fail-on-null" type="rg:boolean">
+               <annotation>
+                  <documentation>If entry is null, fail immediatelly. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="first-entry-offset" type="rg:int">
+               <annotation>
+                  <documentation>Index of key of first entry. This number will be multiplied by slaveIndex. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="ignore-sum" type="rg:boolean">
+               <annotation>
+                  <documentation>Usually the test checks that sum of local nodes = numOwners * numEntries + extraEntries.This option disables such behaviour. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="live-slaves-hint" type="rg:int">
+               <annotation>
+                  <documentation>Hint how many slaves are currently alive - if set to &gt; 0 then the query for amount of entries inthis cache is postponed until the cache appears to be fully replicated. By default this is disabled.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-checks-count" type="rg:int">
+               <annotation>
+                  <documentation>Number of queries after which a DEBUG log message is printed. Default is 10000.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="memory-only" type="rg:boolean">
+               <annotation>
+                  <documentation>If the cache wrapper supports persistent storage and this is set to true, the check will be executed only against in-memory data. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-entries" type="rg:int" use="required">
+               <annotation>
+                  <documentation>Number of entries with key in form specified by the last used key generator, in the cache.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="step-entry-count" type="rg:int">
+               <annotation>
+                  <documentation>Number of entries stepped in each step. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.CheckStage-->
+   <complexType abstract="true" name="check">
+      <annotation>
+         <documentation/>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist"/>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.topology.CheckTopologyStage-->
+   <complexType name="check-topology">
+      <annotation>
+         <documentation>Controls which topology events have (not) happened recently</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="changed" type="rg:boolean">
+               <annotation>
+                  <documentation>The check controls if this event has happened (true) or not happened (false). Defaults to true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="period" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>The period in milliseconds which is checked. Default is infinite.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="type" type="rg:org-radargun-stages-topology-checktopologystage-type">
+               <annotation>
+                  <documentation>What does this stage control. Default is both DataRehashed and TopologyChanged events.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="org-radargun-stages-topology-checktopologystage-type">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="HASH_AND_TOPOLOGY"/>
+               <enumeration value="HASH"/>
+               <enumeration value="TOPOLOGY"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.ClearCacheStage-->
+   <complexType name="clear-cache">
+      <annotation>
+         <documentation>Removes all data from the cache</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="cache-name" type="string">
+               <annotation>
+                  <documentation>Name of the cache to be cleared. Default is the default cache.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="local" type="rg:boolean">
+               <annotation>
+                  <documentation>Execute local variant of clear on each slave. Default value is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="use-transaction" type="rg:boolean">
+               <annotation>
+                  <documentation>Execute the clear inside explicit transaction.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.stresstest.StressTestStage-->
+   <complexType name="stress-test">
+      <annotation>
+         <documentation>Benchmark where several client threads access cache limited by time or number of requests.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="bucket-policy" type="rg:org-radargun-stages-helpers-bucketpolicy-converted-by-org-radargun-stages-helpers-bucketpolicy-converter">
+               <annotation>
+                  <documentation>Which buckets will the stressors use. Available is 'none' (no buckets = null),'thread' (each thread will use bucked_/threadId/) or 'all:/bucketName/' (all threads will use bucketName). Default is 'none'.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="bulk-size" type="rg:int">
+               <annotation>
+                  <documentation>Number of keys inserted/retrieved within one operation. Applicable only when the cache wrappersupports bulk operations. Default is 1 (no bulk operations).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="commit-transactions" type="rg:boolean">
+               <annotation>
+                  <documentation>Specifies whether the transactions should be committed (true) or rolled back (false). Default is true</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="duration" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Benchmark duration. This takes precedence over numRequests. By default switched off.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="entry-lifespan" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="entry-size" type="rg:org-radargun-utils-fuzzy-converted-by-org-radargun-utils-fuzzy-integerconverter">
+               <annotation>
+                  <documentation>Size of the value in bytes. Default is 1000.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="expect-lost-keys" type="rg:boolean">
+               <annotation>
+                  <documentation>Due to configuration (eviction, expiration), some keys may spuriously disappear. Do not issue a warning for this situation. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="fixed-keys" type="rg:boolean">
+               <annotation>
+                  <documentation>The keys can be fixed for the whole test run period or we the set can change over time. Default is true = fixed.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="generate-histogram-range" type="rg:boolean">
+               <annotation>
+                  <documentation>Generate a range for histogram with operations statistics (for use in next stress tests). Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="key-generator-class" type="string">
+               <annotation>
+                  <documentation>Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="key-generator-param" type="string">
+               <annotation>
+                  <documentation>Used to initialize the key generator. Null by default.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="load-all-keys" type="rg:boolean">
+               <annotation>
+                  <documentation>This option is valid only for sharedKeys=true. It forces local loading of all keys (not only numEntries/numNodes). Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-period" type="rg:int">
+               <annotation>
+                  <documentation>Number of operations after which a log entry should be written. Default is 10000.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-bytes" type="rg:long-converted-by-org-radargun-config-sizeconverter">
+               <annotation>
+                  <documentation>Applicable only with fixedKeys=false, makes sense for entrySize with multiple values. Replaces numEntries; requested number of bytes in values set by the stressor. By default not set.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-entries" type="rg:int">
+               <annotation>
+                  <documentation>Number of key-value entries per each client thread which should be used. Default is 100.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-requests" type="rg:long">
+               <annotation>
+                  <documentation>Total number of request to be made against this session: reads + writes. If duration is specified this value is ignored. Default is 50000.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-threads" type="rg:int">
+               <annotation>
+                  <documentation>The number of threads that will work on this slave. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="pool-keys" type="rg:boolean">
+               <annotation>
+                  <documentation>Keep all keys in a pool - do not generate the keys for each request anew. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="prefer-async-operations" type="rg:boolean">
+               <annotation>
+                  <documentation>When executing bulk operations, prefer version with multiple async operations over native implementation. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="remove-invalid-percentage" type="rg:int">
+               <annotation>
+                  <documentation>Used only when useConditionalOperations=true: The frequency of conditional removes that should fail (percentage). Default is 10%</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="remove-percentage" type="rg:int">
+               <annotation>
+                  <documentation>The frequency of removes (percentage). Default is 0%</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="replace-invalid-percentage" type="rg:int">
+               <annotation>
+                  <documentation>In case we test replace performance, the frequency of replaces that should fail (percentage). Default is 40%</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="shared-keys" type="rg:boolean">
+               <annotation>
+                  <documentation>By default each client thread operates on his private set of keys. Setting this to true introduces contention between the threads, the numThreads property says total amount of entries that are used by all threads. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="statistics-period" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Period of single statistics result. By default periodic statistics are not used.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="test-name" type="string">
+               <annotation>
+                  <documentation>Name of the test as used for reporting. Default is StressTest.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="transaction-size" type="rg:int">
+               <annotation>
+                  <documentation>Number of requests in one transaction. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="use-conditional-operations" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, putIfAbsent and replace operations are used. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="use-histogram-statistics" type="rg:boolean">
+               <annotation>
+                  <documentation>The test will produce operation statistics in histogram. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="use-simple-statistics" type="rg:boolean">
+               <annotation>
+                  <documentation>The test will produce operation statistics as average values. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="use-transactions" type="rg:java-lang-boolean">
+               <annotation>
+                  <documentation>Specifies if the requests should be explicitely wrapped in transactions. By defaultthe cachewrapper is queried whether it does support the transactions, if it does,transactions are used, otherwise these are not.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="value-generator-class" type="string">
+               <annotation>
+                  <documentation>Full class name of the value generator. Default is org.radargun.stressors.ByteArrayValueGenerator if useConditionalOperations=false and org.radargun.stressors.WrappedArrayValueGenerator otherwise.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="value-generator-param" type="string">
+               <annotation>
+                  <documentation>Used to initialize the value generator. Null by default.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="write-percentage" type="rg:int">
+               <annotation>
+                  <documentation>Ratio of writes = PUT requests (percentage). Default is 20%</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="org-radargun-stages-helpers-bucketpolicy-converted-by-org-radargun-stages-helpers-bucketpolicy-converter">
+      <union>
+         <simpleType>
+            <restriction>
+               <pattern value="(none|thread|)(:.*)?"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="org-radargun-utils-fuzzy-converted-by-org-radargun-utils-fuzzy-integerconverter">
+      <union>
+         <simpleType>
+            <restriction>
+               <pattern value="\s*([0-9.]+(\.[0-9]*)?\s*%?\s*:\s*)?[0-9]+\s*(,\s*([0-9.]+(\.[0-9]*)?\s*%?\s*:\s*)?[0-9]+\s*)*"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="long-converted-by-org-radargun-config-sizeconverter">
+      <union>
+         <simpleType>
+            <restriction>
+               <pattern value="[0-9]+\s*(k[bB]?|M[bB]?|G[bB]?)"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="java-lang-boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.stresstest.ClientStressTestStage-->
+   <complexType name="client-stress-test">
+      <annotation>
+         <documentation>Repeats the StressTest logic with increasing amount of client threads.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:stress-test">
+            <attribute name="increment" type="rg:int">
+               <annotation>
+                  <documentation>Number of threads which should be added in each iteration. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="init-threads" type="rg:int" use="required">
+               <annotation>
+                  <documentation>Initial number of threads.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="max-threads" type="rg:int" use="required">
+               <annotation>
+                  <documentation>Maximum number of threads this will be run with.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.ClusterValidationStage-->
+   <complexType name="cluster-validation">
+      <annotation>
+         <documentation>Verifies that the cluster is formed by injecting an entry into the cache and then reading it from other nodes.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="partial-replication" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, then the slave will consider that the cluster is formed when one slave replicated the control entry. Otherwise the replication will only be considered successful if all slaves replicated the control value. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="replication-time-sleep" type="rg:int">
+               <annotation>
+                  <documentation>Delay between attempts to retrieve the control entry.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="replication-try-count" type="rg:int">
+               <annotation>
+                  <documentation>How many times we should try to retrieve the control entry.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.stresstest.DataForQueryStage-->
+   <complexType name="data-for-query">
+      <annotation>
+         <documentation>Stage which executes puts/gets indexed entries against index enabled cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:stress-test">
+            <attribute name="data-path" type="string" use="required">
+               <annotation>
+                  <documentation>Specifies the full path of the property file which contains different words for querying. No default value is provided. This property is mandatory.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="is-wildcard" type="rg:boolean">
+               <annotation>
+                  <documentation>Specifies whether the key generation should be done according to wildcard logic or no. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="property-length" type="rg:int">
+               <annotation>
+                  <documentation>The length of the generated indexed entry. Default is 100.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.distributedtask.DistributedTaskStage-->
+   <complexType name="distributed-task">
+      <annotation>
+         <documentation>Stage which executes a MapReduce Task against all keys in the cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="distributed-callable-fqn" type="string" use="required">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.DistributedCallable or java.util.concurrent.Callable implementation to execute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="distributed-execution-params" type="string">
+               <annotation>
+                  <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the distributedCallableFqn Object. The method must be public and take a String parameter.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="execution-policy-name" type="string">
+               <annotation>
+                  <documentation>The name of one of the org.infinispan.distexec.DistributedTaskExecutionPolicy enums. The default is null.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="failover-policy-fqn" type="string">
+               <annotation>
+                  <documentation>The fully qualified class name for a custom org.infinispan.distexec.DistributedTaskFailoverPolicy implementation. The default is null.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="node-address" type="string">
+               <annotation>
+                  <documentation>The node address where the task will be executed. The default is null, and tasks will be executed against all nodes in the cluster.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From extension-example-2.0.0-SNAPSHOT.jar/org.radargun.stages.ExampleStage-->
+   <complexType name="example">
+      <annotation>
+         <documentation>Example stage in different module</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="delay" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Example property delaying the stage executions. Default is 5 seconds.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="foo" type="string" use="required">
+               <annotation>
+                  <documentation>Example property that must be set</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.IsolationLevelCheckStage-->
+   <complexType name="isolation-level-check">
+      <annotation>
+         <documentation>Stage for testing guaranties of isolation levels.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:check">
+            <attribute name="duration" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>How long should this stage take. Default is 1 minute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="expected-level" type="string" use="required">
+               <annotation>
+                  <documentation>Expected isolation level (should match to cache configuration). Supported values are [READ_COMMITTED, REPEATABLE_READ]</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="readers" type="rg:int">
+               <annotation>
+                  <documentation>Number of concurrent threads that try to retrieve the value. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="transaction-size" type="rg:int">
+               <annotation>
+                  <documentation>Number of reads executed inside on transaction. Default is 30.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="writers" type="rg:int">
+               <annotation>
+                  <documentation>Number of concurrent threads that modify the value. Default is 2.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.JMXClusterValidationPrepareStage-->
+   <complexType name="jmx-cluster-validation-prepare">
+      <annotation>
+         <documentation>Collects configuration for JMXClusterValidationStage.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>JMX Connection timeout. Default is 3 seconds.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="prop1" type="string">
+               <annotation>
+                  <documentation>Generic property 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="prop2" type="string">
+               <annotation>
+                  <documentation>Generic property 2.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="prop3" type="string">
+               <annotation>
+                  <documentation>Generic property 3.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Cluster validation timeout. Default is 1 minute.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.JMXClusterValidationStage-->
+   <complexType name="jmx-cluster-validation">
+      <annotation>
+         <documentation>Validates formation of the cluster remotely via JMX.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-master">
+            <attribute name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>JMX connection timeout. Default is 3 seconds.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="plugin" type="string">
+               <annotation>
+                  <documentation>Plugin used for class-loading JMX connector.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="prop1" type="string">
+               <annotation>
+                  <documentation>Generic property 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="prop2" type="string">
+               <annotation>
+                  <documentation>Generic property 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="prop3" type="string">
+               <annotation>
+                  <documentation>Generic property 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="slaves" type="string">
+               <annotation>
+                  <documentation>Indices of slaves that should be up. Default is empty.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Cluster validation timeout. Default is 1 minute.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.JProfilerStage-->
+   <complexType name="j-profiler">
+      <annotation>
+         <documentation>Stage for invoking operations on JProfiler.
+Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=100,config=/path/to/configuration.xml"</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="operations" type="string" use="required">
+               <annotation>
+                  <documentation>Operations that should be invoked on the Controller</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reset-cpu-stats" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, any previously accumulated CPU profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_CPU_RECORDING and STOP_CPU_RECORDING. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reset-memory-stats" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, any previously accumulated Memory profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_MEMORY_RECORDING and STOP_MEMORY_RECORDING. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="snapshot-directory" type="string">
+               <annotation>
+                  <documentation>Directory where the snapshot should be written (for SAVE_SNAPSHOT).</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.JVMMonitorStartStage-->
+   <complexType name="jvm-monitor-start">
+      <annotation>
+         <documentation>Starts collecting JVM statistics locally on each slave node.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="frequency" type="rg:int">
+               <annotation>
+                  <documentation>An integer that specifies the frequency that statistics are collected. The default is one.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="interface-name" type="string">
+               <annotation>
+                  <documentation>Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="time-unit" type="rg:java-util-concurrent-timeunit">
+               <annotation>
+                  <documentation>Specifies the time unit that statistics are collected. One of: MILLISECONDS, SECONDS, MINUTES, or HOURS. The default is SECONDS.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="java-util-concurrent-timeunit">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="NANOSECONDS"/>
+               <enumeration value="MICROSECONDS"/>
+               <enumeration value="MILLISECONDS"/>
+               <enumeration value="SECONDS"/>
+               <enumeration value="MINUTES"/>
+               <enumeration value="HOURS"/>
+               <enumeration value="DAYS"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.JVMMonitorStopStage-->
+   <complexType name="jvm-monitor-stop">
+      <annotation>
+         <documentation>Stop collecting JVM statistics on each slave node and return collected statistics to the master node.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist"/>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.LoadFileStage-->
+   <complexType name="load-file">
+      <annotation>
+         <documentation>Loads the contents of a file into the cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="bucket" type="string">
+               <annotation>
+                  <documentation>The name of the bucket where keys are written. The default is null</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="file-path" type="string" use="required">
+               <annotation>
+                  <documentation>Full pathname to the file.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="print-write-statistics" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, then the time for each put operation is written to the logs. The default is false</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="string-data" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, then String objects are written to the cache. The default is false</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="value-size" type="rg:int">
+               <annotation>
+                  <documentation>The size of the values to put into the cache from the contents of the file. The default size is 1MB (1024 * 1024)</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.mapreduce.MapReduceStage-->
+   <complexType name="map-reduce">
+      <annotation>
+         <documentation>Stage which executes a MapReduce Task against all keys in the cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="collator-fqn" type="string">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="collator-params" type="string">
+               <annotation>
+                  <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Collator Object. The method must be public and take a String parameter. The default is null.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="combiner-fqn" type="string">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to use as a combiner.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="combiner-params" type="string">
+               <annotation>
+                  <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Reducer Object used as a combiner. The method must be public and take a String parameter. The default is null.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="distribute-reduce-phase" type="rg:boolean">
+               <annotation>
+                  <documentation>Boolean value that determines if the Reduce phase of the MapReduceTask is distributed. The default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="mapper-fqn" type="string" use="required">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Mapper implementation to execute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="mapper-params" type="string">
+               <annotation>
+                  <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Mapper Object. The method must be public and take a String parameter. The default is null.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="print-result" type="rg:boolean">
+               <annotation>
+                  <documentation>Boolean value that determines if the final results of the MapReduceTask are written to the log of the first slave node. The default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reducer-fqn" type="string" use="required">
+               <annotation>
+                  <documentation>Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to execute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reducer-params" type="string">
+               <annotation>
+                  <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Reducer Object. The method must be public and take a String parameter. The default is null.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="store-result-in-cache" type="rg:boolean">
+               <annotation>
+                  <documentation>Boolean value that determines if the final results of the MapReduceTask are stored in the cache at key MAPREDUCE_RESULT_KEY. Enabling this feature will require extra DRAM usage. The default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="timeout" type="rg:long">
+               <annotation>
+                  <documentation>A tiemout value for the remote communication that happens during a Map/Reduce task. The default is zero which means to wait forever.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="unit" type="rg:java-util-concurrent-timeunit">
+               <annotation>
+                  <documentation>The java.util.concurrent.TimeUnit to use with the timeout property. The default is TimeUnit.MILLISECONDS</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="use-intermediate-shared-cache" type="rg:boolean">
+               <annotation>
+                  <documentation>Boolean value that determines if the intermediate results of the MapReduceTask are shared. The default is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.lifecycle.ParallelStartStopStage-->
+   <complexType name="parallel-start-stop">
+      <annotation>
+         <documentation>The stage start and stops some nodes concurrently (without waiting for each other).</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-service-start">
+            <attribute name="graceful" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to false, the node crash should be simulated. By default node should be shutdown gracefully.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reachable" type="string">
+               <annotation>
+                  <documentation>Applicable only for cache wrappers with Partitionable feature. Set of slaves that should bereachable from the new node. Default is all slaves.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="role" type="rg:org-radargun-stages-helpers-rolehelper-role">
+               <annotation>
+                  <documentation>Another way how to specify stopped nodes is by role. Available roles are [COORDINATOR]. By default this is not used.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="start" type="string">
+               <annotation>
+                  <documentation>Set of slaves which should be started in this stage. Default is empty.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="start-delay" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Delay before the slaves are started. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="stop" type="string">
+               <annotation>
+                  <documentation>Set of slaves which should be stopped in this stage. Default is empty.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="stop-delay" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Delay before the slaves are stopped. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="org-radargun-stages-helpers-rolehelper-role">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="COORDINATOR"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.stresstest.QueryStage-->
+   <complexType name="query">
+      <annotation>
+         <documentation>Stage which executes a Query using Infinispan-query API against all keys in the cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:stress-test">
+            <attribute name="is-wildcard-query" type="rg:boolean" use="required">
+               <annotation>
+                  <documentation>Boolean variable which shows whether the keyword query should be done or wildcard.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="on-field" type="string" use="required">
+               <annotation>
+                  <documentation>The name of the field for which the query should be executed.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.RandomDataStage-->
+   <complexType name="random-data">
+      <annotation>
+         <documentation>Generates random data to fill the cache.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="bucket" type="string">
+               <annotation>
+                  <documentation>The name of the bucket where keys are written. The default is null</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="limit-word-count" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, then the random word generator selects a word from a pre-defined list. The default is false</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="max-word-count" type="rg:int">
+               <annotation>
+                  <documentation>The maximum number of words to generate in the pre-defined list of words used with limitWordCount.The default is 100.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="max-word-length" type="rg:int">
+               <annotation>
+                  <documentation>The maximum number of characters allowed in a word. The default is 20.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="print-write-statistics" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, then the time for each put operation is written to the logs. The default is false</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="ram-percentage" type="rg:double">
+               <annotation>
+                  <documentation>A double that represents the percentage of the total Java heap used to determine the amount of data to put into the cache.Either valueCount or ramPercentageDataSize should be specified, but not both.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="random-seed" type="rg:long">
+               <annotation>
+                  <documentation>The seed to use for the java.util.Random object. The default is the return value of Calendar.getInstance().getWeekYear().</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="share-words" type="rg:boolean">
+               <annotation>
+                  <documentation>If false, then each node in the cluster generates a list of maxWordCount words. If true, then each node in the cluster shares the same list of words. The default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="string-data" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, then String objects with printable characters are written to the cache.The default is false</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="target-memory-use" type="rg:long">
+               <annotation>
+                  <documentation>The number of bytes to write to the cache when the valueByteOverhead, stringData, and valueSize are taken into account. The code assumes this is an even multiple of valueSize plus valueByteOverhead. If stringData is true, then the code assumes this is an even multiple of (2 * valueSize) plus valueByteOverhead.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="value-byte-overhead" type="rg:int">
+               <annotation>
+                  <documentation>The bytes used over the size of the key and value when putting to the cache. By default the stage retrieves the value from cache wrapper automatically.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="value-count" type="rg:long">
+               <annotation>
+                  <documentation>The number of values of valueSize to write to the cache. Either valueCount or ramPercentageDataSize should be specified, but not both.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="value-size" type="rg:int">
+               <annotation>
+                  <documentation>The size of the values to put into the cache. The default size is 1MB (1024 * 1024).</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="double">
+      <union>
+         <simpleType>
+            <restriction base="double"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.ScenarioCleanupStage-->
+   <complexType name="scenario-cleanup">
+      <annotation>
+         <documentation>DO NOT USE DIRECTLY. This stage is automatically inserted after the last stage in each scenario. You can alter the properties in &amp;lt;cleanup/&amp;gt element.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="check-memory-released" type="rg:boolean">
+               <annotation>
+                  <documentation>Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="heap-dump-dir" type="string">
+               <annotation>
+                  <documentation>Directory where the heap dump will be produced if the memory threshold is hit. By default the dump will not be produced.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="memory-threshold" type="string">
+               <annotation>
+                  <documentation>If the free memory after wrapper destroy and System.gc() is below percentage specified in this property the benchmark will stop. Default is 95.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.ScenarioInitStage-->
+   <complexType name="scenario-init">
+      <annotation>
+         <documentation>DO NOT USE DIRECTLY. This stage is automatically inserted before the beginning of scenario.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist"/>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.lifecycle.ServiceStartStage-->
+   <complexType name="service-start">
+      <annotation>
+         <documentation>Starts services on specified slaves</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-service-start">
+            <attribute name="cluster-formation-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Time allowed the cluster to reach `expectNumSlaves` members. Default is 3 minutes.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delay-after-first-slave-starts" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delay-between-starting-slaves" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="expect-num-slaves" type="rg:java-lang-integer">
+               <annotation>
+                  <documentation>The number of slaves that should be up after all slaves are started. Applicable only with validateCluster=true. Default is all slaves in the cluster (in the same site in case of multi-site configuration).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="reachable" type="string">
+               <annotation>
+                  <documentation>Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="stagger-slave-startup" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="validate-cluster" type="rg:boolean">
+               <annotation>
+                  <documentation>Specifies whether the cluster formation should be checked after cache wrapper startup. Default is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="java-lang-integer">
+      <union>
+         <simpleType>
+            <restriction base="integer"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.lifecycle.ServiceStopStage-->
+   <complexType name="service-stop">
+      <annotation>
+         <documentation>Stops or kills (simulates node crash) one or more nodes.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="async" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true the benchmark will not wait until the node is stopped. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delay-execution" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>If this value is positive the stage will spawn a thread which will stop the node after the delay. The stage will not wait for anything. By default the stop is immediate and synchronous.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="graceful" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to false, the node crash should be simulated. By default node should be shutdown gracefully.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="role" type="rg:org-radargun-stages-helpers-rolehelper-role">
+               <annotation>
+                  <documentation>Instead of specifying concrete slaves we may choose a victim based on his role in the cluster. Supported roles are [COORDINATOR]. By default no role is specified.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait-for-delayed" type="rg:boolean">
+               <annotation>
+                  <documentation>If set, the stage will not stop any node but will wait until the delayed execution is finished. Default is false</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.SetLogLevelStage-->
+   <complexType name="set-log-level">
+      <annotation>
+         <documentation>Debugging stage: changes log priorities</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="package" type="string" use="required">
+               <annotation>
+                  <documentation>The package or class which should be affected.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="pop" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, instead of setting the priority directly just undo the last priority change. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="priority" type="string">
+               <annotation>
+                  <documentation>The new priority that should be used. No defaults.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.topology.SetPartitionsStage-->
+   <complexType name="set-partitions">
+      <annotation>
+         <documentation>Partitions the cluster into several parts that cannot communicate.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="partitions" type="rg:java-util-list-converted-by-org-radargun-stages-topology-setpartitionsstage-uniquecheckerconverter" use="required">
+               <annotation>
+                  <documentation>Set of sets of partitions,e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="java-util-list-converted-by-org-radargun-stages-topology-setpartitionsstage-uniquecheckerconverter">
+      <union>
+         <simpleType>
+            <restriction>
+               <pattern value=""/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.SingleTXCheckStage-->
+   <complexType name="single-tx-check">
+      <annotation>
+         <documentation>Paired with SingleTXLoadStage. Checks that the previous stage had the expected result</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="commit-slave" type="string">
+               <annotation>
+                  <documentation>Indices of slaves which should have committed the transaction (others rolled back). Default is all committed.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="commit-thread" type="string">
+               <annotation>
+                  <documentation>Indices of threads which should have committed the transaction (others rolled back). Default is all committed.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="deleted" type="rg:boolean">
+               <annotation>
+                  <documentation>If this is set to true, REMOVE operation should have been executed. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="transaction-size" type="rg:int">
+               <annotation>
+                  <documentation>Expected size of the transcation.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.SingleTXLoadStage-->
+   <complexType name="single-tx-load">
+      <annotation>
+         <documentation>Performs single transaction with requests on key0 .. keyN in multiple threads on multiple slaves.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="commit-slave" type="string">
+               <annotation>
+                  <documentation>Indices of slaves which should commit the transaction (others will rollback). Default is all commit.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="commit-thread" type="string">
+               <annotation>
+                  <documentation>Indices of threads which should commit the transaction (others will rollback). Default is all commit.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="delete" type="rg:boolean">
+               <annotation>
+                  <documentation>The threads by default do the PUT request, if this is set to true they will do REMOVE. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="duration" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>The enforced duration of the transaction. If &gt; 0 the threads will sleep for duration/transactionSize after each request. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of threads that should execute the transaction. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="transaction-size" type="rg:int">
+               <annotation>
+                  <documentation>Number of request in the transaction. Default is 20.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.SleepStage-->
+   <complexType name="sleep">
+      <annotation>
+         <documentation>Sleeps specified number of milliseconds.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-master">
+            <attribute name="time" type="rg:long-converted-by-org-radargun-config-timeconverter" use="required">
+               <annotation>
+                  <documentation>Sleep duration.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.monitor.StackTraceWatchdogStage-->
+   <complexType name="stack-trace-watchdog">
+      <annotation>
+         <documentation>Debug usage only. Periodically check for all thread stack traces and print them out.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="async-logging" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true the watchdog will not use standard logging for output but will push the output to queue consumed (logged) by another thread. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="mask" type="string">
+               <annotation>
+                  <documentation>If set, only those threads which have this mask in the name will be checked. Default is not set.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="only-stuck" type="rg:boolean">
+               <annotation>
+                  <documentation>By default the check will print out only those threads which appear to be stuck. If this is set to false all threads will be printed out. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="period" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>The delay between consecutive checks. Default is 10 seconds.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="short-stack" type="rg:int">
+               <annotation>
+                  <documentation>Threads with stack lower or equal to this value are never printed (because usually such threads are parked in thread pools). Default is 10.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.stresstest.StressTestWarmupStage-->
+   <complexType name="stress-test-warmup">
+      <annotation>
+         <documentation>Warmup stage for stress test benchmarks.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:stress-test"/>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.tpcc.TpccBenchmarkStage-->
+   <complexType name="tpcc-benchmark">
+      <annotation>
+         <documentation>Simulate the activities found in complex OLTP application environments.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="arrival-rate" type="rg:double">
+               <annotation>
+                  <documentation>Average arrival rate of the transactions to the system. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of threads that will work on this slave. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="order-status-weight" type="rg:double">
+               <annotation>
+                  <documentation>Percentage of Order Status transactions. Default is 5 %.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="payment-weight" type="rg:double">
+               <annotation>
+                  <documentation>Percentage of Payment transactions. Default is 45 %.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="per-thread-simul-time" type="rg:long">
+               <annotation>
+                  <documentation>Total time (in seconds) of simulation for each stressor thread. Default is 180.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.tpcc.TpccPopulationStage-->
+   <complexType name="tpcc-population">
+      <annotation>
+         <documentation>This stage shuld be run before the TpccBenchmarkStage.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="c-id-mask" type="rg:long">
+               <annotation>
+                  <documentation>Mask used to generate non-uniformly distributed random customer numbers. Default is 1023.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="c-last-mask" type="rg:long">
+               <annotation>
+                  <documentation>Mask used to generate non-uniformly distributed random customer last names. Default is 255.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-warehouses" type="rg:int">
+               <annotation>
+                  <documentation>Number of Warehouses. Default is 1.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="ol-id-mask" type="rg:long">
+               <annotation>
+                  <documentation>Mask used to generate non-uniformly distributed random item numbers. Default is 8191.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.topology.WaitForTopologyEventStage-->
+   <complexType name="wait-for-topology-event">
+      <annotation>
+         <documentation>Waits until some event occurs. Note that the initial rehash is not recorded in this manner, therefore waiting for that will result in timeout.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="condition" type="rg:org-radargun-stages-topology-waitfortopologyeventstage-condition">
+               <annotation>
+                  <documentation>Condition we are waiting for. Default is END.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="max-members" type="rg:int">
+               <annotation>
+                  <documentation>The maximum number of slaves that participated in this event. Default is indefinite.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="min-members" type="rg:int">
+               <annotation>
+                  <documentation>The minimum number of slaves that participated in this event. Default is 0.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="set" type="rg:boolean">
+               <annotation>
+                  <documentation>Set last state before finishing. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="type" type="rg:org-radargun-stages-topology-waitfortopologyeventstage-type">
+               <annotation>
+                  <documentation>Type of event we are detecting. Default is REHASH.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait" type="rg:boolean">
+               <annotation>
+                  <documentation>Wait for the event to happen. Default is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="org-radargun-stages-topology-waitfortopologyeventstage-condition">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="START"/>
+               <enumeration value="END"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="org-radargun-stages-topology-waitfortopologyeventstage-type">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="REHASH"/>
+               <enumeration value="TOPOLOGY_UPDATE"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.WriteSkewCheckStage-->
+   <complexType name="write-skew-check">
+      <annotation>
+         <documentation>Stage checking the write skew detection in transactional caches.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:check">
+            <attribute name="duration" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Duration of the test. Default is 1 minute.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="test-null" type="rg:boolean">
+               <annotation>
+                  <documentation>Should write skew between null value and first value be tested? Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of threads overwriting concurrently the entry. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.XSReplCheckStage-->
+   <complexType name="xs-repl-check">
+      <annotation>
+         <documentation>Checks data loaded in XSReplLoadStage.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:check-cache-data">
+            <attribute name="value-post-fix" type="string">
+               <annotation>
+                  <documentation>Postfix part of the value contents. Default is empty string.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.XSReplLoadStage-->
+   <complexType name="xs-repl-load">
+      <annotation>
+         <documentation>Loads data into the cache with input cache name encoded into the value.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="delete" type="rg:boolean">
+               <annotation>
+                  <documentation>If set to true, the entries are removed instead of being inserted. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-entries" type="rg:int" use="required">
+               <annotation>
+                  <documentation>Amount of entries that should be inserted into the cache.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="value-post-fix" type="string">
+               <annotation>
+                  <documentation>String encoded into the value so that the entry may be distinguished from entries loaded in different load stages. Default is empty string.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="org-radargun-config-reporterconfiguration-runcondition">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="ALWAYS"/>
+               <enumeration value="CLUSTER_SUCCESSFUL"/>
+               <enumeration value="CONFIG_SUCCESSFUL"/>
+               <enumeration value="ALL_SUCCESSFUL"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+</schema>

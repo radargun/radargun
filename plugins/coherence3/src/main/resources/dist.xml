@@ -8,23 +8,23 @@
 
    <caching-scheme-mapping>
       <cache-mapping>
-         <cache-name>x</cache-name>
-         <scheme-name>xScheme</scheme-name>
+         <cache-name>testCache</cache-name>
+         <scheme-name>testScheme</scheme-name>
       </cache-mapping>
    </caching-scheme-mapping>
 
    <caching-schemes>
       <distributed-scheme>
-         <scheme-name>xScheme</scheme-name>
+         <scheme-name>testScheme</scheme-name>
          <service-name>DistributedCache</service-name>
          <partition-count>2039</partition-count>
+         <backup-count>1</backup-count>
          <partition-listener>
          	<class-name>org.radargun.listeners.PartitionListenerImpl</class-name>
          </partition-listener>
          <member-listener>
          	<class-name>org.radargun.listeners.MemberListenerImpl</class-name>
          </member-listener>
-         <backup-count>1</backup-count>
          <backing-map-scheme>
             <local-scheme>
                <scheme-ref>unlimited-backing-map</scheme-ref>

@@ -38,5 +38,5 @@
       </transaction>
    </namedCache>
 
-   <namedCache name="x" />
+   <namedCache name="testCache" />
 </infinispan>

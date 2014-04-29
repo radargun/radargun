@@ -8,23 +8,23 @@
 
    <caching-scheme-mapping>
       <cache-mapping>
-         <cache-name>x</cache-name>
-         <scheme-name>xScheme</scheme-name>
+         <cache-name>testCache</cache-name>
+         <scheme-name>testScheme</scheme-name>
       </cache-mapping>
    </caching-scheme-mapping>
 
    <caching-schemes>
       <replicated-scheme>
-         <scheme-name>xScheme</scheme-name>
+         <scheme-name>testScheme</scheme-name>
+         <member-listener>
+            <class-name>org.radargun.listeners.MemberListenerImpl</class-name>
+         </member-listener>
          <backing-map-scheme>
             <local-scheme>
                <scheme-ref>unlimited-backing-map</scheme-ref>
             </local-scheme>
          </backing-map-scheme>
          <autostart>true</autostart>
-         <member-listener>
-         	<class-name>org.radargun.listeners.MemberListenerImpl</class-name>
-         </member-listener>
       </replicated-scheme>
 
       <local-scheme>

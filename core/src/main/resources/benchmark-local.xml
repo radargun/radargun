@@ -1,0 +1,43 @@
+<!-- RadarGun 2.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.0">
+
+   <!-- The  benchmark will be executed within single JVM -->
+   <local/>
+
+   <!-- List of configurations of the services -->
+   <configurations>
+      <config name="Infinispan 5.2 - local">
+         <!-- All slaves use the same configuration -->
+         <setup plugin="infinispan52" file="local.xml" />
+      </config>
+      <config name="Infinispan 6.0 - local">
+         <setup plugin="infinispan60" file="local.xml" />
+      </config>
+   </configurations>
+
+   <!-- Sequence of stages executed on the cluster -->
+   <scenario>
+      <!-- Start services on all nodes -->
+      <service-start />
+      <!-- Begin monitoring of CPU, memory usage and GC -->
+      <jvm-monitor-start />
+      <!-- 5 threads will execute total of 10,000,000 random requests against the default cache ('testCache')-->
+      <stress-test-warmup num-requests="10000000" num-threads="5" />
+      <!-- Remove all data from the default cache -->
+      <clear-cache />
+      <!-- 10 threads will execute random request for 1 minute against the default cache ('testCache') -->
+      <stress-test duration="1m" num-threads="10" />
+      <!-- Stop JVM monitoring -->
+      <jvm-monitor-stop />
+   </scenario>
+
+   <!-- How the statistics are reported -->
+   <reports>
+      <!-- Produce CSV statistics report -->
+      <reporter type="csv"/>
+      <!-- Produce HTML statistics report -->
+      <reporter type="html"/>
+   </reports>
+
+</benchmark>
+      

@@ -5,7 +5,7 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import java.util.Random;
 
-import org.radargun.stressors.JpaValueGenerator;
+import org.radargun.stages.cache.generators.JpaValueGenerator;
 
 /**
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;

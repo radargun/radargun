@@ -14,19 +14,20 @@
 
    <dependencies>
       <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-ehcache25</artifactId>
+         <version>${project.version}</version>
+         <exclusions>
+            <exclusion>
+               <groupId>net.sf.ehcache</groupId>
+               <artifactId>ehcache-core</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
          <groupId>net.sf.ehcache</groupId>
          <artifactId>ehcache-core</artifactId>
          <version>2.6.0</version>
-      </dependency>
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-api</artifactId>
-         <version>1.6.1</version>
-      </dependency>
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-jdk14</artifactId>
-         <version>1.6.1</version>
       </dependency>
    </dependencies>
 </project>

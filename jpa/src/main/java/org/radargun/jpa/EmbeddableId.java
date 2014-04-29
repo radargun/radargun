@@ -1,6 +1,6 @@
 package org.radargun.jpa;
 
-import org.radargun.stressors.JpaKeyGenerator;
+import org.radargun.stages.cache.generators.JpaKeyGenerator;
 
 import javax.persistence.Embeddable;
 
