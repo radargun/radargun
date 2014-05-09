@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
- * Value that stores all operations that were executed on this entry.
+ * Log value that can be written by multiple stressors.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

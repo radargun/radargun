@@ -14,6 +14,20 @@ import org.radargun.traits.Debugable;
 import org.radargun.utils.Utils;
 
 /**
+ * Log checkers control that all operations executed by stressors are persisted in the log values.
+ * Each node checks all writes from all stressors, but there's not a one-to-one stressor-checker
+ * relation. Instead, each node holds a pool of checker threads and a shared data structure
+ * with records about each stressor. All records are iterated through in a round-robin fashion
+ * by the checker threads.
+ *
+ * When the checkers are dead on particular node, this node cannot check the stressors. For some
+ * scenarios this is limiting - therefore, stressors may be configured to unwind the log values
+ * even if the old records are not checked. Then, it has to notify the checker about this action
+ * via ignored_* key, to prevent it from failing the test.
+ *
+ * @see AbstractLogLogic
+ * @see Stressor
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class LogChecker extends Thread {
@@ -32,7 +46,7 @@ public abstract class LogChecker extends Thread {
       super(name);
       keyGenerator = manager.getKeyGenerator();
       slaveIndex = manager.getSlaveIndex();
-      logCounterUpdatePeriod = manager.getLogCounterUpdatePeriod();
+      logCounterUpdatePeriod = manager.getLogLogicConfiguration().getCounterUpdatePeriod();
       pool = logCheckerPool;
       this.basicCache = manager.getBasicCache();
       this.debugableCache = manager.getDebugableCache();

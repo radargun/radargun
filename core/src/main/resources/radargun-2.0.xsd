@@ -379,22 +379,27 @@
                   <documentation>Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="log-checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+            <attribute name="log-logic-checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
                <annotation>
                   <documentation>Maximum time for which are the log value checkers allowed to show no new checked values (error is thrown in CheckBackgroundStressors stage). Default is one minute.</documentation>
                </annotation>
             </attribute>
-            <attribute name="log-checking-threads" type="rg:int">
+            <attribute name="log-logic-checking-threads" type="rg:int">
                <annotation>
                   <documentation>Number of threads on each node that are checking whether all operations from stressor threads have been logged. Default is 10.</documentation>
                </annotation>
             </attribute>
-            <attribute name="log-counter-update-period" type="rg:long">
+            <attribute name="log-logic-counter-update-period" type="rg:long">
                <annotation>
                   <documentation>Number of operations after which will the stressor or checker update in-cache operation counter. Default is 50.</documentation>
                </annotation>
             </attribute>
-            <attribute name="log-value-max-size" type="rg:int">
+            <attribute name="log-logic-enabled" type="rg:boolean">
+               <annotation>
+                  <documentation>Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-logic-value-max-size" type="rg:int">
                <annotation>
                   <documentation>Maximum number of records in one entry before the older ones have to be truncated. Default is 100.</documentation>
                </annotation>
@@ -432,11 +437,6 @@
             <attribute name="transaction-size" type="rg:int">
                <annotation>
                   <documentation>Amount of request wrapped into single transaction. By default transactions are not used (explicitely).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="use-log-values" type="rg:boolean">
-               <annotation>
-                  <documentation>Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="wait-until-loaded" type="rg:boolean">

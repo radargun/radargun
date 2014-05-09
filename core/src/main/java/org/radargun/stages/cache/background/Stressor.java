@@ -6,7 +6,7 @@ import org.radargun.stats.DefaultOperationStats;
 import org.radargun.stats.SynchronizedStatistics;
 
 /**
-* Stressor thread running during many stages.
+* Stressor thread running in parallel to many stages.
 *
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
 */
@@ -18,18 +18,16 @@ class Stressor extends Thread {
    protected final int id;
    private final Logic logic;
    private final long delayBetweenRequests;
-   private final boolean loadOnly;
    protected final SynchronizedStatistics stats = new SynchronizedStatistics(new DefaultOperationStats());
 
    private volatile boolean terminate = false;
-   private boolean loaded;
 
    public Stressor(BackgroundOpsManager manager, Logic logic, int id) {
       super("StressorThread-" + id);
-      this.id = manager.getSlaveIndex() * manager.getNumThreads() + id;
+      GeneralConfiguration config = manager.getGeneralConfiguration();
+      this.id = manager.getSlaveIndex() * config.getNumThreads() + id;
       this.logic = logic;
-      this.delayBetweenRequests = manager.getDelayBetweenRequests();
-      this.loadOnly = manager.getLoadOnly();
+      this.delayBetweenRequests = config.getDelayBetweenRequests();
       logic.setStressor(this);
       stats.begin();
    }
@@ -37,14 +35,6 @@ class Stressor extends Thread {
    @Override
    public void run() {
       try {
-         if (!loaded) {
-            logic.loadData();
-            loaded = true;
-         }
-         if (loadOnly) {
-            log.info("The stressor has finished loading data and will terminate.");
-            return;
-         }
          while (!isInterrupted() && !terminate) {
             logic.invoke();
             if (delayBetweenRequests > 0)
@@ -54,14 +44,6 @@ class Stressor extends Thread {
          log.trace("Stressor interrupted.", e);
          logic.finish();
       }
-   }
-
-   public boolean isLoaded() {
-      return loaded;
-   }
-
-   public void setLoaded(boolean loaded) {
-      this.loaded = loaded;
    }
 
    public void requestTerminate() {
@@ -80,5 +62,9 @@ class Stressor extends Thread {
    public String getStatus() {
       return String.format("%s [id=%d, terminated=%s]: %s [%s]", getName(), id, terminate,
             logic.getClass().getSimpleName(), logic.getStatus());
+   }
+
+   public Logic getLogic() {
+      return logic;
    }
 }

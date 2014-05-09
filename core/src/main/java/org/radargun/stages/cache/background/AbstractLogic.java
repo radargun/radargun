@@ -6,6 +6,8 @@ import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.traits.Transactional;
 
 /**
+ * Common operations for all logics.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class AbstractLogic implements Logic {
@@ -22,7 +24,7 @@ public abstract class AbstractLogic implements Logic {
    protected AbstractLogic(BackgroundOpsManager manager) {
       this.manager = manager;
       this.keyGenerator = manager.getKeyGenerator();
-      this.transactionSize = manager.getTransactionSize();
+      this.transactionSize = manager.getGeneralConfiguration().getTransactionSize();
       this.txCache = manager.getTransactionalCache();
    }
 

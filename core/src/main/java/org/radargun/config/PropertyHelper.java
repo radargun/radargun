@@ -104,9 +104,10 @@ public class PropertyHelper {
             }
          }
          if (delegate != null) {
+            String delegatePrefix = useDashedName ? XmlHelper.camelCaseToDash(delegate.prefix()) : delegate.prefix();
             // TODO: delegate properties are added according to field type, this does not allow polymorphism
             addProperties(field.getType(), properties, useDashedName,
-                  prefix + delegate.prefix(), path == null ? new Path(field) : path.with(field));
+                  prefix + delegatePrefix, path == null ? new Path(field) : path.with(field));
          }
       }
    }

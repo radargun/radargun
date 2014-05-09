@@ -3,6 +3,8 @@ package org.radargun.stages.cache.background;
 import java.util.Random;
 
 /**
+ * Checker used for {@link PrivateLogValue shared log values}
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 class SharedLogChecker extends LogChecker {
