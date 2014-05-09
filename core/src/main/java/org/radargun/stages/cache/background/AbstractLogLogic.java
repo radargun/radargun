@@ -8,8 +8,28 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.utils.Utils;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * Logic based on log values. The general idea is that each operation on an entry
+ * should be persisted in the value by appending the operation id to the value.
+ * Therefore, the value works as a log. Old operations (confirmed on all nodes
+ * are eventually unwound from the value).
+ *
+ * The key used for each operation in given stressor is deterministic. Instance
+ * of Random with known seed is used on each node.
+ *
+ * The stressors (executing this logic) and {@link LogChecker checkers}
+ * are synchronized by writing into special values. Once in a while, each stressor
+ * confirms that it has written all operations with lower id by updating
+ * the stressor_* entry. Also, it checks all checker_* keys to see that it can
+ * unwind old records.
+ *
+ * When either stressor or checker is restarted, it should continue with the sequence
+ * from the last confirmed point. Therefore, the stressor_* entry contains the current
+ * seed of the Random and the stressor can load it.
+ * Similar situation happens when the transaction is rolled back. We have to remember
+ * the seeds before the transaction in order to be able to repeat it.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    protected BasicOperations.Cache basicCache;
@@ -50,11 +70,6 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          this.keySelectorRandom = rand;
       }
       remainingTxOps = transactionSize;
-   }
-
-   @Override
-   public void loadData() {
-      // no data are loaded
    }
 
    @Override
@@ -108,7 +123,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          lastSuccessfulOpTimestamp = System.currentTimeMillis();
 
          // for non-transactional caches write the stressor last operation anytime (once in a while)
-         if (transactionSize <= 0 && operationId % manager.getLogCounterUpdatePeriod() == 0) {
+         if (transactionSize <= 0 && operationId % manager.getLogLogicConfiguration().getCounterUpdatePeriod() == 0) {
             writeStressorLastOperation();
          }
 
@@ -239,7 +254,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    protected Map<Integer, Long> getCheckedOperations(long minOperationId) throws StressorException, BreakTxRequest {
       Map<Integer, Long> minIds = new HashMap<Integer, Long>();
-      for (int thread = 0; thread < manager.getNumThreads() * manager.getClusterSize(); ++thread) {
+      for (int thread = 0; thread < manager.getGeneralConfiguration().getNumThreads() * manager.getClusterSize(); ++thread) {
          minIds.put(thread, getCheckedOperation(thread, minOperationId));
       }
       return minIds;
@@ -256,7 +271,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             throw new StressorException(e);
          }
          long readOperationId = lastCheck == null ? Long.MIN_VALUE : ((LogChecker.LastOperation) lastCheck).getOperationId();
-         if (readOperationId < minOperationId && manager.isIgnoreDeadCheckers() && !manager.isSlaveAlive(i)) {
+         if (readOperationId < minOperationId && manager.getLogLogicConfiguration().isIgnoreDeadCheckers() && !manager.isSlaveAlive(i)) {
             try {
                Object ignored = basicCache.get(LogChecker.ignoredKey(i, thread));
                if (ignored == null || (Long) ignored < minOperationId) {

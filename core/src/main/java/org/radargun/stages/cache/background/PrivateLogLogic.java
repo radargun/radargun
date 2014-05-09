@@ -5,8 +5,11 @@ import org.radargun.Operation;
 import org.radargun.traits.BasicOperations;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * This logic operates on {@link PrivateLogValue private log values} using only {@link BasicOperations},
+ * specifically put, get and remove operations. Private log values are written to by single thread.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
 
    private final int keyRangeStart;
@@ -67,7 +70,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    }
 
    private PrivateLogValue getNextValue(PrivateLogValue prevValue) throws InterruptedException, BreakTxRequest {
-      if (prevValue.size() >= manager.getLogValueMaxSize()) {
+      if (prevValue.size() >= manager.getLogLogicConfiguration().getValueMaxSize()) {
          int checkedValues;
          // TODO some limit after which the stressor will terminate
          for (;;) {

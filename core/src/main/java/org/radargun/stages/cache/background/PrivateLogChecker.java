@@ -5,6 +5,8 @@ import java.util.Random;
 import org.radargun.stages.helpers.Range;
 
 /**
+ * Checker used for {@link PrivateLogValue non-shared log values}
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class PrivateLogChecker extends LogChecker {

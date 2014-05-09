@@ -15,7 +15,7 @@ import org.radargun.stages.AbstractDistStage;
 public class BackgroundStressorsStopStage extends AbstractDistStage {
 
    @Property(doc = "If true, the phase does not finish until all stressors stop loading its data. Default is false.")
-   private boolean waitUntilLoaded = false;
+   private boolean legacyWaitUntilLoaded = false;
 
    @Override
    public DistStageAck executeOnSlave() {

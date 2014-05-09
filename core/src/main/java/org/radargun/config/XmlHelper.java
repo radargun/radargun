@@ -37,6 +37,8 @@ public class XmlHelper {
          if (Character.isUpperCase(c)) {
             if ((prevLowerCase || nextLowerCase) && prevIsAlpha) sb.append('-');
             sb.append(String.valueOf(c).toLowerCase(Locale.ENGLISH));
+         } else if (c == '.') {
+            sb.append('-');
          } else {
             sb.append(c);
          }
