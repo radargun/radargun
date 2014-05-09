@@ -97,18 +97,28 @@ public class InfinispanEmbeddedService {
       log.trace("Using config file: " + configFile + " and cache name: " + cacheName);
 
       cacheManager = createCacheManager(configFile);
-      String cacheNames = cacheManager.getDefinedCacheNames();
-      if (!cacheNames.contains(cacheName))
-         throw new IllegalStateException("The requested cache(" + cacheName + ") is not defined. Defined cache " +
-                                               "names are " + cacheNames);
-      caches.put(null, cacheManager.getCache(cacheName));
-      int i = 0;
-      for (String name : cacheManager.getCacheNames()) {
-         log.trace(i + " adding cache: " + name);
-         Cache cache = cacheManager.getCache(name);
-         // TODO: remove or rename "buckets", and externalize that
-         caches.put("bucket_" + i++, cache);
-         caches.put(name, cache);
+      try {
+         String cacheNames = cacheManager.getDefinedCacheNames();
+         if (!cacheNames.contains(cacheName))
+            throw new IllegalStateException("The requested cache(" + cacheName + ") is not defined. Defined cache " +
+                                                  "names are " + cacheNames);
+         caches.put(null, cacheManager.getCache(cacheName));
+         int i = 0;
+         for (String name : cacheManager.getCacheNames()) {
+            log.trace(i + " adding cache: " + name);
+            Cache cache = cacheManager.getCache(name);
+            // TODO: remove or rename "buckets", and externalize that
+            caches.put("bucket_" + i++, cache);
+            caches.put(name, cache);
+         }
+      } catch (Exception e) {
+         log.trace("Failed to start caches", e);
+         try {
+            cacheManager.stop();
+         } catch (Exception se) {
+            log.error("Failed to stop after start failed", se);
+         }
+         throw e;
       }
    }
 
