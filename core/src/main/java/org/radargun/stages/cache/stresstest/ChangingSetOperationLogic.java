@@ -65,16 +65,16 @@ class ChangingSetOperationLogic implements OperationLogic {
       if (minRemoveTimestamp <= timestamp) {
          Load load = loadForSize.get(minRemoveSize);
          pair = load.scheduledKeys.pollFirst();
-         Object value;
+         Boolean value;
          try {
-            value = stressor.makeRequest(BasicOperations.REMOVE, pair.key);
+            value = (Boolean) stressor.makeRequest(BasicOperations.REMOVE, pair.key);
          } catch (RequestException e) {
             load.scheduledKeys.add(pair);
             return null;
          }
          updateMin();
-         if (value == null && !stage.expectLostKeys) {
-            log.error("REMOVE: Value for key " + pair.key + " is null!");
+         if (!value && !stage.expectLostKeys) {
+            log.error("REMOVE: Entry for key " + pair.key + " was not found!");
          }
          return value;
       } else if (r.nextInt(100) >= stage.writePercentage && minRemoveTimestamp < Long.MAX_VALUE) {
