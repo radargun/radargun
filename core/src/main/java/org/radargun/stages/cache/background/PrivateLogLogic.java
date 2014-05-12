@@ -129,7 +129,8 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       Object prevValue;
       long startTime = System.nanoTime();
       try {
-         prevValue = basicCache.remove(keyGenerator.generateKey(keyId));
+         // Note: with Infinspan, the returned value is sometimes unreliable anyway
+         prevValue = basicCache.getAndRemove(keyGenerator.generateKey(keyId));
       } catch (Exception e) {
          stressor.stats.registerError(System.nanoTime() - startTime, BasicOperations.REMOVE);
          throw e;
