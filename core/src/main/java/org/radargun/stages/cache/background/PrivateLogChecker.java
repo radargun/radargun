@@ -77,9 +77,30 @@ public class PrivateLogChecker extends LogChecker {
                Range threadKeyRange = Range.divideRange(slaveKeyRange.getSize(), numThreads, threadId);
                Range range = threadKeyRange.shift(slaveKeyRange.getStart());
                log.trace("Expecting range " + range + " for thread " + (slaveId * numThreads + threadId));
-               add(new StressorRecord(slaveId * numThreads + threadId, range));
+               addNew(new StressorRecord(slaveId * numThreads + threadId, range));
             }
          }
+         registerListeners();
+      }
+
+      @Override
+      public void created(Object key, Object value) {
+         log.trace("Created " + key + " -> " + value);
+         modified(key, value);
+      }
+
+      @Override
+      public void updated(Object key, Object value) {
+         log.trace("Updated " + key + " -> " + value);
+         modified(key, value);
+      }
+
+      @Override
+      protected void modified(Object key, Object value) {
+         if (value instanceof PrivateLogValue) {
+            PrivateLogValue logValue = (PrivateLogValue) value;
+            notify(logValue.getThreadId(), logValue.getOperationId(logValue.size() - 1), key);
+         } else super.modified(key, value);
       }
    }
 
@@ -104,7 +125,7 @@ public class PrivateLogChecker extends LogChecker {
       @Override
       public void next() {
          currentKeyId = keyRangeStart + rand.nextInt(keyRangeSize);
-         currentOp++;
+         discardNotification(currentOp++);
       }
    }
 

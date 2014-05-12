@@ -1,11 +1,11 @@
 package org.radargun.stages.cache.background;
 
+import org.radargun.traits.BasicOperations;
+import org.radargun.utils.Utils;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-
-import org.radargun.traits.BasicOperations;
-import org.radargun.utils.Utils;
 
 /**
  * Logic based on log values. The general idea is that each operation on an entry
@@ -48,13 +48,13 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
    private volatile long lastSuccessfulTxTimestamp;
    protected int remainingTxOps;
 
-   public AbstractLogLogic(BackgroundOpsManager manager, long seed) {
+   public AbstractLogLogic(BackgroundOpsManager manager, long stressorId) {
       super(manager);
       this.basicCache = manager.getBasicCache();
 
       Random rand = null;
       try {
-         Object last = basicCache.get(LogChecker.lastOperationKey(stressor.id));
+         Object last = basicCache.get(LogChecker.lastOperationKey((int) stressorId));
          if (last != null) {
             operationId = ((LogChecker.LastOperation) last).getOperationId() + 1;
             rand = Utils.setRandomSeed(new Random(0), ((LogChecker.LastOperation) last).getSeed());
@@ -64,8 +64,8 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          log.error("Failure getting last operation", e);
       }
       if (rand == null) {
-         log.trace("Initializing random with " + seed);
-         this.keySelectorRandom = new Random(seed);
+         log.trace("Initializing stressor random with " + stressorId);
+         this.keySelectorRandom = new Random(stressorId);
       } else {
          this.keySelectorRandom = rand;
       }

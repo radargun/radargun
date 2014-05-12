@@ -74,9 +74,9 @@
                         <element name="repeat" type="rg:repeat"/>
                         <element name="background-statistics-start" type="rg:background-statistics-start"/>
                         <element name="background-statistics-stop" type="rg:background-statistics-stop"/>
+                        <element name="background-stressors-check" type="rg:background-stressors-check"/>
                         <element name="background-stressors-start" type="rg:background-stressors-start"/>
                         <element name="background-stressors-stop" type="rg:background-stressors-stop"/>
-                        <element name="check-background-stressors" type="rg:check-background-stressors"/>
                         <element name="check-cache-data" type="rg:check-cache-data"/>
                         <element name="check-topology" type="rg:check-topology"/>
                         <element name="clear-cache" type="rg:clear-cache"/>
@@ -176,9 +176,9 @@
             <element name="repeat" type="rg:repeat"/>
             <element name="background-statistics-start" type="rg:background-statistics-start"/>
             <element name="background-statistics-stop" type="rg:background-statistics-stop"/>
+            <element name="background-stressors-check" type="rg:background-stressors-check"/>
             <element name="background-stressors-start" type="rg:background-stressors-start"/>
             <element name="background-stressors-stop" type="rg:background-stressors-stop"/>
-            <element name="check-background-stressors" type="rg:check-background-stressors"/>
             <element name="check-cache-data" type="rg:check-cache-data"/>
             <element name="check-topology" type="rg:check-topology"/>
             <element name="clear-cache" type="rg:clear-cache"/>
@@ -344,39 +344,49 @@
                   <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
                </annotation>
             </attribute>
-            <attribute name="entry-size" type="rg:int">
-               <annotation>
-                  <documentation>Size of value used in the entry. Default is 1024 bytes.</documentation>
-               </annotation>
-            </attribute>
             <attribute name="gets" type="rg:int">
                <annotation>
                   <documentation>Ratio of GET requests. Default is 2.</documentation>
                </annotation>
             </attribute>
-            <attribute name="ignore-dead-checkers" type="rg:boolean">
+            <attribute name="legacy-entry-size" type="rg:int">
                <annotation>
-                  <documentation>When the log value is full, the stressor needs to wait until all checkers confirm that the records have been checked before discarding oldest records. With ignoreDeadCheckers=true the stressor does not wait for checkers on dead nodes. Default is false.</documentation>
+                  <documentation>Size of value used in the entry. Default is 1024 bytes.</documentation>
                </annotation>
             </attribute>
-            <attribute name="load-data-for-dead-slaves" type="string">
+            <attribute name="legacy-load-data-for-dead-slaves" type="string">
                <annotation>
                   <documentation>List of slaves whose data should be loaded by other threads because these slaves are not alive. Default is empty.</documentation>
                </annotation>
             </attribute>
-            <attribute name="load-data-on-slaves" type="string">
+            <attribute name="legacy-load-data-on-slaves" type="string">
                <annotation>
                   <documentation>List of slaves where the data should be loaded (others immediately start executing requests). Default is all live slaves).</documentation>
                </annotation>
             </attribute>
-            <attribute name="load-only" type="rg:boolean">
+            <attribute name="legacy-load-only" type="rg:boolean">
                <annotation>
                   <documentation>If set to true, the stressor does not execute any requests after loading the data. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="load-with-put-if-absent" type="rg:boolean">
+            <attribute name="legacy-load-with-put-if-absent" type="rg:boolean">
                <annotation>
                   <documentation>Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="legacy-no-loading" type="rg:boolean">
+               <annotation>
+                  <documentation>Do not execute the loading, start usual request right away.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="legacy-wait-until-loaded" type="rg:boolean">
+               <annotation>
+                  <documentation>Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-logic-check-notifications" type="rg:boolean">
+               <annotation>
+                  <documentation>Check that listeners have been fired for each operation on each node (at least once). Default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="log-logic-checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
@@ -399,14 +409,14 @@
                   <documentation>Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.</documentation>
                </annotation>
             </attribute>
+            <attribute name="log-logic-ignore-dead-checkers" type="rg:boolean">
+               <annotation>
+                  <documentation>When the log value is full, the stressor needs to wait until all checkers confirm that the records have been checked before discarding oldest records. With ignoreDeadCheckers=true the stressor does not wait for checkers on dead nodes. Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="log-logic-value-max-size" type="rg:int">
                <annotation>
                   <documentation>Maximum number of records in one entry before the older ones have to be truncated. Default is 100.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="no-loading" type="rg:boolean">
-               <annotation>
-                  <documentation>Do not execute the loading, start usual request right away.</documentation>
                </annotation>
             </attribute>
             <attribute name="num-entries" type="rg:int">
@@ -437,11 +447,6 @@
             <attribute name="transaction-size" type="rg:int">
                <annotation>
                   <documentation>Amount of request wrapped into single transaction. By default transactions are not used (explicitely).</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="wait-until-loaded" type="rg:boolean">
-               <annotation>
-                  <documentation>Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -478,29 +483,9 @@
       </annotation>
       <complexContent>
          <extension base="rg:abstract-dist">
-            <attribute name="wait-until-loaded" type="rg:boolean">
+            <attribute name="legacy-wait-until-loaded" type="rg:boolean">
                <annotation>
                   <documentation>If true, the phase does not finish until all stressors stop loading its data. Default is false.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.CheckBackgroundStressorsStage-->
-   <complexType name="check-background-stressors">
-      <annotation>
-         <documentation>Stage that checks the progress in background stressors and fails if something went wrong.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="resume-after-checked" type="rg:boolean">
-               <annotation>
-                  <documentation>Resume writers after we have stopped them in order to let checkers check everything. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="wait-until-checked" type="rg:boolean">
-               <annotation>
-                  <documentation>Do not write additional operations until all operations are confirmed. Default is false.</documentation>
                </annotation>
             </attribute>
          </extension>

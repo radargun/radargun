@@ -1,11 +1,5 @@
 package org.radargun.stages.cache.background;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
 import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -18,10 +12,17 @@ import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
+import org.radargun.traits.CacheListeners;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.Debugable;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.Transactional;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * 
@@ -63,6 +64,7 @@ public class BackgroundOpsManager implements ServiceListener {
    private LogChecker.Pool logCheckerPool;
 
    private Lifecycle lifecycle;
+   private CacheListeners listeners;
    private BasicOperations.Cache basicCache;
    private Debugable.Cache debugableCache;
    private Transactional.Resource transactionalCache;
@@ -95,6 +97,7 @@ public class BackgroundOpsManager implements ServiceListener {
       instance.operations = generalConfiguration.puts + generalConfiguration.gets + generalConfiguration.removes;
 
       instance.lifecycle = slaveState.getTrait(Lifecycle.class);
+      instance.listeners = slaveState.getTrait(CacheListeners.class);
       instance.loadCaches();
       return instance;
    }
@@ -184,19 +187,19 @@ public class BackgroundOpsManager implements ServiceListener {
    }
 
    private Logic createLogic(int index) {
+      int numThreads = generalConfiguration.numThreads;
       if (generalConfiguration.sharedKeys) {
          if (logLogicConfiguration.enabled) {
-            return new SharedLogLogic(this, index, generalConfiguration.numEntries);
+            return new SharedLogLogic(this, numThreads * slaveState.getSlaveIndex() * index, generalConfiguration.numEntries);
          } else {
             throw new IllegalArgumentException("Legacy logic cannot use shared keys.");
          }
       } else {
-         int numThreads = generalConfiguration.numThreads;
          int totalThreads = numThreads * slaveState.getClusterSize();
          Range range = Range.divideRange(generalConfiguration.numEntries, totalThreads, numThreads * slaveState.getSlaveIndex() + index);
 
          if (logLogicConfiguration.enabled) {
-            return new PrivateLogLogic(this, index, range);
+            return new PrivateLogLogic(this, numThreads * slaveState.getSlaveIndex() + index, range);
          } else {
             List<Integer> deadSlaves = legacyLogicConfiguration.loadDataForDeadSlaves;
             List<List<Range>> rangesForThreads = null;
@@ -420,8 +423,9 @@ public class BackgroundOpsManager implements ServiceListener {
 
    public String getError() {
       if (logLogicConfiguration.enabled) {
-         if (logCheckerPool != null && logCheckerPool.getMissingOperations() > 0) {
-            return "Background stressors report " + logCheckerPool.getMissingOperations() + " missing operations!";
+         if (logCheckerPool != null && (logCheckerPool.getMissingOperations() > 0 || logCheckerPool.getMissingNotifications() > 0)) {
+            return String.format("Background stressors report %d missing operations and %d missing notifications!",
+                  logCheckerPool.getMissingOperations(), logCheckerPool.getMissingNotifications());
          }
          if (logCheckers != null) {
             long lastProgress = System.currentTimeMillis() - logCheckerPool.getLastStoredOperationTimestamp();
@@ -475,6 +479,10 @@ public class BackgroundOpsManager implements ServiceListener {
 
    public ConditionalOperations.Cache getConditionalCache() {
       return conditionalCache;
+   }
+
+   public CacheListeners getListeners() {
+      return listeners;
    }
 
    // TODO:
