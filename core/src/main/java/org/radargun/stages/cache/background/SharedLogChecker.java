@@ -70,12 +70,34 @@ class SharedLogChecker extends LogChecker {
          super(numThreads, numSlaves, manager);
          for (int slaveId = 0; slaveId < numSlaves; ++slaveId) {
             for (int threadId = 0; threadId < numThreads; ++threadId) {
-               add(new StressorRecord(slaveId * numThreads + threadId, numEntries));
+               addNew(new StressorRecord(slaveId * numThreads + threadId, numEntries));
             }
          }
+         registerListeners();
       }
 
+      @Override
+      public void created(Object key, Object value) {
+         log.trace("Created " + key + " -> " + value);
+         modified(key, value);
+      }
+
+      @Override
+      public void updated(Object key, Object value) {
+         log.trace("Updated " + key + " -> " + value);
+         modified(key, value);
+      }
+
+      @Override
+      protected void modified(Object key, Object value) {
+         if (value instanceof SharedLogValue) {
+            SharedLogValue logValue = (SharedLogValue) value;
+            int last = logValue.size() - 1;
+            notify(logValue.getThreadId(last), logValue.getOperationId(last), key);
+         } else super.modified(key, value);
+      }
    }
+
 
    private static class StressorRecord extends AbstractStressorRecord {
       private final int numEntries;
@@ -95,7 +117,7 @@ class SharedLogChecker extends LogChecker {
       @Override
       public void next() {
          currentKeyId = rand.nextInt(numEntries);
-         currentOp++;
+         discardNotification(currentOp++);
       }
    }
 }

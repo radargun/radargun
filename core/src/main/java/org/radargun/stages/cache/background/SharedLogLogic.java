@@ -1,10 +1,10 @@
 package org.radargun.stages.cache.background;
 
-import java.util.Map;
-
 import org.radargun.Operation;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
+
+import java.util.Map;
 
 /**
  * This logic operates on {@link SharedLogValue shared log values}
@@ -18,8 +18,8 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
    private final ConditionalOperations.Cache conditionalCache;
    private final long numEntries;
 
-   SharedLogLogic(BackgroundOpsManager manager, long seed, long numEntries) {
-      super(manager, seed);
+   SharedLogLogic(BackgroundOpsManager manager, long threadId, long numEntries) {
+      super(manager, threadId);
       conditionalCache = manager.getConditionalCache();
       this.numEntries = numEntries;
    }

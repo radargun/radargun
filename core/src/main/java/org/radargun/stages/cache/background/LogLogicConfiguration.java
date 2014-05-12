@@ -30,6 +30,9 @@ public class LogLogicConfiguration {
          "the stressor does not wait for checkers on dead nodes. Default is false.")
    protected boolean ignoreDeadCheckers = false;
 
+   @Property(doc = "Check that listeners have been fired for each operation on each node (at least once). Default is false.")
+   protected boolean checkNotifications = false;
+
    public boolean isEnabled() {
       return enabled;
    }
@@ -52,5 +55,9 @@ public class LogLogicConfiguration {
 
    public boolean isIgnoreDeadCheckers() {
       return ignoreDeadCheckers;
+   }
+
+   public boolean isCheckNotifications() {
+      return checkNotifications;
    }
 }

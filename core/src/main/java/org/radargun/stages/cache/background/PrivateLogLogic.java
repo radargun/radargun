@@ -15,8 +15,8 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    private final int keyRangeStart;
    private final int keyRangeEnd;
 
-   PrivateLogLogic(BackgroundOpsManager manager, long seed, Range range) {
-      super(manager, seed);
+   PrivateLogLogic(BackgroundOpsManager manager, long threadId, Range range) {
+      super(manager, threadId);
       this.keyRangeStart = range.getStart();
       this.keyRangeEnd = range.getEnd();
    }
