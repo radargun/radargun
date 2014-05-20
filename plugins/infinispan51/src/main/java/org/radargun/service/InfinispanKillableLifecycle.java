@@ -118,7 +118,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
    
    private void killInternal() throws Exception {
       List<Address> addressList = service.cacheManager.getMembers();
-      service.cacheManager.stop();
+      service.stopCaches();
       log.info("Killed, previous view is " + addressList);
    }
 

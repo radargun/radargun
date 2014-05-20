@@ -75,7 +75,7 @@ public class InfinispanLifecycle implements Lifecycle {
       try {
          if (beginStop(false)) {
             List<Address> addressList = service.cacheManager.getMembers();
-            service.cacheManager.stop();
+            service.stopCaches();
             log.info("Stopped, previous view is " + addressList);
 
             stateLock.lock();
