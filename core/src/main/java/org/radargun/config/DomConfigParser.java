@@ -340,9 +340,9 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
             inc = parseRepeatArg(incStr, ATTR_INC, repeatName);
          }
       }
-      Map<String, String> repeatExtras = new HashMap<String, String>(extras);
       NodeList childNodes = element.getChildNodes();
       for (int counter = from; counter <= to; counter += inc) {
+         Map<String, String> repeatExtras = new HashMap<String, String>(extras);
          String repeatProperty = PROPERTY_PREFIX_REPEAT + (repeatName.isEmpty() ? PROPERTY_SUFFIX_COUNTER : repeatName + '.' + PROPERTY_SUFFIX_COUNTER);
          repeatExtras.put(repeatProperty, String.valueOf(counter));
          for (int i = 0; i < childNodes.getLength(); i++) {
