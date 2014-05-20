@@ -122,6 +122,11 @@ public class InfinispanEmbeddedService {
       }
    }
 
+   protected void stopCaches() {
+      cacheManager.stop();
+      caches.clear();
+   }
+
    protected DefaultCacheManager createCacheManager(String configFile) throws IOException {
       return new DefaultCacheManager(configFile);
    }
