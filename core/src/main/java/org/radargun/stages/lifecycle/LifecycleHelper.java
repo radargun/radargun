@@ -53,38 +53,39 @@ public class LifecycleHelper {
          for (ServiceListener listener : slaveState.getServiceListeners()) {
             listener.beforeServiceStart();
          }
-         try {
-            long startingTime = System.currentTimeMillis();
-            lifecycle.start();
-            long startedTime = System.currentTimeMillis();
-            slaveState.getTimeline().addEvent(LifecycleHelper.LIFECYCLE, new Timeline.IntervalEvent(startingTime, "Start", startedTime - startingTime));
-            if (validate && clustered != null) {
+         long startingTime = System.currentTimeMillis();
+         lifecycle.start();
+         long startedTime = System.currentTimeMillis();
+         slaveState.getTimeline().addEvent(LifecycleHelper.LIFECYCLE, new Timeline.IntervalEvent(startingTime, "Start", startedTime - startingTime));
+         if (validate && clustered != null) {
 
-               int expectedNumberOfSlaves = expectedSlaves != null ? expectedSlaves : slaveState.getGroupSize();
+            int expectedNumberOfSlaves = expectedSlaves != null ? expectedSlaves : slaveState.getGroupSize();
 
-               long clusterFormationDeadline = System.currentTimeMillis() + clusterFormationTimeout;
-               for (;;) {
-                  int numMembers = clustered.getClusteredNodes();
-                  if (numMembers != expectedNumberOfSlaves) {
-                     String msg = "Number of members=" + numMembers + " is not the one expected: " + expectedNumberOfSlaves;
-                     log.info(msg);
-                     try {
-                        Thread.sleep(1000);
-                     } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                     }
-                     if (System.currentTimeMillis() > clusterFormationDeadline) {
-                        throw new ClusterFormationTimeoutException(msg);
-                     }
-                  } else {
-                     log.info("Number of members is the one expected: " + clustered.getClusteredNodes());
-                     break;
+            long clusterFormationDeadline = System.currentTimeMillis() + clusterFormationTimeout;
+            for (;;) {
+               int numMembers = clustered.getClusteredNodes();
+               if (numMembers != expectedNumberOfSlaves) {
+                  String msg = "Number of members=" + numMembers + " is not the one expected: " + expectedNumberOfSlaves;
+                  log.info(msg);
+                  try {
+                     Thread.sleep(1000);
+                  } catch (InterruptedException ie) {
+                     Thread.currentThread().interrupt();
                   }
+                  if (System.currentTimeMillis() > clusterFormationDeadline) {
+                     throw new ClusterFormationTimeoutException(msg);
+                  }
+               } else {
+                  log.info("Number of members is the one expected: " + clustered.getClusteredNodes());
+                  break;
                }
             }
-         } finally {
-            for (ServiceListener listener : slaveState.getServiceListeners()) {
+         }
+         for (ServiceListener listener : slaveState.getServiceListeners()) {
+            try {
                listener.afterServiceStart();
+            } catch (Exception e) {
+               log.error("Failed to run listener " + listener, e);
             }
          }
       } catch (RuntimeException e) {
