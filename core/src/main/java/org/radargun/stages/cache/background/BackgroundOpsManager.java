@@ -1,5 +1,11 @@
 package org.radargun.stages.cache.background;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -17,12 +23,6 @@ import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.Debugable;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.Transactional;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 /**
  * 
@@ -254,17 +254,23 @@ public class BackgroundOpsManager implements ServiceListener {
     */
    public synchronized void waitUntilLoaded() throws InterruptedException {
       if (logLogicConfiguration.isEnabled()) {
+         log.warn("Not waiting as log logic does not preload data.");
          return;
       }
       if (stressorThreads == null) {
+         log.info("Not loading, no stressors alive.");
          return;
       }
       boolean loaded = false;
       while (!loaded) {
          loaded = true;
          for (Stressor st : stressorThreads) {
-            if ((st.getLogic() instanceof LegacyLogic) && ((LegacyLogic) st.getLogic()).isLoaded()) {
-               loaded = false;
+            if ((st.getLogic() instanceof LegacyLogic)) {
+               boolean isLoaded = ((LegacyLogic) st.getLogic()).isLoaded();
+               log.trace("Thread " + st.getName() + " loaded: " + isLoaded);
+               loaded = loaded && isLoaded;
+            } else {
+               log.warn("Thread " + st.getName() + " has logic " + st.getLogic());
             }
          }
          if (!loaded) {

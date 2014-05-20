@@ -322,6 +322,38 @@
          </extension>
       </complexContent>
    </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.BackgroundStressorsCheckStage-->
+   <complexType name="background-stressors-check">
+      <annotation>
+         <documentation>Stage that checks the progress in background stressors and fails if something went wrong.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="resume-after-checked" type="rg:boolean">
+               <annotation>
+                  <documentation>Resume writers after we have stopped them in order to let checkers check everything. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="wait-until-checked" type="rg:boolean">
+               <annotation>
+                  <documentation>Do not write additional operations until all operations are confirmed. Default is false.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.background.BackgroundStressorsStartStage-->
    <complexType name="background-stressors-start">
       <annotation>
@@ -452,18 +484,6 @@
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="boolean">
-      <union>
-         <simpleType>
-            <restriction base="boolean"/>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
    <simpleType name="long">
       <union>
          <simpleType>
