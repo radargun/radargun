@@ -20,4 +20,10 @@ public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
       InputStream input = new FileLookup().lookupFileStrict(configFile, classLoader);
       return new ParserRegistry(classLoader).parse(input);
    }
+
+   @Override
+   public Infinispan70MapReduce createMapReduce() {
+      return new Infinispan70MapReduce(this);
+   }
+
 }

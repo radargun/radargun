@@ -119,4 +119,15 @@ public interface MapReducer<KOut, VOut, R> {
     */
    public boolean setCombiner(String combinerFqn);
 
+   /**
+    * 
+    * Limits Mapper's Collector size to a given value.
+    * 
+    * @param maxCollectorSize the new size of the Collector
+    * 
+    * @return <code>true</code> if the CacheWrapper supports setting the Collector size, else
+    *         <code>false</code>
+    */
+   public boolean setMaxCollectorSize(int maxCollectorSize);
+
 }
