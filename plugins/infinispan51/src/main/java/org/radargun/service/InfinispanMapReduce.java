@@ -137,6 +137,11 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
       return false;
    }
 
+   @Override
+   public boolean setMaxCollectorSize(int maxCollectorSize) {
+      return false;
+   }
+
    /**
     * 
     * Factory method to create a MapReduceTask class. Infinispan 5.1 executed the reduce phase on a
