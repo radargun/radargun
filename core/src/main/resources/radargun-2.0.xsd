@@ -86,7 +86,6 @@
                         <element name="cluster-validation" type="rg:cluster-validation"/>
                         <element name="data-for-query" type="rg:data-for-query"/>
                         <element name="distributed-task" type="rg:distributed-task"/>
-                        <element name="example" type="rg:example"/>
                         <element name="isolation-level-check" type="rg:isolation-level-check"/>
                         <element name="jmx-cluster-validation-prepare" type="rg:jmx-cluster-validation-prepare"/>
                         <element name="jmx-cluster-validation" type="rg:jmx-cluster-validation"/>
@@ -189,7 +188,6 @@
             <element name="cluster-validation" type="rg:cluster-validation"/>
             <element name="data-for-query" type="rg:data-for-query"/>
             <element name="distributed-task" type="rg:distributed-task"/>
-            <element name="example" type="rg:example"/>
             <element name="isolation-level-check" type="rg:isolation-level-check"/>
             <element name="jmx-cluster-validation-prepare" type="rg:jmx-cluster-validation-prepare"/>
             <element name="jmx-cluster-validation" type="rg:jmx-cluster-validation"/>
@@ -997,26 +995,6 @@
             <attribute name="node-address" type="string">
                <annotation>
                   <documentation>The node address where the task will be executed. The default is null, and tasks will be executed against all nodes in the cluster.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <!--From extension-example-2.0.0-SNAPSHOT.jar/org.radargun.stages.ExampleStage-->
-   <complexType name="example">
-      <annotation>
-         <documentation>Example stage in different module</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:abstract-dist">
-            <attribute name="delay" type="rg:long-converted-by-org-radargun-config-timeconverter">
-               <annotation>
-                  <documentation>Example property delaying the stage executions. Default is 5 seconds.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="foo" type="string" use="required">
-               <annotation>
-                  <documentation>Example property that must be set</documentation>
                </annotation>
             </attribute>
          </extension>
