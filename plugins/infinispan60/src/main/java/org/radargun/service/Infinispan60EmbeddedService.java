@@ -7,7 +7,10 @@ import org.infinispan.commons.util.FileLookupFactory;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.container.entries.InternalCacheEntry;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.radargun.Service;
+import org.radargun.config.Property;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -15,6 +18,11 @@ import org.radargun.Service;
  */
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
 public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
+
+   @Property(doc = "Start thread periodically dumping JGroups state. Use for debug purposes. Default is false.")
+   private boolean jgroupsDumperEnabled = false;
+
+   private JGroupsDumper jgroupsDumper;
 
    @Override
    protected ConfigurationBuilderHolder createConfiguration(String configFile) throws FileNotFoundException {
@@ -36,6 +44,23 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
       sb.append(", isRemoved=").append(ice.isRemoved()).append(", isValid=").append(ice.isValid());
       sb.append(", lifespan=").append(ice.getLifespan()).append(", maxIdle=").append(ice.getMaxIdle());
       return sb.append(']').toString();
+   }
+
+   @Override
+   protected void startCaches() throws Exception {
+      super.startCaches();
+      if (jgroupsDumperEnabled) {
+         jgroupsDumper = new JGroupsDumper(((JGroupsTransport) ((DefaultCacheManager) cacheManager).getTransport())
+               .getChannel().getProtocolStack());
+         jgroupsDumper.start();
+      }
+   }
+
+   @Override
+   protected void stopCaches() {
+      super.stopCaches();
+      if (jgroupsDumper != null) jgroupsDumper.interrupt();
+      jgroupsDumper = null;
    }
 
    protected ConfigDumpHelper createConfigDumpHelper() {
