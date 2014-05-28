@@ -1,7 +1,6 @@
 package org.radargun.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -22,8 +21,8 @@ public class InfinispanTopologyHistory implements TopologyHistory {
 
    protected final Log log = LogFactory.getLog(InfinispanBulkOperations.class);
 
-   private List<TopologyHistory.Event> topologyChanges = new ArrayList<Event>();
-   private List<TopologyHistory.Event> hashChanges = new ArrayList<TopologyHistory.Event>();
+   private List<Event> topologyChanges = new ArrayList<Event>();
+   private List<Event> hashChanges = new ArrayList<Event>();
 
    protected final Infinispan51EmbeddedService service;
 
@@ -36,13 +35,19 @@ public class InfinispanTopologyHistory implements TopologyHistory {
    }
 
    @Override
-   public List<Event> getTopologyChangeHistory() {
-      return Collections.unmodifiableList(topologyChanges);
+   public List<TopologyHistory.Event> getTopologyChangeHistory() {
+      return deepCopy(topologyChanges);
    }
 
    @Override
    public List<TopologyHistory.Event> getRehashHistory() {
-      return Collections.unmodifiableList(hashChanges);
+      return deepCopy(hashChanges);
+   }
+
+   private synchronized List<TopologyHistory.Event> deepCopy(List<Event> events) {
+      ArrayList<TopologyHistory.Event> newList = new ArrayList<TopologyHistory.Event>(events.size());
+      for (Event e : events) newList.add(e.copy());
+      return newList;
    }
 
    @Listener
@@ -62,73 +67,73 @@ public class InfinispanTopologyHistory implements TopologyHistory {
          int atEnd = e.getMembersAtEnd().size();
          addEvent(hashChanges, e.isPre(), atStart, atEnd);
       }
+   }
 
-      private void addEvent(List<TopologyHistory.Event> list, boolean isPre, int atStart, int atEnd) {
-         if (isPre) {
-            list.add(new Event(false, atStart, atEnd));
+   private synchronized void addEvent(List<Event> list, boolean isPre, int atStart, int atEnd) {
+      if (isPre) {
+         list.add(new Event(false, atStart, atEnd));
+      } else {
+         int size = list.size();
+         if (size == 0 || list.get(size - 1).getEnded() != null) {
+            Event ev = new Event(true, atStart, atEnd);
+            list.add(ev);
          } else {
-            int size = list.size();
-            if (size == 0 || list.get(size - 1).getEnded() != null) {
-               Event ev = new Event(true, atStart, atEnd);
-               list.add(ev);
-            } else {
-               ((Event) list.get(size - 1)).setEnded();
-            }
+            list.get(size - 1).setEnded();
          }
       }
+   }
 
-      class Event extends TopologyHistory.Event {
-         private final Date started;
-         private Date ended;
-         private final int atStart;
-         private final int atEnd;
+   private static class Event extends TopologyHistory.Event {
+      private final Date started;
+      private Date ended;
+      private final int atStart;
+      private final int atEnd;
 
-         private Event(Date started, Date ended, int atStart, int atEnd) {
-            this.started = started;
-            this.ended = ended;
-            this.atStart = atStart;
-            this.atEnd = atEnd;
+      private Event(Date started, Date ended, int atStart, int atEnd) {
+         this.started = started;
+         this.ended = ended;
+         this.atStart = atStart;
+         this.atEnd = atEnd;
+      }
+
+      public Event(boolean finished, int atStart, int atEnd) {
+         if (finished) {
+            this.started = this.ended = new Date();
+         } else {
+            this.started = new Date();
          }
+         this.atStart = atStart;
+         this.atEnd = atEnd;
+      }
 
-         public Event(boolean finished, int atStart, int atEnd) {
-            if (finished) {
-               this.started = this.ended = new Date();
-            } else {
-               this.started = new Date();
-            }
-            this.atStart = atStart;
-            this.atEnd = atEnd;
-         }
+      @Override
+      public Date getStarted() {
+         return started;
+      }
 
-         @Override
-         public Date getStarted() {
-            return started;
-         }
+      public void setEnded() {
+         if (ended != null) throw new IllegalStateException();
+         ended = new Date();
+      }
 
-         public void setEnded() {
-            if (ended != null) throw new IllegalStateException();
-            ended = new Date();
-         }
+      @Override
+      public Date getEnded() {
+         return ended;
+      }
 
-         @Override
-         public Date getEnded() {
-            return ended;
-         }
+      @Override
+      public int getMembersAtStart() {
+         return atStart;
+      }
 
-         @Override
-         public int getMembersAtStart() {
-            return atStart;
-         }
+      @Override
+      public int getMembersAtEnd() {
+         return atEnd;
+      }
 
-         @Override
-         public int getMembersAtEnd() {
-            return atEnd;
-         }
-
-         @Override
-         public TopologyHistory.Event copy() {
-            return new Event(started, ended, atStart, atEnd);
-         }
+      @Override
+      public TopologyHistory.Event copy() {
+         return new InfinispanTopologyHistory.Event(started, ended, atStart, atEnd);
       }
    }
 }
