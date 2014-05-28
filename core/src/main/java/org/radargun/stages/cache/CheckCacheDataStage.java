@@ -2,7 +2,10 @@ package org.radargun.stages.cache;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -58,6 +61,9 @@ public class CheckCacheDataStage extends AbstractDistStage {
          "This option disables such behaviour. Default is false.")
    private boolean ignoreSum = false;
 
+   @Property(doc = "If true, the entries are not retrieved, this stage only checks that the sum of entries from local nodes is correct. Default is false.")
+   private boolean sizeOnly = false;
+
    @Property(doc = "Hint how many slaves are currently alive - if set to > 0 then the query for amount of entries in" +
          "this cache is postponed until the cache appears to be fully replicated. By default this is disabled.")
    private int liveSlavesHint = -1;
@@ -78,6 +84,16 @@ public class CheckCacheDataStage extends AbstractDistStage {
    @Property(doc = "If the cache wrapper supports persistent storage and this is set to true, the check " +
          "will be executed only against in-memory data. Default is false.")
    private boolean memoryOnly = false;
+
+   // TODO: better names, even when these are kind of hacks
+   @Property(doc = "Check whether the sum of subparts sizes is the same as local size. Default is false.")
+   private boolean checkSubpartsSumLocal = false;
+
+   @Property(doc = "Check whether the same subparts from each cache have the same size. Default is false.")
+   private boolean checkSubpartsEqual = false;
+
+   @Property(doc = "Check that number of non-zero subparts is equal to number of replicas. Default is false.")
+   private boolean checkSubpartsAreReplicas = false;
 
    private transient KeyGenerator keyGenerator;
 
@@ -102,57 +118,59 @@ public class CheckCacheDataStage extends AbstractDistStage {
          // this slave is dead and does not participate on check
          return successfulResponse();
       }
-      keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
-      if (keyGenerator == null) {
-         keyGenerator = new StringKeyGenerator();
-      }
-      CheckResult result = new CheckResult();
-      if (memoryOnly && inMemoryBasicOperations != null) {
-         basicCache = inMemoryBasicOperations.getMemoryOnlyCache(getCacheName());
-      } else {
-         basicCache = basicOperations.getCache(getCacheName());
-      }
-      if (debugable != null){
-         debugableCache = debugable.getCache(getCacheName());
-      }
+      if (!sizeOnly) {
+         keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
+         if (keyGenerator == null) {
+            keyGenerator = new StringKeyGenerator();
+         }
+         CheckResult result = new CheckResult();
+         if (memoryOnly && inMemoryBasicOperations != null) {
+            basicCache = inMemoryBasicOperations.getMemoryOnlyCache(getCacheName());
+         } else {
+            basicCache = basicOperations.getCache(getCacheName());
+         }
+         if (debugable != null){
+            debugableCache = debugable.getCache(getCacheName());
+         }
 
-      try {
-         if (checkThreads <= 1) {
-            ValueChecker checker = new GeneratedValueChecker((ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR));
-            int entriesToCheck = numEntries;
-            for (int i = firstEntryOffset * slaveState.getSlaveIndex(); entriesToCheck > 0; i += stepEntryCount) {
-               int checkAmount = Math.min(checkEntryCount, entriesToCheck);
-               for (int j = 0; j < checkAmount; ++j) {
-                  if (!checkKey(basicCache, debugableCache, i + j, result, checker)) {
-                     entriesToCheck = 0;
-                     break;
+         try {
+            if (checkThreads <= 1) {
+               ValueChecker checker = new GeneratedValueChecker((ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR));
+               int entriesToCheck = numEntries;
+               for (int i = firstEntryOffset * slaveState.getSlaveIndex(); entriesToCheck > 0; i += stepEntryCount) {
+                  int checkAmount = Math.min(checkEntryCount, entriesToCheck);
+                  for (int j = 0; j < checkAmount; ++j) {
+                     if (!checkKey(basicCache, debugableCache, i + j, result, checker)) {
+                        entriesToCheck = 0;
+                        break;
+                     }
                   }
+                  entriesToCheck -= checkAmount;
                }
-               entriesToCheck -= checkAmount;
+            } else {
+               ExecutorService executor = Executors.newFixedThreadPool(checkThreads);
+               List<Callable<CheckResult>> tasks = new ArrayList<Callable<CheckResult>>();
+               for (int i = 0; i < checkThreads; ++i) {
+                  Range range = Range.divideRange(numEntries, checkThreads, i);
+                  tasks.add(new CheckRangeTask(range.getStart(), range.getEnd()));
+               }
+               for (Future<CheckResult> future : executor.invokeAll(tasks)) {
+                  CheckResult value = future.get();
+                  result.merge(value);
+               }
+            }
+         } catch (Exception e) {
+            return errorResponse("Failed to check entries", e);
+         }
+
+         if (!isDeleted()) {
+            if (result.found != getExpectedNumEntries()) {
+               return new InfoAck(slaveState, result).error("Found " + result.found + " entries while " + getExpectedNumEntries() + " should be loaded.");
             }
          } else {
-            ExecutorService executor = Executors.newFixedThreadPool(checkThreads);
-            List<Callable<CheckResult>> tasks = new ArrayList<Callable<CheckResult>>();
-            for (int i = 0; i < checkThreads; ++i) {
-               Range range = Range.divideRange(numEntries, checkThreads, i);
-               tasks.add(new CheckRangeTask(range.getStart(), range.getEnd()));
+            if (result.found > 0) {
+               return new InfoAck(slaveState, result).error("Found " + result.found + " entries while these should be deleted.");
             }
-            for (Future<CheckResult> future : executor.invokeAll(tasks)) {
-               CheckResult value = future.get();
-               result.merge(value);
-            }
-         }
-      } catch (Exception e) {
-         return errorResponse("Failed to check entries", e);
-      }
-
-      if (!isDeleted()) {
-         if (result.found != getExpectedNumEntries()) {
-            return new InfoAck(slaveState, result).error("Found " + result.found + " entries while " + getExpectedNumEntries() + " should be loaded.");
-         }
-      } else {
-         if (result.found > 0) {
-            return new InfoAck(slaveState, result).error("Found " + result.found + " entries while these should be deleted.");
          }
       }
       CacheInformation.Cache info = cacheInformation.getCache(getCacheName());
@@ -180,7 +198,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
             } else break;
          }
       }
-      return new InfoAck(slaveState, info.getLocalSize(), info.getNumReplicas());
+      return new InfoAck(slaveState, info.getLocalSize(), info.getStructuredSize(), info.getNumReplicas());
    }
 
    private String getCacheName() {
@@ -290,15 +308,50 @@ public class CheckCacheDataStage extends AbstractDistStage {
       }
       int sumSize = 0;
       Integer numReplicas = null;
+      Map<Object, Map<Integer, Integer>> subparts = new HashMap<Object, Map<Integer, Integer>>();
       for (DistStageAck ack : acks) {
-         if (ack instanceof InfoAck) {
-            InfoAck info = (InfoAck) ack;
-            log.debug("Slave " + ack.getSlaveIndex() + " has local size " + info.localSize);
-            sumSize += info.localSize;
-            if (numReplicas == null) numReplicas = info.numReplicas;
-            else if (numReplicas != info.numReplicas) {
-               log.error("Slave " + ack.getSlaveIndex() + " reports " + info.numReplicas + " replicas but other slave reported " + numReplicas);
-               return false;
+         if (!(ack instanceof InfoAck)) {
+            continue;
+         }
+         InfoAck info = (InfoAck) ack;
+         log.debug("Slave " + ack.getSlaveIndex() + " has local size " + info.localSize);
+         sumSize += info.localSize;
+         if (numReplicas == null) numReplicas = info.numReplicas;
+         else if (numReplicas != info.numReplicas) {
+            log.error("Slave " + ack.getSlaveIndex() + " reports " + info.numReplicas + " replicas but other slave reported " + numReplicas);
+            success = false;
+         }
+         int sumSubpartSize = 0;
+         for (Map.Entry<?, Integer> subpart : info.structuredSize.entrySet()) {
+            log.trace("Subpart " + subpart.getKey() + " = " + subpart.getValue());
+            if (subpart.getValue() == 0) continue;
+
+            sumSubpartSize += subpart.getValue();
+            Map<Integer, Integer> otherSubparts = subparts.get(subpart.getKey());
+            if (otherSubparts == null) {
+               subparts.put(subpart.getKey(), new HashMap<Integer, Integer>(Collections.singletonMap(info.getSlaveIndex(), subpart.getValue())));
+            } else if (checkSubpartsEqual) {
+               for (Map.Entry<Integer, Integer> os : otherSubparts.entrySet()) {
+                  if ((int) subpart.getValue() != (int) os.getValue()) {
+                     log.error(String.format("Slave %d reports %s = %d but slave %d reported size %d",
+                           info.getSlaveIndex(), subpart.getKey(), subpart.getValue(), os.getKey(), os.getValue()));
+                     success = false;
+                  }
+               }
+               otherSubparts.put(info.getSlaveIndex(), subpart.getValue());
+            }
+         }
+         if (checkSubpartsSumLocal && sumSubpartSize != info.localSize) {
+            log.error(String.format("On slave %d sum of subparts sizes (%d) is not the same as local size (%d)",
+                  info.getSlaveIndex(), sumSubpartSize, info.localSize));
+            success = false;
+         }
+      }
+      if (checkSubpartsAreReplicas) {
+         for (Map.Entry<Object, Map<Integer, Integer>> subpart : subparts.entrySet()) {
+            if (subpart.getValue().size() != numReplicas) {
+               log.error(String.format("Subpart %s was found in %s, should have %d replicas.", subpart.getKey(), subpart.getValue().keySet(), numReplicas));
+               success = false;
             }
          }
       }
@@ -315,7 +368,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
          }
          if (expectedSize != sumSize) {
             log.error("The cache should contain " + expectedSize + " entries (including backups) but contains " + sumSize + " entries.");
-            return false;
+            success = false;
          } else {
             log.trace("The sum size is " + sumSize + " entries as expected");
          }
@@ -350,12 +403,14 @@ public class CheckCacheDataStage extends AbstractDistStage {
 
    protected static class InfoAck extends DistStageAck {
       final long localSize;
+      final Map<?, Integer> structuredSize;
       final int numReplicas;
       final CheckResult checkResult;
 
-      public InfoAck(SlaveState slaveState, long localSize, int numReplicas) {
+      public InfoAck(SlaveState slaveState, long localSize, Map<?, Integer> structuredSize, int numReplicas) {
          super(slaveState);
          this.localSize = localSize;
+         this.structuredSize = structuredSize;
          this.numReplicas = numReplicas;
          checkResult = null;
       }
@@ -364,6 +419,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
          super(slaveState);
          this.checkResult = checkResult;
          localSize = -1;
+         structuredSize = null;
          numReplicas = -1;
       }
 

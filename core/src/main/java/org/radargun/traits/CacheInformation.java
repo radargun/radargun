@@ -1,6 +1,7 @@
 package org.radargun.traits;
 
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -29,6 +30,12 @@ public interface CacheInformation {
        * @return Number of entries in the whole cache, or negative number if the information is not available.
        */
       int getTotalSize();
+
+      /**
+       * The cache may be structured into different subparts.
+       * @return Map of subpart-identification - subpart-size.
+       */
+      Map<?, Integer> getStructuredSize();
 
       /**
        * @return How many times is each entry replicated in the local cluster (group), or -1 if this cannot be determined.

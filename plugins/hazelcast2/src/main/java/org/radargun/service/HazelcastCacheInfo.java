@@ -2,6 +2,8 @@ package org.radargun.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.Instance;
@@ -53,6 +55,11 @@ public class HazelcastCacheInfo implements CacheInformation {
       @Override
       public int getTotalSize() {
          return map.size();
+      }
+
+      @Override
+      public Map<?, Integer> getStructuredSize() {
+         return Collections.singletonMap(map.getName(), getLocalSize());
       }
 
       @Override

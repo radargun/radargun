@@ -2,6 +2,8 @@ package org.radargun.service;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 import net.sf.ehcache.Ehcache;
 import org.radargun.traits.CacheInformation;
@@ -46,6 +48,11 @@ public class EHCacheInfo implements CacheInformation {
       @Override
       public int getTotalSize() {
          return -1;
+      }
+
+      @Override
+      public Map<?, Integer> getStructuredSize() {
+         return Collections.singletonMap(cache.getName(), getLocalSize());
       }
 
       @Override

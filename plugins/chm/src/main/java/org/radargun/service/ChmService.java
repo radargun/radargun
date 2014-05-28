@@ -16,13 +16,13 @@ public class ChmService {
    protected ConcurrentHashMap<String, ChmCache> caches = new ConcurrentHashMap<String, ChmCache>();
 
    public ChmService() {
-      caches.put(null, new ChmCache());
+      caches.put(null, new ChmCache(null));
    }
 
    public ChmCache getCache(String cacheName) {
       ChmCache cache = caches.get(cacheName);
       if (cache == null) {
-         cache = new ChmCache();
+         cache = new ChmCache(cacheName);
          ChmCache prev = caches.putIfAbsent(cacheName, cache);
          if (prev != null) cache = prev;
       }
