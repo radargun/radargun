@@ -1,6 +1,5 @@
 package org.radargun.stages.topology;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.radargun.DistStageAck;
@@ -114,9 +113,9 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
    private List<TopologyHistory.Event> getEventHistory(TopologyHistory wrapper) {
       switch (type) {
          case REHASH:
-            return new ArrayList<TopologyHistory.Event>(wrapper.getRehashHistory());
+            return wrapper.getRehashHistory();
          case TOPOLOGY_UPDATE:
-            return new ArrayList<TopologyHistory.Event>(wrapper.getTopologyChangeHistory());
+            return wrapper.getTopologyChangeHistory();
       }
       throw new IllegalStateException();
    }

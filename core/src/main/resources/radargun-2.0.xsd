@@ -110,6 +110,7 @@
                         <element name="tpcc-benchmark" type="rg:tpcc-benchmark"/>
                         <element name="tpcc-population" type="rg:tpcc-population"/>
                         <element name="wait-for-topology-event" type="rg:wait-for-topology-event"/>
+                        <element name="wait-for-topology-settle" type="rg:wait-for-topology-settle"/>
                         <element name="write-skew-check" type="rg:write-skew-check"/>
                         <element name="xs-repl-check" type="rg:xs-repl-check"/>
                         <element name="xs-repl-load" type="rg:xs-repl-load"/>
@@ -212,6 +213,7 @@
             <element name="tpcc-benchmark" type="rg:tpcc-benchmark"/>
             <element name="tpcc-population" type="rg:tpcc-population"/>
             <element name="wait-for-topology-event" type="rg:wait-for-topology-event"/>
+            <element name="wait-for-topology-settle" type="rg:wait-for-topology-settle"/>
             <element name="write-skew-check" type="rg:write-skew-check"/>
             <element name="xs-repl-check" type="rg:xs-repl-check"/>
             <element name="xs-repl-load" type="rg:xs-repl-load"/>
@@ -1936,6 +1938,26 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </simpleType>
       </union>
    </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.topology.WaitForTopologySettleStage-->
+   <complexType name="wait-for-topology-settle">
+      <annotation>
+         <documentation>Waits for a period without any change in topology history.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:abstract-dist">
+            <attribute name="period" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>How long period without any change are we looking for. Default is 10 seconds.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="timeout" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
    <!--From radargun-core-2.0.0-SNAPSHOT.jar/org.radargun.stages.cache.WriteSkewCheckStage-->
    <complexType name="write-skew-check">
       <annotation>
