@@ -34,6 +34,8 @@ import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.TextAnchor;
 import org.radargun.config.Converter;
 import org.radargun.config.Property;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
 
 /**
@@ -42,6 +44,7 @@ import org.radargun.reporting.Timeline;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TimelineChart {
+   private static final Log log = LogFactory.getLog(TimelineChart.class);
    protected static final TimeZone GMT = TimeZone.getTimeZone("GMT");
 
    private final static Paint[] defaultPaints = ChartColor.createDefaultPaintArray();
@@ -92,10 +95,15 @@ public class TimelineChart {
       plot.setRangeGridlinesVisible(false);
       plot.setRangeZeroBaselineVisible(true);
 
+      long lastTimestamp = Long.MIN_VALUE;
       for (Timeline.Event event : events) {
          if (event instanceof Timeline.Value) {
             Timeline.Value value = (Timeline.Value) event;
-            series.add(time(event.timestamp - startTimestamp), value.value);
+            if (lastTimestamp == event.timestamp) {
+               log.warn("Duplicate timestamp: " + event);
+            }
+            series.addOrUpdate(time(event.timestamp - startTimestamp), value.value);
+            lastTimestamp = event.timestamp;
          } else if (event instanceof Timeline.IntervalEvent) {
             Timeline.IntervalEvent intervalEvent = (Timeline.IntervalEvent) event;
             IntervalMarker marker = new IntervalMarker(event.timestamp - startTimestamp, event.timestamp + intervalEvent.duration - startTimestamp, paint, stroke, paint, stroke, 0.3f);
@@ -184,6 +192,11 @@ public class TimelineChart {
    private RegularTimePeriod time(long timestamp) {
       Date date = new Date(timestamp);
       return RegularTimePeriod.createInstance(timePeriodClass, date, GMT);
+   }
+
+   public static int getColorForIndex(int slaveIndex) {
+      if (slaveIndex < 0) return 0;
+      return ((Color) defaultPaints[slaveIndex % defaultPaints.length]).getRGB();
    }
 
    private static class TimeUnitConverter implements Converter<Class<? extends RegularTimePeriod>> {
