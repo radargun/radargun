@@ -128,6 +128,12 @@ public class Timeline implements Serializable, Comparable<Timeline> {
       public Value(Number value) {
          this.value = value;
       }
+
+      @Override
+      public String toString() {
+         // doubles require %f, integers %d -> we use %s
+         return String.format("Value{timestamp=%d, value=%s}", timestamp, value);
+      }
    }
 
    /**
@@ -143,6 +149,11 @@ public class Timeline implements Serializable, Comparable<Timeline> {
 
       public TextEvent(String text) {
          this.text = text;
+      }
+
+      @Override
+      public String toString() {
+         return String.format("TextEvent{timestamp=%d, text=%s}", timestamp, text);
       }
    }
 
@@ -167,6 +178,12 @@ public class Timeline implements Serializable, Comparable<Timeline> {
       @Override
       public long getEnded() {
          return timestamp + duration;
+      }
+
+      @Override
+      public String toString() {
+         return String.format("IntervalEvent{timestamp=%d, duration=%d, description=%s}",
+               timestamp, duration, description);
       }
    }
 

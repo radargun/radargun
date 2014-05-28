@@ -174,7 +174,9 @@ public class TimelineDocument extends HtmlDocument {
 
       write("<br><br>");
       for (Timeline timeline : timelines) {
-         write(String.format("<input type=\"checkbox\" checked=\"checked\" id=\"slave_%d\" onClick=\"", timeline.slaveIndex));
+         write(String.format("<span style=\"background-color: #%06X;\">&nbsp;</span>" +
+               "<input type=\"checkbox\" checked=\"checked\" id=\"slave_%d\" onClick=\"",
+               TimelineChart.getColorForIndex(timeline.slaveIndex), timeline.slaveIndex));
          for (int valuesId : valueCategories.values())  {
             write(String.format("reset_display('layer_%d_%d', this.checked, 'block');",
                   valuesId, timeline.slaveIndex));
