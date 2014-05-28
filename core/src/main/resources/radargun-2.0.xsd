@@ -523,6 +523,21 @@
                   <documentation>Number of entries that will be checked in each step. Default is 1.</documentation>
                </annotation>
             </attribute>
+            <attribute name="check-subparts-are-replicas" type="rg:boolean">
+               <annotation>
+                  <documentation>Check that number of non-zero subparts is equal to number of replicas. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="check-subparts-equal" type="rg:boolean">
+               <annotation>
+                  <documentation>Check whether the same subparts from each cache have the same size. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="check-subparts-sum-local" type="rg:boolean">
+               <annotation>
+                  <documentation>Check whether the sum of subparts sizes is the same as local size. Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="check-threads" type="rg:int">
                <annotation>
                   <documentation>Number of thread per node which check data validity. Default is 1.</documentation>
@@ -581,6 +596,11 @@
             <attribute name="num-entries" type="rg:int" use="required">
                <annotation>
                   <documentation>Number of entries with key in form specified by the last used key generator, in the cache.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="size-only" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, the entries are not retrieved, this stage only checks that the sum of entries from local nodes is correct. Default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="step-entry-count" type="rg:int">

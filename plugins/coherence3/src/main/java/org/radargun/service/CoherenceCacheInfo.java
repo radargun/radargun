@@ -1,6 +1,8 @@
 package org.radargun.service;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.MBeanServer;
@@ -77,6 +79,11 @@ public class CoherenceCacheInfo implements CacheInformation {
       @Override
       public int getTotalSize() {
          return nc == null ? -1 : nc.size();
+      }
+
+      @Override
+      public Map<?, Integer> getStructuredSize() {
+         return Collections.singletonMap(nc.getCacheName(), getLocalSize());
       }
 
       @Override

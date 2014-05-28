@@ -1,5 +1,7 @@
 package org.radargun.service;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.radargun.traits.BasicOperations;
@@ -10,8 +12,12 @@ import org.radargun.traits.ConditionalOperations;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ChmCache implements BasicOperations.Cache, ConditionalOperations.Cache, CacheInformation.Cache {
+   private final ConcurrentHashMap chm = new ConcurrentHashMap();
+   private final String name;
 
-   public final ConcurrentHashMap chm = new ConcurrentHashMap();
+   public ChmCache(String name) {
+      this.name = name;
+   }
 
    @Override
    public Object get(Object key) {
@@ -89,6 +95,11 @@ public class ChmCache implements BasicOperations.Cache, ConditionalOperations.Ca
    @Override
    public int getTotalSize() {
       return -1;
+   }
+
+   @Override
+   public Map<?, Integer> getStructuredSize() {
+      return Collections.singletonMap(name, chm.size());
    }
 
    @Override

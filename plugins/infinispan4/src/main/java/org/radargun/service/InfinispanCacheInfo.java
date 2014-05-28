@@ -1,5 +1,7 @@
 package org.radargun.service;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 import org.infinispan.AdvancedCache;
@@ -45,6 +47,11 @@ public class InfinispanCacheInfo implements CacheInformation {
       @Override
       public int getTotalSize() {
          return -1;
+      }
+
+      @Override
+      public Map<?, Integer> getStructuredSize() {
+         return Collections.singletonMap(cache.getName(), getLocalSize());
       }
 
       @Override
