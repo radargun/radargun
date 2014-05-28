@@ -139,6 +139,20 @@ public class Utils {
       }
    }
 
+   public static void threadDump() {
+      for (Entry<Thread, StackTraceElement[]> st : Thread.getAllStackTraces().entrySet()) {
+         StringBuilder sb = new StringBuilder();
+         sb.append("Stack for thread ");
+         sb.append(st.getKey().getName());
+         sb.append(":\n");
+         for (StackTraceElement ste : st.getValue()) {
+            sb.append(ste.toString());
+            sb.append('\n');
+         }
+         log.warn(sb.toString());
+      }
+   }
+
    public static class JarFilenameFilter implements FilenameFilter {
       public boolean accept(File dir, String name) {
          String fileName = name.toUpperCase(Locale.ENGLISH);
