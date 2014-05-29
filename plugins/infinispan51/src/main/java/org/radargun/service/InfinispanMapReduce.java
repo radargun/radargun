@@ -8,11 +8,14 @@ import org.infinispan.distexec.mapreduce.Collator;
 import org.infinispan.distexec.mapreduce.MapReduceTask;
 import org.infinispan.distexec.mapreduce.Mapper;
 import org.infinispan.distexec.mapreduce.Reducer;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.traits.MapReducer;
 import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
 
 public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<KOut, VOut, R> {
+   protected Log log = LogFactory.getLog(getClass());
 
    protected Infinispan51EmbeddedService service;
 
@@ -28,8 +31,16 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
 
    protected String combinerFqn = null;
 
+   protected String resultCacheName = null;
+
+   protected boolean printResult = false;
+
    public InfinispanMapReduce(Infinispan51EmbeddedService service) {
       this.service = service;
+   }
+
+   public void setPrintResult(boolean printResult) {
+      this.printResult = printResult;
    }
 
    @SuppressWarnings("unchecked")
@@ -103,9 +114,27 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
          Utils.invokeMethodWithString(mapper, this.mapperParameters);
          Utils.invokeMethodWithString(reducer, this.reducerParameters);
          result = t.execute();
+         if (resultCacheName != null) {
+            result = t.execute();
+            Cache<Object, Object> resultCache = service.getCache(resultCacheName);
+            for (Map.Entry<KOut, VOut> entry : result.entrySet()) {
+               if (printResult) {
+                  log.info("key: " + entry.getKey() + " value: " + entry.getValue());
+               }
+               resultCache.put(entry.getKey(), entry.getValue());
+            }
+         }
       }
 
       return result;
+   }
+
+   @Override
+   public boolean setResultCacheName(String resultCacheName) {
+      this.resultCacheName = resultCacheName;
+      // Add the result cache to the list of caches known by the service 
+      service.caches.put(resultCacheName, service.cacheManager.getCache(resultCacheName, true));
+      return true;
    }
 
    @Override
