@@ -7,6 +7,7 @@ import org.infinispan.commons.util.FileLookup;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.radargun.Service;
+import org.radargun.traits.ProvidesTrait;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -22,8 +23,15 @@ public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
    }
 
    @Override
+   @ProvidesTrait
    public Infinispan70MapReduce createMapReduce() {
       return new Infinispan70MapReduce(this);
+   }
+
+   @Override
+   @ProvidesTrait
+   public InfinispanCacheInfo createCacheInformation() {
+      return new Infinispan70CacheInfo(this);
    }
 
 }

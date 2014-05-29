@@ -14,6 +14,7 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
+import org.radargun.traits.CacheInformation.Cache;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.MapReducer;
@@ -80,8 +81,9 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    private boolean useIntermediateSharedCache = true;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
-         + "final results of the MapReduceTask are stored in the cache at key MAPREDUCE_RESULT_KEY. "
-         + "Enabling this feature will require extra DRAM usage. The default is false.")
+         + "final results of the MapReduceTask are stored in the cache. "
+         + "The collated object will be stored at key MAPREDUCE_RESULT_KEY. "
+         + "The result map will be stored in a cache named MAPREDUCE_RESULT_KEY. The default is false.")
    private boolean storeResultInCache = false;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
@@ -89,13 +91,17 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          + "first slave node. The default is false.")
    private boolean printResult = false;
 
-   @Property(doc = "A tiemout value for the remote communication that happens "
+   @Property(doc = "A timeout value for the remote communication that happens "
          + "during a Map/Reduce task. The default is zero which means to wait forever.")
    private long timeout = 0;
 
    @Property(doc = "The java.util.concurrent.TimeUnit to use with the timeout "
          + "property. The default is TimeUnit.MILLISECONDS")
    private TimeUnit unit = TimeUnit.MILLISECONDS;
+
+   @Property(doc = "Set the number of intermediate keys/values collected in "
+         + "Collector during a Map/Reduce task. The default is -1. (Use plugin default)")
+   private int maxCollectorSize = -1;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private MapReducer mapReducer;
@@ -111,14 +117,15 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) return false;
+      if (!super.processAckOnMaster(acks))
+         return false;
       StringBuilder reportCsvContent = new StringBuilder();
 
       // TODO: move this into test report
       if (masterState.get(FIRST_SCALE_STAGE_KEY) == null) {
          masterState.put(FIRST_SCALE_STAGE_KEY, masterState.getConfigName());
-         reportCsvContent
-               .append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, DURATION_NANOSECONDS, KEY_COUNT_IN_RESULT_MAP\n");
+         reportCsvContent.append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, "
+               + "DURATION_NANOSECONDS, KEY_COUNT_IN_RESULT_MAP, CONFIGURATION_NAME\n");
       }
 
       for (TextAck ack : cast(acks, TextAck.class)) {
@@ -153,7 +160,9 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    }
 
    private String getPayload(String duration, String resultSize) {
-      return slaveState.getSlaveIndex() + ", " + clustered.getClusteredNodes() + ", " + cacheInformation.getCache(null).getLocalSize() + ", " + duration + ", " + resultSize;
+      return slaveState.getSlaveIndex() + ", " + clustered.getClusteredNodes() + ", "
+            + cacheInformation.getCache(cacheInformation.getDefaultCacheName()).getLocalSize() + ", " + duration + ", "
+            + resultSize + ", " + slaveState.getConfigName();
    }
 
    private DistStageAck executeMapReduceTask(MapReducer<KOut, VOut, R> mapReducer) {
@@ -168,14 +177,12 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       if (mapReducer.setDistributeReducePhase(distributeReducePhase)) {
          log.info(mapReducer.getClass().getName() + " supports MapReducer.setDistributeReducePhase()");
       } else {
-         log.info(mapReducer.getClass().getName()
-               + " does not support MapReducer.setDistributeReducePhase()");
+         log.info(mapReducer.getClass().getName() + " does not support MapReducer.setDistributeReducePhase()");
       }
       if (mapReducer.setUseIntermediateSharedCache(useIntermediateSharedCache)) {
          log.info(mapReducer.getClass().getName() + " supports MapReducer.setUseIntermediateSharedCache()");
       } else {
-         log.info(mapReducer.getClass().getName()
-               + " does not support MapReducer.setUseIntermediateSharedCache()");
+         log.info(mapReducer.getClass().getName() + " does not support MapReducer.setUseIntermediateSharedCache()");
       }
       if (mapReducer.setTimeout(timeout, unit)) {
          log.info(mapReducer.getClass().getName() + " supports MapReducer.setTimeout()");
@@ -187,12 +194,18 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       } else {
          log.info(mapReducer.getClass().getName() + " does not support MapReducer.setCombiner()");
       }
+      if (mapReducer.setMaxCollectorSize(maxCollectorSize)) {
+         log.info(mapReducer.getClass().getName() + " supports MapReducer.setMaxCollectorSize()");
+      } else {
+         log.info(mapReducer.getClass().getName() + " does not support MapReducer.setMaxCollectorSize()");
+      }
       TextAck ack = new TextAck(slaveState);
       try {
          ack.setText(getPayload("noDuration", "noResultSize"));
          if (collatorFqn != null) {
             start = System.nanoTime();
-            payloadObject = mapReducer.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn, collatorFqn);
+            payloadObject = mapReducer.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn,
+                  collatorFqn);
             durationNanos = System.nanoTime() - start;
             log.info("MapReduce task with Collator completed in "
                   + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
@@ -208,6 +221,13 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                }
             }
          } else {
+            if (storeResultInCache) {
+               if (mapReducer.setResultCacheName(MAPREDUCE_RESULT_KEY)) {
+                  log.info(mapReducer.getClass().getName() + " supports MapReducer.setResultCacheName()");
+               } else {
+                  log.info(mapReducer.getClass().getName() + " does not support MapReducer.setResultCacheName()");
+               }
+            }
             start = System.nanoTime();
             payloadMap = mapReducer.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn);
             durationNanos = System.nanoTime() - start;
@@ -222,22 +242,27 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                      log.info("key: " + entry.getKey() + " value: " + entry.getValue());
                   }
                }
-               if (storeResultInCache) {
-                  try {
-                     basicOperations.getCache(null).put(MAPREDUCE_RESULT_KEY, payloadMap);
-                  } catch (Exception e) {
-                     log.error("Failed to put result map into cache", e);
-                  }
-               }
             } else {
-               ack.error("executeMapReduceTask() returned null");
+               if (storeResultInCache) {
+                  log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+                  log.info("Result map contains '" + cacheInformation.getCache(MAPREDUCE_RESULT_KEY).getTotalSize()
+                        + "' keys.");
+                  ack.setText(getPayload(String.valueOf(durationNanos),
+                        String.valueOf(cacheInformation.getCache(MAPREDUCE_RESULT_KEY).getTotalSize())));
+               } else {
+                  ack.setText(getPayload("N/A", "N/A"));
+                  ack.error("executeMapReduceTask() returned null");
+               }
             }
+
          }
       } catch (Exception e) {
          ack.error("executeMapReduceTask() threw an exception", e);
          log.error("executeMapReduceTask() returned an exception", e);
       }
-      log.info(clustered.getClusteredNodes() + " nodes were used. " + cacheInformation.getCache(null).getLocalSize() + " entries on this node");
+      log.info(clustered.getClusteredNodes() + " nodes were used. "
+            + cacheInformation.getCache(cacheInformation.getDefaultCacheName()).getLocalSize()
+            + " entries on this node");
       log.info("--------------------");
 
       return ack;
