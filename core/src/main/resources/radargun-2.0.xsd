@@ -413,6 +413,11 @@
                   <documentation>Do not execute the loading, start usual request right away.</documentation>
                </annotation>
             </attribute>
+            <attribute name="legacy-put-with-replace" type="rg:boolean">
+               <annotation>
+                  <documentation>Use replace operations instead of puts during the test. Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="legacy-wait-until-loaded" type="rg:boolean">
                <annotation>
                   <documentation>Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</documentation>
