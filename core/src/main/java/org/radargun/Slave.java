@@ -73,15 +73,19 @@ public class Slave {
                DistStage stage = (DistStage) scenario.getStage(stageId, extras);
                TraitHelper.InjectResult result = TraitHelper.inject(stage, traits);
                DistStageAck response;
-               if (result == TraitHelper.InjectResult.FAILURE) {
-                  response = new DistStageAck(state)
-                        .error("The stage was not executed because it missed some mandatory traits.", null);
+               InitHelper.init(stage);
+               stage.initOnSlave(state);
+               if (!stage.shouldExecute()) {
+                  log.info("Stage should not be executed");
+                  response = new DistStageAck(state);
                } else if (result == TraitHelper.InjectResult.SKIP) {
-                  response  = new DistStageAck(state);
                   log.info("Stage was skipped because it was missing some traits");
+                  response = new DistStageAck(state);
+               } else if (result == TraitHelper.InjectResult.FAILURE) {
+                  String message = "The stage was not executed because it missed some mandatory traits.";
+                  log.error(message);
+                  response = new DistStageAck(state).error(message, null);
                } else {
-                  InitHelper.init(stage);
-                  stage.initOnSlave(state);
                   if (log.isDebugEnabled()) {
                      log.info("Starting stage " + stage);
                   } else {
@@ -92,6 +96,9 @@ public class Slave {
                   try {
                      response = stage.executeOnSlave();
                      end = System.currentTimeMillis();
+                     if (response == null) {
+                        response = new DistStageAck(state).error("Stage returned null response", null);
+                     }
                      log.info("Finished stage " + stage.getName());
                      response.setDuration(end - start);
                   } catch (Exception e) {

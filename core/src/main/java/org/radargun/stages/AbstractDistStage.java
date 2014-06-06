@@ -67,7 +67,8 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       return lifecycle == null || lifecycle.isRunning();
    }
 
-   protected boolean shouldExecute() {
+   @Override
+   public boolean shouldExecute() {
       boolean execBySlave = slaves == null || slaves.contains(slaveState.getSlaveIndex());
       boolean execByGroup = groups == null || groups.contains(slaveState.getGroupName());
       boolean execByRole = roles == null || RoleHelper.hasAnyRole(slaveState, roles);
