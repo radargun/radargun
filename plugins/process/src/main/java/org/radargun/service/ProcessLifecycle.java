@@ -1,8 +1,10 @@
 package org.radargun.service;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +28,7 @@ import org.radargun.traits.Lifecycle;
 public class ProcessLifecycle implements Lifecycle, Killable {
    protected final Log log = LogFactory.getLog(getClass());
    protected final ProcessService service;
+   protected ProcessOutputReader outputReader, errorReader;
 
    private String prefix;
    private String extension;
@@ -160,12 +163,28 @@ public class ProcessLifecycle implements Lifecycle, Killable {
       }
    }
 
-   protected StreamReader getOutputReader() {
-      return null;
+   protected synchronized StreamReader getOutputReader() {
+      if (outputReader == null) {
+         outputReader = new ProcessOutputReader(new LineConsumer() {
+            @Override
+            public void consume(String line) {
+               service.reportOutput(line);
+            }
+         });
+      }
+      return outputReader;
    }
 
    protected StreamReader getErrorReader() {
-      return null;
+      if (errorReader == null) {
+         errorReader = new ProcessOutputReader(new LineConsumer() {
+            @Override
+            public void consume(String line) {
+               service.reportError(line);
+            }
+         });
+      }
+      return errorReader;
    }
 
    protected StreamWriter getInputWriter() {
@@ -184,5 +203,42 @@ public class ProcessLifecycle implements Lifecycle, Killable {
     */
    interface StreamWriter {
       void setStream(OutputStream stream);
+   }
+
+   interface LineConsumer {
+      void consume(String line);
+   }
+
+   protected class ProcessOutputReader extends Thread implements StreamReader {
+      private BufferedReader reader;
+      private LineConsumer consumer;
+
+      public ProcessOutputReader(LineConsumer consumer) {
+         this.consumer = consumer;
+      }
+
+      @Override
+      public void setStream(InputStream stream) {
+         this.reader = new BufferedReader(new InputStreamReader(stream));
+         this.start();
+      }
+
+      @Override
+      public void run() {
+         String line;
+         try {
+            while ((line = reader.readLine()) != null) {
+               consumer.consume(line);
+            }
+         } catch (IOException e) {
+            log.error("Failed to read server output", e);
+         } finally {
+            try {
+               reader.close();
+            } catch (IOException e) {
+               log.error("Failed to close", e);
+            }
+         }
+      }
    }
 }

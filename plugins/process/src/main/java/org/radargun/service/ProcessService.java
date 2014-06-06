@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 import org.radargun.Service;
 import org.radargun.config.Converter;
@@ -40,6 +42,11 @@ public class ProcessService {
    @Property(doc = "Timeout to start the server. Default is 1 minute.", converter = TimeConverter.class)
    public long startTimeout = 60000;
 
+   @Property(doc = "Process standard error as standard output. Default is false.")
+   public boolean stderrToStdout = false;
+
+   private CopyOnWriteArrayList<Action> actions = new CopyOnWriteArrayList<Action>();
+
    @ProvidesTrait
    public ProcessLifecycle createLifecycle() {
       return new ProcessLifecycle(this);
@@ -57,6 +64,33 @@ public class ProcessService {
 
    public Map<String, String> getEnvironment() {
       return env;
+   }
+
+   public void registerAction(Pattern pattern, Runnable action) {
+      actions.add(new Action(pattern, action));
+   }
+
+   public void unregisterAction(Pattern pattern) {
+      for (Action a : actions) {
+         if (a.pattern.equals(pattern)) actions.remove(a);
+      }
+   }
+
+   public void reportOutput(String line) {
+      System.out.println(line);
+      for (Action action : actions) {
+         if (action.pattern.matcher(line).matches()) {
+            action.runnable.run();
+         }
+      }
+   }
+
+   public void reportError(String line) {
+      if (stderrToStdout) {
+         reportOutput(line);
+      } else {
+         System.err.println(line);
+      }
    }
 
    private static class ArgsConverter implements Converter<List<String>> {
@@ -144,6 +178,16 @@ public class ProcessService {
       @Override
       public String allowedPattern(Type type) {
          return ".*";
+      }
+   }
+
+   private static class Action {
+      public final Pattern pattern;
+      public final Runnable runnable;
+
+      private Action(Pattern pattern, Runnable runnable) {
+         this.pattern = pattern;
+         this.runnable = runnable;
       }
    }
 }

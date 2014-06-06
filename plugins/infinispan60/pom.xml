@@ -75,6 +75,10 @@
             </exclusion>
             <exclusion>
                <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-client-hotrod</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.infinispan</groupId>
                <artifactId>infinispan-query</artifactId>
             </exclusion>
             <exclusion>
@@ -86,12 +90,6 @@
                <artifactId>infinispan-cachestore-leveldb</artifactId>
             </exclusion>
          </exclusions>
-      </dependency>
-
-      <dependency>
-         <groupId>org.radargun</groupId>
-         <artifactId>plugin-process</artifactId>
-         <version>${project.version}</version>
       </dependency>
 
       <dependency>

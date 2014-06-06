@@ -11,9 +11,9 @@ import org.radargun.traits.ConditionalOperations;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class HotRodOperations implements BasicOperations, ConditionalOperations {
-   protected final Infinispan60HotrodService service;
+   protected final InfinispanHotrodService service;
 
-   public HotRodOperations(Infinispan60HotrodService service) {
+   public HotRodOperations(InfinispanHotrodService service) {
       this.service = service;
    }
 
