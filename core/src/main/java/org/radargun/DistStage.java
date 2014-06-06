@@ -13,7 +13,16 @@ import org.radargun.state.SlaveState;
  */
 public interface DistStage extends Stage, Serializable {
 
+   /**
+    * Initialize the stage on master node.
+    * @param masterState
+    */
    void initOnMaster(MasterState masterState);
+
+   /**
+    * Initialize the stage on slave node. The stage must not use injected traits in this method.
+    * @param slaveState
+    */
    void initOnSlave(SlaveState slaveState);
 
    /**
@@ -27,4 +36,11 @@ public interface DistStage extends Stage, Serializable {
     * @return returning false will cause the benchmark to stop.
     */
    boolean processAckOnMaster(List<DistStageAck> acks);
+
+   //TODO: remove the call from stages
+   /**
+    * Should this stage be executed, based on its properties?
+    * @return
+    */
+   boolean shouldExecute();
 }

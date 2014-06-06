@@ -40,7 +40,7 @@ public class ClearCacheStage extends AbstractDistStage {
    @InjectTrait
    private Transactional transactional;
 
-   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   @InjectTrait
    private CacheInformation cacheInformation;
 
    public DistStageAck executeOnSlave() {
@@ -61,6 +61,7 @@ public class ClearCacheStage extends AbstractDistStage {
             if (shouldExecute()) {
                DistStageAck response = executeClear();
                if (response != null) return response;
+               if (cacheInformation == null) return successfulResponse();
             } else {
                if (!local) {
                   int size;
@@ -72,6 +73,7 @@ public class ClearCacheStage extends AbstractDistStage {
                      log.error("The cache was not cleared from another node (contains " + size + " entries), clearing locally");
                      DistStageAck response = executeClear();
                      if (response != null) return response;
+                     if (cacheInformation == null) return successfulResponse();
                   }
                }
             }
