@@ -25,6 +25,9 @@ public class LegacyLogicConfiguration {
    @Property(doc = "Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.")
    protected boolean loadWithPutIfAbsent = false;
 
+   @Property(doc = "Use replace operations instead of puts during the test. Default is false.")
+   protected boolean putWithReplace = false;
+
    @Property(doc = "Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.")
    protected boolean waitUntilLoaded = true;
 
@@ -57,5 +60,9 @@ public class LegacyLogicConfiguration {
 
    public boolean isNoLoading() {
       return noLoading;
+   }
+
+   public boolean isPutWithReplace() {
+      return putWithReplace;
    }
 }

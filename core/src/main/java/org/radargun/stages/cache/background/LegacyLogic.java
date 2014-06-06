@@ -7,6 +7,7 @@ import org.radargun.Operation;
 import org.radargun.stages.helpers.Range;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
+import org.radargun.traits.Transactional;
 
 /**
  * Original background stressors logic which loads all entries into cache and then overwrites them.
@@ -21,10 +22,13 @@ class LegacyLogic extends AbstractLogic {
    private final int keyRangeEnd;
    private final List<Range> deadSlavesRanges;
    private final boolean loadOnly;
+   private final boolean putWithReplace;
    private final Random rand = new Random();
    private volatile long currentKey;
    private int remainingTxOps;
    private boolean loaded;
+   private long transactionStart;
+
 
 
    LegacyLogic(BackgroundOpsManager manager, Range range, List<Range> deadSlavesRanges, boolean loaded) {
@@ -36,6 +40,7 @@ class LegacyLogic extends AbstractLogic {
       this.keyRangeEnd = range.getEnd();
       this.deadSlavesRanges = deadSlavesRanges;
       this.loadOnly = manager.getLegacyLogicConfiguration().isLoadOnly();
+      this.putWithReplace = manager.getLegacyLogicConfiguration().isPutWithReplace();
       this.loaded = loaded;
       currentKey = range.getStart();
       remainingTxOps = transactionSize;
@@ -97,7 +102,14 @@ class LegacyLogic extends AbstractLogic {
             currentKey = keyRangeStart;
          }
          if (transactionSize > 0 && remainingTxOps == transactionSize) {
-            txCache.startTransaction();
+            try {
+               transactionStart = System.nanoTime();
+               txCache.startTransaction();
+               stressor.stats.registerRequest(System.nanoTime() - transactionStart, Transactional.BEGIN);
+            } catch (Exception e) {
+               stressor.stats.registerError(System.nanoTime() - transactionStart, Transactional.BEGIN);
+               throw e;
+            }
          }
          startTime = System.nanoTime();
          Object result;
@@ -105,7 +117,11 @@ class LegacyLogic extends AbstractLogic {
             result = basicCache.get(key);
             if (result == null) operation = BasicOperations.GET_NULL;
          } else if (operation == BasicOperations.PUT) {
-            basicCache.put(key, generateRandomEntry(rand, manager.getLegacyLogicConfiguration().getEntrySize()));
+            if (putWithReplace) {
+               conditionalCache.replace(key, generateRandomEntry(rand, manager.getLegacyLogicConfiguration().getEntrySize()));
+            } else {
+               basicCache.put(key, generateRandomEntry(rand, manager.getLegacyLogicConfiguration().getEntrySize()));
+            }
          } else if (operation == BasicOperations.REMOVE) {
             basicCache.remove(key);
          } else {
@@ -115,7 +131,18 @@ class LegacyLogic extends AbstractLogic {
          if (transactionSize > 0) {
             remainingTxOps--;
             if (remainingTxOps == 0) {
-               txCache.endTransaction(true);
+               long commitStart = System.nanoTime();
+               try {
+                  txCache.endTransaction(true);
+                  long commitEnd = System.nanoTime();
+                  stressor.stats.registerRequest(commitEnd - commitStart, Transactional.COMMIT);
+                  stressor.stats.registerRequest(commitEnd - transactionStart, Transactional.DURATION);
+               } catch (Exception e) {
+                  long commitEnd = System.nanoTime();
+                  stressor.stats.registerError(commitEnd - commitStart, Transactional.COMMIT);
+                  stressor.stats.registerError(commitEnd - transactionStart, Transactional.DURATION);
+                  throw e;
+               }
                remainingTxOps = transactionSize;
             }
          }
