@@ -34,4 +34,9 @@ public abstract class IntervalStatistics implements Statistics {
       beginTime = Math.min(otherStats.getBegin(), beginTime);
       endTime = Math.max(otherStats.getEnd(), endTime);
    }
+
+   @Override
+   public String toString() {
+      return String.format("{beginTime=%d, endTime=%d}", beginTime, endTime);
+   }
 }

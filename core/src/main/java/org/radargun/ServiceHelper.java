@@ -71,7 +71,7 @@ public class ServiceHelper {
       if (configFile != null) {
          configProperties.put(Service.FILE, configFile);
       }
-      PropertyHelper.setProperties(instance, configProperties, true, true);
+      PropertyHelper.setProperties(instance, configProperties, true, false);
       InitHelper.init(instance);
       return instance;
    }

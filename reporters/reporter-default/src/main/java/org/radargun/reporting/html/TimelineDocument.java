@@ -92,9 +92,9 @@ public class TimelineDocument extends HtmlDocument {
 
          /* Range */
          Double min = minValues.get(valueCategory);
-         if (min > 0) min = 0d;
+         if (min == null || min > 0) min = 0d;
          Double max = maxValues.get(valueCategory);
-         if (max < 0) max = 0d;
+         if (min == null || max < 0) max = 0d;
          minValues.put(valueCategory, min);
          maxValues.put(valueCategory, max);
 

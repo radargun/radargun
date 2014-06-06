@@ -129,4 +129,9 @@ public class DefaultStatistics extends IntervalStatistics {
       }
       return representations;
    }
+
+   @Override
+   public String toString() {
+      return super.toString() + "{" + operationStatsMap + "}";
+   }
 }

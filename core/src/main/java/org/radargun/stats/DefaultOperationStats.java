@@ -55,7 +55,7 @@ public class DefaultOperationStats implements OperationStats {
    }
 
    public String toString() {
-      return String.format("requests=%d, responseTimeMax=%d, responseTimeSum=%d, errors=%d",
+      return requests == 0 ? "requests=0" : String.format("requests=%d, responseTimeMax=%d, responseTimeSum=%d, errors=%d",
                            requests, responseTimeMax, responseTimeSum, errors);
    }
 
