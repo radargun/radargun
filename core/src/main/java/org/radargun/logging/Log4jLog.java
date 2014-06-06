@@ -121,11 +121,19 @@ public class Log4jLog implements Log {
 
    @Override
    public Level getLevel() {
-      return Level.toLevel(getLogger().getLevel().toString());
+      Logger logger = getLogger();
+      if (logger == null) throw new IllegalStateException("Logger should be always available: " + this);
+      org.apache.log4j.Level level = logger.getLevel();
+      return level == null ? null : Level.toLevel(level.toString());
    }
 
    @Override
    public void setLevel(Level level) {
-      getLogger().setLevel(org.apache.log4j.Level.toLevel(level.name()));
+      getLogger().setLevel(level == null ? null : org.apache.log4j.Level.toLevel(level.name()));
+   }
+
+   @Override
+   public String toString() {
+      return String.format("Log4jLog{class=%s, className=%s}", clazz, className);
    }
 }

@@ -54,4 +54,10 @@ public class EvaluatorTest {
       System.setProperty("org.radargun.testExpressionWithVar", "2");
       assertEquals("7", Evaluator.parseString("#{ 1 + ${ org.radargun.testExpressionWithVar } * ${org.radargun.noProperty: 3}}"));
    }
+
+   public void testColons() {
+      System.setProperty("org.radargun.testColons", "xxx");
+      assertEquals("fo:oxxxbar:xxxbar:zzzbar:foo",
+            Evaluator.parseString("fo:o${org.radargun.testColons}bar:${org.radargun.testColons:yyy}bar:${org.radargun.noProperty:zzz}bar:foo"));
+   }
 }

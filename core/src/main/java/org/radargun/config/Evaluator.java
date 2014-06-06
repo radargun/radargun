@@ -130,7 +130,7 @@ public class Evaluator {
       int colonIndex = string.indexOf(':', startIndex);
       String property, value;
       String def = null;
-      if (colonIndex < 0) {
+      if (colonIndex < 0 || colonIndex > endIndex) {
          property = string.substring(startIndex, endIndex).trim();
       } else {
          property = string.substring(startIndex, colonIndex).trim();
