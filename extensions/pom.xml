@@ -6,6 +6,7 @@
       <artifactId>radargun-parent</artifactId>
       <groupId>org.radargun</groupId>
       <version>2.0.0-SNAPSHOT</version>
+      <relativePath>../parent/pom.xml</relativePath>
    </parent>
    <artifactId>radargun-extensions</artifactId>
    <name>RadarGun extensions</name>

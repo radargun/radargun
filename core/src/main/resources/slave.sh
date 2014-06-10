@@ -16,13 +16,13 @@ default_master() {
   MASTER_HOST=`sed -n -e '/bindAddress/{
                            s/.*bindAddress="${//
                            s/}".*//
-                           s/:.*//
+                           s/.*://
                            p
                            }' ${RADARGUN_HOME}/conf/benchmark-dist.xml`
   MASTER_PORT=`sed -n -e '/port="/{
                            s/.*port="${//
                            s/}".*//
-                           s/:.*//
+                           s/.*://
                            p
                            }' ${RADARGUN_HOME}/conf/benchmark-dist.xml`
 }
