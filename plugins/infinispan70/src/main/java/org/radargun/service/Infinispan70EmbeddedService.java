@@ -28,10 +28,4 @@ public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
       return new Infinispan70MapReduce(this);
    }
 
-   @Override
-   @ProvidesTrait
-   public InfinispanCacheInfo createCacheInformation() {
-      return new Infinispan70CacheInfo(this);
-   }
-
 }

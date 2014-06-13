@@ -16,11 +16,4 @@ public class JDG63EmbeddedService extends Infinispan60EmbeddedService {
       return new Infinispan70MapReduce(this);
    }
 
-// TODO: Add this when the next ER is released
-//   @Override
-//   @ProvidesTrait
-//   public InfinispanCacheInfo createCacheInformation() {
-//      return new Infinispan70CacheInfo(this);
-//   }
-
 }
