@@ -12,11 +12,17 @@
    <artifactId>plugin-infinispan4</artifactId>
    <name>Infinispan 4.x plugin for RadarGun</name>
 
+   <properties>
+      <version.infinispan>4.2.1.FINAL</version.infinispan>
+      <version.jbossts>4.16.0.Final</version.jbossts>
+   </properties>
+
    <dependencies>
       <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
-         <version>4.2.1.FINAL</version>
+         <version>${version.infinispan}</version>
+         <optional>true</optional>
          <exclusions>
             <exclusion>
                <groupId>log4j</groupId>
@@ -32,7 +38,8 @@
       <dependency>
          <groupId>org.jboss.jbossts</groupId>
          <artifactId>jbossjta</artifactId>
-         <version>4.16.0.Final</version>
+         <version>${version.jbossts}</version>
+         <optional>true</optional>
          <exclusions>
             <exclusion>
                <groupId>org.jboss.logging</groupId>
