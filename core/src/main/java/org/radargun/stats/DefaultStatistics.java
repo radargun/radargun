@@ -95,7 +95,7 @@ public class DefaultStatistics extends IntervalStatistics {
     */
    @Override
    public void merge(Statistics otherStats) {
-      if (!(otherStats instanceof DefaultStatistics)) throw new IllegalArgumentException();
+      if (!(otherStats instanceof DefaultStatistics)) throw new IllegalArgumentException(otherStats.getClass().getName());
       super.merge(otherStats);
       DefaultStatistics stats = (DefaultStatistics) otherStats;
       if (operationStats == null) {

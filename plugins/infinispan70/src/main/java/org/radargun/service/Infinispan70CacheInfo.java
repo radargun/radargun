@@ -52,7 +52,7 @@ public class Infinispan70CacheInfo extends Infinispan53CacheInfo {
             if (entryIterator != null) {
                try {
                   entryIterator.close();
-               } catch (IOException e) {
+               } catch (Exception e) {
                   log.error("Failed to close EntryIterable", e);
                }
             }

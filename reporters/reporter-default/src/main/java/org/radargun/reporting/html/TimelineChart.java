@@ -196,7 +196,7 @@ public class TimelineChart {
 
    public static int getColorForIndex(int slaveIndex) {
       if (slaveIndex < 0) return 0;
-      return ((Color) defaultPaints[slaveIndex % defaultPaints.length]).getRGB();
+      return ((Color) defaultPaints[slaveIndex % defaultPaints.length]).getRGB() & 0xFFFFFF;
    }
 
    private static class TimeUnitConverter implements Converter<Class<? extends RegularTimePeriod>> {
