@@ -84,7 +84,6 @@
                         <element name="web-session-benchmark" type="rg:org-radargun-stages-cache-stresstest-stress-test-stage"/>
                         <element name="client-stress-test" type="rg:org-radargun-stages-cache-stresstest-client-stress-test-stage"/>
                         <element name="cluster-validation" type="rg:org-radargun-stages-cache-cluster-validation-stage"/>
-                        <element name="data-for-query" type="rg:org-radargun-stages-cache-stresstest-data-for-query-stage"/>
                         <element name="distributed-task" type="rg:org-radargun-stages-distributedtask-distributed-task-stage"/>
                         <element name="isolation-level-check" type="rg:org-radargun-stages-cache-isolation-level-check-stage"/>
                         <element name="jmx-cluster-validation-prepare" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-prepare-stage"/>
@@ -190,7 +189,6 @@
             <element name="web-session-benchmark" type="rg:org-radargun-stages-cache-stresstest-stress-test-stage"/>
             <element name="client-stress-test" type="rg:org-radargun-stages-cache-stresstest-client-stress-test-stage"/>
             <element name="cluster-validation" type="rg:org-radargun-stages-cache-cluster-validation-stage"/>
-            <element name="data-for-query" type="rg:org-radargun-stages-cache-stresstest-data-for-query-stage"/>
             <element name="distributed-task" type="rg:org-radargun-stages-distributedtask-distributed-task-stage"/>
             <element name="isolation-level-check" type="rg:org-radargun-stages-cache-isolation-level-check-stage"/>
             <element name="jmx-cluster-validation-prepare" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-prepare-stage"/>
@@ -1569,43 +1567,6 @@
       </complexContent>
    </complexType>
    <!--From radargun-core-2.0.0-SNAPSHOT.jar-->
-   <complexType name="org-radargun-stages-cache-stresstest-data-for-query-stage">
-      <annotation>
-         <documentation>Stage which executes puts/gets indexed entries against index enabled cache.</documentation>
-      </annotation>
-      <complexContent>
-         <extension base="rg:org-radargun-stages-cache-stresstest-stress-test-stage">
-            <sequence>
-               <element maxOccurs="1" minOccurs="0" name="is-wildcard" type="rg:boolean">
-                  <annotation>
-                     <documentation>Specifies whether the key generation should be done according to wildcard logic or no. Default is false.</documentation>
-                  </annotation>
-               </element>
-               <element maxOccurs="1" minOccurs="0" name="property-length" type="rg:int">
-                  <annotation>
-                     <documentation>The length of the generated indexed entry. Default is 100.</documentation>
-                  </annotation>
-               </element>
-            </sequence>
-            <attribute name="data-path" type="string" use="required">
-               <annotation>
-                  <documentation>Specifies the full path of the property file which contains different words for querying. No default value is provided. This property is mandatory.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="is-wildcard" type="rg:boolean">
-               <annotation>
-                  <documentation>Specifies whether the key generation should be done according to wildcard logic or no. Default is false.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="property-length" type="rg:int">
-               <annotation>
-                  <documentation>The length of the generated indexed entry. Default is 100.</documentation>
-               </annotation>
-            </attribute>
-         </extension>
-      </complexContent>
-   </complexType>
-   <!--From radargun-core-2.0.0-SNAPSHOT.jar-->
    <complexType name="org-radargun-stages-distributedtask-distributed-task-stage">
       <annotation>
          <documentation>Stage which executes a MapReduce Task against all keys in the cache.</documentation>
@@ -2272,20 +2233,256 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       </annotation>
       <complexContent>
          <extension base="rg:org-radargun-stages-cache-stresstest-stress-test-stage">
-            <sequence/>
-            <attribute name="is-wildcard-query" type="rg:boolean" use="required">
+            <sequence>
+               <element maxOccurs="1" minOccurs="0" name="conditions" type="rg:java-util-list-converted-by-org-radargun-stages-cache-stresstest-query-stage-condition-converter">
+                  <annotation>
+                     <documentation>Conditions used in the query</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="limit" type="rg:long">
+                  <annotation>
+                     <documentation>Maximum number of the results. Default is none.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="offset" type="rg:long">
+                  <annotation>
+                     <documentation>Offset in the results. Default is none.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="order-by" type="rg:java-util-list-converted-by-org-radargun-stages-cache-stresstest-query-stage-sort-converter">
+                  <annotation>
+                     <documentation>Use sorting order, in form [attribute[:(ASC|DESC)]][,attribute[:(ASC|DESC)]]*. Without specifying ASC or DESC the sort order defaults to ASC. Default is unordereded.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="projection" type="string">
+                  <annotation>
+                     <documentation>Use projection instead of returning full object. Default is without projection.</documentation>
+                  </annotation>
+               </element>
+            </sequence>
+            <attribute name="limit" type="rg:long">
                <annotation>
-                  <documentation>Boolean variable which shows whether the keyword query should be done or wildcard.</documentation>
+                  <documentation>Maximum number of the results. Default is none.</documentation>
                </annotation>
             </attribute>
-            <attribute name="on-field" type="string" use="required">
+            <attribute name="offset" type="rg:long">
                <annotation>
-                  <documentation>The name of the field for which the query should be executed.</documentation>
+                  <documentation>Offset in the results. Default is none.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="order-by" type="rg:java-util-list-converted-by-org-radargun-stages-cache-stresstest-query-stage-sort-converter">
+               <annotation>
+                  <documentation>Use sorting order, in form [attribute[:(ASC|DESC)]][,attribute[:(ASC|DESC)]]*. Without specifying ASC or DESC the sort order defaults to ASC. Default is unordereded.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="projection" type="string">
+               <annotation>
+                  <documentation>Use projection instead of returning full object. Default is without projection.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="query-object-class" type="string" use="required">
+               <annotation>
+                  <documentation>Full class name of the object that should be queried. Mandatory.</documentation>
                </annotation>
             </attribute>
          </extension>
       </complexContent>
    </complexType>
+   <complexType name="org-radargun-stages-cache-stresstest-query-stage-not">
+      <annotation>
+         <documentation>All inner conditions are false</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:java-util-list-converted-by-org-radargun-stages-cache-stresstest-query-stage-condition-converter">
+            <sequence/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="org-radargun-stages-cache-stresstest-query-stage-le">
+      <annotation>
+         <documentation>Target is &lt;= than value</documentation>
+      </annotation>
+      <sequence/>
+      <attribute name="path" type="string" use="required">
+         <annotation>
+            <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-stages-cache-stresstest-query-stage-number-converter" use="required">
+         <annotation>
+            <documentation>Value used in the condition</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <simpleType name="java-lang-number-converted-by-org-radargun-stages-cache-stresstest-query-stage-number-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="(int |long |float |double )?[0-9.]*"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <complexType name="org-radargun-stages-cache-stresstest-query-stage-any">
+      <annotation>
+         <documentation>Any of inner conditions is true</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:java-util-list-converted-by-org-radargun-stages-cache-stresstest-query-stage-condition-converter">
+            <sequence/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="org-radargun-stages-cache-stresstest-query-stage-ge">
+      <annotation>
+         <documentation>Target is &lt; than value</documentation>
+      </annotation>
+      <sequence/>
+      <attribute name="path" type="string" use="required">
+         <annotation>
+            <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-stages-cache-stresstest-query-stage-number-converter" use="required">
+         <annotation>
+            <documentation>Value used in the condition</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <complexType name="org-radargun-stages-cache-stresstest-query-stage-gt">
+      <annotation>
+         <documentation>Target is &gt; than value</documentation>
+      </annotation>
+      <sequence/>
+      <attribute name="path" type="string" use="required">
+         <annotation>
+            <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-stages-cache-stresstest-query-stage-number-converter" use="required">
+         <annotation>
+            <documentation>Value used in the condition</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <complexType name="org-radargun-stages-cache-stresstest-query-stage-lt">
+      <annotation>
+         <documentation>Target is &lt; than value</documentation>
+      </annotation>
+      <sequence/>
+      <attribute name="path" type="string" use="required">
+         <annotation>
+            <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-stages-cache-stresstest-query-stage-number-converter" use="required">
+         <annotation>
+            <documentation>Value used in the condition</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <complexType name="org-radargun-stages-cache-stresstest-query-stage-like">
+      <annotation>
+         <documentation>Target string matches the value</documentation>
+      </annotation>
+      <sequence/>
+      <attribute name="path" type="string" use="required">
+         <annotation>
+            <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="value" type="string" use="required">
+         <annotation>
+            <documentation>Value used in the condition</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <complexType name="org-radargun-stages-cache-stresstest-query-stage-all">
+      <annotation>
+         <documentation>All inner conditions are false</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:java-util-list-converted-by-org-radargun-stages-cache-stresstest-query-stage-condition-converter">
+            <sequence/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <complexType name="org-radargun-stages-cache-stresstest-query-stage-is-null">
+      <annotation>
+         <documentation>Target is not defined (null)</documentation>
+      </annotation>
+      <sequence/>
+      <attribute name="path" type="string" use="required">
+         <annotation>
+            <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <complexType name="org-radargun-stages-cache-stresstest-query-stage-eq">
+      <annotation>
+         <documentation>Target is equal to value</documentation>
+      </annotation>
+      <sequence/>
+      <attribute name="path" type="string" use="required">
+         <annotation>
+            <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="value" type="rg:java-lang-object-converted-by-org-radargun-stages-cache-stresstest-query-stage-object-converter" use="required">
+         <annotation>
+            <documentation>Value used in the condition</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <simpleType name="java-lang-object-converted-by-org-radargun-stages-cache-stresstest-query-stage-object-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value=".*"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <complexType name="java-util-list-converted-by-org-radargun-stages-cache-stresstest-query-stage-condition-converter">
+      <sequence>
+         <choice maxOccurs="unbounded" minOccurs="0">
+            <element name="not" type="rg:org-radargun-stages-cache-stresstest-query-stage-not"/>
+            <element name="le" type="rg:org-radargun-stages-cache-stresstest-query-stage-le"/>
+            <element name="any" type="rg:org-radargun-stages-cache-stresstest-query-stage-any"/>
+            <element name="ge" type="rg:org-radargun-stages-cache-stresstest-query-stage-ge"/>
+            <element name="gt" type="rg:org-radargun-stages-cache-stresstest-query-stage-gt"/>
+            <element name="lt" type="rg:org-radargun-stages-cache-stresstest-query-stage-lt"/>
+            <element name="like" type="rg:org-radargun-stages-cache-stresstest-query-stage-like"/>
+            <element name="all" type="rg:org-radargun-stages-cache-stresstest-query-stage-all"/>
+            <element name="is-null" type="rg:org-radargun-stages-cache-stresstest-query-stage-is-null"/>
+            <element name="eq" type="rg:org-radargun-stages-cache-stresstest-query-stage-eq"/>
+         </choice>
+      </sequence>
+   </complexType>
+   <simpleType name="java-util-list-converted-by-org-radargun-stages-cache-stresstest-query-stage-sort-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[0-9a-zA-Z_]*(:ASC|:DESC)?(,\s*[0-9a-zA-Z_]*(:ASC|:DESC)?)*"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <!--From radargun-core-2.0.0-SNAPSHOT.jar-->
    <complexType name="org-radargun-stages-cache-random-data-stage">
       <annotation>

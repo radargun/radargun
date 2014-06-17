@@ -49,12 +49,6 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
 
    @ProvidesTrait
    @Override
-   public Infinispan52Operations createBasicOperations() {
-      return new Infinispan52Operations(this);
-   }
-
-   @ProvidesTrait
-   @Override
    public InfinispanCacheInfo createCacheInformation() {
       return new Infinispan52CacheInfo(this);
    }
@@ -62,11 +56,6 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
    @ProvidesTrait
    public InfinispanDistributedTask createDistributedTask() {
       return new InfinispanDistributedTask(this);
-   }
-
-   @ProvidesTrait
-   public InfinispanQueryable createQueryable() {
-      return new InfinispanQueryable(this);
    }
 
    @Override
@@ -143,10 +132,6 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
    @Override
    protected int membersCount(ConsistentHash consistentHash) {
       return consistentHash.getMembers().size();
-   }
-
-   public Object wrapValue(Object value) {
-      return InfinispanQueryable.wrapForQuery(value);
    }
 
    @Override

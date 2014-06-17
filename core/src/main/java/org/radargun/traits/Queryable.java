@@ -1,7 +1,6 @@
 package org.radargun.traits;
 
 import java.util.List;
-import java.util.Map;
 
 import org.radargun.Operation;
 
@@ -13,29 +12,50 @@ public interface Queryable {
    Operation QUERY = Operation.register(Queryable.class.getSimpleName() + ".Query");
 
    /**
-    * The parameter name, which value is the field name which should be queried.
+    * Get object for building the query.
+    * @param containerName Name of the container (cache, database, ...) where the query should be executed.
+    * @return Builder
     */
-   public static final String QUERYABLE_FIELD = "onField";
+   QueryBuilder getBuilder(String containerName, Class<?> clazz);
 
    /**
-    * The parameter name, which value is the string to which the specified field should match.
+    * The instance should be reusable, but not thread-safe.
     */
-   public static final String MATCH_STRING = "matching";
+   interface QueryBuilder {
+      QueryBuilder subquery();
+      QueryBuilder eq(String attribute, Object value);
+      QueryBuilder lt(String attribute, Object value);
+      QueryBuilder le(String attribute, Object value);
+      QueryBuilder gt(String attribute, Object value);
+      QueryBuilder ge(String attribute, Object value);
+      QueryBuilder isNull(String attribute);
+      QueryBuilder like(String attribute, String pattern);
+      QueryBuilder not(QueryBuilder subquery);
+      QueryBuilder any(QueryBuilder... subqueries);
+      QueryBuilder orderBy(String attribute, SortOrder order);
+      QueryBuilder projection(String... attribute);
+      QueryBuilder offset(long offset);
+      QueryBuilder limit(long limit);
+      Query build();
+   }
+
+   enum SortOrder {
+      ASCENDING,
+      DESCENDING
+   }
 
    /**
-    * The parameter name, which value specifies whether the wildcard query should be executed or keyword.
+    * Non-reusable and non-thread-safe query object.
     */
-   public static final String IS_WILDCARD = "wildcard";
+   interface Query {
+      QueryResult execute();
+   }
 
    /**
-    * Executes keyword or wildcard queries based on the passed parameters.
-    * @param queryParameters        the map, which contains the queryable field name with it's expected value.
+    * Data retrieved by the query
     */
-   public QueryResult executeQuery(Map<String, Object> queryParameters);
-
-   public interface QueryResult {
-      public int size();
-
-      public List list();
+   interface QueryResult {
+      int size();
+      List list();
    }
 }

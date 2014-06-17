@@ -85,7 +85,7 @@ public class TraitHelper {
             throw new RuntimeException("Error retrieving traits from method " + m, e);
          }
          if (traitImpl == null) {
-            throw new NullPointerException("Trait provided by " + m + " is null.");
+            continue;
          }
          Set<Class<?>> traits = new HashSet<Class<?>>();
          addAllTraits(traits, traitImpl.getClass());

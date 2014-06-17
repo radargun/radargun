@@ -27,6 +27,7 @@ public class InfinispanServerService extends ProcessService {
    protected static final String SERVICE_DESCRIPTION = "Service running Infinispan Server";
    protected static final String JAVA_HOME = "JAVA_HOME";
    protected static final String JAVA_OPTS = "JAVA_OPTS";
+   protected static final String JBOSS_HOME = "JBOSS_HOME";
 
    protected final Log log = LogFactory.getLog(getClass());
 
@@ -103,6 +104,7 @@ public class InfinispanServerService extends ProcessService {
          }
          envs.put(JAVA_OPTS, javaOpts);
       }
+      envs.put(JBOSS_HOME, home);
       return envs;
    }
 }
