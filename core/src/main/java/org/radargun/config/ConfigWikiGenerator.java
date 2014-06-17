@@ -16,7 +16,7 @@ public class ConfigWikiGenerator {
          if (Modifier.isAbstract(entry.getValue().getModifiers())) continue;
          System.out.println("## " + entry.getKey());
          System.out.println(entry.getValue().getAnnotation(org.radargun.config.Stage.class).doc());
-         for (Map.Entry<String, Path> property : PropertyHelper.getProperties(entry.getValue(), true).entrySet()) {
+         for (Map.Entry<String, Path> property : PropertyHelper.getProperties(entry.getValue(), true, false).entrySet()) {
             Property propertyAnnotation = property.getValue().getTargetAnnotation();
             if (property.getKey().equals(propertyAnnotation.deprecatedName()) || propertyAnnotation.readonly()) continue;
             System.out.println("* " + property.getKey()

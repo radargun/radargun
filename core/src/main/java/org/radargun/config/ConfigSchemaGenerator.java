@@ -8,7 +8,6 @@ import java.lang.reflect.Modifier;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -24,6 +23,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.radargun.Stage;
+import org.radargun.stages.ScenarioCleanupStage;
+import org.radargun.stages.ScenarioInitStage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -79,7 +80,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
    private static final String TYPE_REPEAT = "repeat";
    private static final String TYPE_PROPERTY = "property";
 
-   private static Set<String> simpleTypes = new HashSet<String>();
+   private static Set<String> generatedTypes = new HashSet<String>();
    /* Stages classes sorted by name with its source jar */
    private static Map<Class<? extends Stage>, String> stages = new TreeMap<Class<? extends Stage>, String>(new Comparator<Class<? extends Stage>>() {
       @Override
@@ -131,7 +132,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       schema.setAttribute("xmlns:rg", "urn:radargun:benchmark:2.0");
       doc.appendChild(schema);
 
-      intType = generateType(doc, schema, int.class, DefaultConverter.class);
+      intType = generateSimpleType(doc, schema, int.class, DefaultConverter.class);
 
       Element benchmarkElement = doc.createElementNS(NS_XS, XS_ELEMENT);
       benchmarkElement.setAttribute(XS_NAME, ELEMENT_BENCHMARK);
@@ -148,9 +149,9 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       Element localComplex = createComplexElement(doc, clustersChoice, ELEMENT_LOCAL, 0, 1);
       Element clustersComplex = createComplexElement(doc, clustersChoice, ELEMENT_CLUSTERS, 0, 1);
       Element clusterChoice = createChoice(doc, clustersComplex, 1, -1);
-      Element baseClusterType = createComplexType(doc, schema, TYPE_CLUSTER_BASE, null, false, null);
+      Element baseClusterType = createComplexType(doc, schema, TYPE_CLUSTER_BASE, null, true, false, null);
       Element groupComplex = createComplexElement(doc, createSequence(doc, baseClusterType), ELEMENT_GROUP, 0, -1);
-      Element sizedClusterType = createComplexType(doc, schema, TYPE_CLUSTER, RG_PREFIX + TYPE_CLUSTER_BASE, false, null);
+      Element sizedClusterType = createComplexType(doc, schema, TYPE_CLUSTER, RG_PREFIX + TYPE_CLUSTER_BASE, true, false, null);
       Element scaleElement = createComplexElement(doc, clusterChoice, ELEMENT_SCALE, 0, -1);
       createReference(doc, clusterChoice, ELEMENT_CLUSTER, RG_PREFIX + TYPE_CLUSTER);
       createReference(doc, createSequence(doc, scaleElement), ELEMENT_CLUSTER, RG_PREFIX + TYPE_CLUSTER_BASE);
@@ -161,12 +162,8 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       addAttribute(doc, scaleElement, ATTR_TO, intType, null, true);
       addAttribute(doc, scaleElement, ATTR_INC, intType, null, false);
 
-      Element propertyType = createComplexType(doc, schema, TYPE_PROPERTY, null, false, null);
-      Element complexContent = doc.createElementNS(NS_XS, XS_COMPLEX_CONTENT);
-      propertyType.appendChild(complexContent);
-      Element simpleTypeElement = doc.createElementNS(NS_XS, XS_SIMPLE_CONTENT);
-      complexContent.appendChild(simpleTypeElement);
-      addAttribute(doc, complexContent, ATTR_NAME, true);
+      Element propertyType = createComplexType(doc, schema, TYPE_PROPERTY, "string", false, false, null);
+      addAttribute(doc, propertyType, ATTR_NAME, true);
 
       Element configurationsComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_CONFIGURATIONS, 1, 1);
       Element configComplex = createComplexElement(doc, createSequence(doc, configurationsComplex), ELEMENT_CONFIG, 1, -1);
@@ -178,11 +175,11 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       addAttribute(doc, setupComplex, ATTR_SERVICE, false);
       addAttribute(doc, setupComplex, ATTR_GROUP, false);
 
-      createReference(doc, benchmarkSequence, ELEMENT_INIT, RG_PREFIX + "scenario-init", 0, 1);
+      createReference(doc, benchmarkSequence, ELEMENT_INIT, RG_PREFIX + class2xmlId(ScenarioInitStage.class), 0, 1);
 
       Element scenarioComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_SCENARIO, 1, 1);
       Element scenarioChoice = createChoice(doc, createSequence(doc, scenarioComplex), 1, -1);
-      Element repeatType = createComplexType(doc, schema, TYPE_REPEAT, null, false, null);
+      Element repeatType = createComplexType(doc, schema, TYPE_REPEAT, null, true, false, null);
       Element repeatChoice = createChoice(doc, createSequence(doc, repeatType), 1, -1);
       createReference(doc, scenarioChoice, ELEMENT_REPEAT, RG_PREFIX + TYPE_REPEAT);
       createReference(doc, repeatChoice, ELEMENT_REPEAT, RG_PREFIX + TYPE_REPEAT);
@@ -193,77 +190,195 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       addAttribute(doc, repeatType, ATTR_NAME, false);
       generateStageDefinitions(doc, schema, new Element[]{scenarioChoice, repeatChoice});
 
-      createReference(doc, benchmarkSequence, ELEMENT_CLEANUP, RG_PREFIX + "scenario-cleanup", 0, 1);
+      createReference(doc, benchmarkSequence, ELEMENT_CLEANUP, RG_PREFIX + class2xmlId(ScenarioCleanupStage.class), 0, 1);
 
       Element reportsComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_REPORTS, 1, 1);
       Element reporterComplex = createComplexElement(doc, createSequence(doc, reportsComplex), ELEMENT_REPORTER, 1, -1);
       Element reporterSequence = createSequence(doc, reporterComplex);
       Element reportComplex = createComplexElement(doc, reporterSequence, ELEMENT_REPORT, 0, -1);
       Element propertiesComplex = createComplexElement(doc, reporterSequence, ELEMENT_PROPERTIES, 0, 1);
-      createReference(doc, reportComplex, ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY);
+      createReference(doc, createSequence(doc, reportComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY);
       createReference(doc, createSequence(doc, propertiesComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY);
       addAttribute(doc, reporterComplex, ATTR_TYPE, true);
-      String runType = generateType(doc, schema, ReporterConfiguration.RunCondition.class, DefaultConverter.class);
+      String runType = generateSimpleType(doc, schema, ReporterConfiguration.RunCondition.class, DefaultConverter.class);
       addAttribute(doc, reporterComplex, ATTR_RUN, runType, null, false);
    }
 
    private static void generateStageDefinitions(Document doc, Element schema, Element[] parents) {
       Set<Class<? extends Stage>> generatedStages = new HashSet<Class<? extends Stage>>();
       for (Map.Entry<Class<? extends Stage>, String> entry : stages.entrySet()) {
-         generateStage(doc, schema, parents, entry.getKey(), entry.getValue(), generatedStages);
+         generateStage(doc, schema, parents, entry.getKey(), generatedStages);
       }
    }
 
-   private static void generateStage(Document doc, Element schema, Element[] parents, Class stage, String sourcePath, Set<Class<? extends Stage>> generatedStages) {
+   private static void generateStage(Document doc, Element schema, Element[] parents, Class stage, Set<Class<? extends Stage>> generatedStages) {
       if (generatedStages.contains(stage)) return;
       boolean hasParentStage = Stage.class.isAssignableFrom(stage.getSuperclass());
       if (hasParentStage) {
-         generateStage(doc, schema, parents, stage.getSuperclass(), stages.get(stage.getSuperclass()), generatedStages);
+         generateStage(doc, schema, parents, stage.getSuperclass(), generatedStages);
       }
       org.radargun.config.Stage stageAnnotation = (org.radargun.config.Stage)stage.getAnnotation(org.radargun.config.Stage.class);
       if (stageAnnotation == null) return; // not a proper stage
 
-      String stageName = XmlHelper.camelCaseToDash(StageHelper.getStageName(stage));
-      String stageDocText = stageAnnotation.doc();
-      if (sourcePath != null) {
-         schema.appendChild(doc.createComment(String.format("From %s/%s", sourcePath, stage.getName())));
-      }
-      Element stageType = createComplexType(doc, schema, stageName,
-            hasParentStage ? RG_PREFIX + XmlHelper.camelCaseToDash(StageHelper.getStageName(stage.getSuperclass())) : null,
-            Modifier.isAbstract(stage.getModifiers()),
-            stageDocText);
+      String stageType = generateClass(doc, schema, stage);
       if (!Modifier.isAbstract(stage.getModifiers()) && !stageAnnotation.internal()) {
          for (Element parent : parents) {
-            createReference(doc, parent, stageName, RG_PREFIX + stageName);
+            createReference(doc, parent, XmlHelper.camelCaseToDash(StageHelper.getStageName(stage)), stageType);
          }
          if (!stageAnnotation.deprecatedName().equals(org.radargun.config.Stage.NO_DEPRECATED_NAME)) {
             for (Element parent : parents) {
-               createReference(doc, parent, XmlHelper.camelCaseToDash(stageAnnotation.deprecatedName()), RG_PREFIX + stageName);
+               createReference(doc, parent, XmlHelper.camelCaseToDash(stageAnnotation.deprecatedName()), stageType);
             }
          }
-      }
-      for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(stage).entrySet()) {
-         Property propertyAnnotation = property.getValue().getTargetAnnotation();
-         if (propertyAnnotation.readonly()) continue; // cannot be configured
-         String propertyDocText = propertyAnnotation.doc();
-         if (property.getKey().equals(propertyAnnotation.deprecatedName())) {
-            propertyDocText = "*DEPRECATED* " + propertyDocText;
-         }
-         String type = generateType(doc, schema, property.getValue().getTargetType(), propertyAnnotation.converter());
-         addAttribute(doc, stageType, XmlHelper.camelCaseToDash(property.getKey()), type, propertyDocText, !propertyAnnotation.optional());
       }
       generatedStages.add(stage);
    }
 
-   private static String generateType(Document doc, Element schema, Class<?> type, Class<? extends Converter<?>> converterClass) {
-      String typeName = type.getName().replaceAll("[.$]", "-").toLowerCase(Locale.ENGLISH);
-      if (!DefaultConverter.class.equals(converterClass)) {
-         typeName += "-converted-by-" + converterClass.getName().replaceAll("[.$]", "-").toLowerCase(Locale.ENGLISH);
-      }
-      typeName = XmlHelper.camelCaseToDash(typeName);
-      if (simpleTypes.contains(typeName)) {
+   private static String generateClass(Document doc, Element schema, Class<?> clazz) {
+      String typeName = class2xmlId(clazz);
+      if (generatedTypes.contains(typeName)) {
          return RG_PREFIX + typeName;
       }
+      generatedTypes.add(typeName);
+
+      String superType = null;
+      if (clazz.getSuperclass() != Object.class) {
+         superType = generateClass(doc, schema, clazz.getSuperclass());
+      }
+
+      String source = clazz.getProtectionDomain().getCodeSource().getLocation().getPath();
+      if (source == null) source = "unknown source";
+      int lastSlash = source.lastIndexOf('/');
+      if (lastSlash > 0) source = source.substring(lastSlash + 1);
+      schema.appendChild(doc.createComment("From " +  source));
+
+      Element typeElement = createComplexType(doc, schema, typeName, superType, true,
+            Modifier.isAbstract(clazz.getModifiers()), findDocumentation(clazz));
+      Element propertiesSequence = createSequence(doc, typeElement);
+      for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(clazz, true).entrySet()) {
+         generateProperty(doc, schema, typeElement, propertiesSequence, property.getKey(), property.getValue(), true);
+      }
+      return RG_PREFIX + typeName;
+   }
+
+   private static String findDocumentation(Class<?> clazz) {
+      org.radargun.config.Stage stageAnnotation = (org.radargun.config.Stage)clazz.getAnnotation(org.radargun.config.Stage.class);
+      if (stageAnnotation != null) return stageAnnotation.doc();
+      return null;
+   }
+
+   private static void generateProperty(Document doc, Element schema, Element parentType, Element parentSequence,
+                                        String propertyName, Path path, boolean generateAttributes) {
+      if (propertyName.isEmpty()) {
+         if (path.isComplete()) {
+            throw new IllegalArgumentException("Can't use empty property name this way.");
+         } else {
+            // we have to put copy all properties directly here
+            for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(path.getTargetType(), true).entrySet()) {
+               // do not generate attributes as these already have been generated in the parent class
+               generateProperty(doc, schema, parentType, parentSequence, property.getKey(), property.getValue(), false);
+            }
+            return;
+         }
+      }
+      String name = XmlHelper.camelCaseToDash(propertyName);
+      String type, documentation = null;
+      boolean createElement = true;
+
+      if (!path.isComplete()) {
+         type = generateClass(doc, schema, path.getTargetType());
+      } else {
+         Property propertyAnnotation = path.getTargetAnnotation();
+         if (propertyAnnotation == null) {
+            throw new IllegalStateException(path.toString());
+         }
+         if (propertyAnnotation.readonly()) return;
+         String propertyDocText = propertyAnnotation.doc();
+         if (propertyName.equals(propertyAnnotation.deprecatedName())) {
+            propertyDocText = "*DEPRECATED* " + propertyDocText;
+         }
+
+         boolean hasComplexConverter = propertyAnnotation.complexConverter() != ComplexConverter.Dummy.class;
+         if (hasComplexConverter) {
+            type = generateComplexType(doc, schema, path.getTargetType(), propertyAnnotation.complexConverter());
+         } else {
+            type = generateSimpleType(doc, schema, path.getTargetType(), propertyAnnotation.converter());
+            if (generateAttributes) {
+               addAttribute(doc, parentType, name, type, propertyDocText, !propertyAnnotation.optional());
+            }
+         }
+         // do not write elements for simple mandatory properties - these are required as attributes
+         createElement = propertyAnnotation.optional() || hasComplexConverter;
+         documentation = propertyAnnotation.doc();
+      }
+      if (createElement && path.isTrivial()) {
+         Element propertyElement = createReference(doc, parentSequence, name, type, 0, 1);
+         addDocumentation(doc, propertyElement, documentation);
+      }
+   }
+
+   private static String class2xmlId(Class<?> clazz) {
+      return XmlHelper.camelCaseToDash(clazz.getName().replaceAll("[.$]", "-"));
+   }
+
+   private static String generateComplexType(Document doc, Element schema, Class<?> type, Class<? extends ComplexConverter<?>> complexConverterClass) {
+      String typeName = class2xmlId(type) + "-converted-by-" + class2xmlId(complexConverterClass);
+      if (generatedTypes.contains(typeName)) {
+         return RG_PREFIX + typeName;
+      }
+      generatedTypes.add(typeName);
+
+      Element typeElement = doc.createElementNS(NS_XS, XS_COMPLEX_TYPE);
+      typeElement.setAttribute(XS_NAME, typeName);
+      Element choice = createChoice(doc, createSequence(doc, typeElement), 0, -1);
+      ComplexConverter<?> converter;
+      try {
+         Constructor<? extends ComplexConverter<?>> ctor = complexConverterClass.getDeclaredConstructor();
+         ctor.setAccessible(true);
+         converter = ctor.newInstance();
+      } catch (Exception e) {
+         throw new IllegalArgumentException("Cannot create " + complexConverterClass.getName(), e);
+      }
+      for (Class<?> inner : converter.content()) {
+         DefinitionElement de = inner.getAnnotation(DefinitionElement.class);
+         if (de == null) throw new IllegalArgumentException(inner.getName());
+         String subtypeName = class2xmlId(inner);
+         createReference(doc, choice, de.name(), RG_PREFIX + subtypeName);
+         if (!generatedTypes.contains(subtypeName)) {
+            generatedTypes.add(subtypeName);
+            Map<String, Path> subtypeProperties = PropertyHelper.getProperties(inner, true, false);
+            String extended = null;
+            Path valueProperty = subtypeProperties.get("");
+            if (valueProperty != null && valueProperty.getTargetAnnotation().complexConverter() != ComplexConverter.Dummy.class) {
+               // if we have complex value property, let's inherit from the value converter
+               extended = RG_PREFIX + class2xmlId(valueProperty.getTargetType()) + "-converted-by-" + class2xmlId(valueProperty.getTargetAnnotation().complexConverter());
+               subtypeProperties.remove("");
+            }
+            Element subtypeType = createComplexType(doc, schema, subtypeName, extended, true, false, de.doc());
+            Element subtypeSequence = createSequence(doc, subtypeType);
+            for (Map.Entry<String, Path> property : subtypeProperties.entrySet()) {
+               if (property.getKey().isEmpty()) {
+                  throw new IllegalArgumentException("Empty property in class " + inner.getName());
+               }
+               generateProperty(doc, schema, subtypeType, subtypeSequence, property.getKey(), property.getValue(), true);
+            }
+         }
+      }
+
+      schema.appendChild(typeElement);
+      return RG_PREFIX + typeName;
+   }
+
+   private static String generateSimpleType(Document doc, Element schema, Class<?> type,
+                                            Class<? extends Converter<?>> converterClass) {
+      String typeName = class2xmlId(type);
+      if (!DefaultConverter.class.equals(converterClass)) {
+         typeName += "-converted-by-" + class2xmlId(converterClass);
+      }
+      if (generatedTypes.contains(typeName)) {
+         return RG_PREFIX + typeName;
+      }
+
       Element typeElement = doc.createElementNS(NS_XS, XS_SIMPLE_TYPE);
       typeElement.setAttribute(XS_NAME, typeName);
       // do not hang the element yet - if we can't specify it well, drop that
@@ -287,6 +402,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
          }
          Element propertyPattern = doc.createElementNS(NS_XS, XS_PATTERN);
          propertyRestriction.appendChild(propertyPattern);
+         propertyRestriction.setAttribute(XS_BASE, XS_STRING);
          propertyPattern.setAttribute(XS_VALUE, converter.allowedPattern(type));
       } else if (type == Integer.class || type == int.class) {
          propertyRestriction.setAttribute(XS_BASE, XS_INTEGER);
@@ -297,6 +413,8 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       } else if (type == Float.class || type == float.class) {
          propertyRestriction.setAttribute(XS_BASE, XS_FLOAT);
       } else if (type == Double.class || type == double.class) {
+         propertyRestriction.setAttribute(XS_BASE, XS_DOUBLE);
+      } else if (type == Number.class) {
          propertyRestriction.setAttribute(XS_BASE, XS_DOUBLE);
       } else if (type.isEnum()) {
          propertyRestriction.setAttribute(XS_BASE, XS_STRING);
@@ -319,7 +437,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       expressionRestriction.appendChild(expressionPattern);
       expressionPattern.setAttribute(XS_VALUE, "[$#]\\{.*\\}");
 
-      simpleTypes.add(typeName);
+      generatedTypes.add(typeName);
       schema.appendChild(typeElement);
       return RG_PREFIX + typeName;
    }
@@ -330,11 +448,11 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       return sequence;
    }
 
-   private static Element createChoice(Document doc, Element productsSequence, int minOccurs, int maxOccurs) {
+   private static Element createChoice(Document doc, Element sequence, int minOccurs, int maxOccurs) {
       Element choice = doc.createElementNS(NS_XS, XS_CHOICE);
       choice.setAttribute(XS_MIN_OCCURS, String.valueOf(minOccurs));
       choice.setAttribute(XS_MAX_OCCURS, maxOccurs < 0 ? "unbounded" : String.valueOf(maxOccurs));
-      productsSequence.appendChild(choice);
+      sequence.appendChild(choice);
       return choice;
    }
 
@@ -349,7 +467,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       return complex;
    }
 
-   private static Element createComplexType(Document doc, Element parentSequence, String name, String extended, boolean isAbstract, String documentation) {
+   private static Element createComplexType(Document doc, Element parentSequence, String name, String extended, boolean useComplexContent, boolean isAbstract, String documentation) {
       Element typeElement = doc.createElementNS(NS_XS, XS_COMPLEX_TYPE);
       if (isAbstract) typeElement.setAttribute(XS_ABSTRACT, "true");
       typeElement.setAttribute(XS_NAME, name);
@@ -358,11 +476,11 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       if (extended == null) {
          return typeElement;
       } else {
-         Element complexContent = doc.createElementNS(NS_XS, XS_COMPLEX_CONTENT);
-         typeElement.appendChild(complexContent);
+         Element content = doc.createElementNS(NS_XS, useComplexContent ? XS_COMPLEX_CONTENT : XS_SIMPLE_CONTENT);
+         typeElement.appendChild(content);
          Element extension = doc.createElementNS(NS_XS, XS_EXTENSION);
          extension.setAttribute(XS_BASE, extended);
-         complexContent.appendChild(extension);
+         content.appendChild(extension);
          return extension;
       }
    }

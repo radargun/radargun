@@ -117,6 +117,9 @@ public class DefaultConverter implements Converter<Object> {
          if (clazz.isEnum()) {
             return Enum.valueOf((Class<? extends Enum>) clazz, string);
          }
+         if (clazz.isArray()) {
+            return parseArray(string, clazz.getComponentType());
+         }
          Parser parser = parserMap.get(clazz);
          if (parser == null) throw new IllegalArgumentException("Unable to parse '" + string + "' as type " + type);
          return parser.parse(string, null);
@@ -128,16 +131,28 @@ public class DefaultConverter implements Converter<Object> {
          return parser.parse(string, pt.getActualTypeArguments());
       } else if (type instanceof GenericArrayType) {
          GenericArrayType gt = (GenericArrayType) type;
-         List<Object> list = parseCollection(string, gt.getGenericComponentType());
-         Object array = Array.newInstance((Class<?>) gt.getGenericComponentType(), list.size());
-         int i = 0;
-         for (Object o : list) {
-            Array.set(array, i++, o);
-         }
-         return array;
+         return parseArray(string, gt.getGenericComponentType());
       } else {
          throw new IllegalArgumentException("Unable to parse '" + string + "' as type " + type);
       }
+   }
+
+   private static Object parseArray(String string, Type componentType) {
+      List<Object> list = parseCollection(string, componentType);
+      Class<?> arrayComponentType;
+      if (componentType instanceof Class<?>) {
+         arrayComponentType = (Class<?>) componentType;
+      } else if (componentType instanceof ParameterizedType) {
+         arrayComponentType = (Class<?>) ((ParameterizedType) componentType).getRawType();
+      } else  {
+         throw new IllegalArgumentException("Unable to parse '" + string + "' int array of " + componentType);
+      }
+      Object array = Array.newInstance(arrayComponentType, list.size());
+      int i = 0;
+      for (Object o : list) {
+         Array.set(array, i++, o);
+      }
+      return array;
    }
 
    private static List<Object> parseCollection(String string, Type type) {

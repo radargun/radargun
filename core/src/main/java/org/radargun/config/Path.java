@@ -12,6 +12,7 @@ import java.util.Arrays;
  */
 public class Path {
    private final Field[] fields;
+   private boolean complete;
 
    public Path(Field[] fields) {
       if (fields.length == 0) throw new IllegalArgumentException();
@@ -57,6 +58,18 @@ public class Path {
 
    public Class<?> getTargetType() {
       return fields[fields.length - 1].getType();
+   }
+
+   public boolean isTrivial() {
+      return fields.length == 1;
+   }
+
+   public void setComplete(boolean complete) {
+      this.complete = complete;
+   }
+
+   public boolean isComplete() {
+      return complete;
    }
 
    @Override

@@ -3,7 +3,10 @@ package org.radargun.config;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.radargun.logging.Log;
@@ -24,11 +27,12 @@ public class PropertyHelper {
     *
     * @param clazz
     * @param useDashedName Convert property names to dashed form - e.g. myPropertyName becomes my-property-name.
+    * @param includeDelegates Include also those tagged with {@link PropertyDelegate}
     * @return
     */
-   public static Map<String, Path> getProperties(Class<?> clazz, boolean useDashedName) {
+   public static Map<String, Path> getProperties(Class<?> clazz, boolean useDashedName, boolean includeDelegates) {
       Map<String, Path> properties = new TreeMap<String, Path>();
-      addProperties(clazz, properties, useDashedName, "", null);
+      addProperties(clazz, properties, useDashedName, includeDelegates, "", null);
       return properties;
    }
 
@@ -38,9 +42,9 @@ public class PropertyHelper {
     * @param clazz
     * @return
     */
-   public static Map<String, Path> getDeclaredProperties(Class<?> clazz) {
+   public static Map<String, Path> getDeclaredProperties(Class<?> clazz, boolean includeDelegates) {
       Map<String, Path> properties = new TreeMap<String, Path>();
-      addDeclaredProperties(clazz, properties, false, "", null);
+      addDeclaredProperties(clazz, properties, false, includeDelegates, "", null);
       return properties;
    }
 
@@ -73,13 +77,13 @@ public class PropertyHelper {
       return annotation.name().equals(Property.FIELD_NAME) ? property.getName() : annotation.name();
    }
 
-   private static void addProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, String prefix, Path path) {
+   private static void addProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, boolean includeDelegates, String prefix, Path path) {
       if (clazz == null) return;
-      addDeclaredProperties(clazz, properties, useDashedName, prefix, path);
-      addProperties(clazz.getSuperclass(), properties, useDashedName, prefix, path);
+      addDeclaredProperties(clazz, properties, useDashedName, includeDelegates, prefix, path);
+      addProperties(clazz.getSuperclass(), properties, useDashedName, includeDelegates, prefix, path);
    }
 
-   private static void addDeclaredProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, String prefix, Path path) {
+   private static void addDeclaredProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, boolean includeDelegates, String prefix, Path path) {
       for (Field field : clazz.getDeclaredFields()) {
          if (Modifier.isStatic(field.getModifiers())) continue; // property cannot be static
          Property property = field.getAnnotation(Property.class);
@@ -88,12 +92,13 @@ public class PropertyHelper {
             // TODO: this is not necessary, but setting more fields from one property would be complicated
             throw new IllegalArgumentException(String.format("Field %s.%s cannot be declared with both @Property and @PropertyDelegate", clazz.getName(), field.getName()));
          }
+         Path newPath = path == null ? new Path(field) : path.with(field);
          if (property != null) {
             String name = prefix + getPropertyName(field, property);
             if (useDashedName) {
                name = XmlHelper.camelCaseToDash(name);
             }
-            Path newPath = path == null ? new Path(field) : path.with(field);
+            newPath.setComplete(true);
             properties.put(name, newPath);
             String deprecatedName = property.deprecatedName();
             if (!deprecatedName.equals(Property.NO_DEPRECATED_NAME)) {
@@ -105,9 +110,16 @@ public class PropertyHelper {
          }
          if (delegate != null) {
             String delegatePrefix = useDashedName ? XmlHelper.camelCaseToDash(delegate.prefix()) : delegate.prefix();
+            if (includeDelegates) {
+               int i = delegatePrefix.length();
+               for (; i > 0; --i) {
+                  if (Character.isLetterOrDigit(delegatePrefix.charAt(i - 1))) break;
+               }
+               properties.put(delegatePrefix.substring(0, i), newPath);
+            }
             // TODO: delegate properties are added according to field type, this does not allow polymorphism
             addProperties(field.getType(), properties, useDashedName,
-                  prefix + delegatePrefix, path == null ? new Path(field) : path.with(field));
+                  includeDelegates, prefix + delegatePrefix, newPath);
          }
       }
    }
@@ -119,8 +131,8 @@ public class PropertyHelper {
     * @param destination
     */
    public static void copyProperties(Object source, Object destination) {
-      Map<String, Path> sourceProperties = getProperties(source.getClass(), false);
-      Map<String, Path> destProperties = getProperties(destination.getClass(), false);
+      Map<String, Path> sourceProperties = getProperties(source.getClass(), false, false);
+      Map<String, Path> destProperties = getProperties(destination.getClass(), false, false);
       for (Map.Entry<String, Path> property : sourceProperties.entrySet()) {
          Path destPath = destProperties.get(property.getKey());
          if (destPath == null) {
@@ -147,7 +159,7 @@ public class PropertyHelper {
     */
    public static void setProperties(Object target, Map<String, String> propertyMap, boolean ignoreMissingProperty, boolean useDashedName) {
       Class targetClass = target.getClass();
-      Map<String, Path> properties = getProperties(target.getClass(), useDashedName);
+      Map<String, Path> properties = getProperties(target.getClass(), useDashedName, false);
 
       for (Map.Entry<String, String> entry : propertyMap.entrySet()) {
          String propName = entry.getKey();
@@ -157,25 +169,8 @@ public class PropertyHelper {
             if (path.getTargetAnnotation().readonly()) {
                throw new IllegalArgumentException("Property " + propName + " -> " + path + " is readonly and therefore cannot be set!");
             }
-            Class<? extends Converter> converterClass = path.getTargetAnnotation().converter();
-            try {
-               Constructor<? extends Converter> ctor = converterClass.getDeclaredConstructor();
-               ctor.setAccessible(true);
-               Converter converter = ctor.newInstance();
-               path.set(target, converter.convert(Evaluator.parseString(entry.getValue()), path.getTargetGenericType()));
-               continue;
-            } catch (InstantiationException e) {
-               log.error(String.format("Cannot instantiate converter %s for setting %s (%s): %s",
-                     converterClass.getName(), path, propName, e));
-               throw new IllegalArgumentException(e);
-            } catch (IllegalAccessException e) {
-               log.error(String.format("Cannot access converter %s for setting %s (%s): %s",
-                     converterClass.getName(), path, propName, e));
-               throw new IllegalArgumentException(e);
-            } catch (Throwable t) {
-               log.error("Failed to convert value " + entry.getValue() + ": " + t);
-               throw new IllegalArgumentException(t);
-            }
+            setPropertyFromString(target, propName, path, entry.getValue());
+            continue;
          }
          if (ignoreMissingProperty) {
             log.trace("Property " + propName + " could not be set on class [" + targetClass + "]");
@@ -185,4 +180,99 @@ public class PropertyHelper {
       }
    }
 
+   public static void setPropertiesFromDefinitions(Object target, Map<String, Definition> propertyMap, boolean ignoreMissingProperty, boolean useDashedName) {
+      Class targetClass = target.getClass();
+      Map<String, Path> properties = getProperties(target.getClass(), useDashedName, true);
+
+      for (Map.Entry<String, Definition> entry : propertyMap.entrySet()) {
+         String propName = entry.getKey();
+
+         Path path = properties.get(propName);
+         if (path != null) {
+            if (!path.isComplete()) {
+               try {
+                  if (entry.getValue() instanceof SimpleDefinition) {
+                     setProperties(path.get(target), Collections.singletonMap("", ((SimpleDefinition) entry.getValue()).value), ignoreMissingProperty, useDashedName);
+                  } else if (entry.getValue() instanceof ComplexDefinition) {
+                     setPropertiesFromDefinitions(path.get(target), ((ComplexDefinition) entry.getValue()).getAttributeMap(), ignoreMissingProperty, useDashedName);
+                  } else throw new IllegalArgumentException("Unknown definition type: " + entry.getValue());
+               } catch (IllegalAccessException e) {
+                  throw new IllegalArgumentException("Failed to set " + propName + " on " + target, e);
+               }
+               continue;
+            }
+            if (path.getTargetAnnotation().readonly()) {
+               throw new IllegalArgumentException("Property " + propName + " -> " + path + " is readonly and therefore cannot be set!");
+            }
+            if (entry.getValue() instanceof SimpleDefinition) {
+               setPropertyFromString(target, propName, path, ((SimpleDefinition) entry.getValue()).value);
+            } else if (entry.getValue() instanceof ComplexDefinition) {
+               Class<? extends ComplexConverter<?>> converterClass = path.getTargetAnnotation().complexConverter();
+               try {
+                  Constructor<? extends ComplexConverter> ctor = converterClass.getDeclaredConstructor();
+                  ctor.setAccessible(true);
+                  ComplexConverter converter = ctor.newInstance();
+                  path.set(target, converter.convert((ComplexDefinition) entry.getValue(), path.getTargetGenericType()));
+               } catch (InstantiationException e) {
+                  log.error(String.format("Cannot instantiate converter %s for setting %s (%s)",
+                        converterClass.getName(), path, propName), e);
+                  throw new IllegalArgumentException(e);
+               } catch (IllegalAccessException e) {
+                  log.error(String.format("Cannot access converter %s for setting %s (%s)",
+                        converterClass.getName(), path, propName), e);
+                  throw new IllegalArgumentException(e);
+               } catch (Throwable t) {
+                  log.error("Failed to convert definition " + entry.getValue(), t);
+                  throw new IllegalArgumentException(t);
+               }
+            } else {
+               throw new IllegalArgumentException("Unknown definition type: " + entry.getValue());
+            }
+            continue;
+         }
+         if (ignoreMissingProperty) {
+            log.trace("Property " + propName + " could not be set on class [" + targetClass + "]");
+         } else {
+            throw new IllegalArgumentException("Couldn't find a property for parameter " + propName + " on class [" + targetClass + "]");
+         }
+      }
+   }
+
+   private static void setPropertyFromString(Object target, String propName, Path path, String propertyString) {
+      Class<? extends Converter> converterClass = path.getTargetAnnotation().converter();
+      try {
+         Constructor<? extends Converter> ctor = converterClass.getDeclaredConstructor();
+         ctor.setAccessible(true);
+         Converter converter = ctor.newInstance();
+         path.set(target, converter.convert(Evaluator.parseString(propertyString), path.getTargetGenericType()));
+      } catch (InstantiationException e) {
+         log.error(String.format("Cannot instantiate converter %s for setting %s (%s)",
+               converterClass.getName(), path, propName), e);
+         throw new IllegalArgumentException(e);
+      } catch (IllegalAccessException e) {
+         log.error(String.format("Cannot access converter %s for setting %s (%s)",
+               converterClass.getName(), path, propName), e);
+         throw new IllegalArgumentException(e);
+      } catch (Throwable t) {
+         log.error("Failed to convert value " + propertyString, t);
+         throw new IllegalArgumentException(t);
+      }
+   }
+
+   public static String toString(Object target) {
+      StringBuilder sb = new StringBuilder(" {");
+      Set<Map.Entry<String, Path>> properties = PropertyHelper.getProperties(target.getClass(), false, false).entrySet();
+
+      for (Iterator<Map.Entry<String, Path>> iterator = properties.iterator(); iterator.hasNext(); ) {
+         Map.Entry<String, Path> property = iterator.next();
+         String propertyName = property.getKey();
+         Path path = property.getValue();
+         sb.append(propertyName).append('=');
+         sb.append(PropertyHelper.getPropertyString(path, target));
+         if (iterator.hasNext()) {
+            sb.append(", ");
+         }
+      }
+      return sb.append(" }").toString();
+   }
 }

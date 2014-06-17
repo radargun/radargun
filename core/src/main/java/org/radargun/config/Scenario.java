@@ -16,13 +16,12 @@ public class Scenario implements Serializable {
 
    List<StageDescription> stages = new ArrayList<StageDescription>();
 
-   // TODO: Properties should later be <String, Definition> to accommodate complex types
    /**
     * @param stageClass
     * @param properties Stage's attributes as written in configuration - evaluation takes place on slave
     * @param extras Additional properties (evaluable as ${foo}) specified for this stage
     */
-   public void addStage(Class<? extends org.radargun.Stage> stageClass, Map<String, String> properties, Map<String, String> extras) {
+   public void addStage(Class<? extends org.radargun.Stage> stageClass, Map<String, Definition> properties, Map<String, String> extras) {
       stages.add(new StageDescription(stageClass, properties, extras));
    }
 
@@ -49,7 +48,7 @@ public class Scenario implements Serializable {
       backupProperties(localExtras.keySet(), backups);
       setProperties(description.extras);
       setProperties(localExtras);
-      PropertyHelper.setProperties(stage, description.properties, false, true);
+      PropertyHelper.setPropertiesFromDefinitions(stage, description.properties, false, true);
       setProperties(backups);
       return stage;
    }
@@ -60,7 +59,7 @@ public class Scenario implements Serializable {
     * @param stageId
     * @return
     */
-   public Map<String, String> getPropertiesDefinitions(int stageId) {
+   public Map<String, Definition> getPropertiesDefinitions(int stageId) {
       return stages.get(stageId).properties;
    }
 
@@ -87,11 +86,11 @@ public class Scenario implements Serializable {
    private static class StageDescription implements Serializable {
       Class<? extends org.radargun.Stage> stageClass;
       /* Common properties as specified in configuraion */
-      Map<String, String> properties;
+      Map<String, Definition> properties;
       /* Repeat counters, slave num counters...*/
       Map<String, String> extras;
 
-      private StageDescription(Class<? extends org.radargun.Stage> stageClass, Map<String, String> properties, Map<String, String> extras) {
+      private StageDescription(Class<? extends org.radargun.Stage> stageClass, Map<String, Definition> properties, Map<String, String> extras) {
          this.stageClass = stageClass;
          this.properties = properties;
          this.extras = extras;
