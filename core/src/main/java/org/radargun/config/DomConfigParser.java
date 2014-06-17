@@ -13,11 +13,13 @@ import org.radargun.logging.LogFactory;
 import org.radargun.stages.ScenarioCleanupStage;
 import org.radargun.stages.ScenarioInitStage;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 
 /**
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
@@ -59,7 +61,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       index = nextElement(childNodes, index + 1);
 
       Scenario scenario = new Scenario();
-      Map<String, String> initProperties = Collections.EMPTY_MAP;
+      Map<String, Definition> initProperties = Collections.EMPTY_MAP;
       if (ELEMENT_INIT.equals(childNodes.item(index).getNodeName())) {
          initProperties = parseProperties(((Element) childNodes.item(index)));
          index = nextElement(childNodes, index + 1);
@@ -70,7 +72,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       masterConfig.setScenario(scenario);
 
       index = nextElement(childNodes, index + 1);
-      Map<String, String> cleanupProperties = Collections.EMPTY_MAP;
+      Map<String, Definition> cleanupProperties = Collections.EMPTY_MAP;
       if (ELEMENT_CLEANUP.equals(childNodes.item(index).getNodeName())) {
          cleanupProperties = parseProperties((Element) childNodes.item(index));
          index = nextElement(childNodes, index + 1);
@@ -233,14 +235,60 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       }
    }
 
-   private Map<String, String> parseProperties(Element element) {
+   private Map<String, Definition> parseProperties(Element element) {
       NamedNodeMap attributes = element.getAttributes();
-      Map<String, String> properties = new HashMap<String, String>();
+      Map<String, Definition> properties = new HashMap<String, Definition>();
       for (int attrIndex = 0; attrIndex < attributes.getLength(); attrIndex++) {
          Attr attr = (Attr) attributes.item(attrIndex);
-         properties.put(attr.getName(), attr.getValue());
+         properties.put(attr.getName(), new SimpleDefinition(attr.getValue()));
+      }
+      NodeList children = element.getChildNodes();
+      for (int childIndex = 0; childIndex < children.getLength(); ++childIndex) {
+         Node n = children.item(childIndex);
+         if (n instanceof Element) {
+            Element childElement = (Element) n;
+            properties.put(childElement.getNodeName(), toDefinition(childElement));
+         } else if (n instanceof Text) {
+            String text = ((Text) n).getWholeText().trim();
+            if (!text.isEmpty()) {
+               throw new IllegalArgumentException("Non parsed text: " + text);
+            }
+         } else if (n instanceof Comment) {
+            continue;
+         } else {
+            throw new IllegalArgumentException("Unexpected content: " + n);
+         }
       }
       return properties;
+   }
+
+   private Definition toDefinition(Element element) {
+      NamedNodeMap attributes = element.getAttributes();
+      NodeList children = element.getChildNodes();
+      if (attributes.getLength() == 0 && children.getLength() == 1 && children.item(0) instanceof Text) {
+         return new SimpleDefinition(((Text) children.item(0)).getWholeText());
+      }
+      ComplexDefinition definition = new ComplexDefinition();
+      for (int i = 0; i < attributes.getLength(); ++i) {
+         Attr attr = (Attr) attributes.item(i);
+         definition.add(attr.getName(), new SimpleDefinition(attr.getValue()));
+      }
+      for (int i = 0; i < children.getLength(); ++i) {
+         Node n = children.item(i);
+         if (n instanceof Element) {
+            definition.add(n.getNodeName(), toDefinition((Element) n));
+         } else if (n instanceof Text) {
+            String text = ((Text) n).getWholeText().trim();
+            if (!text.isEmpty()) {
+               definition.add("", new SimpleDefinition(text));
+            }
+         } else if (n instanceof Comment) {
+            continue;
+         } else {
+            throw new IllegalArgumentException("Unexpected content: " + n);
+         }
+      }
+      return definition;
    }
 
    private void parseReporting(MasterConfig masterConfig, Element reportsElement) {

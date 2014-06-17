@@ -3,7 +3,7 @@ package org.radargun.config;
 import java.lang.reflect.Type;
 
 /**
- * Interface that converts string representation of a collection of objects into java.util.Collection
+ * Converts string representation of an object into the object, and back.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

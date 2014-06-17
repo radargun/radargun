@@ -11,6 +11,7 @@ import java.util.TreeSet;
 
 import org.radargun.Stage;
 import org.radargun.config.Configuration;
+import org.radargun.config.Definition;
 import org.radargun.config.Path;
 import org.radargun.config.PropertyHelper;
 import org.radargun.config.Scenario;
@@ -94,10 +95,10 @@ public class IndexDocument extends HtmlDocument {
       write("</ul>\n");
    }
 
-   private void writeStage(Stage stage, Map<String, String> propertiesDefinitions) {
+   private void writeStage(Stage stage, Map<String, Definition> propertiesDefinitions) {
       Class<? extends Stage> stageClass = stage.getClass();
       writer.write("<li><span style=\"cursor: pointer\" onClick=\"");
-      Set<Map.Entry<String, Path>> properties = PropertyHelper.getProperties(stageClass, true).entrySet();
+      Set<Map.Entry<String, Path>> properties = PropertyHelper.getProperties(stageClass, true, false).entrySet();
       for (int i = 0; i < properties.size(); ++i) {
          writer.write("switch_li_display('e" + (elementCounter + i) + "');");
       }
