@@ -1,11 +1,6 @@
 package org.radargun.utils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -151,6 +146,17 @@ public class Utils {
          }
          log.warn(sb.toString());
       }
+   }
+
+   public static byte[] readAsBytes(InputStream is) throws IOException {
+      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+      int nRead;
+      byte[] data = new byte[16384];
+      while ((nRead = is.read(data, 0, data.length)) != -1) {
+         buffer.write(data, 0, nRead);
+      }
+      buffer.flush();
+      return buffer.toByteArray();
    }
 
    public static class JarFilenameFilter implements FilenameFilter {
@@ -464,6 +470,31 @@ public class Utils {
             fout.close();
          }
       }
+   }
+
+   public static List<String> readFile(String file) {
+      List<String> lines = new ArrayList<String>();
+      BufferedReader br = null;
+
+      try {
+         br = new BufferedReader(new FileReader(file));
+         String line;
+         while ((line = br.readLine()) != null) {
+            lines.add(line);
+         }
+      } catch(IOException ex) {
+         log.error("Error is thrown during file reading!", ex);
+         throw new RuntimeException(ex);
+      } finally {
+         try {
+            if(br != null) br.close();
+         } catch (IOException ex) {
+            log.error("Error is thrown during closing file stream!", ex);
+            throw new RuntimeException(ex);
+         }
+      }
+
+      return lines;
    }
 
    public static <T1, T2 extends T1> List<T2> cast(List<T1> list, Class<T2> clazz) {

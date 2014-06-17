@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2013 Red Hat, Inc. and/or its affiliates.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this library; if not, write to the Free Software
+  ~ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA
+  -->
+
+<infinispan
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="urn:infinispan:config:7.0 http://www.infinispan.org/schemas/infinispan-config-7.0.xsd"
+   xmlns="urn:infinispan:config:7.0">
+
+   <jgroups>
+      <stack-file name="jgroupsStack" path="${infinispan.jgroups.config:jgroups-udp.xml}"/>
+   </jgroups>
+
+   <cache-container name="default" default-cache="default">
+      <transport stack="jgroupsStack" lock-timeout="600000" cluster="default" />
+      <serialization></serialization>
+      <jmx>
+         <property name="enabled">true</property>
+      </jmx>
+
+      <replicated-cache name="default" mode="SYNC"/>
+
+      <distributed-cache name="dist_tx_shared" mode="SYNC">
+         <transaction transaction-manager-lookup="org.infinispan.transaction.lookup.GenericTransactionManagerLookup" mode="NON_DURABLE_XA" />
+         <indexing index="LOCAL">
+            <property name="default.directory_provider">infinispan</property>
+            <property name="default.indexmanager">org.infinispan.query.indexmanager.InfinispanIndexManager</property>
+            <property name="lucene_version">LUCENE_36</property>
+         </indexing>
+      </distributed-cache>
+
+      <distributed-cache name="dist_nontx_shared" mode="SYNC">
+         <transaction mode="NONE" />
+         <indexing index="LOCAL">
+            <property name="default.directory_provider">infinispan</property>
+            <property name="default.indexmanager">org.infinispan.query.indexmanager.InfinispanIndexManager</property>
+            <property name="lucene_version">LUCENE_36</property>
+         </indexing>
+      </distributed-cache>
+
+      <replicated-cache name="repl_tx_ram" mode="SYNC">
+         <transaction transaction-manager-lookup="org.infinispan.transaction.lookup.GenericTransactionManagerLookup" mode="NON_DURABLE_XA" />
+         <indexing index="ALL">
+            <property name="default.directory_provider">ram</property>
+         </indexing>
+      </replicated-cache>
+
+      <replicated-cache name="repl_nontx_ram" mode="SYNC">
+         <transaction mode="NONE" />
+         <indexing index="ALL">
+            <property name="default.directory_provider">ram</property>
+         </indexing>
+      </replicated-cache>
+   </cache-container>
+
+</infinispan>
+

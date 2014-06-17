@@ -1,0 +1,10 @@
+package org.radargun.query;
+
+message TextObject {
+   required string text = 1;
+}
+
+message NumberObject {
+   required int32 integerValue = 1;
+   required double doubleValue = 2;
+}

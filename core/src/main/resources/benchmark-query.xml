@@ -1,0 +1,55 @@
+<benchmark xmlns="urn:radargun:benchmark:2.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+
+   <clusters>
+      <scale from="1" to="2">
+         <cluster/>
+      </scale>
+   </clusters>
+
+   <configurations>
+      <config name="DistTxShared">
+         <setup plugin="infinispan60" file="query.xml">
+            <property name="cache">dist_tx_shared</property>
+         </setup>
+      </config>
+   </configurations>
+
+   <scenario>
+      <service-start />
+
+      <!-- You should do longer warm-ups for real tests -->
+      <stress-test-warmup duration="10s" num-entries="100" entry-size="0"
+                          value-generator-class="org.radargun.query.SingleWordGenerator"
+                          value-generator-param="${org.radargun.query.dictionary:conf/test-data/animals.txt}"/>
+
+      <!-- Testing write performance and also loading the data -->
+      <stress-test test-name="loading"
+                   duration="10s" num-entries="500" entry-size="0" write-percentage="100"
+                   value-generator-class="org.radargun.query.SingleWordGenerator"
+                   value-generator-param="${org.radargun.query.dictionary:conf/test-data/animals.txt}"/>
+
+      <!-- Logic does only queries - we don't have to specify any generator -->
+      <query test-name="querying"
+             duration="10s"
+             query-object-class="org.radargun.query.TextObject">
+         <conditions>
+            <!-- The conditions are ANDed -->
+            <any>
+               <eq path="text" value="Tiger" />
+               <like path="text" value="%Sea%" />
+            </any>
+            <not>
+               <eq path="text" value="Seahorse"/>
+            </not>
+         </conditions>
+      </query>
+   </scenario>
+
+   <reports>
+      <reporter type="html"/>
+      <reporter type="csv"/>
+   </reports>
+
+</benchmark>

@@ -5,7 +5,7 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 
 /**
- * Implementation of the {@link BasicOperations} and {@link ConditionalOperation}
+ * Implementation of the {@link BasicOperations} and {@link ConditionalOperations}
  * through the HotRod protocol.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -19,8 +19,8 @@ public class HotRodOperations implements BasicOperations, ConditionalOperations 
 
    @Override
    public <K, V> HotRodCache<K, V> getCache(String cacheName) {
-      if (!service.manager.isStarted()) {
-         service.manager.start();
+      if (cacheName == null) {
+         cacheName = service.cacheName;
       }
       if (cacheName == null) {
          return new HotRodCache<K, V>((RemoteCache<K,V>) service.manager.getCache(false), (RemoteCache<K,V>) service.manager.getCache(true));

@@ -11,6 +11,7 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.radargun.Service;
 import org.radargun.config.Property;
+import org.radargun.traits.ProvidesTrait;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -23,6 +24,11 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
    private boolean jgroupsDumperEnabled = false;
 
    private JGroupsDumper jgroupsDumper;
+
+   @ProvidesTrait
+   public InfinispanEmbeddedQueryable createQueryable() {
+      return new InfinispanEmbeddedQueryable(this);
+   }
 
    @Override
    protected ConfigurationBuilderHolder createConfiguration(String configFile) throws FileNotFoundException {

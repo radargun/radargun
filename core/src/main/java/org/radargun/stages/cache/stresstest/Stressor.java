@@ -163,7 +163,7 @@ class Stressor extends Thread {
          } else if (operation == BasicOperations.PUT) {
             basicCache.put(keysAndValues[0], keysAndValues[1]);
          } else if (operation == Queryable.QUERY) {
-            result = queryable.executeQuery((Map<String, Object>) keysAndValues[0]);
+            result = ((Queryable.Query) keysAndValues[0]).execute();
          } else if (operation == BasicOperations.REMOVE) {
             result = basicCache.remove(keysAndValues[0]);
          } else if (operation == ConditionalOperations.REMOVE_EXEC) {
