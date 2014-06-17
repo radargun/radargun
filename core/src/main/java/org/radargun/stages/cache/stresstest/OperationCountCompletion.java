@@ -15,19 +15,17 @@ public class OperationCountCompletion extends Completion {
    private final AtomicLong requestsLeft;
    private final long numRequests;
    private final long logOps;
-   private volatile long startTime = -1;
 
-   public OperationCountCompletion(long numRequests, long logPeriod) {
+   public OperationCountCompletion(long numRequests, long requestPeriod, long logPeriod) {
+      super(requestPeriod);
       this.requestsLeft = new AtomicLong(numRequests);
       this.numRequests = numRequests;
       this.logOps = logPeriod;
    }
 
    @Override
-   public boolean moreToRun() {
-      if (startTime < 0) {
-         startTime = System.nanoTime();
-      }
+   public boolean moreToRun(int opNumber) {
+      waitForNextRequest(opNumber, System.nanoTime());
       return requestsLeft.getAndDecrement() > 0;
    }
 
