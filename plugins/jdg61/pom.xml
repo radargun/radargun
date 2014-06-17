@@ -20,33 +20,33 @@
 
    <dependencies>
       <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-infinispan52</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-core</artifactId>
          <version>${version.infinispan}</version>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-client-hotrod</artifactId>
-         <version>${version.infinispan}</version>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-query</artifactId>
-         <version>${version.infinispan}</version>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-cachestore-jdbc</artifactId>
-         <version>${version.infinispan}</version>
+         <optional>true</optional>
+         <exclusions>
+            <exclusion>
+               <groupId>log4j</groupId>
+               <artifactId>log4j</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
 
       <dependency>
          <groupId>org.jboss.jbossts</groupId>
          <artifactId>jbossjta</artifactId>
          <version>${version.jbossts}</version>
+         <optional>true</optional>
          <exclusions>
             <exclusion>
                <groupId>org.jboss.logging</groupId>
@@ -56,33 +56,25 @@
       </dependency>
 
       <dependency>
-         <groupId>org.radargun</groupId>
-         <artifactId>plugin-infinispan52</artifactId>
-         <version>${project.version}</version>
-         <exclusions>
-            <exclusion>
-               <groupId>org.infinispan</groupId>
-               <artifactId>infinispan-core</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.infinispan</groupId>
-               <artifactId>infinispan-client-hotrod</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.infinispan</groupId>
-               <artifactId>infinispan-query</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.infinispan</groupId>
-               <artifactId>infinispan-cachestore-jdbc</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.jboss.jbossts</groupId>
-               <artifactId>jbossjta</artifactId>
-            </exclusion>
-         </exclusions>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-client-hotrod</artifactId>
+         <version>${version.infinispan}</version>
+         <optional>true</optional>
       </dependency>
 
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-query</artifactId>
+         <version>${version.infinispan}</version>
+         <optional>true</optional>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-cachestore-jdbc</artifactId>
+         <version>${version.infinispan}</version>
+         <optional>true</optional>
+      </dependency>
    </dependencies>
 
 </project>

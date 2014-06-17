@@ -12,21 +12,44 @@
    <artifactId>plugin-jdg60</artifactId>
    <name>JDG 6.0.x plugin for RadarGun</name>
 
-   <dependencies>
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-core</artifactId>
-         <version>5.1.7.Final-redhat-1</version>
-      </dependency>
+   <properties>
+      <version.infinispan>5.1.7.Final-redhat-1</version.infinispan>
+      <version.jbossts>4.16.3.Final</version.jbossts>
+   </properties>
 
+   <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>plugin-infinispan51</artifactId>
          <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-core</artifactId>
+         <version>${version.infinispan}</version>
+         <optional>true</optional>
          <exclusions>
             <exclusion>
-               <groupId>org.infinispan</groupId>
-               <artifactId>infinispan-core</artifactId>
+               <groupId>log4j</groupId>
+               <artifactId>log4j</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.jbossts</groupId>
+         <artifactId>jbossjta</artifactId>
+         <version>${version.jbossts}</version>
+         <optional>true</optional>
+         <exclusions>
+            <exclusion>
+               <groupId>org.jboss.logging</groupId>
+               <artifactId>jboss-logging-spi</artifactId>
             </exclusion>
          </exclusions>
       </dependency>
