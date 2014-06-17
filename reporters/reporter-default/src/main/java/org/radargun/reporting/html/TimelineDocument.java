@@ -11,6 +11,8 @@ import java.util.TreeMap;
 
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
 
 /**
@@ -20,6 +22,7 @@ import org.radargun.reporting.Timeline;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TimelineDocument extends HtmlDocument {
+   private static final Log log = LogFactory.getLog(TimelineDocument.class);
    private final Configuration configuration;
    private final String configName;
    private final String title;
@@ -94,7 +97,7 @@ public class TimelineDocument extends HtmlDocument {
          Double min = minValues.get(valueCategory);
          if (min == null || min > 0) min = 0d;
          Double max = maxValues.get(valueCategory);
-         if (min == null || max < 0) max = 0d;
+         if (max == null || max < 0) max = 0d;
          minValues.put(valueCategory, min);
          maxValues.put(valueCategory, max);
 
@@ -109,6 +112,7 @@ public class TimelineDocument extends HtmlDocument {
             if (values == null) values = Collections.emptyList();
 
             {
+               log.debug("Generating chart for " + valueCategory);
                TimelineChart chart = new TimelineChart();
                PropertyHelper.copyProperties(configuration, chart);
                chart.setEvents(values, timeline.slaveIndex, startTimestamp, endTimestamp, minValues.get(valueCategory) * 1.1, maxValues.get(valueCategory) * 1.1);

@@ -133,9 +133,14 @@ public class CsvReporter implements Reporter {
 
    private Statistics processRow(int it, Set<String> columns, List<Map<String, String>> rows, Map.Entry<Integer, List<Statistics>> slaveStats) {
       // this reporter is merging statistics from all threads on each node
-      Statistics summary = slaveStats.getValue().get(0).copy();
-      for (int i = slaveStats.getValue().size() - 1; i > 0; --i) {
-         summary.merge(slaveStats.getValue().get(i));
+      Statistics summary = null;
+      for (Statistics other : slaveStats.getValue()) {
+         if (other == null) continue;
+         if (summary == null) {
+            summary = other.copy();
+         } else {
+            summary.merge(other);
+         }
       }
       Map<String,OperationStats> operationStats = summary.getOperationsStats();
       Map<String, String> rowData = new HashMap<String, String>();
