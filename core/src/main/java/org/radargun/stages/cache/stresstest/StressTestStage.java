@@ -118,6 +118,10 @@ public class StressTestStage extends AbstractDistStage {
    @Property(converter = TimeConverter.class, doc = "Benchmark duration. This takes precedence over numRequests. By default switched off.")
    protected long duration = 0;
 
+   @Property(converter = TimeConverter.class, doc = "Target period of requests - e.g. when this is set to 10 ms" +
+         "the benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.")
+   protected long requestPeriod = 0;
+
    @Property(doc = "By default each client thread operates on his private set of keys. Setting this to true " +
          "introduces contention between the threads, the numThreads property says total amount of entries that are " +
          "used by all threads. Default is false.")
@@ -293,9 +297,9 @@ public class StressTestStage extends AbstractDistStage {
    public List<List<Statistics>> stress() {
       Completion completion;
       if (duration > 0) {
-         completion = new TimeStressorCompletion(duration);
+         completion = new TimeStressorCompletion(duration, requestPeriod);
       } else {
-         completion = new OperationCountCompletion(numRequests, logPeriod);
+         completion = new OperationCountCompletion(numRequests, requestPeriod, logPeriod);
       }
       setCompletion(completion);
 

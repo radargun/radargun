@@ -810,6 +810,11 @@
                   <documentation>In case we test replace performance, the frequency of replaces that should fail (percentage). Default is 40%</documentation>
                </annotation>
             </attribute>
+            <attribute name="request-period" type="rg:long-converted-by-org-radargun-config-timeconverter">
+               <annotation>
+                  <documentation>Target period of requests - e.g. when this is set to 10 msthe benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="shared-keys" type="rg:boolean">
                <annotation>
                   <documentation>By default each client thread operates on his private set of keys. Setting this to true introduces contention between the threads, the numThreads property says total amount of entries that are used by all threads. Default is false.</documentation>

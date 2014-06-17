@@ -11,7 +11,6 @@ import org.radargun.utils.Utils;
  */
 public class TimeStressorCompletion extends Completion {
 
-   private volatile long startTime = -1;
    private volatile long lastPrint = -1;
    private final long duration;
    private final long logFrequency = TimeUnit.SECONDS.toNanos(20);
@@ -19,18 +18,21 @@ public class TimeStressorCompletion extends Completion {
    /**
     * @param duration Duration of the test in nanoseconds.
     */
-   public TimeStressorCompletion(long duration) {
+   public TimeStressorCompletion(long duration, long requestPeriod) {
+      super(requestPeriod);
       this.duration = TimeUnit.MILLISECONDS.toNanos(duration);
    }
 
    @Override
-   public boolean moreToRun() {
+   public boolean moreToRun(int opNumber) {
       // Synchronize the start until someone is ready
       // we don't care about the race condition here
+      long now = System.nanoTime();
       if (startTime == -1) {
-         startTime = System.nanoTime();
+         startTime = now;
       }
-      return System.nanoTime() <= startTime + duration;
+      waitForNextRequest(opNumber, now);
+      return now < startTime + duration;
    }
 
    @Override
