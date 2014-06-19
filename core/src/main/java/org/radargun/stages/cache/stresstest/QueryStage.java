@@ -312,6 +312,17 @@ public class QueryStage extends StressTestStage {
       }
    }
 
+   @DefinitionElement(name = "contains", doc = "Target is collection containing the value")
+   private static class Contains extends PathCondition {
+      @Property(doc = "Value used in the condition", optional = false, converter = ObjectConverter.class)
+      public Object value;
+
+      @Override
+      public void apply(Queryable.QueryBuilder builder) {
+         builder.contains(path, value);
+      }
+   }
+
    @DefinitionElement(name = "is-null", doc = "Target is not defined (null)")
    private static class IsNull extends PathCondition {
       @Override
@@ -368,7 +379,13 @@ public class QueryStage extends StressTestStage {
 
    private static class ConditionConverter extends ReflexiveListConverter {
       public ConditionConverter() {
-         super(new Class[] {Eq.class, Lt.class, Le.class, Gt.class, Ge.class, Like.class, IsNull.class, Not.class, Any.class, All.class});
+         super(new Class[] {Eq.class, Lt.class, Le.class, Gt.class, Ge.class, Like.class, Contains.class, IsNull.class, Not.class, Any.class, All.class});
+      }
+   }
+
+   private static class ObjectsConverter extends ReflexiveListConverter {
+      public ObjectsConverter() {
+         super(new Class[] { /* TODO */ });
       }
    }
 

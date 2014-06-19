@@ -1,5 +1,6 @@
 package org.radargun.traits;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.radargun.Operation;
@@ -30,6 +31,7 @@ public interface Queryable {
       QueryBuilder ge(String attribute, Object value);
       QueryBuilder isNull(String attribute);
       QueryBuilder like(String attribute, String pattern);
+      QueryBuilder contains(String attribute, Object value);
       QueryBuilder not(QueryBuilder subquery);
       QueryBuilder any(QueryBuilder... subqueries);
       QueryBuilder orderBy(String attribute, SortOrder order);
