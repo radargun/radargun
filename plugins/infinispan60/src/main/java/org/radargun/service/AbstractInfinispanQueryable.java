@@ -90,6 +90,12 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       }
 
       @Override
+      public QueryBuilder contains(String attribute, Object value) {
+         context = getEndContext(attribute).contains(value);
+         return this;
+      }
+
+      @Override
       public QueryBuilder not(QueryBuilder subquery) {
          FilterConditionContext subqueryContext = ((QueryBuilderImpl) subquery).context;
          if (subqueryContext == null) {
