@@ -316,13 +316,13 @@
       <complexContent>
          <extension base="rg:org-radargun-stages-abstract-dist-stage">
             <sequence>
-               <element maxOccurs="1" minOccurs="0" name="stats-iteration-duration" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="stats-iteration-duration" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Delay between statistics snapshots. Default is 5 seconds.</documentation>
                   </annotation>
                </element>
             </sequence>
-            <attribute name="stats-iteration-duration" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="stats-iteration-duration" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Delay between statistics snapshots. Default is 5 seconds.</documentation>
                </annotation>
@@ -330,7 +330,7 @@
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="long-converted-by-org-radargun-config-time-converter">
+   <simpleType name="long-converted-by-org-radargun-utils-time-converter">
       <union>
          <simpleType>
             <restriction base="string">
@@ -423,12 +423,12 @@
                      <documentation>Cache used for the background operations. Default is null (default).</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="dead-slave-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="dead-slave-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Period after which a slave is considered to be dead. Default is 90 s.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="delay-between-requests" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="delay-between-requests" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
                   </annotation>
@@ -476,12 +476,12 @@
                   <documentation>Cache used for the background operations. Default is null (default).</documentation>
                </annotation>
             </attribute>
-            <attribute name="dead-slave-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="dead-slave-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Period after which a slave is considered to be dead. Default is 90 s.</documentation>
                </annotation>
             </attribute>
-            <attribute name="delay-between-requests" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="delay-between-requests" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Time between consecutive requests of one stressor thread. Default is 0.</documentation>
                </annotation>
@@ -536,7 +536,7 @@
                   <documentation>Check that listeners have been fired for each operation on each node (at least once). Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="log-logic-checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="log-logic-checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Maximum time for which are the log value checkers allowed to show no new checked values (error is thrown in CheckBackgroundStressors stage). Default is one minute.</documentation>
                </annotation>
@@ -692,7 +692,7 @@
                <documentation>Check that listeners have been fired for each operation on each node (at least once). Default is false.</documentation>
             </annotation>
          </element>
-         <element maxOccurs="1" minOccurs="0" name="checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+         <element maxOccurs="1" minOccurs="0" name="checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
             <annotation>
                <documentation>Maximum time for which are the log value checkers allowed to show no new checked values (error is thrown in CheckBackgroundStressors stage). Default is one minute.</documentation>
             </annotation>
@@ -728,7 +728,7 @@
             <documentation>Check that listeners have been fired for each operation on each node (at least once). Default is false.</documentation>
          </annotation>
       </attribute>
-      <attribute name="checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+      <attribute name="checkers-no-progress-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
          <annotation>
             <documentation>Maximum time for which are the log value checkers allowed to show no new checked values (error is thrown in CheckBackgroundStressors stage). Default is one minute.</documentation>
          </annotation>
@@ -999,7 +999,7 @@
                      <documentation>The check controls if this event has happened (true) or not happened (false). Defaults to true.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="period" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="period" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>The period in milliseconds which is checked. Default is infinite.</documentation>
                   </annotation>
@@ -1015,7 +1015,7 @@
                   <documentation>The check controls if this event has happened (true) or not happened (false). Defaults to true.</documentation>
                </annotation>
             </attribute>
-            <attribute name="period" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="period" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>The period in milliseconds which is checked. Default is infinite.</documentation>
                </annotation>
@@ -1109,12 +1109,12 @@
                      <documentation>Specifies whether the transactions should be committed (true) or rolled back (false). Default is true</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="duration" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="duration" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Benchmark duration. This takes precedence over numRequests. By default switched off.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="entry-lifespan" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="entry-lifespan" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.</documentation>
                   </annotation>
@@ -1159,7 +1159,7 @@
                      <documentation>Number of operations after which a log entry should be written. Default is 10000.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="num-bytes" type="rg:long-converted-by-org-radargun-config-size-converter">
+               <element maxOccurs="1" minOccurs="0" name="num-bytes" type="rg:long-converted-by-org-radargun-utils-size-converter">
                   <annotation>
                      <documentation>Applicable only with fixedKeys=false, makes sense for entrySize with multiple values. Replaces numEntries; requested number of bytes in values set by the stressor. By default not set.</documentation>
                   </annotation>
@@ -1204,7 +1204,7 @@
                      <documentation>In case we test replace performance, the frequency of replaces that should fail (percentage). Default is 40%</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="request-period" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="request-period" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Target period of requests - e.g. when this is set to 10 msthe benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.</documentation>
                   </annotation>
@@ -1214,7 +1214,7 @@
                      <documentation>By default each client thread operates on his private set of keys. Setting this to true introduces contention between the threads, the numThreads property says total amount of entries that are used by all threads. Default is false.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="statistics-period" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="statistics-period" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Period of single statistics result. By default periodic statistics are not used.</documentation>
                   </annotation>
@@ -1280,12 +1280,12 @@
                   <documentation>Specifies whether the transactions should be committed (true) or rolled back (false). Default is true</documentation>
                </annotation>
             </attribute>
-            <attribute name="duration" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="duration" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Benchmark duration. This takes precedence over numRequests. By default switched off.</documentation>
                </annotation>
             </attribute>
-            <attribute name="entry-lifespan" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="entry-lifespan" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.</documentation>
                </annotation>
@@ -1330,7 +1330,7 @@
                   <documentation>Number of operations after which a log entry should be written. Default is 10000.</documentation>
                </annotation>
             </attribute>
-            <attribute name="num-bytes" type="rg:long-converted-by-org-radargun-config-size-converter">
+            <attribute name="num-bytes" type="rg:long-converted-by-org-radargun-utils-size-converter">
                <annotation>
                   <documentation>Applicable only with fixedKeys=false, makes sense for entrySize with multiple values. Replaces numEntries; requested number of bytes in values set by the stressor. By default not set.</documentation>
                </annotation>
@@ -1375,7 +1375,7 @@
                   <documentation>In case we test replace performance, the frequency of replaces that should fail (percentage). Default is 40%</documentation>
                </annotation>
             </attribute>
-            <attribute name="request-period" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="request-period" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Target period of requests - e.g. when this is set to 10 msthe benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.</documentation>
                </annotation>
@@ -1385,7 +1385,7 @@
                   <documentation>By default each client thread operates on his private set of keys. Setting this to true introduces contention between the threads, the numThreads property says total amount of entries that are used by all threads. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="statistics-period" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="statistics-period" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Period of single statistics result. By default periodic statistics are not used.</documentation>
                </annotation>
@@ -1466,7 +1466,7 @@
          </simpleType>
       </union>
    </simpleType>
-   <simpleType name="long-converted-by-org-radargun-config-size-converter">
+   <simpleType name="long-converted-by-org-radargun-utils-size-converter">
       <union>
          <simpleType>
             <restriction base="string">
@@ -1631,7 +1631,7 @@
       <complexContent>
          <extension base="rg:org-radargun-stages-cache-check-stage">
             <sequence>
-               <element maxOccurs="1" minOccurs="0" name="duration" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="duration" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>How long should this stage take. Default is 1 minute.</documentation>
                   </annotation>
@@ -1652,7 +1652,7 @@
                   </annotation>
                </element>
             </sequence>
-            <attribute name="duration" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="duration" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>How long should this stage take. Default is 1 minute.</documentation>
                </annotation>
@@ -1688,7 +1688,7 @@
       <complexContent>
          <extension base="rg:org-radargun-stages-abstract-dist-stage">
             <sequence>
-               <element maxOccurs="1" minOccurs="0" name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>JMX Connection timeout. Default is 3 seconds.</documentation>
                   </annotation>
@@ -1708,13 +1708,13 @@
                      <documentation>Generic property 3.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="wait-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="wait-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Cluster validation timeout. Default is 1 minute.</documentation>
                   </annotation>
                </element>
             </sequence>
-            <attribute name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>JMX Connection timeout. Default is 3 seconds.</documentation>
                </annotation>
@@ -1734,7 +1734,7 @@
                   <documentation>Generic property 3.</documentation>
                </annotation>
             </attribute>
-            <attribute name="wait-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="wait-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Cluster validation timeout. Default is 1 minute.</documentation>
                </annotation>
@@ -1750,7 +1750,7 @@
       <complexContent>
          <extension base="rg:org-radargun-stages-abstract-master-stage">
             <sequence>
-               <element maxOccurs="1" minOccurs="0" name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>JMX connection timeout. Default is 3 seconds.</documentation>
                   </annotation>
@@ -1780,13 +1780,13 @@
                      <documentation>Indices of slaves that should be up. Default is empty.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="wait-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="wait-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Cluster validation timeout. Default is 1 minute.</documentation>
                   </annotation>
                </element>
             </sequence>
-            <attribute name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="jmx-connection-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>JMX connection timeout. Default is 3 seconds.</documentation>
                </annotation>
@@ -1816,7 +1816,7 @@
                   <documentation>Indices of slaves that should be up. Default is empty.</documentation>
                </annotation>
             </attribute>
-            <attribute name="wait-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="wait-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Cluster validation timeout. Default is 1 minute.</documentation>
                </annotation>
@@ -2177,7 +2177,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                      <documentation>Set of slaves which should be started in this stage. Default is empty.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="start-delay" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="start-delay" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Delay before the slaves are started. Default is 0.</documentation>
                   </annotation>
@@ -2187,7 +2187,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                      <documentation>Set of slaves which should be stopped in this stage. Default is empty.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="stop-delay" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="stop-delay" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Delay before the slaves are stopped. Default is 0.</documentation>
                   </annotation>
@@ -2208,7 +2208,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Set of slaves which should be started in this stage. Default is empty.</documentation>
                </annotation>
             </attribute>
-            <attribute name="start-delay" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="start-delay" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Delay before the slaves are started. Default is 0.</documentation>
                </annotation>
@@ -2218,7 +2218,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Set of slaves which should be stopped in this stage. Default is empty.</documentation>
                </annotation>
             </attribute>
-            <attribute name="stop-delay" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="stop-delay" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Delay before the slaves are stopped. Default is 0.</documentation>
                </annotation>
@@ -2308,13 +2308,13 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
          </annotation>
       </attribute>
-      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-stages-cache-stresstest-query-stage-number-converter" use="required">
+      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-utils-number-converter" use="required">
          <annotation>
             <documentation>Value used in the condition</documentation>
          </annotation>
       </attribute>
    </complexType>
-   <simpleType name="java-lang-number-converted-by-org-radargun-stages-cache-stresstest-query-stage-number-converter">
+   <simpleType name="java-lang-number-converted-by-org-radargun-utils-number-converter">
       <union>
          <simpleType>
             <restriction base="string">
@@ -2338,6 +2338,36 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </extension>
       </complexContent>
    </complexType>
+   <complexType name="org-radargun-stages-cache-stresstest-query-stage-contains">
+      <annotation>
+         <documentation>Target is collection containing the value</documentation>
+      </annotation>
+      <sequence/>
+      <attribute name="path" type="string" use="required">
+         <annotation>
+            <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="value" type="rg:java-lang-object-converted-by-org-radargun-utils-object-converter" use="required">
+         <annotation>
+            <documentation>Value used in the condition</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <simpleType name="java-lang-object-converted-by-org-radargun-utils-object-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value=".*"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <complexType name="org-radargun-stages-cache-stresstest-query-stage-ge">
       <annotation>
          <documentation>Target is &lt; than value</documentation>
@@ -2348,7 +2378,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
          </annotation>
       </attribute>
-      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-stages-cache-stresstest-query-stage-number-converter" use="required">
+      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-utils-number-converter" use="required">
          <annotation>
             <documentation>Value used in the condition</documentation>
          </annotation>
@@ -2364,7 +2394,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
          </annotation>
       </attribute>
-      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-stages-cache-stresstest-query-stage-number-converter" use="required">
+      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-utils-number-converter" use="required">
          <annotation>
             <documentation>Value used in the condition</documentation>
          </annotation>
@@ -2380,7 +2410,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
          </annotation>
       </attribute>
-      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-stages-cache-stresstest-query-stage-number-converter" use="required">
+      <attribute name="value" type="rg:java-lang-number-converted-by-org-radargun-utils-number-converter" use="required">
          <annotation>
             <documentation>Value used in the condition</documentation>
          </annotation>
@@ -2433,32 +2463,19 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <documentation>Target path (field on the queried object or path through embedded objects)</documentation>
          </annotation>
       </attribute>
-      <attribute name="value" type="rg:java-lang-object-converted-by-org-radargun-stages-cache-stresstest-query-stage-object-converter" use="required">
+      <attribute name="value" type="rg:java-lang-object-converted-by-org-radargun-utils-object-converter" use="required">
          <annotation>
             <documentation>Value used in the condition</documentation>
          </annotation>
       </attribute>
    </complexType>
-   <simpleType name="java-lang-object-converted-by-org-radargun-stages-cache-stresstest-query-stage-object-converter">
-      <union>
-         <simpleType>
-            <restriction base="string">
-               <pattern value=".*"/>
-            </restriction>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
    <complexType name="java-util-list-converted-by-org-radargun-stages-cache-stresstest-query-stage-condition-converter">
       <sequence>
          <choice maxOccurs="unbounded" minOccurs="0">
             <element name="not" type="rg:org-radargun-stages-cache-stresstest-query-stage-not"/>
             <element name="le" type="rg:org-radargun-stages-cache-stresstest-query-stage-le"/>
             <element name="any" type="rg:org-radargun-stages-cache-stresstest-query-stage-any"/>
+            <element name="contains" type="rg:org-radargun-stages-cache-stresstest-query-stage-contains"/>
             <element name="ge" type="rg:org-radargun-stages-cache-stresstest-query-stage-ge"/>
             <element name="gt" type="rg:org-radargun-stages-cache-stresstest-query-stage-gt"/>
             <element name="lt" type="rg:org-radargun-stages-cache-stresstest-query-stage-lt"/>
@@ -2698,17 +2715,17 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       <complexContent>
          <extension base="rg:org-radargun-stages-lifecycle-abstract-service-start-stage">
             <sequence>
-               <element maxOccurs="1" minOccurs="0" name="cluster-formation-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="cluster-formation-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Time allowed the cluster to reach `expectNumSlaves` members. Default is 3 minutes.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="delay-after-first-slave-starts" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="delay-after-first-slave-starts" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="delay-between-starting-slaves" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="delay-between-starting-slaves" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
                   </annotation>
@@ -2734,17 +2751,17 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   </annotation>
                </element>
             </sequence>
-            <attribute name="cluster-formation-timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="cluster-formation-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Time allowed the cluster to reach `expectNumSlaves` members. Default is 3 minutes.</documentation>
                </annotation>
             </attribute>
-            <attribute name="delay-after-first-slave-starts" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="delay-after-first-slave-starts" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s</documentation>
                </annotation>
             </attribute>
-            <attribute name="delay-between-starting-slaves" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="delay-between-starting-slaves" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
                </annotation>
@@ -2797,7 +2814,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                      <documentation>If set to true the benchmark will not wait until the node is stopped. Default is false.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="delay-execution" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="delay-execution" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>If this value is positive the stage will spawn a thread which will stop the node after the delay. The stage will not wait for anything. By default the stop is immediate and synchronous.</documentation>
                   </annotation>
@@ -2818,7 +2835,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>If set to true the benchmark will not wait until the node is stopped. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="delay-execution" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="delay-execution" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>If this value is positive the stage will spawn a thread which will stop the node after the delay. The stage will not wait for anything. By default the stop is immediate and synchronous.</documentation>
                </annotation>
@@ -2978,7 +2995,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                      <documentation>The threads by default do the PUT request, if this is set to true they will do REMOVE. Default is false.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="duration" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="duration" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>The enforced duration of the transaction. If &gt; 0 the threads will sleep for duration/transactionSize after each request. Default is 0.</documentation>
                   </annotation>
@@ -3009,7 +3026,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>The threads by default do the PUT request, if this is set to true they will do REMOVE. Default is false.</documentation>
                </annotation>
             </attribute>
-            <attribute name="duration" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="duration" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>The enforced duration of the transaction. If &gt; 0 the threads will sleep for duration/transactionSize after each request. Default is 0.</documentation>
                </annotation>
@@ -3035,7 +3052,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       <complexContent>
          <extension base="rg:org-radargun-stages-abstract-master-stage">
             <sequence/>
-            <attribute name="time" type="rg:long-converted-by-org-radargun-config-time-converter" use="required">
+            <attribute name="time" type="rg:long-converted-by-org-radargun-utils-time-converter" use="required">
                <annotation>
                   <documentation>Sleep duration.</documentation>
                </annotation>
@@ -3066,7 +3083,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                      <documentation>By default the check will print out only those threads which appear to be stuck. If this is set to false all threads will be printed out. Default is true.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="period" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="period" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>The delay between consecutive checks. Default is 10 seconds.</documentation>
                   </annotation>
@@ -3092,7 +3109,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>By default the check will print out only those threads which appear to be stuck. If this is set to false all threads will be printed out. Default is true.</documentation>
                </annotation>
             </attribute>
-            <attribute name="period" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="period" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>The delay between consecutive checks. Default is 10 seconds.</documentation>
                </annotation>
@@ -3258,7 +3275,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                      <documentation>Set last state before finishing. Default is true.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</documentation>
                   </annotation>
@@ -3294,7 +3311,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   <documentation>Set last state before finishing. Default is true.</documentation>
                </annotation>
             </attribute>
-            <attribute name="timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</documentation>
                </annotation>
@@ -3350,23 +3367,23 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       <complexContent>
          <extension base="rg:org-radargun-stages-abstract-dist-stage">
             <sequence>
-               <element maxOccurs="1" minOccurs="0" name="period" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="period" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>How long period without any change are we looking for. Default is 10 seconds.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</documentation>
                   </annotation>
                </element>
             </sequence>
-            <attribute name="period" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="period" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>How long period without any change are we looking for. Default is 10 seconds.</documentation>
                </annotation>
             </attribute>
-            <attribute name="timeout" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</documentation>
                </annotation>
@@ -3382,7 +3399,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       <complexContent>
          <extension base="rg:org-radargun-stages-cache-check-stage">
             <sequence>
-               <element maxOccurs="1" minOccurs="0" name="duration" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <element maxOccurs="1" minOccurs="0" name="duration" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>Duration of the test. Default is 1 minute.</documentation>
                   </annotation>
@@ -3398,7 +3415,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   </annotation>
                </element>
             </sequence>
-            <attribute name="duration" type="rg:long-converted-by-org-radargun-config-time-converter">
+            <attribute name="duration" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Duration of the test. Default is 1 minute.</documentation>
                </annotation>

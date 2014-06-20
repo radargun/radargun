@@ -3,7 +3,7 @@ package org.radargun.stages;
 
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.config.TimeConverter;
+import org.radargun.utils.TimeConverter;
 
 /**
  * Sleeps specified number of milliseconds.

@@ -2,13 +2,12 @@ package org.radargun.stages.lifecycle;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.config.TimeConverter;
+import org.radargun.utils.TimeConverter;
 import org.radargun.stages.helpers.RoleHelper;
 
 /**

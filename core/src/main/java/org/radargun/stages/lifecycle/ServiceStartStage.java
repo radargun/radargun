@@ -5,7 +5,7 @@ import java.util.Set;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.config.TimeConverter;
+import org.radargun.utils.TimeConverter;
 
 /**
  * Stage that starts a CacheWrapper on each slave.

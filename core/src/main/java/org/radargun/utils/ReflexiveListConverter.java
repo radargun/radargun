@@ -1,4 +1,4 @@
-package org.radargun.config;
+package org.radargun.utils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
@@ -9,6 +9,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.radargun.config.ComplexConverter;
+import org.radargun.config.ComplexDefinition;
+import org.radargun.config.DefinitionElement;
+import org.radargun.config.PropertyHelper;
+import org.radargun.config.SimpleDefinition;
 
 /**
  * Converts a elements in definition into list of instances. Instance class

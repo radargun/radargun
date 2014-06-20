@@ -12,11 +12,11 @@ import java.util.regex.Pattern;
 import org.radargun.Service;
 import org.radargun.config.Converter;
 import org.radargun.config.Property;
-import org.radargun.config.TimeConverter;
+import org.radargun.utils.ArgsConverter;
+import org.radargun.utils.TimeConverter;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.ProvidesTrait;
-import org.radargun.utils.Tokenizer;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -90,59 +90,6 @@ public class ProcessService {
          reportOutput(line);
       } else {
          System.err.println(line);
-      }
-   }
-
-   private static class ArgsConverter implements Converter<List<String>> {
-      private static Log log = LogFactory.getLog(ArgsConverter.class);
-
-      @Override
-      public List<String> convert(String string, Type type) {
-         ArrayList<String> list = new ArrayList<String>();
-         Tokenizer tokenizer = new Tokenizer(string, new String[] { " ", "\t", "\n", "\r", "\f", "'" }, true, false, 0);
-         StringBuilder sb = null;
-         while (tokenizer.hasMoreTokens()) {
-            String token = tokenizer.nextToken();
-            if (token.charAt(0) == '\'') {
-               if (sb == null) { // non-quoted
-                  sb = new StringBuilder().append(token);
-               } else { // quoted
-                  sb.append("'");
-                  list.add(sb.toString());
-                  sb = null;
-               }
-            } else if (Character.isWhitespace(token.charAt(0)) && token.length() == 1) {
-               if (sb != null) {
-                  sb.append(token);
-               }
-            } else {
-               if (sb == null) {
-                  list.add(token);
-               } else {
-                  sb.append(token);
-               }
-            }
-         }
-         if (sb != null) {
-            log.warn("Args are not closed: " + string);
-            sb.append('\'');
-            list.add(sb.toString());
-         }
-         return list;
-      }
-
-      @Override
-      public String convertToString(List<String> value) {
-         StringBuilder sb = new StringBuilder();
-         for (String arg : value) {
-            sb.append(arg).append(' ');
-         }
-         return sb.toString();
-      }
-
-      @Override
-      public String allowedPattern(Type type) {
-         return ".*";
       }
    }
 

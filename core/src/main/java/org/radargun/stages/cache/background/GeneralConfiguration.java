@@ -1,7 +1,7 @@
 package org.radargun.stages.cache.background;
 
 import org.radargun.config.Property;
-import org.radargun.config.TimeConverter;
+import org.radargun.utils.TimeConverter;
 
 /**
  * Configuration options shared by all background stressor logics

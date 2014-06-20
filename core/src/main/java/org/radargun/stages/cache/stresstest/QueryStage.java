@@ -4,19 +4,19 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Converter;
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
-import org.radargun.config.ReflexiveListConverter;
 import org.radargun.config.Stage;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Queryable;
+import org.radargun.utils.NumberConverter;
+import org.radargun.utils.ObjectConverter;
+import org.radargun.utils.ReflexiveListConverter;
 
 /**
  * Executes Queries using Infinispan-Query API against the cache.
@@ -157,81 +157,6 @@ public class QueryStage extends StressTestStage {
          previousQueryResult = queryResult;
 
          return queryResult;
-      }
-   }
-
-   private static class NumberConverter implements Converter<Number> {
-      private static final Pattern INT_PATTERN = Pattern.compile("int (.*)");
-      private static final Pattern LONG_PATTERN = Pattern.compile("long (.*)");
-      private static final Pattern FLOAT_PATTERN = Pattern.compile("float (.*)");
-      private static final Pattern DOUBLE_PATTERN = Pattern.compile("double (.*)");
-      @Override
-      public Number convert(String string, Type type) {
-         Number n = toNumber(string);
-         if (n != null) return n;
-         throw new IllegalArgumentException("Cannot parse " + string);
-      }
-
-      public Number toNumber(String string) {
-         Matcher m;
-         if ((m = INT_PATTERN.matcher(string)).matches()) {
-            return Integer.parseInt(m.group(1));
-         } else if ((m = LONG_PATTERN.matcher(string)).matches()) {
-            return Long.parseLong(m.group(1));
-         } else if ((m = FLOAT_PATTERN.matcher(string)).matches()) {
-            return Float.parseFloat(m.group(1));
-         } else if ((m = DOUBLE_PATTERN.matcher(string)).matches()) {
-            return Double.parseDouble(m.group(1));
-         }
-         try {
-            long l = Long.parseLong(string);
-            if (l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE) {
-               return (int) l;
-            }
-         } catch (NumberFormatException e) {}
-         try {
-            return Double.parseDouble(string);
-         } catch (NumberFormatException e) {}
-         return null;
-      }
-
-      @Override
-      public String convertToString(Number value) {
-         return String.valueOf(value);
-      }
-
-      @Override
-      public String allowedPattern(Type type) {
-         return "(int |long |float |double )?[0-9.]*";
-      }
-   }
-
-   private static class ObjectConverter implements Converter<Object>{
-      private static final NumberConverter NUMBER_CONVERTER = new NumberConverter();
-      private static final Pattern STRING_PATTERN = Pattern.compile("string (.*)");
-      private static final Pattern BOOLEAN_PATTERN = Pattern.compile("true|false");
-
-      @Override
-      public Object convert(String string, Type type) {
-         Matcher m;
-         if ((m = STRING_PATTERN.matcher(string)).matches()) {
-            return m.group(1);
-         } else if ((m = BOOLEAN_PATTERN.matcher(string)).matches()) {
-            return Boolean.parseBoolean(string);
-         }
-         Number n = NUMBER_CONVERTER.toNumber(string);
-         if (n != null) return n;
-         return string;
-      }
-
-      @Override
-      public String convertToString(Object value) {
-         return String.valueOf(value);
-      }
-
-      @Override
-      public String allowedPattern(Type type) {
-         return ".*";
       }
    }
 

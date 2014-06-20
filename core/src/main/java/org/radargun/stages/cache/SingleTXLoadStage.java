@@ -7,7 +7,7 @@ import java.util.Set;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.config.TimeConverter;
+import org.radargun.utils.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;

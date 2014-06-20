@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.config.TimeConverter;
+import org.radargun.utils.TimeConverter;
 import org.radargun.jmx.JMXClusterValidator;
 import org.radargun.stages.AbstractMasterStage;
 import org.radargun.utils.ClassLoadHelper;

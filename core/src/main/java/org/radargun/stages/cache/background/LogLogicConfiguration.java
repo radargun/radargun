@@ -1,7 +1,7 @@
 package org.radargun.stages.cache.background;
 
 import org.radargun.config.Property;
-import org.radargun.config.TimeConverter;
+import org.radargun.utils.TimeConverter;
 
 /**
  * Configuration specific to {@link PrivateLogLogic} or {@link SharedLogLogic}
