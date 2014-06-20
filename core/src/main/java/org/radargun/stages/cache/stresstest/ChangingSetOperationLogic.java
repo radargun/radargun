@@ -7,7 +7,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.radargun.config.SizeConverter;
+import org.radargun.utils.SizeConverter;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.BasicOperations;

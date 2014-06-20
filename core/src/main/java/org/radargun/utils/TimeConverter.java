@@ -1,7 +1,8 @@
-package org.radargun.config;
+package org.radargun.utils;
 
 import java.lang.reflect.Type;
 
+import org.radargun.config.Converter;
 import org.radargun.utils.Utils;
 
 /**
