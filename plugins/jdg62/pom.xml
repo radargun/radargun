@@ -54,6 +54,12 @@
       </dependency>
 
       <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-cachestore-leveldb</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+
+      <dependency>
          <groupId>org.jboss.spec.javax.transaction</groupId>
          <artifactId>jboss-transaction-api_1.1_spec</artifactId>
          <version>${version.jbossts}</version>
@@ -85,6 +91,10 @@
             <exclusion>
                <groupId>org.infinispan</groupId>
                <artifactId>infinispan-cachestore-jdbc</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-cachestore-leveldb</artifactId>
             </exclusion>
             <exclusion>
                <groupId>org.jboss.spec.javax.transaction</groupId>

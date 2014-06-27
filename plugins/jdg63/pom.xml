@@ -14,7 +14,7 @@
    <name>JDG 6.3.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>6.1.0.ER5-redhat-1</version.infinispan>
+      <version.infinispan>6.1.0.Final-redhat-3</version.infinispan>
       <version.jbossts>1.0.1.Final-redhat-2</version.jbossts>
    </properties>
 
@@ -54,6 +54,18 @@
       </dependency>
 
       <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-cachestore-leveldb</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-cachestore-jpa</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+
+      <dependency>
          <groupId>org.jboss.spec.javax.transaction</groupId>
          <artifactId>jboss-transaction-api_1.1_spec</artifactId>
          <version>${version.jbossts}</version>
@@ -85,6 +97,14 @@
             <exclusion>
                <groupId>org.infinispan</groupId>
                <artifactId>infinispan-cachestore-jdbc</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-cachestore-leveldb</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-cachestore-jpa</artifactId>
             </exclusion>
             <exclusion>
                <groupId>org.jboss.spec.javax.transaction</groupId>

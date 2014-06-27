@@ -77,6 +77,10 @@
                <artifactId>infinispan-cachestore-jdbc</artifactId>
             </exclusion>
             <exclusion>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-cachestore-leveldb</artifactId>
+            </exclusion>
+            <exclusion>
                <groupId>org.jboss.jbossts</groupId>
                <artifactId>jbossjta</artifactId>
             </exclusion>
