@@ -20,11 +20,11 @@ TAILF=false
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ benchmark.sh [-c config_file] [-u ssh_user] [-w WORKING DIRECTORY] [-m MASTER_IP[:PORT]] [-d port] SLAVE...'
+  wrappedecho '  $ dist.sh [-c config_file] [-u ssh_user] [-w WORKING DIRECTORY] [-m MASTER_IP[:PORT]] [-d port] SLAVE...'
   wrappedecho ""
   wrappedecho "e.g."
-  wrappedecho "  $ benchmark.sh node1 node2 node3 node4"
-  wrappedecho "  $ benchmark.sh node{1..4}"
+  wrappedecho "  $ dist.sh node1 node2 node3 node4"
+  wrappedecho "  $ dist.sh node{1..4}"
   wrappedecho ""
   wrappedecho "   -c       Configuration file. Defaults to '$CONFIG'."
   wrappedecho ""
