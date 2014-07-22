@@ -128,7 +128,13 @@ public class InfinispanEmbeddedService {
    }
 
    protected DefaultCacheManager createCacheManager(String configFile) throws IOException {
-      return new DefaultCacheManager(configFile);
+      DefaultCacheManager cm = new DefaultCacheManager(configFile, false);
+      beforeCacheManagerStart(cm);
+      cm.start();
+      return cm;
+   }
+
+   protected void beforeCacheManagerStart(DefaultCacheManager cacheManager) {
    }
 
    protected void waitForRehash() throws InterruptedException {

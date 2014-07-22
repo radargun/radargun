@@ -2,6 +2,9 @@ package org.radargun.service;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.infinispan.commons.util.FileLookupFactory;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
@@ -24,6 +27,7 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
    private boolean jgroupsDumperEnabled = false;
 
    private JGroupsDumper jgroupsDumper;
+   private ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
 
    @ProvidesTrait
    public InfinispanEmbeddedQueryable createQueryable() {
@@ -53,12 +57,21 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
    }
 
    @Override
-   protected void startCaches() throws Exception {
-      super.startCaches();
+   protected void beforeCacheManagerStart(final DefaultCacheManager cacheManager) {
       if (jgroupsDumperEnabled) {
-         jgroupsDumper = new JGroupsDumper(((JGroupsTransport) ((DefaultCacheManager) cacheManager).getTransport())
-               .getChannel().getProtocolStack());
-         jgroupsDumper.start();
+         scheduledExecutor.schedule(new Runnable() {
+            @Override
+            public void run() {
+               JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
+               if (transport == null || transport.getChannel() == null || !transport.getChannel().isOpen()) {
+                  // JGroups are not initialized, wait
+                  scheduledExecutor.schedule(this, 1, TimeUnit.SECONDS);
+               } else {
+                  jgroupsDumper = new JGroupsDumper(transport.getChannel().getProtocolStack());
+                  jgroupsDumper.start();
+               }
+            }
+         }, 0, TimeUnit.MILLISECONDS);
       }
    }
 

@@ -88,7 +88,10 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
    protected DefaultCacheManager createCacheManager(String configFile) throws IOException {
       ConfigurationBuilderHolder cbh = createConfiguration(configFile);
       cbh.getGlobalConfigurationBuilder().transport().transport(partitionable.createTransport());
-      return new DefaultCacheManager(cbh, true);
+      DefaultCacheManager cm = new DefaultCacheManager(cbh, false);
+      beforeCacheManagerStart(cm);
+      cm.start();
+      return cm;
    }
 
    protected ConfigurationBuilderHolder createConfiguration(String configFile) throws IOException {
