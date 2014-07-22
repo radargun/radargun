@@ -3,14 +3,17 @@ package org.radargun.service;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.jgroups.protocols.TP;
 import org.jgroups.protocols.UNICAST3;
 import org.jgroups.stack.Protocol;
 import org.jgroups.stack.ProtocolStack;
+import org.jgroups.util.TimeScheduler;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.utils.Utils;
@@ -99,6 +102,7 @@ public class JGroupsDumper extends Thread {
    }
 
    private static class TPDumper implements ProtocolDumper {
+      final private Set<String> dumped = new HashSet<String>();
 
       @Override
       public boolean accepts(Protocol protocol) {
@@ -118,18 +122,26 @@ public class JGroupsDumper extends Thread {
          } catch (Exception e) {
             log.error("Failed to get internal thread pool");
          }
+         TimeScheduler timer = tp.getTimer();
+         try {
+            Field f = timer.getClass().getDeclaredField("pool");
+            f.setAccessible(true);
+            dump = checkThreadPool((ThreadPoolExecutor) f.get(timer), "Timer") || dump;
+         } catch (Exception e) {
+            log.error("Failed to get timer thread pool: " + timer.getClass());
+         }
          if (dump) Utils.threadDump();
       }
 
       private boolean checkThreadPool(ThreadPoolExecutor tpe, String name) {
          int threshold = (tpe.getMaximumPoolSize() * 95 / 100) - 1;
-         if (tpe.getPoolSize() >= threshold) {
-            log.warn(String.format("%s current: %d, active: %d, core: %d, max: %d, scheduled: %d, completed: %d, queue size: %d", name,
-                  tpe.getPoolSize(), tpe.getActiveCount(), tpe.getCorePoolSize(), tpe.getMaximumPoolSize(),
-                  tpe.getTaskCount(), tpe.getCompletedTaskCount(), tpe.getQueue() != null ? tpe.getQueue().size() : -1));
-            return true;
-         }
-         return false;
+         log.info(String.format("%s current: %d, active: %d, core: %d, max: %d, scheduled: %d, completed: %d, queue size: %d", name,
+               tpe.getPoolSize(), tpe.getActiveCount(), tpe.getCorePoolSize(), tpe.getMaximumPoolSize(),
+               tpe.getTaskCount(), tpe.getCompletedTaskCount(), tpe.getQueue() != null ? tpe.getQueue().size() : -1));
+         boolean dump = tpe.getActiveCount() >= threshold || (tpe.getPoolSize() >= threshold && !dumped.contains(name));
+         if (dump) dumped.add(name);
+         if (tpe.getPoolSize() < threshold) dumped.remove(name);
+         return dump;
       }
    }
 }
