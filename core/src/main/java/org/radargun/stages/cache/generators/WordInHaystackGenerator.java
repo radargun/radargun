@@ -1,7 +1,8 @@
-package org.radargun.query;
+package org.radargun.stages.cache.generators;
 
 import java.util.Random;
 
+import org.radargun.config.Property;
 import org.radargun.utils.Utils;
 
 /**
@@ -10,13 +11,17 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class WordInHaystackGenerator extends TextObjectGenerator {
+   @Property(doc = "File with words (one word per line).", optional = false)
+   private String file;
+
    private static char[] ALPHABET = "abcdefghijklmnopqrstuvw 1234567890".toCharArray();
 
    private String[] dictionary;
 
    @Override
    public void init(String param, ClassLoader classLoader) {
-      dictionary = Utils.readFile(param).toArray(new String[0]);
+      super.init(param, classLoader);
+      dictionary = Utils.readFile(file).toArray(new String[0]);
    }
 
    @Override
@@ -27,6 +32,6 @@ public class WordInHaystackGenerator extends TextObjectGenerator {
       for (int i = position; i > 0; --i) sb.append(ALPHABET[random.nextInt(ALPHABET.length)]);
       sb.append(word);
       while (sb.length() < size) sb.append(ALPHABET[random.nextInt(ALPHABET.length)]);
-      return new TextObject(sb.toString());
+      return newInstance(sb.toString());
    }
 }

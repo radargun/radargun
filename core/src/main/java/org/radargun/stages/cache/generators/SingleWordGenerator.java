@@ -1,7 +1,8 @@
-package org.radargun.query;
+package org.radargun.stages.cache.generators;
 
 import java.util.Random;
 
+import org.radargun.config.Property;
 import org.radargun.utils.Utils;
 
 /**
@@ -10,20 +11,24 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class SingleWordGenerator extends TextObjectGenerator {
+   @Property(doc = "File with words (one word per line).", optional = false)
+   private String file;
+
    private String[] dictionary;
 
    @Override
    public void init(String param, ClassLoader classLoader) {
-      dictionary = Utils.readFile(param).toArray(new String[0]);
+      super.init(param, classLoader);
+      dictionary = Utils.readFile(file).toArray(new String[0]);
    }
 
    @Override
    public Object generateValue(Object key, int size, Random random) {
-      return new TextObject(dictionary[random.nextInt(dictionary.length)]);
+      return newInstance(dictionary[random.nextInt(dictionary.length)]);
    }
 
    @Override
    public boolean checkValue(Object value, int expectedSize) {
-      return ((TextObject) value).text != null;
+      return getText(value) != null;
    }
 }
