@@ -46,6 +46,9 @@ public class QueryStage extends StressTestStage {
    @Property(doc = "Maximum number of the results. Default is none.")
    private long limit = -1;
 
+   @Property(doc = "Check whether all slaves got the same result, and fail if not. Default is false.")
+   private boolean checkSameResult = false;
+
    @InjectTrait
    private Queryable queryable;
 
@@ -78,9 +81,14 @@ public class QueryStage extends StressTestStage {
             int ackSize = ((QueryAck) ack).queryResultSize;
             if (size < 0) {
                size = ackSize;
-            } else if (size != ((QueryAck) ack).queryResultSize) {
-               log.error("The size got from " + ack.getSlaveIndex() + " = " + ackSize + " is not the same as from other slaves = " + size);
-               return false;
+            } else if (size != ackSize) {
+               String message = "The size got from " + ack.getSlaveIndex() + " = " + ackSize + " is not the same as from other slaves = " + size;
+               if (checkSameResult) {
+                  log.error(message);
+                  return false;
+               } else {
+                  log.info(message);
+               }
             }
          } else {
             unwrapped.add(ack);
@@ -144,7 +152,7 @@ public class QueryStage extends StressTestStage {
          } else {
             log.info("First result has " + queryResult.size() + " entries");
             if (log.isTraceEnabled()) {
-               for (Object entry : queryResult.list()) {
+               for (Object entry : queryResult.values()) {
                   log.trace(String.valueOf(entry));
                }
             }

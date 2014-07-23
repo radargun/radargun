@@ -196,7 +196,7 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       }
 
       @Override
-      public List list() {
+      public List values() {
          return Collections.unmodifiableList(list);
       }
    }
