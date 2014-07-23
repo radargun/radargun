@@ -65,7 +65,7 @@
             </property>
          </activation>
          <modules>
-            <module>jpa</module>
+            <module>specific/jpa</module>
          </modules>
       </profile>
       <!-- Reporters -->
@@ -450,7 +450,7 @@
                            </fileset>
                         </copy>
                         <copy todir="${distribution.artifact}/specific">
-                           <fileset dir="jpa/target" erroronmissingdir="false">
+                           <fileset dir="specific/jpa/target" erroronmissingdir="false">
                               <include name="radargun-jpa-*.jar" />
                            </fileset>
                         </copy>
