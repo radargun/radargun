@@ -1,7 +1,6 @@
 package org.radargun.traits;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.radargun.Operation;
 
@@ -58,6 +57,6 @@ public interface Queryable {
     */
    interface QueryResult {
       int size();
-      List list();
+      Collection values();
    }
 }

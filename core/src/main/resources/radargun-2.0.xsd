@@ -86,7 +86,6 @@
                         <element name="cluster-validation" type="rg:org-radargun-stages-cache-cluster-validation-stage"/>
                         <element name="command" type="rg:org-radargun-stages-command-stage"/>
                         <element name="distributed-task" type="rg:org-radargun-stages-distributedtask-distributed-task-stage"/>
-                        <element name="example" type="rg:org-radargun-stages-example-stage"/>
                         <element name="isolation-level-check" type="rg:org-radargun-stages-cache-isolation-level-check-stage"/>
                         <element name="jmx-cluster-validation-prepare" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-prepare-stage"/>
                         <element name="jmx-cluster-validation" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-stage"/>
@@ -2311,6 +2310,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       <complexContent>
          <extension base="rg:org-radargun-stages-cache-stresstest-stress-test-stage">
             <sequence>
+               <element maxOccurs="1" minOccurs="0" name="check-same-result" type="rg:boolean">
+                  <annotation>
+                     <documentation>Check whether all slaves got the same result, and fail if not. Default is false.</documentation>
+                  </annotation>
+               </element>
                <element maxOccurs="1" minOccurs="0" name="conditions" type="rg:java-util-list-converted-by-org-radargun-stages-cache-stresstest-query-stage-condition-converter">
                   <annotation>
                      <documentation>Conditions used in the query</documentation>
@@ -2337,6 +2341,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   </annotation>
                </element>
             </sequence>
+            <attribute name="check-same-result" type="rg:boolean">
+               <annotation>
+                  <documentation>Check whether all slaves got the same result, and fail if not. Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="limit" type="rg:long">
                <annotation>
                   <documentation>Maximum number of the results. Default is none.</documentation>
