@@ -23,6 +23,10 @@ public class TextObject implements Serializable {
       this.text = text;
    }
 
+   public String getText() {
+      return text;
+   }
+
    @Override
    public String toString() {
       return "TextObject{" + text + '}';

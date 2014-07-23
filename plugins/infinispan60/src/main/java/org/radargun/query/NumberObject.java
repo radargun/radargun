@@ -27,6 +27,14 @@ public class NumberObject implements Serializable {
       this.doubleValue = d;
    }
 
+   public int getInt() {
+      return integerValue;
+   }
+
+   public double getDouble() {
+      return doubleValue;
+   }
+
    @Override
    public String toString() {
       return "NumberObject{int=" + integerValue + ", double=" + doubleValue + '}';
