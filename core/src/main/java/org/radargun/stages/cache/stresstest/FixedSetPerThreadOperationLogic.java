@@ -11,7 +11,7 @@ import org.radargun.traits.BasicOperations;
 /**
  * The sets of keys for the stressor threads are distinct when using this logic.
  *
- * All keys are loaded to the cache in the {@link #init(int, int, int) init} method, prior to test execution.
+ * All keys are loaded to the cache in the {@link OperationLogic#init(Stressor) init} method, prior to test execution.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -31,18 +31,18 @@ class FixedSetPerThreadOperationLogic extends FixedSetOperationLogic {
    }
 
    @Override
-   public void init(int threadIndex, int nodeIndex, int numNodes) {
-      this.nodeIndex = nodeIndex;
+   public void init(Stressor stressor) {
+      this.nodeIndex = stressor.getNodeIndex();
       if (stage.poolKeys) {
          if (pooledKeys.size() == stage.numEntries) return;
       } else {
          if (myLoadedKeys == stage.numEntries) return;
       }
-      BasicOperations.Cache cache = stage.basicOperations.getCache(stage.bucketPolicy.getBucketName(threadIndex));
+      BasicOperations.Cache cache = stage.basicOperations.getCache(stage.bucketPolicy.getBucketName(stressor.getThreadIndex()));
       KeyGenerator keyGenerator = stage.getKeyGenerator();
       for (int keyIndex = 0; keyIndex < stage.numEntries; keyIndex++) {
-         Object key = keyGenerator.generateKey((nodeIndex * stage.numThreads + threadIndex) * stage.numEntries + keyIndex);
-         Object value = stage.generateValue(key, Integer.MAX_VALUE);
+         Object key = keyGenerator.generateKey((nodeIndex * stage.numThreads + stressor.getThreadIndex()) * stage.numEntries + keyIndex);
+         Object value = stage.generateValue(key, Integer.MAX_VALUE, stressor.getRandom());
          addPooledKey(key, value);
          try {
             cache.put(key, value);

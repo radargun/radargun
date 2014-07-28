@@ -41,7 +41,7 @@ public class ClientStressTestStage extends StressTestStage {
          if (duration > 0) {
             completion = new TimeStressorCompletion(duration / iterations, requestPeriod);
          } else {
-            completion = new OperationCountCompletion(duration / iterations, logPeriod, requestPeriod);
+            completion = new OperationCountCompletion(numRequests / iterations, logPeriod, requestPeriod);
          }
          setCompletion(completion);
 
