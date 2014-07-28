@@ -34,9 +34,9 @@ class ChangingSetOperationLogic implements OperationLogic {
    }
 
    @Override
-   public void init(int threadIndex, int nodeIndex, int numNodes) {
-      this.numNodes = numNodes;
-      keysLoaded.compareAndSet(0, nodeIndex);
+   public void init(Stressor stressor) {
+      this.numNodes = stressor.getNumNodes();
+      keysLoaded.compareAndSet(0, stressor.getNodeIndex());
       double averageSize = 0;
       Map<Integer, Double> probabilityMap = stage.entrySize.getProbabilityMap();
       long entries;
@@ -100,7 +100,7 @@ class ChangingSetOperationLogic implements OperationLogic {
          }
          return value;
       } else {
-         Object value = stage.generateValue(null, Integer.MAX_VALUE);
+         Object value = stage.generateValue(null, Integer.MAX_VALUE, stressor.getRandom());
          int size = stage.getValueGenerator().sizeOf(value);
          Load load = loadForSize.get(size);
          if (load.scheduledKeys.size() < load.max) {

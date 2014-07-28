@@ -105,7 +105,7 @@ public class QueryStage extends StressTestStage {
       protected Queryable.QueryResult previousQueryResult = null;
 
       @Override
-      public void init(int threadIndex, int nodeIndex, int numNodes) {
+      public void init(Stressor stressor) {
          Class<?> clazz;
          try {
             clazz = slaveState.getClassLoadHelper().getLoader().loadClass(queryObjectClass);

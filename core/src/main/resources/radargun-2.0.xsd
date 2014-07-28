@@ -86,6 +86,7 @@
                         <element name="cluster-validation" type="rg:org-radargun-stages-cache-cluster-validation-stage"/>
                         <element name="command" type="rg:org-radargun-stages-command-stage"/>
                         <element name="distributed-task" type="rg:org-radargun-stages-distributedtask-distributed-task-stage"/>
+                        <element name="example" type="rg:org-radargun-stages-example-stage"/>
                         <element name="isolation-level-check" type="rg:org-radargun-stages-cache-isolation-level-check-stage"/>
                         <element name="jmx-cluster-validation-prepare" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-prepare-stage"/>
                         <element name="jmx-cluster-validation" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-stage"/>
@@ -192,6 +193,7 @@
             <element name="cluster-validation" type="rg:org-radargun-stages-cache-cluster-validation-stage"/>
             <element name="command" type="rg:org-radargun-stages-command-stage"/>
             <element name="distributed-task" type="rg:org-radargun-stages-distributedtask-distributed-task-stage"/>
+            <element name="example" type="rg:org-radargun-stages-example-stage"/>
             <element name="isolation-level-check" type="rg:org-radargun-stages-cache-isolation-level-check-stage"/>
             <element name="jmx-cluster-validation-prepare" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-prepare-stage"/>
             <element name="jmx-cluster-validation" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-stage"/>
@@ -1211,6 +1213,11 @@
                      <documentation>Target period of requests - e.g. when this is set to 10 msthe benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.</documentation>
                   </annotation>
                </element>
+               <element maxOccurs="1" minOccurs="0" name="seed" type="rg:java-lang-long">
+                  <annotation>
+                     <documentation>Seed used for initialization of random generators. Each thread adds its index to the seed value. By default the seed is not set.</documentation>
+                  </annotation>
+               </element>
                <element maxOccurs="1" minOccurs="0" name="shared-keys" type="rg:boolean">
                   <annotation>
                      <documentation>By default each client thread operates on his private set of keys. Setting this to true introduces contention between the threads, the numThreads property says total amount of entries that are used by all threads. Default is false.</documentation>
@@ -1382,6 +1389,11 @@
                   <documentation>Target period of requests - e.g. when this is set to 10 msthe benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.</documentation>
                </annotation>
             </attribute>
+            <attribute name="seed" type="rg:java-lang-long">
+               <annotation>
+                  <documentation>Seed used for initialization of random generators. Each thread adds its index to the seed value. By default the seed is not set.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="shared-keys" type="rg:boolean">
                <annotation>
                   <documentation>By default each client thread operates on his private set of keys. Setting this to true introduces contention between the threads, the numThreads property says total amount of entries that are used by all threads. Default is false.</documentation>
@@ -1474,6 +1486,18 @@
             <restriction base="string">
                <pattern value="[0-9]+\s*(k[bB]?|M[bB]?|G[bB]?)"/>
             </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="java-lang-long">
+      <union>
+         <simpleType>
+            <restriction base="long"/>
          </simpleType>
          <simpleType>
             <restriction base="string">

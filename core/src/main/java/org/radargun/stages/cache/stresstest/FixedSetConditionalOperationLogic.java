@@ -29,7 +29,7 @@ class FixedSetConditionalOperationLogic extends FixedSetPerThreadOperationLogic 
       Object key = getKey(r.nextInt(stage.numEntries - 1), stressor.getThreadIndex());
       Object lastValue = lastValues.get(key);
 
-      Object newValue = stage.generateValue(key, Integer.MAX_VALUE);
+      Object newValue = stage.generateValue(key, Integer.MAX_VALUE, stressor.getRandom());
       int probability = 0;
       if (lastValue == null) {
          lastValues.put(key, newValue);
@@ -40,9 +40,11 @@ class FixedSetConditionalOperationLogic extends FixedSetPerThreadOperationLogic 
          lastValues.remove(key);
          return stressor.makeRequest(ConditionalOperations.REMOVE_EXEC, key, lastValue);
       } else if (randomAction < (probability += stage.removeInvalidPercentage)) {
-         return stressor.makeRequest(ConditionalOperations.REMOVE_NOTEX, key, stage.generateValue(key, Integer.MAX_VALUE));
+         Object wrongValue = stage.generateValue(key, Integer.MAX_VALUE, stressor.getRandom());
+         return stressor.makeRequest(ConditionalOperations.REMOVE_NOTEX, key, wrongValue);
       } else if (randomAction < (probability += stage.replaceInvalidPercentage)) {
-         return stressor.makeRequest(ConditionalOperations.REPLACE_NOTEX, key, stage.generateValue(key, Integer.MAX_VALUE), newValue);
+         Object wrongValue = stage.generateValue(key, Integer.MAX_VALUE, stressor.getRandom());
+         return stressor.makeRequest(ConditionalOperations.REPLACE_NOTEX, key, wrongValue, newValue);
       } else {
          lastValues.put(key, newValue);
          return stressor.makeRequest(ConditionalOperations.REPLACE_EXEC, key, lastValue, newValue);

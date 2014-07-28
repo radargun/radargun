@@ -37,8 +37,8 @@ class BulkOperationLogic implements OperationLogic {
    }
 
    @Override
-   public void init(int threadIndex, int nodeIndex, int numNodes) {
-      initLogic.init(threadIndex, nodeIndex, numNodes);
+   public void init(Stressor stressor) {
+      initLogic.init(stressor);
    }
 
    @Override
@@ -50,7 +50,7 @@ class BulkOperationLogic implements OperationLogic {
          for (int i = 0; i < stage.bulkSize;) {
             Object key = initLogic.getKey(r.nextInt(stage.numEntries - 1), stressor.getThreadIndex());
             if (!map.containsKey(key)) {
-               map.put(key, stage.generateValue(key, Integer.MAX_VALUE));
+               map.put(key, stage.generateValue(key, Integer.MAX_VALUE, stressor.getRandom()));
                ++i;
             }
          }

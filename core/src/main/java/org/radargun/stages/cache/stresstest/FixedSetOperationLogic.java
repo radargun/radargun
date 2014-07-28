@@ -33,7 +33,7 @@ abstract class FixedSetOperationLogic implements OperationLogic {
       Object key = getKey(randomKeyInt, stressor.getThreadIndex());
 
       if (randomAction < stage.writePercentage) {
-         return stressor.makeRequest(BasicOperations.PUT, key, stage.generateValue(key, Integer.MAX_VALUE));
+         return stressor.makeRequest(BasicOperations.PUT, key, stage.generateValue(key, Integer.MAX_VALUE, stressor.getRandom()));
       } else if (randomAction < stage.writePercentage + stage.removePercentage) {
          return stressor.makeRequest(BasicOperations.REMOVE, key);
       } else {

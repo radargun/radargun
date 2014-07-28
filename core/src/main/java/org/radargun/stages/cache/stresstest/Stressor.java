@@ -1,6 +1,7 @@
 package org.radargun.stages.cache.stresstest;
 
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.radargun.Operation;
@@ -15,7 +16,7 @@ import org.radargun.traits.Transactional;
 
 /**
  * Each stressor operates according to its {@link OperationLogic logic} - the instance is private to each thread.
- * After finishing the {@linkplain OperationLogic#init(int, int, int) init phase}, all stressors synchronously
+ * After finishing the {@linkplain OperationLogic#init(Stressor) init phase}, all stressors synchronously
  * execute logic's {@link OperationLogic#run(Stressor) run} method until
  * the {@link Completion#moreToRun(int)} returns false.
  *
@@ -35,6 +36,7 @@ class Stressor extends Thread {
    private StressTestStage stage;
    private PhaseSynchronizer synchronizer;
    private Completion completion;
+   private Random random;
    private BasicOperations.Cache basicCache;
    private ConditionalOperations.Cache conditionalCache;
    private BulkOperations.Cache bulkNativeCache;
@@ -51,6 +53,11 @@ class Stressor extends Thread {
       this.logic = logic;
       synchronizer = stage.getSynchronizer();
       completion = stage.getCompletion();
+      if (stage.getSeed() != null) {
+         random = new Random(stage.getSeed() + threadIndex + nodeIndex * numNodes);
+      } else {
+         random = new Random();
+      }
 
       String cacheName = stage.bucketPolicy.getBucketName(threadIndex);
       basicCache = stage.basicOperations == null ? null : stage.basicOperations.getCache(cacheName);
@@ -79,7 +86,7 @@ class Stressor extends Thread {
             }
             try {
                if (!stage.isTerminated()) {
-                  logic.init(threadIndex, nodeIndex, numNodes);
+                  logic.init(this);
                }
                stats = stage.createStatistics();
             } catch (RuntimeException e) {
@@ -239,8 +246,20 @@ class Stressor extends Thread {
       return threadIndex;
    }
 
+   public int getNodeIndex() {
+      return nodeIndex;
+   }
+
+   public int getNumNodes() {
+      return numNodes;
+   }
+
    public Statistics getStats() {
       return stats;
+   }
+
+   public Random getRandom() {
+      return random;
    }
 
    private class TransactionException extends Exception {

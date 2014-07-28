@@ -4,14 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
-import org.radargun.utils.SizeConverter;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
@@ -37,6 +34,8 @@ import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
 import org.radargun.utils.Fuzzy;
+import org.radargun.utils.SizeConverter;
+import org.radargun.utils.TimeConverter;
 import org.radargun.utils.Utils;
 
 /**
@@ -162,6 +161,9 @@ public class StressTestStage extends AbstractDistStage {
 
    @Property(doc = "With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.", converter = TimeConverter.class)
    protected long entryLifespan = 3600000;
+
+   @Property(doc = "Seed used for initialization of random generators. Each thread adds its index to the seed value. By default the seed is not set.")
+   protected Long seed;
 
    @InjectTrait
    protected BasicOperations basicOperations;
@@ -457,8 +459,7 @@ public class StressTestStage extends AbstractDistStage {
       }
    }
 
-   protected Object generateValue(Object key, int maxValueSize) {
-      Random random = ThreadLocalRandom.current();
+   protected Object generateValue(Object key, int maxValueSize, Random random) {
       int size = entrySize.next(random);
       size = Math.min(size, maxValueSize);
       return getValueGenerator().generateValue(key, size, random);
@@ -493,6 +494,10 @@ public class StressTestStage extends AbstractDistStage {
    protected static void avoidJit(Object result) {
       //this line was added just to make sure JIT doesn't skip call to cacheWrapper.get
       if (result != null && System.identityHashCode(result) == result.hashCode()) System.out.print("");
+   }
+
+   public Long getSeed() {
+      return seed;
    }
 
    private static class StatisticsAck extends DistStageAck {

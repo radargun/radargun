@@ -11,7 +11,7 @@ interface OperationLogic {
     * Initialize this logic, possibly executing some operations prior to the test itself.
     * However, these operations are not benchmarked.
     */
-   void init(int threadIndex, int nodeIndex, int numNodes);
+   void init(Stressor stressor);
 
    /**
     * Execute one operation on the stressor using its

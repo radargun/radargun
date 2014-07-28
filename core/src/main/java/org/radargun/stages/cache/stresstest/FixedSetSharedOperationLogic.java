@@ -35,11 +35,11 @@ class FixedSetSharedOperationLogic extends FixedSetOperationLogic {
    }
 
    @Override
-   public void init(int threadIndex, int nodeIndex, int numNodes) {
+   public void init(Stressor stressor) {
       if (stage.poolKeys) {
          synchronized (sharedKeys) {
             // no point in doing this in parallel, too much overhead in synchronization
-            if (threadIndex == 0) {
+            if (stressor.getThreadIndex() == 0) {
                if (sharedKeys.size() != stage.numEntries) {
                   sharedKeys.clear();
                   KeyGenerator keyGenerator = stage.getKeyGenerator();
@@ -62,24 +62,25 @@ class FixedSetSharedOperationLogic extends FixedSetOperationLogic {
       if (stage.loadAllKeys) {
          loadedEntryCount = stage.numEntries;
          loadingThreads = stage.numThreads;
-         keyIndex = threadIndex;
+         keyIndex = stressor.getThreadIndex();
       } else {
-         loadedEntryCount = stage.numEntries / numNodes + (nodeIndex < stage.numEntries % numNodes ? 1 : 0);
-         loadingThreads = stage.numThreads * numNodes;
-         keyIndex = threadIndex + nodeIndex * stage.numThreads;
+         loadedEntryCount = stage.numEntries / stressor.getNumNodes()
+               + (stressor.getNodeIndex() < stage.numEntries % stressor.getNumNodes() ? 1 : 0);
+         loadingThreads = stage.numThreads * stressor.getNumNodes();
+         keyIndex = stressor.getThreadIndex() + stressor.getNodeIndex() * stage.numThreads;
       }
-      if (threadIndex == 0) {
+      if (stressor.getThreadIndex() == 0) {
          log.info(String.format("We have loaded %d keys, expecting %d locally loaded",
                keysLoaded.get(), loadedEntryCount));
       }
       if (keysLoaded.get() >= loadedEntryCount) {
          return;
       }
-      BasicOperations.Cache cache = stage.basicOperations.getCache(stage.bucketPolicy.getBucketName(threadIndex));
+      BasicOperations.Cache cache = stage.basicOperations.getCache(stage.bucketPolicy.getBucketName(stressor.getThreadIndex()));
       for (; keyIndex < stage.numEntries; keyIndex += loadingThreads) {
          try {
-            Object key = getKey(keyIndex, threadIndex);
-            cache.put(key, stage.generateValue(key, Integer.MAX_VALUE));
+            Object key = getKey(keyIndex, stressor.getThreadIndex());
+            cache.put(key, stage.generateValue(key, Integer.MAX_VALUE, stressor.getRandom()));
             long loaded = keysLoaded.incrementAndGet();
             if (loaded % 100000 == 0) {
                Runtime runtime = Runtime.getRuntime();
