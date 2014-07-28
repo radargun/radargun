@@ -14,7 +14,7 @@ public class PartitionListenerImpl implements PartitionListener {
    
    @Override
    public void onPartitionEvent(PartitionEvent event) {
-      log.info(event.toString());
+      log.debug(event.toString());
    }
 
 }

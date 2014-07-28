@@ -203,9 +203,10 @@
          </activation>
          <modules>
             <module>plugins/coherence3</module>
+            <module>plugins/coherence12</module>
          </modules>
          <properties>
-            <plugins.coherence>coherence3</plugins.coherence>
+            <plugins.coherence>coherence3,coherence12</plugins.coherence>
          </properties>
       </profile>
       <profile>
