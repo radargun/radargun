@@ -19,6 +19,7 @@
          <groupId>com.oracle.coherence</groupId>
          <artifactId>coherence</artifactId>
          <version>3.7.1</version>
+         <optional>true</optional>
       </dependency>
    </dependencies>
 </project>
