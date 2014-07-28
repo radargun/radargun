@@ -48,6 +48,16 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
    }
 
    @Override
+   protected void afterStopFailed() {
+      try {
+         log.info("Isolating failed service");
+         startDiscarding();
+      } catch (Exception e) {
+         log.error("Failed to isolate failed service", e);
+      }
+   }
+
+   @Override
    public void kill() {
       try {
          startDiscarding();

@@ -59,7 +59,7 @@ public class ScenarioCleanupStage extends AbstractDistStage {
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       boolean result = super.processAckOnMaster(acks);
-      if (masterState.get(ScenarioInitStage.INITIAL_FREE_MEMORY) == null) {
+      if (result && masterState.get(ScenarioInitStage.INITIAL_FREE_MEMORY) == null) {
          masterState.put(ScenarioInitStage.INITIAL_FREE_MEMORY, "");
          for (MemoryAck ack : cast(acks, MemoryAck.class)) {
             String key = ScenarioInitStage.INITIAL_FREE_MEMORY + "_" + ack.getSlaveIndex();

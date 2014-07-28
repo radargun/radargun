@@ -11,6 +11,8 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import org.radargun.config.Cluster;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
@@ -26,6 +28,8 @@ import org.radargun.stats.representation.Throughput;
  */
 // TODO: reduce max report size in order to not overload browser with huge tables
 public class TestReportDocument extends HtmlDocument {
+   private final static Log log = LogFactory.getLog(TestReportDocument.class);
+
    private final List<Report.Test> tests;
    private final String testName;
    private Map<Report, List<Aggregation>> aggregated = new TreeMap<Report, List<Aggregation>>();
@@ -75,9 +79,13 @@ public class TestReportDocument extends HtmlDocument {
                }
                totalThreads += list.size();
             }
-            iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats, totalThreads));
-            for (Map.Entry<String, OperationStats> op : totalStats.getOperationsStats().entrySet()) {
-               if (!op.getValue().isEmpty()) operations.add(op.getKey());
+            if (totalStats == null) {
+               log.warn("There are no stats for this iteration");
+            } else {
+               iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats, totalThreads));
+               for (Map.Entry<String, OperationStats> op : totalStats.getOperationsStats().entrySet()) {
+                  if (!op.getValue().isEmpty()) operations.add(op.getKey());
+               }
             }
          }
          aggregated.put(test.getReport(), iterations);

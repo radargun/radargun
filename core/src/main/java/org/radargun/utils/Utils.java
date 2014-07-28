@@ -135,11 +135,17 @@ public class Utils {
    }
 
    public static void threadDump() {
-      for (Entry<Thread, StackTraceElement[]> st : Thread.getAllStackTraces().entrySet()) {
+      long start = System.nanoTime();
+      Map<Thread, StackTraceElement[]> stacktraces = Thread.getAllStackTraces();
+      long duration = System.nanoTime() - start;
+      log.warn("Thread dump took " + TimeUnit.NANOSECONDS.toMillis(duration) + " ms:");
+      for (Entry<Thread, StackTraceElement[]> st : stacktraces.entrySet()) {
          StringBuilder sb = new StringBuilder();
          sb.append("Stack for thread ");
          sb.append(st.getKey().getName());
-         sb.append(":\n");
+         sb.append(" (");
+         sb.append(st.getKey().getState());
+         sb.append("):\n");
          for (StackTraceElement ste : st.getValue()) {
             sb.append(ste.toString());
             sb.append('\n');
