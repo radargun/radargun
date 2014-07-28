@@ -30,7 +30,6 @@ import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.Debugable;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.Transactional;
-import org.radargun.utils.Utils;
 
 /**
  * 
@@ -577,7 +576,6 @@ public class BackgroundOpsManager implements ServiceListener {
             for (int i = 1; i < stats.size(); ++i) {
                aggregated.merge(stats.get(i));
             }
-            boolean anyRequests = false;
             for (Map.Entry<String, OperationStats> entry : aggregated.getOperationsStats().entrySet()) {
                DefaultOutcome defaultOutcome = entry.getValue().getRepresentation(DefaultOutcome.class);
                if (defaultOutcome.requests != 0 || timeline.getValues(entry.getKey() + " Throughput") != null) {
@@ -585,10 +583,6 @@ public class BackgroundOpsManager implements ServiceListener {
                         stats.size(), TimeUnit.MILLISECONDS.toNanos(aggregated.getEnd() - aggregated.getBegin()));
                   timeline.addValue(entry.getKey() + " Throughput", new Timeline.Value(now, throughput.actual));
                }
-               if (entry.getValue().getRepresentation(DefaultOutcome.class).requests > 0) anyRequests = true;
-            }
-            if (!anyRequests) {
-               Utils.threadDump();
             }
          }
          log.trace("Adding iteration " + BackgroundOpsManager.this.stats.size() + ": " + stats);

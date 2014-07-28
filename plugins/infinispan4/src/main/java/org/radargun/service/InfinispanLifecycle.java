@@ -83,6 +83,7 @@ public class InfinispanLifecycle implements Lifecycle {
          }
       } catch (Exception e) {
          log.error("Service stop failed.");
+         afterStopFailed();
          if (!stateLock.isHeldByCurrentThread()) {
             stateLock.lock();
          }
@@ -93,6 +94,10 @@ public class InfinispanLifecycle implements Lifecycle {
             stateLock.unlock();
          }
       }
+   }
+
+   protected void afterStopFailed() {
+      // nothing, hook for inheritors
    }
 
    protected boolean beginStart() throws InterruptedException {
