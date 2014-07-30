@@ -1,11 +1,17 @@
 package org.radargun.stages.lifecycle;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.utils.TimeConverter;
+import org.radargun.state.SlaveState;
+import org.radargun.traits.ConfigurationProvider;
+import org.radargun.traits.InjectTrait;
 
 /**
  * Stage that starts a CacheWrapper on each slave.
@@ -30,12 +36,18 @@ public class ServiceStartStage extends AbstractServiceStartStage {
    @Property(converter = TimeConverter.class, doc = "Time allowed the cluster to reach `expectNumSlaves` members. Default is 3 minutes.")
    private long clusterFormationTimeout = 180000;
 
+   @Property(doc = "Dump configuration files and properties for the service. Default is false")
+   private boolean dumpConfig = false;
+
    @Property(doc = "The number of slaves that should be up after all slaves are started. Applicable only with " +
          "validateCluster=true. Default is all slaves in the cluster (in the same site in case of multi-site configuration).")
    private Integer expectNumSlaves;
 
    @Property(doc = "Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.")
    private Set<Integer> reachable = null;
+
+   @InjectTrait
+   private ConfigurationProvider configurationProvider;
 
    public DistStageAck executeOnSlave() {
       if (!shouldExecute()) {
@@ -64,7 +76,11 @@ public class ServiceStartStage extends AbstractServiceStartStage {
          return errorResponse("Issues while instantiating/starting cache wrapper", e);
       }
       log.info("Successfully started cache service " + slaveState.getServiceName() + " on slave " + slaveState.getSlaveIndex());
-      return successfulResponse();
+      if (configurationProvider != null && dumpConfig) {
+         return new ServiceStartAck(slaveState, configurationProvider.getNormalizedConfigs(), configurationProvider.getOriginalConfigs());
+      } else {
+         return new ServiceStartAck(slaveState, null, null);
+      }
    }
 
    private void staggerStartup(int thisNodeIndex) {
@@ -85,6 +101,40 @@ public class ServiceStartStage extends AbstractServiceStartStage {
          Thread.sleep(toSleep);
       } catch (InterruptedException e) {
          throw new IllegalStateException("Should never happen");
+      }
+   }
+
+   public boolean processAckOnMaster(List<DistStageAck> acks) {
+      boolean result = super.processAckOnMaster(acks);
+      if (dumpConfig) {
+         for (DistStageAck ack : acks) {
+            if (ack instanceof ServiceStartAck) {
+               ServiceStartAck sAck = (ServiceStartAck) ack;
+               masterState.getReport().addNormalizedServiceConfig(sAck.getSlaveIndex(), sAck.gerNormalizedConfigs());
+               masterState.getReport().addOriginalServiceConfig(sAck.getSlaveIndex(), sAck.getOriginalConfigs());
+            }
+         }
+      }
+      return result;
+   }
+
+   public static class ServiceStartAck extends DistStageAck {
+
+      private Map<String, Properties> normalizedConfigs;
+      private Map<String, byte[]> originalConfigs;
+
+      private ServiceStartAck(SlaveState slaveState, Map<String, Properties> normalizedConfigs, Map<String, byte[]> originalConfigs) {
+         super(slaveState);
+         this.normalizedConfigs = normalizedConfigs;
+         this.originalConfigs = originalConfigs;
+      }
+
+      public Map<String, Properties> gerNormalizedConfigs() {
+         return normalizedConfigs;
+      }
+
+      public Map<String, byte[]> getOriginalConfigs() {
+         return originalConfigs;
       }
    }
 }

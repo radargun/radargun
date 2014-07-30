@@ -34,6 +34,11 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
       return new InfinispanEmbeddedQueryable(this);
    }
 
+   @ProvidesTrait
+   public EmbeddedConfigurationProvider createConfigurationProvider() {
+      return new EmbeddedConfigurationProvider60(this);
+   }
+
    @Override
    protected ConfigurationBuilderHolder createConfiguration(String configFile) throws FileNotFoundException {
       ClassLoader classLoader = getClass().getClassLoader();

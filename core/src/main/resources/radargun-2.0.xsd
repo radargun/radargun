@@ -2805,6 +2805,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                      <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
                   </annotation>
                </element>
+               <element maxOccurs="1" minOccurs="0" name="dump-config" type="rg:boolean">
+                  <annotation>
+                     <documentation>Dump configuration files and properties for the service. Default is false</documentation>
+                  </annotation>
+               </element>
                <element maxOccurs="1" minOccurs="0" name="expect-num-slaves" type="rg:java-lang-integer">
                   <annotation>
                      <documentation>The number of slaves that should be up after all slaves are started. Applicable only with validateCluster=true. Default is all slaves in the cluster (in the same site in case of multi-site configuration).</documentation>
@@ -2839,6 +2844,11 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="delay-between-starting-slaves" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="dump-config" type="rg:boolean">
+               <annotation>
+                  <documentation>Dump configuration files and properties for the service. Default is false</documentation>
                </annotation>
             </attribute>
             <attribute name="expect-num-slaves" type="rg:java-lang-integer">
