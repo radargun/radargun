@@ -58,41 +58,15 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
       return new InfinispanDistributedTask(this);
    }
 
+   @ProvidesTrait
+   public EmbeddedConfigurationProvider createConfigurationProvider() {
+      return new EmbeddedConfigurationProvider(this);
+   }
+
    @Override
    protected ConfigurationBuilderHolder createConfiguration(String configFile) throws FileNotFoundException {
       InputStream input = FileLookupFactory.newInstance().lookupFileStrict(configFile, Thread.currentThread().getContextClassLoader());
       return new ParserRegistry(Thread.currentThread().getContextClassLoader()).parse(input);
-   }
-
-   @Override
-   protected void startCaches() throws Exception {
-      super.startCaches();
-      // config dumping
-      if (dumpConfig) {
-         File dumpDir = new File("conf" + File.separator + "normalized" + File.separator + plugin + File.separator + configName);
-         if (!dumpDir.exists()) {
-            dumpDir.mkdirs();
-         }
-         dumpConfiguration(dumpDir);
-      }
-   }
-
-   /**
-    * 
-    * Dump service configuration as set of files into the dump directory (one per product/config)
-    * 
-    * @param dumpDir
-    */
-   protected void dumpConfiguration(File dumpDir) {
-      ConfigDumpHelper helper = createConfigDumpHelper();
-      if (!dumpDir.exists()) {
-         dumpDir.mkdirs();
-      }
-      helper.dumpGlobal(new File(dumpDir, "config_global.xml"), cacheManager.getCacheManagerConfiguration(), cacheManager.getName());
-      helper.dumpCache(new File(dumpDir, "config_cache.xml"), getCache(null).getAdvancedCache().getCacheConfiguration(), cacheManager.getName(),
-            getCache(null).getName());
-      helper.dumpJGroups(new File(dumpDir, "config_jgroups.xml"), cacheManager.getCacheManagerConfiguration().transport() == null ? null : cacheManager
-            .getCacheManagerConfiguration().transport().clusterName());
    }
 
    protected ConfigDumpHelper createConfigDumpHelper() {
