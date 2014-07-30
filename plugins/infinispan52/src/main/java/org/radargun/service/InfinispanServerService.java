@@ -31,6 +31,9 @@ public class InfinispanServerService extends ProcessService {
 
    protected final Log log = LogFactory.getLog(getClass());
 
+   @Property(doc = "Dump configuration into property files. Default is false.")
+   protected boolean dumpConfig = false;
+
    @Property(doc = "Home directory for the server")
    private String home;
 
@@ -73,6 +76,11 @@ public class InfinispanServerService extends ProcessService {
    @Override
    public InfinispanServerLifecycle createLifecycle() {
       return new InfinispanServerLifecycle(this);
+   }
+
+   @ProvidesTrait
+   public ServerConfigurationProvider createServerConfigurationProvider() {
+      return new ServerConfigurationProvider(this);
    }
 
    @Override

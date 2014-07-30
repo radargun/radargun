@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
@@ -21,7 +22,9 @@ public class Report implements Comparable<Report> {
    /* Configuration part */
    public Configuration configuration;
    public Cluster cluster;
-
+   /* Slave configurations */
+   public Map<Integer, Map<String, Properties>> normalizedSlaveConfigurations = new HashMap<Integer, Map<String, Properties>>();
+   public Map<Integer, Map<String, byte[]>> originalSlaveConfigurations = new HashMap<Integer, Map<String, byte[]>>();
    /* Results part */
    public List<Timeline> timelines = new ArrayList<Timeline>();
    /* Test name - iterations */
@@ -84,6 +87,7 @@ public class Report implements Comparable<Report> {
          ensureIterations(results.size());
          for (int i = 0; i < results.size(); ++i) {
             iterations.get(i).statistics.put(slaveIndex, results.get(i));
+            iterations.get(i).threadCount += results.get(i).size();
          }
       }
 
@@ -104,5 +108,6 @@ public class Report implements Comparable<Report> {
    public static class TestIteration {
       /* slave index - statistics from threads */
       public Map<Integer, List<Statistics>> statistics = new HashMap<Integer, List<Statistics>>();
+      public int threadCount;
    }
 }

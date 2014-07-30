@@ -39,39 +39,35 @@ public class ConfigDumpHelper {
       }
    }
 
-   public boolean dumpGlobal(File dumpFile, GlobalConfiguration globalConfiguration, String managerName) {
+   public Properties dumpGlobal(GlobalConfiguration globalConfiguration, String managerName) {
+      Properties properties = new Properties();
       try {
-         Properties properties = new Properties();
          reflect(globalConfiguration, properties, null);
-         Utils.saveSorted(properties, dumpFile);
-         return true;
       } catch (Exception e) {
          log.error("Error while dumping global config as properties", e);
-         return false;
       }
+      return properties;
    }
 
-   public boolean dumpCache(File dumpFile, Configuration configuration, String managerName, String cacheName) {
+   public Properties dumpCache(Configuration configuration, String managerName, String cacheName) {
+      Properties properties = new Properties();
       try {
-         Properties properties = new Properties();
          reflect(configuration, properties, null);
-         Utils.saveSorted(properties, dumpFile);
-         return true;
       } catch (Exception e) {
          log.error("Error while dumping " + cacheName + " cache config as properties", e);
-         return false;
       }
+      return properties;
    }
 
-   public boolean dumpJGroups(File dumpFile, String clusterName) {
+   public Properties dumpJGroups(String clusterName) {
+      Properties properties = new Properties();
       try {
          MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
          Set<ObjectInstance> beanObjs = mbeanServer.queryMBeans(new ObjectName("jboss.infinispan:type=protocol,cluster=\"default\",protocol=*"), null);
          if (beanObjs.isEmpty()) {
             log.error("no JGroups protocols found");
-            return false;
+            return properties;
          }
-         Properties p = new Properties();
          for (ObjectInstance beanObj : beanObjs) {
             ObjectName protocolObjectName = beanObj.getObjectName();
             MBeanInfo protocolBean = mbeanServer.getMBeanInfo(protocolObjectName);
@@ -79,15 +75,13 @@ public class ConfigDumpHelper {
             for (MBeanAttributeInfo info : protocolBean.getAttributes()) {
                String propName = info.getName();
                Object propValue = mbeanServer.getAttribute(protocolObjectName, propName);
-               p.setProperty(protocolName + "." + propName, propValue == null ? "null" : propValue.toString());
+               properties.setProperty(protocolName + "." + propName, propValue == null ? "null" : propValue.toString());
             }
          }
-         Utils.saveSorted(p, dumpFile);
-         return true;
       } catch (Exception e) {
          log.error("Error while dumping JGroups config as properties", e);
-         return false;
       }
+      return properties;
    }
 
    private List<Method> getMethods(Class<?> clazz) {

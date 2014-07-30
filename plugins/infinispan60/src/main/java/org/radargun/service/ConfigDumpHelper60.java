@@ -1,6 +1,5 @@
 package org.radargun.service;
 
-import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.util.Properties;
 import java.util.Set;
@@ -12,7 +11,6 @@ import javax.management.ObjectName;
 
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.global.GlobalConfiguration;
-import org.radargun.utils.Utils;
 
 /**
  * ConfigDumpHelper that uses Infinispan 6.0's own property dumping mechanism.
@@ -35,32 +33,30 @@ public class ConfigDumpHelper60 extends ConfigDumpHelper {
    }
 
    @Override
-   public boolean dumpCache(File dumpFile, Configuration configuration, String managerName, String cacheName) {
+   public Properties dumpCache(Configuration configuration, String managerName, String cacheName) {
       try {
          MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
          ObjectName cacheObj = findCacheBean(mbeanServer, managerName, cacheName);
          if (cacheObj == null) {
             log.error("No cache named " + cacheName + " found among MBeans");
-            return false;
+            return null;
          }
-         Utils.saveSorted((Properties) mbeanServer.getAttribute(cacheObj, "configurationAsProperties"), dumpFile);
-         return true;
+         return (Properties) mbeanServer.getAttribute(cacheObj, "configurationAsProperties");
       } catch (Exception e) {
          log.error("Error while dumping " + cacheName + " cache config as properties", e);
-         return false;
+         return null;
       }
    }
 
    @Override
-   public boolean dumpGlobal(File dumpFile, GlobalConfiguration globalConfiguration, String managerName) {
+   public Properties dumpGlobal(GlobalConfiguration globalConfiguration, String managerName) {
       try {
          MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
          ObjectName objCacheManager = new ObjectName("jboss.infinispan:type=CacheManager,name=\"" + managerName + "\",component=CacheManager");
-         Utils.saveSorted((Properties) mbeanServer.getAttribute(objCacheManager, "globalConfigurationAsProperties"), dumpFile);
-         return true;
+         return (Properties) mbeanServer.getAttribute(objCacheManager, "globalConfigurationAsProperties");
       } catch (Exception e) {
          log.error("Error while dumping global config as properties", e);
-         return false;
+         return null;
       }
    }
 }
