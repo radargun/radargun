@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
@@ -19,18 +20,36 @@ import org.radargun.stats.Statistics;
  */
 public class Report implements Comparable<Report> {
    /* Configuration part */
-   public Configuration configuration;
-   public Cluster cluster;
-
+   private Configuration configuration;
+   private Cluster cluster;
+   /* Service configurations */
+   private Map<Integer, Map<String, Properties>> normalizedServiceConfigs = new HashMap<Integer, Map<String, Properties>>();
+   private Map<Integer, Map<String, byte[]>> originalServiceConfig = new HashMap<Integer, Map<String, byte[]>>();
    /* Results part */
-   public List<Timeline> timelines = new ArrayList<Timeline>();
+   private List<Timeline> timelines = new ArrayList<Timeline>();
    /* Test name - iterations */
-   public Map<String, Test> tests = new LinkedHashMap<String, Test>();
+   private Map<String, Test> tests = new LinkedHashMap<String, Test>();
 
    public Report(Configuration configuration, Cluster cluster) {
       this.configuration = configuration;
       this.cluster = cluster;
       this.timelines.add(new Timeline(-1));
+   }
+
+   public void addNormalizedServiceConfig(int slaveIndex, Map<String, Properties> serviceConfigs) {
+      normalizedServiceConfigs.put(slaveIndex, serviceConfigs);
+   }
+
+   public Map<Integer, Map<String, Properties>> getNormalizedServiceConfigs() {
+      return Collections.unmodifiableMap(normalizedServiceConfigs);
+   }
+
+   public void addOriginalServiceConfig(int slaveIndex, Map<String, byte[]> serviceConfigs) {
+      originalServiceConfig.put(slaveIndex, serviceConfigs);
+   }
+
+   public Map<Integer, Map<String, byte[]>> getOriginalServiceConfig() {
+      return Collections.unmodifiableMap(originalServiceConfig);
    }
 
    public void addTimelines(Collection<Timeline> timelines) {
@@ -84,6 +103,7 @@ public class Report implements Comparable<Report> {
          ensureIterations(results.size());
          for (int i = 0; i < results.size(); ++i) {
             iterations.get(i).statistics.put(slaveIndex, results.get(i));
+            iterations.get(i).threadCount += results.get(i).size();
          }
       }
 
@@ -104,5 +124,6 @@ public class Report implements Comparable<Report> {
    public static class TestIteration {
       /* slave index - statistics from threads */
       public Map<Integer, List<Statistics>> statistics = new HashMap<Integer, List<Statistics>>();
+      public int threadCount;
    }
 }

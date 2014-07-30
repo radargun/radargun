@@ -75,6 +75,11 @@ public class InfinispanServerService extends ProcessService {
       return new InfinispanServerLifecycle(this);
    }
 
+   @ProvidesTrait
+   public ServerConfigurationProvider createServerConfigurationProvider() {
+      return new ServerConfigurationProvider(this);
+   }
+
    @Override
    protected List<String> getCommand() {
       ArrayList<String> command = new ArrayList<String>();
