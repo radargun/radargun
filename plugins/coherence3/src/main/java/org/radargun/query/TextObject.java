@@ -11,7 +11,7 @@ import com.tangosol.io.pof.PortableObject;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TextObject implements Serializable, PortableObject {
-   public String text;
+   private String text;
 
    public TextObject(String text) {
       this.text = text;

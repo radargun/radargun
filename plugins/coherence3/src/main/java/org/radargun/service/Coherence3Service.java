@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.tangosol.net.CacheFactory;
+import com.tangosol.net.ConfigurableCacheFactory;
 import com.tangosol.net.DefaultConfigurableCacheFactory;
 import com.tangosol.net.NamedCache;
 import org.radargun.Service;
@@ -25,11 +26,10 @@ import org.radargun.traits.ProvidesTrait;
  * @author Manik Surtani &lt;msurtani@gmail.com&gt;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
-// TODO: implement transactions. Would need to rework the xOperations a bit
 @Service(doc = "Oracle Coherence 3.x CacheWrapper implementation.")
 public class Coherence3Service implements Lifecycle, Clustered {
    private Log log = LogFactory.getLog(Coherence3Service.class);
-   
+
    protected Map<String, NamedCache> caches = new HashMap<String, NamedCache>();
    protected boolean started = false;
 
@@ -41,6 +41,12 @@ public class Coherence3Service implements Lifecycle, Clustered {
    @Property(doc = "Attributes that should be indexed, in form cache:attribute,cache:attribute. By default, nothing is indexed.",
       converter = IndexedColumnsConverter.class)
    protected List<IndexedColumn> indexedColumns = Collections.EMPTY_LIST;
+
+   @Property(doc = "Used to lookup the connection factory from InitialContext. By default DefaultConnectionFactory is used.")
+   protected String connectionFactory;
+
+   @Property(doc = "Service used when retrieving the connection. Default is the default service ('TransactionalCache').")
+   protected String transactionalService;
 
    protected CoherenceQueryable queryable = new CoherenceQueryable(this);
 
@@ -64,6 +70,11 @@ public class Coherence3Service implements Lifecycle, Clustered {
       return queryable;
    }
 
+//   @ProvidesTrait
+//   public CoherenceTransactional createTransactional() {
+//      return new CoherenceTransactional(this);
+//   }
+
    public NamedCache getCache(String name) {
       assertStarted();
       if (name == null) {
@@ -72,6 +83,9 @@ public class Coherence3Service implements Lifecycle, Clustered {
       NamedCache nc = caches.get(name);
       if (nc == null) {
          nc = CacheFactory.getCache(name);
+         if (nc == null) {
+            throw new IllegalArgumentException("Cache " + name + " cannot be retrieved.");
+         }
          caches.put(name, nc);
          queryable.registerIndices(nc, indexedColumns);
          log.info("Started Coherence cache " + nc.getCacheName());
@@ -79,15 +93,20 @@ public class Coherence3Service implements Lifecycle, Clustered {
       return nc;
    }
 
+   protected ConfigurableCacheFactory createCacheFactory() {
+      return new DefaultConfigurableCacheFactory(configFile);
+   }
+
    @Override
    public synchronized void start() {
-      CacheFactory.setConfigurableCacheFactory(new DefaultConfigurableCacheFactory(configFile));
-      log.debug("CacheFactory.getClusterConfig(): \n" + CacheFactory.getClusterConfig());
-      log.debug("CacheFactory.getConfigurableCacheFactoryConfig(): \n"
-            + CacheFactory.getConfigurableCacheFactoryConfig());
+//      System.setProperty("tangosol.pof.enabled", "true");
+//      System.setProperty("tangosol.pof.config", "pof-config.xml");
+      System.setProperty("tangosol.coherence.cacheconfig", configFile);
+//      CacheFactory.setConfigurableCacheFactory(createCacheFactory());
       started = true;
       // ensure that at least the main cache is started
       getCache(cacheName);
+      log.info("Started Coherence Service");
    }
 
    private void releaseCache(NamedCache nc) {
@@ -108,8 +127,8 @@ public class Coherence3Service implements Lifecycle, Clustered {
       }
       caches.clear();
       CacheFactory.shutdown();
-      log.info("Cache factory was shut down.");
       started = false;
+      log.info("Cache factory was shut down.");
    }
 
    @Override
