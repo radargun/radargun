@@ -13,8 +13,8 @@ import com.tangosol.io.pof.PortableObject;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NumberObject implements Serializable, PortableObject {
-   public int integerValue;
-   public double doubleValue;
+   private int integerValue;
+   private double doubleValue;
 
    public NumberObject(int i, double d) {
       this.integerValue = i;

@@ -1,0 +1,18 @@
+<?xml version='1.0'?>
+<coherence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns="http://xmlns.oracle.com/coherence/coherence-operational-config"
+   xsi:schemaLocation="http://xmlns.oracle.com/coherence/coherence-operational-config coherence-operational-config.xsd" >
+
+   <logging-config>
+      <destination system-property="tangosol.coherence.log">log4j</destination>
+      <logger-name system-property="tangosol.coherence.log.logger"></logger-name>
+      <severity-level system-property="tangosol.coherence.log.level">5</severity-level>
+      <message-format>{date} &lt;{level}&gt; ({thread},{member}) {text}</message-format>
+      <character-limit system-property="tangosol.coherence.log.limit">1048576</character-limit>
+   </logging-config>
+   
+   <management-config>
+   	<managed-nodes>all</managed-nodes>
+   	<allow-remote-management>true</allow-remote-management>
+   </management-config>
+</coherence>
