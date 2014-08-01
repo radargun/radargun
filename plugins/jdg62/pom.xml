@@ -14,10 +14,10 @@
    <name>JDG 6.2.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>6.0.1.Final-redhat-2</version.infinispan>
-      <version.jbossts>4.16.6.Final-redhat-1</version.jbossts>
+      <version.infinispan>6.0.3.Final-redhat-3</version.infinispan>
+      <version.jbossts>4.17.7.Final-redhat-4</version.jbossts>
       <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
-      <version.remotingjmx>1.0.4.Final</version.remotingjmx>
+      <version.remotingjmx>1.1.2.Final-redhat-1</version.remotingjmx>
    </properties>
 
    <dependencies>
@@ -45,8 +45,8 @@
       </dependency>
 
       <dependency>
-         <groupId>org.jboss.jbossts</groupId>
-         <artifactId>jbossjta</artifactId>
+        <groupId>org.jboss.jbossts.jta</groupId>
+        <artifactId>narayana-jta</artifactId>
          <version>${version.jbossts}</version>
          <optional>true</optional>
          <exclusions>
