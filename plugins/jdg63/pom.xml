@@ -15,9 +15,9 @@
 
    <properties>
       <version.infinispan>${jdg63.infinispan.version}</version.infinispan>
-      <version.jbossts>4.16.6.Final-redhat-1</version.jbossts>
+      <version.jbossts>4.17.15.Final-redhat-5</version.jbossts>
       <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
-      <version.remotingjmx>1.0.4.Final</version.remotingjmx>
+      <version.remotingjmx>1.1.2.Final-redhat-1</version.remotingjmx>
    </properties>
 
    <profiles>
@@ -29,7 +29,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>6.1.0.Final-redhat-1</version.infinispan>
+            <version.infinispan>6.1.0.Final-redhat-4</version.infinispan>
          </properties>
       </profile>
    </profiles>
@@ -59,8 +59,8 @@
       </dependency>
 
       <dependency>
-         <groupId>org.jboss.jbossts</groupId>
-         <artifactId>jbossjta</artifactId>
+        <groupId>org.jboss.jbossts.jta</groupId>
+        <artifactId>narayana-jta</artifactId>
          <version>${version.jbossts}</version>
          <optional>true</optional>
          <exclusions>
