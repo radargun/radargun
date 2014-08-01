@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import org.radargun.DistStageAck;
@@ -218,7 +219,8 @@ public class RandomDataStage extends AbstractDistStage {
           * Add one to the nodeCount on each slave with an index less than the remainder so that the
           * correct number of values are written to the cache
           */
-         if ((totalPutCount % slaveState.getClusterSize() != 0) && slaveState.getSlaveIndex() < (totalPutCount % slaveState.getClusterSize())) {
+         if ((totalPutCount % slaveState.getClusterSize() != 0)
+               && slaveState.getSlaveIndex() < (totalPutCount % slaveState.getClusterSize())) {
             nodePutCount++;
          }
       }
@@ -263,7 +265,8 @@ public class RandomDataStage extends AbstractDistStage {
                + Utils.kbString(runtime.maxMemory()) + "- total: " + Utils.kbString(runtime.totalMemory()));
          log.debug("nodePutCount = " + nodePutCount + "; bytesWritten = " + bytesWritten + "; targetMemoryUse = "
                + targetMemoryUse + "; countOfWordsInData = " + countOfWordsInData);
-         return new DataInsertAck(slaveState, nodePutCount, bytesWritten, targetMemoryUse, countOfWordsInData);
+         return new DataInsertAck(slaveState, nodePutCount, bytesWritten, targetMemoryUse, countOfWordsInData,
+               wordCount);
       } catch (Exception e) {
          return errorResponse("An exception occurred", e);
       } finally {
@@ -332,15 +335,16 @@ public class RandomDataStage extends AbstractDistStage {
       String word = "";
       String[] pickWords = {};
       int pick = 0;
+      int wordLength = maxLength;
       // Random.nextInt(0) generates an error
       if (maxLength - 1 > 0) {
-         int wordLength = random.nextInt(maxLength - 1) + 1;
-         pickWords = words[wordLength - 1];
-         if (pickWords.length - 1 > 0) {
-            pick = random.nextInt(pickWords.length - 1);
-            word = pickWords[pick];
-         }
+         wordLength = random.nextInt(maxLength - 1) + 1;
       }
+      pickWords = words[wordLength - 1];
+      if (pickWords.length - 1 > 0) {
+         pick = random.nextInt(pickWords.length - 1);
+      }
+      word = pickWords[pick];
       return word;
    }
 
@@ -365,7 +369,8 @@ public class RandomDataStage extends AbstractDistStage {
       }
 
       for (int i = wordLength; i > 0; i--) {
-         if (random.nextBoolean()) {
+         // If wordLength == 1, then only use singleByteChars
+         if (wordLength > 1 && random.nextBoolean()) {
             data.append(multiByteChars.charAt(random.nextInt(multiByteChars.length() - 1)));
          } else {
             data.append(singleByteChars.charAt(random.nextInt(singleByteChars.length() - 1)));
@@ -377,7 +382,8 @@ public class RandomDataStage extends AbstractDistStage {
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) return false;
+      if (!super.processAckOnMaster(acks))
+         return false;
       log.info("--------------------");
       if (ramPercentage > 0) {
          if (stringData) {
@@ -405,7 +411,17 @@ public class RandomDataStage extends AbstractDistStage {
       }
       long totalValues = 0;
       long totalBytes = 0;
+      Map<String, Integer> clusterWordCount = new TreeMap<String, Integer>();
       for (DataInsertAck ack : cast(acks, DataInsertAck.class)) {
+         if (ack.wordCount != null) {
+            for (Map.Entry<String, Integer> entry : ack.wordCount.entrySet()) {
+               if (clusterWordCount.containsKey(entry.getKey())) {
+                  clusterWordCount.put(entry.getKey(), clusterWordCount.get(entry.getKey()) + entry.getValue());
+               } else {
+                  clusterWordCount.put(entry.getKey(), entry.getValue());
+               }
+            }
+         }
          totalValues += ack.nodePutCount;
          totalBytes += ack.bytesWritten;
          String logInfo = "Slave " + ack.getSlaveIndex() + " wrote " + ack.nodePutCount
@@ -426,6 +442,13 @@ public class RandomDataStage extends AbstractDistStage {
          }
          log.info(totalWordCount + " words were generated with a maximum length of " + maxWordLength + " characters");
       }
+      if (!clusterWordCount.isEmpty()) {
+         log.info("--------------------");
+         log.info("Cluster wide word count:");
+         for (String key : clusterWordCount.keySet()) {
+            log.info("word: " + key + "; count: " + clusterWordCount.get(key));
+         }
+      }
       log.info("--------------------");
       return true;
    }
@@ -435,13 +458,16 @@ public class RandomDataStage extends AbstractDistStage {
       final long bytesWritten;
       final long targetMemoryUse;
       final long countOfWordsInData;
+      final Map<String, Integer> wordCount;
 
-      private DataInsertAck(SlaveState slaveState, long nodePutCount, long bytesWritten, long targetMemoryUse, long countOfWordsInData) {
+      private DataInsertAck(SlaveState slaveState, long nodePutCount, long bytesWritten, long targetMemoryUse,
+            long countOfWordsInData, Map<String, Integer> wordCount) {
          super(slaveState);
          this.nodePutCount = nodePutCount;
          this.bytesWritten = bytesWritten;
          this.targetMemoryUse = targetMemoryUse;
          this.countOfWordsInData = countOfWordsInData;
+         this.wordCount = wordCount;
       }
    }
 }

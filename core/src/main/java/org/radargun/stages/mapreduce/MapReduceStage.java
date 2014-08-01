@@ -99,10 +99,6 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          + "property. The default is TimeUnit.MILLISECONDS")
    private TimeUnit unit = TimeUnit.MILLISECONDS;
 
-   @Property(doc = "Set the number of intermediate keys/values collected in "
-         + "Collector during a Map/Reduce task. The default is -1. (Use plugin default)")
-   private int maxCollectorSize = -1;
-
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private MapReducer mapReducer;
 
@@ -193,11 +189,6 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          log.info(mapReducer.getClass().getName() + " supports MapReducer.setCombiner()");
       } else {
          log.info(mapReducer.getClass().getName() + " does not support MapReducer.setCombiner()");
-      }
-      if (mapReducer.setMaxCollectorSize(maxCollectorSize)) {
-         log.info(mapReducer.getClass().getName() + " supports MapReducer.setMaxCollectorSize()");
-      } else {
-         log.info(mapReducer.getClass().getName() + " does not support MapReducer.setMaxCollectorSize()");
       }
       TextAck ack = new TextAck(slaveState);
       try {
