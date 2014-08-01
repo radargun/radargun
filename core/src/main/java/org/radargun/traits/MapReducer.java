@@ -121,18 +121,6 @@ public interface MapReducer<KOut, VOut, R> {
 
    /**
     * 
-    * Limits Mapper's Collector size to a given value.
-    * 
-    * @param maxCollectorSize
-    *           the new size of the Collector
-    * 
-    * @return <code>true</code> if the CacheWrapper supports setting the Collector size, else
-    *         <code>false</code>
-    */
-   public boolean setMaxCollectorSize(int maxCollectorSize);
-
-   /**
-    * 
     * Set the name of the result cache. If the service supports it, then the results of the
     * <code>executeMapReduceTask</code> mthod will be stored in this cache.
     * 

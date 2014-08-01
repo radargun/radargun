@@ -192,7 +192,6 @@
             <element name="cluster-validation" type="rg:org-radargun-stages-cache-cluster-validation-stage"/>
             <element name="command" type="rg:org-radargun-stages-command-stage"/>
             <element name="distributed-task" type="rg:org-radargun-stages-distributedtask-distributed-task-stage"/>
-            <element name="example" type="rg:org-radargun-stages-example-stage"/>
             <element name="isolation-level-check" type="rg:org-radargun-stages-cache-isolation-level-check-stage"/>
             <element name="jmx-cluster-validation-prepare" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-prepare-stage"/>
             <element name="jmx-cluster-validation" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-stage"/>
@@ -2116,11 +2115,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                      <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Mapper Object. The method must be public and take a String parameter. The default is null.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="max-collector-size" type="rg:int">
-                  <annotation>
-                     <documentation>Set the number of intermediate keys/values collected in Collector during a Map/Reduce task. The default is -1. (Use plugin default)</documentation>
-                  </annotation>
-               </element>
                <element maxOccurs="1" minOccurs="0" name="print-result" type="rg:boolean">
                   <annotation>
                      <documentation>Boolean value that determines if the final results of the MapReduceTask are written to the log of the first slave node. The default is false.</documentation>
@@ -2185,11 +2179,6 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <attribute name="mapper-params" type="string">
                <annotation>
                   <documentation>A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Mapper Object. The method must be public and take a String parameter. The default is null.</documentation>
-               </annotation>
-            </attribute>
-            <attribute name="max-collector-size" type="rg:int">
-               <annotation>
-                  <documentation>Set the number of intermediate keys/values collected in Collector during a Map/Reduce task. The default is -1. (Use plugin default)</documentation>
                </annotation>
             </attribute>
             <attribute name="print-result" type="rg:boolean">
