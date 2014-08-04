@@ -165,6 +165,9 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "Seed used for initialization of random generators. Each thread adds its index to the seed value. By default the seed is not set.")
    protected Long seed;
 
+   @Property(doc = "During loading phase, if the insert fails, try it again. This is the maximum number of attempts. Default is 10.")
+   protected int maxLoadAttempts = 10;
+
    @InjectTrait
    protected BasicOperations basicOperations;
    @InjectTrait

@@ -44,16 +44,19 @@ class FixedSetPerThreadOperationLogic extends FixedSetOperationLogic {
          Object key = keyGenerator.generateKey((nodeIndex * stage.numThreads + stressor.getThreadIndex()) * stage.numEntries + keyIndex);
          Object value = stage.generateValue(key, Integer.MAX_VALUE, stressor.getRandom());
          addPooledKey(key, value);
-         try {
-            cache.put(key, value);
-            long loaded = keysLoaded.incrementAndGet();
-            if (loaded % 100000 == 0) {
-               Runtime runtime = Runtime.getRuntime();
-               log.info(String.format("Loaded %d/%d entries (on this node), free %d MB/%d MB",
-                     loaded, stage.numEntries * stage.numThreads, runtime.freeMemory() / 1048576, runtime.maxMemory() / 1048576));
+         for (int i = 0; i < stage.maxLoadAttempts; ++i) {
+            try {
+               cache.put(key, value);
+               long loaded = keysLoaded.incrementAndGet();
+               if (loaded % stage.logPeriod == 0) {
+                  Runtime runtime = Runtime.getRuntime();
+                  log.info(String.format("Loaded %d/%d entries (on this node), free %d MB/%d MB",
+                        loaded, stage.numEntries * stage.numThreads, runtime.freeMemory() / 1048576, runtime.maxMemory() / 1048576));
+               }
+               break;
+            } catch (Throwable e) {
+               log.warn("Failed to insert key " + key, e);
             }
-         } catch (Throwable e) {
-            log.warn("Failed to insert key " + key, e);
          }
       }
    }

@@ -1161,6 +1161,11 @@
                      <documentation>Number of operations after which a log entry should be written. Default is 10000.</documentation>
                   </annotation>
                </element>
+               <element maxOccurs="1" minOccurs="0" name="max-load-attempts" type="rg:int">
+                  <annotation>
+                     <documentation>During loading phase, if the insert fails, try it again. This is the maximum number of attempts. Default is 10.</documentation>
+                  </annotation>
+               </element>
                <element maxOccurs="1" minOccurs="0" name="num-bytes" type="rg:long-converted-by-org-radargun-utils-size-converter">
                   <annotation>
                      <documentation>Applicable only with fixedKeys=false, makes sense for entrySize with multiple values. Replaces numEntries; requested number of bytes in values set by the stressor. By default not set.</documentation>
@@ -1335,6 +1340,11 @@
             <attribute name="log-period" type="rg:int">
                <annotation>
                   <documentation>Number of operations after which a log entry should be written. Default is 10000.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="max-load-attempts" type="rg:int">
+               <annotation>
+                  <documentation>During loading phase, if the insert fails, try it again. This is the maximum number of attempts. Default is 10.</documentation>
                </annotation>
             </attribute>
             <attribute name="num-bytes" type="rg:long-converted-by-org-radargun-utils-size-converter">
