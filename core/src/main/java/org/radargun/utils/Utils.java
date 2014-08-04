@@ -109,10 +109,29 @@ public class Utils {
       log.trace("Using smart class loading");
       List<URL> jars = new ArrayList<URL>();
       try {
-         addJars(new File(PLUGINS_DIR + File.separator + plugin + File.separator + "lib"), jars);
-         addJars(new File(SPECIFIC_DIR), jars);
-         File confDir = new File(PLUGINS_DIR + File.separator + plugin + File.separator + "conf/");
-         jars.add(confDir.toURI().toURL());
+         ArgsHolder.PluginParam param = ArgsHolder.getPluginParams().get(plugin);
+         if (param == null) {
+            addJars(new File(PLUGINS_DIR + File.separator + plugin + File.separator + "lib"), jars);
+            addJars(new File(SPECIFIC_DIR), jars);
+            File confDir = new File(PLUGINS_DIR + File.separator + plugin + File.separator + "conf/");
+            jars.add(confDir.toURI().toURL());
+         } else {
+            String pluginPath = param.getPath();
+            if (pluginPath != null) {
+               File pluginRoot = new File(pluginPath);
+               addJars(new File(pluginRoot, "lib"), jars);
+               jars.add(new File(pluginRoot, "conf").toURI().toURL());
+            }
+            List<String> configFiles = param.getConfigFiles();
+            if (configFiles != null) {
+               for (String configFile : configFiles) {
+                  File pluginConfFile = new File(configFile);
+                  if (pluginConfFile.exists()) {
+                     jars.add(new File(pluginConfFile.getParent()).toURI().toURL());
+                  }
+               }
+            }
+         }
       } catch (MalformedURLException e) {
          throw new IllegalArgumentException(e);
       }
@@ -183,7 +202,9 @@ public class Utils {
    }
 
    public static String getServiceProperty(String plugin, String propertyName) {
-      File file = new File(PLUGINS_DIR + File.separator + plugin + File.separator + "conf" + File.separator + PROPERTIES_FILE);
+      ArgsHolder.PluginParam pluginParam = ArgsHolder.getPluginParams().get(plugin);
+      String propertiesPathPrefix = pluginParam != null && pluginParam.getPath() != null ? pluginParam.getPath() : PLUGINS_DIR + File.separator + plugin;
+      File file = new File(propertiesPathPrefix + File.separator + "conf" + File.separator + PROPERTIES_FILE);
       if (!file.exists()) {
          log.warn("Could not find a plugin descriptor : " + file);
          return null;

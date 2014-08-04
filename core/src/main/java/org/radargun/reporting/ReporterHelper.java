@@ -16,6 +16,7 @@ import org.radargun.config.InitHelper;
 import org.radargun.config.PropertyHelper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.utils.ArgsHolder;
 import org.radargun.utils.Utils;
 
 /**
@@ -34,10 +35,21 @@ public class ReporterHelper {
 
    static {
       File reportersDir = new File(REPORTERS_DIR);
-      if (!reportersDir.exists() || !reportersDir.isDirectory()) {
+      if (reportersDir.exists() && reportersDir.isDirectory()) {
+         loadReporters(reportersDir.listFiles());
+      }
+      List<File> reporterFolders = new ArrayList<File>();
+      for (String path : ArgsHolder.getReporterPaths()) {
+         reporterFolders.add(new File(path));
+      }
+      loadReporters(reporterFolders.toArray(new File[reporterFolders.size()]));
+      if (reporters.size() == 0) {
          throw new IllegalStateException("No reporters found!");
       }
-      for (File reporterDir : reportersDir.listFiles()) {
+   }
+
+   private static void loadReporters(File[] files) {
+      for (File reporterDir : files) {
          try {
             if (!reporterDir.isDirectory()) {
                log.warn(reporterDir + " is not a directory");
