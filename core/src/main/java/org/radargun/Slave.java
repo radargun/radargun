@@ -14,6 +14,7 @@ import org.radargun.reporting.Timeline;
 import org.radargun.state.ServiceListener;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.TraitHelper;
+import org.radargun.utils.ArgsHolder;
 
 /**
  * Slave being coordinated by a single {@link Master} object in order to run benchmarks.
@@ -121,40 +122,14 @@ public class Slave {
       ShutDownHook.exit(0);
    }
 
-
    public static void main(String[] args) {
-      String masterHost = null;
-      int masterPort = RemoteSlaveConnection.DEFAULT_PORT;
-      int slaveIndex = -1;
-      for (int i = 0; i < args.length - 1; i++) {
-         if (args[i].equals("-master")) {
-            String param = args[i + 1];
-            if (param.contains(":")) {
-               masterHost = param.substring(0, param.indexOf(":"));
-               try {
-                  masterPort = Integer.parseInt(param.substring(param.indexOf(":") + 1));
-               } catch (NumberFormatException nfe) {
-                  log.warn("Unable to parse port part of the master!  Failing!");
-                  ShutDownHook.exit(10);
-               }
-            } else {
-               masterHost = param;
-            }
-         } else if (args[i].equals("-slaveIndex")) {            
-            try {
-               slaveIndex = Integer.parseInt(args[i + 1]);
-            } catch (NumberFormatException nfe) {
-               log.warn("Unable to parse slaveIndex!  Failing!");
-               ShutDownHook.exit(10);
-            }
-         }
-      }
-      if (masterHost == null) {
+      ArgsHolder.init(args, ArgsHolder.ArgType.SLAVE);
+      if (ArgsHolder.getMasterHost() == null) {
          printUsageAndExit();
       }
-      Slave slave = new Slave(new RemoteMasterConnection(masterHost, masterPort));
+      Slave slave = new Slave(new RemoteMasterConnection(ArgsHolder.getMasterHost(), ArgsHolder.getMasterPort()));
       try {
-         slave.run(slaveIndex);
+         slave.run(ArgsHolder.getSlaveIndex());
       } catch (Exception e) {
          e.printStackTrace();
          ShutDownHook.exit(10);

@@ -7,6 +7,7 @@ import org.radargun.config.ConfigParser;
 import org.radargun.config.MasterConfig;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.utils.ArgsHolder;
 
 /**
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
@@ -37,16 +38,11 @@ public class LaunchMaster {
    }
 
    private static String getConfigOrExit(String[] args) {
-      String config = null;
-      for (int i = 0; i < args.length - 1; i++) {
-         if (args[i].equals("-config")) {
-            config = args[i + 1];
-         }
-      }
-      if (config == null) {
+      ArgsHolder.init(args, ArgsHolder.ArgType.LAUNCH_MASTER);
+      if (ArgsHolder.getConfigFile() == null) {
          printUsageAndExit();
       }
-      return config;
+      return ArgsHolder.getConfigFile();
    }
 
    private static void printUsageAndExit() {
