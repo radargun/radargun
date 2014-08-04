@@ -78,17 +78,20 @@ class FixedSetSharedOperationLogic extends FixedSetOperationLogic {
       }
       BasicOperations.Cache cache = stage.basicOperations.getCache(stage.bucketPolicy.getBucketName(stressor.getThreadIndex()));
       for (; keyIndex < stage.numEntries; keyIndex += loadingThreads) {
-         try {
-            Object key = getKey(keyIndex, stressor.getThreadIndex());
-            cache.put(key, stage.generateValue(key, Integer.MAX_VALUE, stressor.getRandom()));
-            long loaded = keysLoaded.incrementAndGet();
-            if (loaded % 100000 == 0) {
-               Runtime runtime = Runtime.getRuntime();
-               log.info(String.format("Loaded %d/%d entries (on this node), free %d MB/%d MB",
-                     loaded, loadedEntryCount, runtime.freeMemory() / 1048576, runtime.maxMemory() / 1048576));
+         for (int i = 0; i < stage.maxLoadAttempts; ++i) {
+            try {
+               Object key = getKey(keyIndex, stressor.getThreadIndex());
+               cache.put(key, stage.generateValue(key, Integer.MAX_VALUE, stressor.getRandom()));
+               long loaded = keysLoaded.incrementAndGet();
+               if (loaded % stage.logPeriod == 0) {
+                  Runtime runtime = Runtime.getRuntime();
+                  log.info(String.format("Loaded %d/%d entries (on this node), free %d MB/%d MB",
+                        loaded, loadedEntryCount, runtime.freeMemory() / 1048576, runtime.maxMemory() / 1048576));
+               }
+               break;
+            } catch (Exception e) {
+               log.error("Failed to insert shared key " + keyIndex, e);
             }
-         } catch (Exception e) {
-            log.error("Failed to insert shared key " + keyIndex, e);
          }
       }
    }
