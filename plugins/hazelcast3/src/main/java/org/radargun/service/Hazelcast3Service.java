@@ -21,4 +21,9 @@ public class Hazelcast3Service extends HazelcastService {
    public HazelcastOperations createOperations() {
       return new Hazelcast3Operations(this);
    }
+
+   @ProvidesTrait
+   public HazelcastQueryable createQueryable() {
+      return new HazelcastQueryable(this);
+   }
 }

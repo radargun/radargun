@@ -6,6 +6,7 @@ import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.IMap;
 import org.radargun.Service;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
@@ -67,11 +68,12 @@ public class HazelcastService implements Lifecycle, Clustered {
    @Override
    public void stop() {
       hazelcastInstance.getLifecycleService().shutdown();
+      hazelcastInstance = null;
    }
 
    @Override
    public boolean isRunning() {
-      return hazelcastInstance.getLifecycleService().isRunning();
+      return hazelcastInstance != null && hazelcastInstance.getLifecycleService().isRunning();
    }
 
    @Override
@@ -109,4 +111,10 @@ public class HazelcastService implements Lifecycle, Clustered {
       return is;
    }
 
+   protected <K, V> IMap<K, V> getMap(String mapName) {
+      if (mapName == null) {
+         mapName = this.mapName;
+      }
+      return hazelcastInstance.getMap(mapName);
+   }
 }
