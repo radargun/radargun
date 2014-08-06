@@ -70,10 +70,15 @@ public class Master {
                try {
                   int stageCount = masterConfig.getScenario().getStageCount();
                   for (int stageId = 0; stageId < stageCount - 1; ++stageId) {
-                     if (!executeStage(connection, configuration, cluster, stageId)) break;
+                     if (!executeStage(connection, configuration, cluster, stageId)) {
+                        returnCode = masterConfig.getConfigurations().indexOf(configuration) + 1;
+                        break;
+                     }
                   }
                   // run ScenarioCleanup
-                  executeStage(connection, configuration, cluster, stageCount - 1);
+                  if (!executeStage(connection, configuration, cluster, stageCount - 1)) {
+                     returnCode = masterConfig.getConfigurations().indexOf(configuration) + 1;
+                  }
                } finally {
                   connection.runStage(-1, cluster.getSize());
                }
@@ -94,13 +99,14 @@ public class Master {
                   reporter.run(masterConfig.getScenario(), Collections.unmodifiableList(reports));
                } catch (Exception e) {
                   log.error("Error in reporter " + reporterConfiguration.type, e);
+                  returnCode = 127;
                }
             }
          }
          log.info("All reporters have been executed, exiting.");
       } catch (Throwable e) {
          log.error("Exception in Master.run: ", e);
-         returnCode = 1;
+         returnCode = 127;
       } finally {
          if (connection != null) {
             connection.release();

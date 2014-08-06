@@ -9,6 +9,9 @@ SLAVE_COUNT_ARG=""
 TAILF=false
 RADARGUN_MASTER_PID=""
 DEBUG=""
+PLUGIN_PATHS=""
+PLUGIN_CONFIGS=""
+REPORTER_PATHS=""
 
 master_pid() {
    RADARGUN_MASTER_PID=`ps -ef | grep "org.radargun.LaunchMaster" | grep -v "grep" | awk '{print $2}'`
@@ -19,21 +22,27 @@ help_and_exit() {
   wrappedecho "Usage: "
   wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT] [-d [host:]port] [-status] [-stop]'
   wrappedecho ""
-  wrappedecho "   -c       Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark-dist.xml"
+  wrappedecho "   -c              Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark-dist.xml"
   wrappedecho ""
-  wrappedecho "   -s       Number of slaves.  Defaults to maxSize attribute in framework configuration XML file."
+  wrappedecho "   -s              Number of slaves.  Defaults to maxSize attribute in framework configuration XML file."
   wrappedecho ""
-  wrappedecho "   -t       After starting the benchmark it will run 'tail -f' on the master node's log file."
+  wrappedecho "   -t              After starting the benchmark it will run 'tail -f' on the master node's log file."
   wrappedecho ""
-  wrappedecho "   -m       MASTER host[:port]. An optional override to override the host/port defaults that the master listens on."
+  wrappedecho "   -m              MASTER host[:port]. An optional override to override the host/port defaults that the master listens on."
   wrappedecho ""
-  wrappedecho "   -d       Debug master on given port."
+  wrappedecho "   -d              Debug master on given port."
   wrappedecho ""
-  wrappedecho "   -status  Prints infromation on master's status: running or not."
+  wrappedecho "   -status         Prints infromation on master's status: running or not."
   wrappedecho ""
-  wrappedecho "   -stop    Forces the master to stop running."
+  wrappedecho "   -stop           Forces the master to stop running."
   wrappedecho ""
-  wrappedecho "   -h       Displays this help screen"
+  wrappedecho "   --add-plugin    Path to custom plugin directory. Can be specified multiple times."
+  wrappedecho ""
+  wrappedecho "   --add-config    Path to config file for specified plugin. Specified as pluginName:/path/config.xml. Can be specified multiple times."
+  wrappedecho ""
+  wrappedecho "   --add-reporter  Path to custom reporter directory. Can be specified multiple times."
+  wrappedecho ""
+  wrappedecho "   -h              Displays this help screen"
   wrappedecho ""
 
   exit 0
@@ -92,6 +101,18 @@ do
     "-h")
       help_and_exit
       ;;
+    "--add-plugin")
+      PLUGIN_PATHS="--add-plugin=${2} ${PLUGIN_PATHS}"
+      shift
+      ;;
+    "--add-config")
+      PLUGIN_CONFIGS="--add-config=${2} ${PLUGIN_CONFIGS}"
+      shift
+      ;;
+    "--add-reporter")
+      REPORTER_PATHS="--add-reporter=${2} ${REPORTER_PATHS}"
+      shift
+      ;;
     *)
       wrappedecho "Warning: unknown argument ${1}" 
       help_and_exit
@@ -120,7 +141,7 @@ if [ "x${DEBUG}" != "x" ]; then
   JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG}"
 fi
 
-${JAVA} ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.radargun.LaunchMaster -config ${CONFIG} > stdout_master.out 2>&1 &
+${JAVA} ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.radargun.LaunchMaster --config ${CONFIG} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS} ${REPORTER_PATHS} > stdout_master.out 2>&1 &
 export RADARGUN_MASTER_PID=$!
 HOST_NAME=`hostname`
 echo "Master's PID is $RADARGUN_MASTER_PID running on ${HOST_NAME}"

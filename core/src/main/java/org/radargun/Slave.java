@@ -125,21 +125,15 @@ public class Slave {
    public static void main(String[] args) {
       ArgsHolder.init(args, ArgsHolder.ArgType.SLAVE);
       if (ArgsHolder.getMasterHost() == null) {
-         printUsageAndExit();
+         ArgsHolder.printUsageAndExit(ArgsHolder.ArgType.SLAVE);
       }
       Slave slave = new Slave(new RemoteMasterConnection(ArgsHolder.getMasterHost(), ArgsHolder.getMasterPort()));
       try {
          slave.run(ArgsHolder.getSlaveIndex());
       } catch (Exception e) {
          e.printStackTrace();
-         ShutDownHook.exit(10);
+         ShutDownHook.exit(127);
       }
-   }
-
-   private static void printUsageAndExit() {
-      System.out.println("Usage: start_local_slave.sh -master <host>:port");
-      System.out.println("       -master: The host(and optional port) on which the master resides. If port is missing it defaults to " + RemoteSlaveConnection.DEFAULT_PORT);
-      ShutDownHook.exit(1);
    }
 
    private Map<String, String> getCurrentExtras(Configuration configuration, Cluster cluster) {

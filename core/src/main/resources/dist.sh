@@ -17,6 +17,9 @@ SLAVES=""
 DEBUG=""
 SLAVE_COUNT=0
 TAILF=false
+PLUGIN_PATHS=""
+PLUGIN_CONFIGS=""
+REPORTER_PATHS=""
 
 help_and_exit() {
   wrappedecho "Usage: "
@@ -26,21 +29,27 @@ help_and_exit() {
   wrappedecho "  $ dist.sh node1 node2 node3 node4"
   wrappedecho "  $ dist.sh node{1..4}"
   wrappedecho ""
-  wrappedecho "   -c       Configuration file. Defaults to '$CONFIG'."
+  wrappedecho "   -c              Configuration file. Defaults to '$CONFIG'."
   wrappedecho ""
-  wrappedecho "   -u       SSH user to use when SSH'ing across to the slaves.  Defaults to '$SSH_USER'."
+  wrappedecho "   -u              SSH user to use when SSH'ing across to the slaves.  Defaults to '$SSH_USER'."
   wrappedecho ""
-  wrappedecho "   -w       Working directory on the slave.  Defaults to '$WORKING_DIR'."
+  wrappedecho "   -w              Working directory on the slave.  Defaults to '$WORKING_DIR'."
   wrappedecho ""
-  wrappedecho "   -m       Connection to MASTER server.  Specified as host or host:port.  Defaults to '$MASTER'."
+  wrappedecho "   -m              Connection to MASTER server.  Specified as host or host:port.  Defaults to '$MASTER'."
   wrappedecho ""
-  wrappedecho "   -r       Command for remote command execution.  Defaults to '$REMOTE_CMD'."
+  wrappedecho "   -r              Command for remote command execution.  Defaults to '$REMOTE_CMD'."
   wrappedecho ""
-  wrappedecho "   -t       After starting the benchmark it will run 'tail -f' on the master node's log file."
+  wrappedecho "   -t              After starting the benchmark it will run 'tail -f' on the master node's log file."
   wrappedecho ""
-  wrappedecho "   -d       Open debugging port on each node."
+  wrappedecho "   -d              Open debugging port on each node."
   wrappedecho ""
-  wrappedecho "   -h       Displays this help screen"
+  wrappedecho "   --add-plugin    Path to custom plugin directory. Can be specified multiple times."
+  wrappedecho ""
+  wrappedecho "   --add-config    Path to config file for specified plugin. Specified as pluginName:/path/config.xml. Can be specified multiple times."
+  wrappedecho ""
+  wrappedecho "   --add-reporter  Path to custom reporter directory. Can be specified multiple times."
+  wrappedecho ""
+  wrappedecho "   -h              Displays this help screen"
   wrappedecho ""
   exit 0
 }
@@ -82,6 +91,18 @@ do
     "-h")
       help_and_exit
       ;;
+    "--add-plugin")
+      PLUGIN_PATHS="--add-plugin=${2} ${PLUGIN_PATHS}"
+      shift
+      ;;
+    "--add-config")
+      PLUGIN_CONFIGS="--add-config=${2} ${PLUGIN_CONFIGS}"
+      shift
+      ;;
+    "--add-reporter")
+      REPORTER_PATHS="--add-reporter=${2} ${REPORTER_PATHS}"
+      shift
+      ;;
     *)
       if [ ${1:0:1} = "-" ] ; then
         echo "Warning: unknown argument ${1}" 
@@ -107,7 +128,7 @@ DEBUG_CMD=""
 if [ "x$DEBUG" != "x" ]; then
    DEBUG_CMD="-d localhost:$DEBUG"
 fi
-${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD}
+${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD} ${REPORTER_PATHS}
 #### Sleep for a few seconds so master can open its port
 
 ####### then start the rest of the nodes
@@ -115,7 +136,7 @@ ${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEB
 INDEX=0
 for slave in $SLAVES; do
   CMD="source ~/.bash_profile ; cd $WORKING_DIR"
-  CMD="$CMD ; bin/slave.sh -m ${MASTER} -n $slave -i $INDEX"
+  CMD="$CMD ; bin/slave.sh -m ${MASTER} -n $slave -i $INDEX ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
   if [ "x$DEBUG" != "x" ]; then
      CMD="$CMD -d $slave:$DEBUG"
   fi
