@@ -59,7 +59,10 @@ public class ArgsHolder {
       public static void parseArgs(String[] args, ArgType type) {
          for (int i = 0; i < args.length; i++) {
             if (ArgType.SLAVE == type) {
-               if (args[i].equals("-master") && i < args.length - 1) {
+               if ((args[i].equals("-master") || args[i].equals("--master")) && i < args.length - 1) {
+                  if (args[i].equals("-master")) {
+                     log.warn("Switch -master is deprecated. Use --master instead.");
+                  }
                   String param = args[i + 1];
                   if (param.contains(":")) {
                      masterHost = param.substring(0, param.indexOf(":"));
@@ -67,53 +70,89 @@ public class ArgsHolder {
                         masterPort = Integer.parseInt(param.substring(param.indexOf(":") + 1));
                      } catch (NumberFormatException nfe) {
                         log.warn("Unable to parse port part of the master!  Failing!");
-                        ShutDownHook.exit(10);
+                        ShutDownHook.exit(127);
                      }
                   } else {
                      masterHost = param;
                   }
-               } else if (args[i].equals("-slaveIndex") && i < args.length - 1) {
+               } else if ((args[i].equals("-slaveIndex") || args[i].equals("--slaveIndex")) && i < args.length - 1) {
+                  if (args[i].equals("-slaveIndex")) {
+                     log.warn("Switch -slaveIndex is deprecated. Use --slaveIndex instead.");
+                  }
                   try {
                      slaveIndex = Integer.parseInt(args[i + 1]);
                   } catch (NumberFormatException nfe) {
                      log.warn("Unable to parse slaveIndex!  Failing!");
-                     ShutDownHook.exit(10);
+                     ShutDownHook.exit(127);
                   }
+               } else {
+                  processCommonArgs(args[i], type);
                }
             }
             if (ArgType.LAUNCH_MASTER == type) {
-               if (args[i].equals("-config") && i < args.length - 1) {
+               if ((args[i].equals("-config") || args[i].equals("--config")) && i < args.length - 1) {
+                  if (args[i].equals("-config")) {
+                     log.warn("Switch -config is deprecated. Use --config instead.");
+                  }
                   configFile = args[i + 1];
-               } else if (args[i].startsWith("--add-reporter")) {
+               } else if (args[i].matches("--add-reporter=.+")) {
                   String reporterPath = args[i].split("=")[1];
                   reporterPaths.add(reporterPath);
-               }
-            }
-            if (args[i].matches("--add-plugin=.+")) {
-               String pluginPath = args[i].split("=")[1];
-               String pluginName = pluginPath.substring(pluginPath.lastIndexOf("/") + 1, pluginPath.length());
-               PluginParam pluginParam = pluginParams.get(pluginName);
-               if (pluginParam == null) {
-                  pluginParams.put(pluginName, new PluginParam(pluginPath, null));
                } else {
-                  pluginParam.setPath(pluginPath);
-               }
-            } else if (args[i].matches("--add-config=.+:.+")) {
-               String configPath = args[i].split("=")[1];
-               String pluginName = configPath.substring(0, configPath.indexOf(":"));
-               String configFile = configPath.substring(configPath.indexOf(":") + 1, configPath.length());
-               PluginParam pluginParam = pluginParams.get(pluginName);
-               if (pluginParam == null) {
-                  pluginParams.put(pluginName, new PluginParam(null, Arrays.asList(configFile)));
-               } else {
-                  if (pluginParam.getConfigFiles() == null) {
-                     pluginParam.setConfigFiles(new ArrayList<String>());
-                  }
-                  pluginParam.getConfigFiles().add(configFile);
+                  processCommonArgs(args[i], type);
                }
             }
          }
       }
+   }
+
+   private static void processCommonArgs(String arg, ArgType type) {
+      if (arg.matches("--add-plugin=.+")) {
+         String pluginPath = arg.split("=")[1];
+         String pluginName = pluginPath.substring(pluginPath.lastIndexOf("/") + 1, pluginPath.length());
+         PluginParam pluginParam = pluginParams.get(pluginName);
+         if (pluginParam == null) {
+            pluginParams.put(pluginName, new PluginParam(pluginPath, null));
+         } else {
+            pluginParam.setPath(pluginPath);
+         }
+      } else if (arg.matches("--add-config=.+:.+")) {
+         String configPath = arg.split("=")[1];
+         String pluginName = configPath.substring(0, configPath.indexOf(":"));
+         String configFile = configPath.substring(configPath.indexOf(":") + 1, configPath.length());
+         PluginParam pluginParam = pluginParams.get(pluginName);
+         if (pluginParam == null) {
+            pluginParams.put(pluginName, new PluginParam(null, Arrays.asList(configFile)));
+         } else {
+            if (pluginParam.getConfigFiles() == null) {
+               pluginParam.setConfigFiles(new ArrayList<String>());
+            }
+            pluginParam.getConfigFiles().add(configFile);
+         }
+      } else if (arg.startsWith("-")) {
+         // handle unsupported options
+         printUsageAndExit(type);
+      }
+   }
+
+   public static void printUsageAndExit(ArgType type) {
+      if (ArgType.SLAVE == type) {
+         printSlaveUsageAndExit();
+      } else if (ArgType.LAUNCH_MASTER == type) {
+         printMasterUsageAndExit();
+      }
+   }
+
+   private static void printMasterUsageAndExit() {
+      System.out.println("Usage: master.sh  --config <config-file.xml>");
+      System.out.println("       --config : xml file containing benchmark's configuration");
+      ShutDownHook.exit(127);
+   }
+
+   private static void printSlaveUsageAndExit() {
+      System.out.println("Usage: start_local_slave.sh --master <host>:port");
+      System.out.println("       --master: The host(and optional port) on which the master resides. If port is missing it defaults to " + RemoteSlaveConnection.DEFAULT_PORT);
+      ShutDownHook.exit(127);
    }
 
    public static enum ArgType {

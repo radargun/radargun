@@ -1,6 +1,5 @@
 package org.radargun;
 
-
 import java.io.File;
 
 import org.radargun.config.ConfigParser;
@@ -33,22 +32,16 @@ public class LaunchMaster {
          master.run();
       } catch (Exception e) {
          e.printStackTrace();
-         ShutDownHook.exit(10);
+         ShutDownHook.exit(127);
       }
    }
 
    private static String getConfigOrExit(String[] args) {
       ArgsHolder.init(args, ArgsHolder.ArgType.LAUNCH_MASTER);
       if (ArgsHolder.getConfigFile() == null) {
-         printUsageAndExit();
+         ArgsHolder.printUsageAndExit(ArgsHolder.ArgType.LAUNCH_MASTER);
       }
       return ArgsHolder.getConfigFile();
-   }
-
-   private static void printUsageAndExit() {
-      System.out.println("Usage: master.sh  -config <config-file.xml>");
-      System.out.println("       -config : xml file containing benchmark's configuration");
-      ShutDownHook.exit(1);
    }
 
    private static void out(String message) {

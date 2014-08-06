@@ -15,8 +15,8 @@ import static org.testng.Assert.*;
 public class ArgsHolderTest {
 
    public void testParseArgs() {
-      String[] masterArgs = {"-config", "/foo/configFile.xml", "--add-reporter=/foo/reporterDir", "--add-reporter=/bar/reporterDir"};
-      String[] slaveArgs = {"-master", "127.0.0.1:2103", "-slaveIndex", "1", "--add-plugin=/foo/plugin1", "--add-config=plugin1:/foo/config.xml",
+      String[] masterArgs = {"--config", "/foo/configFile.xml", "--add-reporter=/foo/reporterDir", "--add-reporter=/bar/reporterDir"};
+      String[] slaveArgs = {"--master", "127.0.0.1:2103", "--slaveIndex", "1", "--add-plugin=/foo/plugin1", "--add-config=plugin1:/foo/config.xml",
             "--add-config=plugin1:/foo/jgroups.xml", "--add-plugin=/bar/plugin2", "--add-config=plugin2:/bar/config.xml"};
       ArgsHolder.init(masterArgs, ArgsHolder.ArgType.LAUNCH_MASTER);
       ArgsHolder.init(slaveArgs, ArgsHolder.ArgType.SLAVE);
@@ -43,5 +43,15 @@ public class ArgsHolderTest {
       assertEquals("/bar/plugin2", plugin2.getPath());
       List<String> configFiles2 = plugin2.getConfigFiles();
       assertTrue(configFiles2.contains("/bar/config.xml"));
+
+      String[] deprecatedMasterArgs = {"-config", "/deprecated/configFile.xml"};
+      String[] deprecatedSlaveArgs = {"-master", "127.0.0.2:2101", "-slaveIndex", "2"};
+      ArgsHolder.init(deprecatedMasterArgs, ArgsHolder.ArgType.LAUNCH_MASTER);
+      ArgsHolder.init(deprecatedSlaveArgs, ArgsHolder.ArgType.SLAVE);
+
+      assertEquals("127.0.0.2", ArgsHolder.getMasterHost());
+      assertEquals(2101, ArgsHolder.getMasterPort());
+      assertEquals(2, ArgsHolder.getSlaveIndex());
+      assertEquals("/deprecated/configFile.xml", ArgsHolder.getConfigFile());
    }
 }

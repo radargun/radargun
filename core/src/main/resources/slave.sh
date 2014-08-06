@@ -10,6 +10,8 @@ MASTER_PORT=""
 SLAVE_INDEX=""
 DEBUG=""
 LOG4J_PREFIX=`hostname`-$RANDOM
+PLUGIN_PATHS=""
+PLUGIN_CONFIGS=""
 
 
 default_master() {
@@ -34,15 +36,19 @@ help_and_exit() {
   echo "Usage: "
   echo '  $ slave.sh [-m host:port] [-p log4j_file_prefix] [-i slaveIndex] [-d [host:]port]'
   echo ""
-  echo "   -m        Master host and port. Optional, defaults to ${MASTER}. (this value is taken from ./conf/benchmark-dist.xml)."
+  echo "   -m              Master host and port. Optional, defaults to ${MASTER}. (this value is taken from ./conf/benchmark-dist.xml)."
   echo ""
-  echo "   -n        Name of this slave (used for log files and to select a slave configuration from environment.sh). Optional."
+  echo "   -n              Name of this slave (used for log files and to select a slave configuration from environment.sh). Optional."
   echo ""
-  echo "   -i        Index of this slave. Optional."
+  echo "   -i              Index of this slave. Optional."
   echo ""
-  echo "   -d        Debug address. Optional."
+  echo "   -d              Debug address. Optional."
   echo ""
-  echo "   -h        Displays this help screen"
+  echo "   --add-plugin    Path to custom plugin directory. Can be specified multiple times."
+  echo ""
+  echo "   --add-config    Path to config file for specified plugin. Specified as pluginName:/path/config.xml. Can be specified multiple times."
+  echo ""
+  echo "   -h              Displays this help screen"
   echo ""
   exit 0
 }
@@ -72,6 +78,14 @@ do
     "-h")
       help_and_exit
       ;;
+    "--add-plugin")
+      PLUGIN_PATHS="--add-plugin=${2} ${PLUGIN_PATHS}"
+      shift
+      ;;
+    "--add-config")
+      PLUGIN_CONFIGS="--add-config=${2} ${PLUGIN_CONFIGS}"
+      shift
+      ;;
     *)
       echo "Warn: unknown param \"${1}\"" 
       help_and_exit
@@ -80,9 +94,9 @@ do
   shift
 done
 
-CONF="-master $MASTER"
+CONF="--master $MASTER"
 if [ "x$SLAVE_INDEX" != "x" ]; then
-   CONF="$CONF -slaveIndex $SLAVE_INDEX"
+   CONF="$CONF --slaveIndex $SLAVE_INDEX"
 fi
 
 add_fwk_to_classpath
@@ -103,8 +117,8 @@ D_VARS="-Djava.net.preferIPv4Stack=true -Dlog4j.file.prefix=${LOG4J_PREFIX} -Dbi
 if [ "x$DEBUG" != "x" ]; then
    JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG}"
 fi
-echo "${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF}" > stdout_slave_${LOG4J_PREFIX}.out
+echo "${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}" > stdout_slave_${LOG4J_PREFIX}.out
 echo "--------------------------------------------------------------------------------" >> stdout_slave_${LOG4J_PREFIX}.out
-nohup ${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} >> stdout_slave_${LOG4J_PREFIX}.out 2>&1 &
+nohup ${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS} >> stdout_slave_${LOG4J_PREFIX}.out 2>&1 &
 echo "... done! Slave process started on host ${HOSTNAME}!"
 echo ""
