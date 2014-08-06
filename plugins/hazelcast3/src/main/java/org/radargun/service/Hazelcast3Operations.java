@@ -18,7 +18,7 @@ public class Hazelcast3Operations extends HazelcastOperations {
 
    @Override
    public <K, V> HazelcastCache<K, V> getCache(String cacheName) {
-      return new Cache<K, V>((IMap<K,V>) service.hazelcastInstance.getMap(cacheName));
+      return new Cache<K, V>(service.<K, V>getMap(cacheName));
    }
 
    protected static class Cache<K, V> implements HazelcastCache<K, V> {
