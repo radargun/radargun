@@ -34,4 +34,9 @@ public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
       return new Infinispan70CacheInfo(this);
    }
 
+   @Override
+   @ProvidesTrait
+   public InfinispanEmbeddedQueryable createQueryable() {
+      return new Infinispan70EmbeddedQueryable(this);
+   }
 }

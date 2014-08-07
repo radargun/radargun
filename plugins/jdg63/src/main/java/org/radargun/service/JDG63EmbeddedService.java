@@ -29,11 +29,15 @@ public class JDG63EmbeddedService extends Infinispan60EmbeddedService {
       return new ParserRegistry(classLoader).parse(input);
    }
 
-// TODO: Add this when the next ER is released
-//   @Override
-//   @ProvidesTrait
-//   public InfinispanCacheInfo createCacheInformation() {
-//      return new Infinispan70CacheInfo(this);
-//   }
+   @Override
+   @ProvidesTrait
+   public InfinispanEmbeddedQueryable createQueryable() {
+      return new Infinispan70EmbeddedQueryable(this);
+   }
 
+   @Override
+   @ProvidesTrait
+   public InfinispanCacheInfo createCacheInformation() {
+      return new Infinispan70CacheInfo(this);
+   }
 }
