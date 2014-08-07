@@ -54,7 +54,7 @@ class Stressor extends Thread {
       synchronizer = stage.getSynchronizer();
       completion = stage.getCompletion();
       if (stage.getSeed() != null) {
-         random = new Random(stage.getSeed() + threadIndex + nodeIndex * numNodes);
+         random = new Random(stage.getSeed() + threadIndex + nodeIndex * stage.numThreads);
       } else {
          random = new Random();
       }
