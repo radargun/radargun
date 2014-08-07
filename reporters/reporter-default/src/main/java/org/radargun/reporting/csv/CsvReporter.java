@@ -65,7 +65,7 @@ public class CsvReporter implements Reporter {
          ArrayList<Map<String, String>> rows = new ArrayList();
          for (Report.TestIteration iteration : test.getIterations()) {
             Statistics aggregated = null;
-            for (Map.Entry<Integer, List<Statistics>> slaveStats : iteration.statistics.entrySet()) {
+            for (Map.Entry<Integer, List<Statistics>> slaveStats : iteration.getStatistics()) {
                if (ignore != null && ignore.contains(slaveStats.getKey())) {
                   continue;
                }
@@ -83,14 +83,14 @@ public class CsvReporter implements Reporter {
                Map<String, String> rowData = new HashMap<String, String>();
                rows.add(rowData);
                for (Map.Entry<String, OperationStats> os : operationStats.entrySet()) {
-                  addRepresentations(aggregated, iteration.threadCount, rowData, os.getKey(), os.getValue());
+                  addRepresentations(aggregated, iteration.getThreadCount(), rowData, os.getKey(), os.getValue());
                }
                columns.addAll(rowData.keySet());
 
                rowData.put(SLAVE_INDEX, "TOTAL");
                rowData.put(ITERATION, String.valueOf(it));
                rowData.put(PERIOD, String.valueOf(aggregated.getEnd() - aggregated.getBegin()));
-               rowData.put(THREAD_COUNT, String.valueOf(iteration.threadCount));
+               rowData.put(THREAD_COUNT, String.valueOf(iteration.getThreadCount()));
             }
             ++it;
          }

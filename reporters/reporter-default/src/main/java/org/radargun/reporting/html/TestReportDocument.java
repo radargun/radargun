@@ -36,6 +36,7 @@ public class TestReportDocument extends HtmlDocument {
    private int maxIterations = 0;
    private Set<String> operations = new TreeSet<String>();
    private Set<Cluster> clusters = new TreeSet<Cluster>();
+   private Map<String, Map<Report, List<Report.TestResult>>> results = new TreeMap<String, Map<Report, List<Report.TestResult>>>();
 
    private int elementCounter = 0;
 
@@ -50,7 +51,7 @@ public class TestReportDocument extends HtmlDocument {
             int totalThreads = 0;
             List<Statistics> nodeStats = new ArrayList<Statistics>();
             List<Integer> nodeThreads = new ArrayList<Integer>();
-            for (Map.Entry<Integer, List<Statistics>> entry : it.statistics.entrySet()) {
+            for (Map.Entry<Integer, List<Statistics>> entry : it.getStatistics()) {
                int slaveIndex = entry.getKey();
                List<Statistics> list = entry.getValue();
 
@@ -87,6 +88,20 @@ public class TestReportDocument extends HtmlDocument {
                   if (!op.getValue().isEmpty()) operations.add(op.getKey());
                }
             }
+
+            for (Map.Entry<String, Report.TestResult> entry : it.getResults().entrySet()) {
+               Map<Report, List<Report.TestResult>> resultsByType = results.get(entry.getKey());
+               if (resultsByType == null) {
+                  resultsByType = new TreeMap<Report, List<Report.TestResult>>();
+                  results.put(entry.getKey(), resultsByType);
+               }
+               List<Report.TestResult> resultsList = resultsByType.get(test.getReport());
+               if (resultsList == null) {
+                  resultsList = new ArrayList<Report.TestResult>();
+                  resultsByType.put(test.getReport(), resultsList);
+               }
+               resultsList.add(entry.getValue());
+            }
          }
          aggregated.put(test.getReport(), iterations);
          maxIterations = Math.max(maxIterations, iterations.size());
@@ -103,6 +118,10 @@ public class TestReportDocument extends HtmlDocument {
 
    public void writeTest() throws IOException {
       writeTag("h1", "Test " + testName);
+      for (Map.Entry<String, Map<Report, List<Report.TestResult>>> result : results.entrySet()) {
+         writeTag("h2", result.getKey());
+         writeResult(result.getValue());
+      }
       for (String operation : operations) {
          writeTag("h2", operation);
          createChart(String.format("%s%s%s_%s.png", directory, File.separator, testName, operation), operation);
@@ -110,6 +129,52 @@ public class TestReportDocument extends HtmlDocument {
                "<img src=\"%s_%s.png\" alt=\"%s\"/></div></div>\n", testName, operation, operation));
          writeOperation(operation);
       }
+   }
+
+   private void writeResult(Map<Report, List<Report.TestResult>> results) {
+      write("<table>\n");
+      if (maxIterations > 1) {
+         write("<tr><th colspan=\"2\">&nbsp;</th>");
+         for (int iteration = 0; iteration < maxIterations; ++iteration) {
+            write(String.format("<th style=\"border-left-color: black; border-left-width: 2px;\">iteration %d</th>", iteration));
+         }
+         write("</tr>\n");
+      }
+      write("<tr><th colspan=\"2\">Configuration</th>\n");
+      for (int i = 0; i < maxIterations; ++i) {
+         write("<th style=\"text-align: center; border-left-color: black; border-left-width: 2px;\">Value</th>\n");
+      }
+      write("</tr>\n");
+      for (Map.Entry<Report, List<Report.TestResult>> entry : results.entrySet()) {
+         Report report = entry.getKey();
+
+         int nodeCount = entry.getValue().isEmpty() ? 0 : entry.getValue().get(0).slaveResults.size();
+
+         write("<tr><th style=\"text-align: left; cursor: pointer\" onClick=\"");
+         for (int i = 0; i < nodeCount; ++i) {
+            write("switch_visibility('e" + (elementCounter + i) + "'); ");
+         }
+         write(String.format("\">%s</th><th>%s</th>", report.getConfiguration().name, report.getCluster()));
+         for (Report.TestResult result : entry.getValue()) {
+            writeResult(result.aggregatedValue, false, result.suspicious);
+         }
+         write("</tr>\n");
+         for (int node = 0; node < nodeCount; ++node) {
+            write(String.format("<tr id=\"e%d\" style=\"visibility: collapse;\"><th colspan=\"2\" style=\"text-align: right\">node%d</th>", elementCounter++, node));
+            for (Report.TestResult result : entry.getValue()) {
+               Report.SlaveResult sr = result.slaveResults.get(node);
+               writeResult(sr.value, false, sr.suspicious);
+            }
+            write("</tr>\n");
+         }
+      }
+      write("</table><br>\n");
+   }
+
+   private void writeResult(String value, boolean gray, boolean suspect) {
+      String rowStyle = suspect ? "background-color: #FFBBBB; " : (gray ? "background-color: #F0F0F0; ": "");
+      rowStyle += "text-align: right; ";
+      writeTD(value, rowStyle + "border-left-color: black; border-left-width: 2px;");
    }
 
    private void createChart(String filename, String operation) throws IOException {

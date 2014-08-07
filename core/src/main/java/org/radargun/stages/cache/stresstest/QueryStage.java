@@ -1,8 +1,13 @@
 package org.radargun.stages.cache.stresstest;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.radargun.DistStageAck;
@@ -11,7 +16,9 @@ import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
+import org.radargun.reporting.Report;
 import org.radargun.state.SlaveState;
+import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.NumberConverter;
@@ -67,43 +74,40 @@ public class QueryStage extends StressTestStage {
    }
 
    @Override
-   public DistStageAck executeOnSlave() {
-      return new QueryAck(slaveState, super.executeOnSlave(), expectedSize.get());
+   protected QueryAck newStatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
+      return new QueryAck(slaveState, iterations, expectedSize.get());
    }
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
-      ArrayList<DistStageAck> unwrapped = new ArrayList<DistStageAck>(acks.size());
-      int size = -1;
-      for (DistStageAck ack : acks) {
-         if (ack instanceof QueryAck) {
-            unwrapped.add(((QueryAck) ack).wrapped);
-            int ackSize = ((QueryAck) ack).queryResultSize;
-            if (size < 0) {
-               size = ackSize;
-            } else if (size != ackSize) {
-               String message = "The size got from " + ack.getSlaveIndex() + " = " + ackSize + " is not the same as from other slaves = " + size;
-               if (checkSameResult) {
-                  log.error(message);
-                  return false;
-               } else {
-                  log.info(message);
-               }
+      if (!super.processAckOnMaster(acks)) return false;
+      int minSize = Integer.MAX_VALUE, maxSize = Integer.MIN_VALUE;
+      Map<Integer, Report.SlaveResult> slaveResults = new HashMap<Integer, Report.SlaveResult>();
+      for (QueryAck ack : cast(acks, QueryAck.class)) {
+         if (maxSize >= 0 && (minSize != ack.queryResultSize || maxSize != ack.queryResultSize)) {
+            String message = String.format("The size got from %d -> %d is not the same as from other slaves -> %d .. %d ",
+                  ack.getSlaveIndex(), ack.queryResultSize, minSize, maxSize);
+            if (checkSameResult) {
+               log.error(message);
+               return false;
+            } else {
+               log.info(message);
             }
-         } else {
-            unwrapped.add(ack);
          }
+         minSize = Math.min(minSize, ack.queryResultSize);
+         maxSize = Math.max(maxSize, ack.queryResultSize);
+         slaveResults.put(ack.getSlaveIndex(), new Report.SlaveResult(String.valueOf(ack.queryResultSize), false));
       }
-      return super.processAckOnMaster(unwrapped);
+      String sizeString = minSize == maxSize ? String.valueOf(maxSize) : String.format("%d .. %d", minSize, maxSize);
+      masterState.getReport().getTest(testName).addResult(0, Collections.singletonMap("Query result size", new Report.TestResult(slaveResults, sizeString, false)));
+      return true;
    }
 
-   protected static class QueryAck extends DistStageAck {
-      DistStageAck wrapped;
-      int queryResultSize;
+   protected static class QueryAck extends StatisticsAck {
+      public final int queryResultSize;
 
-      public QueryAck(SlaveState slaveState, DistStageAck wrapped, int queryResultSize) {
-         super(slaveState);
-         this.wrapped = wrapped;
+      public QueryAck(SlaveState slaveState, List<List<Statistics>> iterations, int queryResultSize) {
+         super(slaveState, iterations);
          this.queryResultSize = queryResultSize;
       }
    }
@@ -359,6 +363,7 @@ public class QueryStage extends StressTestStage {
 
       @Override
       public String convertToString(List<SortElement> value) {
+         if (value == null) return "<unordered>";
          StringBuilder sb = new StringBuilder();
          for (SortElement e : value) {
             sb.append(e.attribute).append(':').append(e.asc ? "ASC" : "DESC").append(", ");

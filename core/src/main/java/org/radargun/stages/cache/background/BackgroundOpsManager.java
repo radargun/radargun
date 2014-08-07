@@ -1,5 +1,6 @@
 package org.radargun.stages.cache.background;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,7 +51,7 @@ public class BackgroundOpsManager implements ServiceListener {
     * Key to SlaveState to retrieve BackgroundOpsManager instance and to MasterState to retrieve results.
     */
    public static final String NAME = "BackgroundOpsManager";
-   private static final String CACHE_SIZE = "Cache size";
+   static final String CACHE_SIZE = "Cache size";
 
    private static Log log = LogFactory.getLog(BackgroundOpsManager.class);
 
@@ -65,7 +66,7 @@ public class BackgroundOpsManager implements ServiceListener {
    private ScheduledFuture statsTask;
    private ScheduledFuture keepAliveTask;
    private ScheduledExecutorService executor;
-   private List<List<Statistics>> stats;
+   private List<IterationStats> stats;
    private long statsIterationDuration;
    private boolean loaded = false;
    private LogChecker[] logCheckers;
@@ -386,7 +387,7 @@ public class BackgroundOpsManager implements ServiceListener {
 
    public synchronized void startStats() {
       if (stats == null) {
-         stats = new ArrayList<List<Statistics>>();
+         stats = new ArrayList<IterationStats>();
       }
       if (sizeThread == null) {
          sizeThread = new SizeThread();
@@ -397,7 +398,7 @@ public class BackgroundOpsManager implements ServiceListener {
       }
    }
 
-   public synchronized List<List<Statistics>> stopStats() {
+   public synchronized void stopStats() {
       if (statsTask != null) {
          statsTask.cancel(true);
          statsTask = null;
@@ -412,12 +413,13 @@ public class BackgroundOpsManager implements ServiceListener {
          }
          sizeThread = null;
       }
-      List<List<Statistics>> statsToReturn = stats;
+   }
+
+   public synchronized List<IterationStats> getStats() {
+      List<IterationStats> statsToReturn = stats;
       stats = null;
       return statsToReturn;
    }
-
-
 
    public KeyGenerator getKeyGenerator() {
       KeyGenerator keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
@@ -548,7 +550,7 @@ public class BackgroundOpsManager implements ServiceListener {
          stats.add(gatherStats());
       }
 
-      private List<Statistics> gatherStats() {
+      private IterationStats gatherStats() {
          Stressor[] threads = stressorThreads;
          List<Statistics> stats;
          if (threads == null) {
@@ -563,7 +565,8 @@ public class BackgroundOpsManager implements ServiceListener {
          }
          Timeline timeline = slaveState.getTimeline();
          long now = System.currentTimeMillis();
-         timeline.addValue(CACHE_SIZE, new Timeline.Value(now, sizeThread.getAndResetSize()));
+         long cacheSize = sizeThread.getAndResetSize();
+         timeline.addValue(CACHE_SIZE, new Timeline.Value(now, cacheSize));
          if (stats.isEmpty()) {
             // add zero for all operations we've already reported
             for (String valueCategory : timeline.getValueCategories()) {
@@ -585,8 +588,9 @@ public class BackgroundOpsManager implements ServiceListener {
                }
             }
          }
+
          log.trace("Adding iteration " + BackgroundOpsManager.this.stats.size() + ": " + stats);
-         return stats;
+         return new IterationStats(stats, cacheSize);
       }
    }
 
@@ -652,5 +656,15 @@ public class BackgroundOpsManager implements ServiceListener {
 
    public LogLogicConfiguration getLogLogicConfiguration() {
       return logLogicConfiguration;
+   }
+
+   public class IterationStats implements Serializable {
+      public final List<Statistics> statistics;
+      public final long cacheSize;
+
+      private IterationStats(List<Statistics> statistics, long cacheSize) {
+         this.statistics = statistics;
+         this.cacheSize = cacheSize;
+      }
    }
 }

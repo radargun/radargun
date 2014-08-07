@@ -2,7 +2,10 @@ package org.radargun.stages.cache.background;
 
 import static org.radargun.utils.Utils.cast;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
@@ -10,7 +13,7 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
-import org.radargun.stats.Statistics;
+import org.radargun.utils.Table;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -26,7 +29,8 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
       try {
          BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState);
          if (instance != null) {
-            return new StatisticsAck(slaveState, instance.stopStats());
+            instance.stopStats();
+            return new StatisticsAck(slaveState, instance.getStats());
          } else {
             return errorResponse("No " + BackgroundOpsManager.NAME);
          }
@@ -40,16 +44,33 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
       if (!super.processAckOnMaster(acks)) return false;
       Report report = masterState.getReport();
       Report.Test test = report.createTest(testName);
+      Table<Integer, Integer, Long> cacheSizes = new Table<Integer, Integer, Long>();
       for (StatisticsAck ack : cast(acks, StatisticsAck.class)) {
-         test.addIterations(ack.getSlaveIndex(), ack.iterations);
+         int i = 0;
+         for (BackgroundOpsManager.IterationStats stats : ack.iterations) {
+            test.addStatistics(i, ack.getSlaveIndex(), stats.statistics);
+            cacheSizes.put(ack.getSlaveIndex(), i, stats.cacheSize);
+            ++i;
+         }
+      }
+      for (int iteration : cacheSizes.columnKeys()) {
+         Map<Integer, Report.SlaveResult> slaveResults = new HashMap<Integer, Report.SlaveResult>();
+         long min = Long.MAX_VALUE, max = Long.MIN_VALUE;
+         for (Map.Entry<Integer, Long> iterationData : cacheSizes.getColumn(iteration).entrySet()) {
+            slaveResults.put(iterationData.getKey(), new Report.SlaveResult(String.valueOf(iterationData.getValue()), false));
+            min = Math.min(min, iterationData.getValue());
+            max = Math.max(max, iterationData.getValue());
+         }
+         Report.TestResult result = new Report.TestResult(slaveResults, min < max ? String.format("%d .. %d", min, max) : "-", false);
+         test.addResult(iteration, Collections.singletonMap(BackgroundOpsManager.CACHE_SIZE, result));
       }
       return true;
    }
 
    private static class StatisticsAck extends DistStageAck {
-      final List<List<Statistics>> iterations;
+      public final List<BackgroundOpsManager.IterationStats> iterations;
 
-      private StatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
+      private StatisticsAck(SlaveState slaveState, List<BackgroundOpsManager.IterationStats> iterations) {
          super(slaveState);
          this.iterations = iterations;
       }

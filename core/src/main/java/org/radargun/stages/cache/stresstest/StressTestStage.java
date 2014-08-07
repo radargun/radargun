@@ -1,5 +1,7 @@
 package org.radargun.stages.cache.stresstest;
 
+import static org.radargun.utils.Utils.cast;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -263,36 +265,31 @@ public class StressTestStage extends AbstractDistStage {
 
       try {
          List<List<Statistics>> results = execute();
-         return new StatisticsAck(slaveState, results);
+         return newStatisticsAck(slaveState, results);
       } catch (Exception e) {
          return errorResponse("Exception while initializing the test", e);
       }
    }
 
+   protected StatisticsAck newStatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
+      return new StatisticsAck(slaveState, iterations);
+   }
+
    public boolean processAckOnMaster(List<DistStageAck> acks) {
-      logDurationInfo(acks);
-      boolean success = true;
+      if (!super.processAckOnMaster(acks)) return false;
       Report report = masterState.getReport();
       Report.Test test = report.createTest(testName);
-      for (DistStageAck ack : acks) {
-         if (ack.isError()) {
-            success = false;
-            log.warn("Received error ack: " + ack);
-            continue;
-         }
-         if (!(ack instanceof StatisticsAck)) {
-            log.error("Success ack does not contain statistics");
-            continue;
-         }
-         StatisticsAck sack = (StatisticsAck) ack;
-         log.trace("Received success ack: " + ack);
-         if (sack.iterations != null) {
-            test.addIterations(ack.getSlaveIndex(), sack.iterations);
+      for (StatisticsAck ack : cast(acks, StatisticsAck.class)) {
+         if (ack.iterations != null) {
+            int i = 0;
+            for (List<Statistics> threadStats : ack.iterations) {
+               test.addStatistics(++i, ack.getSlaveIndex(), threadStats);
+            }
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }
       }
-      return success;
+      return true;
    }
 
    protected boolean defaultProcessAck(List<DistStageAck> acks) {
@@ -503,10 +500,10 @@ public class StressTestStage extends AbstractDistStage {
       return seed;
    }
 
-   private static class StatisticsAck extends DistStageAck {
+   protected static class StatisticsAck extends DistStageAck {
       private final List<List<Statistics>> iterations;
 
-      private StatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
+      protected StatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
          super(slaveState);
          this.iterations = iterations;
       }
