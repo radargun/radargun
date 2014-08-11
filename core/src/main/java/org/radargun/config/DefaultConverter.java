@@ -231,11 +231,21 @@ public class DefaultConverter implements Converter<Object> {
 
    @Override
    public String convertToString(Object value) {
-      if (value instanceof Collection) {
+      if (value == null) {
+         return "null";
+      } else if (value instanceof Collection) {
          StringBuilder sb = new StringBuilder("[ ");
          for (Iterator iterator = ((Collection) value).iterator(); iterator.hasNext(); ) {
             sb.append(convertToString(iterator.next()));
             if (iterator.hasNext()) sb.append(", ");
+         }
+         return sb.append(" ]").toString();
+      } else if (value.getClass().isArray()) {
+         StringBuilder sb = new StringBuilder("[ ");
+         int length = Array.getLength(value);
+         for (int i = 0; i < length; ++i) {
+            sb.append(convertToString(Array.get(value, i)));
+            if (i < length - 1) sb.append(", ");
          }
          return sb.append(" ]").toString();
       }
