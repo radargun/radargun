@@ -7,6 +7,8 @@ import org.hibernate.search.annotations.Analyze;
 import org.hibernate.search.annotations.Field;
 import org.hibernate.search.annotations.Index;
 import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.NumericField;
+import org.hibernate.search.annotations.Store;
 import org.infinispan.protostream.MessageMarshaller;
 
 /**
@@ -16,9 +18,11 @@ import org.infinispan.protostream.MessageMarshaller;
  */
 @Indexed
 public class NumberObject implements Serializable {
-   @Field(index = Index.YES, analyze = Analyze.NO)
+   @NumericField
+   @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES)
    public int integerValue;
 
+   @NumericField
    @Field(index = Index.YES, analyze = Analyze.NO)
    public double doubleValue;
 
