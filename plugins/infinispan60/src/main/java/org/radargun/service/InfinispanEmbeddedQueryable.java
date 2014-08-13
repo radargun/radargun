@@ -22,4 +22,10 @@ public class InfinispanEmbeddedQueryable extends AbstractInfinispanQueryable {
       QueryFactory factory = searchManager.getQueryFactory();
       return new QueryBuilderImpl(factory, clazz);
    }
+
+   @Override
+   public void reindex(String containerName) {
+      SearchManager searchManager = Search.getSearchManager(service.getCache(containerName));
+      searchManager.getMassIndexer().start();
+   }
 }

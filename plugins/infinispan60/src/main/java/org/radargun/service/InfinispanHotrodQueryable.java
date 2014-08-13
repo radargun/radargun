@@ -40,6 +40,13 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
       return new QueryBuilderImpl(factory, clazz);
    }
 
+   @Override
+   public void reindex(String containerName) {
+      // We should rather throw an exception because if the cache is configured
+      // with manual index we cannot make sure that the cache will be reindexed.
+      throw new UnsupportedOperationException();
+   }
+
    void registerProtofilesLocal(SerializationContext context) {
       for (String protofile : service.protofiles) {
          try {

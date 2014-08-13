@@ -10,6 +10,7 @@ import org.radargun.Operation;
 @Trait(doc = "Allows running queries on the node.")
 public interface Queryable {
    Operation QUERY = Operation.register(Queryable.class.getSimpleName() + ".Query");
+   Operation REINDEX = Operation.register(Queryable.class.getSimpleName() + ".Reindex");
 
    /**
     * Get object for building the query.
@@ -17,6 +18,12 @@ public interface Queryable {
     * @return Builder
     */
    QueryBuilder getBuilder(String containerName, Class<?> clazz);
+
+   /**
+    * Makes sure that indexes are in sync with data in the cache.
+    * (It is implementation/configuration dependent whether this is necessary)
+    */
+   void reindex(String containerName);
 
    /**
     * The instance should be reusable, but not thread-safe.

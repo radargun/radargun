@@ -37,6 +37,11 @@ public class HazelcastQueryable implements Queryable {
       return new HazelcastQueryBuilder(service.getMap(mapName));
    }
 
+   @Override
+   public void reindex(String containerName) {
+      // noop
+   }
+
    private class HazelcastQueryBuilder implements QueryBuilder {
       private final IMap map;
       private Predicate predicate;
