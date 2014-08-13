@@ -17,7 +17,6 @@
       <version.infinispan>6.0.3.Final-redhat-3</version.infinispan>
       <version.jbossts>4.17.7.Final-redhat-4</version.jbossts>
       <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
-      <version.remotingjmx>1.1.2.Final-redhat-1</version.remotingjmx>
    </properties>
 
    <dependencies>
@@ -109,13 +108,6 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-cachestore-leveldb</artifactId>
          <version>${version.infinispan}</version>
-         <optional>true</optional>
-      </dependency>
-
-      <dependency>
-         <groupId>org.jboss.remotingjmx</groupId>
-         <artifactId>remoting-jmx</artifactId>
-         <version>${version.remotingjmx}</version>
          <optional>true</optional>
       </dependency>
 

@@ -15,7 +15,6 @@
    <properties>
       <version.infinispan>6.0.1.Final</version.infinispan>
       <version.jbossts>4.16.3.Final</version.jbossts>
-      <version.remotingjmx>1.0.4.Final</version.remotingjmx>
    </properties>
 
    <dependencies>
@@ -94,13 +93,6 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-cachestore-leveldb</artifactId>
          <version>${version.infinispan}</version>
-         <optional>true</optional>
-      </dependency>
-
-      <dependency>
-         <groupId>org.jboss.remotingjmx</groupId>
-         <artifactId>remoting-jmx</artifactId>
-         <version>${version.remotingjmx}</version>
          <optional>true</optional>
       </dependency>
 
