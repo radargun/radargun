@@ -1,9 +1,12 @@
 package org.radargun.utils;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 
 /**
@@ -12,21 +15,61 @@ import java.util.Set;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Projections {
-   public static <A, B> Collection project(Collection<A> collection, Func<A, B> func) {
+   public static <A, B> Collection<B> project(Collection<A> collection, Func<A, B> func) {
       return new ProjectCollection<A, B>(collection, func);
+   }
+
+   public static <A, B> List<B> project(List<A> collection, Func<A, B> func) {
+      return new ProjectList<A, B>(collection, func);
+   }
+
+   public static <A> boolean any(Collection<A> collection, Condition<A> condition) {
+      for (A a : collection) {
+         if (condition.accept(a)) return true;
+      }
+      return false;
    }
 
    public static <A> Collection<A> subset(Collection<A> collection, int skip, int limit) {
       return new SubsetCollection<A>(collection, skip, limit);
    }
 
+   public static <A, B> Collection<B> where(Collection<A> collection, Condition<A> condition, Func<A, B> converter) {
+      // TODO: lazy collection would be better
+      ArrayList<B> out = new ArrayList<B>();
+      for (A a : collection) {
+         if (condition.accept(a)) {
+            out.add(converter.project(a));
+         }
+      }
+      return out;
+   }
+
+   public static <A, B> Collection<B> instancesOf(Collection<A> collection, final Class<? extends B> clazz) {
+      return where(collection, new Condition<A>() {
+         @Override
+         public boolean accept(A a) {
+            return clazz.isInstance(a);
+         }
+      }, new Func<A, B>() {
+         @Override
+         public B project(A a) {
+            return clazz.cast(a);
+         }
+      });
+   }
+
    public interface Func<A, B> {
       B project(A a);
    }
 
+   public interface Condition<A> {
+      boolean accept(A a);
+   }
+
    private static class ProjectCollection<A, B> implements Collection<B> {
       private final Collection<A> collection;
-      private final Func<A, B> func;
+      protected final Func<A, B> func;
 
       private ProjectCollection(Collection<A> collection, Func<A, B> func) {
          this.collection = collection;
@@ -262,6 +305,134 @@ public class Projections {
       @Override
       public void clear() {
          throw new UnsupportedOperationException();
+      }
+   }
+
+   private static class ProjectList<A, B> extends ProjectCollection<A,B> implements List<B> {
+      private final List<A> list;
+
+      public ProjectList(List<A> list, Func<A, B> func) {
+         super(list, func);
+         this.list = list;
+      }
+
+      @Override
+      public boolean addAll(int index, Collection<? extends B> c) {
+         throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public B get(int index) {
+         return func.project(list.get(index));
+      }
+
+      @Override
+      public B set(int index, B element) {
+         throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public void add(int index, B element) {
+         throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public B remove(int index) {
+         throw new UnsupportedOperationException();
+      }
+
+      @Override
+      public int indexOf(Object o) {
+         for (int i = 0; i < list.size(); ++i) {
+            B b = func.project(list.get(i));
+            if (b == null) {
+               if (o == null) return i;
+            } else {
+               if (b.equals(o)) return i;
+            }
+         }
+         return -1;
+      }
+
+      @Override
+      public int lastIndexOf(Object o) {
+         for (int i = list.size(); i >= 0; --i) {
+            B b = func.project(list.get(i));
+            if (b == null) {
+               if (o == null) return i;
+            } else {
+               if (b.equals(o)) return i;
+            }
+         }
+         return -1;
+      }
+
+      @Override
+      public ListIterator<B> listIterator() {
+         return new ProjectedListIterator(list.listIterator());
+      }
+
+      @Override
+      public ListIterator<B> listIterator(int index) {
+         return new ProjectedListIterator(list.listIterator(index));
+      }
+
+      @Override
+      public List<B> subList(int fromIndex, int toIndex) {
+         throw new UnsupportedOperationException();
+      }
+
+      private class ProjectedListIterator implements ListIterator<B> {
+         private final ListIterator<A> it;
+
+         public ProjectedListIterator(ListIterator<A> it) {
+            this.it = it;
+         }
+
+         @Override
+         public boolean hasNext() {
+            return it.hasNext();
+         }
+
+         @Override
+         public B next() {
+            return func.project(it.next());
+         }
+
+         @Override
+         public boolean hasPrevious() {
+            return it.hasPrevious();
+         }
+
+         @Override
+         public B previous() {
+            return func.project(it.previous());
+         }
+
+         @Override
+         public int nextIndex() {
+            return it.nextIndex();
+         }
+
+         @Override
+         public int previousIndex() {
+            return it.previousIndex();
+         }
+
+         @Override
+         public void remove() {
+            throw new UnsupportedOperationException();
+         }
+
+         @Override
+         public void set(B b) {
+            throw new UnsupportedOperationException();
+         }
+
+         @Override
+         public void add(B b) {
+            throw new UnsupportedOperationException();
+         }
       }
    }
 }

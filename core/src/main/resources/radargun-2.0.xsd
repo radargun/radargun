@@ -87,6 +87,7 @@
                         <element name="command" type="rg:org-radargun-stages-command-stage"/>
                         <element name="distributed-task" type="rg:org-radargun-stages-distributedtask-distributed-task-stage"/>
                         <element name="isolation-level-check" type="rg:org-radargun-stages-cache-isolation-level-check-stage"/>
+                        <element name="iterate" type="rg:org-radargun-stages-iteration-iterate-stage"/>
                         <element name="jmx-cluster-validation-prepare" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-prepare-stage"/>
                         <element name="jmx-cluster-validation" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-stage"/>
                         <element name="j-profiler" type="rg:org-radargun-stages-monitor-j-profiler-stage"/>
@@ -193,6 +194,7 @@
             <element name="command" type="rg:org-radargun-stages-command-stage"/>
             <element name="distributed-task" type="rg:org-radargun-stages-distributedtask-distributed-task-stage"/>
             <element name="isolation-level-check" type="rg:org-radargun-stages-cache-isolation-level-check-stage"/>
+            <element name="iterate" type="rg:org-radargun-stages-iteration-iterate-stage"/>
             <element name="jmx-cluster-validation-prepare" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-prepare-stage"/>
             <element name="jmx-cluster-validation" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-stage"/>
             <element name="j-profiler" type="rg:org-radargun-stages-monitor-j-profiler-stage"/>
@@ -1760,6 +1762,148 @@
             <attribute name="writers" type="rg:int">
                <annotation>
                   <documentation>Number of concurrent threads that modify the value. Default is 2.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar-->
+   <complexType name="org-radargun-stages-iteration-iterate-stage">
+      <annotation>
+         <documentation>Iterates through all entries.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-stages-abstract-dist-stage">
+            <sequence>
+               <element maxOccurs="1" minOccurs="0" name="container-name" type="string">
+                  <annotation>
+                     <documentation>Name of the container (e.g. cache, DB table etc.) that should be iterated. Default is the default container.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="converter-class" type="string">
+                  <annotation>
+                     <documentation>Full class name of the converter. Default is no converter (Map.Entry&lt;K, V&gt; is returned).</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="converter-param" type="string">
+                  <annotation>
+                     <documentation>Parameter for the converter (used to resolve its properties). No defaults.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="fail-on-failed-iteration" type="rg:boolean">
+                  <annotation>
+                     <documentation>Fail the stage if some of the stressors has failed. Default is true.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="fail-on-not-total-size" type="rg:java-lang-boolean">
+                  <annotation>
+                     <documentation>Fail when the number of elements is different than total size. Default is true if filter is not defined and false otherwise.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="fail-on-uneven-elements" type="rg:boolean">
+                  <annotation>
+                     <documentation>Fail when the number of elements iterated is not same. Default is true.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="filter-class" type="string">
+                  <annotation>
+                     <documentation>Full class name of the filter used to iterate through entries. Default is none (accept all).</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="filter-param" type="string">
+                  <annotation>
+                     <documentation>Parameters for the filter (used to resolve its properties). No defaults.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="max-next-failures" type="rg:int">
+                  <annotation>
+                     <documentation>Number of next() calls that are allowed to fail until we break the loop. Default is 100.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="num-loops" type="rg:int">
+                  <annotation>
+                     <documentation>Number of iterations that should be executed. Default is 100.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="num-threads" type="rg:int">
+                  <annotation>
+                     <documentation>Number of stressor threads that should iterate the cache in parallel. Default is 10.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="test-name" type="string">
+                  <annotation>
+                     <documentation>Name of this test. Default is 'IterationTest'.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
+                  <annotation>
+                     <documentation>Max duration of the iteration. Default is infinite.</documentation>
+                  </annotation>
+               </element>
+            </sequence>
+            <attribute name="container-name" type="string">
+               <annotation>
+                  <documentation>Name of the container (e.g. cache, DB table etc.) that should be iterated. Default is the default container.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="converter-class" type="string">
+               <annotation>
+                  <documentation>Full class name of the converter. Default is no converter (Map.Entry&lt;K, V&gt; is returned).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="converter-param" type="string">
+               <annotation>
+                  <documentation>Parameter for the converter (used to resolve its properties). No defaults.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="fail-on-failed-iteration" type="rg:boolean">
+               <annotation>
+                  <documentation>Fail the stage if some of the stressors has failed. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="fail-on-not-total-size" type="rg:java-lang-boolean">
+               <annotation>
+                  <documentation>Fail when the number of elements is different than total size. Default is true if filter is not defined and false otherwise.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="fail-on-uneven-elements" type="rg:boolean">
+               <annotation>
+                  <documentation>Fail when the number of elements iterated is not same. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="filter-class" type="string">
+               <annotation>
+                  <documentation>Full class name of the filter used to iterate through entries. Default is none (accept all).</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="filter-param" type="string">
+               <annotation>
+                  <documentation>Parameters for the filter (used to resolve its properties). No defaults.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="max-next-failures" type="rg:int">
+               <annotation>
+                  <documentation>Number of next() calls that are allowed to fail until we break the loop. Default is 100.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-loops" type="rg:int">
+               <annotation>
+                  <documentation>Number of iterations that should be executed. Default is 100.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-threads" type="rg:int">
+               <annotation>
+                  <documentation>Number of stressor threads that should iterate the cache in parallel. Default is 10.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="test-name" type="string">
+               <annotation>
+                  <documentation>Name of this test. Default is 'IterationTest'.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
+               <annotation>
+                  <documentation>Max duration of the iteration. Default is infinite.</documentation>
                </annotation>
             </attribute>
          </extension>
