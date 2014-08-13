@@ -98,6 +98,7 @@
                         <element name="parallel-start-stop" type="rg:org-radargun-stages-lifecycle-parallel-start-stop-stage"/>
                         <element name="query" type="rg:org-radargun-stages-cache-stresstest-query-stage"/>
                         <element name="random-data" type="rg:org-radargun-stages-cache-random-data-stage"/>
+                        <element name="reindex" type="rg:org-radargun-stages-cache-reindex-stage"/>
                         <element name="service-start" type="rg:org-radargun-stages-lifecycle-service-start-stage"/>
                         <element name="service-stop" type="rg:org-radargun-stages-lifecycle-service-stop-stage"/>
                         <element name="set-log-level" type="rg:org-radargun-stages-monitor-set-log-level-stage"/>
@@ -205,6 +206,7 @@
             <element name="parallel-start-stop" type="rg:org-radargun-stages-lifecycle-parallel-start-stop-stage"/>
             <element name="query" type="rg:org-radargun-stages-cache-stresstest-query-stage"/>
             <element name="random-data" type="rg:org-radargun-stages-cache-random-data-stage"/>
+            <element name="reindex" type="rg:org-radargun-stages-cache-reindex-stage"/>
             <element name="service-start" type="rg:org-radargun-stages-lifecycle-service-start-stage"/>
             <element name="service-stop" type="rg:org-radargun-stages-lifecycle-service-stop-stage"/>
             <element name="set-log-level" type="rg:org-radargun-stages-monitor-set-log-level-stage"/>
@@ -2894,6 +2896,38 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
          </simpleType>
       </union>
    </simpleType>
+   <!--From radargun-core-2.0.0-SNAPSHOT.jar-->
+   <complexType name="org-radargun-stages-cache-reindex-stage">
+      <annotation>
+         <documentation>Runs Queryable.reindex()</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-stages-abstract-dist-stage">
+            <sequence>
+               <element maxOccurs="1" minOccurs="0" name="container" type="string">
+                  <annotation>
+                     <documentation>Container (e.g. cache or DB table) which should be reindex. Default is the default container.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="test" type="string">
+                  <annotation>
+                     <documentation>Test under which performance of reindexing should be recorded. Default is 'reindex'.</documentation>
+                  </annotation>
+               </element>
+            </sequence>
+            <attribute name="container" type="string">
+               <annotation>
+                  <documentation>Container (e.g. cache or DB table) which should be reindex. Default is the default container.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="test" type="string">
+               <annotation>
+                  <documentation>Test under which performance of reindexing should be recorded. Default is 'reindex'.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
    <!--From radargun-core-2.0.0-SNAPSHOT.jar-->
    <complexType name="org-radargun-stages-scenario-cleanup-stage">
       <annotation>

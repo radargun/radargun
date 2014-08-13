@@ -44,6 +44,11 @@ public class CoherenceQueryable implements Queryable {
       return new QueryBuilderImpl(service.getCache(containerName));
    }
 
+   @Override
+   public void reindex(String containerName) {
+      // noop - indices should be in sync
+   }
+
    public void registerIndices(NamedCache cache, List<Coherence3Service.IndexedColumn> indexedColumns) {
       for (Coherence3Service.IndexedColumn c : service.indexedColumns) {
          if (cache.getCacheName().equals(c.cache)) {
