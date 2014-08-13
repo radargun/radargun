@@ -40,4 +40,8 @@ public class JDG63EmbeddedService extends Infinispan60EmbeddedService {
    public InfinispanCacheInfo createCacheInformation() {
       return new Infinispan70CacheInfo(this);
    }
+
+   @ProvidesTrait
+   public InfinispanIterable createIterable() { return new InfinispanIterable(this); }
+
 }

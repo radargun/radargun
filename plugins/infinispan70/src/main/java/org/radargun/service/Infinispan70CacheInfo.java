@@ -1,15 +1,12 @@
 package org.radargun.service;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.Iterator;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.commons.util.CloseableIterable;
-import org.infinispan.filter.Converter;
-import org.infinispan.filter.KeyValueFilter;
 import org.infinispan.iteration.EntryIterable;
-import org.infinispan.metadata.Metadata;
+import org.radargun.filters.AllFilter;
+import org.radargun.filters.NullConverter;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.CacheInformation;
@@ -40,8 +37,8 @@ public class Infinispan70CacheInfo extends Infinispan53CacheInfo {
          int totalSize = 0;
          EntryIterable entryIterator = null;
          try {
-            entryIterator = cache.filterEntries(new AllEntriesFilter());
-            CloseableIterable ci = entryIterator.converter(new AllEntriesConverter());
+            entryIterator = cache.filterEntries(AllFilter.INSTANCE);
+            CloseableIterable ci = entryIterator.converter(NullConverter.INSTANCE);
             Iterator iter = ci.iterator();
             while (iter.hasNext()) {
                iter.next();
@@ -61,21 +58,4 @@ public class Infinispan70CacheInfo extends Infinispan53CacheInfo {
 
    }
 
-   protected class AllEntriesFilter implements KeyValueFilter, Serializable {
-
-      @Override
-      public boolean accept(Object key, Object value, Metadata metadata) {
-         return true;
-      }
-
-   }
-   
-   protected class AllEntriesConverter implements Converter {
-
-      @Override
-      public Object convert(Object key, Object value, Metadata metadata) {
-         return 0;
-      }
-      
-   }
 }

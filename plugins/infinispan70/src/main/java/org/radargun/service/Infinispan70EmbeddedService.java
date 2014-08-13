@@ -39,4 +39,7 @@ public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
    public InfinispanEmbeddedQueryable createQueryable() {
       return new Infinispan70EmbeddedQueryable(this);
    }
+
+   @ProvidesTrait
+   public InfinispanIterable createIterable() { return new InfinispanIterable(this); }
 }

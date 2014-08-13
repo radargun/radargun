@@ -18,6 +18,8 @@ import javax.management.MBeanServer;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
 import org.radargun.Directories;
+import org.radargun.config.InitHelper;
+import org.radargun.config.PropertyHelper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
@@ -320,12 +322,21 @@ public class Utils {
       return NF.format(d);
    }
 
-   public static Object instantiate(String name, ClassLoader classLoader) {
+   public static <T> T instantiate(ClassLoader classLoader, String className) {
       try {
-         return classLoader.loadClass(name).newInstance();
+         return (T) classLoader.loadClass(className).newInstance();
       } catch (Exception e) {
          throw new IllegalArgumentException(e);
       }
+   }
+
+   public static <T> T instantiateAndInit(ClassLoader classLoader, String className, String params) {
+      T instance = instantiate(classLoader, className);
+      if (params != null) {
+         PropertyHelper.setProperties(instance, parseParams(params), false, false);
+      }
+      InitHelper.init(instance);
+      return instance;
    }
    
    public static long string2Millis(String duration) {
