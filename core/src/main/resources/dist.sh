@@ -9,7 +9,7 @@ set_env
 #### parse plugins we want to test
 SSH_USER=$USER
 WORKING_DIR=`pwd`
-CONFIG=$WORKING_DIR/conf/benchmark-dist.xml
+CONFIG=$RADARGUN_HOME/conf/benchmark-dist.xml
 VERBOSE=false
 REMOTE_CMD='ssh -q -o "StrictHostKeyChecking false"'
 MASTER=`hostname`
@@ -136,7 +136,7 @@ ${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEB
 INDEX=0
 for slave in $SLAVES; do
   CMD="source ~/.bash_profile ; cd $WORKING_DIR"
-  CMD="$CMD ; bin/slave.sh -m ${MASTER} -n $slave -i $INDEX ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
+  CMD="$CMD ; ${RADARGUN_HOME}/bin/slave.sh -m ${MASTER} -n $slave -i $INDEX ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
   if [ "x$DEBUG" != "x" ]; then
      CMD="$CMD -d $slave:$DEBUG"
   fi
