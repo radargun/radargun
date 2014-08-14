@@ -298,6 +298,7 @@
                            </fileset>
                         </path>
                         <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
+                           <sysproperty key="radargun.directories.allow_broken" value="true" />
                            <arg value="core/src/main/resources" />
                            <arg pathref="core_and_extensions" />
                         </java>

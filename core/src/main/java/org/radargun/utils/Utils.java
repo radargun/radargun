@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.management.MBeanServer;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
+import org.radargun.Directories;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
@@ -27,8 +28,6 @@ public class Utils {
 
 
    private static Log log = LogFactory.getLog(Utils.class);
-   public static final String PLUGINS_DIR = "plugins";
-   public static final String SPECIFIC_DIR = "specific";
    public static final String PROPERTIES_FILE = "plugin.properties";
    private static final NumberFormat NF = new DecimalFormat("##,###");
    private static final NumberFormat MEM_FMT = new DecimalFormat("##,###.##");
@@ -111,10 +110,11 @@ public class Utils {
       try {
          ArgsHolder.PluginParam param = ArgsHolder.getPluginParams().get(plugin);
          if (param == null) {
-            addJars(new File(PLUGINS_DIR + File.separator + plugin + File.separator + "lib"), jars);
-            addJars(new File(SPECIFIC_DIR), jars);
-            File confDir = new File(PLUGINS_DIR + File.separator + plugin + File.separator + "conf/");
+            File pluginDir = new File(Directories.PLUGINS_DIR, plugin);
+            File confDir = new File(pluginDir, "conf");
             jars.add(confDir.toURI().toURL());
+            addJars(new File(pluginDir, "lib"), jars);
+            addJars(Directories.SPECIFIC_DIR, jars);
          } else {
             String pluginPath = param.getPath();
             if (pluginPath != null) {
@@ -203,8 +203,10 @@ public class Utils {
 
    public static String getServiceProperty(String plugin, String propertyName) {
       ArgsHolder.PluginParam pluginParam = ArgsHolder.getPluginParams().get(plugin);
-      String propertiesPathPrefix = pluginParam != null && pluginParam.getPath() != null ? pluginParam.getPath() : PLUGINS_DIR + File.separator + plugin;
-      File file = new File(propertiesPathPrefix + File.separator + "conf" + File.separator + PROPERTIES_FILE);
+      File pluginDir = pluginParam != null && pluginParam.getPath() != null
+            ? new File(pluginParam.getPath()) : new File(Directories.PLUGINS_DIR, plugin);
+      File confDir = new File(pluginDir, "conf");
+      File file = new File(confDir, PROPERTIES_FILE);
       if (!file.exists()) {
          log.warn("Could not find a plugin descriptor : " + file);
          return null;

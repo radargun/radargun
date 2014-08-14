@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.radargun.Directories;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.utils.Utils;
@@ -21,12 +22,9 @@ public class StageHelper {
    private static Map<String, Class<? extends org.radargun.Stage>> stagesDashed;
 
    static {
-      stagesDashed = new HashMap<String, Class<? extends org.radargun.Stage>>();
-      File libDir = new File("lib");
-      if (libDir.exists() && libDir.isDirectory()) {
-         for (File jar : libDir.listFiles(new Utils.JarFilenameFilter())) {
-            stagesDashed.putAll(getStagesFromJar(jar.getPath(), true));
-         }
+      stagesDashed = new HashMap<>();
+      for (File jar : Directories.LIB_DIR.listFiles(new Utils.JarFilenameFilter())) {
+         stagesDashed.putAll(getStagesFromJar(jar.getPath(), true));
       }
    }
 

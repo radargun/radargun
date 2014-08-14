@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.radargun.Directories;
 import org.radargun.config.InitHelper;
 import org.radargun.config.PropertyHelper;
 import org.radargun.logging.Log;
@@ -27,17 +28,13 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ReporterHelper {
-   private static final String REPORTERS_DIR = "reporters";
    private static final String REPORTER_PREFIX = "reporter.";
 
    private static final Log log = LogFactory.getLog(ReporterHelper.class);
    private static final Map<String, Class<? extends Reporter>> reporters = new HashMap<String, Class<? extends Reporter>>();
 
    static {
-      File reportersDir = new File(REPORTERS_DIR);
-      if (reportersDir.exists() && reportersDir.isDirectory()) {
-         loadReporters(reportersDir.listFiles());
-      }
+      loadReporters(Directories.REPORTERS_DIR.listFiles());
       List<File> reporterFolders = new ArrayList<File>();
       for (String path : ArgsHolder.getReporterPaths()) {
          reporterFolders.add(new File(path));
