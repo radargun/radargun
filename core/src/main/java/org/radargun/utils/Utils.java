@@ -106,32 +106,35 @@ public class Utils {
 
    public static URLClassLoader buildPluginSpecificClassLoader(String plugin, ClassLoader parent) {
       log.trace("Using smart class loading");
-      List<URL> jars = new ArrayList<URL>();
+      List<URL> jars = new ArrayList<>();
       try {
          ArgsHolder.PluginParam param = ArgsHolder.getPluginParams().get(plugin);
-         if (param == null) {
-            File pluginDir = new File(Directories.PLUGINS_DIR, plugin);
-            File confDir = new File(pluginDir, "conf");
-            jars.add(confDir.toURI().toURL());
-            addJars(new File(pluginDir, "lib"), jars);
-            addJars(Directories.SPECIFIC_DIR, jars);
-         } else {
+         if (param != null) {
             String pluginPath = param.getPath();
             if (pluginPath != null) {
                File pluginRoot = new File(pluginPath);
                addJars(new File(pluginRoot, "lib"), jars);
                jars.add(new File(pluginRoot, "conf").toURI().toURL());
             }
-            List<String> configFiles = param.getConfigFiles();
-            if (configFiles != null) {
-               for (String configFile : configFiles) {
-                  File pluginConfFile = new File(configFile);
-                  if (pluginConfFile.exists()) {
-                     jars.add(new File(pluginConfFile.getParent()).toURI().toURL());
-                  }
+            for (String configFile : param.getConfigFiles()) {
+               File pluginConfFile = new File(configFile);
+               if (pluginConfFile.exists()) {
+                  jars.add(new File(pluginConfFile.getParent()).toURI().toURL());
+               } else {
+                  log.warn("File '" + pluginConfFile + "' does not exist!");
                }
             }
          }
+         File pluginDir = new File(Directories.PLUGINS_DIR, plugin);
+         if (pluginDir.exists() && pluginDir.isDirectory()) {
+            File confDir = new File(pluginDir, "conf");
+            jars.add(confDir.toURI().toURL());
+            // add default lib only if it is not defined explicitly
+            if (param == null || (param != null && param.getPath() == null)) {
+               addJars(new File(pluginDir, "lib"), jars);
+            }
+         }
+         addJars(Directories.SPECIFIC_DIR, jars);
       } catch (MalformedURLException e) {
          throw new IllegalArgumentException(e);
       }
@@ -182,6 +185,13 @@ public class Utils {
       }
       buffer.flush();
       return buffer.toByteArray();
+   }
+
+   public static String sanitizePath(String pluginPath) {
+      if (pluginPath.startsWith("~/")) {
+         pluginPath = System.getProperty("user.home") + File.separator + pluginPath.substring(2);
+      }
+      return pluginPath;
    }
 
    public static class JarFilenameFilter implements FilenameFilter {
