@@ -452,6 +452,7 @@
                               <include name="**/*" />
                            </fileset>
                         </copy>
+			<mkdir dir="${distribution.artifact}/specific" />
                         <copy todir="${distribution.artifact}/specific">
                            <fileset dir="specific/jpa/target" erroronmissingdir="false">
                               <include name="radargun-jpa-*.jar" />
