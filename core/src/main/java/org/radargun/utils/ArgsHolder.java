@@ -1,11 +1,15 @@
 package org.radargun.utils;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.radargun.RemoteSlaveConnection;
 import org.radargun.ShutDownHook;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-
-import java.util.*;
 
 /**
  * <p>Holder for input arguments of {@link org.radargun.LaunchMaster} and {@link org.radargun.Slave}.</p>
@@ -109,26 +113,23 @@ public class ArgsHolder {
    private static void processCommonArgs(String arg, ArgType type) {
       if (arg.matches("--add-plugin=.+")) {
          String pluginPath = arg.split("=")[1];
+         pluginPath = Utils.sanitizePath(pluginPath);
          String pluginName = pluginPath.substring(pluginPath.lastIndexOf("/") + 1, pluginPath.length());
          PluginParam pluginParam = pluginParams.get(pluginName);
          if (pluginParam == null) {
-            pluginParams.put(pluginName, new PluginParam(pluginPath, null));
-         } else {
-            pluginParam.setPath(pluginPath);
+            pluginParams.put(pluginName, pluginParam = new PluginParam());
          }
+         pluginParam.setPath(pluginPath);
       } else if (arg.matches("--add-config=.+:.+")) {
-         String configPath = arg.split("=")[1];
-         String pluginName = configPath.substring(0, configPath.indexOf(":"));
-         String configFile = configPath.substring(configPath.indexOf(":") + 1, configPath.length());
+         String configArg = arg.split("=")[1];
+         String pluginName = configArg.substring(0, configArg.indexOf(":"));
+         String configPath = configArg.substring(configArg.indexOf(":") + 1, configArg.length());
+         configPath = Utils.sanitizePath(configPath);
          PluginParam pluginParam = pluginParams.get(pluginName);
          if (pluginParam == null) {
-            pluginParams.put(pluginName, new PluginParam(null, Arrays.asList(configFile)));
-         } else {
-            if (pluginParam.getConfigFiles() == null) {
-               pluginParam.setConfigFiles(new ArrayList<String>());
-            }
-            pluginParam.getConfigFiles().add(configFile);
+            pluginParams.put(pluginName, pluginParam = new PluginParam());
          }
+         pluginParam.getConfigFiles().add(configPath);
       } else if (arg.startsWith("-")) {
          // handle unsupported options
          printUsageAndExit(type);
@@ -161,12 +162,7 @@ public class ArgsHolder {
 
    public static class PluginParam {
       private String path;
-      private List<String> configFiles;
-
-      public PluginParam(String path, List<String> configFiles) {
-         this.path = path;
-         this.configFiles = configFiles;
-      }
+      private List<String> configFiles = new ArrayList<>();
 
       public String getPath() {
          return path;
@@ -178,10 +174,6 @@ public class ArgsHolder {
 
       public List<String> getConfigFiles() {
          return configFiles;
-      }
-
-      public void setConfigFiles(List<String> configFiles) {
-         this.configFiles = configFiles;
       }
    }
 

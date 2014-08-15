@@ -92,11 +92,11 @@ do
       help_and_exit
       ;;
     "--add-plugin")
-      PLUGIN_PATHS="--add-plugin=${2} ${PLUGIN_PATHS}"
+      PLUGIN_PATHS="--add-plugin ${2} ${PLUGIN_PATHS}"
       shift
       ;;
     "--add-config")
-      PLUGIN_CONFIGS="--add-config=${2} ${PLUGIN_CONFIGS}"
+      PLUGIN_CONFIGS="--add-config ${2} ${PLUGIN_CONFIGS}"
       shift
       ;;
     "--add-reporter")
