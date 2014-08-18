@@ -148,5 +148,5 @@ echo "Master's PID is $RADARGUN_MASTER_PID running on ${HOST_NAME}"
 if [ $TAILF == "true" ]
 then
   touch radargun.log
-  tail -f radargun.log
+  tail -f radargun.log --pid $RADARGUN_MASTER_PID
 fi  
