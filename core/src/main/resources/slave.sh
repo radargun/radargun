@@ -12,7 +12,7 @@ DEBUG=""
 LOG4J_PREFIX=`hostname`-$RANDOM
 PLUGIN_PATHS=""
 PLUGIN_CONFIGS=""
-
+TAILF=false
 
 default_master() {
   MASTER_HOST=`sed -n -e '/bindAddress/{
@@ -44,6 +44,8 @@ help_and_exit() {
   echo ""
   echo "   -d              Debug address. Optional."
   echo ""
+  echo "   -t              After starting the slave it will run 'tail -f' on the slave node's log file."
+  echo ""
   echo "   --add-plugin    Path to custom plugin directory. Can be specified multiple times."
   echo ""
   echo "   --add-config    Path to config file for specified plugin. Specified as pluginName:/path/config.xml. Can be specified multiple times."
@@ -74,6 +76,9 @@ do
     "-d")
       DEBUG=$2
       shift
+      ;;
+    "-t")
+      TAILF=true
       ;;
     "-h")
       help_and_exit
@@ -120,5 +125,10 @@ fi
 echo "${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}" > stdout_slave_${LOG4J_PREFIX}.out
 echo "--------------------------------------------------------------------------------" >> stdout_slave_${LOG4J_PREFIX}.out
 nohup ${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS} >> stdout_slave_${LOG4J_PREFIX}.out 2>&1 &
-echo "... done! Slave process started on host ${HOSTNAME}!"
+export SLAVE_PID=$!
+echo "... done! Slave process started on host ${HOSTNAME}! Slave PID is ${SLAVE_PID}"
 echo ""
+if [ $TAILF == "true" ]
+then
+  tail -f stdout_slave_${LOG4J_PREFIX}.out --pid $SLAVE_PID
+fi
