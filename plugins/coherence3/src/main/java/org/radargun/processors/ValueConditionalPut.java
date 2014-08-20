@@ -11,6 +11,9 @@ import com.tangosol.util.processor.ConditionalPut;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ValueConditionalPut extends ConditionalPut {
+   public ValueConditionalPut() {
+   }
+
    public ValueConditionalPut(Filter filter, Object oValue) {
       super(filter, oValue);
    }

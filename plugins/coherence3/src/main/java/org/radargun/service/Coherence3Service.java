@@ -48,6 +48,9 @@ public class Coherence3Service implements Lifecycle, Clustered {
    @Property(doc = "Service used when retrieving the connection. Default is the default service ('TransactionalCache').")
    protected String transactionalService;
 
+   @Property(doc = "Use POF (Portable Object Format) for serialization instead of Java serialization. Default is true.")
+   protected boolean usePOF = true;
+
    protected CoherenceQueryable queryable = new CoherenceQueryable(this);
 
    @ProvidesTrait
@@ -99,8 +102,12 @@ public class Coherence3Service implements Lifecycle, Clustered {
 
    @Override
    public synchronized void start() {
-//      System.setProperty("tangosol.pof.enabled", "true");
-//      System.setProperty("tangosol.pof.config", "pof-config.xml");
+      if (usePOF) {
+         System.setProperty("tangosol.pof.enabled", "true");
+         System.setProperty("tangosol.pof.config", "pof-config.xml");
+      } else {
+         System.setProperty("tangosol.pof.enabled", "false");
+      }
       System.setProperty("tangosol.coherence.cacheconfig", configFile);
 //      CacheFactory.setConfigurableCacheFactory(createCacheFactory());
       started = true;
