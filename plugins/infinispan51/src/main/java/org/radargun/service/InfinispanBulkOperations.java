@@ -30,8 +30,7 @@ public class InfinispanBulkOperations implements BulkOperations {
       return new Cache<K, V>((AdvancedCache<K,V>) service.getCache(cacheName).getAdvancedCache(), preferAsync);
    }
 
-   protected class Cache<K, V> implements BulkOperations.Cache<K, V> {
-
+   protected class Cache<K, V> implements BulkOperations.Cache<K, V>, AdvancedCacheHolder {
       protected final AdvancedCache<K, V> impl;
       protected final TransactionManager tm;
       protected final boolean preferAsync;
@@ -145,6 +144,11 @@ public class InfinispanBulkOperations implements BulkOperations {
                throw new RuntimeException(e);
             }
          }
+      }
+
+      @Override
+      public AdvancedCache getAdvancedCache() {
+         return impl;
       }
    }
 }

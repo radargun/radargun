@@ -37,7 +37,7 @@ public class HazelcastCacheInfo implements CacheInformation {
 
    @Override
    public Cache getCache(String cacheName) {
-      return new Cache(service.hazelcastInstance.getMap(cacheName));
+      return new Cache(service.getMap(cacheName));
    }
 
    protected class Cache implements CacheInformation.Cache {

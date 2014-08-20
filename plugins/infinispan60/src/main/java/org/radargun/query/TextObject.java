@@ -17,7 +17,7 @@ import org.infinispan.protostream.MessageMarshaller;
 @Indexed
 public class TextObject implements Serializable {
    @Field(index = Index.YES, analyze = Analyze.NO)
-   public String text;
+   private String text;
 
    public TextObject(String text) {
       this.text = text;

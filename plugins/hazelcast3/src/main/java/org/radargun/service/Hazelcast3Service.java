@@ -1,7 +1,8 @@
 package org.radargun.service;
 
-import com.hazelcast.transaction.TransactionContext;
 import org.radargun.Service;
+import org.radargun.traits.ProvidesTrait;
+import org.radargun.traits.Transactional;
 
 /**
  * An implementation of CacheWrapper that uses Hazelcast instance as an underlying implementation.
@@ -9,33 +10,15 @@ import org.radargun.Service;
  */
 @Service(doc = "Hazelcast")
 public class Hazelcast3Service extends HazelcastService {
+   @ProvidesTrait
+   @Override
+   public Transactional createTransactional() {
+      return new Hazelcast3Transactional(this);
+   }
 
-    ThreadLocal<TransactionContext> transactionContext = new ThreadLocal<TransactionContext>();
-
-    @Override
-    public void startTransaction() {
-        try {
-            TransactionContext newTransactionContext = hazelcastInstance.newTransactionContext();
-            transactionContext.set(newTransactionContext);
-            newTransactionContext.beginTransaction();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void endTransaction(boolean successful) {
-        try {
-            TransactionContext tc = transactionContext.get();
-            transactionContext.remove();
-            if (successful) {
-                tc.commitTransaction();
-            } else {
-                tc.rollbackTransaction();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+   @ProvidesTrait
+   @Override
+   public HazelcastOperations createOperations() {
+      return new Hazelcast3Operations(this);
+   }
 }

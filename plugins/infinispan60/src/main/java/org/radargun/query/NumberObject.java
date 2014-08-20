@@ -20,11 +20,11 @@ import org.infinispan.protostream.MessageMarshaller;
 public class NumberObject implements Serializable {
    @NumericField
    @Field(index = Index.YES, analyze = Analyze.NO, store = Store.YES)
-   public int integerValue;
+   private int integerValue;
 
    @NumericField
    @Field(index = Index.YES, analyze = Analyze.NO)
-   public double doubleValue;
+   private double doubleValue;
 
    public NumberObject(int i, double d) {
       this.integerValue = i;

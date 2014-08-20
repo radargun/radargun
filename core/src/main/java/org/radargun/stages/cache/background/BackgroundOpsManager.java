@@ -76,7 +76,7 @@ public class BackgroundOpsManager implements ServiceListener {
    private CacheListeners listeners;
    private volatile BasicOperations.Cache basicCache;
    private volatile Debugable.Cache debugableCache;
-   private volatile Transactional.Resource transactionalCache;
+   private volatile Transactional transactional;
    private volatile ConditionalOperations.Cache conditionalCache;
    private volatile CacheInformation.Cache cacheInfo;
 
@@ -125,13 +125,12 @@ public class BackgroundOpsManager implements ServiceListener {
       Debugable debugable = slaveState.getTrait(Debugable.class);
       debugableCache = debugable == null ? null : debugable.getCache(generalConfiguration.cacheName);
       if (generalConfiguration.transactionSize > 0) {
-         Transactional transactional = slaveState.getTrait(Transactional.class);
+         transactional = slaveState.getTrait(Transactional.class);
          if (transactional == null) {
             throw new IllegalArgumentException("Transactions are set on but the service does not provide transactions");
-         } else if (!transactional.isTransactional(generalConfiguration.cacheName)) {
+         } else if (transactional.getConfiguration(generalConfiguration.cacheName) == Transactional.Configuration.NON_TRANSACTIONAL) {
             throw new IllegalArgumentException("Transactions are set on but the cache is not configured as transactional");
          }
-         transactionalCache = transactional.getResource(generalConfiguration.cacheName);
       }
       CacheInformation cacheInformation = slaveState.getTrait(CacheInformation.class);
       cacheInfo = cacheInformation == null ? null : cacheInformation.getCache(generalConfiguration.cacheName);
@@ -141,7 +140,6 @@ public class BackgroundOpsManager implements ServiceListener {
       basicCache = null;
       conditionalCache = null;
       debugableCache = null;
-      transactionalCache = null;
       cacheInfo = null;
    }
 
@@ -482,8 +480,8 @@ public class BackgroundOpsManager implements ServiceListener {
       return debugableCache;
    }
 
-   public Transactional.Resource getTransactionalCache() {
-      return transactionalCache;
+   public Transactional.Transaction newTransaction() {
+      return transactional.getTransaction();
    }
 
    public ConditionalOperations.Cache getConditionalCache() {

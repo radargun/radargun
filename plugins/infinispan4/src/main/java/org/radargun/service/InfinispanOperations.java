@@ -30,7 +30,7 @@ public class InfinispanOperations implements BasicOperations, ConditionalOperati
       return new Cache<K, V>(service, (AdvancedCache<K,V>) service.getCache(cacheName).getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL));
    }
 
-   protected interface InfinispanCache<K, V> extends BasicOperations.Cache<K, V>, ConditionalOperations.Cache<K, V> {}
+   protected interface InfinispanCache<K, V> extends BasicOperations.Cache<K, V>, ConditionalOperations.Cache<K, V>, AdvancedCacheHolder {}
 
    protected static class Cache<K, V> implements InfinispanCache<K, V> {
       protected final Log log = LogFactory.getLog(getClass());
@@ -93,7 +93,7 @@ public class InfinispanOperations implements BasicOperations, ConditionalOperati
 
       @Override
       public void clear() {
-         if (trace) log.trace("CLEAR");
+         if (trace) log.trace("CLEAR " + impl.getName());
          impl.clear();
       }
 
@@ -113,6 +113,11 @@ public class InfinispanOperations implements BasicOperations, ConditionalOperati
       public boolean remove(K key, V oldValue) {
          if (trace) log.trace(String.format("REMOVE cache=%s key=%s value=%s", impl.getName(), key, oldValue));
          return impl.remove(key, oldValue);
+      }
+
+      @Override
+      public AdvancedCache getAdvancedCache() {
+         return impl;
       }
    }
 }
