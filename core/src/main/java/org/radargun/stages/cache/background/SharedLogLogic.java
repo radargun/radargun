@@ -1,10 +1,10 @@
 package org.radargun.stages.cache.background;
 
+import java.util.Map;
+
 import org.radargun.Operation;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
-
-import java.util.Map;
 
 /**
  * This logic operates on {@link SharedLogValue shared log values}
@@ -15,12 +15,16 @@ import java.util.Map;
  */
 class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
 
-   private final ConditionalOperations.Cache conditionalCache;
+   private final ConditionalOperations.Cache nonTxConditionalCache;
+   private ConditionalOperations.Cache conditionalCache;
    private final long numEntries;
 
    SharedLogLogic(BackgroundOpsManager manager, long threadId, long numEntries) {
       super(manager, threadId);
-      conditionalCache = manager.getConditionalCache();
+      nonTxConditionalCache = manager.getConditionalCache();
+      if (transactionSize > 0) {
+         conditionalCache = nonTxConditionalCache;
+      }
       this.numEntries = numEntries;
    }
 
@@ -99,6 +103,20 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
       } else {
          return filtered;
       }
+   }
+
+   @Override
+   protected void startTransaction() {
+      ongoingTx = manager.newTransaction();
+      basicCache = ongoingTx.wrap(nonTxBasicCache);
+      conditionalCache = ongoingTx.wrap(nonTxConditionalCache);
+      ongoingTx.begin();
+   }
+
+   @Override
+   protected void clearTransaction() {
+      super.clearTransaction();
+      conditionalCache = null;
    }
 
    private SharedLogValue checkedGetValue(long keyId) throws Exception {

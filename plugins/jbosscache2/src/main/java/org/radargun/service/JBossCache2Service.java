@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.jboss.cache.Cache;
 import org.jboss.cache.DefaultCacheFactory;
-import org.jboss.cache.transaction.DummyTransactionManager;
 import org.jgroups.Address;
 import org.radargun.Service;
 import org.radargun.config.Property;
@@ -20,7 +19,7 @@ import org.radargun.traits.Transactional;
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Service(doc = "JBossCache 2.x")
-public class JBossCache2Service implements Lifecycle, Clustered, Transactional.Resource
+public class JBossCache2Service implements Lifecycle, Clustered
 {
    private Log log = LogFactory.getLog(JBossCache2Service.class);
    private HashMap<String, Cache> caches = new HashMap<String, Cache>();
@@ -40,17 +39,7 @@ public class JBossCache2Service implements Lifecycle, Clustered, Transactional.R
 
    @ProvidesTrait
    public Transactional createTransactional() {
-      return new Transactional() {
-         @Override
-         public boolean isTransactional(String cacheName) {
-            return true;
-         }
-
-         @Override
-         public Resource getResource(String cacheName) {
-            return JBossCache2Service.this;
-         }
-      };
+      return new JBossCacheTransactional();
    }
 
    public Cache getCache(String cacheName) {
@@ -103,26 +92,5 @@ public class JBossCache2Service implements Lifecycle, Clustered, Transactional.R
    public int getClusteredNodes() {
       List<Address> members = getCache(null).getMembers();
       return members == null || members.isEmpty() ? 1 : members.size();
-   }
-
-   @Override
-   public void startTransaction() {
-      try {
-         DummyTransactionManager.getInstance().begin();
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
-   }
-
-   @Override
-   public void endTransaction(boolean successful) {
-      try {
-         if (successful)
-            DummyTransactionManager.getInstance().commit();
-         else
-            DummyTransactionManager.getInstance().rollback();
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
    }
 }

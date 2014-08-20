@@ -37,12 +37,18 @@ class Stressor extends Thread {
    private PhaseSynchronizer synchronizer;
    private Completion completion;
    private Random random;
+
+   private final BasicOperations.Cache nonTxBasicCache;
+   private final ConditionalOperations.Cache nonTxConditionalCache;
+   private final BulkOperations.Cache nonTxBulkNativeCache;
+   private final BulkOperations.Cache nonTxBulkAsyncCache;
    private BasicOperations.Cache basicCache;
    private ConditionalOperations.Cache conditionalCache;
    private BulkOperations.Cache bulkNativeCache;
    private BulkOperations.Cache bulkAsyncCache;
-   private Transactional.Resource txCache;
    private Queryable queryable;
+
+   private Transactional.Transaction ongoingTx;
 
    public Stressor(StressTestStage stage, OperationLogic logic, int threadIndex, int nodeIndex, int numNodes) {
       super("Stressor-" + threadIndex);
@@ -60,15 +66,23 @@ class Stressor extends Thread {
       }
 
       String cacheName = stage.bucketPolicy.getBucketName(threadIndex);
-      basicCache = stage.basicOperations == null ? null : stage.basicOperations.getCache(cacheName);
-      conditionalCache = stage.conditionalOperations == null ? null : stage.conditionalOperations.getCache(cacheName);
+      nonTxBasicCache = stage.basicOperations == null ? null : stage.basicOperations.getCache(cacheName);
+      nonTxConditionalCache = stage.conditionalOperations == null ? null : stage.conditionalOperations.getCache(cacheName);
       if (stage.bulkOperations != null) {
-         bulkNativeCache = stage.bulkOperations.getCache(cacheName, false);
-         bulkAsyncCache = stage.bulkOperations.getCache(cacheName, true);
+         nonTxBulkNativeCache = stage.bulkOperations.getCache(cacheName, false);
+         nonTxBulkAsyncCache = stage.bulkOperations.getCache(cacheName, true);
+      } else {
+         nonTxBulkAsyncCache = nonTxBulkNativeCache = null;
       }
+      // default for Transactional.Configuration.TRANSACTIONS_ENABLED is without transactions
       useTransactions = stage.useTransactions != null ? stage.useTransactions :
-            stage.transactional == null ? false : stage.transactional.isTransactional(cacheName);
-      txCache = useTransactions ? stage.transactional.getResource(cacheName) : txCache;
+            stage.transactional == null ? false : stage.transactional.getConfiguration(cacheName) == Transactional.Configuration.TRANSACTIONAL;
+      if (!useTransactions) {
+         basicCache = nonTxBasicCache;
+         conditionalCache = nonTxConditionalCache;
+         bulkNativeCache = nonTxBulkNativeCache;
+         bulkAsyncCache = nonTxBulkAsyncCache;
+      }
    }
 
    public void setQueryable(Queryable queryable) {
@@ -139,6 +153,8 @@ class Stressor extends Thread {
          } catch (TransactionException e) {
             stats.registerError(e.getOperationDuration(), stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
             stats.registerError(transactionDuration + e.getOperationDuration(), Transactional.DURATION);
+         } finally {
+            clearTransaction();
          }
          transactionDuration = 0;
       }
@@ -148,6 +164,12 @@ class Stressor extends Thread {
       long startTxTime = 0;
       if (useTransactions && txRemainingOperations <= 0) {
          try {
+            ongoingTx = stage.transactional.getTransaction();
+            basicCache = ongoingTx.wrap(nonTxBasicCache);
+            conditionalCache = ongoingTx.wrap(nonTxConditionalCache);
+            bulkNativeCache = ongoingTx.wrap(nonTxBulkNativeCache);
+            bulkAsyncCache = ongoingTx.wrap(nonTxBulkAsyncCache);
+
             startTxTime = startTransaction();
             transactionDuration = startTxTime;
             txRemainingOperations = stage.transactionSize;
@@ -223,6 +245,8 @@ class Stressor extends Thread {
             endTxTime = e.getOperationDuration();
             stats.registerError(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
             stats.registerError(transactionDuration + endTxTime, Transactional.DURATION);
+         } finally {
+            clearTransaction();
          }
       }
       if (successful) {
@@ -240,6 +264,14 @@ class Stressor extends Thread {
          throw new OperationLogic.RequestException(exception);
       }
       return result;
+   }
+
+   private void clearTransaction() {
+      ongoingTx = null;
+      basicCache = null;
+      conditionalCache = null;
+      bulkNativeCache = null;
+      bulkAsyncCache = null;
    }
 
    public int getThreadIndex() {
@@ -278,7 +310,7 @@ class Stressor extends Thread {
    private long startTransaction() throws TransactionException {
       long start = System.nanoTime();
       try {
-         txCache.startTransaction();
+         ongoingTx.begin();
       } catch (Exception e) {
          long time = System.nanoTime() - start;
          log.error("Failed to start transaction", e);
@@ -290,7 +322,11 @@ class Stressor extends Thread {
    private long endTransaction() throws TransactionException {
       long start = System.nanoTime();
       try {
-         txCache.endTransaction(stage.commitTransactions);
+         if (stage.commitTransactions) {
+            ongoingTx.commit();
+         } else {
+            ongoingTx.rollback();
+         }
       } catch (Exception e) {
          long time = System.nanoTime() - start;
          log.error("Failed to end transaction", e);

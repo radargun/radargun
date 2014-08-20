@@ -18,21 +18,20 @@ public abstract class AbstractLogic implements Logic {
    protected BackgroundOpsManager manager;
    protected KeyGenerator keyGenerator;
    protected final int transactionSize;
-   protected final Transactional.Resource txCache;
    protected Stressor stressor;
+   protected Transactional.Transaction ongoingTx;
 
    protected AbstractLogic(BackgroundOpsManager manager) {
       this.manager = manager;
       this.keyGenerator = manager.getKeyGenerator();
       this.transactionSize = manager.getGeneralConfiguration().getTransactionSize();
-      this.txCache = manager.getTransactionalCache();
    }
 
    @Override
    public void finish() {
-      if (transactionSize > 0) {
+      if (transactionSize > 0 && ongoingTx != null) {
          try {
-            txCache.endTransaction(false);
+            ongoingTx.rollback();
          } catch (Exception e) {
             log.error("Error while ending transaction", e);
          }

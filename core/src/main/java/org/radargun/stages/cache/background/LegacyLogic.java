@@ -16,26 +16,32 @@ import org.radargun.traits.Transactional;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 class LegacyLogic extends AbstractLogic {
-   private final BasicOperations.Cache basicCache;
-   private final ConditionalOperations.Cache conditionalCache;
+   // these two caches can be transactional internally (with autocommit)
+   // but must not be used between begin() and commit() | rollback()
+   private final BasicOperations.Cache nonTxBasicCache;
+   private final ConditionalOperations.Cache nonTxConditionalCache;
    private final int keyRangeStart;
    private final int keyRangeEnd;
    private final List<Range> deadSlavesRanges;
    private final boolean loadOnly;
    private final boolean putWithReplace;
    private final Random rand = new Random();
+   private BasicOperations.Cache basicCache;
+   private ConditionalOperations.Cache conditionalCache;
    private volatile long currentKey;
    private int remainingTxOps;
    private boolean loaded;
    private long transactionStart;
 
-
-
    LegacyLogic(BackgroundOpsManager manager, Range range, List<Range> deadSlavesRanges, boolean loaded) {
       super(manager);
       this.manager = manager;
-      this.basicCache = manager.getBasicCache();
-      this.conditionalCache = manager.getConditionalCache();
+      this.nonTxBasicCache = manager.getBasicCache();
+      this.nonTxConditionalCache = manager.getConditionalCache();
+      if (transactionSize <= 0) {
+         basicCache = nonTxBasicCache;
+         conditionalCache = nonTxConditionalCache;
+      }
       this.keyRangeStart = range.getStart();
       this.keyRangeEnd = range.getEnd();
       this.deadSlavesRanges = deadSlavesRanges;
@@ -67,9 +73,9 @@ class LegacyLogic extends AbstractLogic {
             try {
                Object key = keyGenerator.generateKey(keyId);
                if (loadWithPutIfAbsent) {
-                  conditionalCache.putIfAbsent(key, generateRandomEntry(rand, entrySize));
+                  nonTxConditionalCache.putIfAbsent(key, generateRandomEntry(rand, entrySize));
                } else {
-                  basicCache.put(key, generateRandomEntry(rand, entrySize));
+                  nonTxBasicCache.put(key, generateRandomEntry(rand, entrySize));
                }
                if (loaded_keys % 1000 == 0) {
                   log.debug("Loaded " + loaded_keys + " out of " + (to - from));
@@ -103,8 +109,11 @@ class LegacyLogic extends AbstractLogic {
          }
          if (transactionSize > 0 && remainingTxOps == transactionSize) {
             try {
+               ongoingTx = manager.newTransaction();
+               basicCache = ongoingTx.wrap(nonTxBasicCache);
+               conditionalCache = ongoingTx.wrap(nonTxConditionalCache);
                transactionStart = System.nanoTime();
-               txCache.startTransaction();
+               ongoingTx.begin();
                stressor.stats.registerRequest(System.nanoTime() - transactionStart, Transactional.BEGIN);
             } catch (Exception e) {
                stressor.stats.registerError(System.nanoTime() - transactionStart, Transactional.BEGIN);
@@ -133,7 +142,7 @@ class LegacyLogic extends AbstractLogic {
             if (remainingTxOps == 0) {
                long commitStart = System.nanoTime();
                try {
-                  txCache.endTransaction(true);
+                  ongoingTx.commit();
                   long commitEnd = System.nanoTime();
                   stressor.stats.registerRequest(commitEnd - commitStart, Transactional.COMMIT);
                   stressor.stats.registerRequest(commitEnd - transactionStart, Transactional.DURATION);
@@ -142,6 +151,8 @@ class LegacyLogic extends AbstractLogic {
                   stressor.stats.registerError(commitEnd - commitStart, Transactional.COMMIT);
                   stressor.stats.registerError(commitEnd - transactionStart, Transactional.DURATION);
                   throw e;
+               } finally {
+                  txCleanup();
                }
                remainingTxOps = transactionSize;
             }
@@ -157,14 +168,22 @@ class LegacyLogic extends AbstractLogic {
          }
          if (transactionSize > 0) {
             try {
-               txCache.endTransaction(false);
+               ongoingTx.rollback();
             } catch (Exception e1) {
                log.error("Error while ending transaction", e);
+            } finally {
+               txCleanup();
             }
             remainingTxOps = transactionSize;
          }
          stressor.stats.registerError(startTime <= 0 ? 0 : System.nanoTime() - startTime, operation);
       }
+   }
+
+   private void txCleanup() {
+      ongoingTx = null;
+      basicCache = null;
+      conditionalCache = null;
    }
 
    private byte[] generateRandomEntry(Random rand, int size) {

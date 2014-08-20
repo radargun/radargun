@@ -1,22 +1,19 @@
 package org.radargun.service;
 
+import com.hazelcast.core.BaseMap;
 import com.hazelcast.core.IMap;
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-import org.radargun.traits.BasicOperations;
-import org.radargun.traits.ConditionalOperations;
+import com.hazelcast.core.TransactionalMap;
 
 /**
+ * Functionally same as {@link HazelcastOperations} but the interfaces have changed a bit
+ * and in order to support transactions we have to adapt.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class HazelcastOperations implements BasicOperations, ConditionalOperations {
-   protected final static Log log = LogFactory.getLog(HazelcastOperations.class);
-   protected final static boolean trace = log.isTraceEnabled();
+public class Hazelcast3Operations extends HazelcastOperations {
 
-   protected final HazelcastService service;
-
-   public HazelcastOperations(HazelcastService service) {
-      this.service = service;
+   public Hazelcast3Operations(Hazelcast3Service service) {
+      super(service);
    }
 
    @Override
@@ -24,13 +21,18 @@ public class HazelcastOperations implements BasicOperations, ConditionalOperatio
       return new Cache<K, V>((IMap<K,V>) service.hazelcastInstance.getMap(cacheName));
    }
 
-   protected interface HazelcastCache<K, V> extends BasicOperations.Cache<K, V>, ConditionalOperations.Cache<K, V> {}
-
    protected static class Cache<K, V> implements HazelcastCache<K, V> {
-      protected final IMap<K, V> map;
+      protected final BaseMap<K, V> map;
+      protected final IMap<K, V> clearMap;
 
       public Cache(IMap<K, V> map) {
          this.map = map;
+         this.clearMap = map;
+      }
+
+      public Cache(TransactionalMap<K, V> map) {
+         this.map = map;
+         this.clearMap = null;
       }
 
       @Override
@@ -75,7 +77,11 @@ public class HazelcastOperations implements BasicOperations, ConditionalOperatio
 
       @Override
       public void clear() {
-         map.clear();
+         if (clearMap == null) {
+            throw new UnsupportedOperationException("Cannot clear in transaction.");
+         } else {
+            clearMap.clear();
+         }
       }
 
       @Override

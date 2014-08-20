@@ -99,23 +99,24 @@ public class ClearCacheStage extends AbstractDistStage {
       if (cache == null) {
          return errorResponse("There is no cache '" + cacheName + "'", null);
       }
-      Transactional.Resource txCache = null;
+      Transactional.Transaction tx = null;
       try {
          if (useTransaction) {
-            txCache = transactional.getResource(cacheName);
-            if (txCache == null) {
+            if (transactional.getConfiguration(cacheName) == Transactional.Configuration.NON_TRANSACTIONAL) {
                return errorResponse("No transactions for '" + cacheName + "'", null);
             }
-            txCache.startTransaction();
+            tx = transactional.getTransaction();
+            cache = tx.wrap(cache);
+            tx.begin();
          }
          cache.clear();
          if (useTransaction) {
-            txCache.endTransaction(true);
+            tx.commit();
          }
       } catch (RuntimeException e) {
-         if (txCache != null) {
+         if (tx != null) {
             try {
-               txCache.endTransaction(false);
+               tx.rollback();
             } catch (Exception e2) {
                log.error("Cannot roll back", e2);
             }

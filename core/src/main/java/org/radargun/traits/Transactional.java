@@ -13,26 +13,65 @@ public interface Transactional {
    Operation ROLLBACK = Operation.register(TRAIT + ".Rollback");
    Operation DURATION = Operation.register(TRAIT + ".Duration");
 
+   public enum Configuration {
+      /**
+       * No transactions can be executed on the resource
+       */
+      NON_TRANSACTIONAL,
+      /**
+       * Operations on this cache will be executed in transaction only if explicitly requested
+       */
+      TRANSACTIONS_ENABLED,
+      /**
+       * All operations should be executed in transaction
+       */
+      TRANSACTIONAL
+   }
+
    /**
-    * @return True if the cache is configured to use transactions.
+    * @return True if the resource is configured to be able to use transactions.
     */
-   boolean isTransactional(String resourceName);
+   Configuration getConfiguration(String resourceName);
 
-   Resource getResource(String resourceName);
+   /**
+    * Get a new object representing a transaction.
+    * @return
+    */
+   Transaction getTransaction();
 
-   interface Resource {
+   /**
+    * Each instance of transaction should be used only for single begin() ... commit() || rollback().
+    */
+   interface Transaction {
       /**
-       * Starts a transaction against the cache. All following operations will
-       * take place in the scope of the transaction started. The transaction will
-       * be completed by invoking {@link #endTransaction(boolean)}.
+       * Retrieve a wrapped version of this resource that can be used for transactional operations.
+       * ({@link #begin()} must not be called until at least one resource was wrapped.
+       * The behaviour of operations executed within the scope of the transaction on non-wrapped
+       * resources is undefined.
+       *
+       * @param resource Usually some object retrieved from another Trait
+       * @param <T>
+       * @return
+       * @throws IllegalArgumentException If the resource cannot be wrapped.
        */
-      void startTransaction();
+      <T> T wrap(T resource);
 
       /**
-       * Called in conjunction with {@link #startTransaction()} in order to complete
-       * a transaction by either committing or rolling it back.
-       * @param successful commit or rollback?
+       * Starts a transaction. All following operations on wrapped resources specified
+       * when retrieving this transaction will take place in the scope of this
+       * transaction. The transaction will be completed by invoking
+       * {@link #commit()} or {@link #rollback()}
        */
-      void endTransaction(boolean successful);
+      void begin();
+
+      /**
+       * Complete the transaction by committing (changes are persisted).
+       */
+      void commit();
+
+      /**
+       * Complete the transaction by rolling it back (changes are discarded).
+       */
+      void rollback();
    }
 }

@@ -120,19 +120,20 @@ public class IsolationLevelCheckStage extends CheckStage {
    private class WriterThread extends ClientThread {
       @Override
       public void run() {
-         BasicOperations.Cache cache = basicOperations.getCache(null);
-         Transactional.Resource txCache = transactional.getResource(null);
+         BasicOperations.Cache nonTxCache = basicOperations.getCache(null);
          Random rand = new Random();
          while (!finished) {
             try {
+               Transactional.Transaction tx = transactional.getTransaction();
+               BasicOperations.Cache txCache = tx.wrap(nonTxCache);
                log.trace("Starting transaction");
-               txCache.startTransaction();
-               cache.put(ISOLATION_CHECK_KEY, -1);
+               tx.begin();
+               txCache.put(ISOLATION_CHECK_KEY, -1);
                Thread.sleep(10);
                long value = rand.nextInt(1000);
-               cache.put(ISOLATION_CHECK_KEY, value);
+               txCache.put(ISOLATION_CHECK_KEY, value);
                log.trace("Inserted value " + value);
-               txCache.endTransaction(true);
+               tx.commit();
                log.trace("Ended transaction");
             } catch (Exception e) {
                exception = e;
@@ -145,19 +146,20 @@ public class IsolationLevelCheckStage extends CheckStage {
    private class ReaderThread extends ClientThread {
       @Override
       public void run() {
-         BasicOperations.Cache cache = basicOperations.getCache(null);
-         Transactional.Resource txCache = transactional.getResource(null);
+         BasicOperations.Cache nonTxCache = basicOperations.getCache(null);
          while (!finished) {
+            Transactional.Transaction tx = transactional.getTransaction();
+            BasicOperations.Cache txCache = tx.wrap(nonTxCache);
             log.trace("Starting transaction");
-            txCache.startTransaction();
+            tx.begin();
             Object lastValue = null;
             for (int i = 0; i < transactionSize; ++i) {
                try {
-                  Object value = cache.get(ISOLATION_CHECK_KEY);
+                  Object value = txCache.get(ISOLATION_CHECK_KEY);
                   log.trace("Read value " + value + ", previous value is " + lastValue);
                   if (!(value instanceof Long) || ((Long) value) < 0) {
                      exception = new IllegalStateException("Unexpected value " + value);
-                     txCache.endTransaction(false);
+                     tx.rollback();
                      return;
                   }
                   if (lastValue != null && !lastValue.equals(value)) {
@@ -171,7 +173,7 @@ public class IsolationLevelCheckStage extends CheckStage {
                   return;
                }
             }
-            txCache.endTransaction(true);
+            tx.commit();
             log.trace("Ended transaction");
          }
       }

@@ -1,11 +1,11 @@
 package org.radargun.stages.cache.background;
 
-import org.radargun.traits.BasicOperations;
-import org.radargun.utils.Utils;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+
+import org.radargun.traits.BasicOperations;
+import org.radargun.utils.Utils;
 
 /**
  * Logic based on log values. The general idea is that each operation on an entry
@@ -32,6 +32,7 @@ import java.util.Random;
  */
 abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
+   protected final BasicOperations.Cache nonTxBasicCache;
    protected BasicOperations.Cache basicCache;
 
    protected final Random keySelectorRandom;
@@ -50,11 +51,14 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    public AbstractLogLogic(BackgroundOpsManager manager, long stressorId) {
       super(manager);
-      this.basicCache = manager.getBasicCache();
+      this.nonTxBasicCache = manager.getBasicCache();
+      if (transactionSize > 0) {
+         basicCache = nonTxBasicCache;
+      }
 
       Random rand = null;
       try {
-         Object last = basicCache.get(LogChecker.lastOperationKey((int) stressorId));
+         Object last = nonTxBasicCache.get(LogChecker.lastOperationKey((int) stressorId));
          if (last != null) {
             operationId = ((LogChecker.LastOperation) last).getOperationId() + 1;
             rand = Utils.setRandomSeed(new Random(0), ((LogChecker.LastOperation) last).getSeed());
@@ -111,7 +115,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             txStartKeyId = keyId;
             // we could serialize & deserialize instead, but that's not much better
             txStartRandSeed = Utils.getRandomSeed(keySelectorRandom);
-            txCache.startTransaction();
+            startTransaction();
          }
 
          boolean txBreakRequest = false;
@@ -131,7 +135,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             remainingTxOps--;
             if (remainingTxOps <= 0 || txBreakRequest) {
                try {
-                  txCache.endTransaction(true);
+                  ongoingTx.commit();
                   lastSuccessfulTxTimestamp = System.currentTimeMillis();
                } catch (Exception e) {
                   log.trace("Transaction was rolled back, restarting from operation " + txStartOperationId);
@@ -140,6 +144,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                   return false;
                } finally {
                   remainingTxOps = transactionSize;
+                  clearTransaction();
                }
                if (stressor.isTerminated()) {
                   // If the thread was interrupted and cache is registered as Synchronization (not XAResource)
@@ -162,11 +167,13 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                // for non-transactional caches write the stressor last operation only after the transaction
                // has finished
                try {
-                  txCache.startTransaction();
+                  startTransaction();
                   writeStressorLastOperation();
-                  txCache.endTransaction(true);
+                  ongoingTx.commit();
                } catch (Exception e) {
                   log.error("Cannot write stressor last operation", e);
+               } finally {
+                  clearTransaction();
                }
             }
          }
@@ -180,14 +187,15 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          } else {
             log.error("Cache operation error", e);
          }
-         if (transactionSize > 0) {
+         if (transactionSize > 0 && ongoingTx != null) {
             try {
-               txCache.endTransaction(false);
+               ongoingTx.rollback();
                log.info("Transaction rolled back");
             } catch (Exception e1) {
                log.error("Error while rolling back transaction", e1);
             } finally {
                log.info("Restarting from operation " + txStartOperationId);
+               clearTransaction();
                remainingTxOps = transactionSize;
                txRolledBack = true;
                afterRollback();
@@ -207,24 +215,37 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          try {
             if (inTransaction) {
                try {
-                  txCache.endTransaction(false);
+                  ongoingTx.rollback();
                } catch (Exception e) {
                }
             }
-            txCache.startTransaction();
+            startTransaction();
             inTransaction = true;
             for (DelayedRemove delayedRemove : delayedRemoves.values()) {
                checkedRemoveValue(delayedRemove.keyId, delayedRemove.oldValue);
             }
-            txCache.endTransaction(true);
+            ongoingTx.commit();
             lastSuccessfulTxTimestamp = System.currentTimeMillis();
             inTransaction = false;
             delayedRemoves.clear();
             return;
          } catch (Exception e) {
             log.error("Error while executing delayed removes.", e);
+         } finally {
+            clearTransaction();
          }
       }
+   }
+
+   protected void startTransaction() {
+      ongoingTx = manager.newTransaction();
+      basicCache = ongoingTx.wrap(nonTxBasicCache);
+      ongoingTx.begin();
+   }
+
+   protected void clearTransaction() {
+      ongoingTx = null;
+      basicCache = null;
    }
 
    protected void delayedRemoveValue(long keyId, ValueType prevValue) throws Exception {

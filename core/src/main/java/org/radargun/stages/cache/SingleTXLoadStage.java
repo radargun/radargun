@@ -74,21 +74,19 @@ public class SingleTXLoadStage extends AbstractDistStage {
    private class ClientThread extends Thread {
       private int id;
       public Exception exception;
-      public BasicOperations.Cache cache;
-      public Transactional.Resource txCache;
-      
+
       public ClientThread(int id) {
          super("ClientThread-" + slaveState.getSlaveIndex() + "-" + id);
          this.id = id;
-         this.cache = basicOperations.getCache(null);
-         this.txCache = transactional.getResource(null);
       }
       
       @Override
       public void run() {
          try {
+            Transactional.Transaction tx = transactional.getTransaction();
+            BasicOperations.Cache cache = tx.wrap(basicOperations.getCache(null));
             log.trace("Beginning transaction");
-            txCache.startTransaction();
+            tx.begin();
             for (int i = 0; i < transactionSize; ++i) {
                if (!delete) {
                   try {
@@ -116,9 +114,13 @@ public class SingleTXLoadStage extends AbstractDistStage {
                }            
             }
             boolean successfull = (commitSlave == null || commitSlave.contains(slaveState.getSlaveIndex())) && (commitThread == null || commitThread.contains(id));
-            txCache.endTransaction(successfull);
-            if (successfull) log.trace("Committed transaction");
-            else log.debug("Rolled back transaction");
+            if (successfull) {
+               tx.commit();
+               log.trace("Committed transaction");
+            } else {
+               tx.rollback();
+               log.debug("Rolled back transaction");
+            }
          } catch (Exception e) {
             exception = e;
          }

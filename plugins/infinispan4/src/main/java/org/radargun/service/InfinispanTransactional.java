@@ -1,8 +1,8 @@
 package org.radargun.service;
 
-import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
+import org.infinispan.AdvancedCache;
 import org.radargun.traits.Transactional;
 
 /**
@@ -19,28 +19,48 @@ public class InfinispanTransactional implements Transactional {
    }
 
    @Override
-   public boolean isTransactional(String cacheName) {
-      return service.isCacheTransactional(service.getCache(cacheName));
+   public Configuration getConfiguration(String cacheName) {
+      return service.isCacheTransactional(service.getCache(cacheName)) ?
+            Configuration.TRANSACTIONAL : Configuration.NON_TRANSACTIONAL;
    }
 
    @Override
-   public Transactional.Resource getResource(String cacheName) {
-      return new Resource(service.getCache(cacheName).getAdvancedCache().getTransactionManager());
+   public Transaction getTransaction() {
+      return new Tx();
    }
 
-   protected class Resource implements Transactional.Resource {
-      protected final TransactionManager tm;
+   protected AdvancedCache getAdvancedCache(Object resource) {
+      if (resource == null) {
+         return null;
+      } else if (resource instanceof AdvancedCacheHolder) {
+         return ((AdvancedCacheHolder) resource).getAdvancedCache();
+      } else {
+         throw new IllegalArgumentException(String.valueOf(resource));
+      }
+   }
 
-      public Resource(TransactionManager transactionManager) {
-         if (transactionManager == null) throw new NullPointerException();
-         this.tm = transactionManager;
+   protected class Tx implements Transaction {
+      protected TransactionManager tm;
+
+      @Override
+      public <T> T wrap(T resource) {
+         if (resource == null) {
+            return null;
+         }
+         TransactionManager tm = getAdvancedCache(resource).getTransactionManager();
+         if (this.tm != null && this.tm != tm) {
+            throw new IllegalArgumentException("Different transaction managers for single transaction!");
+         }
+         this.tm = tm;
+         // we don't have to wrap anything for Infinispan
+         return resource;
       }
 
       @Override
-      public void startTransaction() {
+      public void begin() {
          try {
             tm.begin();
-            Transaction transaction = tm.getTransaction();
+            javax.transaction.Transaction transaction = tm.getTransaction();
             if (enlistExtraXAResource) {
                transaction.enlistResource(new DummyXAResource());
             }
@@ -51,14 +71,19 @@ public class InfinispanTransactional implements Transactional {
       }
 
       @Override
-      public void endTransaction(boolean successful) {
+      public void commit() {
          try {
-            if (successful)
-               tm.commit();
-            else
-               tm.rollback();
+            tm.commit();
+         } catch (Exception e) {
+            throw new RuntimeException(e);
          }
-         catch (Exception e) {
+      }
+
+      @Override
+      public void rollback() {
+         try {
+            tm.rollback();
+         } catch (Exception e) {
             throw new RuntimeException(e);
          }
       }

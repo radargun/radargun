@@ -1,7 +1,6 @@
 package org.radargun.service;
 
 import org.infinispan.AdvancedCache;
-import org.radargun.traits.Transactional;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -15,29 +14,36 @@ public class Infinispan51Transactional extends InfinispanTransactional {
    }
 
    @Override
-   public Transactional.Resource getResource(String cacheName) {
+   public Transaction getTransaction() {
       if (service.batching) {
-         return new BatchingResource(service.getCache(cacheName).getAdvancedCache());
+         return new Batch();
       } else {
-         return super.getResource(cacheName);
+         return super.getTransaction();
       }
    }
 
-   protected class BatchingResource implements Transactional.Resource {
-      private final AdvancedCache impl;
+   protected class Batch implements Transaction {
+      private AdvancedCache impl;
 
-      public BatchingResource(AdvancedCache cache) {
-         this.impl = cache;
+      @Override
+      public <T> T wrap(T resource) {
+         impl = getAdvancedCache(resource);
+         return resource;
       }
 
       @Override
-      public void startTransaction() {
+      public void begin() {
          impl.startBatch();
       }
 
       @Override
-      public void endTransaction(boolean successful) {
-         impl.endBatch(successful);
+      public void commit() {
+         impl.endBatch(true);
+      }
+
+      @Override
+      public void rollback() {
+         impl.endBatch(false);
       }
    }
 }

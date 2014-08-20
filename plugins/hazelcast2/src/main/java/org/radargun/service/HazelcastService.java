@@ -22,7 +22,7 @@ import org.radargun.traits.Transactional;
  *
  */
 @Service(doc = "Hazelcast")
-public class HazelcastService implements Lifecycle, Clustered, Transactional.Resource {
+public class HazelcastService implements Lifecycle, Clustered {
 
    protected final Log log = LogFactory.getLog(getClass());
    private final boolean trace = log.isTraceEnabled();
@@ -42,17 +42,7 @@ public class HazelcastService implements Lifecycle, Clustered, Transactional.Res
 
    @ProvidesTrait
    public Transactional createTransactional() {
-      return new Transactional() {
-         @Override
-         public boolean isTransactional(String cacheName) {
-            return true;
-         }
-
-         @Override
-         public Resource getResource(String cacheName) {
-            return HazelcastService.this;
-         }
-      };
+      return new HazelcastTransactional(this);
    }
 
    @ProvidesTrait
@@ -98,28 +88,6 @@ public class HazelcastService implements Lifecycle, Clustered, Transactional.Res
       }
    }
 
-   @Override
-   public void startTransaction() {
-      try {
-         hazelcastInstance.getTransaction().begin();
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
-   }
-
-   @Override
-   public void endTransaction(boolean successful) {
-      try {
-         if (successful) {
-            hazelcastInstance.getTransaction().commit();
-         } else {
-            hazelcastInstance.getTransaction().rollback();
-         }
-      } catch (Exception e) {
-         throw new RuntimeException(e);
-      }
-   }
-
    private InputStream getAsInputStreamFromClassLoader(String filename) {
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
       InputStream is;
@@ -140,4 +108,5 @@ public class HazelcastService implements Lifecycle, Clustered, Transactional.Res
       }
       return is;
    }
+
 }

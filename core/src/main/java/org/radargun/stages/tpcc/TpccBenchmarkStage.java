@@ -81,16 +81,13 @@ public class TpccBenchmarkStage extends AbstractDistStage {
    private BlockingQueue<RequestType> queue;
    private AtomicLong countJobs;
    private Producer[] producers;
-   private BasicOperations.Cache<Object, Object> basicCache;
-   private Transactional.Resource txCache;
+   //private BasicOperations.Cache<Object, Object> basicCache;
 
    public DistStageAck executeOnSlave() {
       if (!isServiceRunnning()) {
          log.info("Not running test on this slave.");
          return successfulResponse();
       }
-      basicCache = basicOperations.getCache(null);
-      txCache = transactional.getResource(null);
 
       log.info("Starting TpccBenchmarkStage: " + this.toString());
 
@@ -166,10 +163,11 @@ public class TpccBenchmarkStage extends AbstractDistStage {
    }
 
    private void initializeToolsParameters() {
+      BasicOperations.Cache cache = basicOperations.getCache(null);
       try {
-         TpccTools.C_C_LAST = (Long) basicCache.get( "C_C_LAST");
-         TpccTools.C_C_ID = (Long) basicCache.get("C_C_ID");
-         TpccTools.C_OL_I_ID = (Long) basicCache.get("C_OL_ID");
+         TpccTools.C_C_LAST = (Long) cache.get( "C_C_LAST");
+         TpccTools.C_C_ID = (Long) cache.get("C_C_ID");
+         TpccTools.C_OL_I_ID = (Long) cache.get("C_OL_ID");
       } catch (Exception e) {
          log.error("Error", e);
       }
@@ -532,10 +530,12 @@ public class TpccBenchmarkStage extends AbstractDistStage {
             }
             isReadOnly = transaction.isReadOnly();
 
+            Transactional.Transaction tx = transactional.getTransaction();
+            BasicOperations.Cache cache = tx.wrap(basicOperations.getCache(null));
             long startService = System.nanoTime();
-            txCache.startTransaction();
+            tx.begin();
             try {
-               transaction.executeTransaction(basicCache);
+               transaction.executeTransaction(cache);
             } catch (Throwable e) {
                successful = false;
                log.warn("Transaction failed:", e);
@@ -558,7 +558,11 @@ public class TpccBenchmarkStage extends AbstractDistStage {
                   measureCommitTime = true;
                }
 
-               txCache.endTransaction(successful);
+               if (successful) {
+                  tx.commit();
+               } else {
+                  tx.rollback();
+               }
 
                if (!successful) {
                   nrFailures++;

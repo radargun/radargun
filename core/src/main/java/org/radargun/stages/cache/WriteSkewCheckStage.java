@@ -140,28 +140,29 @@ public class WriteSkewCheckStage extends CheckStage {
    private class WriteSkewThread extends ClientThread {
       @Override
       public void run() {
-         BasicOperations.Cache cache = basicOperations.getCache(null);
-         Transactional.Resource txCache = transactional.getResource(null);
+         BasicOperations.Cache nonTxCache = basicOperations.getCache(null);
          while (!finished) {
+            Transactional.Transaction tx = transactional.getTransaction();
+            BasicOperations.Cache txCache = tx.wrap(nonTxCache);
             log.trace("Starting transaction");
-            txCache.startTransaction();
+            tx.begin();
             Object value = null;
             try {
-               value = cache.get(WRITE_SKEW_CHECK_KEY);
+               value = txCache.get(WRITE_SKEW_CHECK_KEY);
                if (value == null) {
                   value = new Long(0);
                } else if (!(value instanceof Long)) {
                   exception = new IllegalStateException("Counter is not a long: it is " + value);
                   return;
                }
-               cache.put(WRITE_SKEW_CHECK_KEY, ((Long) value) + 1);
+               txCache.put(WRITE_SKEW_CHECK_KEY, ((Long) value) + 1);
             } catch (Exception e) {
                exception = e;
                return;
             }
             boolean skew = false;
             try {
-               txCache.endTransaction(true);
+               tx.commit();
             } catch (Exception e) {
                log.trace("Skew detected");
                skewCounter.incrementAndGet();
