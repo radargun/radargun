@@ -37,14 +37,18 @@ public class KeyAffinityStringKeyGenerator implements KeyGenerator {
 
    @Override
    public void init(String param, ClassLoader classLoader) {
-      String[] args = param.split(",");
-      for (String arg : args) {
-         String[] keyval = arg.split("=");
-         if (keyval.length != 2) throw new IllegalArgumentException(param);
-         if (keyval[0].trim().equals("keyBufferSize")) keyBufferSize = Integer.parseInt(keyval[1].trim());
-         else if (keyval[0].trim().equals("cache")) cache = keyval[1].trim();
+      if (param != null) {
+         String[] args = param.split(",");
+         for (String arg : args) {
+            String[] keyVal = arg.split("=");
+            if (keyVal.length != 2) throw new IllegalArgumentException("Invalid parameter format (" + param + ").");
+            if (keyVal[0].trim().equals("keyBufferSize")) keyBufferSize = Integer.parseInt(keyVal[1].trim());
+            else if (keyVal[0].trim().equals("cache")) cache = keyVal[1].trim();
+         }
       }
-      keyBufferSize = Integer.parseInt(param);
+      if (keyBufferSize <= 0 || cache == null) {
+         throw new IllegalArgumentException("Invalid parameters provided, 'keyBufferSize' and 'cache' need to be specified.");
+      }
       wrapper = Infinispan51EmbeddedService.getInstance();
    }
 
