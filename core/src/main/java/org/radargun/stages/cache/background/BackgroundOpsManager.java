@@ -656,7 +656,7 @@ public class BackgroundOpsManager implements ServiceListener {
       return logLogicConfiguration;
    }
 
-   public class IterationStats implements Serializable {
+   public static class IterationStats implements Serializable {
       public final List<Statistics> statistics;
       public final long cacheSize;
 
