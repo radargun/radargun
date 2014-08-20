@@ -115,7 +115,7 @@ public class ReporterHelper {
       }
       try {
          Reporter instance = clazz.newInstance();
-         PropertyHelper.setProperties(instance, properties, true, true);
+         PropertyHelper.setProperties(instance, properties, false, false);
          InitHelper.init(instance);
          return instance;
       } catch (Exception e) {
