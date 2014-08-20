@@ -55,6 +55,14 @@ public class Master {
          connection.establish();
          connection.sendScenario(masterConfig.getScenario());
          state.setMaxClusterSize(masterConfig.getMaxClusterSize());
+         // let's create reporters now to fail soon in case of misconfiguration
+         ArrayList<Reporter> reporters = new ArrayList<>();
+         for (ReporterConfiguration reporterConfiguration : masterConfig.getReporters()) {
+            for (ReporterConfiguration.Report report : reporterConfiguration.getReports()) {
+               reporters.add(ReporterHelper.createReporter(reporterConfiguration.type, report.getProperties()));
+            }
+         }
+
          long benchmarkStart = System.currentTimeMillis();
          for (Configuration configuration : masterConfig.getConfigurations()) {
             log.info("Started benchmarking configuration '" + configuration.name + "'");
@@ -91,16 +99,13 @@ public class Master {
          }
          log.info("Executed all benchmarks in " + Utils.getMillisDurationString(System.currentTimeMillis() - benchmarkStart) + ", reporting...");
          // TODO run conditions: are these really necessary?
-         for (ReporterConfiguration reporterConfiguration : masterConfig.getReporters()) {
-            for (ReporterConfiguration.Report report : reporterConfiguration.getReports()) {
-               try {
-                  log.info("Running reporter " + reporterConfiguration.type);
-                  Reporter reporter = ReporterHelper.createReporter(reporterConfiguration.type, report.getProperties());
-                  reporter.run(masterConfig.getScenario(), Collections.unmodifiableList(reports));
-               } catch (Exception e) {
-                  log.error("Error in reporter " + reporterConfiguration.type, e);
-                  returnCode = 127;
-               }
+         for (Reporter reporter : reporters) {
+            try {
+               log.info("Running reporter " + reporter);
+               reporter.run(masterConfig.getScenario(), Collections.unmodifiableList(reports));
+            } catch (Exception e) {
+               log.error("Error in reporter " + reporter, e);
+               returnCode = 127;
             }
          }
          log.info("All reporters have been executed, exiting.");
