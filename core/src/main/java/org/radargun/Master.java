@@ -19,6 +19,7 @@ import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
 import org.radargun.reporting.ReporterHelper;
 import org.radargun.reporting.Timeline;
+import org.radargun.stages.AbstractStage;
 import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
 
@@ -64,6 +65,7 @@ public class Master {
          }
 
          long benchmarkStart = System.currentTimeMillis();
+         String failedStage = null;
          for (Configuration configuration : masterConfig.getConfigurations()) {
             log.info("Started benchmarking configuration '" + configuration.name + "'");
             state.setConfigName(configuration.name);
@@ -80,6 +82,11 @@ public class Master {
                   for (int stageId = 0; stageId < stageCount - 1; ++stageId) {
                      if (!executeStage(connection, configuration, cluster, stageId)) {
                         returnCode = masterConfig.getConfigurations().indexOf(configuration) + 1;
+                        AbstractStage stage = (AbstractStage) masterConfig.getScenario().getStage(stageId,
+                              getCurrentExtras(masterConfig, configuration, cluster));
+                        if (stage.isExitOnFailure()) {
+                           failedStage = stage.getName();
+                        }
                         break;
                      }
                   }
@@ -93,9 +100,16 @@ public class Master {
                log.info("Finished scenario on " + cluster + " in " + Utils.getMillisDurationString(System.currentTimeMillis() - clusterStart));
                state.getReport().addTimelines(connection.receiveTimelines(cluster.getSize()));
                reports.add(state.getReport());
+               if (failedStage != null) {
+                  break;
+               }
             }
-            log.info("Finished benchmarking configuraion '" + configuration.name + "' in "
+            log.info("Finished benchmarking configuration '" + configuration.name + "' in "
                   + Utils.getMillisDurationString(System.currentTimeMillis() - configStart));
+            if (failedStage != null) {
+               log.info("Exiting benchmark due to failure in '" + failedStage + "' stage");
+               break;
+            }
          }
          log.info("Executed all benchmarks in " + Utils.getMillisDurationString(System.currentTimeMillis() - benchmarkStart) + ", reporting...");
          // TODO run conditions: are these really necessary?
