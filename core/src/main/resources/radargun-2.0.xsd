@@ -1059,9 +1059,9 @@
                      <documentation>Name of the cache to be cleared. Default is the default cache.</documentation>
                   </annotation>
                </element>
-               <element maxOccurs="1" minOccurs="0" name="local" type="rg:boolean">
+               <element maxOccurs="1" minOccurs="0" name="local" type="rg:java-lang-boolean">
                   <annotation>
-                     <documentation>Execute local variant of clear on each slave. Default value is true.</documentation>
+                     <documentation>Execute local variant of clear on each slave. Default is null - local clear is performed, only if it is provided by the service. True enforces local clear - if given service does not provide the feature, exception is thrown.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="use-transaction" type="rg:boolean">
@@ -1075,9 +1075,9 @@
                   <documentation>Name of the cache to be cleared. Default is the default cache.</documentation>
                </annotation>
             </attribute>
-            <attribute name="local" type="rg:boolean">
+            <attribute name="local" type="rg:java-lang-boolean">
                <annotation>
-                  <documentation>Execute local variant of clear on each slave. Default value is true.</documentation>
+                  <documentation>Execute local variant of clear on each slave. Default is null - local clear is performed, only if it is provided by the service. True enforces local clear - if given service does not provide the feature, exception is thrown.</documentation>
                </annotation>
             </attribute>
             <attribute name="use-transaction" type="rg:boolean">
@@ -1088,6 +1088,18 @@
          </extension>
       </complexContent>
    </complexType>
+   <simpleType name="java-lang-boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <!--From radargun-core-2.0.0-SNAPSHOT.jar-->
    <complexType name="org-radargun-stages-cache-stresstest-stress-test-stage">
       <annotation>
@@ -1506,18 +1518,6 @@
       <union>
          <simpleType>
             <restriction base="long"/>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
-   <simpleType name="java-lang-boolean">
-      <union>
-         <simpleType>
-            <restriction base="boolean"/>
          </simpleType>
          <simpleType>
             <restriction base="string">

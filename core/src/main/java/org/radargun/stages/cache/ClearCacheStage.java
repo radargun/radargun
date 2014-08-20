@@ -22,8 +22,9 @@ import org.radargun.utils.Utils;
 @Stage(doc = "Removes all data from the cache")
 public class ClearCacheStage extends AbstractDistStage {
 
-   @Property(doc = "Execute local variant of clear on each slave. Default value is true.")
-   private boolean local = true;
+   @Property(doc = "Execute local variant of clear on each slave. Default is null - local clear is performed, only if it is provided by the service." +
+         " True enforces local clear - if given service does not provide the feature, exception is thrown.")
+   private Boolean local = null;
 
    @Property(doc = "Execute the clear inside explicit transaction.")
    private boolean useTransaction = false;
@@ -49,7 +50,7 @@ public class ClearCacheStage extends AbstractDistStage {
          log.info("This slave is dead, cannot clear cache.");
          return successfulResponse();
       }
-      if (local && localBasicOperations == null) {
+      if (Boolean.TRUE.equals(local) && localBasicOperations == null) {
          return errorResponse("This cache does not support local clear", null);
       }
       if (useTransaction && transactional == null) {
@@ -63,7 +64,7 @@ public class ClearCacheStage extends AbstractDistStage {
                if (response != null) return response;
                if (cacheInformation == null) return successfulResponse();
             } else {
-               if (!local) {
+               if (Boolean.FALSE.equals(local) || localBasicOperations == null) {
                   int size;
                   for (int count = new Random().nextInt(20) + 10; count > 0 && (size = cacheInformation.getCache(cacheName).getLocalSize()) > 0; --count) {
                      log.debug("Waiting until the cache gets empty (contains " + size + " entries)");
@@ -90,7 +91,7 @@ public class ClearCacheStage extends AbstractDistStage {
 
    protected DistStageAck executeClear() {
       BasicOperations.Cache cache;
-      if (local) {
+      if (!Boolean.FALSE.equals(local) && localBasicOperations != null) {
          cache = localBasicOperations.getLocalCache(cacheName);
       } else {
          cache = basicOperations.getCache(cacheName);
