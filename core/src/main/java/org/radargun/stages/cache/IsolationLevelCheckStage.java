@@ -1,7 +1,5 @@
 package org.radargun.stages.cache;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -9,11 +7,12 @@ import java.util.Random;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
+import org.radargun.utils.Projections;
+import org.radargun.utils.TimeConverter;
 
 /**
  * Stage for testing guaranties of isolation levels.
@@ -93,7 +92,7 @@ public class IsolationLevelCheckStage extends CheckStage {
       if (!super.processAckOnMaster(acks)) return false;
 
       boolean anyValueChangeDetected = false;
-      for (ChangeAck ack : cast(acks, ChangeAck.class)) {
+      for (ChangeAck ack : Projections.instancesOf(acks, ChangeAck.class)) {
          log.debug(String.format("Value change detected on slave %d: %s", ack.getSlaveIndex(), ack.valueChangeDetected));
          if (expectedLevel.equalsIgnoreCase(REPEATABLE_READ) && ack.valueChangeDetected) {
             log.error("Value change was detected but this should not happen with isolation " + expectedLevel);

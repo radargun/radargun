@@ -1,7 +1,5 @@
 package org.radargun.stages;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.io.File;
 import java.util.List;
 
@@ -10,6 +8,7 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.lifecycle.LifecycleHelper;
 import org.radargun.state.SlaveState;
+import org.radargun.utils.Projections;
 import org.radargun.utils.Utils;
 
 /**
@@ -61,7 +60,7 @@ public class ScenarioCleanupStage extends AbstractDistStage {
       boolean result = super.processAckOnMaster(acks);
       if (result && masterState.get(ScenarioInitStage.INITIAL_FREE_MEMORY) == null) {
          masterState.put(ScenarioInitStage.INITIAL_FREE_MEMORY, "");
-         for (MemoryAck ack : cast(acks, MemoryAck.class)) {
+         for (MemoryAck ack : Projections.instancesOf(acks, MemoryAck.class)) {
             String key = ScenarioInitStage.INITIAL_FREE_MEMORY + "_" + ack.getSlaveIndex();
             log.info(String.format("Node %d has final free memory of: %d kb", ack.getSlaveIndex(), ack.freeMemory / 1024));
             masterState.put(key, ack.freeMemory);

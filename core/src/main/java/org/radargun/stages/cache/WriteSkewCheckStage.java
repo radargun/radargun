@@ -1,7 +1,5 @@
 package org.radargun.stages.cache;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -9,11 +7,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
+import org.radargun.utils.Projections;
+import org.radargun.utils.TimeConverter;
 
 /**
  * Stage checking the write skew detection in transactional caches.
@@ -99,7 +98,7 @@ public class WriteSkewCheckStage extends CheckStage {
       long sumIncrements = 0;
       long sumSkews = 0;
       long maxValue = -1;
-      for (Counters ack : cast(acks, Counters.class)) {
+      for (Counters ack : Projections.instancesOf(acks, Counters.class)) {
          sumIncrements += ack.totalCounter;
          sumSkews += ack.skewCounter;
          maxValue = Math.max(maxValue, ack.ispnCounter);

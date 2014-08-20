@@ -23,7 +23,6 @@ import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
-import org.radargun.utils.Utils;
 
 /**
  * Connection to slaves in different JVMs
@@ -151,7 +150,11 @@ public class RemoteSlaveConnection implements SlaveConnection {
       responses.clear();
       mcastInt(stageId, numSlaves);
       flushBuffers(numSlaves);
-      return Utils.cast(responses, DistStageAck.class);
+      ArrayList<DistStageAck> list = new ArrayList<>(responses.size());
+      for (Object o : responses) {
+         list.add((DistStageAck) o);
+      }
+      return list;
    }
 
    @Override
