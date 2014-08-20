@@ -18,6 +18,10 @@
          <type-id>1002</type-id>
          <class-name>org.radargun.query.TextObject</class-name>
       </user-type>
+      <user-type>
+         <type-id>1003</type-id>
+         <class-name>org.radargun.query.ManyIntegersObject</class-name>
+      </user-type>
 
       <!-- processors, aggregators etc.. -->
       <user-type>
