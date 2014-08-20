@@ -1,7 +1,5 @@
 package org.radargun.stages.cache.stresstest;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +34,7 @@ import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
 import org.radargun.utils.Fuzzy;
+import org.radargun.utils.Projections;
 import org.radargun.utils.SizeConverter;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.Utils;
@@ -277,9 +276,13 @@ public class StressTestStage extends AbstractDistStage {
 
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       if (!super.processAckOnMaster(acks)) return false;
+      if (testName == null || testName.isEmpty()) {
+         log.info("No test name - results are not recorded");
+         return true;
+      }
       Report report = masterState.getReport();
       Report.Test test = report.createTest(testName);
-      for (StatisticsAck ack : cast(acks, StatisticsAck.class)) {
+      for (StatisticsAck ack : Projections.instancesOf(acks, StatisticsAck.class)) {
          if (ack.iterations != null) {
             int i = 0;
             for (List<Statistics> threadStats : ack.iterations) {
