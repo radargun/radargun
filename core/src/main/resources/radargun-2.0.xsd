@@ -86,6 +86,7 @@
                         <element name="cluster-validation" type="rg:org-radargun-stages-cache-cluster-validation-stage"/>
                         <element name="command" type="rg:org-radargun-stages-command-stage"/>
                         <element name="distributed-task" type="rg:org-radargun-stages-distributedtask-distributed-task-stage"/>
+                        <element name="example" type="rg:org-radargun-stages-example-stage"/>
                         <element name="isolation-level-check" type="rg:org-radargun-stages-cache-isolation-level-check-stage"/>
                         <element name="jmx-cluster-validation-prepare" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-prepare-stage"/>
                         <element name="jmx-cluster-validation" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-stage"/>
@@ -192,6 +193,7 @@
             <element name="cluster-validation" type="rg:org-radargun-stages-cache-cluster-validation-stage"/>
             <element name="command" type="rg:org-radargun-stages-command-stage"/>
             <element name="distributed-task" type="rg:org-radargun-stages-distributedtask-distributed-task-stage"/>
+            <element name="example" type="rg:org-radargun-stages-example-stage"/>
             <element name="isolation-level-check" type="rg:org-radargun-stages-cache-isolation-level-check-stage"/>
             <element name="jmx-cluster-validation-prepare" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-prepare-stage"/>
             <element name="jmx-cluster-validation" type="rg:org-radargun-stages-monitor-jmx-cluster-validation-stage"/>
@@ -233,8 +235,31 @@
       <annotation>
          <documentation/>
       </annotation>
-      <sequence/>
+      <sequence>
+         <element maxOccurs="1" minOccurs="0" name="exit-on-failure" type="rg:boolean">
+            <annotation>
+               <documentation>If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</documentation>
+            </annotation>
+         </element>
+      </sequence>
+      <attribute name="exit-on-failure" type="rg:boolean">
+         <annotation>
+            <documentation>If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</documentation>
+         </annotation>
+      </attribute>
    </complexType>
+   <simpleType name="boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <!--From radargun-core-2.0.0-SNAPSHOT.jar-->
    <complexType abstract="true" name="org-radargun-stages-abstract-dist-stage">
       <annotation>
@@ -400,18 +425,6 @@
          </extension>
       </complexContent>
    </complexType>
-   <simpleType name="boolean">
-      <union>
-         <simpleType>
-            <restriction base="boolean"/>
-         </simpleType>
-         <simpleType>
-            <restriction base="string">
-               <pattern value="[$#]\{.*\}"/>
-            </restriction>
-         </simpleType>
-      </union>
-   </simpleType>
    <!--From radargun-core-2.0.0-SNAPSHOT.jar-->
    <complexType name="org-radargun-stages-cache-background-background-stressors-start-stage">
       <annotation>
@@ -1708,6 +1721,47 @@
          </extension>
       </complexContent>
    </complexType>
+   <!--From extension-example-2.0.0-SNAPSHOT.jar-->
+   <complexType name="org-radargun-stages-example-stage">
+      <annotation>
+         <documentation>Example stage in different module</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-stages-abstract-dist-stage">
+            <sequence>
+               <element maxOccurs="1" minOccurs="0" name="delay" type="rg:long-converted-by-org-radargun-config-time-converter">
+                  <annotation>
+                     <documentation>Example property delaying the stage executions. Default is 5 seconds.</documentation>
+                  </annotation>
+               </element>
+            </sequence>
+            <attribute name="delay" type="rg:long-converted-by-org-radargun-config-time-converter">
+               <annotation>
+                  <documentation>Example property delaying the stage executions. Default is 5 seconds.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="foo" type="string" use="required">
+               <annotation>
+                  <documentation>Example property that must be set</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="long-converted-by-org-radargun-config-time-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[0-9]+\s*[mMsS]?"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
    <!--From radargun-core-2.0.0-SNAPSHOT.jar-->
    <complexType name="org-radargun-stages-cache-isolation-level-check-stage">
       <annotation>
