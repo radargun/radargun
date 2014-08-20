@@ -1,7 +1,5 @@
 package org.radargun.stages.cache.background;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +11,7 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
+import org.radargun.utils.Projections;
 import org.radargun.utils.Table;
 
 /**
@@ -42,10 +41,14 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       if (!super.processAckOnMaster(acks)) return false;
+      if (testName == null || testName.isEmpty()) {
+         log.info("No test name - results are not recorded");
+         return true;
+      }
       Report report = masterState.getReport();
       Report.Test test = report.createTest(testName);
       Table<Integer, Integer, Long> cacheSizes = new Table<Integer, Integer, Long>();
-      for (StatisticsAck ack : cast(acks, StatisticsAck.class)) {
+      for (StatisticsAck ack : Projections.instancesOf(acks, StatisticsAck.class)) {
          int i = 0;
          for (BackgroundOpsManager.IterationStats stats : ack.iterations) {
             test.addStatistics(i, ack.getSlaveIndex(), stats.statistics);

@@ -1,7 +1,5 @@
 package org.radargun.stages.cache.stresstest;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +21,7 @@ import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.NumberConverter;
 import org.radargun.utils.ObjectConverter;
+import org.radargun.utils.Projections;
 import org.radargun.utils.ReflexiveListConverter;
 
 /**
@@ -83,7 +82,7 @@ public class QueryStage extends StressTestStage {
       if (!super.processAckOnMaster(acks)) return false;
       int minSize = Integer.MAX_VALUE, maxSize = Integer.MIN_VALUE;
       Map<Integer, Report.SlaveResult> slaveResults = new HashMap<Integer, Report.SlaveResult>();
-      for (QueryAck ack : cast(acks, QueryAck.class)) {
+      for (QueryAck ack : Projections.instancesOf(acks, QueryAck.class)) {
          if (maxSize >= 0 && (minSize != ack.queryResultSize || maxSize != ack.queryResultSize)) {
             String message = String.format("The size got from %d -> %d is not the same as from other slaves -> %d .. %d ",
                   ack.getSlaveIndex(), ack.queryResultSize, minSize, maxSize);
@@ -98,8 +97,13 @@ public class QueryStage extends StressTestStage {
          maxSize = Math.max(maxSize, ack.queryResultSize);
          slaveResults.put(ack.getSlaveIndex(), new Report.SlaveResult(String.valueOf(ack.queryResultSize), false));
       }
-      String sizeString = minSize == maxSize ? String.valueOf(maxSize) : String.format("%d .. %d", minSize, maxSize);
-      masterState.getReport().getTest(testName).addResult(0, Collections.singletonMap("Query result size", new Report.TestResult(slaveResults, sizeString, false)));
+      if (testName != null && !testName.isEmpty()) {
+         String sizeString = minSize == maxSize ? String.valueOf(maxSize) : String.format("%d .. %d", minSize, maxSize);
+         masterState.getReport().getTest(testName).addResult(0,
+               Collections.singletonMap("Query result size", new Report.TestResult(slaveResults, sizeString, false)));
+      } else {
+         log.info("No test name - results are not recorded");
+      }
       return true;
    }
 
