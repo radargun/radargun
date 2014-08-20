@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.infinispan.Cache;
+
 /**
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
  */
@@ -22,8 +24,10 @@ public class EmbeddedConfigurationProvider extends AbstractConfigurationProvider
          ConfigDumpHelper configDumpHelper = service.createConfigDumpHelper();
          configurationMap.put("global", configDumpHelper.dumpGlobal(
                service.cacheManager.getCacheManagerConfiguration(), service.cacheManager.getName()));
-         configurationMap.put("cache", configDumpHelper.dumpCache(service.caches.get(null).getAdvancedCache().getCacheConfiguration(),
-               service.cacheManager.getName(), service.caches.get(null).getName()));
+         for (Map.Entry<String,Cache> cache : service.caches.entrySet()) {
+            configurationMap.put("cache_" + cache.getValue().getName(), configDumpHelper.dumpCache(cache.getValue().getAdvancedCache().getCacheConfiguration(),
+                  service.cacheManager.getName(), cache.getValue().getName()));
+         }
          configurationMap.put("jgroups", configDumpHelper.dumpJGroups(service.cacheManager.getCacheManagerConfiguration().transport() == null
                ? null : service.cacheManager.getCacheManagerConfiguration().transport().clusterName()));
       } catch (Exception e) {
