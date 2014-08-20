@@ -2403,7 +2403,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       <union>
          <simpleType>
             <restriction base="string">
-               <pattern value="(int |long |float |double )?[0-9.]*"/>
+               <pattern value="(int |long |float |double )?(\+|-)?[0-9.]*"/>
             </restriction>
          </simpleType>
          <simpleType>
