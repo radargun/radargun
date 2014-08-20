@@ -11,6 +11,9 @@ import com.tangosol.util.processor.ConditionalRemove;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class BooleanConditionalRemove extends ConditionalRemove {
+   public BooleanConditionalRemove() {
+   }
+
    public BooleanConditionalRemove(Filter filter) {
       super(filter);
    }

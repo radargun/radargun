@@ -13,6 +13,10 @@ import com.tangosol.io.pof.PortableObject;
 public class TextObject implements Serializable, PortableObject {
    private String text;
 
+   public TextObject() {
+      // for POF deserialization only
+   }
+
    public TextObject(String text) {
       this.text = text;
    }

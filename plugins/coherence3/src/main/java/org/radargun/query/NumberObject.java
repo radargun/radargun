@@ -16,6 +16,10 @@ public class NumberObject implements Serializable, PortableObject {
    private int integerValue;
    private double doubleValue;
 
+   public NumberObject() {
+      // for POF deserialization only
+   }
+
    public NumberObject(int i, double d) {
       this.integerValue = i;
       this.doubleValue = d;

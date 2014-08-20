@@ -11,6 +11,9 @@ import com.tangosol.util.processor.ConditionalPut;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class BooleanConditionalPut extends ConditionalPut {
+   public BooleanConditionalPut() {
+   }
+
    public BooleanConditionalPut(Filter filter, Object oValue) {
       super(filter, oValue);
    }

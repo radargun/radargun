@@ -4,20 +4,44 @@
 <pof-config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xmlns="http://xmlns.oracle.com/coherence/coherence-pof-config"
               xsi:schemaLocation="http://xmlns.oracle.com/coherence/coherence-pof-config coherence-pof-config.xsd">
-  <user-type-list>
+   <user-type-list>
 
-    <!-- coherence POF user types -->
-    <include>coherence-pof-config.xml</include>
+   <!-- coherence POF user types -->
+   <include>coherence-pof-config.xml</include>
 
-    <user-type>
-      <type-id>1001</type-id>
-      <class-name>org.radargun.query.NumberObject</class-name>
-    </user-type>
-    <user-type>
-      <type-id>1002</type-id>
-      <class-name>org.radargun.query.TextObject</class-name>
-    </user-type>
-  </user-type-list>
+      <!-- data types -->
+      <user-type>
+         <type-id>1001</type-id>
+         <class-name>org.radargun.query.NumberObject</class-name>
+      </user-type>
+      <user-type>
+         <type-id>1002</type-id>
+         <class-name>org.radargun.query.TextObject</class-name>
+      </user-type>
+
+      <!-- processors, aggregators etc.. -->
+      <user-type>
+         <type-id>2000</type-id>
+         <class-name>org.radargun.processors.BooleanConditionalPut</class-name>
+      </user-type>
+      <user-type>
+         <type-id>2001</type-id>
+         <class-name>org.radargun.processors.BooleanConditionalRemove</class-name>
+      </user-type>
+      <user-type>
+         <type-id>2002</type-id>
+         <class-name>org.radargun.processors.ValueConditionalPut</class-name>
+      </user-type>
+      <user-type>
+         <type-id>2100</type-id>
+         <class-name>org.radargun.aggregators.LimitAggregator</class-name>
+      </user-type>
+      <user-type>
+         <type-id>2200</type-id>
+         <class-name>org.radargun.service.CoherenceQueryable$ProjectionComparator</class-name>
+      </user-type>
+
+   </user-type-list>
 
   <allow-interfaces>true</allow-interfaces>
   <allow-subclasses>true</allow-subclasses>

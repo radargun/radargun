@@ -113,8 +113,8 @@ public class Utils {
             String pluginPath = param.getPath();
             if (pluginPath != null) {
                File pluginRoot = new File(pluginPath);
-               addJars(new File(pluginRoot, "lib"), jars);
                jars.add(new File(pluginRoot, "conf").toURI().toURL());
+               addJars(new File(pluginRoot, "lib"), jars);
             }
             for (String configFile : param.getConfigFiles()) {
                File pluginConfFile = new File(configFile);

@@ -367,11 +367,13 @@ public class CoherenceQueryable implements Queryable {
       }
    }
 
-   private static class ProjectionComparator implements Comparator, Serializable, PortableObject {
+   public static class ProjectionComparator implements Comparator, Serializable, PortableObject {
       private int index;
       private SortOrder order;
 
-      public ProjectionComparator() {}
+      public ProjectionComparator() {
+         // for POF deserialization only
+      }
 
       private ProjectionComparator(int index, SortOrder order) {
          this.index = index;
@@ -398,13 +400,13 @@ public class CoherenceQueryable implements Queryable {
       @Override
       public void readExternal(PofReader pofReader) throws IOException {
          index = pofReader.readInt(0);
-         order = (SortOrder) pofReader.readObject(1);
+         order = SortOrder.values()[pofReader.readInt(1)];
       }
 
       @Override
       public void writeExternal(PofWriter pofWriter) throws IOException {
          pofWriter.writeInt(0, index);
-         pofWriter.writeObject(1, order);
+         pofWriter.writeObject(1, order.ordinal());
       }
    }
 }
