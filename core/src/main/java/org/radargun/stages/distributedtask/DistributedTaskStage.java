@@ -1,7 +1,5 @@
 package org.radargun.stages.distributedtask;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +16,7 @@ import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.DistributedTaskExecutor;
 import org.radargun.traits.InjectTrait;
+import org.radargun.utils.Projections;
 import org.radargun.utils.Utils;
 
 /**
@@ -77,7 +76,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          reportCsvContent.append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, DURATION_NANOSECONDS\n");
       }
 
-      for (TextAck ack : cast(acks, TextAck.class)) {
+      for (TextAck ack : Projections.instancesOf(acks, TextAck.class)) {
          reportCsvContent.append(ack.getText()).append("\n");
       }
       reportCsvContent.append("\n");

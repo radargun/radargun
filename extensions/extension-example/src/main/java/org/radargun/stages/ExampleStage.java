@@ -1,14 +1,13 @@
 package org.radargun.stages;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.util.List;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.state.SlaveState;
+import org.radargun.utils.Projections;
+import org.radargun.utils.TimeConverter;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -37,7 +36,7 @@ public class ExampleStage extends AbstractDistStage {
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       boolean successful = super.processAckOnMaster(acks);
       if (successful) {
-         for (ExampleAck ack : cast(acks, ExampleAck.class)) {
+         for (ExampleAck ack : Projections.instancesOf(acks, ExampleAck.class)) {
             log.info(String.format("Slave %d reports: %s", ack.getSlaveIndex(), ack.getExampleMessage()));
          }
       }

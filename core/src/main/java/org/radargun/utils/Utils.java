@@ -2,7 +2,6 @@ package org.radargun.utils;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -545,15 +544,5 @@ public class Utils {
       }
 
       return lines;
-   }
-
-   public static <T1, T2 extends T1> List<T2> cast(List<T1> list, Class<T2> clazz) {
-      T2[] array = (T2[]) Array.newInstance(clazz, list.size());
-      Iterator<T1> it = list.iterator();
-      for (int i = 0; i < array.length; ++i) {
-         if (!it.hasNext()) throw new IllegalStateException();
-         array[i] = clazz.cast(it.next());
-      }
-      return Arrays.asList(array);
    }
 }

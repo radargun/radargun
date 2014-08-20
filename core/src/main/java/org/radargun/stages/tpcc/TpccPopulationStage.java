@@ -1,8 +1,6 @@
 
 package org.radargun.stages.tpcc;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.util.List;
 
 import org.radargun.DistStageAck;
@@ -12,6 +10,7 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
+import org.radargun.utils.Projections;
 
 /**
  * This stage shuld be run before the <b>TpccBenchmarkStage</b>. It will perform the population of
@@ -65,7 +64,7 @@ public class TpccPopulationStage extends AbstractDistStage {
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       if (!super.processAckOnMaster(acks)) return false;
       logDurationInfo(acks);
-      for (DurationAck ack : cast(acks, DurationAck.class)) {
+      for (DurationAck ack : Projections.instancesOf(acks, DurationAck.class)) {
          if (log.isTraceEnabled()) {
             log.trace("Tpcc population on slave " + ack.getSlaveIndex() + " finished in " + ack.duration + " millis.");
          }

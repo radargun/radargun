@@ -1,7 +1,5 @@
 package org.radargun.stages.mapreduce;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -14,10 +12,10 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
-import org.radargun.traits.CacheInformation.Cache;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.MapReducer;
+import org.radargun.utils.Projections;
 import org.radargun.utils.Utils;
 
 /**
@@ -124,7 +122,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                + "DURATION_NANOSECONDS, KEY_COUNT_IN_RESULT_MAP, CONFIGURATION_NAME\n");
       }
 
-      for (TextAck ack : cast(acks, TextAck.class)) {
+      for (TextAck ack : Projections.instancesOf(acks, TextAck.class)) {
          reportCsvContent.append(ack.getText()).append("\n");
       }
       reportCsvContent.append("\n");

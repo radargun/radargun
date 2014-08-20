@@ -23,6 +23,15 @@ public class Projections {
       return new ProjectList<A, B>(collection, func);
    }
 
+   public static <A, B extends A> List<B> castProject(List<A> list, Class<B> clazz) {
+      return new ProjectList<A, B>(list, new Func<A, B>() {
+         @Override
+         public B project(A a) {
+            return (B) a;
+         }
+      });
+   }
+
    public static <A> boolean any(Collection<A> collection, Condition<A> condition) {
       for (A a : collection) {
          if (condition.accept(a)) return true;

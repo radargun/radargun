@@ -1,7 +1,5 @@
 package org.radargun.stages.cache;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,6 +16,7 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
+import org.radargun.utils.Projections;
 import org.radargun.utils.Utils;
 
 /**
@@ -58,7 +57,7 @@ public class LoadFileStage extends AbstractDistStage {
       log.info("Size of file '" + filePath + "' is " + fileSize + " bytes");
       log.info("Value size is '" + valueSize + "' which will produce " + (int) Math.ceil((double) fileSize / valueSize)
             + " keys");
-      for (ResultAck ack : cast(acks, ResultAck.class)) {
+      for (ResultAck ack : Projections.instancesOf(acks, ResultAck.class)) {
          log.info("Slave " + ack.getSlaveIndex() + " wrote " + ack.putCount
                + " values to the cache with a total size of " + ack.totalBytesRead + " bytes");
       }

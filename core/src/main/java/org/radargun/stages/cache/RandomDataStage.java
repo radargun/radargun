@@ -1,7 +1,5 @@
 package org.radargun.stages.cache;
 
-import static org.radargun.utils.Utils.cast;
-
 import java.nio.CharBuffer;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -20,6 +18,7 @@ import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
+import org.radargun.utils.Projections;
 import org.radargun.utils.Utils;
 
 /**
@@ -412,7 +411,7 @@ public class RandomDataStage extends AbstractDistStage {
       long totalValues = 0;
       long totalBytes = 0;
       Map<String, Integer> clusterWordCount = new TreeMap<String, Integer>();
-      for (DataInsertAck ack : cast(acks, DataInsertAck.class)) {
+      for (DataInsertAck ack : Projections.instancesOf(acks, DataInsertAck.class)) {
          if (ack.wordCount != null) {
             for (Map.Entry<String, Integer> entry : ack.wordCount.entrySet()) {
                if (clusterWordCount.containsKey(entry.getKey())) {
