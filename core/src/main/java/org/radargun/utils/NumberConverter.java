@@ -53,6 +53,6 @@ public class NumberConverter implements Converter<Number> {
 
    @Override
    public String allowedPattern(Type type) {
-      return "(int |long |float |double )?[0-9.]*";
+      return "(int |long |float |double )?(\\+|-)?[0-9.]*";
    }
 }
