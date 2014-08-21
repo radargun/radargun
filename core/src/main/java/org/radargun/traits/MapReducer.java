@@ -3,8 +3,6 @@ package org.radargun.traits;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.radargun.utils.ClassLoadHelper;
-
 @Trait(doc = "Provides interface for executing Map/Reduce tasks")
 public interface MapReducer<KOut, VOut, R> {
 
@@ -13,45 +11,39 @@ public interface MapReducer<KOut, VOut, R> {
     * This method executes a MapReduce task against all of the keys in the cache using the specified
     * Mapper and Reducer classes.
     * 
-    * @param classLoadHelper
-    *           a <code>ClassLoadHelper</code> used to instantiate the classes
-    * 
     * @param mapperFqn
     *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Mapper
     *           implementation. The implementation must have a no argument constructor.
-    * 
+    *
     * @param reducerFqn
     *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Reducer
     *           implementation. The implementation must have a no argument constructor.
-    * 
+    *
     * @param collatorFqn
     *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Collator
     *           implementation. The implementation must have a no argument constructor.
-    * 
+    *
     * @return the collated result
     */
-   public R executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn,
-         String collatorFqn);
+   public R executeMapReduceTask(String mapperFqn, String reducerFqn,
+                                 String collatorFqn);
 
    /**
     * 
     * This method executes a MapReduce task against all of the keys in the cache using the specified
     * Mapper and Reducer classes.
     * 
-    * @param classLoadHelper
-    *           a <code>ClassLoadHelper</code> used to instantiate the classes
-    * 
     * @param mapperFqn
     *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Mapper
     *           implementation. The implementation must have a no argument constructor.
-    * 
+    *
     * @param reducerFqn
     *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Reducer
     *           implementation. The implementation must have a no argument constructor.
-    * 
+    *
     * @return a Map where each key is an output key and value is reduced value for that output key
     */
-   public Map<KOut, VOut> executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn);
+   public Map<KOut, VOut> executeMapReduceTask(String mapperFqn, String reducerFqn);
 
    /**
     * 

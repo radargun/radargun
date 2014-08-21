@@ -66,7 +66,7 @@ public class Slave {
             state.setService(setup.service);
             state.setTimeline(new Timeline(slaveIndex));
             Map<String, String> extras = getCurrentExtras(configuration, cluster);
-            Object service = ServiceHelper.createService(state.getClassLoadHelper().getLoader(), setup.plugin, setup.service, configuration.name, setup.file, slaveIndex, setup.getProperties(), extras);
+            Object service = ServiceHelper.createService(state.getClassLoader(), setup.plugin, setup.service, configuration.name, setup.file, slaveIndex, setup.getProperties(), extras);
             Map<Class<?>, Object> traits = TraitHelper.retrieve(service);
             state.setTraits(traits);
             while ((stageId = connection.receiveNextStageId()) >= 0) {

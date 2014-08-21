@@ -18,7 +18,6 @@ import org.infinispan.remoting.transport.Transport;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.DistributedTaskExecutor;
-import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
 
 /**
@@ -39,20 +38,21 @@ public class InfinispanDistributedTask<K, V, T> implements DistributedTaskExecut
 
    @SuppressWarnings("unchecked")
    @Override
-   public List<Future<T>> executeDistributedTask(ClassLoadHelper classLoadHelper, String distributedCallableFqn,
-         String executionPolicyName, String failoverPolicyFqn, String nodeAddress, Map<String, String> params) {
+   public List<Future<T>> executeDistributedTask(String distributedCallableFqn,
+                                                 String executionPolicyName, String failoverPolicyFqn, String nodeAddress, Map<String, String> params) {
 
       Cache<K, V> cache = (Cache<K, V>) service.getCache(null);
       DistributedExecutorService des = new DefaultExecutorService(cache);
       Callable<T> callable = null;
       DistributedTaskBuilder<T> taskBuilder = null;
       List<Future<T>> result = null;
+      ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
       if (distributedCallableFqn == null) {
          log.fatal("The distributedCallableFqn parameter must be specified.");
       } else {
          try {
-            callable = (Callable<T>) classLoadHelper.createInstance(distributedCallableFqn);
+            callable = Utils.instantiate(classLoader, distributedCallableFqn);
             taskBuilder = des.createDistributedTaskBuilder(callable);
             callable = (Callable<T>) Utils.invokeMethodWithString(callable, params);
          } catch (Exception e1) {
@@ -74,8 +74,7 @@ public class InfinispanDistributedTask<K, V, T> implements DistributedTaskExecut
 
          if (failoverPolicyFqn != null) {
             try {
-               DistributedTaskFailoverPolicy failoverPolicy = (DistributedTaskFailoverPolicy) classLoadHelper
-                     .createInstance(failoverPolicyFqn);
+               DistributedTaskFailoverPolicy failoverPolicy = Utils.instantiate(classLoader, failoverPolicyFqn);
                taskBuilder = taskBuilder.failoverPolicy(failoverPolicy);
             } catch (Exception e) {
                log.error("Could not instantiate DistributedTaskFailoverPolicy class: " + failoverPolicyFqn, e);

@@ -98,10 +98,10 @@ public class IterateStage extends AbstractDistStage {
             Iterable.Converter converter = null;
             try {
                if (filterClass != null) {
-                  filter = Utils.instantiateAndInit(slaveState.getClassLoadHelper().getLoader(), filterClass, filterParam);
+                  filter = Utils.instantiateAndInit(slaveState.getClassLoader(), filterClass, filterParam);
                }
                if (converterClass != null) {
-                  converter = Utils.instantiateAndInit(slaveState.getClassLoadHelper().getLoader(), converterClass, converterParam);
+                  converter = Utils.instantiateAndInit(slaveState.getClassLoader(), converterClass, converterParam);
                }
             } catch (Exception e) {
                terminate(stressors);

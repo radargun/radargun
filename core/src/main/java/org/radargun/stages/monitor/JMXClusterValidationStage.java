@@ -6,10 +6,9 @@ import java.util.List;
 
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.jmx.JMXClusterValidator;
 import org.radargun.stages.AbstractMasterStage;
-import org.radargun.utils.ClassLoadHelper;
+import org.radargun.utils.TimeConverter;
 import org.radargun.utils.Utils;
 
 /**
@@ -66,8 +65,8 @@ public class JMXClusterValidationStage extends AbstractMasterStage {
             }
          }
 
-         ClassLoadHelper classLoaderHelper = new ClassLoadHelper(true, this.getClass(), plugin, masterState);
-         JMXClusterValidator validator = (JMXClusterValidator) classLoaderHelper.createInstance(validatorClass);
+         ClassLoader classLoader = Utils.buildPluginSpecificClassLoader(plugin, getClass().getClassLoader());
+         JMXClusterValidator validator = Utils.instantiate(classLoader, validatorClass);
          validator.init(filteredSlaveJMXEndpoints, jmxConnectionTimeout, prop1, prop2, prop3);
          log.info("Waiting for cluster formation ...");
          return validator.waitUntilClusterFormed(waitTimeout);

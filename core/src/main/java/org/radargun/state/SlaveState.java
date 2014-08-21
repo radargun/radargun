@@ -8,7 +8,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.radargun.config.Cluster;
 import org.radargun.reporting.Timeline;
-import org.radargun.utils.ClassLoadHelper;
+import org.radargun.utils.Utils;
 
 /**
  * State residing on slave, passed to each's {@link org.radargun.DistStage#initOnSlave(SlaveState)}
@@ -20,7 +20,7 @@ public class SlaveState extends StateBase {
    private InetAddress localAddress;
    private int slaveIndex = -1;
    private String plugin;
-   private ClassLoadHelper classLoadHelper;
+   private ClassLoader classLoader;
    private String serviceName;
    private Cluster cluster;
    private Cluster.Group group;
@@ -61,8 +61,8 @@ public class SlaveState extends StateBase {
       return group.size;
    }
 
-   public ClassLoadHelper getClassLoadHelper() {
-      return classLoadHelper;
+   public ClassLoader getClassLoader() {
+      return classLoader;
    }
 
    public String getPlugin() {
@@ -71,7 +71,7 @@ public class SlaveState extends StateBase {
 
    public void setPlugin(String plugin) {
       this.plugin = plugin;
-      classLoadHelper = new ClassLoadHelper(true, this.getClass(), plugin, this);
+      classLoader = Utils.buildPluginSpecificClassLoader(plugin, getClass().getClassLoader());
    }
 
    public String getServiceName() {
