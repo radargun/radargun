@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Random;
 
+import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.utils.Utils;
@@ -31,12 +32,11 @@ public class ManyIntegersObjectGenerator implements ValueGenerator {
    private Constructor<?> ctor;
    private Field[] fields;
 
-   @Override
-   public void init(String param, ClassLoader classLoader) {
-      PropertyHelper.setProperties(this, Utils.parseParams(param), false, false);
+   @Init
+   public void init() {
       if (max > min) throw new IllegalArgumentException(String.format("min (%d) must be <= max (%d)", min, max));
       try {
-         clazz = classLoader.loadClass(this.clazzName);
+         clazz = Thread.currentThread().getContextClassLoader().loadClass(this.clazzName);
          Class<?>[] params = new Class<?>[numInts];
          fields = new Field[numInts];
          for (int i = 0; i < params.length; ++i) {

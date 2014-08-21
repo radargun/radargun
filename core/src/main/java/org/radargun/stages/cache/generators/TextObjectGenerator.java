@@ -3,9 +3,8 @@ package org.radargun.stages.cache.generators;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 
+import org.radargun.config.Init;
 import org.radargun.config.Property;
-import org.radargun.config.PropertyHelper;
-import org.radargun.utils.Utils;
 
 /**
  * Generates text objects. TextObject (by default it is org.radargun.query.TextObject)
@@ -28,11 +27,10 @@ public abstract class TextObjectGenerator implements ValueGenerator {
    private Constructor<?> ctor;
    private Method getText;
 
-   @Override
-   public void init(String param, ClassLoader classLoader) {
-      PropertyHelper.setProperties(this, Utils.parseParams(param), false, false);
+   @Init
+   public void initClass() {
       try {
-         Class<?> clazz = classLoader.loadClass(this.clazz);
+         Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(this.clazz);
          ctor = clazz.getConstructor(String.class);
          getText = clazz.getMethod("getText");
       } catch (Exception e) {

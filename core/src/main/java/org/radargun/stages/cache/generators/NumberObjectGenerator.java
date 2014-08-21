@@ -4,9 +4,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Random;
 
+import org.radargun.config.Init;
 import org.radargun.config.Property;
-import org.radargun.config.PropertyHelper;
-import org.radargun.utils.Utils;
 
 /**
  * Generates number objects NumberObject (by default it is org.radargun.query.NumberObject)
@@ -42,11 +41,10 @@ public class NumberObjectGenerator implements ValueGenerator {
    private Method getInt;
    private Method getDouble;
 
-   @Override
-   public void init(String param, ClassLoader classLoader) {
-      PropertyHelper.setProperties(this, Utils.parseParams(param), false, false);
+   @Init
+   public void init() {
       try {
-         Class<?> clazz = classLoader.loadClass(this.clazz);
+         Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(this.clazz);
          ctor = clazz.getConstructor(int.class, double.class);
          getInt = clazz.getMethod("getInt");
          getDouble = clazz.getMethod("getDouble");

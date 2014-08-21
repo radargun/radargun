@@ -5,6 +5,8 @@ import java.util.concurrent.Executors;
 
 import org.infinispan.affinity.KeyAffinityService;
 import org.infinispan.affinity.KeyAffinityServiceFactory;
+import org.radargun.config.Init;
+import org.radargun.config.Property;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -28,24 +30,19 @@ public class KeyAffinityStringKeyGenerator implements KeyGenerator {
 
    protected final Log log = LogFactory.getLog(KeyAffinityStringKeyGenerator.class);
 
+   @Property(doc = "Number of generated keys per node.", optional = false)
+   private int keyBufferSize;
+
+   @Property(doc = "Name of the cache where the keys will be stored.", optional = false)
+   private String cache;
+
    private KeyAffinityService affinityService;
    private ExecutorService executor;
    private AddressAwareStringKeyGenerator generator;
-   private int keyBufferSize;
-   private String cache;
    private Infinispan51EmbeddedService wrapper;
 
-   @Override
-   public void init(String param, ClassLoader classLoader) {
-      if (param != null) {
-         String[] args = param.split(",");
-         for (String arg : args) {
-            String[] keyVal = arg.split("=");
-            if (keyVal.length != 2) throw new IllegalArgumentException("Invalid parameter format (" + param + ").");
-            if (keyVal[0].trim().equals("keyBufferSize")) keyBufferSize = Integer.parseInt(keyVal[1].trim());
-            else if (keyVal[0].trim().equals("cache")) cache = keyVal[1].trim();
-         }
-      }
+   @Init
+   public void init() {
       if (keyBufferSize <= 0 || cache == null) {
          throw new IllegalArgumentException("Invalid parameters provided, 'keyBufferSize' and 'cache' need to be specified.");
       }
