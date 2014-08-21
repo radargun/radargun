@@ -89,18 +89,20 @@ public class TestReportDocument extends HtmlDocument {
                }
             }
 
-            for (Map.Entry<String, Report.TestResult> entry : it.getResults().entrySet()) {
-               Map<Report, List<Report.TestResult>> resultsByType = results.get(entry.getKey());
-               if (resultsByType == null) {
-                  resultsByType = new TreeMap<Report, List<Report.TestResult>>();
-                  results.put(entry.getKey(), resultsByType);
+            if (it != null && it.getResults() != null) {
+               for (Map.Entry<String, Report.TestResult> entry : it.getResults().entrySet()) {
+                  Map<Report, List<Report.TestResult>> resultsByType = results.get(entry.getKey());
+                  if (resultsByType == null) {
+                     resultsByType = new TreeMap<Report, List<Report.TestResult>>();
+                     results.put(entry.getKey(), resultsByType);
+                  }
+                  List<Report.TestResult> resultsList = resultsByType.get(test.getReport());
+                  if (resultsList == null) {
+                     resultsList = new ArrayList<Report.TestResult>();
+                     resultsByType.put(test.getReport(), resultsList);
+                  }
+                  resultsList.add(entry.getValue());
                }
-               List<Report.TestResult> resultsList = resultsByType.get(test.getReport());
-               if (resultsList == null) {
-                  resultsList = new ArrayList<Report.TestResult>();
-                  resultsByType.put(test.getReport(), resultsList);
-               }
-               resultsList.add(entry.getValue());
             }
          }
          aggregated.put(test.getReport(), iterations);

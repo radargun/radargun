@@ -12,6 +12,8 @@ import java.util.Set;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.stats.Statistics;
 
 /**
@@ -20,6 +22,8 @@ import org.radargun.stats.Statistics;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Report implements Comparable<Report> {
+   private static final Log log = LogFactory.getLog(Report.class);
+
    /* Configuration part */
    private Configuration configuration;
    private Cluster cluster;
@@ -72,6 +76,18 @@ public class Report implements Comparable<Report> {
 
    public Test getTest(String testName) {
       return tests.get(testName);
+   }
+
+   public Report.Test getOrCreateTest(String testName, boolean preferGet) {
+      Report.Test test;
+      if (preferGet) {
+         test = tests.get(testName);
+         if (test != null) {
+            return test;
+         }
+         log.warn("Test '" + testName + "' was not found - creating new test.");
+      }
+      return createTest(testName);
    }
 
    public Configuration getConfiguration() {
@@ -127,7 +143,7 @@ public class Report implements Comparable<Report> {
    public static class TestIteration {
       /* Slave index - Statistics from threads */
       private Map<Integer, List<Statistics>> statistics = new HashMap<Integer, List<Statistics>>();
-      private Map<String, TestResult> results = new HashMap<String, TestResult>();
+      private Map<String, TestResult> results;
 
       private int threadCount;
 
@@ -137,6 +153,7 @@ public class Report implements Comparable<Report> {
       }
 
       public void setResults(Map<String, TestResult> results) {
+         if (this.results != null) throw new IllegalStateException("Results already set: " + this.results);
          this.results = results;
       }
 
@@ -149,7 +166,7 @@ public class Report implements Comparable<Report> {
       }
 
       public Map<String, TestResult> getResults() {
-         return Collections.unmodifiableMap(results);
+         return results == null ? null : Collections.unmodifiableMap(results);
       }
    }
 

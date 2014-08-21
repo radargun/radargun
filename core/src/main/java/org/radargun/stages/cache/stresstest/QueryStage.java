@@ -99,7 +99,8 @@ public class QueryStage extends StressTestStage {
       }
       if (testName != null && !testName.isEmpty()) {
          String sizeString = minSize == maxSize ? String.valueOf(maxSize) : String.format("%d .. %d", minSize, maxSize);
-         masterState.getReport().getTest(testName).addResult(0,
+         Report.Test test = masterState.getReport().getTest(testName);
+         test.addResult(getTestIteration(),
                Collections.singletonMap("Query result size", new Report.TestResult(slaveResults, sizeString, false)));
       } else {
          log.info("No test name - results are not recorded");

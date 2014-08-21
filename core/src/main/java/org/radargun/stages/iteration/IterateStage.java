@@ -35,6 +35,10 @@ public class IterateStage extends AbstractDistStage {
    @Property(doc = "Name of this test. Default is 'IterationTest'.")
    protected String testName = "IterationTest";
 
+   @Property(doc = "By default, each stage creates a new test. If this property is set to true," +
+         "results are amended to existing test (as iterations). Default is false.")
+   protected boolean amendTest = false;
+
    @Property(doc = "Full class name of the filter used to iterate through entries. Default is none (accept all).")
    protected String filterClass;
 
@@ -151,7 +155,7 @@ public class IterateStage extends AbstractDistStage {
       if (!super.processAckOnMaster(acks)) return false;
       Report.Test test = null;
       if (testName != null && !testName.isEmpty()) {
-         test = masterState.getReport().createTest(testName);
+         test = masterState.getReport().getOrCreateTest(testName, amendTest);
       } else {
          log.info("No test name - results are not recorded");
       }
@@ -159,9 +163,10 @@ public class IterateStage extends AbstractDistStage {
       long prevTotalSize = -1;
       long totalMinElements = -1, totalMaxElements = -1;
       Map<Integer, Report.SlaveResult> slaveResults = new HashMap<>();
+      int testIteration = test.getIterations().size();
       for (IterationAck ack : Projections.instancesOf(acks, IterationAck.class)) {
          if (test != null) {
-            test.addStatistics(0, ack.getSlaveIndex(), Projections.project(ack.results, new Projections.Func<StressorResult, Statistics>() {
+            test.addStatistics(testIteration, ack.getSlaveIndex(), Projections.project(ack.results, new Projections.Func<StressorResult, Statistics>() {
                @Override
                public Statistics project(StressorResult result) {
                   return result.stats;
@@ -213,7 +218,7 @@ public class IterateStage extends AbstractDistStage {
                slaveMinElements != slaveMaxElements));
       }
       if (test != null) {
-         test.addResult(0, Collections.singletonMap("Elements", new Report.TestResult(
+         test.addResult(testIteration, Collections.singletonMap("Elements", new Report.TestResult(
                slaveResults, range(totalMinElements, totalMaxElements), totalMinElements != totalMaxElements)));
       }
       return retval;

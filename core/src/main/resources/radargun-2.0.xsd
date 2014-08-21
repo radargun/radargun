@@ -1123,6 +1123,11 @@
       <complexContent>
          <extension base="rg:org-radargun-stages-abstract-dist-stage">
             <sequence>
+               <element maxOccurs="1" minOccurs="0" name="amend-test" type="rg:boolean">
+                  <annotation>
+                     <documentation>By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</documentation>
+                  </annotation>
+               </element>
                <element maxOccurs="1" minOccurs="0" name="bucket-policy" type="rg:org-radargun-stages-helpers-bucket-policy-converted-by-org-radargun-stages-helpers-bucket-policy-converter">
                   <annotation>
                      <documentation>Which buckets will the stressors use. Available is 'none' (no buckets = null),'thread' (each thread will use bucked_/threadId/) or 'all:/bucketName/' (all threads will use bucketName). Default is 'none'.</documentation>
@@ -1304,6 +1309,11 @@
                   </annotation>
                </element>
             </sequence>
+            <attribute name="amend-test" type="rg:boolean">
+               <annotation>
+                  <documentation>By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="bucket-policy" type="rg:org-radargun-stages-helpers-bucket-policy-converted-by-org-radargun-stages-helpers-bucket-policy-converter">
                <annotation>
                   <documentation>Which buckets will the stressors use. Available is 'none' (no buckets = null),'thread' (each thread will use bucked_/threadId/) or 'all:/bucketName/' (all threads will use bucketName). Default is 'none'.</documentation>
@@ -1788,6 +1798,11 @@
       <complexContent>
          <extension base="rg:org-radargun-stages-abstract-dist-stage">
             <sequence>
+               <element maxOccurs="1" minOccurs="0" name="amend-test" type="rg:boolean">
+                  <annotation>
+                     <documentation>By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</documentation>
+                  </annotation>
+               </element>
                <element maxOccurs="1" minOccurs="0" name="container-name" type="string">
                   <annotation>
                      <documentation>Name of the container (e.g. cache, DB table etc.) that should be iterated. Default is the default container.</documentation>
@@ -1854,6 +1869,11 @@
                   </annotation>
                </element>
             </sequence>
+            <attribute name="amend-test" type="rg:boolean">
+               <annotation>
+                  <documentation>By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</documentation>
+               </annotation>
+            </attribute>
             <attribute name="container-name" type="string">
                <annotation>
                   <documentation>Name of the container (e.g. cache, DB table etc.) that should be iterated. Default is the default container.</documentation>
