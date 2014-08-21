@@ -7,10 +7,6 @@ import java.util.Random;
  */
 public class ByteArrayValueGenerator implements ValueGenerator {
    @Override
-   public void init(String param, ClassLoader classLoader) {
-   }
-
-   @Override
    public Object generateValue(Object key, int size, Random random) {
       return generateArray(size, random);
    }

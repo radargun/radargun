@@ -3,17 +3,23 @@ package org.radargun.stages.cache.generators;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
+import org.radargun.config.Init;
+import org.radargun.config.Property;
+
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class JpaKeyGenerator implements KeyGenerator {
+   @Property(name = "class", doc = "Fully qualified name of the key class.", optional = false)
+   private String clazzName;
+
    private Class<?> clazz;
    private Constructor<?> ctor;
 
-   @Override
-   public void init(String param, ClassLoader classLoader) {
+   @Init
+   public void init() {
       try {
-         clazz = classLoader.loadClass(param);
+         clazz = Thread.currentThread().getContextClassLoader().loadClass(clazzName);
          ctor = clazz.getConstructor(long.class);
       } catch (Exception e) {
          throw new IllegalArgumentException(e);

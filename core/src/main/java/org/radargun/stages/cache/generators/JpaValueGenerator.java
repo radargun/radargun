@@ -5,26 +5,32 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.util.Random;
 
+import org.radargun.config.Init;
+import org.radargun.config.Property;
+
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class JpaValueGenerator implements ValueGenerator {
+   @Property(name = "class", doc = "Fully qualified name of the value class", optional = false)
+   private String clazzName;
 
    private Class<?> clazz;
    private Class<? extends Annotation> entityClazz;
    private Constructor<?> ctor;
 
-   @Override
-   public void init(String param, ClassLoader classLoader) {
+   @Init
+   public void init() {
       try {
+         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
          entityClazz = (Class<? extends Annotation>) classLoader.loadClass("javax.persistence.Entity");
-         clazz = classLoader.loadClass(param);
+         clazz = classLoader.loadClass(clazzName);
          if (!clazz.isAnnotationPresent(entityClazz)) {
             throw new IllegalArgumentException("Class " + clazz.getName() + " is not an entity - no @Entity present");
          }
          ctor = clazz.getConstructor(Object.class, int.class, Random.class);
       } catch (Exception e) {
-         throw new IllegalArgumentException(param, e);
+         throw new IllegalArgumentException(clazzName, e);
       }
    }
 

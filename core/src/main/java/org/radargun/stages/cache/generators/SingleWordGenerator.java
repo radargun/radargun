@@ -2,6 +2,7 @@ package org.radargun.stages.cache.generators;
 
 import java.util.Random;
 
+import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.utils.Utils;
 
@@ -16,9 +17,8 @@ public class SingleWordGenerator extends TextObjectGenerator {
 
    private String[] dictionary;
 
-   @Override
-   public void init(String param, ClassLoader classLoader) {
-      super.init(param, classLoader);
+   @Init
+   public void initDictionary() {
       dictionary = Utils.readFile(file).toArray(new String[0]);
    }
 

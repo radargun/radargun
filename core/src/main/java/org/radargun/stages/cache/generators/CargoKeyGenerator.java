@@ -4,6 +4,9 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Random;
 
+import org.radargun.config.Init;
+import org.radargun.config.Property;
+
 /**
  * This generator creates key objects with the 8-byte index
  * and random byte-array of configurable length (equal to all keys).
@@ -11,12 +14,14 @@ import java.util.Random;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class CargoKeyGenerator implements KeyGenerator {
+   @Property(doc = "Size of the cargo (in bytes).", optional = false)
+   private int size;
+
    private byte[] cargo;
 
-   @Override
-   public void init(String param, ClassLoader classLoader) {
-      int keySize = Integer.parseInt(param);
-      cargo = new byte[keySize];
+   @Init
+   public void init() {
+      cargo = new byte[size];
       new Random().nextBytes(cargo);
    }
 
