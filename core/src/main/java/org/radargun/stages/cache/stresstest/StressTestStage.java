@@ -52,6 +52,10 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "Name of the test as used for reporting. Default is StressTest.")
    protected String testName = "StressTest";
 
+   @Property(doc = "By default, each stage creates a new test. If this property is set to true," +
+         "results are amended to existing test (as iterations). Default is false.")
+   protected boolean amendTest = false;
+
    @Property(doc = "Number of operations after which a log entry should be written. Default is 10000.")
    protected int logPeriod = 10000;
 
@@ -187,6 +191,7 @@ public class StressTestStage extends AbstractDistStage {
    private transient volatile Completion completion;
    private transient volatile boolean finished = false;
    private transient volatile boolean terminated = false;
+   private int testIteration; // first iteration we should use for setting the statistics
 
    protected transient List<Stressor> stressors = new ArrayList<Stressor>(numThreads);
    private transient Statistics statisticsPrototype = new DefaultStatistics(new DefaultOperationStats());
@@ -281,10 +286,11 @@ public class StressTestStage extends AbstractDistStage {
          return true;
       }
       Report report = masterState.getReport();
-      Report.Test test = report.createTest(testName);
+      Report.Test test = report.getOrCreateTest(testName, amendTest);
+      testIteration = test.getIterations().size();
       for (StatisticsAck ack : Projections.instancesOf(acks, StatisticsAck.class)) {
          if (ack.iterations != null) {
-            int i = 0;
+            int i = getTestIteration();
             for (List<Statistics> threadStats : ack.iterations) {
                test.addStatistics(++i, ack.getSlaveIndex(), threadStats);
             }
@@ -501,6 +507,10 @@ public class StressTestStage extends AbstractDistStage {
 
    public Long getSeed() {
       return seed;
+   }
+
+   protected int getTestIteration() {
+      return testIteration;
    }
 
    protected static class StatisticsAck extends DistStageAck {
