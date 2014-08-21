@@ -125,7 +125,7 @@ public class QueryStage extends StressTestStage {
       public void init(Stressor stressor) {
          Class<?> clazz;
          try {
-            clazz = slaveState.getClassLoadHelper().getLoader().loadClass(queryObjectClass);
+            clazz = slaveState.getClassLoader().loadClass(queryObjectClass);
          } catch (ClassNotFoundException e) {
             throw new IllegalArgumentException("Cannot load class " + queryObjectClass, e);
          }

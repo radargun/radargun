@@ -117,7 +117,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
 
       log.info("--------------------");
       long start = System.nanoTime();
-      futureList = executor.executeDistributedTask(slaveState.getClassLoadHelper(), distributedCallableFqn,
+      futureList = executor.executeDistributedTask(distributedCallableFqn,
             executionPolicyName, failoverPolicyFqn, nodeAddress, Utils.parseParams(distributedExecutionParams));
       TextAck ack = new TextAck(slaveState);
       if (futureList == null) {

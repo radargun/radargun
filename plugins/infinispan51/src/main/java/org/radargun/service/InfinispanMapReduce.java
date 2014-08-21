@@ -11,7 +11,6 @@ import org.infinispan.distexec.mapreduce.Reducer;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.MapReducer;
-import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
 
 public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<KOut, VOut, R> {
@@ -45,8 +44,8 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
 
    @SuppressWarnings("unchecked")
    @Override
-   public R executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn,
-         String collatorFqn) {
+   public R executeMapReduceTask(String mapperFqn, String reducerFqn,
+                                 String collatorFqn) {
       MapReduceTask<KIn, VIn, KOut, VOut> t = mapReduceTaskFactory();
 
       Mapper<KIn, VIn, KOut, VOut> mapper = null;
@@ -54,25 +53,26 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
       Collator<KOut, VOut, R> collator = null;
 
       R result = null;
+      ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
       try {
-         mapper = (Mapper<KIn, VIn, KOut, VOut>) classLoadHelper.createInstance(mapperFqn);
+         mapper = Utils.instantiate(classLoader, mapperFqn);
          t = t.mappedWith(mapper);
       } catch (Exception e) {
          throw (new IllegalArgumentException("Could not instantiate Mapper class: " + mapperFqn, e));
       }
 
       try {
-         reducer = (Reducer<KOut, VOut>) classLoadHelper.createInstance(reducerFqn);
+         reducer = Utils.instantiate(classLoader, reducerFqn);
          t = t.reducedWith(reducer);
       } catch (Exception e) {
          throw (new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e));
       }
 
-      setCombiner(t, classLoadHelper, combinerFqn);
+      setCombiner(t, combinerFqn);
 
       try {
-         collator = (Collator<KOut, VOut, R>) classLoadHelper.createInstance(collatorFqn);
+         collator = Utils.instantiate(classLoader, collatorFqn);
       } catch (Exception e) {
          throw (new IllegalArgumentException("Could not instantiate Collator class: " + collatorFqn, e));
       }
@@ -88,23 +88,24 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
 
    @SuppressWarnings("unchecked")
    @Override
-   public Map<KOut, VOut> executeMapReduceTask(ClassLoadHelper classLoadHelper, String mapperFqn, String reducerFqn) {
+   public Map<KOut, VOut> executeMapReduceTask(String mapperFqn, String reducerFqn) {
       MapReduceTask<KIn, VIn, KOut, VOut> t = mapReduceTaskFactory();
 
       Mapper<KIn, VIn, KOut, VOut> mapper = null;
       Reducer<KOut, VOut> reducer = null;
 
       Map<KOut, VOut> result = null;
+      ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
       try {
-         mapper = (Mapper<KIn, VIn, KOut, VOut>) classLoadHelper.createInstance(mapperFqn);
+         mapper = Utils.instantiate(classLoader, mapperFqn);
          t = t.mappedWith(mapper);
       } catch (Exception e) {
          throw (new IllegalArgumentException("Could not instantiate Mapper class: " + mapperFqn, e));
       }
 
       try {
-         reducer = (Reducer<KOut, VOut>) classLoadHelper.createInstance(reducerFqn);
+         reducer = Utils.instantiate(classLoader, reducerFqn);
          t = t.reducedWith(reducer);
       } catch (Exception e) {
          throw (new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e));
@@ -187,16 +188,14 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
     * 
     * @param task
     *           the MapReduceTask object to modify
-    * @param classLoadHelper
-    *           a <code>ClassLoadHelper</code> used to instantiate the classes
     * @param combinerFqn
     *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Reducer
     *           implementation. The implementation must have a no argument constructor.
-    * 
+    *
     * @return the MapReduceTask with the combiner set if the CacheWrapper supports it
     */
    protected MapReduceTask<KIn, VIn, KOut, VOut> setCombiner(MapReduceTask<KIn, VIn, KOut, VOut> task,
-         ClassLoadHelper classLoadHelper, String combinerFqn) {
+                                                             String combinerFqn) {
       return task;
    }
 

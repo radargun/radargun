@@ -66,7 +66,7 @@ public class LocalSlaveConnection implements SlaveConnection {
       slaveState.setPlugin(plugin);
       slaveState.setService(service);
       slaveState.setConfigName(configuration.name);
-      this.service = ServiceHelper.createService(slaveState.getClassLoadHelper().getLoader(), plugin, service, configuration.name, setups.get(0).file, 0, setups.get(0).getProperties(), extras);
+      this.service = ServiceHelper.createService(slaveState.getClassLoader(), plugin, service, configuration.name, setups.get(0).file, 0, setups.get(0).getProperties(), extras);
       this.traits = TraitHelper.retrieve(this.service);
       slaveState.setTraits(traits);
       slaveState.setTimeline(new Timeline(0));

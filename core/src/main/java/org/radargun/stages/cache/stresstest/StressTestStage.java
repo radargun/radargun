@@ -479,8 +479,7 @@ public class StressTestStage extends AbstractDistStage {
          synchronized (this) {
             if (keyGenerator != null) return keyGenerator;
             log.info("Using key generator " + keyGeneratorClass + ", param " + keyGeneratorParam);
-            ClassLoader classLoader = slaveState.getClassLoadHelper().getLoader();
-            keyGenerator = Utils.instantiateAndInit(classLoader, keyGeneratorClass, keyGeneratorParam);
+            keyGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), keyGeneratorClass, keyGeneratorParam);
          }
       }
       return keyGenerator;
@@ -491,8 +490,7 @@ public class StressTestStage extends AbstractDistStage {
          synchronized (this) {
             if (valueGenerator != null) return valueGenerator;
             log.info("Using value generator " + valueGeneratorClass + ", param " + valueGeneratorParam);
-            ClassLoader classLoader = slaveState.getClassLoadHelper().getLoader();
-            valueGenerator = Utils.instantiateAndInit(classLoader, valueGeneratorClass, valueGeneratorParam);
+            valueGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), valueGeneratorClass, valueGeneratorParam);
          }
       }
       return valueGenerator;

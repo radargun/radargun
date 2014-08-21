@@ -3,7 +3,6 @@ package org.radargun.service;
 import org.infinispan.Cache;
 import org.infinispan.distexec.mapreduce.MapReduceTask;
 import org.infinispan.distexec.mapreduce.Reducer;
-import org.radargun.utils.ClassLoadHelper;
 import org.radargun.utils.Utils;
 
 public class Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> extends InfinispanMapReduce<KIn, VIn, KOut, VOut, R> {
@@ -38,11 +37,11 @@ public class Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> extends InfinispanMa
 
    @Override
    protected MapReduceTask<KIn, VIn, KOut, VOut> setCombiner(MapReduceTask<KIn, VIn, KOut, VOut> task,
-         ClassLoadHelper classLoadHelper, String combinerFqn) {
+                                                             String combinerFqn) {
       if (combinerFqn != null) {
          try {
             @SuppressWarnings("unchecked")
-            Reducer<KOut, VOut> combiner = (Reducer<KOut, VOut>) classLoadHelper.createInstance(combinerFqn);
+            Reducer<KOut, VOut> combiner = Utils.instantiate(Thread.currentThread().getContextClassLoader(), combinerFqn);
             Utils.invokeMethodWithString(combiner, this.combinerParameters);
             task = task.combinedWith(combiner);
          } catch (Exception e) {

@@ -193,7 +193,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          ack.setText(getPayload("noDuration", "noResultSize"));
          if (collatorFqn != null) {
             start = System.nanoTime();
-            payloadObject = mapReducer.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn,
+            payloadObject = mapReducer.executeMapReduceTask(mapperFqn, reducerFqn,
                   collatorFqn);
             durationNanos = System.nanoTime() - start;
             log.info("MapReduce task with Collator completed in "
@@ -218,7 +218,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                }
             }
             start = System.nanoTime();
-            payloadMap = mapReducer.executeMapReduceTask(slaveState.getClassLoadHelper(), mapperFqn, reducerFqn);
+            payloadMap = mapReducer.executeMapReduceTask(mapperFqn, reducerFqn);
             durationNanos = System.nanoTime() - start;
 
             if (payloadMap != null) {

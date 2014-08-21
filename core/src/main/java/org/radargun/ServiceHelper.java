@@ -25,9 +25,6 @@ public class ServiceHelper {
    public static Object createService(ClassLoader classLoader, String plugin, String service, String configName,
                                       String configFile, int slaveIndex,
                                       Map<String, String> properties, Map<String, String> extras) {
-
-      Thread.currentThread().setContextClassLoader(classLoader);
-
       String serviceClassName = Utils.getServiceProperty(plugin, "service." + service);
       Class<?> serviceClazz = null;
       try {
