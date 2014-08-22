@@ -155,6 +155,6 @@ done
 
 if [ $TAILF == "true" ]
 then
-  tail -f radargun.log
+  tail -f radargun.log --pid `cat master.pid`
 fi
 
