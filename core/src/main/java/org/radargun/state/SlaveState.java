@@ -65,6 +65,10 @@ public class SlaveState extends StateBase {
       return classLoader;
    }
 
+   public void resetClassLoader() {
+      classLoader = getClass().getClassLoader();
+   }
+
    public String getPlugin() {
       return plugin;
    }

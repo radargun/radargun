@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.arjuna.ats.arjuna.common.arjPropertyManager;
+import com.arjuna.ats.arjuna.coordinator.TransactionReaper;
+import com.arjuna.ats.arjuna.coordinator.TxControl;
 import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
@@ -125,6 +127,8 @@ public class InfinispanEmbeddedService {
    protected void stopCaches() {
       cacheManager.stop();
       caches.clear();
+      TxControl.disable(true);
+      TransactionReaper.terminate(true);
    }
 
    protected DefaultCacheManager createCacheManager(String configFile) throws IOException {
