@@ -2956,9 +2956,19 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
       <complexContent>
          <extension base="rg:org-radargun-stages-abstract-dist-stage">
             <sequence>
+               <element maxOccurs="1" minOccurs="0" name="check-memory" type="rg:boolean">
+                  <annotation>
+                     <documentation>Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
+                  </annotation>
+               </element>
                <element maxOccurs="1" minOccurs="0" name="check-memory-released" type="rg:boolean">
                   <annotation>
                      <documentation>Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="check-threads" type="rg:boolean">
+                  <annotation>
+                     <documentation>Specifies whether the check for unfinished threads should be performed. Default is true.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="heap-dump-dir" type="string">
@@ -2972,9 +2982,19 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                   </annotation>
                </element>
             </sequence>
-            <attribute name="check-memory-released" type="rg:boolean">
+            <attribute name="check-memory" type="rg:boolean">
                <annotation>
                   <documentation>Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="check-memory-released" type="rg:boolean">
+               <annotation>
+                  <documentation>*DEPRECATED* Specifies whether the check for amount of free memory should be performed. Default is true.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="check-threads" type="rg:boolean">
+               <annotation>
+                  <documentation>Specifies whether the check for unfinished threads should be performed. Default is true.</documentation>
                </annotation>
             </attribute>
             <attribute name="heap-dump-dir" type="string">
