@@ -145,6 +145,7 @@ ${JAVA} ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.radargun.Launc
 export RADARGUN_MASTER_PID=$!
 HOST_NAME=`hostname`
 echo "Master's PID is $RADARGUN_MASTER_PID running on ${HOST_NAME}"
+echo $RADARGUN_MASTER_PID > master.pid
 if [ $TAILF == "true" ]
 then
   touch radargun.log
