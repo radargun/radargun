@@ -8,6 +8,8 @@ import com.tangosol.io.pof.PofWriter;
 import com.tangosol.io.pof.PortableObject;
 
 /**
+ * Simple object containing one string. See {@link org.radargun.stages.cache.generators.TextObjectGenerator}
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TextObject implements Serializable, PortableObject {
@@ -39,5 +41,10 @@ public class TextObject implements Serializable, PortableObject {
    @Override
    public void writeExternal(PofWriter pofWriter) throws IOException {
       pofWriter.writeString(0, text);
+   }
+
+   @Override
+   public String toString() {
+      return "TextObject{" + text + '}';
    }
 }

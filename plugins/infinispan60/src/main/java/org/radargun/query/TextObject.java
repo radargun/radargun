@@ -10,7 +10,7 @@ import org.hibernate.search.annotations.Indexed;
 import org.infinispan.protostream.MessageMarshaller;
 
 /**
- * Simple object to be queried.
+ * Simple object containing one string. See {@link org.radargun.stages.cache.generators.TextObjectGenerator}
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
