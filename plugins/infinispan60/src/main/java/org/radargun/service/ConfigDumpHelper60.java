@@ -20,9 +20,9 @@ import org.infinispan.configuration.global.GlobalConfiguration;
  */
 public class ConfigDumpHelper60 extends ConfigDumpHelper {
 
-   private ObjectName findCacheBean(MBeanServer mbeanServer, String managerName, String cacheName) throws MalformedObjectNameException {
-      Set<ObjectInstance> beanObjs = mbeanServer.queryMBeans(new ObjectName("jboss.infinispan:type=Cache,name=*,manager=\"" + managerName
-            + "\",component=Cache"), null);
+   private ObjectName findCacheBean(MBeanServer mbeanServer, String domain, String managerName, String cacheName) throws MalformedObjectNameException {
+      Set<ObjectInstance> beanObjs = mbeanServer.queryMBeans(new ObjectName(
+            String.format("%s:type=Cache,name=*,manager=\"%s\",component=Cache", domain, managerName)), null);
       for (ObjectInstance beanObj : beanObjs) {
          String name = beanObj.getObjectName().getKeyProperty("name");
          if (name != null && (name.startsWith(cacheName) || name.startsWith("\"" + cacheName))) {
@@ -33,10 +33,10 @@ public class ConfigDumpHelper60 extends ConfigDumpHelper {
    }
 
    @Override
-   public Properties dumpCache(Configuration configuration, String managerName, String cacheName) {
+   public Properties dumpCache(Configuration configuration, String jmxDomain, String managerName, String cacheName) {
       try {
          MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-         ObjectName cacheObj = findCacheBean(mbeanServer, managerName, cacheName);
+         ObjectName cacheObj = findCacheBean(mbeanServer, jmxDomain, managerName, cacheName);
          if (cacheObj == null) {
             log.error("No cache named " + cacheName + " found among MBeans");
             return null;
@@ -49,10 +49,10 @@ public class ConfigDumpHelper60 extends ConfigDumpHelper {
    }
 
    @Override
-   public Properties dumpGlobal(GlobalConfiguration globalConfiguration, String managerName) {
+   public Properties dumpGlobal(GlobalConfiguration globalConfiguration, String jmxDomain, String managerName) {
       try {
          MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-         ObjectName objCacheManager = new ObjectName("jboss.infinispan:type=CacheManager,name=\"" + managerName + "\",component=CacheManager");
+         ObjectName objCacheManager = new ObjectName(String.format("%s:type=CacheManager,name=\"%s\",component=CacheManager", jmxDomain, managerName));
          return (Properties) mbeanServer.getAttribute(objCacheManager, "globalConfigurationAsProperties");
       } catch (Exception e) {
          log.error("Error while dumping global config as properties", e);

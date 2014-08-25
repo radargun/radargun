@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.infinispan.Cache;
+import org.infinispan.configuration.global.GlobalConfiguration;
 
 /**
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
@@ -22,14 +23,25 @@ public class EmbeddedConfigurationProvider extends AbstractConfigurationProvider
       Map<String, Properties> configurationMap = new HashMap<String, Properties>(3);
       try {
          ConfigDumpHelper configDumpHelper = service.createConfigDumpHelper();
-         configurationMap.put("global", configDumpHelper.dumpGlobal(
-               service.cacheManager.getCacheManagerConfiguration(), service.cacheManager.getName()));
-         for (Map.Entry<String,Cache> cache : service.caches.entrySet()) {
-            configurationMap.put("cache_" + cache.getValue().getName(), configDumpHelper.dumpCache(cache.getValue().getAdvancedCache().getCacheConfiguration(),
-                  service.cacheManager.getName(), cache.getValue().getName()));
+         GlobalConfiguration global = service.cacheManager.getCacheManagerConfiguration();
+         String jmxDomain = global.globalJmxStatistics().domain();
+         Properties globalProperties = configDumpHelper.dumpGlobal(global, jmxDomain, service.cacheManager.getName());
+         if (!globalProperties.isEmpty()) {
+            configurationMap.put("global", globalProperties);
          }
-         configurationMap.put("jgroups", configDumpHelper.dumpJGroups(service.cacheManager.getCacheManagerConfiguration().transport() == null
-               ? null : service.cacheManager.getCacheManagerConfiguration().transport().clusterName()));
+         for (Map.Entry<String,Cache> cache : service.caches.entrySet()) {
+            Properties cacheProperties = configDumpHelper.dumpCache(
+                  cache.getValue().getAdvancedCache().getCacheConfiguration(), jmxDomain,
+                  service.cacheManager.getName(), cache.getValue().getName());
+            if (!cacheProperties.isEmpty()) {
+               configurationMap.put("cache_" + cache.getValue().getName(), cacheProperties);
+            }
+         }
+         String clusterName = global.transport() == null ? "default" : global.transport().clusterName();
+         Properties jgroupsProperties = configDumpHelper.dumpJGroups(jmxDomain, clusterName);
+         if (!jgroupsProperties.isEmpty()) {
+            configurationMap.put("jgroups", jgroupsProperties);
+         }
       } catch (Exception e) {
          log.error("Error while creating normalized configuration files", e);
       }
