@@ -2,12 +2,9 @@ package org.radargun.reporting.html;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import org.radargun.config.Configuration;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyDelegate;
 import org.radargun.config.Scenario;
@@ -51,15 +48,11 @@ public class HtmlReporter implements Reporter {
       } finally {
          index.close();
       }
-      Map<String, Integer> clusterIndices = new HashMap<String, Integer>();
       for (Report report : reports) {
          String configName = report.getConfiguration().name;
-         Integer clusterIndex = clusterIndices.get(configName);
-         if (clusterIndex == null) clusterIndex = 0;
-         clusterIndices.put(configName, clusterIndex + 1);
 
          TimelineDocument timelineDocument = new TimelineDocument(timelineConfig, targetDir,
-               configName + "_" + clusterIndex, configName + " on " + report.getCluster(), report.getTimelines());
+               configName + "_" + report.getCluster().getClusterIndex(), configName + " on " + report.getCluster(), report.getTimelines());
          try {
             timelineDocument.open();
             timelineDocument.writeTimelines();
@@ -92,5 +85,28 @@ public class HtmlReporter implements Reporter {
          }
       }
 
+      for (Report report : reports) {
+         for (Configuration.Setup setup : report.getConfiguration().getSetups()) {
+            Set<Integer> slaves = report.getCluster().getSlaves(setup.group);
+            Set<String> normalized = new HashSet<>();
+            for (Map.Entry<Integer, Map<String, Properties>> entry : report.getNormalizedServiceConfigs().entrySet()) {
+               if (slaves.contains(entry.getKey())) {
+                  normalized.addAll(entry.getValue().keySet());
+               }
+            }
+            for (String config : normalized) {
+               NormalizedConfigDocument document = new NormalizedConfigDocument(
+                     targetDir, report.getConfiguration().name, setup.group, report.getCluster(), config, report.getNormalizedServiceConfigs(), slaves);
+               try {
+                  document.open();
+                  document.writeProperties();
+               } catch (IOException e) {
+                  log.error("Failed to write normalized configuration", e);
+               } finally {
+                  document.close();
+               }
+            }
+         }
+      }
    }
 }

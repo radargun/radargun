@@ -3,7 +3,10 @@ package org.radargun.config;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Definition of one cluster
@@ -11,7 +14,7 @@ import java.util.List;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Cluster implements Serializable, Comparable<Cluster> {
-
+   private final static AtomicInteger indexGenerator = new AtomicInteger(0);
    public final static String DEFAULT_GROUP = "default";
    public final static Cluster LOCAL = new Cluster();
 
@@ -20,6 +23,11 @@ public class Cluster implements Serializable, Comparable<Cluster> {
    }
 
    private List<Group> groups = new ArrayList<Group>();
+   private final int index;
+
+   public Cluster() {
+      index = indexGenerator.getAndIncrement();
+   }
 
    public void addGroup(String name, int size) {
       if (!groups.isEmpty() && DEFAULT_GROUP.equals(groups.get(0).name)) {
@@ -71,6 +79,9 @@ public class Cluster implements Serializable, Comparable<Cluster> {
       throw new IllegalStateException("Slave index is " + slaveIndex + ", cluster is " + toString());
    }
 
+   public int getClusterIndex() {
+      return index;
+   }
 
    @Override
    public String toString() {
@@ -116,6 +127,21 @@ public class Cluster implements Serializable, Comparable<Cluster> {
          if (compare != 0) return compare;
       }
       return 0;
+   }
+
+   public Set<Integer> getSlaves(String group) {
+      int index = 0;
+      for (Group g : groups) {
+         if (g.name.equals(group)) {
+            Set<Integer> slaves = new HashSet<>(g.size);
+            for (int i = 0; i < g.size; ++i) {
+               slaves.add(index + i);
+            }
+            return slaves;
+         }
+         index += g.size;
+      }
+      throw new IllegalArgumentException("Group " + group + " was not defined");
    }
 
    public class Group implements Serializable {

@@ -36,8 +36,8 @@ public class ServiceStartStage extends AbstractServiceStartStage {
    @Property(converter = TimeConverter.class, doc = "Time allowed the cluster to reach `expectNumSlaves` members. Default is 3 minutes.")
    private long clusterFormationTimeout = 180000;
 
-   @Property(doc = "Dump configuration files and properties for the service. Default is false")
-   private boolean dumpConfig = false;
+   @Property(doc = "Collect configuration files and properties for the service, and pass those to reporters. Default is true.")
+   private boolean dumpConfig = true;
 
    @Property(doc = "The number of slaves that should be up after all slaves are started. Applicable only with " +
          "validateCluster=true. Default is all slaves in the cluster (in the same site in case of multi-site configuration).")
