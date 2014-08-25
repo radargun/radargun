@@ -1,10 +1,5 @@
 package org.radargun.service;
 
-import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanInfo;
-import javax.management.MBeanServer;
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -13,6 +8,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanInfo;
+import javax.management.MBeanServer;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
 
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.global.GlobalConfiguration;
@@ -37,7 +37,7 @@ public class ConfigDumpHelper {
       }
    }
 
-   public Properties dumpGlobal(GlobalConfiguration globalConfiguration, String managerName) {
+   public Properties dumpGlobal(GlobalConfiguration globalConfiguration, String jmxDomain, String managerName) {
       Properties properties = new Properties();
       try {
          reflect(globalConfiguration, properties, null);
@@ -47,7 +47,7 @@ public class ConfigDumpHelper {
       return properties;
    }
 
-   public Properties dumpCache(Configuration configuration, String managerName, String cacheName) {
+   public Properties dumpCache(Configuration configuration, String domain, String managerName, String cacheName) {
       Properties properties = new Properties();
       try {
          reflect(configuration, properties, null);
@@ -57,11 +57,11 @@ public class ConfigDumpHelper {
       return properties;
    }
 
-   public Properties dumpJGroups(String clusterName) {
+   public Properties dumpJGroups(String jmxDomain, String clusterName) {
       Properties properties = new Properties();
       try {
          MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
-         Set<ObjectInstance> beanObjs = mbeanServer.queryMBeans(new ObjectName("jboss.infinispan:type=protocol,cluster=\"default\",protocol=*"), null);
+         Set<ObjectInstance> beanObjs = mbeanServer.queryMBeans(new ObjectName(String.format("%s:type=protocol,cluster=\"%s\",protocol=*", jmxDomain, clusterName)), null);
          if (beanObjs.isEmpty()) {
             log.error("no JGroups protocols found");
             return properties;
