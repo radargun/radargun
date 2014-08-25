@@ -41,6 +41,7 @@
       <plugins.spymemcached />
       <reporter.default />
       <extension.example/>
+      <extension.example.jars />
    </properties>
 
    <profiles>
@@ -55,6 +56,7 @@
          </modules>
          <properties>
             <extension.example>extension-example</extension.example>
+            <extension.example.jars>extension-example/target/**/*.jar</extension.example.jars>
          </properties>
       </profile>
       <!-- Plugin-specific -->
@@ -288,14 +290,9 @@
                   <configuration>
                      <target>
                         <echo message="Generating XSD schema" />
-
                         <path id="core_and_extensions">
-                           <fileset dir="core/target/distribution/radargun-core-bin/radargun-core/lib">
-                              <include name="*.jar" />
-                           </fileset>
-                           <fileset dir="extensions">
-                              <include name="*/target/**/*.jar" />
-                           </fileset>
+                           <fileset dir="core/target/distribution/radargun-core-bin/radargun-core/lib" includes="*.jar" />
+                           <fileset dir="extensions" includes="no-extension,${extension.example.jars}" />
                         </path>
                         <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
                            <sysproperty key="radargun.directories.allow_broken" value="true" />
