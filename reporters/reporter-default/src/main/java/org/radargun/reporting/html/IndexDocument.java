@@ -1,15 +1,13 @@
 package org.radargun.reporting.html;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.radargun.Stage;
+import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
 import org.radargun.config.Definition;
 import org.radargun.config.Path;
@@ -70,19 +68,137 @@ public class IndexDocument extends HtmlDocument {
          write(" on cluster with " + report.getCluster().getSize() + " slaves: " + report.getCluster());
          write("\n<br>Setups:<br><ul>\n");
          for (Configuration.Setup setup : report.getConfiguration().getSetups()) {
-            write(String.format("<li>Group %s -> Plugin: %s, Service: %s, Configuration file: %s", setup.group, setup.plugin, setup.service, setup.file));
+            write(String.format("<li>Group %s:<ul>\n<li>Plugin: %s</li>\n<li>Service: %s</li>\n", setup.group, setup.plugin, setup.service));
+            writeConfigurationFiles(report, setup);
             if (!setup.getProperties().isEmpty()) {
-               write(", Properties: <ul>\n");
+               write("<li>Properties: <ul>\n");
                for (Map.Entry<String, String> property : setup.getProperties().entrySet()) {
                   writeTag("li", String.format("%s: %s", property.getKey(), property.getValue()));
                }
-               write("</ul>\n");
+               write("</ul></li>\n");
             }
-            write("</li>\n");
+            write("</ul></li>\n");
          }
          write("</ul><br>\n");
       }
 
+   }
+
+   private static class OriginalConfig {
+      private Set<Integer> slaves = new HashSet<>();
+      private String filename;
+      private byte[] content;
+
+      public OriginalConfig(int slave, String filename, byte[] content) {
+         slaves.add(slave);
+         this.filename = filename;
+         this.content = content;
+      }
+   }
+
+   private void writeConfigurationFiles(Report report, Configuration.Setup setup) {
+      Set<Integer> slaves = report.getCluster().getSlaves(setup.group);
+      Set<OriginalConfig> configs = new HashSet<>();
+      for (Map.Entry<Integer, Map<String, byte[]>> entry : report.getOriginalServiceConfig().entrySet()) {
+         if (slaves.contains(entry.getKey())) {
+            for (Map.Entry<String, byte[]> file : entry.getValue().entrySet()) {
+               addToConfigs(configs, entry.getKey(), file.getKey(), file.getValue());
+            }
+         }
+      }
+      if (configs.size() == 0) {
+         write("<li>Configuration file: " + setup.file + "</li>\n");
+      } else if (configs.size() == 1) {
+         write("<li>Configuration file: ");
+         writeConfig(report.getCluster(), setup, configs.iterator().next(), false);
+         write("</li>\n");
+      } else {
+         write("<li>Configuration files: <ul>\n");
+         for (OriginalConfig config : configs) {
+            if (config.filename.equals(setup.file)) {
+               write("<li>");
+               writeConfig(report.getCluster(), setup, config, config.slaves.size() != slaves.size());
+               write("</li\n>");
+            }
+         }
+         for (OriginalConfig config : configs) {
+            if (!config.filename.equals(setup.file)) {
+               write("<li>");
+               writeConfig(report.getCluster(), setup, config, config.slaves.size() != slaves.size());
+               write("</li\n>");
+            }
+         }
+         write("</ul>");
+      }
+      Set<String> normalized = new HashSet<>();
+      for (Map.Entry<Integer, Map<String, Properties>> entry : report.getNormalizedServiceConfigs().entrySet()) {
+         if (slaves.contains(entry.getKey())) {
+            normalized.addAll(entry.getValue().keySet());
+         }
+      }
+      write("<li>Normalized configurations: <ul>\n");
+      for (String config : normalized) {
+         write(String.format("<li><a href=\"%s\">%s</a></li>",
+               NormalizedConfigDocument.getFilename(
+                     report.getConfiguration().name, setup.group, report.getCluster(), config), config));
+      }
+      write("</ul></li>");
+   }
+
+   private void writeConfig(Cluster cluster, Configuration.Setup setup, OriginalConfig config, boolean writeSlaves) {
+      String configFile = String.format("original_%s_%s_%d_%s",
+            setup.getConfiguration().name, setup.group, cluster.getClusterIndex(), config.filename);
+      FileOutputStream contentWriter = null;
+      boolean written = false;
+      try {
+         contentWriter = new FileOutputStream(directory + File.separator + configFile);
+         try {
+            contentWriter.write(config.content);
+         } catch (IOException e) {
+            log.error("Failed to write " + configFile, e);
+         } finally {
+            try {
+               contentWriter.close();
+               written = true;
+            } catch (IOException e) {
+               log.error("Failed to close", e);
+            }
+         }
+      } catch (FileNotFoundException e) {
+         log.error("Failed to open " + configFile, e);
+      }
+      if (written) {
+         write(String.format("<a href=\"%s\">%s</a>", configFile, config.filename));
+      } else {
+         write(config.filename);
+      }
+      if (writeSlaves) {
+         write("(slaves ");
+         boolean first = true;
+         for (int slave : config.slaves) {
+            write(String.valueOf(slave));
+            if (!first) {
+               write(", ");
+            }
+            first = false;
+         }
+         write(")");
+      }
+
+   }
+
+   private void addToConfigs(Set<OriginalConfig> configs, int slave, String filename, byte[] content) {
+      boolean found = false;
+      for (OriginalConfig config : configs) {
+         if (config.filename.equals(filename) && Arrays.equals(config.content, content)) {
+            config.slaves.add(slave);
+            found = true;
+            break;
+         }
+      }
+      if (!found) {
+         configs.add(new OriginalConfig(slave, filename, content));
+      }
    }
 
    public void writeScenario(Scenario scenario) {
