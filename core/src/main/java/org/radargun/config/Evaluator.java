@@ -241,6 +241,27 @@ public class Evaluator {
       }
    }
 
+   private static String power(String first, String second) {
+      try {
+         int base = Integer.parseInt(first);
+         int power = Integer.parseInt(second);
+         int value = 1;
+         if (power < 0) {
+            return String.valueOf(Math.pow(base, power));
+         }
+         for (int i = power; i > 0; --i) {
+            value *= base;
+         }
+         return String.valueOf(value);
+      } catch (NumberFormatException e) {
+         try {
+            return String.valueOf(Math.pow(Double.parseDouble(first), Double.parseDouble(second)));
+         } catch (NumberFormatException e2) {
+            throw new IllegalArgumentException(first + "^" + second);
+         }
+      }
+   }
+
    private static interface TwoArgFunctor {
       String exec(String first, String second);
    }
@@ -278,6 +299,12 @@ public class Evaluator {
          @Override
          public String exec(String first, String second) {
             return modulo(first, second);
+         }
+      }),
+      POWER("^", 300, false, new TwoArgFunctor() {
+         @Override
+         public String exec(String first, String second) {
+            return power(first, second);
          }
       }),
       RANGE("..", 50, false, new TwoArgFunctor() {
