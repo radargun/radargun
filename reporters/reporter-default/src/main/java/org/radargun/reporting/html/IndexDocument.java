@@ -118,14 +118,14 @@ public class IndexDocument extends HtmlDocument {
             if (config.filename.equals(setup.file)) {
                write("<li>");
                writeConfig(report.getCluster(), setup, config, config.slaves.size() != slaves.size());
-               write("</li\n>");
+               write("</li>\n");
             }
          }
          for (OriginalConfig config : configs) {
             if (!config.filename.equals(setup.file)) {
                write("<li>");
                writeConfig(report.getCluster(), setup, config, config.slaves.size() != slaves.size());
-               write("</li\n>");
+               write("</li>\n");
             }
          }
          write("</ul>");
