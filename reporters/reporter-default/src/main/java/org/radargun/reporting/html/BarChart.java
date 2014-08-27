@@ -11,9 +11,14 @@ import org.jfree.chart.renderer.category.StatisticalBarRenderer;
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class BarChart extends ComparisonChart {
+
+   public BarChart(String domainLabel, String rangeLabel) {
+      super(domainLabel, rangeLabel);
+   }
+
    @Override
    protected JFreeChart createChart() {
-      JFreeChart chart = ChartFactory.createBarChart(null, "Cluster size", "Response time (ms)",
+      JFreeChart chart = ChartFactory.createBarChart(null, domainLabel, rangeLabel,
             categorySet, PlotOrientation.VERTICAL, true, false, false);
       chart.getCategoryPlot().setRenderer(new StatisticalBarRenderer());
       return chart;

@@ -12,15 +12,13 @@ import org.jfree.chart.renderer.category.StatisticalLineAndShapeRenderer;
  */
 public class LineChart extends ComparisonChart {
 
-   private final String domainLabel;
-
-   public LineChart(String domainLabel) {
-      this.domainLabel = domainLabel;
+   public LineChart(String domainLabel, String rangeLabel) {
+      super(domainLabel, rangeLabel);
    }
 
    @Override
    protected JFreeChart createChart() {
-      JFreeChart chart = ChartFactory.createLineChart(null, domainLabel, "Response time (ms)",
+      JFreeChart chart = ChartFactory.createLineChart(null, domainLabel, rangeLabel,
             categorySet, PlotOrientation.VERTICAL, true, false, false);
       chart.getCategoryPlot().setRenderer(new StatisticalLineAndShapeRenderer());
       return chart;

@@ -25,6 +25,9 @@ public class HtmlReporter implements Reporter {
    @Property(doc = "Directory to put the reports. Default is results/html.")
    private String targetDir = "results" + File.separator + "html";
 
+   @Property(doc = "Generate separate charts for different cluster sizes. Default is false.")
+   private boolean separateClusterCharts = false;
+
    @PropertyDelegate(prefix = "timeline.chart.")
    private TimelineDocument.Configuration timelineConfig = new TimelineDocument.Configuration();
 
@@ -74,7 +77,7 @@ public class HtmlReporter implements Reporter {
          }
       }
       for (Map.Entry<String, List<Report.Test>> entry : tests.entrySet()) {
-         TestReportDocument testReport = new TestReportDocument(targetDir, entry.getKey(), entry.getValue());
+         TestReportDocument testReport = new TestReportDocument(targetDir, entry.getKey(), entry.getValue(), separateClusterCharts);
          try {
             testReport.open();
             testReport.writeTest();

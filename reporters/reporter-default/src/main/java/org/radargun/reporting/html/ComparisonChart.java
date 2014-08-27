@@ -6,20 +6,28 @@ import java.io.IOException;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
-import org.radargun.stats.representation.MeanAndDev;
 
 /**
- * Wraps JFree charts for use in reports.
+ * Wraps JFree charts for use in reports. Currently, 2 types of statistics are
+ * displayed in form of a chart - throughput (ops/sec) and mean/standard deviation.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class ComparisonChart {
-   public int width;
-   public int height;
+   private int width;
+   private int height;
+   protected final String domainLabel;
+   protected final String rangeLabel;
+
    protected DefaultStatisticalCategoryDataset categorySet = new DefaultStatisticalCategoryDataset();
 
-   public void add(String category, Integer clusterSize, MeanAndDev meanAndDev) {
-      categorySet.add(meanAndDev.mean / 1000000, meanAndDev.dev / 1000000, category, clusterSize);
+   public ComparisonChart(String domainLabel, String rangeLabel) {
+      this.domainLabel = domainLabel;
+      this.rangeLabel = rangeLabel;
+   }
+
+   public void addValue(double value, double deviation, Comparable rowKey, Comparable columnKey) {
+      categorySet.add(value, deviation, rowKey, columnKey);
    }
 
    public void save(String filename) throws IOException {
@@ -28,4 +36,12 @@ public abstract class ComparisonChart {
    }
 
    protected abstract JFreeChart createChart();
+
+   public void setWidth(int width) {
+      this.width = width;
+   }
+
+   public void setHeight(int height) {
+      this.height = height;
+   }
 }
