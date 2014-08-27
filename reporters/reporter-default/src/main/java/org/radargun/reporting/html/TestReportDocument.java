@@ -3,6 +3,7 @@ package org.radargun.reporting.html;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,20 +31,27 @@ import org.radargun.stats.representation.Throughput;
 public class TestReportDocument extends HtmlDocument {
    private final static Log log = LogFactory.getLog(TestReportDocument.class);
 
+   private int maxIterations = 0;
+   private int elementCounter = 0;
+   private boolean separateClusterCharts;
+
    private final List<Report.Test> tests;
    private final String testName;
    private Map<Report, List<Aggregation>> aggregated = new TreeMap<Report, List<Aggregation>>();
-   private int maxIterations = 0;
+   private Map<Integer, Map<Report, List<Aggregation>>> aggregatedByConfigs = new TreeMap<>();
+   private Map<String, Map<Report, List<Report.TestResult>>> results = new TreeMap<String, Map<Report, List<Report.TestResult>>>();
    private Set<String> operations = new TreeSet<String>();
    private Set<Cluster> clusters = new TreeSet<Cluster>();
-   private Map<String, Map<Report, List<Report.TestResult>>> results = new TreeMap<String, Map<Report, List<Report.TestResult>>>();
 
-   private int elementCounter = 0;
-
-   public TestReportDocument(String targetDir, String testName, List<Report.Test> tests) {
+   public TestReportDocument(String targetDir, String testName, List<Report.Test> tests, boolean separateClusterCharts) {
       super(targetDir, String.format("test_%s.html", testName), "Test " + testName);
       this.tests = tests;
       this.testName = testName;
+      this.separateClusterCharts = separateClusterCharts;
+      initAggregations();
+   }
+
+   private void initAggregations() {
       for (Report.Test test : tests) {
          List<Aggregation> iterations = new ArrayList<Aggregation>();
          for (Report.TestIteration it : test.getIterations()) {
@@ -106,6 +114,13 @@ public class TestReportDocument extends HtmlDocument {
             }
          }
          aggregated.put(test.getReport(), iterations);
+         int clusterSize = test.getReport().getCluster().getSize();
+         Map<Report, List<Aggregation>> reportAggregationMap = aggregatedByConfigs.get(clusterSize);
+         if (reportAggregationMap == null) {
+            reportAggregationMap = new HashMap<>();
+         }
+         reportAggregationMap.put(test.getReport(), iterations);
+         aggregatedByConfigs.put(clusterSize, reportAggregationMap);
          maxIterations = Math.max(maxIterations, iterations.size());
          clusters.add(test.getReport().getCluster());
       }
@@ -126,11 +141,26 @@ public class TestReportDocument extends HtmlDocument {
       }
       for (String operation : operations) {
          writeTag("h2", operation);
-         createChart(String.format("%s%s%s_%s.png", directory, File.separator, testName, operation), operation);
-         write(String.format("<div style=\"text-align: left; display: inline-block;\"><div style=\"display: table; text-align: center\">" +
-               "<img src=\"%s_%s.png\" alt=\"%s\"/></div></div>\n", testName, operation, operation));
-         writeOperation(operation);
+         if (separateClusterCharts) {
+            for (Map.Entry<Integer, Map<Report, List<Aggregation>>> entry : aggregatedByConfigs.entrySet()) {
+               createAndWriteCharts(operation, entry.getValue(), "_" + entry.getKey());
+            }
+         } else {
+            createAndWriteCharts(operation, aggregated, "");
+         }
       }
+   }
+
+   private void createAndWriteCharts(String operation, Map<Report, List<Aggregation>> reportAggregationMap, String clusterSize) throws IOException {
+      createChart(String.format("%s%s%s_%s%s_mean_dev.png", directory, File.separator, testName, operation, clusterSize),
+            operation, "Response time (ms)", StatisticType.MEAN_AND_DEV, reportAggregationMap);
+      createChart(String.format("%s%s%s_%s%s_throughput.png", directory, File.separator, testName, operation, clusterSize),
+            operation,  "Operations/sec", StatisticType.ACTUAL_THROUGHPUT, reportAggregationMap);
+      write("<table><tr>");
+      write(String.format("<td style=\"border: 0px;\"><img src=\"%s_%s%s_mean_dev.png\" alt=\"%s\"/></div></div></td>\n", testName, operation, clusterSize, operation));
+      write(String.format("<td style=\"border: 0px;\"><img src=\"%s_%s%s_throughput.png\" alt=\"%s\"/></div></div>\n", testName, operation, clusterSize, operation));
+      write("</tr></table>");
+      writeOperation(operation, reportAggregationMap);
    }
 
    private void writeResult(Map<Report, List<Report.TestResult>> results) {
@@ -179,38 +209,47 @@ public class TestReportDocument extends HtmlDocument {
       writeTD(value, rowStyle + "border-left-color: black; border-left-width: 2px;");
    }
 
-   private void createChart(String filename, String operation) throws IOException {
+   private void createChart(String filename, String operation, String rangeAxisLabel, StatisticType statisticType, Map<Report, List<Aggregation>> reportAggregationMap) throws IOException {
       ComparisonChart chart;
-      boolean xLabelClusterSize = clusters.size() > 1 || maxIterations <= 1;
-      if (clusters.size() > 1 || maxIterations > 1) {
-         chart = new LineChart(xLabelClusterSize ? "Cluster size" : "Iteration");
+      boolean xLabelClusterSize = !separateClusterCharts && (clusters.size() > 1 || maxIterations <= 1);
+      if ((clusters.size() > 1 && !separateClusterCharts) || maxIterations > 1) {
+         chart = new LineChart(xLabelClusterSize ? "Cluster size" : "Iteration", rangeAxisLabel);
       } else {
-         chart = new BarChart();
+         chart = new BarChart("Cluster size", rangeAxisLabel);
       }
-      for (Map.Entry<Report, List<Aggregation>> entry : aggregated.entrySet()) {
+      for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
          int iteration = 0;
          for (Aggregation aggregation : entry.getValue()) {
             try {
                String categoryName = entry.getKey().getConfiguration().name;
-               if (clusters.size() > 1) categoryName = String.format("%s_%s", categoryName, iteration);
-
+               if (!separateClusterCharts && clusters.size() > 1) categoryName = String.format("%s_%s", categoryName, iteration);
                OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
                if (operationStats == null) continue;
-               MeanAndDev meanAndDev = operationStats.getRepresentation(MeanAndDev.class);
-               if (meanAndDev == null) continue;
-
-               chart.add(categoryName, xLabelClusterSize ? aggregation.nodeStats.size() : iteration, meanAndDev);
+               switch (statisticType) {
+                  case MEAN_AND_DEV: {
+                     MeanAndDev meanAndDev = operationStats.getRepresentation(MeanAndDev.class);
+                     if (meanAndDev == null) continue;
+                     chart.addValue(meanAndDev.mean / 1000000, meanAndDev.dev / 1000000, categoryName, xLabelClusterSize ? aggregation.nodeStats.size() : iteration);
+                     break;
+                  }
+                  case ACTUAL_THROUGHPUT: {
+                     DefaultOutcome defaultOutcome = operationStats.getRepresentation(DefaultOutcome.class);
+                     if (defaultOutcome == null) continue;
+                     Throughput throughput = defaultOutcome.toThroughput(aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
+                     chart.addValue(throughput.actual / 1000000, 0, categoryName, xLabelClusterSize ? aggregation.nodeStats.size() : iteration);
+                  }
+               }
             } finally {
                ++iteration;
             }
          }
       }
-      chart.width = Math.min(Math.max(tests.size(), maxIterations) * 100 + 200, 1800);
-      chart.height = Math.min(tests.size() * 100 + 200, 800);
+      chart.setWidth(Math.min(Math.max(tests.size(), maxIterations) * 100 + 200, 1800));
+      chart.setHeight(Math.min(tests.size() * 100 + 200, 800));
       chart.save(filename);
    }
 
-   private void writeOperation(String operation) {
+   private void writeOperation(String operation, Map<Report, List<Aggregation>> reportAggregationMap) {
       write("<table>\n");
       if (maxIterations > 1) {
          write("<tr><th colspan=\"2\">&nbsp;</th>");
@@ -226,7 +265,7 @@ public class TestReportDocument extends HtmlDocument {
          write("<th>mean</td><th>std.dev</th><th>theoretical&nbsp;TP</th><th>actual&nbsp;TP</th>\n");
       }
       write("</tr>\n");
-      for (Map.Entry<Report, List<Aggregation>> entry : aggregated.entrySet()) {
+      for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
          Report report = entry.getKey();
 
          int nodeCount = entry.getValue().isEmpty() ? 0 : entry.getValue().get(0).nodeStats.size();
@@ -346,4 +385,7 @@ public class TestReportDocument extends HtmlDocument {
       }
    }
 
+   private static enum StatisticType {
+      MEAN_AND_DEV, ACTUAL_THROUGHPUT
+   }
 }
