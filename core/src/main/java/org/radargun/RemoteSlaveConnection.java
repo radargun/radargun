@@ -86,8 +86,13 @@ public class RemoteSlaveConnection implements SlaveConnection {
                      break;
                   }
                }
-            } else if (slaveIndex >= slaves.length || slaves[slaveIndex] != null) {
-               throw new IllegalArgumentException("Slave requests invalid slaveIndex " + slaveIndex);
+            } else if (slaveIndex >= slaves.length) {
+               throw new IllegalArgumentException("Slave requests invalid slaveIndex "
+                     + slaveIndex + " (expected " + slaves.length + " slaves)");
+
+            } else if (slaves[slaveIndex] != null) {
+               throw new IllegalArgumentException("Slave requests slaveIndex " + slaveIndex
+                     + " but this was already assigned to " + slaves[slaveIndex].getRemoteAddress());
             }
             writeInt(socketChannel, slaveIndex);
             writeInt(socketChannel, slaves.length);
