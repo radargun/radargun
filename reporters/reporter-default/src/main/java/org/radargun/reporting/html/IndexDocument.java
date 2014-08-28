@@ -241,13 +241,9 @@ public class IndexDocument extends HtmlDocument {
    protected void writeTimelines(Collection<Report> reports) {
       writeTag("h2", "Timelines");
       write("<ul>\n");
-      Map<String, Integer> clusterIndices = new HashMap<String, Integer>();
       for (Report report : reports) {
-         Integer clusterIndex = clusterIndices.get(report.getConfiguration().name);
-         if (clusterIndex == null) clusterIndex = 0;
-         clusterIndices.put(report.getConfiguration().name, clusterIndex + 1);
          write(String.format("<li><a href=\"timeline_%s_%d.html\">%s on %s</a></li>",
-               report.getConfiguration().name, clusterIndex, report.getConfiguration().name, report.getCluster()));
+            report.getConfiguration().name, report.getCluster().getClusterIndex(), report.getConfiguration().name, report.getCluster()));
       }
       write("\n</ul>");
    }
