@@ -100,7 +100,7 @@ public class IndexDocument extends HtmlDocument {
       Set<Integer> slaves = report.getCluster().getSlaves(setup.group);
       Set<OriginalConfig> configs = new HashSet<>();
       for (Map.Entry<Integer, Map<String, byte[]>> entry : report.getOriginalServiceConfig().entrySet()) {
-         if (slaves.contains(entry.getKey())) {
+         if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
             for (Map.Entry<String, byte[]> file : entry.getValue().entrySet()) {
                addToConfigs(configs, entry.getKey(), file.getKey(), file.getValue());
             }
@@ -132,7 +132,7 @@ public class IndexDocument extends HtmlDocument {
       }
       Set<String> normalized = new HashSet<>();
       for (Map.Entry<Integer, Map<String, Properties>> entry : report.getNormalizedServiceConfigs().entrySet()) {
-         if (slaves.contains(entry.getKey())) {
+         if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
             normalized.addAll(entry.getValue().keySet());
          }
       }

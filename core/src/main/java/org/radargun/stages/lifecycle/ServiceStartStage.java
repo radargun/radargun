@@ -1,5 +1,6 @@
 package org.radargun.stages.lifecycle;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -79,7 +80,7 @@ public class ServiceStartStage extends AbstractServiceStartStage {
       if (configurationProvider != null && dumpConfig) {
          return new ServiceStartAck(slaveState, configurationProvider.getNormalizedConfigs(), configurationProvider.getOriginalConfigs());
       } else {
-         return new ServiceStartAck(slaveState, null, null);
+         return new ServiceStartAck(slaveState, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
       }
    }
 

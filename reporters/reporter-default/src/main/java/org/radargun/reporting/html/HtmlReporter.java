@@ -93,7 +93,7 @@ public class HtmlReporter implements Reporter {
             Set<Integer> slaves = report.getCluster().getSlaves(setup.group);
             Set<String> normalized = new HashSet<>();
             for (Map.Entry<Integer, Map<String, Properties>> entry : report.getNormalizedServiceConfigs().entrySet()) {
-               if (slaves.contains(entry.getKey())) {
+               if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
                   normalized.addAll(entry.getValue().keySet());
                }
             }
