@@ -2,7 +2,9 @@ package org.radargun.sysmonitor;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -41,7 +43,13 @@ public class LocalJmxMonitor implements ServiceListener {
    }
 
    public synchronized void startMonitoringLocal() {
-      exec = Executors.newScheduledThreadPool(1);
+      exec = Executors.newScheduledThreadPool(1, new ThreadFactory() {
+         AtomicInteger counter = new AtomicInteger();
+         @Override
+         public Thread newThread(Runnable r) {
+            return new Thread(r, "JmxMonitor" + counter.getAndIncrement());
+         }
+      });
       log.info("Gathering statistics every " + frequency + " " + timeUnit.name());
       try {
          cpuMonitor = new CpuUsageMonitor(slaveState.getTimeline());
@@ -70,6 +78,11 @@ public class LocalJmxMonitor implements ServiceListener {
          netOutMonitor.stop();
       }
       exec.shutdownNow();
+      try {
+         exec.awaitTermination(2 * frequency, timeUnit);
+      } catch (InterruptedException e) {
+         log.error("Failed to terminate local monitoring.");
+      }
       this.exec = null;
 
    }
