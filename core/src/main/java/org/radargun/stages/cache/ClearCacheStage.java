@@ -58,7 +58,7 @@ public class ClearCacheStage extends AbstractDistStage {
       }
       for (int i = 0; i < 5; i++) {
          try {
-            log.info(Utils.printMemoryFootprint(true));
+            log.info("Before executing clear, memory looks like this: \n" + Utils.getMemoryInfo());
             if (shouldExecute()) {
                DistStageAck response = executeClear();
                if (response != null) return response;
@@ -83,7 +83,7 @@ public class ClearCacheStage extends AbstractDistStage {
             log.warn("Failed to clear cache(s)", e);
          } finally {
             System.gc();
-            log.info(Utils.printMemoryFootprint(false));
+            log.info( "After executing clear, memory looks like this: \n" + Utils.getMemoryInfo());
          }
       }
       return errorResponse("Failed to clear the cache.", null);

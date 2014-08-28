@@ -2,8 +2,11 @@ package org.radargun.utils;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryUsage;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -56,26 +59,24 @@ public class Utils {
       return getMillisDurationString(nanos / 1000000);
    }
 
-   public static String fileName2Config(String fileName) {
-      int index = fileName.indexOf('.');
-      if (index > 0) {
-         fileName = fileName.substring(0, index);
-         index = fileName.indexOf(File.separator);
-         if (index > 0) {
-            fileName = fileName.substring(fileName.lastIndexOf(File.separator) + 1);
-         }
-      }
-      return fileName;
-   }
-
-   public static String printMemoryFootprint(boolean before) {
+   public static String getMemoryInfo() {
       Runtime run = Runtime.getRuntime();
-      String memoryInfo = "Memory - free: " + kbString(run.freeMemory()) + " - max:" + kbString(run.maxMemory()) + "- total:" + kbString(run.totalMemory());
-      if (before) {
-         return "Before executing clear, memory looks like this: " + memoryInfo;
-      } else {
-         return "After executing cleanup, memory looks like this: " + memoryInfo;
+      StringBuilder memoryInfo = new StringBuilder();
+      memoryInfo.append("Runtime free: ").append(kbString(run.freeMemory()))
+            .append("\nRuntime max:").append(kbString(run.maxMemory()))
+            .append("\nRuntime total:").append(kbString(run.totalMemory()));
+      Iterator<MemoryPoolMXBean> iter = ManagementFactory.getMemoryPoolMXBeans().iterator();
+      while (iter.hasNext())
+      {
+         MemoryPoolMXBean item = iter.next();
+         MemoryUsage usage = item.getUsage();
+         memoryInfo.append("\nMX ").append(item.getName()).append("(").append(item.getType()).append("): ")
+               .append("used: ").append(kbString(usage.getUsed()))
+               .append(", init: ").append(kbString(usage.getInit()))
+               .append(", committed: ").append(kbString(usage.getCommitted()))
+               .append(", max: ").append(kbString(usage.getMax()));
       }
+      return memoryInfo.toString();
    }
 
    private static String format(long bytes) {
@@ -544,5 +545,20 @@ public class Utils {
       }
 
       return lines;
+   }
+
+   public static void setField(Class<?> clazz, String fieldName, Object instance, Object value) {
+      try {
+         Field field = clazz.getDeclaredField(fieldName);
+         field.setAccessible(true);
+         if (Modifier.isFinal(field.getModifiers())) {
+            Field modifiers = Field.class.getDeclaredField("modifiers");
+            modifiers.setAccessible(true);
+            modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+         }
+         field.set(instance, value);
+      } catch (Exception e) {
+         log.error("Failed to set " + clazz.getName() + "." + fieldName + " to value", e);
+      }
    }
 }

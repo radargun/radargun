@@ -24,6 +24,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.radargun.Stage;
 import org.radargun.stages.ScenarioCleanupStage;
+import org.radargun.stages.ScenarioDestroyStage;
 import org.radargun.stages.ScenarioInitStage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -190,6 +191,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       addAttribute(doc, repeatType, ATTR_NAME, false);
       generateStageDefinitions(doc, schema, new Element[]{scenarioChoice, repeatChoice});
 
+      createReference(doc, benchmarkSequence, ELEMENT_DESTROY, RG_PREFIX + class2xmlId(ScenarioDestroyStage.class), 0, 1);
       createReference(doc, benchmarkSequence, ELEMENT_CLEANUP, RG_PREFIX + class2xmlId(ScenarioCleanupStage.class), 0, 1);
 
       Element reportsComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_REPORTS, 1, 1);

@@ -11,6 +11,7 @@ import org.radargun.Properties;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.ScenarioCleanupStage;
+import org.radargun.stages.ScenarioDestroyStage;
 import org.radargun.stages.ScenarioInitStage;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Comment;
@@ -70,14 +71,22 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
       parseScenario(scenario, (Element) childNodes.item(index));
       masterConfig.setScenario(scenario);
-
       index = nextElement(childNodes, index + 1);
+
+      Map<String, Definition> destroyProperties = Collections.EMPTY_MAP;
+      if (ELEMENT_DESTROY.equals(childNodes.item(index).getNodeName())) {
+         destroyProperties = parseProperties((Element) childNodes.item(index));
+         index = nextElement(childNodes, index + 1);
+      }
+      scenario.addStage(ScenarioDestroyStage.class, destroyProperties, Collections.EMPTY_MAP);
+
       Map<String, Definition> cleanupProperties = Collections.EMPTY_MAP;
       if (ELEMENT_CLEANUP.equals(childNodes.item(index).getNodeName())) {
          cleanupProperties = parseProperties((Element) childNodes.item(index));
          index = nextElement(childNodes, index + 1);
       }
       scenario.addStage(ScenarioCleanupStage.class, cleanupProperties, Collections.EMPTY_MAP);
+
       parseReporting(masterConfig, (Element) childNodes.item(index));
 
       return masterConfig;
