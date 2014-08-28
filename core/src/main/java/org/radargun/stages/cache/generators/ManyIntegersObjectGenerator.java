@@ -34,7 +34,7 @@ public class ManyIntegersObjectGenerator implements ValueGenerator {
 
    @Init
    public void init() {
-      if (max > min) throw new IllegalArgumentException(String.format("min (%d) must be <= max (%d)", min, max));
+      if (max < min) throw new IllegalArgumentException(String.format("min (%d) must be <= max (%d)", min, max));
       try {
          clazz = Thread.currentThread().getContextClassLoader().loadClass(this.clazzName);
          Class<?>[] params = new Class<?>[numInts];
