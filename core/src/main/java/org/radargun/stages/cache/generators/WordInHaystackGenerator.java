@@ -27,10 +27,14 @@ public class WordInHaystackGenerator extends TextObjectGenerator {
    @Override
    public Object generateValue(Object key, int size, Random random) {
       String word = dictionary[random.nextInt(dictionary.length)];
-      int position = random.nextInt(size - word.length());
       StringBuilder sb = new StringBuilder(size);
-      for (int i = position; i > 0; --i) sb.append(ALPHABET[random.nextInt(ALPHABET.length)]);
-      sb.append(word);
+      if (word.length() < size) {
+         int position = random.nextInt(size - word.length());
+         for (int i = position; i > 0; --i) sb.append(ALPHABET[random.nextInt(ALPHABET.length)]);
+      }
+      if (word.length() <= size) {
+         sb.append(word);
+      }
       while (sb.length() < size) sb.append(ALPHABET[random.nextInt(ALPHABET.length)]);
       return newInstance(sb.toString());
    }
