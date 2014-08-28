@@ -1,8 +1,10 @@
 package org.radargun;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.net.InetAddress;
 
+import org.radargun.logging.LogFactory;
 import org.radargun.state.SlaveState;
 
 /**
@@ -65,13 +67,24 @@ public class DistStageAck implements Serializable {
 
    @Override
    public String toString() {
-      return "DistStageAck{" +
-            "slaveIndex=" + slaveIndex +
-            ", slaveAddress=" + slaveAddress +
-            ", isError=" + isError +
-            ", errorMessage='" + errorMessage + '\'' +
-            ", remoteExceptionString=" + remoteExceptionString +
-            '}';
+      StringBuilder sb = new StringBuilder();
+      Class<?> clazz = getClass();
+      sb.append(clazz.getSimpleName()).append('{');
+      while (clazz != Object.class && clazz != null) {
+         for (Field f : clazz.getDeclaredFields()) {
+            sb.append(f.getName()).append('=');
+            try {
+               f.setAccessible(true);
+               sb.append(String.valueOf(f.get(this)));
+            } catch (IllegalAccessException e) {
+               LogFactory.getLog(clazz).warn("Failed to retrieve " + clazz.getName() + "." + f.getName(), e);
+               sb.append("<unknown>");
+            }
+            sb.append(", ");
+         }
+         clazz = clazz.getSuperclass();
+      }
+      return sb.append('}').toString();
    }
 
    public void setDuration(long duration) {
