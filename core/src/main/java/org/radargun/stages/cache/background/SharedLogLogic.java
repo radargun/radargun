@@ -22,7 +22,7 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
    SharedLogLogic(BackgroundOpsManager manager, long threadId, long numEntries) {
       super(manager, threadId);
       nonTxConditionalCache = manager.getConditionalCache();
-      if (transactionSize > 0) {
+      if (transactionSize <= 0) {
          conditionalCache = nonTxConditionalCache;
       }
       this.numEntries = numEntries;

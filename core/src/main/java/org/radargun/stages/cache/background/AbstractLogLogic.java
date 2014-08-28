@@ -52,7 +52,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
    public AbstractLogLogic(BackgroundOpsManager manager, long stressorId) {
       super(manager);
       this.nonTxBasicCache = manager.getBasicCache();
-      if (transactionSize > 0) {
+      if (transactionSize <= 0) {
          basicCache = nonTxBasicCache;
       }
 
