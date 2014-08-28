@@ -1,16 +1,21 @@
 package org.radargun.stages;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.radargun.DistStage;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.lifecycle.LifecycleHelper;
+import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.Projections;
+import org.radargun.utils.TimeConverter;
 import org.radargun.utils.Utils;
 
 /**
@@ -19,119 +24,198 @@ import org.radargun.utils.Utils;
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is automatically inserted after the last stage in each scenario. You can alter the properties in &lt;cleanup/&gt element.")
-public class ScenarioCleanupStage extends AbstractDistStage {
+public final class ScenarioCleanupStage extends AbstractStage implements DistStage {
 
    @Property(doc = "Specifies whether the check for amount of free memory should be performed. Default is true.", deprecatedName = "checkMemoryReleased")
    private boolean checkMemory = true;
 
-   @Property(doc = "If the free memory after wrapper destroy and System.gc() is below percentage specified in this property the benchmark will stop. Default is 95.")
-   private byte memoryThreshold = 95;
+   @Property(doc = "If the available (free) memory after service destroy and System.gc() is below percentage specified in this property the benchmark will fail. Default is 95.")
+   private int memoryThreshold = 95;
 
-   @Property(doc = "Directory where the heap dump will be produced if the memory threshold is hit. By default the dump will not be produced.")
+   @Property(doc = "Timeout for releasing memory through garbage collections. Default is 30 seconds.", converter = TimeConverter.class)
+   private long memoryReleaseTimeout = 30000;
+
+   @Property(doc = "Directory where the heap dump will be produced if the memory threshold is hit " +
+         "or some threads have not finished. By default the dump will not be produced.")
    private String heapDumpDir = null;
 
    @Property(doc = "Specifies whether the check for unfinished threads should be performed. Default is true.")
    private boolean checkThreads = true;
 
+   @Property(doc = "Calls Thread.stop() on threads that have not finished. Works only if checkThreads=true. Default is true.")
+   private boolean stopUnfinishedThreads = true;
+
+   @Property(doc = "Timeout for stopped threads to join. Default is 10 seconds.", converter = TimeConverter.class)
+   private long stopTimeout = 10000;
+
+   private SlaveState slaveState;
+
+   @Override
+   public void initOnMaster(MasterState masterState) {
+      // not needed
+   }
+
+   @Override
+   public void initOnSlave(SlaveState slaveState) {
+      this.slaveState = slaveState;
+   }
+
    public DistStageAck executeOnSlave() {
-      log.info("Scenario finished, running cleanup...");
       try {
-         if (lifecycle != null && lifecycle.isRunning()) {
-            LifecycleHelper.stop(slaveState, true, false);
-            log.info("Service successfully stopped.");
-         } else {
-            log.info("No service deployed on this slave, nothing to do.");
+         int unfinishedThreads = 0;
+         if (checkThreads) {
+            Set<Thread> unfinished = getUnfinishedThreads();
+            unfinishedThreads = unfinished.size();
+            if (unfinishedThreads > 0) {
+               logUnfinished(unfinished);
+               if (stopUnfinishedThreads) {
+                  stopUnfinished(unfinished);
+               }
+            }
          }
-      } catch (Exception e) {
-         return errorResponse("Problems shutting down the slave", e);
+
+         boolean memoryCheckResult = true;
+         if (checkMemory) {
+            memoryCheckResult = checkMemoryReleased();
+         } else {
+            System.gc();
+         }
+
+         if ((unfinishedThreads > 0 || !memoryCheckResult) && heapDumpDir != null) {
+            try {
+               File heapDumpFile = new File(heapDumpDir, slaveState.getConfigName() + "." + slaveState.getSlaveIndex()
+                     + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".bin");
+               log.info("Dumping heap into " + heapDumpFile.getAbsolutePath());
+               Utils.dumpHeap(heapDumpFile.getAbsolutePath());
+               log.info("Successfully written heap dump.");
+            } catch (Exception e) {
+               log.error("Cannot write heap dump!", e);
+            }
+         }
+
+         Runtime runtime = Runtime.getRuntime();
+         long availableMemory = runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory();
+         return new CleanupAck(slaveState, memoryCheckResult, (Long) slaveState.get(ScenarioInitStage.INITIAL_FREE_MEMORY), availableMemory, unfinishedThreads);
       } finally {
-         //reset the class loader to SystemClassLoader
-         Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
-         slaveState.resetClassLoader();
+         log.info("Memory after cleanup: \n" + Utils.getMemoryInfo());
       }
-
-      log.info(Utils.printMemoryFootprint(true));
-      if (checkMemory) {
-         checkMemoryReleased();
-      } else {
-         System.gc();
-      }
-      log.info(Utils.printMemoryFootprint(false));
-
-      int unfinishedThreads = 0;
-      if (checkThreads) {
-         unfinishedThreads = checkThreadsFinished();
-      }
-      return new CleanupAck(slaveState, (Long) slaveState.get(ScenarioInitStage.INITIAL_FREE_MEMORY), Runtime.getRuntime().freeMemory(), unfinishedThreads);
    }
 
    @Override
    public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) return false;
       boolean result = true;
       for (CleanupAck ack : Projections.instancesOf(acks, CleanupAck.class)) {
-         log.info(String.format("Node %d has changed free memory from %d MB to %d MB and has %d unfinished threads",
-               ack.getSlaveIndex(), ack.initialFreeMemory / 1048576, ack.finalFreeMemory / 1048576, ack.unfinishedThreads));
-         result = result && ack.unfinishedThreads == 0;
+         log.info(String.format("Node %d has changed available memory from %d MB to %d MB and has %d unfinished threads",
+               ack.getSlaveIndex(), ack.initialAvailableMemory / 1048576, ack.finalAvailableMemory / 1048576, ack.unfinishedThreads));
+         if (ack.isError()) {
+            log.warn("Ack contains errors: " + ack);
+         }
+         result = result && !ack.isError() && ack.memoryCheckResult && ack.unfinishedThreads == 0;
       }
       return result;
    }
 
-   private void checkMemoryReleased() {
+   @Override
+   public boolean shouldExecute() {
+      return true;
+   }
+
+   private boolean checkMemoryReleased() {
       long percentage = -1;
       long currentFreeMemory = -1;
       long initialFreeMemory = (Long) slaveState.get(ScenarioInitStage.INITIAL_FREE_MEMORY);
-      for (int i = 0; i < 30; i++) {
+      long deadline = System.currentTimeMillis() + memoryReleaseTimeout;
+      for (;;) {
          System.gc();
-         currentFreeMemory = Runtime.getRuntime().freeMemory();
+         Runtime runtime = Runtime.getRuntime();
+         currentFreeMemory = runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory();
          percentage = (currentFreeMemory * 100) / initialFreeMemory;
-         if (percentage >= memoryThreshold) break;
+         if (percentage > memoryThreshold || System.currentTimeMillis() > deadline) break;
+         log.info(String.format("Available memory: %d kB (%d%% of initial available memory - %d kB)", currentFreeMemory / 1024, percentage, initialFreeMemory / 1024));
          Utils.sleep(1000);
       }
-      log.info(String.format("Free memory: %d kb (%d%% from the initial free memory - %d kb)", currentFreeMemory / 1024, percentage, initialFreeMemory / 1024));
-      if (percentage < memoryThreshold) {
-         String msg = "Actual percentage of memory smaller than expected!";
-         log.error(msg);
-         if (heapDumpDir != null) {
-            try {
-               Utils.dumpHeap(new File(heapDumpDir, slaveState.getConfigName() + ".bin").getAbsolutePath());
-            } catch (Exception e) {
-               log.error("Cannot produce heap dump!", e);
-            }
-         }
-         throw new IllegalStateException(msg);
+      if (percentage > memoryThreshold) {
+         return true;
       }
+      log.error("Using more memory than expected!");
+      return false;
    }
 
-   private int checkThreadsFinished() {
-      Thread[] activeThreads = new Thread[Thread.activeCount() * 2];
-      int activeCount = Thread.enumerate(activeThreads);
-      Set<Thread> threads = new HashSet<>(activeCount);
-      for (int i = 0; i < activeCount; ++i) threads.add(activeThreads[i]);
-      Set<Thread> initialThreads = (Set<Thread>) slaveState.get(ScenarioInitStage.INITIAL_THREADS);
-      threads.removeAll(initialThreads);
+   private String getThreadId(Thread thread) {
+      return String.format("%s (id=%d, state=%s)", thread.getName(), thread.getId(), thread.getState());
+   }
+
+   private void logUnfinished(Collection<Thread> threads) {
       for (Thread thread : threads) {
          StringBuilder sb = new StringBuilder();
-         sb.append("Unfinished thread ").append(thread.getName()).append(" (id=")
-               .append(thread.getId()).append(", status=").append(thread.getState()).append(")");
+         sb.append("Unfinished thread " + getThreadId(thread));
          for (StackTraceElement ste : thread.getStackTrace()) {
             sb.append("\n\tat ");
             sb.append(ste.toString());
          }
          log.warn(sb.toString());
       }
-      return threads.size();
+   }
+
+   private void stopUnfinished(Collection<Thread> threads) {
+      for (Thread thread : threads) {
+         log.info("Interrupting thread " + getThreadId(thread));
+         thread.interrupt();
+      }
+      long deadline = System.currentTimeMillis() + stopTimeout/2;
+      for (Thread thread : threads) {
+         long timeout = deadline - System.currentTimeMillis();
+         if (timeout > 0) {
+            try {
+               thread.join(timeout);
+            } catch (InterruptedException e) {
+               log.warn("Interrupted when waiting for thread " + getThreadId(thread), e);
+            }
+         }
+      }
+
+      deadline += stopTimeout/2;
+      for (Thread thread : threads) {
+         if (!thread.isAlive()) continue;
+         log.info("Stopping thread " + getThreadId(thread));
+         // we can't break anything when doing the cleanup
+         thread.stop();
+      }
+      for (Thread thread : threads) {
+         // we can't break anything when doing the cleanup
+         long timeout = deadline - System.currentTimeMillis();
+         if (timeout > 0) {
+            try {
+               thread.join(timeout);
+            } catch (InterruptedException e) {
+               log.warn("Interrupted when waiting for thread " + getThreadId(thread), e);
+            }
+         }
+         log.info("Is thread " + getThreadId(thread) + ") alive? " + thread.isAlive());
+      }
+   }
+
+   private Set<Thread> getUnfinishedThreads() {
+      Thread[] activeThreads = new Thread[Thread.activeCount() * 2];
+      int activeCount = Thread.enumerate(activeThreads);
+      Set<Thread> threads = new HashSet<>(activeCount);
+      for (int i = 0; i < activeCount; ++i) threads.add(activeThreads[i]);
+      Set<Thread> initialThreads = (Set<Thread>) slaveState.get(ScenarioInitStage.INITIAL_THREADS);
+      threads.removeAll(initialThreads);
+      return threads;
    }
 
 
    private static class CleanupAck extends DistStageAck {
-      private final long initialFreeMemory, finalFreeMemory;
+      private final boolean memoryCheckResult;
+      private final long initialAvailableMemory, finalAvailableMemory;
       private final int unfinishedThreads;
 
-      private CleanupAck(SlaveState slaveState, long initialFreeMemory, long finalFreeMemory, int unfinishedThreads) {
+      private CleanupAck(SlaveState slaveState, boolean memoryCheckResult, long initialAvailableMemory, long finalAvailableMemory, int unfinishedThreads) {
          super(slaveState);
-         this.initialFreeMemory = initialFreeMemory;
-         this.finalFreeMemory = finalFreeMemory;
+         this.memoryCheckResult = memoryCheckResult;
+         this.initialAvailableMemory = initialAvailableMemory;
+         this.finalAvailableMemory = finalAvailableMemory;
          this.unfinishedThreads = unfinishedThreads;
       }
    }

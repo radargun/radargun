@@ -25,6 +25,7 @@ public abstract class AbstractStage implements org.radargun.Stage {
       return StageHelper.getStageName(getClass());
    }
 
+   @Override
    public boolean isExitOnFailure() {
       return exitOnFailure;
    }

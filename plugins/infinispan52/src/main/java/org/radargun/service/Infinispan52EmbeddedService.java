@@ -11,6 +11,7 @@ import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
+import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.util.FileLookupFactory;
 import org.radargun.Service;
 import org.radargun.config.Property;
@@ -67,6 +68,11 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
 
    protected ConfigDumpHelper createConfigDumpHelper() {
       return new ConfigDumpHelper();
+   }
+
+   @Override
+   protected String getJmxDomain() {
+      return ((DefaultCacheManager) cacheManager).getCacheManagerConfiguration().globalJmxStatistics().domain();
    }
 
    @Override

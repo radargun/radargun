@@ -31,6 +31,7 @@ public class LaunchMaster {
          Master master = new Master(masterConfig);
          master.run();
       } catch (Exception e) {
+         log.error("Master failed", e);
          e.printStackTrace();
          ShutDownHook.exit(127);
       }

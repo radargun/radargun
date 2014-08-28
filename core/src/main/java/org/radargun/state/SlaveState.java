@@ -65,7 +65,9 @@ public class SlaveState extends StateBase {
       return classLoader;
    }
 
-   public void resetClassLoader() {
+   public void reset() {
+      traits.clear();
+      serviceListeners.clear();
       classLoader = getClass().getClassLoader();
    }
 

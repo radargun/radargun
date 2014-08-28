@@ -19,7 +19,6 @@ import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
 import org.radargun.reporting.ReporterHelper;
 import org.radargun.reporting.Timeline;
-import org.radargun.stages.AbstractStage;
 import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
 
@@ -35,6 +34,8 @@ public class Master {
    private final MasterConfig masterConfig;
    private final MasterState state;
    private final ArrayList<Report> reports = new ArrayList<Report>();
+   private int returnCode;
+   private String failedStage;
 
    public Master(MasterConfig masterConfig) {
       this.masterConfig = masterConfig;
@@ -45,7 +46,6 @@ public class Master {
 
    public void run() throws Exception {
       SlaveConnection connection = null;
-      int returnCode = 0;
       try {
          if (masterConfig.isLocal()) {
             connection = new LocalSlaveConnection();
@@ -65,7 +65,6 @@ public class Master {
          }
 
          long benchmarkStart = System.currentTimeMillis();
-         String failedStage = null;
          for (Configuration configuration : masterConfig.getConfigurations()) {
             log.info("Started benchmarking configuration '" + configuration.name + "'");
             state.setConfigName(configuration.name);
@@ -77,25 +76,19 @@ public class Master {
                state.setCluster(cluster);
                state.setReport(new Report(configuration, cluster));
                long clusterStart = System.currentTimeMillis();
+               int stageCount = masterConfig.getScenario().getStageCount();
                try {
-                  int stageCount = masterConfig.getScenario().getStageCount();
-                  for (int stageId = 0; stageId < stageCount - 1; ++stageId) {
+                  // ScenarioDestroy and ScenarioCleanup are special ones, ran always
+                  for (int stageId = 0; stageId < stageCount - 2; ++stageId) {
                      if (!executeStage(connection, configuration, cluster, stageId)) {
-                        returnCode = masterConfig.getConfigurations().indexOf(configuration) + 1;
-                        AbstractStage stage = (AbstractStage) masterConfig.getScenario().getStage(stageId,
-                              getCurrentExtras(masterConfig, configuration, cluster));
-                        if (stage.isExitOnFailure()) {
-                           failedStage = stage.getName();
-                        }
                         break;
                      }
                   }
-                  // run ScenarioCleanup
-                  if (!executeStage(connection, configuration, cluster, stageCount - 1)) {
-                     returnCode = masterConfig.getConfigurations().indexOf(configuration) + 1;
-                  }
+                  // run ScenarioDestroy
+                  executeStage(connection, configuration, cluster, stageCount - 2);
                } finally {
-                  connection.runStage(-1, cluster.getSize());
+                  // run ScenarioCleanup
+                  executeStage(connection, configuration, cluster, stageCount - 1);
                }
                log.info("Finished scenario on " + cluster + " in " + Utils.getMillisDurationString(System.currentTimeMillis() - clusterStart));
                state.getReport().addTimelines(connection.receiveTimelines(cluster.getSize()));
@@ -138,14 +131,17 @@ public class Master {
       Stage stage = masterConfig.getScenario().getStage(stageId, getCurrentExtras(masterConfig, configuration, cluster));
       InitHelper.init(stage);
       if (stage instanceof MasterStage) {
-         if (!executeMasterStage((MasterStage) stage)) return false;
+         if (executeMasterStage((MasterStage) stage)) return true;
       } else if (stage instanceof DistStage) {
-         if (!executeDistStage(connection, stageId, (DistStage) stage)) return false;
+         if (executeDistStage(connection, stageId, (DistStage) stage)) return true;
       } else {
          log.error("Stage '" + stage.getName() + "' is neither master nor distributed");
-         return false;
       }
-      return true;
+      returnCode = masterConfig.getConfigurations().indexOf(configuration) + 1;
+      if (stage.isExitOnFailure()) {
+         failedStage = stage.getName();
+      }
+      return false;
    }
 
    private Map<String, String> getCurrentExtras(MasterConfig masterConfig, Configuration configuration, Cluster cluster) {

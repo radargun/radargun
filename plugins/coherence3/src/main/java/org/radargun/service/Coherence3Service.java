@@ -1,12 +1,18 @@
 package org.radargun.service;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
+import com.oracle.common.internal.net.MultiProviderSelectionService;
+import com.oracle.common.net.SelectionService;
+import com.oracle.common.net.SelectionServices;
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.ConfigurableCacheFactory;
 import com.tangosol.net.DefaultConfigurableCacheFactory;
@@ -134,6 +140,17 @@ public class Coherence3Service implements Lifecycle, Clustered {
       }
       caches.clear();
       CacheFactory.shutdown();
+      try {
+         Field ssField = MultiProviderSelectionService.class.getDeclaredField("m_mapServices");
+         ssField.setAccessible(true);
+         ConcurrentMap<SelectorProvider, SelectionService> selectionServices
+               = (ConcurrentMap<SelectorProvider, SelectionService>) ssField.get(SelectionServices.getDefaultService());
+         for (SelectionService ss : selectionServices.values()) {
+            ss.shutdown();
+         }
+      } catch (Exception e) {
+         log.error("Failed to shutdown selection services", e);
+      }
       started = false;
       log.info("Cache factory was shut down.");
    }

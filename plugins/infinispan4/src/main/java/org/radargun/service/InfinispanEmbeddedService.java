@@ -3,8 +3,12 @@ package org.radargun.service;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Map;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
 import com.arjuna.ats.arjuna.common.arjPropertyManager;
 import com.arjuna.ats.arjuna.coordinator.TransactionReaper;
@@ -125,10 +129,27 @@ public class InfinispanEmbeddedService {
    }
 
    protected void stopCaches() {
+      String jmxDomain = getJmxDomain();
       cacheManager.stop();
       caches.clear();
       TxControl.disable(true);
       TransactionReaper.terminate(true);
+      MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+      try {
+         for (ObjectName objectName : mbeanServer.queryNames(new ObjectName(jmxDomain + ":*"), null)) {
+            try {
+               mbeanServer.unregisterMBean(objectName);
+            } catch (Exception e) {
+               log.warn("Cannot unregister MBean " + objectName, e);
+            }
+         }
+      } catch (MalformedObjectNameException e) {
+         log.warn("Failed to unregister MBeans", e);
+      }
+   }
+
+   protected String getJmxDomain() {
+      return cacheManager.getGlobalConfiguration().getJmxDomain();
    }
 
    protected DefaultCacheManager createCacheManager(String configFile) throws IOException {

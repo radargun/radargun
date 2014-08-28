@@ -7,6 +7,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.commons.util.FileLookupFactory;
+import org.infinispan.commons.util.concurrent.jdk8backported.ForkJoinPool;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.container.entries.InternalCacheEntry;
@@ -15,6 +16,7 @@ import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.radargun.Service;
 import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
+import org.radargun.utils.Utils;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -85,6 +87,9 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
       super.stopCaches();
       if (jgroupsDumper != null) jgroupsDumper.interrupt();
       jgroupsDumper = null;
+      // TODO: not sure when ForkJoinPool was added
+      // disable further thread creation
+      Utils.setField(ForkJoinPool.class, "factory", ForkJoinPool.commonPool(), null);
    }
 
    protected ConfigDumpHelper createConfigDumpHelper() {

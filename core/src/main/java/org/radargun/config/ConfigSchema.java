@@ -27,6 +27,7 @@ interface ConfigSchema {
    String ELEMENT_CLUSTERS = "clusters";
    String ELEMENT_CONFIG = "config";
    String ELEMENT_CONFIGURATIONS = "configurations";
+   String ELEMENT_DESTROY = "destroy";
    String ELEMENT_GROUP = "group";
    String ELEMENT_INIT = "init";
    String ELEMENT_LOCAL = "local";
