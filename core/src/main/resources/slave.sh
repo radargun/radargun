@@ -1,8 +1,12 @@
 #!/bin/bash
 
 ## Load includes
-if [ "x$RADARGUN_HOME" = "x" ]; then DIRNAME=`dirname $0`; RADARGUN_HOME=`cd $DIRNAME/..; pwd` ; fi; export RADARGUN_HOME
-. ${RADARGUN_HOME}/bin/includes.sh
+if [ "x$RADARGUN_HOME" = "x" ]; then
+  DIRNAME=`dirname $0`
+  RADARGUN_HOME=`cd $DIRNAME/..; pwd`
+fi
+export RADARGUN_HOME
+. `dirname $0`/includes.sh
 
 
 MASTER_HOST=""
@@ -13,6 +17,8 @@ LOG4J_PREFIX=`hostname`-$RANDOM
 PLUGIN_PATHS=""
 PLUGIN_CONFIGS=""
 TAILF=false
+WAIT=false
+OUT_FILE=stdout_slave_${LOG4J_PREFIX}.out
 
 default_master() {
   MASTER_HOST=`sed -n -e '/bindAddress/{
@@ -45,6 +51,10 @@ help_and_exit() {
   echo "   -d              Debug address. Optional."
   echo ""
   echo "   -t              After starting the slave it will run 'tail -f' on the slave node's log file."
+  echo ""
+  echo "   -o, --out-file  File where stdout and stderr should be redirected to."
+  echo ""
+  echo "   -w, --wait      Waits until the process finishes and passes the return value."
   echo ""
   echo "   --add-plugin    Path to custom plugin directory. Can be specified multiple times."
   echo ""
@@ -91,6 +101,17 @@ do
       PLUGIN_CONFIGS="--add-config=${2} ${PLUGIN_CONFIGS}"
       shift
       ;;
+    "-w"|"--wait")
+      WAIT="true"
+      ;;
+    "-o"|"--out-file")
+      OUT_FILE=${2}
+      shift
+      ;;
+    "-J")
+      JVM_OPTS="${JVM_OPTS} ${2}"
+      shift
+      ;;
     *)
       echo "Warn: unknown param \"${1}\"" 
       help_and_exit
@@ -122,13 +143,26 @@ D_VARS="-Djava.net.preferIPv4Stack=true -Dlog4j.file.prefix=${LOG4J_PREFIX} -Dbi
 if [ "x$DEBUG" != "x" ]; then
    JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG}"
 fi
-echo "${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}" > stdout_slave_${LOG4J_PREFIX}.out
-echo "--------------------------------------------------------------------------------" >> stdout_slave_${LOG4J_PREFIX}.out
-nohup ${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS} >> stdout_slave_${LOG4J_PREFIX}.out 2>&1 &
+RUN_CMD="${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
+
+if [ -z $OUT_FILE ]; then
+   echo ${RUN_CMD}
+   ${RUN_CMD} &
+else
+   echo ${RUN_CMD} > $OUT_FILE;
+   echo "--------------------------------------------------------------------------------" >> $OUT_FILE
+   nohup ${RUN_CMD} >> $OUT_FILE 2>&1 &
+fi
+
 export SLAVE_PID=$!
 echo "... done! Slave process started on host ${HOSTNAME}! Slave PID is ${SLAVE_PID}"
 echo ""
 if [ $TAILF == "true" ]
 then
   tail -f stdout_slave_${LOG4J_PREFIX}.out --pid $SLAVE_PID
+fi
+
+if [ $WAIT == "true" ]
+then
+  wait $SLAVE_PID
 fi
