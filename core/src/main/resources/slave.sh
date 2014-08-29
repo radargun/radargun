@@ -139,7 +139,11 @@ if [ -n "$SLAVE_NAME" ] ; then
   echo Using bind address $BIND_ADDRESS
 fi
 
-D_VARS="-Djava.net.preferIPv4Stack=true -Dlog4j.file.prefix=${LOG4J_PREFIX} -Dbind.address=${BIND_ADDRESS} -Djgroups.bind_addr=${BIND_ADDRESS}"
+D_VARS="-Djava.net.preferIPv4Stack=true -Dlog4j.file.prefix=${LOG4J_PREFIX} "
+if [ -n "$BIND_ADDRESS" ]; then
+  D_VARS="$D_VARS -Dbind.address=${BIND_ADDRESS} -Djgroups.bind_addr=${BIND_ADDRESS}";
+fi
+
 if [ "x$DEBUG" != "x" ]; then
    JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG}"
 fi
