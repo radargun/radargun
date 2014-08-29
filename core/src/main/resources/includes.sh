@@ -52,7 +52,7 @@ add_fwk_to_classpath() {
 }
 
 set_env() {
-  . ${RADARGUN_HOME}/bin/environment.sh
+  . `dirname $0`/environment.sh
 
   # If the user specified a JAVA_HOME, use that
   if [ -n "$JAVA_HOME" ]
