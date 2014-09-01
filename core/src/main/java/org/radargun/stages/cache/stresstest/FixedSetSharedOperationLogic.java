@@ -94,5 +94,29 @@ class FixedSetSharedOperationLogic extends FixedSetOperationLogic {
             }
          }
       }
+      // make sure all stressors init their keys before making requests to avoid null return values.
+      if (stage.sharedKeys && !stage.loadAllKeys) {
+         // key_set_init_ack_${nodeIndex}_${threadIndex}
+         final String ackKeyTemplate = "key_set_init_ack_%s_%s";
+         cache.put(String.format(ackKeyTemplate, stressor.getNodeIndex(), stressor.getThreadIndex()), "ack_key");
+         log.trace(String.format("Keys have been initialized for thread %s on node %s.", stressor.getThreadIndex(), stressor.getNodeIndex()));
+         boolean keysInitialized = false;
+         outer : while (!keysInitialized) {
+            for (int node = 0; node < stressor.getNumNodes(); node++) {
+               for (int thread = 0; thread < stage.numThreads; thread++) {
+                  if (!cache.containsKey(String.format(ackKeyTemplate, node, thread))) {
+                     try {
+                        Thread.sleep(100);
+                     } catch (InterruptedException e) {
+                        log.error(String.format("Exception while suspending thread %s on node %s", stressor.getThreadIndex(), stressor.getNodeIndex()), e);
+                     } finally {
+                        continue outer;
+                     }
+                  }
+               }
+            }
+            keysInitialized = true;
+         }
+      }
    }
 }
