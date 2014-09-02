@@ -33,7 +33,7 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
                generalConfiguration, legacyLogicConfiguration, logLogicConfiguration);
 
          log.info("Starting stressor threads");
-         if (isServiceRunnning()) {
+         if (isServiceRunning()) {
             instance.startBackgroundThreads();
          }
 

@@ -114,7 +114,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
       if (!shouldExecute()) {
          return successfulResponse();
       }
-      if (!isServiceRunnning()) {
+      if (!isServiceRunning()) {
          // this slave is dead and does not participate on check
          return successfulResponse();
       }

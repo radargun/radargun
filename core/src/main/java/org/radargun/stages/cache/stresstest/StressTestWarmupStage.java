@@ -24,7 +24,7 @@ public class StressTestWarmupStage extends StressTestStage {
          log.info("The stage should not run on this slave");
          return successfulResponse();
       }
-      if (!isServiceRunnning()) {
+      if (!isServiceRunning()) {
          log.info("Not running test on this slave as the service is not running.");
          return successfulResponse();
       }
