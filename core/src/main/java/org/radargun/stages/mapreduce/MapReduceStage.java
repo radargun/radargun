@@ -138,7 +138,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      if (!isServiceRunnning()) {
+      if (!isServiceRunning()) {
          return errorResponse("Service is not runnning", null);
       }
 

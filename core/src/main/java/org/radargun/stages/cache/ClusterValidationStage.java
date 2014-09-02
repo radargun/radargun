@@ -51,7 +51,7 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    public DistStageAck executeOnSlave() {
       try {
-         if (!isServiceRunnning()) {
+         if (!isServiceRunning()) {
             log.info("Missing wrapper, not participating on validation");
             return successfulResponse();
          }

@@ -265,7 +265,7 @@ public class StressTestStage extends AbstractDistStage {
          log.info("The stage should not run on this slave");
          return successfulResponse();
       }
-      if (!isServiceRunnning()) {
+      if (!isServiceRunning()) {
          log.info("Not running test on this slave as service is not running.");
          return successfulResponse();
       }

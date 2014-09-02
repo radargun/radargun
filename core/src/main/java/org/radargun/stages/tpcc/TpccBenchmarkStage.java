@@ -84,7 +84,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
    //private BasicOperations.Cache<Object, Object> basicCache;
 
    public DistStageAck executeOnSlave() {
-      if (!isServiceRunnning()) {
+      if (!isServiceRunning()) {
          log.info("Not running test on this slave.");
          return successfulResponse();
       }

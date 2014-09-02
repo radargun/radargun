@@ -92,7 +92,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      if (!isServiceRunnning()) {
+      if (!isServiceRunning()) {
          return errorResponse("Service not running", null);
       }
 

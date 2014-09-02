@@ -63,7 +63,7 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       this.slaveState = slaveState;
    }
 
-   public boolean isServiceRunnning() {
+   public boolean isServiceRunning() {
       return lifecycle == null || lifecycle.isRunning();
    }
 

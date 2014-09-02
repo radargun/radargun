@@ -62,7 +62,7 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      if (!isServiceRunnning()) {
+      if (!isServiceRunning()) {
          return successfulResponse();
       }
       List<TopologyHistory.Event> history = getEventHistory(topologyHistory);
