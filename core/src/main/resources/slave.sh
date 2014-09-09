@@ -18,7 +18,7 @@ PLUGIN_PATHS=""
 PLUGIN_CONFIGS=""
 TAILF=false
 WAIT=false
-OUT_FILE=stdout_slave_${LOG4J_PREFIX}.out
+OUT_FILE="undef-out-file"
 
 default_master() {
   MASTER_HOST=`sed -n -e '/bindAddress/{
@@ -113,7 +113,7 @@ do
       shift
       ;;
     *)
-      echo "Warn: unknown param \"${1}\"" 
+      echo "Warn: unknown param \"${1}\""
       help_and_exit
       ;;
   esac
@@ -137,6 +137,10 @@ if [ -n "$SLAVE_NAME" ] ; then
     BIND_ADDRESS=$MY_BIND_ADDRESS
   fi
   echo Using bind address $BIND_ADDRESS
+fi
+
+if [ "x$OUT_FILE" == "xundef-out-file" ]; then
+  OUT_FILE=stdout_slave_${LOG4J_PREFIX}.out
 fi
 
 D_VARS="-Djava.net.preferIPv4Stack=true -Dlog4j.file.prefix=${LOG4J_PREFIX} "
