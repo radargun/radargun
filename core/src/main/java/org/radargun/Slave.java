@@ -134,11 +134,20 @@ public class Slave {
             // this is always the last stage and is ran in main thread (not sc-main)
             break;
          }
-         TraitHelper.InjectResult result = TraitHelper.inject(stage, traits);
+         TraitHelper.InjectResult result = null;
          DistStageAck response;
-         InitHelper.init(stage);
-         stage.initOnSlave(state);
-         if (!stage.shouldExecute()) {
+         Exception initException = null;
+         try {
+            result = TraitHelper.inject(stage, traits);
+            InitHelper.init(stage);
+            stage.initOnSlave(state);
+         } catch (Exception e) {
+            log.error("Stage initialization has failed", e);
+            initException = e;
+         }
+         if (initException != null) {
+            response = new DistStageAck(state).error("Stage initialization has failed", initException);
+         } else if (!stage.shouldExecute()) {
             log.info("Stage should not be executed");
             response = new DistStageAck(state);
          } else if (result == TraitHelper.InjectResult.SKIP) {
