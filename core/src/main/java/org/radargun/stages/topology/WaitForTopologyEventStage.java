@@ -13,8 +13,8 @@ import org.radargun.traits.TopologyHistory;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Stage(doc = "Waits until some event occurs. Note that the initial rehash is not recorded in this manner" +
-      ", therefore waiting for that will result in timeout.")
+@Stage(doc = "Waits until some event occurs. Note that the initial rehash is not recorded in this manner, " +
+      "therefore waiting for that will result in timeout.")
 public class WaitForTopologyEventStage extends AbstractDistStage {
    public enum Type {
       REHASH("__last_rehash_event__"),

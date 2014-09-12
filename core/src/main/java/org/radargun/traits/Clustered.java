@@ -3,7 +3,7 @@ package org.radargun.traits;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Trait(doc = "Information about clustered nodes")
+@Trait(doc = "Information about clustered nodes.")
 public interface Clustered {
    /**
     * @return True if this slave has unique role in the cluster

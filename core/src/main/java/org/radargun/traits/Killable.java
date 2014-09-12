@@ -3,7 +3,7 @@ package org.radargun.traits;
 /**
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
-@Trait(doc = "Allows simulation of abrupt shutdown (node crash)")
+@Trait(doc = "Allows simulation of abrupt shutdown (node crash).")
 public interface Killable {
    /**
     * Kill the Service instance abruptly.

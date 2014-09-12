@@ -24,7 +24,7 @@ public class JVMMonitorStartStage extends AbstractDistStage {
          + "If not specified, then statistics are not collected.")
    private String interfaceName;
 
-   @Property(doc = "An integer that specifies the frequency that statistics are collected. " + "The default is one.")
+   @Property(doc = "An integer that specifies the frequency that statistics are collected. The default is one.")
    private int frequency = 1;
 
    @Property(doc = "Specifies the time unit that statistics are collected. "

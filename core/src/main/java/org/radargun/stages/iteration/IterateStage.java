@@ -37,7 +37,7 @@ public class IterateStage extends AbstractDistStage {
    @Property(doc = "Name of this test. Default is 'IterationTest'.")
    protected String testName = "IterationTest";
 
-   @Property(doc = "By default, each stage creates a new test. If this property is set to true," +
+   @Property(doc = "By default, each stage creates a new test. If this property is set to true, " +
          "results are amended to existing test (as iterations). Default is false.")
    protected boolean amendTest = false;
 

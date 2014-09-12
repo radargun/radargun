@@ -64,7 +64,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
    @Property(doc = "If true, the entries are not retrieved, this stage only checks that the sum of entries from local nodes is correct. Default is false.")
    private boolean sizeOnly = false;
 
-   @Property(doc = "Hint how many slaves are currently alive - if set to > 0 then the query for amount of entries in" +
+   @Property(doc = "Hint how many slaves are currently alive - if set to > 0 then the query for amount of entries in " +
          "this cache is postponed until the cache appears to be fully replicated. By default this is disabled.")
    private int liveSlavesHint = -1;
 

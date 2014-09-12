@@ -32,16 +32,16 @@ public class LoadFileStage extends AbstractDistStage {
    private String filePath;
 
    @Property(doc = "The size of the values to put into the cache from the contents"
-         + " of the file. The default size is 1MB (1024 * 1024)")
+         + " of the file. The default size is 1MB (1024 * 1024).")
    private int valueSize = 1024 * 1024;
 
-   @Property(doc = "The name of the bucket where keys are written. The default is null")
+   @Property(doc = "The name of the bucket where keys are written. The default is null.")
    private String bucket = null;
 
-   @Property(doc = "If true, then the time for each put operation is written to the logs. The default is false")
+   @Property(doc = "If true, then the time for each put operation is written to the logs. The default is false.")
    private boolean printWriteStatistics = false;
 
-   @Property(doc = "If true, then String objects are written to the cache. The default is false")
+   @Property(doc = "If true, then String objects are written to the cache. The default is false.")
    private boolean stringData = false;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)

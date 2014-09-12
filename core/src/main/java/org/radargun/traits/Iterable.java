@@ -11,7 +11,7 @@ import org.radargun.Operation;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Trait(doc = "Provides way to iterate through all entries")
+@Trait(doc = "Provides way to iterate through all entries.")
 public interface Iterable {
    Operation GET_ITERATOR = Operation.register(Iterable.class.getSimpleName() + ".GetIterator");
    Operation HAS_NEXT = Operation.register(Iterable.class.getSimpleName() + ".HasNext");

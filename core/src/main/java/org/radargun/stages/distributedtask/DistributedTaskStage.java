@@ -39,15 +39,15 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    private String distributedCallableFqn;
 
    @Property(optional = true, doc = "The name of one of the "
-         + "org.infinispan.distexec.DistributedTaskExecutionPolicy enums. " + "The default is null.")
+         + "org.infinispan.distexec.DistributedTaskExecutionPolicy enums. The default is null.")
    private String executionPolicyName;
 
    @Property(optional = true, doc = "The fully qualified class name for a custom "
-         + "org.infinispan.distexec.DistributedTaskFailoverPolicy implementation. " + "The default is null.")
+         + "org.infinispan.distexec.DistributedTaskFailoverPolicy implementation. The default is null.")
    private String failoverPolicyFqn = null;
 
    @Property(optional = true, doc = "The node address where the task will be "
-         + "executed. The default is null, and tasks will be executed against " + "all nodes in the cluster.")
+         + "executed. The default is null, and tasks will be executed against all nodes in the cluster.")
    private String nodeAddress = null;
 
    @Property(optional = true, doc = "A String in the form of "

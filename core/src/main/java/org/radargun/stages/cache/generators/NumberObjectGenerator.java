@@ -22,16 +22,16 @@ import org.radargun.config.Property;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NumberObjectGenerator implements ValueGenerator {
-   @Property(doc = "Minimal value (inclusive) of generated integer part")
+   @Property(doc = "Minimal value (inclusive) of generated integer part.")
    private int intMin = Integer.MIN_VALUE;
 
-   @Property(doc = "Maximal value (inclusive) of generated integer part")
+   @Property(doc = "Maximal value (inclusive) of generated integer part.")
    private int intMax = Integer.MAX_VALUE;
 
-   @Property(doc = "Minimal value (inclusive) of generated double part")
+   @Property(doc = "Minimal value (inclusive) of generated double part.")
    private double doubleMin = 0;
 
-   @Property(doc = "Maximal value (exclusive) of generated double part")
+   @Property(doc = "Maximal value (exclusive) of generated double part.")
    private double doubleMax = 1;
 
    @Property(name = "class", doc = "Class instantiated by this generator. Default is 'org.radargun.query.NumberObject'.")

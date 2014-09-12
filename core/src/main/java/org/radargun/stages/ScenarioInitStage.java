@@ -19,7 +19,7 @@ public final class ScenarioInitStage extends AbstractDistStage {
    static final String INITIAL_FREE_MEMORY = "INITIAL_FREE_MEMORY";
    static final String INITIAL_THREADS = "INITIAL_THREADS";
 
-   @Property(doc = "Directory where the heap dump will be produced. Contrary to scenario-cleanup," +
+   @Property(doc = "Directory where the heap dump will be produced. Contrary to scenario-cleanup, " +
          "if this directory is set, the heap dump is written always. By default the dump will not be produced.")
    private String heapDumpDir;
 

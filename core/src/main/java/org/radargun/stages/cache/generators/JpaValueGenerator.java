@@ -12,7 +12,7 @@ import org.radargun.config.Property;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class JpaValueGenerator implements ValueGenerator {
-   @Property(name = "class", doc = "Fully qualified name of the value class", optional = false)
+   @Property(name = "class", doc = "Fully qualified name of the value class.", optional = false)
    private String clazzName;
 
    private Class<?> clazz;

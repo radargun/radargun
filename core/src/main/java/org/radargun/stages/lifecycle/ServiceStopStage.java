@@ -31,7 +31,7 @@ public class ServiceStopStage extends AbstractDistStage {
    private long delayExecution;
 
    @Property(doc="If set, the stage will not stop any node but will wait until the delayed execution is finished. " +
-         "Default is false")
+         "Default is false.")
    private boolean waitForDelayed = false;
 
    public DistStageAck executeOnSlave() {

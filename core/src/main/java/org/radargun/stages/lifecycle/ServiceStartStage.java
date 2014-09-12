@@ -28,10 +28,10 @@ public class ServiceStartStage extends AbstractServiceStartStage {
    @Property(doc = "If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.")
    private boolean staggerSlaveStartup = true;
 
-   @Property(converter = TimeConverter.class, doc = "Delay (staggering) after first slave's start is initiated. Default is 5s")
+   @Property(converter = TimeConverter.class, doc = "Delay (staggering) after first slave's start is initiated. Default is 5s.")
    private long delayAfterFirstSlaveStarts = 5000;
 
-   @Property(converter = TimeConverter.class, doc = "Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms")
+   @Property(converter = TimeConverter.class, doc = "Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms.")
    private long delayBetweenStartingSlaves = 500;
 
    @Property(converter = TimeConverter.class, doc = "Time allowed the cluster to reach `expectNumSlaves` members. Default is 3 minutes.")

@@ -33,7 +33,7 @@ public class ParallelStartStopStage extends AbstractServiceStartStage {
    @Property(converter = TimeConverter.class, doc = "Delay before the slaves are started. Default is 0.")
    private long startDelay = 0;
 
-   @Property(doc = "Applicable only for cache wrappers with Partitionable feature. Set of slaves that should be" +
+   @Property(doc = "Applicable only for cache wrappers with Partitionable feature. Set of slaves that should be " +
          "reachable from the new node. Default is all slaves.")
    private Set<Integer> reachable = null;
 

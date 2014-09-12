@@ -876,7 +876,7 @@
                </element>
                <element maxOccurs="1" minOccurs="0" name="live-slaves-hint" type="rg:int">
                   <annotation>
-                     <documentation>Hint how many slaves are currently alive - if set to &gt; 0 then the query for amount of entries inthis cache is postponed until the cache appears to be fully replicated. By default this is disabled.</documentation>
+                     <documentation>Hint how many slaves are currently alive - if set to &gt; 0 then the query for amount of entries in this cache is postponed until the cache appears to be fully replicated. By default this is disabled.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="log-checks-count" type="rg:int">
@@ -962,7 +962,7 @@
             </attribute>
             <attribute name="live-slaves-hint" type="rg:int">
                <annotation>
-                  <documentation>Hint how many slaves are currently alive - if set to &gt; 0 then the query for amount of entries inthis cache is postponed until the cache appears to be fully replicated. By default this is disabled.</documentation>
+                  <documentation>Hint how many slaves are currently alive - if set to &gt; 0 then the query for amount of entries in this cache is postponed until the cache appears to be fully replicated. By default this is disabled.</documentation>
                </annotation>
             </attribute>
             <attribute name="log-checks-count" type="rg:int">
@@ -1780,7 +1780,7 @@
             </attribute>
             <attribute name="expected-level" type="string" use="required">
                <annotation>
-                  <documentation>Expected isolation level (should match to cache configuration). Supported values are [READ_COMMITTED, REPEATABLE_READ]</documentation>
+                  <documentation>Expected isolation level (should match to cache configuration). Supported values are [READ_COMMITTED, REPEATABLE_READ].</documentation>
                </annotation>
             </attribute>
             <attribute name="readers" type="rg:int">
@@ -1811,7 +1811,7 @@
             <sequence>
                <element maxOccurs="1" minOccurs="0" name="amend-test" type="rg:boolean">
                   <annotation>
-                     <documentation>By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</documentation>
+                     <documentation>By default, each stage creates a new test. If this property is set to true, results are amended to existing test (as iterations). Default is false.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="container-name" type="string">
@@ -1887,7 +1887,7 @@
             </sequence>
             <attribute name="amend-test" type="rg:boolean">
                <annotation>
-                  <documentation>By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</documentation>
+                  <documentation>By default, each stage creates a new test. If this property is set to true, results are amended to existing test (as iterations). Default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="container-name" type="string">
@@ -2238,28 +2238,28 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <sequence>
                <element maxOccurs="1" minOccurs="0" name="bucket" type="string">
                   <annotation>
-                     <documentation>The name of the bucket where keys are written. The default is null</documentation>
+                     <documentation>The name of the bucket where keys are written. The default is null.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="print-write-statistics" type="rg:boolean">
                   <annotation>
-                     <documentation>If true, then the time for each put operation is written to the logs. The default is false</documentation>
+                     <documentation>If true, then the time for each put operation is written to the logs. The default is false.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="string-data" type="rg:boolean">
                   <annotation>
-                     <documentation>If true, then String objects are written to the cache. The default is false</documentation>
+                     <documentation>If true, then String objects are written to the cache. The default is false.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="value-size" type="rg:int">
                   <annotation>
-                     <documentation>The size of the values to put into the cache from the contents of the file. The default size is 1MB (1024 * 1024)</documentation>
+                     <documentation>The size of the values to put into the cache from the contents of the file. The default size is 1MB (1024 * 1024).</documentation>
                   </annotation>
                </element>
             </sequence>
             <attribute name="bucket" type="string">
                <annotation>
-                  <documentation>The name of the bucket where keys are written. The default is null</documentation>
+                  <documentation>The name of the bucket where keys are written. The default is null.</documentation>
                </annotation>
             </attribute>
             <attribute name="file-path" type="string" use="required">
@@ -2269,17 +2269,17 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             </attribute>
             <attribute name="print-write-statistics" type="rg:boolean">
                <annotation>
-                  <documentation>If true, then the time for each put operation is written to the logs. The default is false</documentation>
+                  <documentation>If true, then the time for each put operation is written to the logs. The default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="string-data" type="rg:boolean">
                <annotation>
-                  <documentation>If true, then String objects are written to the cache. The default is false</documentation>
+                  <documentation>If true, then String objects are written to the cache. The default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="value-size" type="rg:int">
                <annotation>
-                  <documentation>The size of the values to put into the cache from the contents of the file. The default size is 1MB (1024 * 1024)</documentation>
+                  <documentation>The size of the values to put into the cache from the contents of the file. The default size is 1MB (1024 * 1024).</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -2345,7 +2345,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                </element>
                <element maxOccurs="1" minOccurs="0" name="unit" type="rg:java-util-concurrent-time-unit">
                   <annotation>
-                     <documentation>The java.util.concurrent.TimeUnit to use with the timeout property. The default is TimeUnit.MILLISECONDS</documentation>
+                     <documentation>The java.util.concurrent.TimeUnit to use with the timeout property. The default is TimeUnit.MILLISECONDS.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="use-intermediate-shared-cache" type="rg:boolean">
@@ -2416,7 +2416,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             </attribute>
             <attribute name="unit" type="rg:java-util-concurrent-time-unit">
                <annotation>
-                  <documentation>The java.util.concurrent.TimeUnit to use with the timeout property. The default is TimeUnit.MILLISECONDS</documentation>
+                  <documentation>The java.util.concurrent.TimeUnit to use with the timeout property. The default is TimeUnit.MILLISECONDS.</documentation>
                </annotation>
             </attribute>
             <attribute name="use-intermediate-shared-cache" type="rg:boolean">
@@ -2442,7 +2442,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                </element>
                <element maxOccurs="1" minOccurs="0" name="reachable" type="string">
                   <annotation>
-                     <documentation>Applicable only for cache wrappers with Partitionable feature. Set of slaves that should bereachable from the new node. Default is all slaves.</documentation>
+                     <documentation>Applicable only for cache wrappers with Partitionable feature. Set of slaves that should be reachable from the new node. Default is all slaves.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="start" type="string">
@@ -2473,7 +2473,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             </attribute>
             <attribute name="reachable" type="string">
                <annotation>
-                  <documentation>Applicable only for cache wrappers with Partitionable feature. Set of slaves that should bereachable from the new node. Default is all slaves.</documentation>
+                  <documentation>Applicable only for cache wrappers with Partitionable feature. Set of slaves that should be reachable from the new node. Default is all slaves.</documentation>
                </annotation>
             </attribute>
             <attribute name="start" type="string">
@@ -2793,12 +2793,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <sequence>
                <element maxOccurs="1" minOccurs="0" name="bucket" type="string">
                   <annotation>
-                     <documentation>The name of the bucket where keys are written. The default is null</documentation>
+                     <documentation>The name of the bucket where keys are written. The default is null.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="limit-word-count" type="rg:boolean">
                   <annotation>
-                     <documentation>If true, then the random word generator selects a word from a pre-defined list. The default is false</documentation>
+                     <documentation>If true, then the random word generator selects a word from a pre-defined list. The default is false.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="max-word-count" type="rg:int">
@@ -2813,12 +2813,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                </element>
                <element maxOccurs="1" minOccurs="0" name="print-write-statistics" type="rg:boolean">
                   <annotation>
-                     <documentation>If true, then the time for each put operation is written to the logs. The default is false</documentation>
+                     <documentation>If true, then the time for each put operation is written to the logs. The default is false.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="ram-percentage" type="rg:double">
                   <annotation>
-                     <documentation>A double that represents the percentage of the total Java heap used to determine the amount of data to put into the cache.Either valueCount or ramPercentageDataSize should be specified, but not both.</documentation>
+                     <documentation>A double that represents the percentage of the total Java heap used to determine the amount of data to put into the cache. Either valueCount or ramPercentageDataSize should be specified, but not both.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="random-seed" type="rg:long">
@@ -2859,12 +2859,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             </sequence>
             <attribute name="bucket" type="string">
                <annotation>
-                  <documentation>The name of the bucket where keys are written. The default is null</documentation>
+                  <documentation>The name of the bucket where keys are written. The default is null.</documentation>
                </annotation>
             </attribute>
             <attribute name="limit-word-count" type="rg:boolean">
                <annotation>
-                  <documentation>If true, then the random word generator selects a word from a pre-defined list. The default is false</documentation>
+                  <documentation>If true, then the random word generator selects a word from a pre-defined list. The default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="max-word-count" type="rg:int">
@@ -2879,12 +2879,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             </attribute>
             <attribute name="print-write-statistics" type="rg:boolean">
                <annotation>
-                  <documentation>If true, then the time for each put operation is written to the logs. The default is false</documentation>
+                  <documentation>If true, then the time for each put operation is written to the logs. The default is false.</documentation>
                </annotation>
             </attribute>
             <attribute name="ram-percentage" type="rg:double">
                <annotation>
-                  <documentation>A double that represents the percentage of the total Java heap used to determine the amount of data to put into the cache.Either valueCount or ramPercentageDataSize should be specified, but not both.</documentation>
+                  <documentation>A double that represents the percentage of the total Java heap used to determine the amount of data to put into the cache. Either valueCount or ramPercentageDataSize should be specified, but not both.</documentation>
                </annotation>
             </attribute>
             <attribute name="random-seed" type="rg:long">
@@ -3082,13 +3082,13 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <sequence>
                <element maxOccurs="1" minOccurs="0" name="heap-dump-dir" type="string">
                   <annotation>
-                     <documentation>Directory where the heap dump will be produced. Contrary to scenario-cleanup,if this directory is set, the heap dump is written always. By default the dump will not be produced.</documentation>
+                     <documentation>Directory where the heap dump will be produced. Contrary to scenario-cleanup, if this directory is set, the heap dump is written always. By default the dump will not be produced.</documentation>
                   </annotation>
                </element>
             </sequence>
             <attribute name="heap-dump-dir" type="string">
                <annotation>
-                  <documentation>Directory where the heap dump will be produced. Contrary to scenario-cleanup,if this directory is set, the heap dump is written always. By default the dump will not be produced.</documentation>
+                  <documentation>Directory where the heap dump will be produced. Contrary to scenario-cleanup, if this directory is set, the heap dump is written always. By default the dump will not be produced.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -3109,12 +3109,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                </element>
                <element maxOccurs="1" minOccurs="0" name="delay-after-first-slave-starts" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
-                     <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s</documentation>
+                     <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="delay-between-starting-slaves" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
-                     <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
+                     <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms.</documentation>
                   </annotation>
                </element>
                <element maxOccurs="1" minOccurs="0" name="dump-config" type="rg:boolean">
@@ -3150,12 +3150,12 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             </attribute>
             <attribute name="delay-after-first-slave-starts" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
-                  <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s</documentation>
+                  <documentation>Delay (staggering) after first slave's start is initiated. Default is 5s.</documentation>
                </annotation>
             </attribute>
             <attribute name="delay-between-starting-slaves" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
-                  <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms</documentation>
+                  <documentation>Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms.</documentation>
                </annotation>
             </attribute>
             <attribute name="dump-config" type="rg:boolean">
@@ -3223,7 +3223,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
                </element>
                <element maxOccurs="1" minOccurs="0" name="wait-for-delayed" type="rg:boolean">
                   <annotation>
-                     <documentation>If set, the stage will not stop any node but will wait until the delayed execution is finished. Default is false</documentation>
+                     <documentation>If set, the stage will not stop any node but will wait until the delayed execution is finished. Default is false.</documentation>
                   </annotation>
                </element>
             </sequence>
@@ -3244,7 +3244,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             </attribute>
             <attribute name="wait-for-delayed" type="rg:boolean">
                <annotation>
-                  <documentation>If set, the stage will not stop any node but will wait until the delayed execution is finished. Default is false</documentation>
+                  <documentation>If set, the stage will not stop any node but will wait until the delayed execution is finished. Default is false.</documentation>
                </annotation>
             </attribute>
          </extension>
@@ -3297,7 +3297,7 @@ Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=1
             <sequence/>
             <attribute name="partitions" type="rg:java-util-list-converted-by-org-radargun-stages-topology-set-partitions-stage-unique-checker-converter" use="required">
                <annotation>
-                  <documentation>Set of sets of partitions,e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.</documentation>
+                  <documentation>Set of sets of partitions, e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.</documentation>
                </annotation>
             </attribute>
          </extension>

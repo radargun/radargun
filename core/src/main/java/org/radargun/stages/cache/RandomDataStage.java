@@ -55,22 +55,22 @@ public class RandomDataStage extends AbstractDistStage {
    private long valueCount = -1;
 
    @Property(doc = "A double that represents the percentage of the total Java heap "
-         + "used to determine the amount of data to put into the cache."
+         + "used to determine the amount of data to put into the cache. "
          + "Either valueCount or ramPercentageDataSize should be specified, but not both.")
    private double ramPercentage = -1;
 
-   @Property(doc = "The name of the bucket where keys are written. The default is null")
+   @Property(doc = "The name of the bucket where keys are written. The default is null.")
    private String bucket = null;
 
    @Property(doc = "If true, then String objects with printable characters are written to the cache."
          + "The default is false")
    private boolean stringData = false;
 
-   @Property(doc = "If true, then the time for each put operation is written to the logs. The default is false")
+   @Property(doc = "If true, then the time for each put operation is written to the logs. The default is false.")
    private boolean printWriteStatistics = false;
 
    @Property(doc = "If true, then the random word generator selects a word from a pre-defined list. "
-         + "The default is false")
+         + "The default is false.")
    private boolean limitWordCount = false;
 
    @Property(doc = "The maximum number of words to generate in the pre-defined list of words used with limitWordCount."

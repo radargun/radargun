@@ -3,7 +3,7 @@ package org.radargun.traits;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-@Trait(doc = "Provides interface for executing Map/Reduce tasks")
+@Trait(doc = "Provides interface for executing Map/Reduce tasks.")
 public interface MapReducer<KOut, VOut, R> {
 
    /**

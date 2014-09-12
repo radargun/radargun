@@ -22,7 +22,7 @@ import org.radargun.traits.Partitionable;
 @Stage(doc = "Partitions the cluster into several parts that cannot communicate.")
 public class SetPartitionsStage extends AbstractDistStage {
 
-   @Property(optional = false, converter = UniqueCheckerConverter.class, doc = "Set of sets of partitions," +
+   @Property(optional = false, converter = UniqueCheckerConverter.class, doc = "Set of sets of partitions, " +
          "e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.")
    private List<Set<Integer>> partitions;
 

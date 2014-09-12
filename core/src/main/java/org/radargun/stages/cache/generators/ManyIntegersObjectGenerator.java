@@ -16,10 +16,10 @@ import org.radargun.utils.Utils;
  */
 public class ManyIntegersObjectGenerator implements ValueGenerator {
 
-   @Property(doc = "Minimum value for all numbers (inclusive). Default is Integer.MIN_VALUE")
+   @Property(doc = "Minimum value for all numbers (inclusive). Default is Integer.MIN_VALUE.")
    private int min = Integer.MIN_VALUE;
 
-   @Property(doc = "Maximum value for all numbers (inclusive). Default is Integer.MAX_VALUE")
+   @Property(doc = "Maximum value for all numbers (inclusive). Default is Integer.MAX_VALUE.")
    private int max = Integer.MAX_VALUE;
 
    @Property(name = "class", doc = "Class instantiated by this generator. Default is 'org.radargun.query.ManyIntegersObject'.")

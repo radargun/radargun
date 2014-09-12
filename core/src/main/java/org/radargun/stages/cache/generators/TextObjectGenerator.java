@@ -21,7 +21,7 @@ import org.radargun.config.Property;
  */
 public abstract class TextObjectGenerator implements ValueGenerator {
 
-   @Property(name = "class", doc = "Class instantiated by this generator. Default is 'org.radargun.query.TextObject'")
+   @Property(name = "class", doc = "Class instantiated by this generator. Default is 'org.radargun.query.TextObject'.")
    private String clazz = "org.radargun.query.TextObject";
 
    private Constructor<?> ctor;

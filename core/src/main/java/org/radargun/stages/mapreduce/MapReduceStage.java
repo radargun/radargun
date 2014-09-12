@@ -94,7 +94,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    private long timeout = 0;
 
    @Property(doc = "The java.util.concurrent.TimeUnit to use with the timeout "
-         + "property. The default is TimeUnit.MILLISECONDS")
+         + "property. The default is TimeUnit.MILLISECONDS.")
    private TimeUnit unit = TimeUnit.MILLISECONDS;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
