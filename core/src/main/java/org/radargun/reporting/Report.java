@@ -117,8 +117,13 @@ public class Report implements Comparable<Report> {
       }
 
       public void addStatistics(int iteration, int slaveIndex, List<Statistics> stats) {
+         addStatistics(iteration, slaveIndex, stats, null, null);
+      }
+
+      public void addStatistics(int iteration, int slaveIndex, List<Statistics> stats, String iterationName, String iterationValue) {
          ensureIterations(iteration + 1);
-         iterations.get(iteration).addStatistics(slaveIndex, stats);
+         checkIteration(iteration, iterationName, iterationValue);
+         iterations.get(iteration).addStatistics(slaveIndex, stats, iterationName, iterationValue);
       }
 
       public void addResult(int iteration, Map<String, TestResult> results) {
@@ -129,6 +134,12 @@ public class Report implements Comparable<Report> {
       private void ensureIterations(int size) {
          iterations.ensureCapacity(size);
          for (int i = iterations.size(); i < size; ++i) iterations.add(new TestIteration());
+      }
+
+      private void checkIteration(int iteration, String iterationName, String iterationValue) {
+         TestIteration ti = iterations.get(iteration);
+         ti.iterationName = iterationName;
+         ti.iterationValue = iterationValue;
       }
 
       public List<TestIteration> getIterations() {
@@ -146,10 +157,14 @@ public class Report implements Comparable<Report> {
       private Map<String, TestResult> results;
 
       private int threadCount;
+      private String iterationName;
+      private String iterationValue;
 
-      public void addStatistics(int slaveIndex, List<Statistics> slaveStats) {
+      public void addStatistics(int slaveIndex, List<Statistics> slaveStats, String iterationName, String iterationValue) {
          statistics.put(slaveIndex, slaveStats);
          threadCount += slaveStats.size();
+         this.iterationName = iterationName;
+         this.iterationValue = iterationValue;
       }
 
       public void setResults(Map<String, TestResult> results) {
@@ -168,6 +183,14 @@ public class Report implements Comparable<Report> {
       public Map<String, TestResult> getResults() {
          return results == null ? null : Collections.unmodifiableMap(results);
       }
+
+      public String getIterationName() {
+         return iterationName;
+      }
+
+      public String getIterationValue() {
+         return iterationValue;
+      }
    }
 
    /**
@@ -177,11 +200,15 @@ public class Report implements Comparable<Report> {
       public final Map<Integer, SlaveResult> slaveResults;
       public final String aggregatedValue;
       public final boolean suspicious;
+      public final String iterationName;
+      public final String iterationValue;
 
-      public TestResult(Map<Integer, SlaveResult> slaveResults, String aggregatedValue, boolean suspicious) {
+      public TestResult(Map<Integer, SlaveResult> slaveResults, String aggregatedValue, boolean suspicious, String iterationName, String iterationValue) {
          this.slaveResults = Collections.unmodifiableMap(slaveResults);
          this.aggregatedValue = aggregatedValue;
          this.suspicious = suspicious;
+         this.iterationName = iterationName;
+         this.iterationValue = iterationValue;
       }
    }
 

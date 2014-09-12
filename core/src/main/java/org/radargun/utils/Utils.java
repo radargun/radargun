@@ -43,6 +43,9 @@ public class Utils {
    // field to store the hotspot diagnostic MBean
    private static volatile Object hotspotMBean;
 
+   private Utils() {
+   }
+
    public static String getMillisDurationString(long millis) {
       long secs = millis / 1000;
       long mins = secs / 60;

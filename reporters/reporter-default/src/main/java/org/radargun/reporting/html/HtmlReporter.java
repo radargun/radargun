@@ -38,7 +38,7 @@ public class HtmlReporter implements Reporter {
    public void run(Scenario scenario, Collection<Report> reports) {
       this.scenario = scenario;
       this.reports = reports;
-      IndexDocument index = new IndexDocument(targetDir);;
+      IndexDocument index = new IndexDocument(targetDir);
       try {
          index.open();
          index.writeConfigurations(reports);

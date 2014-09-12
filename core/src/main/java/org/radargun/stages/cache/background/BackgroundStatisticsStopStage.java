@@ -64,7 +64,7 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
             min = Math.min(min, iterationData.getValue());
             max = Math.max(max, iterationData.getValue());
          }
-         Report.TestResult result = new Report.TestResult(slaveResults, min < max ? String.format("%d .. %d", min, max) : "-", false);
+         Report.TestResult result = new Report.TestResult(slaveResults, min < max ? String.format("%d .. %d", min, max) : "-", false, null, null);
          test.addResult(iteration, Collections.singletonMap(BackgroundOpsManager.CACHE_SIZE, result));
       }
       return true;

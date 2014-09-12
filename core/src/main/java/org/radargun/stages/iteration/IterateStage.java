@@ -11,7 +11,9 @@ import java.util.concurrent.CountDownLatch;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Init;
+import org.radargun.config.Path;
 import org.radargun.config.Property;
+import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
@@ -74,6 +76,9 @@ public class IterateStage extends AbstractDistStage {
 
    @Property(doc = "Fail when the number of elements is different than total size. Default is true if filter is not defined and false otherwise.")
    protected Boolean failOnNotTotalSize;
+
+   @Property(doc = "Property, which value will be used to identify individual iterations (e.g. num-threads).")
+   protected String iterationProperty;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected Iterable iterable;
@@ -171,7 +176,7 @@ public class IterateStage extends AbstractDistStage {
                public Statistics project(StressorResult result) {
                   return result.stats;
                }
-            }));
+            }), iterationProperty, resolveIterationValue());
          }
          long slaveMinElements = -1, slaveMaxElements = -1;
          for (int i = 0; i < ack.results.size(); ++i) {
@@ -219,7 +224,8 @@ public class IterateStage extends AbstractDistStage {
       }
       if (test != null) {
          test.addResult(testIteration, Collections.singletonMap("Elements", new Report.TestResult(
-               slaveResults, range(totalMinElements, totalMaxElements), totalMinElements != totalMaxElements)));
+               slaveResults, range(totalMinElements, totalMaxElements), totalMinElements != totalMaxElements,
+               iterationProperty, resolveIterationValue())));
       }
       return retval;
    }
@@ -243,6 +249,18 @@ public class IterateStage extends AbstractDistStage {
             stressor.interrupt();
          }
       }
+   }
+
+   protected String resolveIterationValue() {
+      if (iterationProperty != null) {
+         Map<String, Path> properties = PropertyHelper.getProperties(getClass(), true, false);
+         String propertyString = PropertyHelper.getPropertyString(properties.get(iterationProperty), this);
+         if (propertyString == null) {
+            throw new IllegalStateException("Unable to resolve iteration property '" + iterationProperty + "'.");
+         }
+         return propertyString;
+      }
+      return null;
    }
 
    private static class IterationAck extends DistStageAck {

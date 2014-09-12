@@ -3,7 +3,6 @@ package org.radargun.reporting.html;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,7 +90,7 @@ public class TestReportDocument extends HtmlDocument {
             if (totalStats == null) {
                log.warn("There are no stats for this iteration");
             } else {
-               iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats, totalThreads));
+               iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats, totalThreads, it.getIterationName(), it.getIterationValue()));
                for (Map.Entry<String, OperationStats> op : totalStats.getOperationsStats().entrySet()) {
                   if (!op.getValue().isEmpty()) operations.add(op.getKey());
                }
@@ -117,7 +116,7 @@ public class TestReportDocument extends HtmlDocument {
          int clusterSize = test.getReport().getCluster().getSize();
          Map<Report, List<Aggregation>> reportAggregationMap = aggregatedByConfigs.get(clusterSize);
          if (reportAggregationMap == null) {
-            reportAggregationMap = new HashMap<>();
+            reportAggregationMap = new TreeMap<>();
          }
          reportAggregationMap.put(test.getReport(), iterations);
          aggregatedByConfigs.put(clusterSize, reportAggregationMap);
@@ -156,7 +155,7 @@ public class TestReportDocument extends HtmlDocument {
             operation, "Response time (ms)", StatisticType.MEAN_AND_DEV, reportAggregationMap);
       createChart(String.format("%s%s%s_%s%s_throughput.png", directory, File.separator, testName, operation, clusterSize),
             operation,  "Operations/sec", StatisticType.ACTUAL_THROUGHPUT, reportAggregationMap);
-      write("<table><tr>");
+      write("<table><th style=\"text-align: center;border: 0px;\">Response time mean</th><th style=\"text-align: center;border: 0px;\">Actual throughput</th><tr>");
       write(String.format("<td style=\"border: 0px;\"><img src=\"%s_%s%s_mean_dev.png\" alt=\"%s\"/></div></div></td>\n", testName, operation, clusterSize, operation));
       write(String.format("<td style=\"border: 0px;\"><img src=\"%s_%s%s_throughput.png\" alt=\"%s\"/></div></div>\n", testName, operation, clusterSize, operation));
       write("</tr></table>");
@@ -167,8 +166,17 @@ public class TestReportDocument extends HtmlDocument {
       write("<table>\n");
       if (maxIterations > 1) {
          write("<tr><th colspan=\"2\">&nbsp;</th>");
+         Map.Entry<Report, List<Report.TestResult>> entry = results.entrySet().iterator().next();
          for (int iteration = 0; iteration < maxIterations; ++iteration) {
-            write(String.format("<th style=\"border-left-color: black; border-left-width: 2px;\">iteration %d</th>", iteration));
+            String iterationValue;
+            if (entry != null) {
+               Report.TestResult testResult = entry.getValue().get(iteration);
+               iterationValue = testResult != null && testResult.iterationName != null
+                     ? testResult.iterationName + "=" + testResult.iterationValue : "iteration " + String.valueOf(iteration);
+            } else {
+               iterationValue = "iteration " + String.valueOf(iteration);
+            }
+            write(String.format("<th style=\"border-left-color: black; border-left-width: 2px;\">%s</th>", iterationValue));
          }
          write("</tr>\n");
       }
@@ -210,37 +218,40 @@ public class TestReportDocument extends HtmlDocument {
    }
 
    private void createChart(String filename, String operation, String rangeAxisLabel, StatisticType statisticType, Map<Report, List<Aggregation>> reportAggregationMap) throws IOException {
-      ComparisonChart chart;
+      ComparisonChart chart = null;
       boolean xLabelClusterSize = !separateClusterCharts && (clusters.size() > 1 || maxIterations <= 1);
-      if ((clusters.size() > 1 && !separateClusterCharts) || maxIterations > 1) {
-         chart = new LineChart(xLabelClusterSize ? "Cluster size" : "Iteration", rangeAxisLabel);
-      } else {
-         chart = new BarChart("Cluster size", rangeAxisLabel);
-      }
       for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
-         int iteration = 0;
+         int iterationIndex = 0;
          for (Aggregation aggregation : entry.getValue()) {
+            if (chart == null) {
+               if ((clusters.size() > 1 && !separateClusterCharts) || maxIterations > 1) {
+                  chart = new LineChart(xLabelClusterSize ? "Cluster size" : (aggregation.iterationValue != null ? aggregation.iterationName : "Iteration"), rangeAxisLabel);
+               } else {
+                  chart = new BarChart("Cluster size", rangeAxisLabel);
+               }
+            }
+            String columnKey = aggregation.iterationName == null ? String.valueOf(iterationIndex) : aggregation.iterationValue;
             try {
                String categoryName = entry.getKey().getConfiguration().name;
-               if (!separateClusterCharts && clusters.size() > 1) categoryName = String.format("%s_%s", categoryName, iteration);
+               if (!separateClusterCharts && clusters.size() > 1) categoryName = String.format("%s_%s", categoryName, columnKey);
                OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
                if (operationStats == null) continue;
                switch (statisticType) {
                   case MEAN_AND_DEV: {
                      MeanAndDev meanAndDev = operationStats.getRepresentation(MeanAndDev.class);
                      if (meanAndDev == null) continue;
-                     chart.addValue(meanAndDev.mean / 1000000, meanAndDev.dev / 1000000, categoryName, xLabelClusterSize ? aggregation.nodeStats.size() : iteration);
+                     chart.addValue(meanAndDev.mean / 1000000, meanAndDev.dev / 1000000, categoryName, xLabelClusterSize ? aggregation.nodeStats.size() : columnKey);
                      break;
                   }
                   case ACTUAL_THROUGHPUT: {
                      DefaultOutcome defaultOutcome = operationStats.getRepresentation(DefaultOutcome.class);
                      if (defaultOutcome == null) continue;
                      Throughput throughput = defaultOutcome.toThroughput(aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
-                     chart.addValue(throughput.actual / 1000000, 0, categoryName, xLabelClusterSize ? aggregation.nodeStats.size() : iteration);
+                     chart.addValue(throughput.actual / 1000000, 0, categoryName, xLabelClusterSize ? aggregation.nodeStats.size() : columnKey);
                   }
                }
             } finally {
-               ++iteration;
+               ++iterationIndex;
             }
          }
       }
@@ -253,8 +264,17 @@ public class TestReportDocument extends HtmlDocument {
       write("<table>\n");
       if (maxIterations > 1) {
          write("<tr><th colspan=\"2\">&nbsp;</th>");
+         Map.Entry<Report, List<Aggregation>> entry = reportAggregationMap.entrySet().iterator().next();
          for (int iteration = 0; iteration < maxIterations; ++iteration) {
-            write(String.format("<th colspan=\"6\" style=\"border-left-color: black; border-left-width: 2px;\">iteration %d</th>", iteration));
+            String iterationValue;
+            if (entry != null) {
+               Aggregation aggregation = entry.getValue().get(iteration);
+               iterationValue = aggregation != null && aggregation.iterationName != null
+                     ? aggregation.iterationName + "=" + aggregation.iterationValue : "iteration " + String.valueOf(iteration);
+            } else {
+               iterationValue = "iteration " + String.valueOf(iteration);
+            }
+            write(String.format("<th colspan=\"6\" style=\"border-left-color: black; border-left-width: 2px;\">%s</th>", iterationValue));
          }
          write("</tr>\n");
       }
@@ -284,7 +304,7 @@ public class TestReportDocument extends HtmlDocument {
                   TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin()));
             MeanAndDev meanAndDev = operationStats == null ? null : operationStats.getRepresentation(MeanAndDev.class);
 
-            writeRepresentations(defaultOutcome, meanAndDev, throughput, false, aggregation.anySuspect(operation));
+            writeRepresentations(defaultOutcome, meanAndDev, throughput, false, aggregation.anySuspect(operation), aggregation);
          }
 
          write("</tr>\n");
@@ -300,7 +320,7 @@ public class TestReportDocument extends HtmlDocument {
                      TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin()));
                MeanAndDev meanAndDev = operationStats == null ? null : operationStats.getRepresentation(MeanAndDev.class);
 
-               writeRepresentations(defaultOutcome, meanAndDev, throughput, true, aggregation.isSuspect(node, operation));
+               writeRepresentations(defaultOutcome, meanAndDev, throughput, true, aggregation.isSuspect(node, operation), aggregation);
             }
             write("</tr>\n");
          }
@@ -309,7 +329,7 @@ public class TestReportDocument extends HtmlDocument {
    }
 
    private void writeRepresentations(DefaultOutcome defaultOutcome, MeanAndDev meanAndDev, Throughput throughput,
-                                     boolean gray, boolean suspect) {
+                                     boolean gray, boolean suspect, Aggregation aggregation) {
       String rowStyle = suspect ? "background-color: #FFBBBB; " : (gray ? "background-color: #F0F0F0; ": "");
       rowStyle += "text-align: right; ";
 
@@ -349,12 +369,17 @@ public class TestReportDocument extends HtmlDocument {
       final Statistics totalStats;
       final List<Integer> nodeThreads;
       final int totalThreads;
+      final String iterationName;
+      final String iterationValue;
 
-      public Aggregation(List<Statistics> nodeStats, List<Integer> nodeThreads, Statistics totalStats, int totalThreads) {
+      public Aggregation(List<Statistics> nodeStats, List<Integer> nodeThreads, Statistics totalStats,
+                         int totalThreads, String iterationName, String iterationValue) {
          this.nodeStats = nodeStats;
          this.nodeThreads = nodeThreads;
          this.totalStats = totalStats;
          this.totalThreads = totalThreads;
+         this.iterationName = iterationName;
+         this.iterationValue = iterationValue;
       }
 
       public boolean anySuspect(String operation) {
@@ -377,11 +402,28 @@ public class TestReportDocument extends HtmlDocument {
             return tos != null;
          }
          DefaultOutcome ndo = nos.getRepresentation(DefaultOutcome.class);
-         DefaultOutcome tdo = nos.getRepresentation(DefaultOutcome.class);
+         DefaultOutcome tdo = tos.getRepresentation(DefaultOutcome.class);
          if (ndo == null ) {
             return tdo != null;
          }
-         return ndo.requests < tdo.requests * 4 / 5 || ndo.requests > tdo.requests * 5 / 4;
+         double requestsAverage = getRequestsAverage(operation);
+         return ndo.requests < requestsAverage * 4 / 5 || requestsAverage > tdo.requests * 5 / 4;
+      }
+
+      private double getRequestsAverage(String operation) {
+         long requests = 0;
+         int slaveStatsCount = 0;
+         for (Statistics statistics : nodeStats) {
+            OperationStats operationStats = statistics.getOperationsStats().get(operation);
+            if (operationStats != null) {
+               DefaultOutcome defaultOutcome = operationStats.getRepresentation(DefaultOutcome.class);
+               if (defaultOutcome != null) {
+                  requests += defaultOutcome.requests;
+                  slaveStatsCount++;
+               }
+            }
+         }
+         return slaveStatsCount > 0 ? requests / slaveStatsCount : 0;
       }
    }
 

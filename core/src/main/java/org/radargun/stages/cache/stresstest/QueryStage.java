@@ -73,8 +73,8 @@ public class QueryStage extends StressTestStage {
    }
 
    @Override
-   protected QueryAck newStatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
-      return new QueryAck(slaveState, iterations, expectedSize.get());
+   protected QueryAck newStatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations, String iterationName, String iterationValue) {
+      return new QueryAck(slaveState, iterations, expectedSize.get(), iterationProperty, resolveIterationValue());
    }
 
    @Override
@@ -101,7 +101,7 @@ public class QueryStage extends StressTestStage {
          String sizeString = minSize == maxSize ? String.valueOf(maxSize) : String.format("%d .. %d", minSize, maxSize);
          Report.Test test = masterState.getReport().getTest(testName);
          test.addResult(getTestIteration(),
-               Collections.singletonMap("Query result size", new Report.TestResult(slaveResults, sizeString, false)));
+               Collections.singletonMap("Query result size", new Report.TestResult(slaveResults, sizeString, false, iterationProperty, resolveIterationValue())));
       } else {
          log.info("No test name - results are not recorded");
       }
@@ -111,8 +111,8 @@ public class QueryStage extends StressTestStage {
    protected static class QueryAck extends StatisticsAck {
       public final int queryResultSize;
 
-      public QueryAck(SlaveState slaveState, List<List<Statistics>> iterations, int queryResultSize) {
-         super(slaveState, iterations);
+      public QueryAck(SlaveState slaveState, List<List<Statistics>> iterations, int queryResultSize, String iterationName, String iterationValue) {
+         super(slaveState, iterations, iterationName, iterationValue);
          this.queryResultSize = queryResultSize;
       }
    }

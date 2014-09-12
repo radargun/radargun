@@ -21,14 +21,14 @@
 
       <!-- You should do longer warm-ups for real tests -->
       <stress-test-warmup duration="10s" num-entries="100" entry-size="0"
-                          value-generator-class="org.radargun.query.SingleWordGenerator"
-                          value-generator-param="${org.radargun.query.dictionary:conf/test-data/animals.txt}"/>
+                          value-generator-class="org.radargun.stages.cache.generators.SingleWordGenerator"
+                          value-generator-param="file:conf/test-data/animals.txt"/>
 
       <!-- Testing write performance and also loading the data -->
       <stress-test test-name="loading"
                    duration="10s" num-entries="500" entry-size="0" write-percentage="100"
-                   value-generator-class="org.radargun.query.SingleWordGenerator"
-                   value-generator-param="${org.radargun.query.dictionary:conf/test-data/animals.txt}"/>
+                   value-generator-class="org.radargun.stages.cache.generators.SingleWordGenerator"
+                   value-generator-param="file:conf/test-data/animals.txt"/>
 
       <!-- Logic does only queries - we don't have to specify any generator -->
       <query test-name="querying"

@@ -3,11 +3,14 @@ package org.radargun.stages.cache.stresstest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Init;
+import org.radargun.config.Path;
 import org.radargun.config.Property;
+import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
@@ -173,6 +176,9 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "During loading phase, if the insert fails, try it again. This is the maximum number of attempts. Default is 10.")
    protected int maxLoadAttempts = 10;
 
+   @Property(doc = "Property, which value will be used to identify individual iterations (e.g. num-threads).")
+   protected String iterationProperty;
+
    @InjectTrait
    protected BasicOperations basicOperations;
    @InjectTrait
@@ -269,14 +275,14 @@ public class StressTestStage extends AbstractDistStage {
 
       try {
          List<List<Statistics>> results = execute();
-         return newStatisticsAck(slaveState, results);
+         return newStatisticsAck(slaveState, results, iterationProperty, resolveIterationValue());
       } catch (Exception e) {
          return errorResponse("Exception while initializing the test", e);
       }
    }
 
-   protected StatisticsAck newStatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
-      return new StatisticsAck(slaveState, iterations);
+   protected StatisticsAck newStatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations, String iterationName, String iterationValue) {
+      return new StatisticsAck(slaveState, iterations, iterationName, iterationValue);
    }
 
    public boolean processAckOnMaster(List<DistStageAck> acks) {
@@ -292,7 +298,7 @@ public class StressTestStage extends AbstractDistStage {
          if (ack.iterations != null) {
             int i = getTestIteration();
             for (List<Statistics> threadStats : ack.iterations) {
-               test.addStatistics(++i, ack.getSlaveIndex(), threadStats);
+               test.addStatistics(++i, ack.getSlaveIndex(), threadStats, ack.iterationName, ack.iterationValue);
             }
          } else {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
@@ -509,12 +515,28 @@ public class StressTestStage extends AbstractDistStage {
       return testIteration;
    }
 
+   protected String resolveIterationValue() {
+      if (iterationProperty != null) {
+         Map<String, Path> properties = PropertyHelper.getProperties(getClass(), true, false);
+         String propertyString = PropertyHelper.getPropertyString(properties.get(iterationProperty), this);
+         if (propertyString == null) {
+            throw new IllegalStateException("Unable to resolve iteration property '" + iterationProperty + "'.");
+         }
+         return propertyString;
+      }
+      return null;
+   }
+
    protected static class StatisticsAck extends DistStageAck {
       private final List<List<Statistics>> iterations;
+      private String iterationName;
+      private String iterationValue;
 
-      protected StatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
+      protected StatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations, String iterationName, String iterationValue) {
          super(slaveState);
          this.iterations = iterations;
+         this.iterationName = iterationName;
+         this.iterationValue = iterationValue;
       }
    }
 }

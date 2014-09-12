@@ -1174,6 +1174,11 @@
                      <documentation>Generate a range for histogram with operations statistics (for use in next stress tests). Default is false.</documentation>
                   </annotation>
                </element>
+               <element maxOccurs="1" minOccurs="0" name="iteration-property" type="string">
+                  <annotation>
+                     <documentation>Property, which value will be used to identify individual iterations (e.g. num-threads).</documentation>
+                  </annotation>
+               </element>
                <element maxOccurs="1" minOccurs="0" name="key-generator-class" type="string">
                   <annotation>
                      <documentation>Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.</documentation>
@@ -1358,6 +1363,11 @@
             <attribute name="generate-histogram-range" type="rg:boolean">
                <annotation>
                   <documentation>Generate a range for histogram with operations statistics (for use in next stress tests). Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="iteration-property" type="string">
+               <annotation>
+                  <documentation>Property, which value will be used to identify individual iterations (e.g. num-threads).</documentation>
                </annotation>
             </attribute>
             <attribute name="key-generator-class" type="string">
@@ -1844,6 +1854,11 @@
                      <documentation>Parameters for the filter (used to resolve its properties). No defaults.</documentation>
                   </annotation>
                </element>
+               <element maxOccurs="1" minOccurs="0" name="iteration-property" type="string">
+                  <annotation>
+                     <documentation>Property, which value will be used to identify individual iterations (e.g. num-threads).</documentation>
+                  </annotation>
+               </element>
                <element maxOccurs="1" minOccurs="0" name="max-next-failures" type="rg:int">
                   <annotation>
                      <documentation>Number of next() calls that are allowed to fail until we break the loop. Default is 100.</documentation>
@@ -1913,6 +1928,11 @@
             <attribute name="filter-param" type="string">
                <annotation>
                   <documentation>Parameters for the filter (used to resolve its properties). No defaults.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="iteration-property" type="string">
+               <annotation>
+                  <documentation>Property, which value will be used to identify individual iterations (e.g. num-threads).</documentation>
                </annotation>
             </attribute>
             <attribute name="max-next-failures" type="rg:int">

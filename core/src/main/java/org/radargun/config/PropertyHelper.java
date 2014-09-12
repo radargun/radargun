@@ -19,6 +19,9 @@ import org.radargun.logging.LogFactory;
  */
 public class PropertyHelper {
 
+   private PropertyHelper() {
+   }
+
    private static Log log = LogFactory.getLog(PropertyHelper.class);
 
    /**
