@@ -3,6 +3,7 @@ package org.radargun.service;
 import java.io.IOException;
 
 import org.infinispan.Cache;
+import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.TransactionConfiguration;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.Parser;
@@ -116,6 +117,11 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
    protected boolean isCacheTransactional(Cache<?, ?> cache) {
       TransactionConfiguration txConfig = cache.getCacheConfiguration().transaction();
       return txConfig != null && txConfig.transactionMode() == TransactionMode.TRANSACTIONAL;
+   }
+
+   protected boolean isCacheBatching(Cache<?, ?> cache) {
+      Configuration config = cache.getCacheConfiguration();
+      return config.invocationBatching().enabled();
    }
 
    @Override
