@@ -1,10 +1,5 @@
 package org.radargun.reporting.html;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.jfree.chart.ChartUtilities;
-import org.jfree.chart.JFreeChart;
 import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
 
 /**
@@ -13,35 +8,17 @@ import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public abstract class ComparisonChart {
-   private int width;
-   private int height;
+public abstract class ComparisonChart extends Chart {
    protected final String domainLabel;
    protected final String rangeLabel;
-
-   protected DefaultStatisticalCategoryDataset categorySet = new DefaultStatisticalCategoryDataset();
+   protected final DefaultStatisticalCategoryDataset categorySet = new DefaultStatisticalCategoryDataset();
 
    public ComparisonChart(String domainLabel, String rangeLabel) {
-      this.domainLabel = domainLabel;
       this.rangeLabel = rangeLabel;
+      this.domainLabel = domainLabel;
    }
 
    public void addValue(double value, double deviation, Comparable rowKey, Comparable columnKey) {
       categorySet.add(value, deviation, rowKey, columnKey);
-   }
-
-   public void save(String filename) throws IOException {
-      JFreeChart chart = createChart();
-      ChartUtilities.saveChartAsPNG(new File(filename), chart, width, height);
-   }
-
-   protected abstract JFreeChart createChart();
-
-   public void setWidth(int width) {
-      this.width = width;
-   }
-
-   public void setHeight(int height) {
-      this.height = height;
    }
 }

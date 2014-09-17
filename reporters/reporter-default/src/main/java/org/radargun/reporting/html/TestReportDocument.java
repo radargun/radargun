@@ -10,7 +10,6 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
-import org.radargun.charts.BarPlotGenerator;
 import org.radargun.config.Cluster;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -270,13 +269,14 @@ public class TestReportDocument extends HtmlDocument {
 
    private void writeOperation(final String operation, Map<Report, List<Aggregation>> reportAggregationMap) {
       write("<table>\n");
-      boolean hasHistograms = Projections.any(reportAggregationMap.values(), new Projections.Condition<List<Aggregation>>() {
+      boolean hasHistograms = Projections.any(Projections.notNull(reportAggregationMap.values()), new Projections.Condition<List<Aggregation>>() {
          @Override
          public boolean accept(List<Aggregation> aggregations) {
-            return Projections.any(aggregations, new Projections.Condition<Aggregation>() {
+            return Projections.any(Projections.notNull(aggregations), new Projections.Condition<Aggregation>() {
                @Override
                public boolean accept(Aggregation aggregation) {
-                  return aggregation.totalStats.getOperationsStats().get(operation).getRepresentation(Histogram.class, histogramBuckets, histogramPercentile) != null;
+                  OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
+                  return operationStats != null && operationStats.getRepresentation(Histogram.class, histogramBuckets, histogramPercentile) != null;
                }
             });
          }
@@ -374,7 +374,9 @@ public class TestReportDocument extends HtmlDocument {
          } else {
             String filename = String.format("histogram_%s_%s_%d_%d_%s.png", testName, operation, cluster, iteration, node);
             try {
-               BarPlotGenerator.generate(operation, histogram.ranges, histogram.counts, directory, filename, histogramWidth, histogramHeight);
+               HistogramChart chart = new HistogramChart().setData(operation, histogram);
+               chart.setWidth(histogramWidth).setHeight(histogramHeight);
+               chart.save(directory + File.separator + filename);
                writeTD(String.format("<a href=\"%s\">show</a>", filename), rowStyle);
             } catch (IOException e) {
                log.error("Failed to generate chart " + filename, e);

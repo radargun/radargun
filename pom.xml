@@ -41,6 +41,7 @@
       <plugins.spymemcached />
       <reporter.default />
       <extension.example/>
+      <extension.hdrhistogram />
    </properties>
 
    <profiles>
@@ -57,6 +58,21 @@
          </modules>
          <properties>
             <extension.example>extension-example</extension.example>
+         </properties>
+      </profile>
+      <profile>
+         <id>hdrhistogram</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+            <property>
+               <name>!no-hdrhistogram</name>
+            </property>
+         </activation>
+         <modules>
+            <module>extensions/hdrhistogram</module>
+         </modules>
+         <properties>
+            <extension.hdrhistogram>hdrhistogram</extension.hdrhistogram>
          </properties>
       </profile>
       <!-- Plugin-specific -->
@@ -401,7 +417,7 @@
                            <mapper type="flatten" />
                         </pathconvert>
 
-                        <ac:for list="${extension.example}" param="extension" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${extension.example},${extension.hdrhistogram}" param="extension" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging extension @{extension}..." />
                               <copy todir="${distribution.artifact}/lib">
