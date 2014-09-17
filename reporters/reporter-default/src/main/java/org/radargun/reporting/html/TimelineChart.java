@@ -126,7 +126,9 @@ public class TimelineChart {
       dateAxis.setTimeZone(GMT);
       dateAxis.setMinimumDate(new Date(0));
       dateAxis.setMaximumDate(new Date(endTimestamp - startTimestamp));
-      plot.getRangeAxis().setRange(lowerBound, upperBound);
+      if (upperBound > lowerBound) {
+         plot.getRangeAxis().setRange(lowerBound, upperBound);
+      }
    }
 
    public void saveChart(String filename) throws IOException {

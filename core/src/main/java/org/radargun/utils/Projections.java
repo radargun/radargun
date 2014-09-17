@@ -75,6 +75,15 @@ public class Projections {
       });
    }
 
+   public static <A> Collection<A> notNull(Collection<A> collection) {
+      return where(collection, new Condition<A>() {
+         @Override
+         public boolean accept(A a) {
+            return a != null;
+         }
+      }, Identity.INSTANCE);
+   }
+
    public static long[] toLongArray(Collection<Long> collection) {
       long[] array = new long[collection.size()];
       int i = 0;
@@ -90,6 +99,14 @@ public class Projections {
 
    public interface Condition<A> {
       boolean accept(A a);
+   }
+
+   public static class Identity<A> implements Func<A, A> {
+      public static final Identity INSTANCE = new Identity();
+      @Override
+      public A project(A a) {
+         return a;
+      }
    }
 
    private static class ProjectCollection<A, B> implements Collection<B> {
