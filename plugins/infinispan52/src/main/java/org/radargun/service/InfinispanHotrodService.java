@@ -19,7 +19,9 @@ public class InfinispanHotrodService implements Lifecycle {
    @Property(doc = "List of server addresses the clients should connect to, separated by semicolons (;).")
    protected String servers;
 
-   protected RemoteCacheManager manager;
+   // due to a bug in RCM, we have to duplicate the managers
+   protected RemoteCacheManager managerNoReturn;
+   protected RemoteCacheManager managerForceReturn;
 
    @ProvidesTrait
    public HotRodOperations createOperations() {
@@ -33,17 +35,20 @@ public class InfinispanHotrodService implements Lifecycle {
 
    @Override
    public void start() {
-      manager = new RemoteCacheManager(servers, true);
+      managerNoReturn = new RemoteCacheManager(servers, true);
+      managerForceReturn = new RemoteCacheManager(servers, true);
    }
 
    @Override
    public void stop() {
-      manager.stop();
-      manager = null;
+      managerNoReturn.stop();
+      managerNoReturn = null;
+      managerForceReturn.stop();
+      managerForceReturn = null;
    }
 
    @Override
    public boolean isRunning() {
-      return manager != null && manager.isStarted();
+      return managerNoReturn != null && managerNoReturn.isStarted();
    }
 }
