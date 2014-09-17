@@ -3,12 +3,16 @@ package org.radargun.service;
 import javax.transaction.TransactionManager;
 
 import org.infinispan.AdvancedCache;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.traits.Transactional;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InfinispanTransactional implements Transactional {
+   protected final static Log log = LogFactory.getLog(InfinispanTransactional.class);
+   protected final static boolean trace = log.isTraceEnabled();
 
    protected final InfinispanEmbeddedService service;
    protected final boolean enlistExtraXAResource;
@@ -61,6 +65,7 @@ public class InfinispanTransactional implements Transactional {
          try {
             tm.begin();
             javax.transaction.Transaction transaction = tm.getTransaction();
+            if (trace) log.trace("Transaction begin " + transaction);
             if (enlistExtraXAResource) {
                transaction.enlistResource(new DummyXAResource());
             }
@@ -73,6 +78,7 @@ public class InfinispanTransactional implements Transactional {
       @Override
       public void commit() {
          try {
+            if (trace) log.trace("Transaction commit " + tm.getTransaction());
             tm.commit();
          } catch (Exception e) {
             throw new RuntimeException(e);
@@ -82,6 +88,7 @@ public class InfinispanTransactional implements Transactional {
       @Override
       public void rollback() {
          try {
+            if (trace) log.trace("Transaction rollback " + tm.getTransaction());
             tm.rollback();
          } catch (Exception e) {
             throw new RuntimeException(e);
