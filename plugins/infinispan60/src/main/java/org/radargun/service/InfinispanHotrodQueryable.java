@@ -36,7 +36,7 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
          cacheName = service.cacheName;
       }
       QueryFactory factory = Search.getQueryFactory(
-            cacheName == null ? service.manager.getCache() : service.manager.getCache(cacheName));
+            cacheName == null ? service.managerForceReturn.getCache() : service.managerForceReturn.getCache(cacheName));
       return new QueryBuilderImpl(factory, clazz);
    }
 

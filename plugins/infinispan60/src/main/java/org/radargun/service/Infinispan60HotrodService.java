@@ -103,7 +103,8 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
 
    @Override
    public void start() {
-      manager = new RemoteCacheManager(configuration, true);
+      managerNoReturn = new RemoteCacheManager(configuration, true);
+      managerForceReturn = new RemoteCacheManager(configuration, true);
       if (queryable != null) {
          queryable.registerProtofilesRemote();
       }
