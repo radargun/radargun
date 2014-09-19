@@ -1,6 +1,5 @@
 package org.radargun.service;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import net.spy.memcached.CASResponse;
@@ -29,19 +28,15 @@ public class SpyMemcachedOperations implements BasicOperations, ConditionalOpera
       if (cacheName != null && (service.cacheName == null || !service.cacheName.equals(cacheName))) {
          throw new UnsupportedOperationException();
       }
-      try {
-         return new SpyMemcachedCache();
-      } catch (IOException e) {
-         throw new RuntimeException("Cannot connect client", e);
-      }
+      return new SpyMemcachedCache();
    }
 
    protected class SpyMemcachedCache<K, V> implements BasicOperations.Cache<K, V>, ConditionalOperations.Cache<K, V> {
 
       private final MemcachedClient client;
 
-      public SpyMemcachedCache() throws IOException {
-         client = new MemcachedClient(service.servers);
+      public SpyMemcachedCache() {
+         client = service.memcachedClient;
       }
 
       @Override
