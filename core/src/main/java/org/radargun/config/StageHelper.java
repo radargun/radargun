@@ -1,6 +1,7 @@
 package org.radargun.config;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +29,11 @@ public class StageHelper {
       }
    }
 
+   public static Map<String, Class<? extends org.radargun.Stage>> getStages() {
+      return Collections.unmodifiableMap(stagesDashed);
+   }
+
    public static Map<String, Class<? extends org.radargun.Stage>> getStagesFromJar(String path, boolean dashNames) {
-      System.err.println("Loading JARS from " + path);
       List<Class<? extends org.radargun.Stage>> list = AnnotatedHelper.getClassesFromJar(path, org.radargun.Stage.class, Stage.class);
       Map<String, Class<? extends org.radargun.Stage>> stages = new TreeMap<String, Class<? extends org.radargun.Stage>>();
       for (Class<? extends org.radargun.Stage> clazz : list) {

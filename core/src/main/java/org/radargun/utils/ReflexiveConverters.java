@@ -1,5 +1,6 @@
 package org.radargun.utils;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -10,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.radargun.Directories;
+import org.radargun.config.AnnotatedHelper;
 import org.radargun.config.ComplexConverter;
 import org.radargun.config.ComplexDefinition;
 import org.radargun.config.Definition;
@@ -20,7 +23,8 @@ import org.radargun.config.SimpleDefinition;
 /**
  * Converts a elements in definition into list of instances. Instance class
  * is chosen according to element name as specified in {@link org.radargun.config.DefinitionElement#name()}
- * on one of the classes passed in the constructor.
+ * on one of the classes passed in the constructor, or classes implementing class passed to the contructor.
+ * In the latter case, all JARs in lib/ are scanned for these implementations annotated with DefinitionElement
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -36,9 +40,23 @@ public class ReflexiveConverters {
                throw new IllegalArgumentException(clazz.getName() + " missing @DefinitionElement");
             }
             if (this.classes.containsKey(de.name())) {
-               throw new IllegalArgumentException(clazz.getName() + " already in the list");
+               throw new IllegalArgumentException("Trying to register " + clazz.getName() + " as '" + de.name()
+                     + "' but this is already used by " + this.classes.get(de.name()));
             }
             this.classes.put(de.name(), clazz);
+         }
+      }
+
+      protected <T> Base(Class<T> implementedClass) {
+         for (File file : Directories.LIB_DIR.listFiles(new Utils.JarFilenameFilter())) {
+            for (Class<? extends T> clazz : AnnotatedHelper.getClassesFromJar(file.getPath(), implementedClass, DefinitionElement.class)) {
+               DefinitionElement de = clazz.getAnnotation(DefinitionElement.class);
+               if (this.classes.containsKey(de.name())) {
+                  throw new IllegalArgumentException("Trying to register " + clazz.getName() + " as '" + de.name()
+                        + "' but this is already used by " + this.classes.get(de.name()));
+               }
+               classes.put(de.name(), clazz);
+            }
          }
       }
 
@@ -72,8 +90,12 @@ public class ReflexiveConverters {
    }
 
    public static class ObjectConverter extends Base implements ComplexConverter<Object> {
-      protected ObjectConverter(Class<?>[] classes) {
+      public ObjectConverter(Class<?>[] classes) {
          super(classes);
+      }
+
+      public <T> ObjectConverter(Class<T> implementedClass) {
+         super(implementedClass);
       }
 
       @Override
@@ -107,14 +129,18 @@ public class ReflexiveConverters {
          super(classes);
       }
 
+      public <T> ListConverter(Class<T> implementedClass) {
+         super(implementedClass);
+      }
+
       @Override
       public List convert(ComplexDefinition definition, Type type) {
          if (type instanceof Class<?>) {
             Class<?> clazz = (Class<?>) type;
-            if (clazz != List.class) throw new IllegalArgumentException(type.toString());
+            if (!List.class.isAssignableFrom(clazz)) throw new IllegalArgumentException(type.toString());
          } else if (type instanceof ParameterizedType) {
             ParameterizedType ptype = (ParameterizedType) type;
-            if (ptype.getRawType() != List.class) throw new IllegalArgumentException(type.toString());
+            if (!List.class.isAssignableFrom((Class<?>) ptype.getRawType())) throw new IllegalArgumentException(type.toString());
          }
          List list = new ArrayList();
          for (ComplexDefinition.Entry entry : definition.getAttributes()) {
