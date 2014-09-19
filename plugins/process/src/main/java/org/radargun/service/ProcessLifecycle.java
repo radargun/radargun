@@ -39,7 +39,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
    }
 
    @Override
-   public synchronized void kill() {
+   public void kill() {
       Process process = killAsyncInternal();
       if (process == null) return;
       for (;;) {
@@ -53,7 +53,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
    }
 
    @Override
-   public synchronized void killAsync() {
+   public void killAsync() {
       killAsyncInternal();
    }
 
@@ -71,7 +71,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
    }
 
    @Override
-   public synchronized void start() {
+   public void start() {
       if (isRunning()) {
          log.warn("Process is already running");
          return;
@@ -110,7 +110,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
    }
 
    @Override
-   public synchronized void stop() {
+   public void stop() {
       if (!isRunning()) {
          log.warn("Process is not running, cannot stop");
          return;
@@ -132,7 +132,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
    }
 
    @Override
-   public synchronized boolean isRunning() {
+   public boolean isRunning() {
       Process process = null;
       try {
          process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "running" + extension, service.getCommandTag())).start();
@@ -166,7 +166,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
       return outputReader;
    }
 
-   protected StreamReader getErrorReader() {
+   protected synchronized StreamReader getErrorReader() {
       if (errorReader == null) {
          errorReader = new ProcessOutputReader(new LineConsumer() {
             @Override

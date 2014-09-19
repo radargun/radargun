@@ -19,7 +19,7 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
    }
 
    @Override
-   public synchronized void start() {
+   public void start() {
       service.registerAction(START_OK, new Runnable() {
          @Override
          public void run() {
@@ -51,23 +51,44 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
 
       super.start();
       long startTime = System.currentTimeMillis();
-      while (!serverStarted) {
-         try {
-            long waitTime = startTime + service.startTimeout - System.currentTimeMillis();
-            if (waitTime <= 0) {
-               throw new IllegalStateException("Server did not start within timeout");
+      synchronized (this) {
+         while (!serverStarted) {
+            try {
+               long waitTime = startTime + service.startTimeout - System.currentTimeMillis();
+               if (waitTime <= 0) {
+                  throw new IllegalStateException("Server did not start within timeout");
+               }
+               wait(waitTime);
+            } catch (InterruptedException e) {
+               throw new IllegalStateException("Interrupted waiting for server to start", e);
             }
-            wait(waitTime);
-         } catch (InterruptedException e) {
-            throw new IllegalStateException("Interrupted waiting for server to start", e);
          }
       }
    }
 
    @Override
-   public synchronized void stop() {
+   public void stop() {
       super.stop();
       // TODO: wait for the server to stop?
+      stopReaders();
+   }
+
+   @Override
+   public void kill() {
+      super.kill();
+      stopReaders();
+   }
+
+   @Override
+   public void killAsync() {
+      super.killAsync();
+      synchronized (this) {
+         outputReader = null;
+         errorReader = null;
+      }
+   }
+
+   private synchronized void stopReaders() {
       if (outputReader != null) {
          try {
             outputReader.join(60000);
@@ -76,6 +97,15 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
             Thread.currentThread().interrupt();
          }
          outputReader = null;
+      }
+      if (errorReader != null) {
+         try {
+            errorReader.join(60000);
+         } catch (InterruptedException e) {
+            log.warn("Interrupted waiting for the reader");
+            Thread.currentThread().interrupt();
+         }
+         errorReader = null;
       }
    }
 
