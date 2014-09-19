@@ -6,7 +6,6 @@ import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -540,30 +539,14 @@ public class ConfigSchemaGenerator implements ConfigSchema {
 
    /**
     * Generate the XSD file. First argument is directory where the XSD file should be placed
-    * (it will be named radargun-{version}.xsd, second argument is list of JAR files that
-    * should be searched for stages. This second argument should be the same as classpath
-    * used for running this class.
+    * (it will be named radargun-{version}.xsd.
     */
    public static void main(String[] args) {
       if (args.length < 1 || args[0] == null)
          throw new IllegalArgumentException("No schema location directory specified!");
-      if (args.length < 2 || args[1] == null)
-         throw new IllegalArgumentException("No stage jars specified!");
 
-      // ignore jars included multiple times
-      Map<String, String> uniqueJars = new HashMap<String, String>();
-      for (String jar : args[1].split(File.pathSeparator)) {
-         int fileNameIndex = jar.lastIndexOf(File.separator);
-         String filename = fileNameIndex < 0 ? jar : jar.substring(fileNameIndex + 1);
-         if (!uniqueJars.containsKey(filename)) {
-            uniqueJars.put(filename, jar);
-         }
-      }
-
-      for (Map.Entry<String, String> entry : uniqueJars.entrySet()) {
-         for (Class<? extends Stage> stage : StageHelper.getStagesFromJar(entry.getValue(), true).values()) {
-            stages.put(stage, entry.getKey());
-         }
+      for (Class<? extends Stage> stage : StageHelper.getStages().values()) {
+         stages.put(stage, stage.getProtectionDomain().getCodeSource().getLocation().getPath());
       }
       generate(args[0]);
    }

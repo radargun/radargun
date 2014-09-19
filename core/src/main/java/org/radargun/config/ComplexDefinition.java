@@ -40,7 +40,7 @@ public class ComplexDefinition implements Definition {
     * @return
     */
    public List<Entry> getAttributes() {
-      return Collections.unmodifiableList(attributes);
+      return attributes == null ? Collections.EMPTY_LIST : Collections.unmodifiableList(attributes);
    }
 
    /**
@@ -50,6 +50,7 @@ public class ComplexDefinition implements Definition {
     * @return
     */
    public Map<String, Definition> getAttributeMap() {
+      if (attributes == null) return Collections.EMPTY_MAP;
       Map<String, Definition> map = new HashMap<String, Definition>();
       for (Entry entry : attributes) {
          if (map.put(entry.name, entry.definition) != null)

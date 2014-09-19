@@ -35,7 +35,7 @@ public class AnnotatedHelper {
 
    public static <TClass, TAnnotation extends Annotation> List<Class<? extends TClass>>
          getClassesFromJar(String path, Class<TClass> loadedClass, Class<TAnnotation> annotationClass) {
-      log.info("Loading JARS from " + path);
+      log.tracef("Looking for @%s %s, loading classes from %s", annotationClass.getSimpleName(), loadedClass.getSimpleName(), path);
       List<Class<? extends TClass>> classes = new ArrayList<Class<? extends TClass>>();
       try {
          ZipInputStream inputStream = new ZipInputStream(new FileInputStream(path));
@@ -57,7 +57,6 @@ public class AnnotatedHelper {
             TAnnotation annotation = clazz.getAnnotation(annotationClass);
             if (annotation != null) {
                if (!loadedClass.isAssignableFrom(clazz)) {
-                  log.warn(clazz.getName() + " is marked with " + annotationClass.getSimpleName() + " but does not implement/extend " + loadedClass);
                   continue;
                }
                classes.add((Class<? extends TClass>) clazz);

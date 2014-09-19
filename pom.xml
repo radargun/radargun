@@ -41,7 +41,6 @@
       <plugins.spymemcached />
       <reporter.default />
       <extension.example/>
-      <extension.example.jars />
    </properties>
 
    <profiles>
@@ -49,14 +48,15 @@
       <profile>
          <id>extension-example</id>
          <activation>
-            <activeByDefault>false</activeByDefault>
+            <property>
+               <name>extension-example</name>
+            </property>
          </activation>
          <modules>
             <module>extensions/extension-example</module>
          </modules>
          <properties>
             <extension.example>extension-example</extension.example>
-            <extension.example.jars>extension-example/target/**/*.jar</extension.example.jars>
          </properties>
       </profile>
       <!-- Plugin-specific -->
@@ -282,29 +282,6 @@
                </execution>
 
                <execution>
-                  <id>generate_xsd</id>
-                  <phase>prepare-package</phase>
-                  <goals>
-                     <goal>run</goal>
-                  </goals>
-                  <configuration>
-                     <target>
-                        <echo message="Generating XSD schema" />
-                        <path id="core_and_extensions">
-                           <fileset dir="core/target/distribution/radargun-core-bin/radargun-core/lib" includes="*.jar" />
-                           <fileset dir="extensions" includes="no-extension,${extension.example.jars}" />
-                        </path>
-                        <mkdir dir="${distribution.artifact}/schema" />
-                        <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
-                           <sysproperty key="radargun.directories.allow_broken" value="true" />
-                           <arg value="${distribution.artifact}/schema" />
-                           <arg pathref="core_and_extensions" />
-                        </java>
-                     </target>
-                  </configuration>
-               </execution>
-
-               <execution>
                   <id>prepare_plugins</id>
                   <phase>prepare-package</phase>
                   <goals>
@@ -450,7 +427,7 @@
                               <include name="**/*" />
                            </fileset>
                         </copy>
-			<mkdir dir="${distribution.artifact}/specific" />
+			               <mkdir dir="${distribution.artifact}/specific" />
                         <copy todir="${distribution.artifact}/specific">
                            <fileset dir="specific/jpa/target" erroronmissingdir="false">
                               <include name="radargun-jpa-*.jar" />
@@ -467,6 +444,27 @@
                               <include name="**/*.py" />
                            </fileset>
                         </chmod>
+                     </target>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <id>generate_xsd</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <target>
+                        <echo message="Generating XSD schema" />
+                        <path id="core_and_extensions">
+                           <fileset dir="${distribution.artifact}/lib" includes="*.jar" />
+                        </path>
+                        <mkdir dir="${distribution.artifact}/schema" />
+                        <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
+                           <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                           <arg value="${distribution.artifact}/schema" />
+                        </java>
                      </target>
                   </configuration>
                </execution>
