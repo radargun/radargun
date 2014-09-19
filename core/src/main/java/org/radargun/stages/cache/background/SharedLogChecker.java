@@ -68,10 +68,10 @@ class SharedLogChecker extends LogChecker {
 
       public Pool(int numSlaves, int numThreads, int numEntries, BackgroundOpsManager manager) {
          super(numThreads, numSlaves, manager);
-         for (int slaveId = 0; slaveId < numSlaves; ++slaveId) {
-            for (int threadId = 0; threadId < numThreads; ++threadId) {
-               addNew(new StressorRecord(slaveId * numThreads + threadId, numEntries));
-            }
+         int totalThreads = numThreads * numSlaves;
+         for (int threadId = 0; threadId < totalThreads; ++threadId) {
+            log.tracef("Record %d has range 0 - %d", threadId, numEntries);
+            addNew(new StressorRecord(threadId, numEntries));
          }
          registerListeners(true); // synchronous listeners
       }
