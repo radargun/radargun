@@ -52,7 +52,7 @@ public abstract class LogChecker extends Thread {
    public LogChecker(String name, BackgroundOpsManager manager, Pool logCheckerPool) {
       super(name);
       keyGenerator = manager.getKeyGenerator();
-      slaveIndex = manager.getSlaveIndex();
+      slaveIndex = manager.getSlaveState().getIndexInGroup();
       logCounterUpdatePeriod = manager.getLogLogicConfiguration().getCounterUpdatePeriod();
       pool = logCheckerPool;
       this.basicCache = manager.getBasicCache();

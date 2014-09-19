@@ -71,14 +71,11 @@ public class PrivateLogChecker extends LogChecker {
 
       public Pool(int numSlaves, int numThreads, int numEntries, BackgroundOpsManager manager) {
          super(numThreads, numSlaves, manager);
-         for (int slaveId = 0; slaveId < numSlaves; ++slaveId) {
-            Range slaveKeyRange = Range.divideRange(numEntries, numSlaves, slaveId);
-            for (int threadId = 0; threadId < numThreads; ++threadId) {
-               Range threadKeyRange = Range.divideRange(slaveKeyRange.getSize(), numThreads, threadId);
-               Range range = threadKeyRange.shift(slaveKeyRange.getStart());
-               log.trace("Expecting range " + range + " for thread " + (slaveId * numThreads + threadId));
-               addNew(new StressorRecord(slaveId * numThreads + threadId, range));
-            }
+         int totalThreads = numThreads * numSlaves;
+         for (int threadId = 0; threadId < totalThreads; ++threadId) {
+            Range range = Range.divideRange(numEntries, totalThreads, threadId);
+            log.tracef("Record %d has range %s", threadId, range);
+            addNew(new PrivateLogChecker.StressorRecord(threadId, range));
          }
          registerListeners(true); // synchronous listeners
       }

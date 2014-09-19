@@ -207,17 +207,19 @@ public class BackgroundOpsManager implements ServiceListener {
       int numThreads = generalConfiguration.numThreads;
       if (generalConfiguration.sharedKeys) {
          if (logLogicConfiguration.enabled) {
-            return new SharedLogLogic(this, numThreads * slaveState.getSlaveIndex() * index, generalConfiguration.numEntries);
+            return new SharedLogLogic(this, numThreads * slaveState.getIndexInGroup() + index, generalConfiguration.numEntries);
          } else {
             throw new IllegalArgumentException("Legacy logic cannot use shared keys.");
          }
       } else {
-         int totalThreads = numThreads * slaveState.getClusterSize();
-         Range range = Range.divideRange(generalConfiguration.numEntries, totalThreads, numThreads * slaveState.getSlaveIndex() + index);
+         // TODO: we may have broken totalThreads for legacy logic with dead slaves preloading
+         int totalThreads = numThreads * slaveState.getGroupSize();
+         Range range = Range.divideRange(generalConfiguration.numEntries, totalThreads, numThreads * slaveState.getIndexInGroup() + index);
 
          if (logLogicConfiguration.enabled) {
-            return new PrivateLogLogic(this, numThreads * slaveState.getSlaveIndex() + index, range);
+            return new PrivateLogLogic(this, numThreads * slaveState.getIndexInGroup() + index, range);
          } else {
+            // TODO: remove preloading from background stressors at all, use load-data instead
             List<Integer> deadSlaves = legacyLogicConfiguration.loadDataForDeadSlaves;
             List<List<Range>> rangesForThreads = null;
             int liveId = slaveState.getSlaveIndex();
@@ -244,7 +246,7 @@ public class BackgroundOpsManager implements ServiceListener {
       } else if (generalConfiguration.sharedKeys) {
          logCheckers = new LogChecker[logLogicConfiguration.checkingThreads];
          SharedLogChecker.Pool pool = new SharedLogChecker.Pool(
-               slaveState.getClusterSize(), generalConfiguration.numThreads, generalConfiguration.numEntries, this);
+               slaveState.getGroupSize(), generalConfiguration.numThreads, generalConfiguration.numEntries, this);
          logCheckerPool = pool;
          for (int i = 0; i < logLogicConfiguration.checkingThreads; ++i) {
             logCheckers[i] = new SharedLogChecker(i, pool, this);
@@ -253,7 +255,7 @@ public class BackgroundOpsManager implements ServiceListener {
       } else {
          logCheckers = new LogChecker[logLogicConfiguration.checkingThreads];
          PrivateLogChecker.Pool pool = new PrivateLogChecker.Pool(
-               slaveState.getClusterSize(), generalConfiguration.numThreads, generalConfiguration.numEntries, this);
+               slaveState.getGroupSize(), generalConfiguration.numThreads, generalConfiguration.numEntries, this);
          logCheckerPool = pool;
          for (int i = 0; i < logLogicConfiguration.checkingThreads; ++i) {
             logCheckers[i] = new PrivateLogChecker(i, pool, this);
@@ -545,7 +547,7 @@ public class BackgroundOpsManager implements ServiceListener {
       @Override
       public void run() {
          try {
-            basicCache.put("__keepAlive_" + getSlaveIndex(), System.currentTimeMillis());
+            basicCache.put("__keepAlive_" + slaveState.getIndexInGroup(), System.currentTimeMillis());
          } catch (Exception e) {
             log.error("Failed to place keep alive timestamp", e);
          }
@@ -647,12 +649,8 @@ public class BackgroundOpsManager implements ServiceListener {
       this.loaded = loaded;
    }
 
-   public int getSlaveIndex() {
-      return slaveState.getSlaveIndex();
-   }
-
-   public int getClusterSize() {
-      return slaveState.getClusterSize();
+   public SlaveState getSlaveState() {
+      return slaveState;
    }
 
    public GeneralConfiguration getGeneralConfiguration() {

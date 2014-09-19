@@ -275,7 +275,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    protected Map<Integer, Long> getCheckedOperations(long minOperationId) throws StressorException, BreakTxRequest {
       Map<Integer, Long> minIds = new HashMap<Integer, Long>();
-      for (int thread = 0; thread < manager.getGeneralConfiguration().getNumThreads() * manager.getClusterSize(); ++thread) {
+      for (int thread = 0; thread < manager.getGeneralConfiguration().getNumThreads() * manager.getSlaveState().getClusterSize(); ++thread) {
          minIds.put(thread, getCheckedOperation(thread, minOperationId));
       }
       return minIds;
@@ -283,7 +283,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    protected long getCheckedOperation(int thread, long minOperationId) throws StressorException, BreakTxRequest {
       long minReadOperationId = Long.MAX_VALUE;
-      for (int i = 0; i < manager.getClusterSize(); ++i) {
+      for (int i = 0; i < manager.getSlaveState().getClusterSize(); ++i) {
          Object lastCheck;
          try {
             lastCheck = basicCache.get(LogChecker.checkerKey(i, thread));

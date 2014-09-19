@@ -17,6 +17,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
 
    PrivateLogLogic(BackgroundOpsManager manager, long threadId, Range range) {
       super(manager, threadId);
+      log.tracef("Stressor %d has range %s", threadId, range);
       this.keyRangeStart = range.getStart();
       this.keyRangeEnd = range.getEnd();
    }

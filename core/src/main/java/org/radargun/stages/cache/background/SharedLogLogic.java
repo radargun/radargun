@@ -30,7 +30,7 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
 
    @Override
    protected long nextKeyId() {
-      return keySelectorRandom.nextLong() % numEntries;
+      return keySelectorRandom.nextInt((int) numEntries);
    }
 
    @Override
