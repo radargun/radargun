@@ -294,9 +294,10 @@
                            <fileset dir="core/target/distribution/radargun-core-bin/radargun-core/lib" includes="*.jar" />
                            <fileset dir="extensions" includes="no-extension,${extension.example.jars}" />
                         </path>
+                        <mkdir dir="${distribution.artifact}/schema" />
                         <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
                            <sysproperty key="radargun.directories.allow_broken" value="true" />
-                           <arg value="core/src/main/resources" />
+                           <arg value="${distribution.artifact}/schema" />
                            <arg pathref="core_and_extensions" />
                         </java>
                      </target>
