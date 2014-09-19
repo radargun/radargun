@@ -1,5 +1,6 @@
 package org.radargun.stages.test;
 
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import org.radargun.logging.Log;
@@ -12,8 +13,10 @@ import org.radargun.logging.LogFactory;
  */
 public abstract class Completion {
    static final String PROGRESS_STRING = "Number of operations executed by this thread: %d. Elapsed time: %s. Remaining: %s. Total: %s.";
-   protected static Log log = LogFactory.getLog(Completion.class);
+   protected final static Log log = LogFactory.getLog(Completion.class);
    protected final long requestPeriod;
+   // prevents non-intended synchronization
+   protected final ThreadLocal<Long> privateRampUp = new ThreadLocal<>();
    protected volatile long startTime = -1;
 
    public Completion(long requestPeriod) {
@@ -37,7 +40,12 @@ public abstract class Completion {
          startTime = System.nanoTime();
       }
       if (requestPeriod > 0) {
-         long waitTime = TimeUnit.NANOSECONDS.toMillis(startTime + requestPeriod * opNumber - now);
+         Long rampUp = privateRampUp.get();
+         if (rampUp == null) {
+            rampUp = new Random(Thread.currentThread().getId() ^ System.nanoTime()).nextLong() % requestPeriod;
+            privateRampUp.set(rampUp);
+         }
+         long waitTime = TimeUnit.NANOSECONDS.toMillis(startTime + rampUp + requestPeriod * opNumber - now);
          // for times < 1ms, do not wait
          if (waitTime > 0) {
             try {
