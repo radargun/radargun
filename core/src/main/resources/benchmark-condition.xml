@@ -1,0 +1,75 @@
+<!-- RadarGun 2.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.0">
+
+   <!-- Specifies where should the master open socket  -->
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <!-- List of cluster configurations where the benchmark should run-->
+   <clusters>
+      <cluster size="2" />
+   </clusters>
+
+   <!-- List of configurations of the services -->
+   <configurations>
+      <config name="Infinispan 6.0 - distributed">
+         <setup plugin="infinispan60" file="dist-sync.xml" />
+      </config>
+   </configurations>
+
+   <!-- Sequence of stages executed on the cluster -->
+   <scenario>
+      <!-- Start services on all nodes -->
+      <service-start />
+      <!-- Begin monitoring of CPU, memory usage and GC -->
+      <jvm-monitor-start />
+
+      <!-- Preload the cache with data -->
+      <load-data num-entries="5000"/>
+      <!-- 5 threads will execute total of 100,000 random requests against the default cache ('testCache')-->
+      <!-- As the test is called 'warmup', performance statistics won't be reported -->
+      <basic-operations-test test-name="warmup" num-requests="100000" total-threads="10">
+         <key-selector>
+            <concurrent-keys total-entries="5000" />
+         </key-selector>
+      </basic-operations-test>
+
+      <!-- Remove all data from the default cache -->
+      <clear-cache />
+      <!-- Again, preload the cache with data -->
+      <load-data num-entries="10000"/>
+
+      <!-- The loop will increase number of threads but at most 10 times -->
+      <repeat times="10">
+         <!-- Each threads should execute 1000 requests/s; 200 writes and 800 reads -->
+         <basic-operations-test test-name="stress-test" amend-test="true"
+                                duration="10s"
+                                use-transactions="false"
+                                total-threads="#{ 5 * ${repeat.counter} + 5 }"
+                                request-period="1">
+            <!-- Terminate the test when we can't achieve 95% of expected throughput,
+                 or if the mean time is 1 ms or more  -->
+            <repeat-condition>
+               <all>
+                  <throughput on="BasicOperations.Put" over="#{ (5 * ${repeat.counter} + 5) * 200 * 95 / 100 }"/>
+                  <mean on="BasicOperations.Put" below="1 ms" />
+               </all>
+            </repeat-condition>
+            <key-selector>
+               <concurrent-keys total-entries="10000"/>
+            </key-selector>
+         </basic-operations-test>
+      </repeat>
+
+      <!-- Stop JVM monitoring -->
+      <jvm-monitor-stop />
+   </scenario>
+
+   <!-- How the statistics are reported -->
+   <reports>
+      <!-- Produce CSV statistics report -->
+      <reporter type="csv" />
+      <!-- Produce HTML statistics report -->
+      <reporter type="html" />
+   </reports>
+
+</benchmark>

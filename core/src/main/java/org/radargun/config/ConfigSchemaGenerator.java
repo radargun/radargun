@@ -359,7 +359,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
             Path valueProperty = subtypeProperties.get("");
             if (valueProperty != null && valueProperty.getTargetAnnotation().complexConverter() != ComplexConverter.Dummy.class) {
                // if we have complex value property, let's inherit from the value converter
-               extended = RG_PREFIX + class2xmlId(valueProperty.getTargetType()) + "-converted-by-" + class2xmlId(valueProperty.getTargetAnnotation().complexConverter());
+               extended = generateComplexType(doc, schema, valueProperty.getTargetType(), valueProperty.getTargetAnnotation().complexConverter());
                subtypeProperties.remove("");
             }
             Element subtypeType = createComplexType(doc, schema, subtypeName, extended, true, false, de.doc());

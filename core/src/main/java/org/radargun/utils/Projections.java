@@ -39,6 +39,13 @@ public class Projections {
       return false;
    }
 
+   public static <A> boolean all(Collection<A> collection, Condition<A> condition) {
+      for (A a : collection) {
+         if (!condition.accept(a)) return false;
+      }
+      return true;
+   }
+
    public static <A> Collection<A> subset(Collection<A> collection, int skip, int limit) {
       return new SubsetCollection<A>(collection, skip, limit);
    }

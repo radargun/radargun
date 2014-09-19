@@ -91,6 +91,10 @@ public abstract class TestStage extends AbstractDistStage {
    @Property(doc = "Property, which value will be used to identify individual iterations (e.g. num-threads).")
    protected String iterationProperty;
 
+   @Property(doc = "If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.",
+      complexConverter = PerformanceCondition.Converter.class)
+   protected PerformanceCondition repeatCondition;
+
    @InjectTrait
    protected Transactional transactional;
 
@@ -183,19 +187,41 @@ public abstract class TestStage extends AbstractDistStage {
       if (result.isError()) return result;
 
       Report.Test test = getTest(amendTest);
-      if (test == null) return result;
-      testIteration = test.getIterations().size();
+      testIteration = test == null ? 0 : test.getIterations().size();
+      Statistics aggregated = createStatistics();
+      int threads = 0;
       for (StatisticsAck ack : Projections.instancesOf(acks, StatisticsAck.class)) {
          if (ack.iterations != null) {
             int i = getTestIteration();
             for (List<Statistics> threadStats : ack.iterations) {
-               test.addStatistics(++i, ack.getSlaveIndex(), threadStats, iterationProperty, resolveIterationValue());
+               if (test != null) {
+                  test.addStatistics(++i, ack.getSlaveIndex(), threadStats, iterationProperty, resolveIterationValue());
+               }
+               threads = Math.max(threads, threadStats.size());
+               for (Statistics s : threadStats) {
+                  aggregated.merge(s);
+               }
             }
          } else {
-            log.trace("No report received from slave: " + ack.getSlaveIndex());
+            log.trace("No statistics received from slave: " + ack.getSlaveIndex());
          }
       }
-      return StageResult.SUCCESS;
+      if (repeatCondition == null) {
+         return StageResult.SUCCESS;
+      } else {
+         try {
+            if (repeatCondition.evaluate(threads, aggregated)) {
+               log.info("Loop-condition condition was satisfied, continuing the loop.");
+               return StageResult.SUCCESS;
+            } else {
+               log.info("Loop-condition condition not satisfied, terminating the loop");
+               return StageResult.BREAK;
+            }
+         } catch (Exception e) {
+            log.info("Loop-condition has thrown exception, terminating the loop", e);
+            return StageResult.BREAK;
+         }
+      }
    }
 
    protected Report.Test getTest(boolean existing) {
