@@ -1,6 +1,8 @@
 package org.radargun.service;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.Configuration;
@@ -25,6 +27,9 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
 
    @Property(doc = "Use batching instead of transactions. Default is false.")
    protected boolean batching = false;
+
+   @Property(doc = "List of caches that should be removed prior to CacheManager.stop() - workarounds issues when stopping the server.")
+   protected List<String> removedCaches = Collections.EMPTY_LIST;
 
    protected InfinispanPartitionableLifecycle partitionable;
    protected InfinispanTopologyHistory topologyAware;
@@ -83,6 +88,18 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
    protected void startCaches() throws Exception {
       super.startCaches();
       topologyAware.registerListener(getCache(null));
+   }
+
+   @Override
+   protected void stopCaches() {
+      for (String removedCache : removedCaches) {
+         try {
+            ((DefaultCacheManager) cacheManager).removeCache(removedCache);
+         } catch (Exception e) {
+            log.error("Failed to remove cache " + removedCache, e);
+         }
+      }
+      super.stopCaches();
    }
 
    @Override
