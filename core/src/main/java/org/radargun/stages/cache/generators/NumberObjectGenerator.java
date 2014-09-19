@@ -23,10 +23,10 @@ import org.radargun.config.Property;
  */
 public class NumberObjectGenerator implements ValueGenerator {
    @Property(doc = "Minimal value (inclusive) of generated integer part.")
-   private int intMin = Integer.MIN_VALUE;
+   private long intMin = Integer.MIN_VALUE;
 
    @Property(doc = "Maximal value (inclusive) of generated integer part.")
-   private int intMax = Integer.MAX_VALUE;
+   private long intMax = Integer.MAX_VALUE;
 
    @Property(doc = "Minimal value (inclusive) of generated double part.")
    private double doubleMin = 0;
