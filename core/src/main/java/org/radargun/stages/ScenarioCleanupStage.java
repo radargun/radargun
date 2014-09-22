@@ -105,8 +105,8 @@ public final class ScenarioCleanupStage extends AbstractStage implements DistSta
    public boolean processAckOnMaster(List<DistStageAck> acks) {
       boolean result = true;
       for (CleanupAck ack : Projections.instancesOf(acks, CleanupAck.class)) {
-         log.info(String.format("Node %d has changed available memory from %d MB to %d MB and has %d unfinished threads",
-               ack.getSlaveIndex(), ack.initialAvailableMemory / 1048576, ack.finalAvailableMemory / 1048576, ack.unfinishedThreads));
+         log.infof("Node %d has changed available memory from %d MB to %d MB and has %d unfinished threads",
+               ack.getSlaveIndex(), ack.initialAvailableMemory / 1048576, ack.finalAvailableMemory / 1048576, ack.unfinishedThreads);
          if (ack.isError()) {
             log.warn("Ack contains errors: " + ack);
          }
@@ -131,7 +131,7 @@ public final class ScenarioCleanupStage extends AbstractStage implements DistSta
          currentFreeMemory = runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory();
          percentage = (currentFreeMemory * 100) / initialFreeMemory;
          if (percentage > memoryThreshold || System.currentTimeMillis() > deadline) break;
-         log.info(String.format("Available memory: %d kB (%d%% of initial available memory - %d kB)", currentFreeMemory / 1024, percentage, initialFreeMemory / 1024));
+         log.infof("Available memory: %d kB (%d%% of initial available memory - %d kB)", currentFreeMemory / 1024, percentage, initialFreeMemory / 1024);
          Utils.sleep(1000);
       }
       if (percentage > memoryThreshold) {

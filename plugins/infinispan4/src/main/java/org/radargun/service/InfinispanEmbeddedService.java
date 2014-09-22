@@ -241,7 +241,7 @@ public class InfinispanEmbeddedService {
       DistributionManager dm = cache.getDistributionManager();
       DataContainer container = cache.getDataContainer();
       StringBuilder sb = new StringBuilder(256);
-      sb.append(String.format("Debug info for key %s %s: owners=", cache.getName(), key));
+      sb.append("Debug info for key ").append(cache.getName()).append(' ').append(key).append(": owners=");
       for (Address owner : dm.locate(key)) {
          sb.append(owner).append(", ");
       }

@@ -104,26 +104,26 @@ public abstract class LogChecker extends Thread {
                }
                Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
                if (ignored != null && record.getOperationId() <= (Long) ignored) {
-                  log.debug(String.format("Ignoring operations %d - %d for thread %d", record.getOperationId(), ignored, record.getThreadId()));
+                  log.debugf("Ignoring operations %d - %d for thread %d", record.getOperationId(), ignored, record.getThreadId());
                   while (record.getOperationId() <= (Long) ignored) {
                      record.next();
                   }
                }
                if (record.getOperationId() != 0) {
-                  log.debug(String.format("Check for thread %d continues from operation %d",
-                     record.getThreadId(), record.getOperationId()));
+                  log.debugf("Check for thread %d continues from operation %d",
+                        record.getThreadId(), record.getOperationId());
                }
             }
             if (trace) {
-               log.trace(String.format("Checking operation %d for thread %d on key %d (%s)",
-                     record.getOperationId(), record.getThreadId(), record.getKeyId(), keyGenerator.generateKey(record.getKeyId())));
+               log.tracef("Checking operation %d for thread %d on key %d (%s)",
+                     record.getOperationId(), record.getThreadId(), record.getKeyId(), keyGenerator.generateKey(record.getKeyId()));
             }
             boolean notification = record.hasNotification(record.getOperationId());
             Object value = findValue(record);
             boolean contains = containsOperation(value, record);
             if (notification && contains) {
                if (trace) {
-                  log.trace(String.format("Found operation %d for thread %d", record.getOperationId(), record.getThreadId()));
+                  log.tracef("Found operation %d for thread %d", record.getOperationId(), record.getThreadId());
                }
                if (record.getOperationId() % logCounterUpdatePeriod == 0) {
                   basicCache.put(checkerKey(slaveIndex, record.getThreadId()),
@@ -137,7 +137,7 @@ public abstract class LogChecker extends Thread {
                   // one more check to see whether some operations should not be ignored
                   Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
                   if (ignored != null && record.getOperationId() <= (Long) ignored) {
-                     log.debug(String.format("Operations %d - %d for thread %d are ignored.", record.getOperationId(), ignored, record.threadId));
+                     log.debugf("Operations %d - %d for thread %d are ignored.", record.getOperationId(), ignored, record.threadId);
                      while (record.getOperationId() <= (Long) ignored) {
                         record.next();
                      }
@@ -145,16 +145,16 @@ public abstract class LogChecker extends Thread {
                   }
 
                   if (!notification) {
-                     log.error(String.format("Missing notification for operation %d for thread %d on key %d (%s), required for %d, notified for %s",
+                     log.errorf("Missing notification for operation %d for thread %d on key %d (%s), required for %d, notified for %s",
                            record.getOperationId(), record.getThreadId(), record.getKeyId(),
-                           keyGenerator.generateKey(record.getKeyId()), record.requireNotify, record.notifiedOps));
+                           keyGenerator.generateKey(record.getKeyId()), record.requireNotify, record.notifiedOps);
                      pool.reportMissingNotification();
                   }
                   if (!contains) {
-                     log.error(String.format("Missing operation %d for thread %d on key %d (%s) %s",
+                     log.errorf("Missing operation %d for thread %d on key %d (%s) %s",
                            record.getOperationId(), record.getThreadId(), record.getKeyId(),
                            keyGenerator.generateKey(record.getKeyId()),
-                           value == null ? " - entry was completely lost" : ""));
+                           value == null ? " - entry was completely lost" : "");
                      if (trace) {
                         log.trace("Not found in " + value);
                      }

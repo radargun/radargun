@@ -296,8 +296,8 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             try {
                Object ignored = basicCache.get(LogChecker.ignoredKey(i, thread));
                if (ignored == null || (Long) ignored < minOperationId) {
-                  log.debug(String.format("Setting ignore operation for checker slave %d and stressor %d: %s -> %d (last check %s)",
-                        i, thread, ignored, minOperationId, lastCheck));
+                  log.debugf("Setting ignore operation for checker slave %d and stressor %d: %s -> %d (last check %s)",
+                        i, thread, ignored, minOperationId, lastCheck);
                   basicCache.put(LogChecker.ignoredKey(i, thread), minOperationId);
                   if (transactionSize > 0) {
                      throw new BreakTxRequest();

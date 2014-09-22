@@ -47,47 +47,47 @@ public class InfinispanOperations implements BasicOperations, ConditionalOperati
       }
 
       public void put(K key, V value) {
-         if (trace) log.trace(String.format("PUT cache=%s key=%s value=%s", impl.getName(), key, value));
+         if (trace) log.tracef("PUT cache=%s key=%s value=%s", impl.getName(), key, value);
          ignoreReturnValueImpl.put(key, value);
       }
 
       @Override
       public V getAndPut(K key, V value) {
-         if (trace) log.trace(String.format("GET_AND_PUT cache=%s key=%s value=%s", impl.getName(), key, value));
+         if (trace) log.tracef("GET_AND_PUT cache=%s key=%s value=%s", impl.getName(), key, value);
          return impl.put(key, value);
       }
 
       public V get(K key) {
-         if (trace) log.trace(String.format("GET cache=%s key=%s", impl.getName(), key));
+         if (trace) log.tracef("GET cache=%s key=%s", impl.getName(), key);
          return impl.get(key);
       }
 
       @Override
       public boolean containsKey(K key) {
-         if (trace) log.trace(String.format("CONTAINS cache=%s key=%s", impl.getName(), key));
+         if (trace) log.tracef("CONTAINS cache=%s key=%s", impl.getName(), key);
          return impl.containsKey(key);
       }
 
       public boolean remove(K key) {
-         if (trace) log.trace(String.format("REMOVE cache=%s key=%s", impl.getName(), key));
+         if (trace) log.tracef("REMOVE cache=%s key=%s", impl.getName(), key);
          return impl.remove(key) != null;
       }
 
       @Override
       public V getAndRemove(K key) {
-         if (trace) log.trace(String.format("GET_AND_REMOVE cache=%s key=%s", impl.getName(), key));
+         if (trace) log.tracef("GET_AND_REMOVE cache=%s key=%s", impl.getName(), key);
          return impl.remove(key);
       }
 
       @Override
       public boolean replace(K key, V value) {
-         if (trace) log.trace(String.format("REPLACE cache=%s key=%s value=%s", impl.getName(), key, value));
+         if (trace) log.tracef("REPLACE cache=%s key=%s value=%s", impl.getName(), key, value);
          return impl.replace(key, value) != null;
       }
 
       @Override
       public V getAndReplace(K key, V value) {
-         if (trace) log.trace(String.format("GET_AND_REPLACE cache=%s key=%s value=%s", impl.getName(), key, value));
+         if (trace) log.tracef("GET_AND_REPLACE cache=%s key=%s value=%s", impl.getName(), key, value);
          return impl.replace(key, value);
       }
 
@@ -99,19 +99,19 @@ public class InfinispanOperations implements BasicOperations, ConditionalOperati
 
       @Override
       public boolean replace(K key, V oldValue, V newValue) {
-         if (trace) log.trace(String.format("REPLACE cache=%s key=%s old=%s, new=%s", impl.getName(), key, oldValue, newValue));
+         if (trace) log.tracef("REPLACE cache=%s key=%s old=%s, new=%s", impl.getName(), key, oldValue, newValue);
          return impl.replace(key, oldValue, newValue);
       }
 
       @Override
       public boolean putIfAbsent(K key, V value) {
-         if (trace) log.trace(String.format("PUT_IF_ABSENT cache=%s key=%s value=%s", impl.getName(), key, value));
+         if (trace) log.tracef("PUT_IF_ABSENT cache=%s key=%s value=%s", impl.getName(), key, value);
          return impl.putIfAbsent(key, value) == null;
       }
 
       @Override
       public boolean remove(K key, V oldValue) {
-         if (trace) log.trace(String.format("REMOVE cache=%s key=%s value=%s", impl.getName(), key, oldValue));
+         if (trace) log.tracef("REMOVE cache=%s key=%s value=%s", impl.getName(), key, oldValue);
          return impl.remove(key, oldValue);
       }
 

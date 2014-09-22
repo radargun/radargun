@@ -103,13 +103,13 @@ public class WriteSkewCheckStage extends CheckStage {
          sumSkews += ack.skewCounter;
          maxValue = Math.max(maxValue, ack.ispnCounter);
       }
-      log.info(String.format("Total increments: %d, Skews: %d, DB value: %d", sumIncrements, sumSkews, maxValue));
+      log.infof("Total increments: %d, Skews: %d, DB value: %d", sumIncrements, sumSkews, maxValue);
       if (maxValue + sumSkews != sumIncrements) {
-         log.error(String.format("Database contains value %d but slaves report %d successful increments",
-               maxValue, sumIncrements - sumSkews));
+         log.errorf("Database contains value %d but slaves report %d successful increments",
+               maxValue, sumIncrements - sumSkews);
          return false;
       } else {
-         log.info(String.format("Performed %d successful increments in %d ms", sumIncrements - sumSkews, duration));
+         log.infof("Performed %d successful increments in %d ms", sumIncrements - sumSkews, duration);
          return true;
       }
    }

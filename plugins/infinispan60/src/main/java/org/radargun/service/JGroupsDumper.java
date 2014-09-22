@@ -48,10 +48,10 @@ public class JGroupsDumper extends Thread {
             for (Map.Entry<String, Object> entry : prot.dumpStats().entrySet()) {
                String value = String.valueOf(entry.getValue());
                if (value.indexOf('\n') >= 0) {
-                  log.debug(String.format("\t%s = ", entry.getKey()));
+                  log.debugf("\t%s = ", entry.getKey());
                   logSorted(value, "\t\t");
                } else {
-                  log.debug(String.format("\t%s = %s", entry.getKey(), entry.getValue()));
+                  log.debugf("\t%s = %s", entry.getKey(), entry.getValue());
                }
             }
             for (ProtocolDumper dumper : dumpers) {
@@ -135,9 +135,9 @@ public class JGroupsDumper extends Thread {
 
       private boolean checkThreadPool(ThreadPoolExecutor tpe, String name) {
          int threshold = (tpe.getMaximumPoolSize() * 95 / 100) - 1;
-         log.info(String.format("%s current: %d, active: %d, core: %d, max: %d, scheduled: %d, completed: %d, queue size: %d", name,
+         log.infof("%s current: %d, active: %d, core: %d, max: %d, scheduled: %d, completed: %d, queue size: %d", name,
                tpe.getPoolSize(), tpe.getActiveCount(), tpe.getCorePoolSize(), tpe.getMaximumPoolSize(),
-               tpe.getTaskCount(), tpe.getCompletedTaskCount(), tpe.getQueue() != null ? tpe.getQueue().size() : -1));
+               tpe.getTaskCount(), tpe.getCompletedTaskCount(), tpe.getQueue() != null ? tpe.getQueue().size() : -1);
          boolean dump = tpe.getActiveCount() >= threshold || (tpe.getPoolSize() >= threshold && !dumped.contains(name));
          if (dump) dumped.add(name);
          if (tpe.getPoolSize() < threshold) dumped.remove(name);

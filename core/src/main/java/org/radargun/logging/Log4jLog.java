@@ -40,6 +40,18 @@ public class Log4jLog implements Log {
    }
 
    @Override
+   public final void tracef(String format, Object... args) {
+      Logger logger = getLogger();
+      if (logger.isTraceEnabled()) logger.trace(String.format(format, args));
+   }
+
+   @Override
+   public void tracef(Throwable throwable, String format, Object... args) {
+      Logger logger = getLogger();
+      if (logger.isTraceEnabled()) logger.trace(String.format(format, args), throwable);
+   }
+
+   @Override
    public final boolean isTraceEnabled() {
       return getLogger().isTraceEnabled();
    }
@@ -52,6 +64,18 @@ public class Log4jLog implements Log {
    @Override
    public final void debug(String message, Throwable throwable) {
       getLogger().debug(message, throwable);
+   }
+
+   @Override
+   public void debugf(String format, Object... args) {
+      Logger logger = getLogger();
+      if (logger.isDebugEnabled()) logger.debug(String.format(format, args));
+   }
+
+   @Override
+   public void debugf(Throwable throwable, String format, Object... args) {
+      Logger logger = getLogger();
+      if (logger.isDebugEnabled()) logger.debug(String.format(format, args), throwable);
    }
 
    @Override
@@ -70,6 +94,18 @@ public class Log4jLog implements Log {
    }
 
    @Override
+   public void infof(String format, Object... args) {
+      Logger logger = getLogger();
+      if (logger.isInfoEnabled()) logger.info(String.format(format, args));
+   }
+
+   @Override
+   public void infof(Throwable throwable, String format, Object... args) {
+      Logger logger = getLogger();
+      if (logger.isInfoEnabled()) logger.trace(String.format(format, args), throwable);
+   }
+
+   @Override
    public final boolean isInfoEnabled() {
       return getLogger().isInfoEnabled();
    }
@@ -82,6 +118,16 @@ public class Log4jLog implements Log {
    @Override
    public final void warn(String message, Throwable throwable) {
       getLogger().warn(message, throwable);
+   }
+
+   @Override
+   public void warnf(String format, Object... args) {
+      getLogger().warn(String.format(format, args));
+   }
+
+   @Override
+   public void warnf(Throwable throwable, String format, Object... args) {
+      getLogger().warn(String.format(format, args), throwable);
    }
 
    @Override
@@ -100,6 +146,16 @@ public class Log4jLog implements Log {
    }
 
    @Override
+   public void errorf(String format, Object... args) {
+      getLogger().error(String.format(format, args));
+   }
+
+   @Override
+   public void errorf(Throwable throwable, String format, Object... args) {
+      getLogger().error(String.format(format, args), throwable);
+   }
+
+   @Override
    public final boolean isErrorEnabled() {
       return true;
    }
@@ -112,6 +168,16 @@ public class Log4jLog implements Log {
    @Override
    public final void fatal(String message, Throwable throwable) {
       getLogger().fatal(message, throwable);
+   }
+
+   @Override
+   public void fatalf(String format, Object... args) {
+      getLogger().fatal(String.format(format, args));
+   }
+
+   @Override
+   public void fatalf(Throwable throwable, String format, Object... args) {
+      getLogger().fatal(String.format(format, args), throwable);
    }
 
    @Override

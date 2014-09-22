@@ -28,7 +28,7 @@ public class ExampleStage extends AbstractDistStage {
       } catch (InterruptedException e) {
          log.warn("Stage was interrupted!", e);
       }
-      log.info(String.format("Slave %d says: %s", slaveState.getSlaveIndex(), foo));
+      log.infof("Slave %d says: %s", slaveState.getSlaveIndex(), foo);
       return new ExampleAck(slaveState, String.format("Slave %d said: %s", slaveState.getSlaveIndex(), foo));
    }
 
@@ -37,7 +37,7 @@ public class ExampleStage extends AbstractDistStage {
       boolean successful = super.processAckOnMaster(acks);
       if (successful) {
          for (ExampleAck ack : Projections.instancesOf(acks, ExampleAck.class)) {
-            log.info(String.format("Slave %d reports: %s", ack.getSlaveIndex(), ack.getExampleMessage()));
+            log.infof("Slave %d reports: %s", ack.getSlaveIndex(), ack.getExampleMessage());
          }
       }
       return successful;

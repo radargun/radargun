@@ -93,7 +93,7 @@ public class IsolationLevelCheckStage extends CheckStage {
 
       boolean anyValueChangeDetected = false;
       for (ChangeAck ack : Projections.instancesOf(acks, ChangeAck.class)) {
-         log.debug(String.format("Value change detected on slave %d: %s", ack.getSlaveIndex(), ack.valueChangeDetected));
+         log.debugf("Value change detected on slave %d: %s", ack.getSlaveIndex(), ack.valueChangeDetected);
          if (expectedLevel.equalsIgnoreCase(REPEATABLE_READ) && ack.valueChangeDetected) {
             log.error("Value change was detected but this should not happen with isolation " + expectedLevel);
             return false;

@@ -85,7 +85,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
             }
             if (prevValue.getOperationId(0) <= minReadOperationId) {
                for (checkedValues = 1; checkedValues < prevValue.size() && prevValue.getOperationId(checkedValues) <= minReadOperationId; ++checkedValues) {
-                  log.trace(String.format("Discarding operation %d (minReadOperationId is %d)", prevValue.getOperationId(checkedValues), minReadOperationId));
+                  log.tracef("Discarding operation %d (minReadOperationId is %d)", prevValue.getOperationId(checkedValues), minReadOperationId);
                }
                break;
             } else {

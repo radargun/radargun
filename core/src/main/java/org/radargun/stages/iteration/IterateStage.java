@@ -183,11 +183,11 @@ public class IterateStage extends AbstractDistStage {
             StressorResult result = ack.results.get(i);
             if (result.failed) {
                retval = retval && !failOnFailedIteration;
-               log.warn(String.format("Slave %d, stressor %d has failed", ack.getSlaveIndex(), i));
+               log.warnf("Slave %d, stressor %d has failed", ack.getSlaveIndex(), i);
             } else {
                if (result.minElements != result.maxElements) {
-                  log.warn(String.format("Slave %d, stressor %d reports %d .. %d elements",
-                        ack.getSlaveIndex(), i, result.minElements, result.maxElements));
+                  log.warnf("Slave %d, stressor %d reports %d .. %d elements",
+                        ack.getSlaveIndex(), i, result.minElements, result.maxElements);
                   retval = retval && !failOnUnevenElements;
                }
                if (totalMinElements < 0) {
@@ -195,12 +195,12 @@ public class IterateStage extends AbstractDistStage {
                   totalMaxElements = result.maxElements;
                }
                else if (totalMinElements != result.minElements || totalMaxElements != result.maxElements) {
-                  log.warn(String.format("Previous stressor reported %d .. %d elements but slave %d, stressor %d reports %d .. %d elements",
-                        totalMinElements, totalMaxElements, ack.getSlaveIndex(), i, result.minElements, result.maxElements));
+                  log.warnf("Previous stressor reported %d .. %d elements but slave %d, stressor %d reports %d .. %d elements",
+                        totalMinElements, totalMaxElements, ack.getSlaveIndex(), i, result.minElements, result.maxElements);
                   retval = retval && !failOnUnevenElements;
                }
                if (ack.totalSize >= 0 && (result.minElements != ack.totalSize || result.maxElements != ack.totalSize)) {
-                  log.warn(String.format("Slave %d stressor %d reports %d element but total size is %d", ack.getSlaveIndex(), i, result.maxElements, ack.totalSize));
+                  log.warnf("Slave %d stressor %d reports %d element but total size is %d", ack.getSlaveIndex(), i, result.maxElements, ack.totalSize);
                   retval = retval && !failOnNotTotalSize;
                }
                totalMinElements = Math.min(totalMinElements, result.minElements);
@@ -216,7 +216,7 @@ public class IterateStage extends AbstractDistStage {
          }
          if (prevTotalSize < 0) prevTotalSize = ack.totalSize;
          else if (prevTotalSize != ack.totalSize) {
-            log.warn(String.format("Previous total size was %d but slave %d reports total size %d", prevTotalSize, ack.getSlaveIndex(), ack.totalSize));
+            log.warnf("Previous total size was %d but slave %d reports total size %d", prevTotalSize, ack.getSlaveIndex(), ack.totalSize);
             retval = retval && !failOnNotTotalSize;
          }
          slaveResults.put(ack.getSlaveIndex(), new Report.SlaveResult(range(slaveMinElements, slaveMaxElements),
