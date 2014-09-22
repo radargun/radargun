@@ -52,6 +52,13 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
    @Property(doc = "JMX Domain name for components looked up. Default is 'jboss.infinispan'")
    protected String jmxDomain = "jboss.infinispan";
 
+   @Property(doc = "Maximal amount of active connections to single server. Default is unlimited.")
+   protected int maxConnectionsServer = -1;
+
+   @Property(doc = "Maximal amount of active connections to all servers. Default is unlimited.")
+   protected int maxConnectionsTotal = -1;
+
+
    protected ArrayList<String> serverHostnames = new ArrayList<String>();
    protected InfinispanHotrodQueryable queryable;
    protected Configuration configuration;
@@ -59,6 +66,7 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
    @Init
    public void init() {
       ConfigurationBuilder builder = new ConfigurationBuilder();
+      builder.connectionPool().maxActive(maxConnectionsServer).maxTotal(maxConnectionsTotal);
       for (String server : servers.split(";")) {
          Matcher matcher = ADDRESS_PATTERN.matcher(server);
          if (!matcher.matches()) {
