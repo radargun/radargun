@@ -7,16 +7,21 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.radargun.Operation;
+import org.radargun.config.DefinitionElement;
+import org.radargun.config.Property;
 
 /**
  * Implements the Statistics interface using provided {@link OperationStats}.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@DefinitionElement(name = "default", doc = "Statistics with the same implementation of operation statistics.")
 public class DefaultStatistics extends IntervalStatistics {
    private transient OperationStats[] operationStats = new OperationStats[0];
    private Map<String, OperationStats> operationStatsMap = new HashMap<String, OperationStats>();
-   protected final OperationStats prototype;
+
+   @Property(name = "operationStats", doc = "Operation statistics prototype.", complexConverter = OperationStats.Converter.class)
+   protected OperationStats prototype = new DefaultOperationStats();
 
    public static Statistics merge(Collection<Statistics> set) {
       if (set.size() == 0) {
@@ -28,6 +33,9 @@ public class DefaultStatistics extends IntervalStatistics {
          res.merge(elems.next());
       }
       return res;
+   }
+
+   public DefaultStatistics() {
    }
 
    public DefaultStatistics(OperationStats prototype) {
@@ -122,10 +130,10 @@ public class DefaultStatistics extends IntervalStatistics {
    }
 
    @Override
-   public <T> T[] getRepresentations(Class<T> clazz) {
+   public <T> T[] getRepresentations(Class<T> clazz, Object... args) {
       T[] representations = (T[]) Array.newInstance(clazz, operationStats.length);
       for (int i = 0; i < operationStats.length; ++i) {
-         representations[i] = operationStats[i].getRepresentation(clazz);
+         representations[i] = operationStats[i].getRepresentation(clazz, args);
       }
       return representations;
    }

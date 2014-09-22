@@ -75,6 +75,15 @@ public class Projections {
       });
    }
 
+   public static long[] toLongArray(Collection<Long> collection) {
+      long[] array = new long[collection.size()];
+      int i = 0;
+      for (Long l : collection) {
+         array[i++] = l;
+      }
+      return array;
+   }
+
    public interface Func<A, B> {
       B project(A a);
    }

@@ -6,32 +6,39 @@ import java.util.List;
 import java.util.Map;
 
 import org.radargun.Operation;
+import org.radargun.config.DefinitionElement;
+import org.radargun.config.Property;
+import org.radargun.utils.TimeConverter;
 
 /**
  * Keeps a series of {@link Statistics} instances and records the requests according to current timestamp.
- * Result retrieval needs special handling using the {@link #asList()} method.
  *
  * Useful when the request response time is expected to change during the test execution.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class PeriodicStatistics extends IntervalStatistics {
-   private final Statistics prototype;
-   private final long period;
-   private final List<Statistics> buckets;
+@DefinitionElement(name = "periodic", doc = "Periodically switches the statistics where the operation is recorded.")
+public class PeriodicStatistics extends IntervalStatistics implements IterationStatistics {
+   @Property(name = "implementation", doc = "Operation statistics prototype. Default is DefaultStatistics.", complexConverter = Statistics.Converter.class)
+   private Statistics prototype = new DefaultStatistics();
+
+   @Property(doc = "Duration of one sample.", optional = false, converter = TimeConverter.class)
+   private long period;
+
+   private final List<IterationStatistics.Iteration> buckets;
 
    public PeriodicStatistics(Statistics prototype, long period) {
       this.prototype = prototype;
       this.period = period;
-      this.buckets = new ArrayList<Statistics>();
+      this.buckets = new ArrayList<>();
    }
 
    public PeriodicStatistics(PeriodicStatistics other) {
       this.prototype = other.prototype;
       this.period = other.period;
-      this.buckets = new ArrayList<Statistics>(other.buckets.size());
-      for (Statistics s : other.buckets) {
-         this.buckets.add(s.copy());
+      this.buckets = new ArrayList<>(other.buckets.size());
+      for (Iteration s : other.buckets) {
+         this.buckets.add(new Iteration(s.name, s.statistics.copy()));
       }
    }
 
@@ -39,9 +46,9 @@ public class PeriodicStatistics extends IntervalStatistics {
       long currentTime = System.currentTimeMillis();
       int bucket = (int)((currentTime - getBegin()) / period);
       while (buckets.size() <= bucket) {
-         buckets.add(prototype.copy());
+         buckets.add(new Iteration("Period " + bucket, prototype.copy()));
       }
-      return buckets.get(bucket);
+      return buckets.get(bucket).statistics;
    }
 
    @Override
@@ -80,11 +87,11 @@ public class PeriodicStatistics extends IntervalStatistics {
    }
 
    @Override
-   public <T> T[] getRepresentations(Class<T> clazz) {
+   public <T> T[] getRepresentations(Class<T> clazz, Object... args) {
       throw new UnsupportedOperationException();
    }
 
-   public List<Statistics> asList() {
+   public List<Iteration> getIterations() {
       return Collections.unmodifiableList(buckets);
    }
 }
