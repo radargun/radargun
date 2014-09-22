@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.radargun.Operation;
+import org.radargun.utils.ReflexiveConverters;
 
 /**
  * Collects and provides statistics of operations executed against the service.
@@ -79,8 +80,14 @@ public interface Statistics extends Serializable {
    /**
     * Get particular representation of each operation stats, in array with operation IDs as indices.
     * @param clazz
-    * @param <T>
+    * @param args
     * @return
     */
-   <T> T[] getRepresentations(Class<T> clazz);
+   <T> T[] getRepresentations(Class<T> clazz, Object... args);
+
+   public static class Converter extends ReflexiveConverters.ObjectConverter {
+      public Converter() {
+         super(Statistics.class);
+      }
+   }
 }

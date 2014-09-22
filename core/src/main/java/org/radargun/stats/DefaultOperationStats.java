@@ -1,5 +1,6 @@
 package org.radargun.stats;
 
+import org.radargun.config.DefinitionElement;
 import org.radargun.stats.representation.BoxAndWhiskers;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.MeanAndDev;
@@ -9,6 +10,7 @@ import org.radargun.stats.representation.MeanAndDev;
 *
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
 */
+@DefinitionElement(name = "default", doc = "Operations statistics with fixed memory footprint.")
 public class DefaultOperationStats implements OperationStats {
    private static final double INVERSE_NORMAL_95 = 1.96;
    private static final double INVERSE_NORMAL_50 = 0.67448;
@@ -92,7 +94,7 @@ public class DefaultOperationStats implements OperationStats {
    }
 
    @Override
-   public <T> T getRepresentation(Class<T> clazz) {
+   public <T> T getRepresentation(Class<T> clazz, Object... args) {
       if (clazz == DefaultOutcome.class) {
          return (T) new DefaultOutcome(requests, errors, responseTimeMean, responseTimeMax);
       } else if (clazz == MeanAndDev.class) {
@@ -100,7 +102,7 @@ public class DefaultOperationStats implements OperationStats {
       } else if (clazz == BoxAndWhiskers.class) {
          return (T) getBoxAndWhiskers();
       } else {
-         throw new IllegalArgumentException(clazz.toString());
+         return null;
       }
    }
 

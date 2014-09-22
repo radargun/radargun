@@ -43,9 +43,9 @@ public class MultiOperationStats implements OperationStats {
    }
 
    @Override
-   public <T> T getRepresentation(Class<T> clazz) {
+   public <T> T getRepresentation(Class<T> clazz, Object... args) {
       for (OperationStats impl : impls) {
-         T representation = impl.getRepresentation(clazz);
+         T representation = impl.getRepresentation(clazz, args);
          if (representation != null) return representation;
       }
       return null;

@@ -37,6 +37,13 @@ public abstract class IntervalStatistics implements Statistics {
 
    @Override
    public String toString() {
-      return String.format("{beginTime=%d, endTime=%d}", beginTime, endTime);
+      StringBuilder sb = new StringBuilder();
+      sb.append(getClass().getSimpleName()).append(" {beginTime=");
+      if (beginTime == Long.MAX_VALUE) sb.append("<none>");
+      else sb.append(beginTime);
+      sb.append(", endTime=");
+      if (endTime == Long.MIN_VALUE) sb.append("<none>");
+      else sb.append(endTime);
+      return sb.append("}").toString();
    }
 }

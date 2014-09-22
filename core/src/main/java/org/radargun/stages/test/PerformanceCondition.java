@@ -59,7 +59,7 @@ public abstract class PerformanceCondition {
       }
    }
 
-   @DefinitionElement(name = "all", doc = "All inner conditions are false", resolveType = DefinitionElement.ResolveType.PASS_BY_DEFINITION)
+   @DefinitionElement(name = "all", doc = "All inner conditions are true", resolveType = DefinitionElement.ResolveType.PASS_BY_DEFINITION)
    protected static class All extends PerformanceCondition {
       @Property(name = "", doc = "Inner conditions", complexConverter = ListConverter.class)
       public final List<PerformanceCondition> subs = new ArrayList<>();
@@ -134,7 +134,7 @@ public abstract class PerformanceCondition {
          OperationStats stats = statistics.getOperationsStats().get(on);
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          DefaultOutcome outcome = stats.getRepresentation(DefaultOutcome.class);
-         if (outcome == null) throw new IllegalStateException("Cannot determine mean from " + stats);
+         if (outcome == null) throw new IllegalStateException("Cannot determine throughput from " + stats);
          org.radargun.stats.representation.Throughput throughput = outcome.toThroughput(threads,
                TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin()));
          log.info("Throughput is " + throughput.actual + " ops/s " + PropertyHelper.toString(this));
@@ -163,7 +163,7 @@ public abstract class PerformanceCondition {
          OperationStats stats = statistics.getOperationsStats().get(on);
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          DefaultOutcome outcome = stats.getRepresentation(DefaultOutcome.class);
-         if (outcome == null) throw new IllegalStateException("Cannot determine mean from " + stats);
+         if (outcome == null) throw new IllegalStateException("Cannot determine request count from " + stats);
          log.info("Executed " + outcome.requests + " reqs " + PropertyHelper.toString(this));
          if (below != null) return outcome.requests < below;
          if (over != null) return outcome.requests > over;
@@ -200,7 +200,7 @@ public abstract class PerformanceCondition {
          OperationStats stats = statistics.getOperationsStats().get(on);
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          DefaultOutcome outcome = stats.getRepresentation(DefaultOutcome.class);
-         if (outcome == null) throw new IllegalStateException("Cannot determine mean from " + stats);
+         if (outcome == null) throw new IllegalStateException("Cannot determine error count from " + stats);
          log.info("Encountered " + outcome.errors + " errors " + PropertyHelper.toString(this));
          if (totalBelow != null) return outcome.errors < totalBelow;
          if (totalOver != null) return outcome.errors > totalOver;
@@ -210,15 +210,47 @@ public abstract class PerformanceCondition {
       }
    }
 
+   @DefinitionElement(name = "percentile", doc = "Checks value of the response time of given operation " +
+         "at some percentile (0 = fastest operation, 100 = slowest operation).")
+   protected static class Percentile extends AbstractCondition {
+      @Property(doc = "Test if the response time is below specified value (use time unit!)", converter = NanoTimeConverter.class)
+      protected Long below;
+
+      @Property(doc = "Test if the response time is above specified value (use time unit!)", converter = NanoTimeConverter.class)
+      protected Long over;
+
+      @Property(doc = "Percentile used for the comparison: (0 = fastest operation, 100 = slowest operation)", optional = false)
+      protected double value;
+
+      @Init
+      public void init() {
+         if (below != null && over != null) throw new IllegalStateException("Cannot define both 'below' and 'over'!");
+         if (below == null && over == null) throw new IllegalStateException("Must define either 'below' or 'over'!");
+      }
+
+      @Override
+      public boolean evaluate(int threads, Statistics statistics) {
+         OperationStats stats = statistics.getOperationsStats().get(on);
+         if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
+         org.radargun.stats.representation.Percentile percentile
+               = stats.getRepresentation(org.radargun.stats.representation.Percentile.class, value);
+         if (percentile == null) throw new IllegalStateException("Cannot determine percentile from " + stats);
+         log.info("Response time is " + percentile.responseTimeMax + " ns " + PropertyHelper.toString(this));
+         if (below != null) return percentile.responseTimeMax < below;
+         if (over != null) return percentile.responseTimeMax > over;
+         throw new IllegalStateException();
+      }
+   }
+
    public static class Converter extends ReflexiveConverters.ObjectConverter {
       public Converter() {
-         super(new Class<?>[] { Any.class, All.class, Mean.class, Throughput.class, Requests.class, Errors.class});
+         super(new Class<?>[] { Any.class, All.class, Mean.class, Throughput.class, Requests.class, Errors.class, Percentile.class});
       }
    }
 
    protected static class ListConverter extends ReflexiveConverters.ListConverter {
       public ListConverter() {
-         super(new Class<?>[] { Any.class, All.class, Mean.class, Throughput.class, Requests.class, Errors.class});
+         super(new Class<?>[] { Any.class, All.class, Mean.class, Throughput.class, Requests.class, Errors.class, Percentile.class});
       }
    }
 }

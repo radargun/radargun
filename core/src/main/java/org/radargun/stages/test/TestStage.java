@@ -1,7 +1,6 @@
 package org.radargun.stages.test;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -16,16 +15,9 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
-import org.radargun.stats.AllRecordingOperationStats;
-import org.radargun.stats.DefaultOperationStats;
 import org.radargun.stats.DefaultStatistics;
-import org.radargun.stats.HistogramOperationStats;
-import org.radargun.stats.HistogramStatistics;
-import org.radargun.stats.MultiOperationStats;
-import org.radargun.stats.OperationStats;
-import org.radargun.stats.PeriodicStatistics;
+import org.radargun.stats.IterationStatistics;
 import org.radargun.stats.Statistics;
-import org.radargun.stats.representation.Histogram;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
 import org.radargun.utils.Projections;
@@ -76,17 +68,9 @@ public abstract class TestStage extends AbstractDistStage {
          "the benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.")
    protected long requestPeriod = 0;
 
-   @Property(doc = "Generate a range for histogram with operations statistics (for use in next stress tests). Default is false.")
-   protected boolean generateHistogramRange = false;
-
-   @Property(doc = "The test will produce operation statistics in histogram. Default is false.")
-   protected boolean useHistogramStatistics = false;
-
-   @Property(doc = "The test will produce operation statistics as average values. Default is true.")
-   protected boolean useSimpleStatistics = true;
-
-   @Property(doc = "Period of single statistics result. By default periodic statistics are not used.", converter = TimeConverter.class)
-   protected long statisticsPeriod = 0;
+   @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'default' statistics " +
+         "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
+   protected Statistics statisticsPrototype = new DefaultStatistics();
 
    @Property(doc = "Property, which value will be used to identify individual iterations (e.g. num-threads).")
    protected String iterationProperty;
@@ -105,7 +89,6 @@ public abstract class TestStage extends AbstractDistStage {
    protected volatile boolean terminated = false;
    protected int testIteration; // first iteration we should use for setting the statistics
    protected List<Stressor> stressors = new ArrayList<>();
-   protected Statistics statisticsPrototype = new DefaultStatistics(new DefaultOperationStats());
 
    @Init
    public void init() {
@@ -119,59 +102,17 @@ public abstract class TestStage extends AbstractDistStage {
       if (result != null && System.identityHashCode(result) == result.hashCode()) System.out.print("");
    }
 
-   protected void loadStatistics() {
-      Statistics statistics;
-      if (generateHistogramRange) {
-         statistics = new DefaultStatistics(new AllRecordingOperationStats());
-      } else if (useHistogramStatistics) {
-         Histogram[] histograms = (Histogram[]) slaveState.get(Histogram.OPERATIONS_HISTOGRAMS);
-         if (histograms == null) {
-            throw new IllegalStateException("The histogram statistics are not generated. Please run StressTestWarmup with generateHistogramRange=true");
-         }
-         OperationStats[] histogramProtypes = new OperationStats[histograms.length];
-         for (int i = 0; i < histograms.length; ++i) {
-            if (useSimpleStatistics) {
-               histogramProtypes[i] = new MultiOperationStats(new DefaultOperationStats(), new HistogramOperationStats(histograms[i]));
-            } else {
-               histogramProtypes[i] = new HistogramOperationStats(histograms[i]);
-            }
-         }
-         statistics = new HistogramStatistics(histogramProtypes, new DefaultOperationStats());
-      } else {
-         statistics = new DefaultStatistics(new DefaultOperationStats());
-      }
-      if (statisticsPeriod > 0) {
-         statistics = new PeriodicStatistics(statistics, statisticsPeriod);
-      }
-      statisticsPrototype = statistics;
-   }
-
-   private void storeStatistics(List<List<Statistics>> results) {
-      if (generateHistogramRange) {
-         Statistics statistics = statisticsPrototype.copy();
-         for (List<Statistics> iteration : results) {
-            for (Statistics s : iteration) {
-               s.merge(statistics);
-            }
-         }
-         slaveState.put(Histogram.OPERATIONS_HISTOGRAMS, statistics.getRepresentations(Histogram.class));
-      }
-   }
-
    public DistStageAck executeOnSlave() {
       if (!isServiceRunning()) {
          log.info("Not running test on this slave as service is not running.");
          return successfulResponse();
       }
 
-      loadStatistics();
-
       try {
          long startNanos = System.nanoTime();
          log.info("Starting test " + testName);
          List<List<Statistics>> results = execute();
          log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
-         storeStatistics(results);
          return newStatisticsAck(slaveState, results);
       } catch (Exception e) {
          return errorResponse("Exception while initializing the test", e);
@@ -282,22 +223,23 @@ public abstract class TestStage extends AbstractDistStage {
          }
       }
 
-      if (statisticsPeriod > 0) {
-         /* expand the periodic statistics into iterations */
-         List<List<Statistics>> all = new ArrayList<List<Statistics>>();
-         for (Statistics s : stats) {
+      List<List<Statistics>> all = new ArrayList<>();
+      all.add(new ArrayList<Statistics>());
+      /* expand the iteration statistics into iterations */
+      for (Statistics s : stats) {
+         if (s instanceof IterationStatistics) {
             int iteration = 0;
-            for (Statistics s2 : ((PeriodicStatistics) s).asList()) {
+            for (IterationStatistics.Iteration it : ((IterationStatistics) s).getIterations()) {
                while (iteration >= all.size()) {
                   all.add(new ArrayList<Statistics>(stats.size()));
                }
-               all.get(iteration++).add(s2);
+               all.get(iteration++).add(it.statistics);
             }
+         } else {
+            all.get(0).add(s);
          }
-         return all;
-      } else {
-         return Collections.singletonList(stats);
       }
+      return all;
    }
 
    public int getTotalThreads() {
