@@ -38,6 +38,6 @@ public class OperationCountCompletion extends Completion {
       long elapsedNanos = System.nanoTime() - startTime;
       long estimatedTotal = elapsedNanos * numRequests / totalExecuted;
       long estimatedRemaining = estimatedTotal - elapsedNanos;
-      log.info(String.format(PROGRESS_STRING, executedOps, Utils.getNanosDurationString(elapsedNanos), Utils.getNanosDurationString(estimatedRemaining) + " (estimated)", Utils.getNanosDurationString(estimatedTotal) + " (estimated)"));
+      log.infof(PROGRESS_STRING, executedOps, Utils.getNanosDurationString(elapsedNanos), Utils.getNanosDurationString(estimatedRemaining) + " (estimated)", Utils.getNanosDurationString(estimatedTotal) + " (estimated)");
    }
 }

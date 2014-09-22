@@ -333,8 +333,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
             } else if (checkSubpartsEqual) {
                for (Map.Entry<Integer, Integer> os : otherSubparts.entrySet()) {
                   if ((int) subpart.getValue() != (int) os.getValue()) {
-                     log.error(String.format("Slave %d reports %s = %d but slave %d reported size %d",
-                           info.getSlaveIndex(), subpart.getKey(), subpart.getValue(), os.getKey(), os.getValue()));
+                     log.errorf("Slave %d reports %s = %d but slave %d reported size %d",
+                           info.getSlaveIndex(), subpart.getKey(), subpart.getValue(), os.getKey(), os.getValue());
                      success = false;
                   }
                }
@@ -342,15 +342,15 @@ public class CheckCacheDataStage extends AbstractDistStage {
             }
          }
          if (checkSubpartsSumLocal && sumSubpartSize != info.localSize) {
-            log.error(String.format("On slave %d sum of subparts sizes (%d) is not the same as local size (%d)",
-                  info.getSlaveIndex(), sumSubpartSize, info.localSize));
+            log.errorf("On slave %d sum of subparts sizes (%d) is not the same as local size (%d)",
+                  info.getSlaveIndex(), sumSubpartSize, info.localSize);
             success = false;
          }
       }
       if (checkSubpartsAreReplicas) {
          for (Map.Entry<Object, Map<Integer, Integer>> subpart : subparts.entrySet()) {
             if (subpart.getValue().size() != numReplicas) {
-               log.error(String.format("Subpart %s was found in %s, should have %d replicas.", subpart.getKey(), subpart.getValue().keySet(), numReplicas));
+               log.errorf("Subpart %s was found in %s, should have %d replicas.", subpart.getKey(), subpart.getValue().keySet(), numReplicas);
                success = false;
             }
          }

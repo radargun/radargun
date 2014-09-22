@@ -145,8 +145,8 @@ public class PropertyHelper {
          try {
             destPath.set(destination, property.getValue().get(source));
          } catch (IllegalAccessException e) {
-            log.error(String.format("Failed to copy %s (%s) to %s.%s (%s)",
-               property.getValue(), source, destPath, destination), e);
+            log.errorf(e, "Failed to copy %s (%s) to %s.%s (%s)",
+               property.getValue(), source, destPath, destination);
          }
       }
    }
@@ -217,12 +217,12 @@ public class PropertyHelper {
                   ComplexConverter converter = ctor.newInstance();
                   path.set(target, converter.convert((ComplexDefinition) entry.getValue(), path.getTargetGenericType()));
                } catch (InstantiationException e) {
-                  log.error(String.format("Cannot instantiate converter %s for setting %s (%s)",
-                        converterClass.getName(), path, propName), e);
+                  log.errorf(e, "Cannot instantiate converter %s for setting %s (%s)",
+                        converterClass.getName(), path, propName);
                   throw new IllegalArgumentException(e);
                } catch (IllegalAccessException e) {
-                  log.error(String.format("Cannot access converter %s for setting %s (%s)",
-                        converterClass.getName(), path, propName), e);
+                  log.errorf(e, "Cannot access converter %s for setting %s (%s)",
+                        converterClass.getName(), path, propName);
                   throw new IllegalArgumentException(e);
                } catch (Throwable t) {
                   log.error("Failed to convert definition " + entry.getValue(), t);
@@ -249,12 +249,12 @@ public class PropertyHelper {
          Converter converter = ctor.newInstance();
          path.set(target, converter.convert(Evaluator.parseString(propertyString), path.getTargetGenericType()));
       } catch (InstantiationException e) {
-         log.error(String.format("Cannot instantiate converter %s for setting %s (%s)",
-               converterClass.getName(), path, propName), e);
+         log.errorf(e, "Cannot instantiate converter %s for setting %s (%s)",
+               converterClass.getName(), path, propName);
          throw new IllegalArgumentException(e);
       } catch (IllegalAccessException e) {
-         log.error(String.format("Cannot access converter %s for setting %s (%s)",
-               converterClass.getName(), path, propName), e);
+         log.errorf(e, "Cannot access converter %s for setting %s (%s)",
+               converterClass.getName(), path, propName);
          throw new IllegalArgumentException(e);
       } catch (Throwable t) {
          log.error("Failed to convert value " + propertyString, t);

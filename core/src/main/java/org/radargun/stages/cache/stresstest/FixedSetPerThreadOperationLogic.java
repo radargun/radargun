@@ -50,8 +50,8 @@ class FixedSetPerThreadOperationLogic extends FixedSetOperationLogic {
                long loaded = keysLoaded.incrementAndGet();
                if (loaded % stage.logPeriod == 0) {
                   Runtime runtime = Runtime.getRuntime();
-                  log.info(String.format("Loaded %d/%d entries (on this node), free %d MB/%d MB",
-                        loaded, stage.numEntries * stage.numThreads, runtime.freeMemory() / 1048576, runtime.maxMemory() / 1048576));
+                  log.infof("Loaded %d/%d entries (on this node), free %d MB/%d MB",
+                        loaded, stage.numEntries * stage.numThreads, runtime.freeMemory() / 1048576, runtime.maxMemory() / 1048576);
                }
                break;
             } catch (Throwable e) {
