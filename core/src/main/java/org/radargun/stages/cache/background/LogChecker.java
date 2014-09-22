@@ -1,6 +1,7 @@
 package org.radargun.stages.cache.background;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -131,7 +132,7 @@ public abstract class LogChecker extends Thread {
                }
                record.next();
                record.setLastUnsuccessfulCheckTimestamp(Long.MIN_VALUE);
-               pool.reportStoredOperation();
+               record.setLastSuccessfulCheckTimestamp(System.currentTimeMillis());
             } else {
                if (record.getLastStressorOperation() >= record.getOperationId()) {
                   // one more check to see whether some operations should not be ignored
@@ -200,7 +201,6 @@ public abstract class LogChecker extends Thread {
       private final AtomicLong missingOperations = new AtomicLong();
       private final AtomicLong missingNotifications = new AtomicLong();
       private final BasicOperations.Cache cache;
-      private volatile long lastStoredOperationTimestamp = Long.MIN_VALUE;
 
       public Pool(int numThreads, int numSlaves, BackgroundOpsManager manager) {
          totalThreads = numThreads * numSlaves;
@@ -247,12 +247,12 @@ public abstract class LogChecker extends Thread {
          return totalThreads;
       }
 
-      public void reportStoredOperation() {
-         lastStoredOperationTimestamp = System.currentTimeMillis();
-      }
-
-      public long getLastStoredOperationTimestamp() {
-         return lastStoredOperationTimestamp;
+      public Collection<StressorRecord> getRecords() {
+         ArrayList<StressorRecord> records = new ArrayList<>();
+         for (int i = 0; i < allRecords.length(); ++i) {
+            records.add(allRecords.get(i));
+         }
+         return records;
       }
 
       public AbstractStressorRecord take() {
@@ -285,22 +285,23 @@ public abstract class LogChecker extends Thread {
          }
          for (;;) {
             boolean allChecked = true;
+            long now = System.currentTimeMillis();
             for (int i = 0; i < totalThreads; ++i) {
                AbstractStressorRecord record = allRecords.get(i);
                if (record == null) continue;
                if (record.getOperationId() <= record.getLastStressorOperation()) {
                   if (log.isTraceEnabled()) {
-                     log.trace(String.format("Currently checked operation for thread %d is %d (key id %08X), last written is %d",
-                           record.getThreadId(), record.getOperationId(), record.getKeyId(), record.getLastStressorOperation()));
+                     log.trace(record.getStatus());
                   }
                   allChecked = false;
                   break;
                }
-            }
-            if (lastStoredOperationTimestamp + timeout < System.currentTimeMillis()) {
-               String error = "Waiting for checkers timed out after " + (System.currentTimeMillis() - lastStoredOperationTimestamp) + " ms";
-               log.error(error);
-               return error;
+               if (record.getLastSuccessfulCheckTimestamp() + timeout < now) {
+                  String error = "Waiting for checker for record [" + record.getStatus() + "] timed out after "
+                        + (now - record.getLastSuccessfulCheckTimestamp()) + " ms";
+                  log.error(error);
+                  return error;
+               }
             }
             if (allChecked) {
                StringBuilder sb = new StringBuilder("All checks OK: ");
@@ -365,13 +366,19 @@ public abstract class LogChecker extends Thread {
       }
    }
 
-   protected abstract static class AbstractStressorRecord {
+   public interface StressorRecord {
+      String getStatus();
+      long getLastSuccessfulCheckTimestamp();
+   }
+
+   protected abstract static class AbstractStressorRecord implements StressorRecord {
       protected final Random rand;
       protected final int threadId;
       protected long currentKeyId;
       protected volatile long currentOp = -1;
       private long lastStressorOperation = -1;
       private long lastUnsuccessfulCheckTimestamp = Long.MIN_VALUE;
+      private long lastSuccessfulCheckTimestamp = System.currentTimeMillis();
       private Set<Long> notifiedOps = new HashSet<Long>();
       private long requireNotify = Long.MAX_VALUE;
 
@@ -386,6 +393,11 @@ public abstract class LogChecker extends Thread {
          log.trace("Initializing record random with " + Utils.getRandomSeed(rand));
          this.rand = rand;
          this.threadId = threadId;
+      }
+
+      public String getStatus() {
+         return String.format("thread=%d, lastStressorOperation=%d, currentOp=%d, currentKeyId=%08X, notifiedOps=%s, requireNotify=%d",
+               threadId, lastStressorOperation, currentOp, currentKeyId, notifiedOps, requireNotify);
       }
 
       public abstract void next();
@@ -441,6 +453,15 @@ public abstract class LogChecker extends Thread {
       public synchronized boolean hasNotification(long operationId) {
          if (operationId < requireNotify) return true;
          return notifiedOps.contains(operationId);
+      }
+
+      public void setLastSuccessfulCheckTimestamp(long timestamp) {
+         this.lastSuccessfulCheckTimestamp = timestamp;
+      }
+
+      @Override
+      public long getLastSuccessfulCheckTimestamp() {
+         return lastSuccessfulCheckTimestamp;
       }
    }
 }

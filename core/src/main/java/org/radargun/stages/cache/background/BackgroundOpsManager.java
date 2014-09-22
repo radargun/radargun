@@ -434,9 +434,22 @@ public class BackgroundOpsManager implements ServiceListener {
             return String.format("Background stressors report %d missing operations and %d missing notifications!",
                   logCheckerPool.getMissingOperations(), logCheckerPool.getMissingNotifications());
          }
-         if (logCheckers != null) {
-            long lastProgress = System.currentTimeMillis() - logCheckerPool.getLastStoredOperationTimestamp();
-            if (lastProgress > logLogicConfiguration.checkersNoProgressTimeout) {
+         if (stressorThreads != null) {
+            for (Stressor stressor : stressorThreads) {
+               log.info("Stressor: threadId=" + stressor.id + ", " + stressor.getLogic().getStatus());
+            }
+         }
+         if (logCheckerPool != null) {
+            boolean progress = true;
+            long now = System.currentTimeMillis();
+            for (LogChecker.StressorRecord record : logCheckerPool.getRecords()) {
+               log.info("Record: " + record.getStatus());
+               if (now - record.getLastSuccessfulCheckTimestamp() > logLogicConfiguration.checkersNoProgressTimeout) {
+                  log.error("No progress in this record for " + (now - record.getLastSuccessfulCheckTimestamp()) + " ms");
+                  progress = false;
+               }
+            }
+            if (!progress) {
                StringBuilder sb = new StringBuilder(1000).append("Current stressors info:\n");
                for (Stressor stressor : stressorThreads) {
                   sb.append(stressor.getStatus()).append(", stacktrace:\n");
@@ -454,7 +467,7 @@ public class BackgroundOpsManager implements ServiceListener {
                   }
                }
                log.info(sb.toString());
-               return "No progress in checkers for " + lastProgress + " ms!";
+               return "No progress in checkers!";
             }
          }
       }
