@@ -43,5 +43,11 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
             addEvent(hashChanges, false, 0, 0);
          }
       });
+      service.lifecycle.registerOnStop(new Runnable() {
+         @Override
+         public void run() {
+            reset();
+         }
+      });
    }
 }

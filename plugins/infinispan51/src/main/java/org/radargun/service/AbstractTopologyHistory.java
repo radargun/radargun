@@ -46,6 +46,11 @@ public class AbstractTopologyHistory implements TopologyHistory {
       }
    }
 
+   protected synchronized void reset() {
+      topologyChanges.clear();
+      hashChanges.clear();
+   }
+
    protected static class Event extends TopologyHistory.Event {
       private final Date started;
       private Date ended;

@@ -1,5 +1,7 @@
 package org.radargun.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -8,10 +10,11 @@ import java.util.regex.Pattern;
 public class InfinispanServerLifecycle extends ProcessLifecycle {
    private boolean serverStarted;
    private boolean serverStopped;
-   private InfinispanServerService service;
+   private final InfinispanServerService service;
    private final static Pattern START_OK = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started in.*");
    private final static Pattern START_ERROR = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started \\(with errors\\) in.*");
    private final static Pattern STOPPED = Pattern.compile(".*\\[org\\.jboss\\.as\\].*stopped in.*");
+   private final List<Runnable> stopListeners = new ArrayList<>();
 
    public InfinispanServerLifecycle(final InfinispanServerService service) {
       super(service);
@@ -119,6 +122,12 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
       // no serverStarted = false!
       serverStopped = true;
       notifyAll();
+      for (Runnable listener : stopListeners) {
+         listener.run();
+      }
    }
 
+   public synchronized void registerOnStop(Runnable runnable) {
+      stopListeners.add(runnable);
+   }
 }
