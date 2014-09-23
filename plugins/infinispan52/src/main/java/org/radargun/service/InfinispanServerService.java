@@ -49,6 +49,8 @@ public class InfinispanServerService extends JavaProcessService {
    @Property(name = Service.SLAVE_INDEX, doc = "Index of this slave.")
    private int slaveIndex;
 
+   protected InfinispanServerLifecycle lifecycle = new InfinispanServerLifecycle(this);
+
    @Init
    public void init() {
       try {
@@ -72,7 +74,7 @@ public class InfinispanServerService extends JavaProcessService {
    @ProvidesTrait
    @Override
    public InfinispanServerLifecycle createLifecycle() {
-      return new InfinispanServerLifecycle(this);
+      return lifecycle;
    }
 
    @ProvidesTrait
