@@ -33,7 +33,7 @@ public class EmbeddedConfigurationProvider extends AbstractConfigurationProvider
             Properties cacheProperties = configDumpHelper.dumpCache(
                   cache.getValue().getAdvancedCache().getCacheConfiguration(), jmxDomain,
                   service.cacheManager.getName(), cache.getValue().getName());
-            if (!cacheProperties.isEmpty()) {
+            if (cacheProperties != null && !cacheProperties.isEmpty()) {
                configurationMap.put("cache_" + cache.getValue().getName(), cacheProperties);
             }
          }

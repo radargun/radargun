@@ -8,6 +8,7 @@ import java.util.Map;
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
 import org.radargun.config.InitHelper;
+import org.radargun.config.PropertyHelper;
 import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -124,6 +125,7 @@ public class Slave {
       state.setTimeline(new Timeline(slaveIndex));
       Map<String, String> extras = getCurrentExtras(configuration, cluster);
       Object service = ServiceHelper.createService(state.getClassLoader(), setup.plugin, setup.service, configuration.name, setup.file, slaveIndex, setup.getProperties(), extras);
+      log.info("Service is " + service.getClass().getSimpleName() + PropertyHelper.toString(service));
       Map<Class<?>, Object> traits = TraitHelper.retrieve(service);
       state.setTraits(traits);
       for (;;) {
