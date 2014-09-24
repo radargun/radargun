@@ -42,4 +42,9 @@ public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
 
    @ProvidesTrait
    public InfinispanIterable createIterable() { return new InfinispanIterable(this); }
+
+   @ProvidesTrait
+   public InfinispanCacheListeners createListeners() {
+      return new InfinispanCacheListeners(this);
+   }
 }
