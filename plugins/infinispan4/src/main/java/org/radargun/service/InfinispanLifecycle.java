@@ -82,7 +82,7 @@ public class InfinispanLifecycle implements Lifecycle {
             state = State.STOPPED;
          }
       } catch (Exception e) {
-         log.error("Service stop failed.");
+         log.error("Service stop failed.", e);
          afterStopFailed();
          if (!stateLock.isHeldByCurrentThread()) {
             stateLock.lock();

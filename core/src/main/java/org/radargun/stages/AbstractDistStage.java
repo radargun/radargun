@@ -112,7 +112,9 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
             log.warn("Received error ack " + ack);
             result = errorResult();
          } else {
-            log.trace("Received success ack " + ack);
+            if (log.isTraceEnabled()) {
+               log.trace("Received success ack " + ack);
+            }
          }
       }
       return result;
