@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.radargun.config.Cluster;
 import org.radargun.reporting.Timeline;
 import org.radargun.reporting.html.TimelineDocument;
 import org.testng.annotations.Test;
@@ -43,7 +44,9 @@ public class TimelineChartsTest {
       t1.addValue("Category C", new Timeline.Value(now + 2100, 912));
       t1.addValue("Category C", new Timeline.Value(now + 3800, 485));
 
-      TimelineDocument doc = new TimelineDocument(new TimelineDocument.Configuration(), "test", "testconfig", "Test Config", Arrays.asList(t0, t1));
+      Cluster cluster = new Cluster();
+      cluster.addGroup("default", 2);
+      TimelineDocument doc = new TimelineDocument(new TimelineDocument.Configuration(), "test", "testconfig", "Test Config", Arrays.asList(t0, t1), cluster);
       try {
          doc.open();
          doc.writeTimelines();

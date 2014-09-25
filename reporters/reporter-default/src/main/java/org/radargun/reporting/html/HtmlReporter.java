@@ -53,7 +53,7 @@ public class HtmlReporter implements Reporter {
          String configName = report.getConfiguration().name;
 
          TimelineDocument timelineDocument = new TimelineDocument(timelineConfig, targetDir,
-               configName + "_" + report.getCluster().getClusterIndex(), configName + " on " + report.getCluster(), report.getTimelines());
+               configName + "_" + report.getCluster().getClusterIndex(), configName + " on " + report.getCluster(), report.getTimelines(), report.getCluster());
          try {
             timelineDocument.open();
             timelineDocument.writeTimelines();

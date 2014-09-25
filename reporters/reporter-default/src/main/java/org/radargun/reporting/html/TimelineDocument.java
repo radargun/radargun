@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.radargun.config.Cluster;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.logging.Log;
@@ -26,6 +27,7 @@ public class TimelineDocument extends HtmlDocument {
    private final Configuration configuration;
    private final String configName;
    private final String title;
+   private final Cluster cluster;
    private List<Timeline> timelines;
    private Map<String, Double> minValues = new HashMap<String, Double>();
    private Map<String, Double> maxValues = new HashMap<String, Double>();
@@ -33,13 +35,14 @@ public class TimelineDocument extends HtmlDocument {
    private Map<String, Integer> eventCategories = new TreeMap<String, Integer>();
    private long startTimestamp = Long.MAX_VALUE, endTimestamp = Long.MIN_VALUE;
 
-   public TimelineDocument(Configuration configuration, String directory, String configName, String title, List<Timeline> timelines) {
+   public TimelineDocument(Configuration configuration, String directory, String configName, String title, List<Timeline> timelines, Cluster cluster) {
       super(directory, "timeline_" + configName + ".html", title + " Timeline");
       this.title = title;
       this.configuration = configuration;
       this.timelines = new ArrayList<Timeline>(timelines);
       Collections.sort(this.timelines);
       this.configName = configName;
+      this.cluster = cluster;
 
       for (Timeline timeline : this.timelines) {
          startTimestamp = Math.min(startTimestamp, timeline.getFirstTimestamp());
@@ -190,7 +193,13 @@ public class TimelineDocument extends HtmlDocument {
             }
          }
          if (timeline.slaveIndex >= 0) {
-            write(String.format("\"><strong>Slave %d</strong><br>\n", timeline.slaveIndex));
+            write("\"><strong>Slave ");
+            if (cluster.getGroups().size() > 1)  {
+               write(String.format("%d (%s)", timeline.slaveIndex, cluster.getGroup(timeline.slaveIndex).name));
+            } else {
+               write(String.valueOf(timeline.slaveIndex));
+            }
+            write("</strong><br>\n");
          } else {
             write("\"><strong>Master</strong><br>\n");
          }
