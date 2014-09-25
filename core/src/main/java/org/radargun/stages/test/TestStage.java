@@ -49,10 +49,10 @@ public abstract class TestStage extends AbstractDistStage {
    @Property(doc = "Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.")
    protected int totalThreads = 0;
 
-   @Property(doc = "Specifies if the requests should be explicitely wrapped in transactions. By default" +
-         "the cachewrapper is queried whether it does support the transactions, if it does," +
-         "transactions are used, otherwise these are not.")
-   protected Boolean useTransactions = null;
+   @Property(doc = "Specifies if the requests should be explicitly wrapped in transactions. " +
+         "Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if " +
+         "the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.")
+   protected TransactionMode useTransactions = TransactionMode.IF_TRANSACTIONAL;
 
    @Property(doc = "Specifies whether the transactions should be committed (true) or rolled back (false). " +
          "Default is true")
@@ -319,9 +319,7 @@ public abstract class TestStage extends AbstractDistStage {
    }
 
    public boolean useTransactions(String cacheName) {
-      // default for Transactional.Configuration.TRANSACTIONS_ENABLED is without transactions
-      return useTransactions != null ? useTransactions :
-            transactional == null ? false : transactional.getConfiguration(cacheName) == Transactional.Configuration.TRANSACTIONAL;
+      return useTransactions.use(transactional, cacheName, transactionSize);
    }
 
    public abstract OperationLogic getLogic();
