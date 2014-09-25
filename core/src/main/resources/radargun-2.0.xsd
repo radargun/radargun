@@ -1149,6 +1149,11 @@
                      <documentation>Benchmark duration. This takes precedence over numRequests. By default switched off.</documentation>
                   </annotation>
                </element>
+               <element maxOccurs="1" minOccurs="0" name="enable-cluster-listeners" type="rg:boolean">
+                  <annotation>
+                     <documentation>During stress stage, cluster listeners could be enabled. This is flag to turn them on. Default is disabled.</documentation>
+                  </annotation>
+               </element>
                <element maxOccurs="1" minOccurs="0" name="entry-lifespan" type="rg:long-converted-by-org-radargun-utils-time-converter">
                   <annotation>
                      <documentation>With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.</documentation>
@@ -1338,6 +1343,11 @@
             <attribute name="duration" type="rg:long-converted-by-org-radargun-utils-time-converter">
                <annotation>
                   <documentation>Benchmark duration. This takes precedence over numRequests. By default switched off.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="enable-cluster-listeners" type="rg:boolean">
+               <annotation>
+                  <documentation>During stress stage, cluster listeners could be enabled. This is flag to turn them on. Default is disabled.</documentation>
                </annotation>
             </attribute>
             <attribute name="entry-lifespan" type="rg:long-converted-by-org-radargun-utils-time-converter">

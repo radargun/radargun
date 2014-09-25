@@ -1,6 +1,8 @@
 package org.radargun.stages.cache.stresstest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,8 @@ import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.Histogram;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.BulkOperations;
+import org.radargun.traits.CacheInformation;
+import org.radargun.traits.CacheListeners;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -179,6 +183,9 @@ public class StressTestStage extends AbstractDistStage {
    @Property(doc = "Property, which value will be used to identify individual iterations (e.g. num-threads).")
    protected String iterationProperty;
 
+   @Property(doc = "During stress stage, cluster listeners could be enabled. This is flag to turn them on. Default is disabled.")
+   protected boolean enableClusterListeners = false;
+
    @InjectTrait
    protected BasicOperations basicOperations;
    @InjectTrait
@@ -187,6 +194,10 @@ public class StressTestStage extends AbstractDistStage {
    protected BulkOperations bulkOperations;
    @InjectTrait
    protected Transactional transactional;
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private CacheInformation cacheInformation;
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   private CacheListeners listeners;
 
    protected transient volatile KeyGenerator keyGenerator;
    protected transient volatile ValueGenerator valueGenerator;
@@ -261,6 +272,9 @@ public class StressTestStage extends AbstractDistStage {
    }
 
    public DistStageAck executeOnSlave() {
+      if (enableClusterListeners)
+         registerListeners();
+
       if (!shouldExecute()) {
          log.info("The stage should not run on this slave");
          return successfulResponse();
@@ -387,6 +401,43 @@ public class StressTestStage extends AbstractDistStage {
 
    protected Stressor createStressor(int threadIndex) {
       return new Stressor(this, getLogic(), threadIndex, slaveState.getSlaveIndex(), slaveState.getClusterSize());
+   }
+
+   protected void registerListeners() {
+
+      if (listeners == null) {
+         throw new IllegalArgumentException("Service does not support cache listeners");
+      }
+      Collection<CacheListeners.Type> supported = listeners.getSupportedListeners();
+      if (!supported.containsAll(Arrays.asList(CacheListeners.Type.CREATED, CacheListeners.Type.EVICTED, CacheListeners.Type.REMOVED, CacheListeners.Type.UPDATED))) {
+         throw new IllegalArgumentException("Service does not support required listener types; supported are: " + supported);
+      }
+//      String cacheName = manager.getGeneralConfiguration().getCacheName();
+      listeners.addCreatedListener(cacheInformation.getDefaultCacheName(), new CacheListeners.CreatedListener() {
+         @Override
+         public void created(Object key, Object value) {
+            log.info("Created " + key + " -> " + value);
+         }
+      });
+      listeners.addEvictedListener(cacheInformation.getDefaultCacheName(), new CacheListeners.EvictedListener() {
+         @Override
+         public void evicted(Object key, Object value) {
+            log.info("Evicted " + key + " -> " + value);
+         }
+      });
+      listeners.addRemovedListener(cacheInformation.getDefaultCacheName(), new CacheListeners.RemovedListener() {
+         @Override
+         public void removed(Object key, Object value) {
+            log.info("Removed " + key + " -> " + value);
+         }
+      });
+
+      listeners.addUpdatedListener(cacheInformation.getDefaultCacheName(), new CacheListeners.UpdatedListener() {
+         @Override
+         public void updated(Object key, Object value) {
+            log.info("Updated " + key + " -> " + value);
+         }
+      });
    }
 
    protected void finishOperations() {
