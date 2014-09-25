@@ -49,7 +49,11 @@ public class JMXClusterValidationStage extends AbstractMasterStage {
    @Override
    public StageResult execute() throws Exception {
       try {
-         String validatorClass = Utils.getServiceProperty(plugin, JMX_CLUSTERVALIDATOR);
+         String validatorClass = Utils.getPluginProperty(plugin, JMX_CLUSTERVALIDATOR);
+         if (validatorClass == null) {
+            log.errorf("Cannot find validator class for plugin %s", plugin);
+            return errorResult();
+         }
          jmxConnectionTimeout = (Long) masterState.get(JMXClusterValidationPrepareStage.STATE_JMX_CONN_TIMEOUT);
          waitTimeout = (Long) masterState.get(JMXClusterValidationPrepareStage.STATE_WAIT_TIMEOUT);
          @SuppressWarnings("unchecked")
