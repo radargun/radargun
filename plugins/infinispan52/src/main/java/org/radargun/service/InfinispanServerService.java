@@ -23,7 +23,7 @@ import org.radargun.traits.ProvidesTrait;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Service(doc = InfinispanServerService.SERVICE_DESCRIPTION)
-public class InfinispanServerService extends ProcessService {
+public class InfinispanServerService extends JavaProcessService {
    protected static final String SERVICE_DESCRIPTION = "Service running Infinispan Server";
    protected static final String JAVA_HOME = "JAVA_HOME";
    protected static final String JAVA_OPTS = "JAVA_OPTS";

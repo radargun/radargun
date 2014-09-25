@@ -10,6 +10,16 @@ findpids() {
    done;
 }
 
+findjvms() {
+   JVMS=""
+   for pid in `jps | cut -f 1 -d " "`; do
+      grep /proc/$pid/environ -e "RADARGUN_TAG=$1" > /dev/null 2> /dev/null;
+      if [ $? -eq 0 ]; then
+         JVMS="$JVMS $pid";
+      fi;
+   done;
+}
+
 killtree() {
     local _pid=$1
     local _sig=$2

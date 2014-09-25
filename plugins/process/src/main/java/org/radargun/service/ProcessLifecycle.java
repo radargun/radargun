@@ -1,7 +1,6 @@
 package org.radargun.service;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -10,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -32,19 +30,12 @@ public class ProcessLifecycle implements Lifecycle, Killable {
 
    private String prefix;
    private String extension;
-   private String tag;
+
 
    public ProcessLifecycle(ProcessService service) {
       this.service = service;
-      if (!"unix".equals(service.os)) throw new IllegalArgumentException("Only unix is supported as OS.");
-      prefix = "plugins" + File.separator + "process" + File.separator + "bin" + File.separator + service.os + "-";
-      extension = "unix".equals(service.os) ? ".sh" : null;
-      Random random = new Random();
-      StringBuilder sb = new StringBuilder(16);
-      for (int i = 0; i < 16; ++i) {
-         sb.append((char) (random.nextInt('z' - 'a' + 1) + 'a'));
-      }
-      tag = sb.toString();
+      prefix = service.getCommandPrefix();
+      extension = service.getCommandSuffix();
    }
 
    @Override
@@ -72,7 +63,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
          return null;
       }
       try {
-         return new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "kill" + extension, tag)).start();
+         return new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "kill" + extension, service.getCommandTag())).start();
       } catch (IOException e) {
          log.error("Cannot kill service", e);
       }
@@ -87,7 +78,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
       }
       List<String> command = new ArrayList<String>();
       command.add(prefix + "start" + extension);
-      command.add(tag);
+      command.add(service.getCommandTag());
       command.addAll(service.getCommand());
       Map<String, String> env = service.getEnvironment();
       log.info("Environment:\n" + env);
@@ -126,7 +117,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
       }
       Process process;
       try {
-         process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "stop" + extension, tag)).start();
+         process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "stop" + extension, service.getCommandTag())).start();
          for (;;) {
             try {
                process.waitFor();
@@ -144,7 +135,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
    public synchronized boolean isRunning() {
       Process process = null;
       try {
-         process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "running" + extension, tag)).start();
+         process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "running" + extension, service.getCommandTag())).start();
          int exitValue = process.waitFor();
          return exitValue == 0;
       } catch (IOException e) {

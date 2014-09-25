@@ -52,6 +52,7 @@
 
    <!-- Sequence of stages executed on the cluster -->
    <scenario>
+      <jvm-monitor-start />
       <!-- Start services on all nodes -->
       <service-start />
 

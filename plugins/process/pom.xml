@@ -10,4 +10,18 @@
    <modelVersion>4.0.0</modelVersion>
    <name>Generic process plugin</name>
    <artifactId>plugin-process</artifactId>
+
+   <dependencies>
+      <!-- This dependency is not loaded in plugin classloader, we have to include
+           that directly on classpath. The reason is that it loads native shared
+           libraries and you can't have that loaded in multiple classloaders. -->
+      <dependency>
+         <groupId>com.sun</groupId>
+         <artifactId>tools</artifactId>
+         <version>1.7.0</version>
+         <scope>system</scope>
+         <!-- TODO: this system path is OS-dependent - create Win and Mac profiles -->
+         <systemPath>${java.home}/../lib/tools.jar</systemPath>
+      </dependency>
+   </dependencies>
 </project>
