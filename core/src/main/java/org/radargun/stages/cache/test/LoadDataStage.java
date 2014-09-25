@@ -15,9 +15,11 @@ import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
+import org.radargun.stages.test.TransactionMode;
 import org.radargun.state.ServiceListenerAdapter;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Transactional;
 import org.radargun.utils.Fuzzy;
 import org.radargun.utils.Utils;
 
@@ -66,8 +68,19 @@ public class LoadDataStage extends AbstractDistStage {
    @Property(doc = "During loading phase, if the insert fails, try it again. This is the maximum number of attempts. Default is 10.")
    protected int maxLoadAttempts = 10;
 
-   @InjectTrait
+   @Property(doc = "Specifies if the requests should be explicitly wrapped in transactions. " +
+         "Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if " +
+         "the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.")
+   protected TransactionMode useTransactions = TransactionMode.IF_TRANSACTIONAL;
+
+   @Property(doc = "Numbers of entries loaded in one transaction. Default is to not use transactions.")
+   protected int transactionSize = 0;
+
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected BasicOperations basicOperations;
+
+   @InjectTrait
+   protected Transactional transactional;
 
    protected List<Loader> loaders = new ArrayList<>();
    protected KeyGenerator keyGenerator;
@@ -79,6 +92,13 @@ public class LoadDataStage extends AbstractDistStage {
       if (!isServiceRunning()) {
          log.info("Not running test on this slave as service is not running.");
          return successfulResponse();
+      }
+      if (useTransactions == TransactionMode.ALWAYS) {
+         if (transactional == null) {
+            return errorResponse("Service does not support transactions");
+         } else if (transactionSize <= 0) {
+            return errorResponse("Transaction size was not configured");
+         }
       }
       log.info("Using key generator " + keyGeneratorClass + ", param " + keyGeneratorParam);
       keyGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), keyGeneratorClass, keyGeneratorParam);
@@ -97,8 +117,11 @@ public class LoadDataStage extends AbstractDistStage {
          }
       });
 
+      int threadBase = getExecutingSlaveIndex() * numThreads;
       for (int i = 0; i < numThreads; ++i) {
-         Loader loader = new Loader(i, getLoaderIds(i));
+         String cacheName = cacheSelector.getCacheName(threadBase + i);
+         boolean useTransactions = this.useTransactions.use(transactional, cacheName, transactionSize);
+         Loader loader = useTransactions ? new TxLoader(i, getLoaderIds(i)) : new NonTxLoader(i, getLoaderIds(i));
          loaders.add(loader);
          loader.start(); // no special synchronization needed
       }
@@ -122,12 +145,17 @@ public class LoadDataStage extends AbstractDistStage {
    }
 
    private interface LoaderIds {
+      /** Return next key ID for key with given size*/
       long next(int size);
+      /** Create a mark we can later return to */
+      void mark();
+      void resetToMark();
    }
 
    private static class RangeIds implements LoaderIds {
       private long current;
       private long limit;
+      private long mark;
 
       public RangeIds(long from, long to) {
          current = from;
@@ -142,54 +170,40 @@ public class LoadDataStage extends AbstractDistStage {
             return -1;
          }
       }
+
+      @Override
+      public void mark() {
+         mark = current;
+      }
+
+      @Override
+      public void resetToMark() {
+         current = mark;
+      }
    }
 
-   private class Loader extends Thread {
-      private int threadIndex;
-      private Throwable throwable;
-      private final Random random;
-      private LoaderIds loaderIds;
+   private abstract class Loader extends Thread {
+      protected final Random random;
+      protected final int threadIndex;
+      protected final LoaderIds loaderIds;
+      protected Throwable throwable;
 
-      public Loader(int index, LoaderIds loaderIds) {
+      private Loader(int index, LoaderIds loaderIds) {
          super("Loader-" + index);
          this.loaderIds = loaderIds;
          threadIndex = slaveState.getSlaveIndex() * numThreads + index;
          random = seed == null ? new Random() : new Random(seed + threadIndex);
       }
 
+      public Exception getException() {
+         return throwable == null ? null : new ExecutionException(throwable);
+      }
+
       @Override
       public void run() {
          try {
-            BasicOperations.Cache cache = basicOperations.getCache(cacheSelector.getCacheName(threadIndex));
-            for (;;) {
-               int size = entrySize.next(random);
-               long keyId = loaderIds.next(size);
-               if (keyId < 0) {
-                  log.info("Finished loading entries");
-                  break;
-               }
-               Object key = keyGenerator.generateKey(keyId);
-               Object value = valueGenerator.generateValue(key, size, random);
-               boolean inserted = false;
-               for (int i = 0; i < maxLoadAttempts; ++i) {
-                  try {
-                     cache.put(key, value);
-                     inserted = true;
-                     break;
-                  } catch (Exception e) {
-                     log.warn("Failed to insert entry into cache", e);
-                  }
-               }
-               if (!inserted) {
-                  throwable = new Exception("Failed to insert entry key=" + key + ", value=" + value + " " + maxLoadAttempts + " times.");
-                  return;
-               }
-               // just for logs - don't worry about those two not in sync
-               long entryCount = entryCounter.incrementAndGet();
-               long totalSize = sizeSum.addAndGet(size);
-               if (entryCount % logPeriod == 0) {
-                  log.infof("This node loaded %d entries (~%d bytes)", entryCount, totalSize);
-               }
+            for (; ; ) {
+               if (!loadEntry()) return;
             }
          } catch (Throwable t) {
             log.error("Exception in Loader", t);
@@ -197,8 +211,141 @@ public class LoadDataStage extends AbstractDistStage {
          }
       }
 
-      public Exception getException() {
-         return throwable == null ? null : new ExecutionException(throwable);
+      protected abstract boolean loadEntry();
+   }
+
+   private class NonTxLoader extends Loader {
+      private final BasicOperations.Cache<Object, Object> cache;
+
+      public NonTxLoader(int index, LoaderIds loaderIds) {
+         super(index, loaderIds);
+         String cacheName = cacheSelector.getCacheName(threadIndex);
+         cache = basicOperations.getCache(cacheName);
+      }
+
+      @Override
+      protected boolean loadEntry() {
+         int size = entrySize.next(random);
+         long keyId = loaderIds.next(size);
+         if (keyId < 0) {
+            log.info("Finished loading entries");
+            return false;
+         }
+         Object key = keyGenerator.generateKey(keyId);
+         Object value = valueGenerator.generateValue(key, size, random);
+         boolean inserted = false;
+         for (int i = 0; i < maxLoadAttempts; ++i) {
+            try {
+               cache.put(key, value);
+               inserted = true;
+               break;
+            } catch (Exception e) {
+               log.warn("Failed to insert entry into cache", e);
+            }
+         }
+         if (!inserted) {
+            throw new RuntimeException("Failed to insert entry key=" + key + ", value=" + value + " " + maxLoadAttempts + " times.");
+         }
+         logLoaded(1, size);
+         return true;
+      }
+   }
+
+   private class TxLoader extends Loader {
+      private final BasicOperations.Cache<Object, Object> nonTxCache;
+      private Transactional.Transaction tx;
+      private BasicOperations.Cache cache;
+      private int txCurrentSize;
+      private int txAttempts;
+      private long txValuesSize;
+      private long txBeginSeed;
+
+      public TxLoader(int index, LoaderIds loaderIds) {
+         super(index, loaderIds);
+         String cacheName = cacheSelector.getCacheName(threadIndex);
+         nonTxCache = basicOperations.getCache(cacheName);
+      }
+
+      @Override
+      protected boolean loadEntry() {
+         if (tx == null) {
+            tx = transactional.getTransaction();
+            cache = tx.wrap(nonTxCache);
+            txBeginSeed = Utils.getRandomSeed(random);
+            try {
+               tx.begin();
+            } catch (Exception e) {
+               log.error("Begin failed");
+               throw e;
+            }
+            loaderIds.mark();
+         }
+         int size = entrySize.next(random);
+         long keyId = loaderIds.next(size);
+         if (keyId >= 0) {
+            Object key = keyGenerator.generateKey(keyId);
+            Object value = valueGenerator.generateValue(key, size, random);
+            try {
+               cache.put(key, value);
+               txCurrentSize++;
+               txValuesSize += size;
+            } catch (Exception e) {
+               log.warn("Failed to insert entry into cache", e);
+               try {
+                  tx.rollback();
+               } catch (Exception re) {
+                  log.error("Failed to rollback transaction", re);
+               }
+               restartTx();
+               return true;
+            }
+         }
+         if (txCurrentSize >= transactionSize || keyId < 0) {
+            try {
+               tx.commit();
+               logLoaded(txCurrentSize, txValuesSize);
+               txAttempts = 0;
+               txCurrentSize = 0;
+               txValuesSize = 0;
+               tx = null;
+               cache = null;
+            } catch (Exception e) {
+               log.error("Failed to commit transaction", e);
+               restartTx();
+               return true;
+            }
+            if (keyId < 0) {
+               log.info("Finished loading entries");
+               return false;
+            }
+         }
+         return true;
+      }
+
+      private void restartTx() {
+         loaderIds.resetToMark();
+         Utils.setRandomSeed(random, txBeginSeed);
+         txCurrentSize = 0;
+         txValuesSize = 0;
+         cache = null;
+         tx = null;
+         txAttempts++;
+         if (txAttempts >= maxLoadAttempts) {
+            throw new RuntimeException("Failed to commit transaction " + maxLoadAttempts + " times");
+         }
+      }
+   }
+
+   private void logLoaded(long entries, long size) {
+      long prevEntryCount, currentEntryCount;
+      do {
+         prevEntryCount = entryCounter.get();
+         currentEntryCount = prevEntryCount + entries;
+      } while (!entryCounter.compareAndSet(prevEntryCount, currentEntryCount));
+      // just for logs - don't worry about those two not in sync
+      long totalSize = sizeSum.addAndGet(size);
+      if (prevEntryCount / logPeriod < currentEntryCount / logPeriod) {
+         log.infof("This node loaded %d entries (~%d bytes)", currentEntryCount, totalSize);
       }
    }
 }
