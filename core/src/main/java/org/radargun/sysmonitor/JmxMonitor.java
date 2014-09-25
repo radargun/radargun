@@ -1,21 +1,26 @@
 package org.radargun.sysmonitor;
 
-import java.io.Serializable;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.text.NumberFormat;
 import javax.management.AttributeNotFoundException;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import javax.management.remote.JMXConnector;
 
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
+import org.radargun.traits.JmxConnectionProvider;
 
 /**
  * Provides constants for JMX access.
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-public abstract class AbstractActivityMonitor implements Runnable, Serializable {
+public abstract class JmxMonitor implements Monitor {
+   protected final Log log = LogFactory.getLog(getClass());
 
    static final ObjectName OS_NAME = getOSName();
    static final String PROCESSING_CAPACITY_ATTR = "ProcessingCapacity";
@@ -24,8 +29,12 @@ public abstract class AbstractActivityMonitor implements Runnable, Serializable 
    static final NumberFormat PERCENT_FORMATTER = NumberFormat.getPercentInstance();
 
    protected final Timeline timeline;
+   protected final JmxConnectionProvider jmxConnectionProvider;
+   protected MBeanServerConnection connection;
+   protected JMXConnector connector;
 
-   public AbstractActivityMonitor(Timeline timeline) {
+   public JmxMonitor(JmxConnectionProvider jmxConnectionProvider, Timeline timeline) {
+      this.jmxConnectionProvider = jmxConnectionProvider;
       this.timeline = timeline;
    }
 
@@ -53,5 +62,33 @@ public abstract class AbstractActivityMonitor implements Runnable, Serializable 
          num = 1;
       }
       return num.longValue();
+   }
+
+   @Override
+   public synchronized void start() {
+      if (jmxConnectionProvider == null) {
+         connection = ManagementFactory.getPlatformMBeanServer();
+      } else {
+         connector = jmxConnectionProvider.getConnector();
+         if (connector != null) {
+            try {
+               connection = connector.getMBeanServerConnection();
+            } catch (IOException e) {
+               log.error("Failed to connect to MBean server", e);
+            }
+         }
+      }
+   }
+
+   @Override
+   public synchronized void stop() {
+      if (connector != null) {
+         try {
+            connector.close();
+         } catch (IOException e) {
+            log.error("Failed to close JMX connection", e);
+         }
+         connector = null;
+      }
    }
 }

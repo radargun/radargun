@@ -10,13 +10,12 @@ import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
+import java.util.concurrent.TimeUnit;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
+import org.radargun.traits.JmxConnectionProvider;
 
 /**
  * In each invocation of the {@link #run()} method, retrieves information
@@ -24,64 +23,44 @@ import org.radargun.reporting.Timeline;
  *
  * @author Galder Zamarreno
  */
-public class GcMonitor extends AbstractActivityMonitor implements Serializable {
-
-   /** The serialVersionUID */
-   private static final long serialVersionUID = 8983759071129628827L;
-
-   private static Log log = LogFactory.getLog(GcMonitor.class);
+public class GcMonitor extends JmxMonitor implements Serializable {
    private static final String GC_USAGE = "GC CPU usage";
 
-   boolean running = true;
+   private long prevGcTime;
+   private long prevUpTime;
 
-   long gcTime;
-   long prevGcTime;
-   long upTime;
-   long prevUpTime;
-
-   public GcMonitor(Timeline timeline) {
-      super(timeline);
+   public GcMonitor(JmxConnectionProvider jmxConnectionProvider, Timeline timeline) {
+      super(jmxConnectionProvider, timeline);
    }
 
-   public void stop() {
-      running = false;
-   }
-
-   public void run() {
-      if (running) {
-         try {
-            prevUpTime = upTime;
-            prevGcTime = gcTime;
-            MBeanServerConnection con = ManagementFactory.getPlatformMBeanServer();
-            if (con == null)
-               throw new IllegalStateException("PlatformMBeanServer not started!");
-
-            OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(con,
-                  ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
-            int procCount = os.getAvailableProcessors();
-
-            List<GarbageCollectorMXBean> gcMbeans = getGarbageCollectorMXBeans(con);
-            gcTime = -1;
-            for (GarbageCollectorMXBean gcBean : gcMbeans)
-               gcTime += gcBean.getCollectionTime();
-
-            long processGcTime = gcTime * 1000000 / procCount;
-            long prevProcessGcTime = prevGcTime * 1000000 / procCount;
-            long processGcTimeDiff = processGcTime - prevProcessGcTime;
-
-            Long jmxUpTime = (Long) con.getAttribute(RUNTIME_NAME, PROCESS_UP_TIME);
-            upTime = jmxUpTime;
-            long upTimeDiff = (upTime * 1000000) - (prevUpTime * 1000000);
-
-            long gcUsage = upTimeDiff > 0 ? Math.min((long) (1000 * (float) processGcTimeDiff / (float) upTimeDiff),
-                  1000) : 0;
-
-            // TODO: remove that decimal !@#%$
-            timeline.addValue(GC_USAGE, new Timeline.Value(gcUsage * 0.1d));
-
-         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+   public synchronized void run() {
+      try {
+         if (connection == null) {
+            log.warn("MBean connection is not open, cannot read GC stats");
+            return;
          }
+
+         OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(connection,
+               ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+         int procCount = os.getAvailableProcessors();
+
+         List<GarbageCollectorMXBean> gcMbeans = getGarbageCollectorMXBeans(connection);
+         long gcTime = 0;
+         for (GarbageCollectorMXBean gcBean : gcMbeans)
+            gcTime += gcBean.getCollectionTime();
+
+         long processGcTimeDiff = TimeUnit.MILLISECONDS.toNanos(gcTime - prevGcTime) / procCount;
+         long upTime = (Long) connection.getAttribute(RUNTIME_NAME, PROCESS_UP_TIME);
+         long upTimeDiff = TimeUnit.MILLISECONDS.toNanos(upTime - prevUpTime);
+
+         double gcUsage = Math.min(1d, Math.max(0, (double) processGcTimeDiff / (double) upTimeDiff));
+
+         timeline.addValue(GC_USAGE, new Timeline.Value(gcUsage));
+         log.tracef("Current GC CPU usage: %.2f%%", 100 * gcUsage);
+         prevUpTime = upTime;
+         prevGcTime = gcTime;
+      } catch (Exception e) {
+         log.error(e.getMessage(), e);
       }
    }
 
@@ -101,5 +80,17 @@ public class GcMonitor extends AbstractActivityMonitor implements Serializable {
          }
       }
       return gcMbeans;
+   }
+
+   @Override
+   public synchronized void start() {
+      super.start();
+      timeline.addValue(GC_USAGE, new Timeline.Value(0));
+   }
+
+   @Override
+   public synchronized void stop() {
+      super.stop();
+      timeline.addValue(GC_USAGE, new Timeline.Value(0));
    }
 }

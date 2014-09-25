@@ -1,32 +1,20 @@
 package org.radargun.sysmonitor;
 
-import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
+import java.util.concurrent.TimeUnit;
 
-import javax.management.MBeanServerConnection;
-
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
+import org.radargun.traits.JmxConnectionProvider;
 
 /**
  * @author Galder Zamarreno
  */
-public class CpuUsageMonitor extends AbstractActivityMonitor implements Serializable {
+public class CpuUsageMonitor extends JmxMonitor {
+   private static final String CPU_USAGE = "CPU usage";
+   private static final String PROCESS_CPU_TIME_ATTR = "ProcessCpuTime";
 
-   /** The serialVersionUID */
-   private static final long serialVersionUID = 6632071089421842090L;
-   protected static final String CPU_USAGE = "CPU usage";
-
-   private static Log log = LogFactory.getLog(CpuUsageMonitor.class);
-   static final String PROCESS_CPU_TIME_ATTR = "ProcessCpuTime";
-
-   boolean running = true;
-
-   long cpuTime;
    long prevCpuTime;
-   long upTime;
    long prevUpTime;
 
    static {
@@ -34,45 +22,48 @@ public class CpuUsageMonitor extends AbstractActivityMonitor implements Serializ
       PERCENT_FORMATTER.setMaximumIntegerDigits(3);
    }
 
-   public CpuUsageMonitor(Timeline timeline) {
-      super(timeline);
+   public CpuUsageMonitor(JmxConnectionProvider jmxConnectionProvider, Timeline timeline) {
+      super(jmxConnectionProvider, timeline);
    }
 
-   public void stop() {
-      running = false;
-   }
-
-   public void run() {
-      if (running) {
-         try {
-            prevCpuTime = cpuTime;
-            prevUpTime = upTime;
-
-            MBeanServerConnection con = ManagementFactory.getPlatformMBeanServer();
-            if (con == null)
-               throw new IllegalStateException("PlatformMBeanServer not started!");
-
-            long cpuTimeMultiplier = getCpuMultiplier(con);
-            OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(con,
-                  ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
-            int procCount = os.getAvailableProcessors();
-
-            Long jmxCpuTime = (Long) con.getAttribute(OS_NAME, PROCESS_CPU_TIME_ATTR);
-            cpuTime = jmxCpuTime * cpuTimeMultiplier;
-            Long jmxUpTime = (Long) con.getAttribute(RUNTIME_NAME, PROCESS_UP_TIME);
-            upTime = jmxUpTime;
-            long upTimeDiff = (upTime * 1000000) - (prevUpTime * 1000000);
-
-            long procTimeDiff = (cpuTime / procCount) - (prevCpuTime / procCount);
-
-            long cpuUsage = upTimeDiff > 0 ? Math.min((long) (1000 * (float) procTimeDiff / (float) upTimeDiff), 1000)
-                  : 0;
-
-            // TODO: remove that decimal !@#%$
-            timeline.addValue(CPU_USAGE, new Timeline.Value(cpuUsage * 0.1d));
-         } catch (Exception e) {
-            log.error("Exception!", e);
+   public synchronized void run() {
+      try {
+         if (connection == null) {
+            log.warn("MBean connection is not open, cannot read CPU stats");
+            return;
          }
+
+         long cpuTimeMultiplier = getCpuMultiplier(connection);
+         OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(connection,
+               ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+         int procCount = os.getAvailableProcessors();
+
+         long jmxCpuTime = (Long) connection.getAttribute(OS_NAME, PROCESS_CPU_TIME_ATTR);
+         long cpuTime = jmxCpuTime * cpuTimeMultiplier;
+         long upTime = (Long) connection.getAttribute(RUNTIME_NAME, PROCESS_UP_TIME);
+
+         long upTimeDiff = TimeUnit.MILLISECONDS.toNanos(upTime - prevUpTime);
+         long procTimeDiff = (cpuTime - prevCpuTime) / procCount; // already in nanoseconds
+         double cpuUsage = Math.min(1d, Math.max(0d, (double) procTimeDiff / (double) upTimeDiff));
+
+         timeline.addValue(CPU_USAGE, new Timeline.Value(cpuUsage));
+         log.tracef("Current CPU usage: %.1f%%", 100 * cpuUsage);
+         prevCpuTime = cpuTime;
+         prevUpTime = upTime;
+      } catch (Exception e) {
+         log.error("Exception!", e);
       }
+   }
+
+   @Override
+   public synchronized void start() {
+      super.start();
+      timeline.addValue(CPU_USAGE, new Timeline.Value(0));
+   }
+
+   @Override
+   public synchronized void stop() {
+      super.stop();
+      timeline.addValue(CPU_USAGE, new Timeline.Value(0));
    }
 }

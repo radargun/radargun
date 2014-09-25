@@ -3,7 +3,7 @@ package org.radargun.stages.monitor;
 import org.radargun.DistStageAck;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.sysmonitor.LocalJmxMonitor;
+import org.radargun.sysmonitor.Monitors;
 
 /**
  * 
@@ -16,10 +16,9 @@ public class JVMMonitorStopStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      LocalJmxMonitor monitor = (LocalJmxMonitor) slaveState.get(JVMMonitorStartStage.MONITOR_KEY);
+      Monitors monitor = (Monitors) slaveState.get(Monitors.MONITORS);
       if (monitor != null) {
-         monitor.stopMonitoringLocal();
-         slaveState.removeServiceListener(monitor);
+         monitor.stop();
          return successfulResponse();
       } else {
          return errorResponse("No JVMMonitor object found on slave: " + slaveState.getSlaveIndex());

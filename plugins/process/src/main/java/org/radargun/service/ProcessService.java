@@ -1,14 +1,17 @@
 package org.radargun.service;
 
+import java.io.File;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
+import org.radargun.Directories;
 import org.radargun.Service;
 import org.radargun.config.Converter;
 import org.radargun.config.Property;
@@ -46,6 +49,16 @@ public class ProcessService {
    public boolean stderrToStdout = false;
 
    private CopyOnWriteArrayList<Action> actions = new CopyOnWriteArrayList<Action>();
+   protected String tag;
+
+   public ProcessService() {
+      Random random = new Random();
+      StringBuilder sb = new StringBuilder(16);
+      for (int i = 0; i < 16; ++i) {
+         sb.append((char) (random.nextInt('z' - 'a' + 1) + 'a'));
+      }
+      tag = sb.toString();
+   }
 
    @ProvidesTrait
    public ProcessLifecycle createLifecycle() {
@@ -60,6 +73,19 @@ public class ProcessService {
          command.add(file);
       }
       return command;
+   }
+
+   public String getCommandPrefix() {
+      return Directories.PLUGINS_DIR + File.separator + "process" + File.separator + "bin" + File.separator + os + "-";
+   }
+
+   public String getCommandSuffix() {
+      if (!"unix".equals(os)) throw new IllegalArgumentException("Only unix is supported as OS.");
+      return ".sh";
+   }
+
+   public String getCommandTag() {
+      return tag;
    }
 
    public Map<String, String> getEnvironment() {
