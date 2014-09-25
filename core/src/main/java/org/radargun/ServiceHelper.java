@@ -25,7 +25,10 @@ public class ServiceHelper {
    public static Object createService(ClassLoader classLoader, String plugin, String service, String configName,
                                       String configFile, int slaveIndex,
                                       Map<String, String> properties, Map<String, String> extras) {
-      String serviceClassName = Utils.getServiceProperty(plugin, "service." + service);
+      String serviceClassName = Utils.getPluginProperty(plugin, "service." + service);
+      if (serviceClassName == null) {
+         throw new IllegalStateException(String.format("Cannot find service %s for plugin %s", service, plugin));
+      }
       Class<?> serviceClazz = null;
       try {
          serviceClazz = classLoader.loadClass(serviceClassName);

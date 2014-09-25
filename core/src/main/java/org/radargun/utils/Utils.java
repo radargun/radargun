@@ -32,7 +32,7 @@ public class Utils {
 
 
    private static Log log = LogFactory.getLog(Utils.class);
-   public static final String PROPERTIES_FILE = "plugin.properties";
+   private static final String PROPERTIES_FILE = "plugin.properties";
    private static final NumberFormat NF = new DecimalFormat("##,###");
    private static final NumberFormat MEM_FMT = new DecimalFormat("##,###.##");
 
@@ -226,7 +226,7 @@ public class Utils {
       }
    }
 
-   public static String getServiceProperty(String plugin, String propertyName) {
+   public static String getPluginProperty(String plugin, String propertyName) {
       ArgsHolder.PluginParam pluginParam = ArgsHolder.getPluginParams().get(plugin);
       File pluginDir = pluginParam != null && pluginParam.getPath() != null
             ? new File(pluginParam.getPath()) : new File(Directories.PLUGINS_DIR, plugin);
@@ -241,11 +241,7 @@ public class Utils {
       try {
          inStream = new FileInputStream(file);
          properties.load(inStream);
-         String value = properties.getProperty(propertyName);
-         if (value == null) {
-            throw new IllegalStateException(String.format("Property %s could not be found in %s/" + Utils.PROPERTIES_FILE, propertyName, plugin));
-         }
-         return value;
+         return properties.getProperty(propertyName);
       } catch (IOException e) {
          throw new RuntimeException(e);
       } finally {
