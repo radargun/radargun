@@ -111,7 +111,11 @@ public class LifecycleHelper {
     * @param async
     */
    public static void stop(SlaveState slaveState, boolean graceful, boolean async) {
-      Lifecycle lifecycle = slaveState.getTrait(Lifecycle.class);
+      stop(slaveState, graceful, async, 0);
+   }
+
+   public static void stop(SlaveState slaveState, boolean graceful, boolean async, long gracefulStopTimeout) {
+      final Lifecycle lifecycle = slaveState.getTrait(Lifecycle.class);
       if (lifecycle == null) throw new IllegalArgumentException();
       Killable killable = slaveState.getTrait(Killable.class);
       if (lifecycle.isRunning()) {
@@ -130,7 +134,27 @@ public class LifecycleHelper {
                   log.info("Service is not Killable, stopping instead");
                }
                stoppingTime = System.currentTimeMillis();
-               lifecycle.stop();
+               if (gracefulStopTimeout <= 0) {
+                  lifecycle.stop();
+               } else {
+                  Thread stopThread = new Thread(new Runnable() {
+                     @Override
+                     public void run() {
+                        lifecycle.stop();
+                     }
+                  }, "StopThread");
+                  stopThread.start();
+                  try {
+                     stopThread.join(gracefulStopTimeout);
+                  } catch (InterruptedException e) {
+                     Thread.currentThread().interrupt();
+                     log.warn("Interrupted when waiting for Lifecycle.stop()");
+                  }
+                  if (stopThread.isAlive() && killable != null) {
+                     log.warn("Lifecycle did not finished withing timeout, killing instead.");
+                     killable.kill();
+                  }
+               }
             } else {
                log.info("Killing service.");
                stoppingTime = System.currentTimeMillis();
@@ -151,6 +175,7 @@ public class LifecycleHelper {
          log.info("No cache wrapper deployed on this slave, nothing to do.");
       }
    }
+
 
    private static class ClusterFormationTimeoutException extends RuntimeException {
       public ClusterFormationTimeoutException(String msg) {
