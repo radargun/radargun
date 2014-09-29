@@ -1,9 +1,14 @@
 package org.radargun.stages;
 
+import java.util.List;
+
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Stage;
 import org.radargun.stages.lifecycle.LifecycleHelper;
 import org.radargun.state.ServiceListener;
+import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Lifecycle;
 import org.radargun.utils.Utils;
 
 /**
@@ -14,7 +19,10 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is automatically inserted after the last stage in each scenario.")
-public class ScenarioDestroyStage extends AbstractDistStage {
+public class ScenarioDestroyStage extends InternalDistStage {
+   @InjectTrait
+   protected Lifecycle lifecycle;
+
    @Override
    public DistStageAck executeOnSlave() {
       log.info("Scenario finished, destroying...");
@@ -38,5 +46,21 @@ public class ScenarioDestroyStage extends AbstractDistStage {
          slaveState.reset();
       }
       return successfulResponse();
+   }
+
+   @Override
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = StageResult.SUCCESS;
+      for (DistStageAck ack : acks) {
+         if (ack.isError()) {
+            log.warn("Received error ack " + ack);
+            result = errorResult();
+         } else {
+            if (log.isTraceEnabled()) {
+               log.trace("Received success ack " + ack);
+            }
+         }
+      }
+      return result;
    }
 }

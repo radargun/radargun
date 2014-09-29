@@ -4,6 +4,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.jmx.JMXClusterValidator;
@@ -46,7 +47,7 @@ public class JMXClusterValidationStage extends AbstractMasterStage {
    }
 
    @Override
-   public boolean execute() throws Exception {
+   public StageResult execute() throws Exception {
       try {
          String validatorClass = Utils.getServiceProperty(plugin, JMX_CLUSTERVALIDATOR);
          jmxConnectionTimeout = (Long) masterState.get(JMXClusterValidationPrepareStage.STATE_JMX_CONN_TIMEOUT);
@@ -69,10 +70,10 @@ public class JMXClusterValidationStage extends AbstractMasterStage {
          JMXClusterValidator validator = Utils.instantiate(classLoader, validatorClass);
          validator.init(filteredSlaveJMXEndpoints, jmxConnectionTimeout, prop1, prop2, prop3);
          log.info("Waiting for cluster formation ...");
-         return validator.waitUntilClusterFormed(waitTimeout);
+         return validator.waitUntilClusterFormed(waitTimeout) ? StageResult.SUCCESS : errorResult();
       } catch (Exception e) {
          log.error("Error while validating cluster", e);
-         return false;
+         return errorResult();
       }
    }
 }

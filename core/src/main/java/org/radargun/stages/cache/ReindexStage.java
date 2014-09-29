@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
@@ -41,15 +42,17 @@ public class ReindexStage extends AbstractDistStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) return false;
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError()) return result;
+
       Report.Test test = masterState.getReport().createTest(this.test);
       for (DistStageAck ack : acks) {
          if (ack instanceof StatisticsAck) {
             test.addStatistics(0, ack.getSlaveIndex(), Collections.singletonList(((StatisticsAck) ack).stats));
          }
       }
-      return true;
+      return StageResult.SUCCESS;
    }
 
    private static class StatisticsAck extends DistStageAck {

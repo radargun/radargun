@@ -4,16 +4,18 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 
-import org.radargun.Stage;
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
-import org.radargun.config.Definition;
-import org.radargun.config.Path;
-import org.radargun.config.PropertyHelper;
-import org.radargun.config.Scenario;
-import org.radargun.config.StageHelper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
@@ -201,41 +203,45 @@ public class IndexDocument extends HtmlDocument {
       }
    }
 
-   public void writeScenario(Scenario scenario) {
+   public void writeScenario(Collection<Report> reports) {
+      if (reports.isEmpty()) return;
+      // all reports should share the same stages
+      List<Report.Stage> stages = reports.iterator().next().getStages();
       writeTag("h2", "Scenario");
       write("Note that some properties may have not been resolved correctly as these depend on local properties<br>");
       write("\nThese stages have been used for the benchmark:<br><ul>\n");
-      for (int i = 0; i < scenario.getStageCount(); ++i) {
-         writeStage(scenario.getStage(i, Collections.EMPTY_MAP), scenario.getPropertiesDefinitions(i));
+      for (Report.Stage stage : stages) {
+         writeStage(stage);
       }
       write("</ul>\n");
    }
 
-   private void writeStage(Stage stage, Map<String, Definition> propertiesDefinitions) {
-      Class<? extends Stage> stageClass = stage.getClass();
+   private void writeStage(Report.Stage stage) {
       writer.write("<li><span style=\"cursor: pointer\" onClick=\"");
-      Set<Map.Entry<String, Path>> properties = PropertyHelper.getProperties(stageClass, true, false).entrySet();
+      List<Report.Property> properties = stage.getProperties();
       for (int i = 0; i < properties.size(); ++i) {
          writer.write("switch_li_display('e" + (elementCounter + i) + "');");
       }
-      writer.write(String.format("\">%s</span><ul>\n", StageHelper.getStageName(stageClass)));
-      for (Map.Entry<String, Path> property : properties) {
-         Path path = property.getValue();
-         String currentValue = PropertyHelper.getPropertyString(path, stage);
+      writer.write(String.format("\">%s</span><ul>\n", stage.getName()));
+      for (Report.Property property : properties) {
          int propertyCounter = elementCounter++;
-         if (propertiesDefinitions.containsKey(property.getKey())) {
+         if (property.getDefinition() != null) {
             writer.write(String.format("<li><strong>%s = %s</strong>&nbsp;" +
                   "<small style=\"cursor: pointer\"  id=\"showdef%d\" onClick=\"switch_visibility('showdef%d'); switch_visibility('def%d');\">show definition</small>" +
                   "<span id=\"def%d\" style=\"visibility: collapse\"><small style=\"cursor: pointer\" onClick=\"switch_visibility('showdef%d'); switch_visibility('def%d');\">hide definition:</small>" +
-                  "&nbsp;%s</span></li>\n", property.getKey(), currentValue,
+                  "&nbsp;%s</span></li>\n", property.getName(), escape(String.valueOf(property.getValue())),
                   propertyCounter, propertyCounter, propertyCounter, propertyCounter, propertyCounter, propertyCounter,
-                  propertiesDefinitions.get(property.getKey())));
+                  escape(String.valueOf(property.getDefinition()))));
          } else {
             writer.write(String.format("<li id=\"e%d\" style=\"display: none\"><small>%s = %s</small></li>\n",
-                     propertyCounter, property.getKey(), currentValue));
+                     propertyCounter, property.getName(), property.getValue()));
          }
       }
       writer.write("</ul></li>\n");
+   }
+
+   private String escape(String str) {
+      return str.replaceAll("<", "&lt;").replace(">", "&gt;");
    }
 
    protected void writeTimelines(Collection<Report> reports) {

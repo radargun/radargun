@@ -11,6 +11,7 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
@@ -380,9 +381,10 @@ public class RandomDataStage extends AbstractDistStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks))
-         return false;
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError()) return result;
+
       log.info("--------------------");
       if (ramPercentage > 0) {
          if (stringData) {
@@ -449,7 +451,7 @@ public class RandomDataStage extends AbstractDistStage {
          }
       }
       log.info("--------------------");
-      return true;
+      return StageResult.SUCCESS;
    }
 
    private static class DataInsertAck extends DistStageAck {

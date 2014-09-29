@@ -7,6 +7,7 @@ import java.util.TreeSet;
 
 import org.radargun.DistStage;
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.logging.Log;
@@ -27,15 +28,6 @@ import org.radargun.utils.Utils;
 public abstract class AbstractDistStage extends AbstractStage implements DistStage {
    protected Log log = LogFactory.getLog(getClass());
 
-   /**
-    * This field is filled in only on master node, on slave it is set to null
-    */
-   protected MasterState masterState;
-   /**
-    * This field is filled in only on slave node, on master it is set to null
-    */
-   protected SlaveState slaveState;
-
    @Property(doc = "Specifies on which slaves this stage should actively run. " +
          "The result set is intersection of specified slaves, groups and roles. Default is all slaves.")
    protected Set<Integer> slaves;
@@ -49,19 +41,19 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
          "Supported roles are " + RoleHelper.SUPPORTED_ROLES + ". Default is all roles.")
    protected Set<RoleHelper.Role> roles;
 
-
    @InjectTrait
    protected Lifecycle lifecycle;
 
-   @Override
-   public void initOnMaster(MasterState masterState) {
-      this.masterState = masterState;
-   }
+   /**
+    * This field is filled in only on master node, on slave it is set to null
+    */
+   protected MasterState masterState;
+   /**
+    * This field is filled in only on slave node, on master it is set to null
+    */
+   protected SlaveState slaveState;
 
-   @Override
-   public void initOnSlave(SlaveState slaveState) {
-      this.slaveState = slaveState;
-   }
+   protected List<Integer> executingSlaves;
 
    public boolean isServiceRunning() {
       return lifecycle == null || lifecycle.isRunning();
@@ -96,20 +88,18 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      boolean success = true;
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = StageResult.SUCCESS;
       logDurationInfo(acks);
       for (DistStageAck ack : acks) {
          if (ack.isError()) {
             log.warn("Received error ack " + ack);
-            return false;
+            result = errorResult();
          } else {
             log.trace("Received success ack " + ack);
          }
       }
-      if (log.isTraceEnabled())
-         log.trace("All ack messages were successful");
-      return success;
+      return result;
    }
 
    protected void logDurationInfo(List<? extends DistStageAck> acks) {
@@ -123,6 +113,16 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
          processingDuration += ack.getSlaveIndex() + " = " + Utils.prettyPrintMillis(ack.getDuration());
       }
       log.info("Received responses from all " + acks.size() + " slaves. " + processingDuration + "]");
+   }
+
+   @Override
+   public void initOnMaster(MasterState masterState) {
+      this.masterState = masterState;
+   }
+
+   @Override
+   public void initOnSlave(SlaveState slaveState) {
+      this.slaveState = slaveState;
    }
 
    protected DistStageAck errorResponse(String message) {

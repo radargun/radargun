@@ -12,12 +12,13 @@ import java.util.Set;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
+import org.radargun.config.Definition;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stats.Statistics;
 
 /**
- * Report from single test, e.g. one stage, or homogenous operations during multiple stages
+ * Data collected during scenarion on one configuration
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -27,6 +28,8 @@ public class Report implements Comparable<Report> {
    /* Configuration part */
    private Configuration configuration;
    private Cluster cluster;
+   /* Scenario */
+   private List<Stage> stages = new ArrayList<>();
    /* Service configurations */
    private Map<Integer, Map<String, Properties>> normalizedServiceConfigs = new HashMap<Integer, Map<String, Properties>>();
    private Map<Integer, Map<String, byte[]>> originalServiceConfig = new HashMap<Integer, Map<String, byte[]>>();
@@ -55,6 +58,16 @@ public class Report implements Comparable<Report> {
 
    public Map<Integer, Map<String, byte[]>> getOriginalServiceConfig() {
       return Collections.unmodifiableMap(originalServiceConfig);
+   }
+
+   public Stage addStage(String name) {
+      Stage stage = new Stage(name);
+      stages.add(stage);
+      return stage;
+   }
+
+   public List<Stage> getStages() {
+      return Collections.unmodifiableList(stages);
    }
 
    public void addTimelines(Collection<Timeline> timelines) {
@@ -222,6 +235,51 @@ public class Report implements Comparable<Report> {
       public SlaveResult(String value, boolean suspicious) {
          this.value = value;
          this.suspicious = suspicious;
+      }
+   }
+
+   public static class Stage {
+      private final String name;
+      private final List<Property> properties = new ArrayList<>();
+
+      public Stage(String name) {
+         this.name = name;
+      }
+
+      public String getName() {
+         return name;
+      }
+
+      public void addProperty(String name, Definition definition, Object value) {
+         properties.add(new Property(name, definition, value));
+      }
+
+      public List<Property> getProperties() {
+         return Collections.unmodifiableList(properties);
+      }
+   }
+
+   public static class Property {
+      private final String name;
+      private final Definition definition;
+      private final Object value;
+
+      public Property(String name, Definition definition, Object value) {
+         this.name = name;
+         this.definition = definition;
+         this.value = value;
+      }
+
+      public String getName() {
+         return name;
+      }
+
+      public Definition getDefinition() {
+         return definition;
+      }
+
+      public Object getValue() {
+         return value;
       }
    }
 }

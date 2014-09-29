@@ -4,6 +4,7 @@ package org.radargun.stages.tpcc;
 import java.util.List;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
@@ -61,15 +62,17 @@ public class TpccPopulationStage extends AbstractDistStage {
       return new DurationAck(slaveState, duration);
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) return false;
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError()) return result;
+
       logDurationInfo(acks);
       for (DurationAck ack : Projections.instancesOf(acks, DurationAck.class)) {
          if (log.isTraceEnabled()) {
             log.trace("Tpcc population on slave " + ack.getSlaveIndex() + " finished in " + ack.duration + " millis.");
          }
       }
-      return true;
+      return StageResult.SUCCESS;
    }
 
    private static class DurationAck extends DistStageAck {

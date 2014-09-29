@@ -8,6 +8,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
@@ -66,8 +67,8 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    private Clustered clustered;
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      super.processAckOnMaster(acks);
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
       StringBuilder reportCsvContent = new StringBuilder();
 
       // TODO: move this into test report
@@ -87,7 +88,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          log.error("Failed to create report.", e);
       }
 
-      return true;
+      return result;
    }
 
    @Override

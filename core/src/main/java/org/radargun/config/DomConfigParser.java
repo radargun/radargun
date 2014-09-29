@@ -13,6 +13,9 @@ import org.radargun.logging.LogFactory;
 import org.radargun.stages.ScenarioCleanupStage;
 import org.radargun.stages.ScenarioDestroyStage;
 import org.radargun.stages.ScenarioInitStage;
+import org.radargun.stages.control.RepeatBeginStage;
+import org.radargun.stages.control.RepeatContinueStage;
+import org.radargun.stages.control.RepeatEndStage;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
@@ -26,11 +29,7 @@ import org.w3c.dom.Text;
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class DomConfigParser extends ConfigParser implements ConfigSchema {
-
    private static Log log = LogFactory.getLog(DomConfigParser.class);
-
-   String PROPERTY_PREFIX_REPEAT = "repeat.";
-   String PROPERTY_SUFFIX_COUNTER = "counter";
 
    public MasterConfig parseConfig(String config) throws Exception {
       //the content in the new file is too dynamic, let's just use DOM for now
@@ -64,10 +63,10 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       Scenario scenario = new Scenario();
       Map<String, Definition> initProperties = Collections.EMPTY_MAP;
       if (ELEMENT_INIT.equals(childNodes.item(index).getNodeName())) {
-         initProperties = parseProperties(((Element) childNodes.item(index)));
+         initProperties = parseProperties(((Element) childNodes.item(index)), true);
          index = nextElement(childNodes, index + 1);
       }
-      scenario.addStage(ScenarioInitStage.class, initProperties, Collections.EMPTY_MAP);
+      scenario.addStage(ScenarioInitStage.class, initProperties, null);
 
       parseScenario(scenario, (Element) childNodes.item(index));
       masterConfig.setScenario(scenario);
@@ -75,17 +74,17 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
       Map<String, Definition> destroyProperties = Collections.EMPTY_MAP;
       if (ELEMENT_DESTROY.equals(childNodes.item(index).getNodeName())) {
-         destroyProperties = parseProperties((Element) childNodes.item(index));
+         destroyProperties = parseProperties((Element) childNodes.item(index), true);
          index = nextElement(childNodes, index + 1);
       }
-      scenario.addStage(ScenarioDestroyStage.class, destroyProperties, Collections.EMPTY_MAP);
+      scenario.addStage(ScenarioDestroyStage.class, destroyProperties, null);
 
       Map<String, Definition> cleanupProperties = Collections.EMPTY_MAP;
       if (ELEMENT_CLEANUP.equals(childNodes.item(index).getNodeName())) {
-         cleanupProperties = parseProperties((Element) childNodes.item(index));
+         cleanupProperties = parseProperties((Element) childNodes.item(index), true);
          index = nextElement(childNodes, index + 1);
       }
-      scenario.addStage(ScenarioCleanupStage.class, cleanupProperties, Collections.EMPTY_MAP);
+      scenario.addStage(ScenarioCleanupStage.class, cleanupProperties, null);
 
       parseReporting(masterConfig, (Element) childNodes.item(index));
 
@@ -239,17 +238,20 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       for (int i = 0; i < childNodes.getLength(); i++) {
          Node child = childNodes.item(i);
          if (child instanceof Element) {
-            addScenarioItem(scenario, (Element) child, Collections.EMPTY_MAP);
+            addScenarioItem(scenario, (Element) child);
          }
       }
    }
 
-   private Map<String, Definition> parseProperties(Element element) {
+   private Map<String, Definition> parseProperties(Element element, boolean subElements) {
       NamedNodeMap attributes = element.getAttributes();
       Map<String, Definition> properties = new HashMap<String, Definition>();
       for (int attrIndex = 0; attrIndex < attributes.getLength(); attrIndex++) {
          Attr attr = (Attr) attributes.item(attrIndex);
          properties.put(attr.getName(), new SimpleDefinition(attr.getValue()));
+      }
+      if (!subElements) {
+         return properties;
       }
       NodeList children = element.getChildNodes();
       for (int childIndex = 0; childIndex < children.getLength(); ++childIndex) {
@@ -369,53 +371,30 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       throw new IllegalArgumentException(sb.toString());
    }
 
-   private void addScenarioItem(Scenario scenario, Element element, Map<String, String> extras) {
+   private void addScenarioItem(Scenario scenario, Element element) {
       if (element.getNodeName().equalsIgnoreCase(ELEMENT_REPEAT)) {
-         addRepeat(scenario, element, extras);
+         wrapStages(scenario, element, new Class[] { RepeatBeginStage.class }, new Class[] {RepeatContinueStage.class, RepeatEndStage.class });
       } else {
-         scenario.addStage(StageHelper.getStageClassByDashedName(element.getNodeName()), parseProperties(element), extras);
+         scenario.addStage(StageHelper.getStageClassByDashedName(element.getNodeName()), parseProperties(element, true), null);
       }
    }
 
-   private void addRepeat(Scenario scenario, Element element, Map<String, String> extras) {
-      String timesStr = getAttribute(element, ATTR_TIMES, "");
-      String fromStr = getAttribute(element, ATTR_FROM, "");
-      String toStr = getAttribute(element, ATTR_TO, "");
-      String incStr = getAttribute(element, ATTR_INC, "");
-      String repeatName = getAttribute(element, ATTR_NAME, "");
-      if ((timesStr.isEmpty() && (fromStr.isEmpty() || toStr.isEmpty()))
-            || (!timesStr.isEmpty() && (!fromStr.isEmpty() || !toStr.isEmpty() || !incStr.isEmpty()))) {
-         throw new IllegalArgumentException("Define either times or from, to, [inc]");
-      }
-      int from = 0, to = 1, inc = 1;
-      if (!timesStr.isEmpty()) {
-         to = parseRepeatArg(timesStr, ATTR_TIMES, repeatName) - 1;
-      } else {
-         from = parseRepeatArg(fromStr, ATTR_FROM, repeatName);
-         to = parseRepeatArg(toStr, ATTR_TO, repeatName);
-         if (!incStr.isEmpty()) {
-            inc = parseRepeatArg(incStr, ATTR_INC, repeatName);
-         }
+   private void wrapStages(Scenario scenario, Element element,
+                           Class<? extends org.radargun.Stage>[] stagesBefore, Class<? extends org.radargun.Stage>[] stagesAfter) {
+      String labelName = getAttribute(element, ATTR_NAME, "");
+      Map<String, Definition> properties = parseProperties(element, false);
+      for (Class<? extends org.radargun.Stage> stage : stagesBefore) {
+         scenario.addStage(stage, properties, labelName);
       }
       NodeList childNodes = element.getChildNodes();
-      for (int counter = from; counter <= to; counter += inc) {
-         Map<String, String> repeatExtras = new HashMap<String, String>(extras);
-         String repeatProperty = PROPERTY_PREFIX_REPEAT + (repeatName.isEmpty() ? PROPERTY_SUFFIX_COUNTER : repeatName + '.' + PROPERTY_SUFFIX_COUNTER);
-         repeatExtras.put(repeatProperty, String.valueOf(counter));
-         for (int i = 0; i < childNodes.getLength(); i++) {
-            Node child = childNodes.item(i);
-            if (child instanceof Element) {
-               addScenarioItem(scenario, (Element) child, repeatExtras);
-            }
+      for (int i = 0; i < childNodes.getLength(); i++) {
+         Node child = childNodes.item(i);
+         if (child instanceof Element) {
+            addScenarioItem(scenario, (Element) child);
          }
       }
-   }
-
-   private int parseRepeatArg(String value, String name, String repeatName) {
-      try {
-         return Integer.parseInt(value);
-      } catch (NumberFormatException e) {
-         throw new IllegalArgumentException(String.format("Attribute %s=%s on %s is not an integer!", name, value, repeatName != null ? repeatName : ELEMENT_REPEAT), e);
+      for (Class<? extends org.radargun.Stage> stage : stagesAfter) {
+         scenario.addStage(stage, properties, labelName);
       }
    }
 }

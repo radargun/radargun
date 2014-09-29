@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
@@ -48,10 +49,10 @@ public class LoadFileStage extends AbstractDistStage {
    private BasicOperations basicOperations;
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) {
-         return false;
-      }
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError()) return result;
+
       long fileSize = new File(filePath).length();
       log.info("--------------------");
       log.info("Size of file '" + filePath + "' is " + fileSize + " bytes");
@@ -62,7 +63,7 @@ public class LoadFileStage extends AbstractDistStage {
                + " values to the cache with a total size of " + ack.totalBytesRead + " bytes");
       }
       log.info("--------------------");
-      return true;
+      return StageResult.SUCCESS;
    }
 
    @Override

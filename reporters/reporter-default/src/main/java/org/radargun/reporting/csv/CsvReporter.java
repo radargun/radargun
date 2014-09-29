@@ -8,7 +8,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Property;
-import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
@@ -47,7 +46,7 @@ public class CsvReporter implements Reporter {
    private boolean computeTotal = true;
 
    @Override
-   public void run(Scenario scenario, Collection<Report> reports) {
+   public void run(Collection<Report> reports) {
       for (Report report : reports) {
          for (Report.Test test : report.getTests()) {
             reportTest(report, test);

@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
@@ -19,6 +20,7 @@ import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
 import org.radargun.reporting.ReporterHelper;
 import org.radargun.reporting.Timeline;
+import org.radargun.stages.control.RepeatStage;
 import org.radargun.state.MasterState;
 import org.radargun.utils.Utils;
 
@@ -35,7 +37,7 @@ public class Master {
    private final MasterState state;
    private final ArrayList<Report> reports = new ArrayList<Report>();
    private int returnCode;
-   private String failedStage;
+   private boolean exitFlag = false;
 
    public Master(MasterConfig masterConfig) {
       this.masterConfig = masterConfig;
@@ -77,30 +79,34 @@ public class Master {
                state.setReport(new Report(configuration, cluster));
                long clusterStart = System.currentTimeMillis();
                int stageCount = masterConfig.getScenario().getStageCount();
+               int scenarioDestroyId = stageCount - 2;
+               int scenarioCleanupId = stageCount - 1;
                try {
-                  // ScenarioDestroy and ScenarioCleanup are special ones, ran always
-                  for (int stageId = 0; stageId < stageCount - 2; ++stageId) {
-                     if (!executeStage(connection, configuration, cluster, stageId)) {
-                        break;
-                     }
+                  try {
+                     // ScenarioDestroy and ScenarioCleanup are special ones, executed always
+                     int nextStageId = 0;
+                     do {
+                        nextStageId = executeStage(connection, configuration, cluster, nextStageId);
+                     } while (nextStageId >= 0 && nextStageId < scenarioDestroyId);
+                     // run ScenarioDestroy
+                  } finally {
+                     executeStage(connection, configuration, cluster, scenarioDestroyId);
                   }
-                  // run ScenarioDestroy
-                  executeStage(connection, configuration, cluster, stageCount - 2);
                } finally {
                   // run ScenarioCleanup
-                  executeStage(connection, configuration, cluster, stageCount - 1);
+                  executeStage(connection, configuration, cluster, scenarioCleanupId);
                }
                log.info("Finished scenario on " + cluster + " in " + Utils.getMillisDurationString(System.currentTimeMillis() - clusterStart));
                state.getReport().addTimelines(connection.receiveTimelines(cluster.getSize()));
                reports.add(state.getReport());
-               if (failedStage != null) {
+               if (exitFlag) {
                   break;
                }
             }
             log.info("Finished benchmarking configuration '" + configuration.name + "' in "
                   + Utils.getMillisDurationString(System.currentTimeMillis() - configStart));
-            if (failedStage != null) {
-               log.info("Exiting benchmark due to failure in '" + failedStage + "' stage");
+            if (exitFlag) {
+               log.info("Exiting whole benchmark");
                break;
             }
          }
@@ -109,7 +115,7 @@ public class Master {
          for (Reporter reporter : reporters) {
             try {
                log.info("Running reporter " + reporter);
-               reporter.run(masterConfig.getScenario(), Collections.unmodifiableList(reports));
+               reporter.run(Collections.unmodifiableList(reports));
             } catch (Exception e) {
                log.error("Error in reporter " + reporter, e);
                returnCode = 127;
@@ -127,21 +133,46 @@ public class Master {
       }
    }
 
-   private boolean executeStage(SlaveConnection connection, Configuration configuration, Cluster cluster, int stageId) throws Exception {
-      Stage stage = masterConfig.getScenario().getStage(stageId, getCurrentExtras(masterConfig, configuration, cluster));
+   private int executeStage(SlaveConnection connection, Configuration configuration, Cluster cluster, int stageId) {
+      Stage stage = masterConfig.getScenario().getStage(stageId, state, getCurrentExtras(masterConfig, configuration, cluster), state.getReport());
       InitHelper.init(stage);
+      StageResult result;
       if (stage instanceof MasterStage) {
-         if (executeMasterStage((MasterStage) stage)) return true;
+         result = executeMasterStage((MasterStage) stage);
       } else if (stage instanceof DistStage) {
-         if (executeDistStage(connection, stageId, (DistStage) stage)) return true;
+         result = executeDistStage(connection, stageId, (DistStage) stage);
       } else {
          log.error("Stage '" + stage.getName() + "' is neither master nor distributed");
+         return -1;
       }
-      returnCode = masterConfig.getConfigurations().indexOf(configuration) + 1;
-      if (stage.isExitOnFailure()) {
-         failedStage = stage.getName();
+
+      if (result == StageResult.SUCCESS) {
+         return stageId + 1;
+      } else if (result == StageResult.FAIL || result == StageResult.EXIT){
+         returnCode = masterConfig.getConfigurations().indexOf(configuration) + 1;
+         if (result == StageResult.EXIT) {
+            exitFlag = true;
+         }
+         return -1;
+      } else if (result == StageResult.BREAK || result == StageResult.CONTINUE) {
+         Stack<String> repeatNames = (Stack<String>) state.get(RepeatStage.REPEAT_NAMES);
+         String nextLabel;
+         if (repeatNames == null || repeatNames.isEmpty()) {
+            log.warn("BREAK or CONTINUE used out of any repeat.");
+            return -1;
+         } else if (result == StageResult.BREAK) {
+            nextLabel = Utils.concat(".", "repeat", repeatNames.peek(), "end");
+         } else if (result == StageResult.CONTINUE) {
+            nextLabel = Utils.concat(".", "repeat", repeatNames.peek(), "begin");
+         } else throw new IllegalStateException();
+         int nextStageId = masterConfig.getScenario().getLabel(nextLabel);
+         if (nextStageId < 0) {
+            log.error("No label '" + nextLabel + "' defined");
+         }
+         return nextStageId;
+      } else {
+         throw new IllegalStateException("Result does not match to any type.");
       }
-      return false;
    }
 
    private Map<String, String> getCurrentExtras(MasterConfig masterConfig, Configuration configuration, Cluster cluster) {
@@ -157,39 +188,45 @@ public class Master {
       return extras;
    }
 
-   private boolean executeMasterStage(MasterStage stage) throws Exception {
+   private StageResult executeMasterStage(MasterStage stage) {
       stage.init(state);
       if (log.isDebugEnabled())
-         log.debug("Starting '" + stage.getName() + "' on master node only. Details:" + stage);
+         log.debug("Starting master stage " + stage.getName() + ". Details:" + stage);
       else
-         log.info("Starting '" + stage.getName() + "' on master node only.");
+         log.info("Starting master stage " + stage.getName() + ".");
       long start = System.currentTimeMillis(), end = start;
       try {
-         boolean successful = stage.execute();
+         StageResult result = stage.execute();
          end = System.currentTimeMillis();
-         if (successful) {
-            log.trace("Master stage executed successfully " + stage.getName());
+         if (result.isError()) {
+            log.error("Execution of master stage " + stage.getName() + " failed.");
          } else {
-            log.error("Exiting because issues processing current stage: " + stage.getName());
+            log.info("Finished master stage " + stage.getName());
          }
-         return successful;
+         return result;
       } catch (Exception e) {
          end = System.currentTimeMillis();
          log.error("Caught exception", e);
-         return false;
+         return StageResult.FAIL;
       } finally {
          state.getTimeline().addEvent(Stage.STAGE, new Timeline.IntervalEvent(start, stage.getName(), end - start));
       }
    }
 
-   private boolean executeDistStage(SlaveConnection connection, int stageId, DistStage stage) throws IOException {
+   private StageResult executeDistStage(SlaveConnection connection, int stageId, DistStage stage) {
       if (log.isDebugEnabled())
-         log.debug("Starting distributed '" + stage.getName() + "'. Details:" + stage);
+         log.debug("Starting distributed stage " + stage.getName() + ". Details:" + stage);
       else
-         log.info("Starting distributed '" + stage.getName() + "'.");
+         log.info("Starting distributed stage " + stage.getName() + ".");
       int numSlaves = state.getClusterSize();
       stage.initOnMaster(state);
-      List<DistStageAck> responses = connection.runStage(stageId, numSlaves);
+      List<DistStageAck> responses = null;
+      try {
+         responses = connection.runStage(stageId, numSlaves);
+      } catch (IOException e) {
+         log.error("Error when communicating to slaves");
+         return StageResult.EXIT;
+      }
       if (responses.size() > 1) {
          Collections.sort(responses, new Comparator<DistStageAck>() {
             @Override
@@ -200,12 +237,18 @@ public class Master {
             }
          });
       }
-      if (stage.processAckOnMaster(responses)) {
-         log.trace("Stage " + stage.getName() + " successfully executed.");
-         return true;
-      } else {
-         log.warn("Execution error for current benchmark, skipping rest of the stages");
-         return false;
+      StageResult result;
+      try {
+         result = stage.processAckOnMaster(responses);
+      } catch (Exception e) {
+         log.error("Processing acks on master failed", e);
+         return StageResult.EXIT;
       }
+      if (result.isError()) {
+         log.error("Execution of distribute stage " + stage.getName() + " failed.");
+      } else {
+         log.info("Finished distributed stage " + stage.getName() + ".");
+      }
+      return result;
    }
 }

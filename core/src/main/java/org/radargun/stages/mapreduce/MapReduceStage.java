@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
@@ -110,9 +111,10 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    private BasicOperations basicOperations;
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks))
-         return false;
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError()) return result;
+
       StringBuilder reportCsvContent = new StringBuilder();
 
       // TODO: move this into test report
@@ -133,7 +135,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          log.error("Failed to create report.", e);
       }
 
-      return true;
+      return StageResult.SUCCESS;
    }
 
    @Override

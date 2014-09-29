@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.SlaveState;
@@ -93,8 +94,10 @@ public class WriteSkewCheckStage extends CheckStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) return false;
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError()) return result;
+
       long sumIncrements = 0;
       long sumSkews = 0;
       long maxValue = -1;
@@ -107,10 +110,10 @@ public class WriteSkewCheckStage extends CheckStage {
       if (maxValue + sumSkews != sumIncrements) {
          log.errorf("Database contains value %d but slaves report %d successful increments",
                maxValue, sumIncrements - sumSkews);
-         return false;
+         return errorResult();
       } else {
          log.infof("Performed %d successful increments in %d ms", sumIncrements - sumSkews, duration);
-         return true;
+         return StageResult.SUCCESS;
       }
    }
 

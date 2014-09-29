@@ -25,37 +25,38 @@ public class PropertyHelper {
    private static Log log = LogFactory.getLog(PropertyHelper.class);
 
    /**
-    * Retrieve all properties from this class and all its superclasses as a map of property name - path pairs.
-    * @see Path for details.
+    * Retrieve all properties from this class and all its superclasses.
     *
     * @param clazz
     * @param useDashedName Convert property names to dashed form - e.g. myPropertyName becomes my-property-name.
-    * @param includeDelegates Include also those tagged with {@link PropertyDelegate}
-    * @return
+    * @param includeDelegates Include also those tagged with {@link PropertyDelegate}.
+    * @param includeAliases Include alternative names of the properties.
+    * @return Map of names of the properties (either dashed or camel cased) to {@link Path paths} in the object graph starting from the given class.
     */
-   public static Map<String, Path> getProperties(Class<?> clazz, boolean useDashedName, boolean includeDelegates) {
+   public static Map<String, Path> getProperties(Class<?> clazz, boolean useDashedName, boolean includeDelegates, boolean includeAliases) {
       Map<String, Path> properties = new TreeMap<String, Path>();
-      addProperties(clazz, properties, useDashedName, includeDelegates, "", null);
+      addProperties(clazz, properties, useDashedName, includeDelegates, includeAliases, "", null);
       return properties;
    }
 
    /**
-    *  Retrieve all properties from this class (*not including its superclasses) as a map of property name - path pairs.
-    * @see Path for details.
+    * Retrieve all properties from this class (not including its superclasses).
+    *
     * @param clazz
-    * @return
+    * @return Map of names of the properties (either dashed or camel cased) to {@link Path paths}
+    * in the object graph starting from the given class.
     */
-   public static Map<String, Path> getDeclaredProperties(Class<?> clazz, boolean includeDelegates) {
+   public static Map<String, Path> getDeclaredProperties(Class<?> clazz, boolean includeDelegates, boolean includeAliases) {
       Map<String, Path> properties = new TreeMap<String, Path>();
-      addDeclaredProperties(clazz, properties, false, includeDelegates, "", null);
+      addDeclaredProperties(clazz, properties, false, includeDelegates, includeAliases, "", null);
       return properties;
    }
 
    /**
     * Retrieve string representation of property's value on the source object.
     * @param path
-    * @param source
-    * @return
+    * @param source Object where the paths start.
+    * @return String representation of the value (as retrieved from its converter).
     */
    public static String getPropertyString(Path path, Object source) {
       Object value = null;
@@ -80,13 +81,13 @@ public class PropertyHelper {
       return annotation.name().equals(Property.FIELD_NAME) ? property.getName() : annotation.name();
    }
 
-   private static void addProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, boolean includeDelegates, String prefix, Path path) {
+   private static void addProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, boolean includeDelegates, boolean includeAliases, String prefix, Path path) {
       if (clazz == null) return;
-      addDeclaredProperties(clazz, properties, useDashedName, includeDelegates, prefix, path);
-      addProperties(clazz.getSuperclass(), properties, useDashedName, includeDelegates, prefix, path);
+      addDeclaredProperties(clazz, properties, useDashedName, includeDelegates, includeAliases, prefix, path);
+      addProperties(clazz.getSuperclass(), properties, useDashedName, includeDelegates, includeAliases, prefix, path);
    }
 
-   private static void addDeclaredProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, boolean includeDelegates, String prefix, Path path) {
+   private static void addDeclaredProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, boolean includeDelegates, boolean includeAliases, String prefix, Path path) {
       for (Field field : clazz.getDeclaredFields()) {
          if (Modifier.isStatic(field.getModifiers())) continue; // property cannot be static
          Property property = field.getAnnotation(Property.class);
@@ -103,12 +104,14 @@ public class PropertyHelper {
             }
             newPath.setComplete(true);
             properties.put(name, newPath);
-            String deprecatedName = property.deprecatedName();
-            if (!deprecatedName.equals(Property.NO_DEPRECATED_NAME)) {
-               if (useDashedName) {
-                  deprecatedName = XmlHelper.camelCaseToDash(deprecatedName);
+            if (includeAliases) {
+               String deprecatedName = property.deprecatedName();
+               if (!deprecatedName.equals(Property.NO_DEPRECATED_NAME)) {
+                  if (useDashedName) {
+                     deprecatedName = XmlHelper.camelCaseToDash(deprecatedName);
+                  }
+                  properties.put(deprecatedName, newPath);
                }
-               properties.put(deprecatedName, newPath);
             }
          }
          if (delegate != null) {
@@ -122,7 +125,7 @@ public class PropertyHelper {
             }
             // TODO: delegate properties are added according to field type, this does not allow polymorphism
             addProperties(field.getType(), properties, useDashedName,
-                  includeDelegates, prefix + delegatePrefix, newPath);
+                  includeDelegates, includeAliases, prefix + delegatePrefix, newPath);
          }
       }
    }
@@ -134,8 +137,8 @@ public class PropertyHelper {
     * @param destination
     */
    public static void copyProperties(Object source, Object destination) {
-      Map<String, Path> sourceProperties = getProperties(source.getClass(), false, false);
-      Map<String, Path> destProperties = getProperties(destination.getClass(), false, false);
+      Map<String, Path> sourceProperties = getProperties(source.getClass(), false, false, false);
+      Map<String, Path> destProperties = getProperties(destination.getClass(), false, false, true);
       for (Map.Entry<String, Path> property : sourceProperties.entrySet()) {
          Path destPath = destProperties.get(property.getKey());
          if (destPath == null) {
@@ -155,14 +158,14 @@ public class PropertyHelper {
     * Set properties on the target object using values from the propertyMap.
     * The keys in propertyMap use property name, values are evaluated and converted here.
     *
-    * @param target The modified object
+    * @param target The modified object.
     * @param propertyMap Source of the data, not evaluated
     * @param ignoreMissingProperty If the property is not found on the target object, should we throw and exception?
-    * @param useDashedName Expect that the property names in propertyMap use the dashed form
+    * @param useDashedName Expect that the property names in propertyMap use the dashed form.
     */
    public static void setProperties(Object target, Map<String, String> propertyMap, boolean ignoreMissingProperty, boolean useDashedName) {
       Class targetClass = target.getClass();
-      Map<String, Path> properties = getProperties(target.getClass(), useDashedName, false);
+      Map<String, Path> properties = getProperties(target.getClass(), useDashedName, false, true);
 
       for (Map.Entry<String, String> entry : propertyMap.entrySet()) {
          String propName = entry.getKey();
@@ -183,9 +186,17 @@ public class PropertyHelper {
       }
    }
 
+   /**
+    * Set properties on the target object using values from the propertyMap.
+    *
+    * @param target The modified object.
+    * @param propertyMap Map of property names to the (possibly complex) definitions.
+    * @param ignoreMissingProperty If the property is not found on the target object, should we throw and exception?
+    * @param useDashedName Expect that the property names in propertyMap use the dashed form.
+    */
    public static void setPropertiesFromDefinitions(Object target, Map<String, Definition> propertyMap, boolean ignoreMissingProperty, boolean useDashedName) {
       Class targetClass = target.getClass();
-      Map<String, Path> properties = getProperties(target.getClass(), useDashedName, true);
+      Map<String, Path> properties = getProperties(target.getClass(), useDashedName, true, true);
 
       for (Map.Entry<String, Definition> entry : propertyMap.entrySet()) {
          String propName = entry.getKey();
@@ -262,9 +273,15 @@ public class PropertyHelper {
       }
    }
 
+   /**
+    * Write all properties of this object to string.
+    *
+    * @param target
+    * @return String in form ' {property1=value1, property2=value2, ... }'
+    */
    public static String toString(Object target) {
       StringBuilder sb = new StringBuilder(" {");
-      Set<Map.Entry<String, Path>> properties = PropertyHelper.getProperties(target.getClass(), false, false).entrySet();
+      Set<Map.Entry<String, Path>> properties = PropertyHelper.getProperties(target.getClass(), false, false, false).entrySet();
 
       for (Iterator<Map.Entry<String, Path>> iterator = properties.iterator(); iterator.hasNext(); ) {
          Map.Entry<String, Path> property = iterator.next();

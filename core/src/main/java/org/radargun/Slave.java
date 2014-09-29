@@ -76,7 +76,7 @@ public class Slave {
       DistStageAck response = null;
       try {
          Map<String, String> extras = getCurrentExtras(configuration, cluster);
-         ScenarioCleanupStage stage = (ScenarioCleanupStage) scenario.getStage(scenario.getStageCount() - 1, extras);
+         ScenarioCleanupStage stage = (ScenarioCleanupStage) scenario.getStage(scenario.getStageCount() - 1, state, extras, null);
          InitHelper.init(stage);
          stage.initOnSlave(state);
          log.info("Starting stage " + (log.isDebugEnabled() ? stage.toString() : stage.getName()));
@@ -129,7 +129,7 @@ public class Slave {
       for (;;) {
          int stageId = connection.receiveNextStageId();
          log.trace("Received stage ID " + stageId);
-         DistStage stage = (DistStage) scenario.getStage(stageId, extras);
+         DistStage stage = (DistStage) scenario.getStage(stageId, state, extras, null);
          if (stage instanceof ScenarioCleanupStage) {
             // this is always the last stage and is ran in main thread (not sc-main)
             break;

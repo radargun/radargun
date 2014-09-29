@@ -86,4 +86,12 @@ public class StateBase {
          return Boolean.parseBoolean(value.toString());
       }
    }
+
+   public Map<String, String> asStringMap() {
+      HashMap<String, String> map = new HashMap<>(stateMap.size());
+      for (Map.Entry<Object, Object> entry : stateMap.entrySet()) {
+         map.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+      }
+      return map;
+   }
 }

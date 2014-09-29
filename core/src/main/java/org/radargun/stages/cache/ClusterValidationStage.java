@@ -3,6 +3,7 @@ package org.radargun.stages.cache;
 import java.util.List;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
@@ -94,13 +95,13 @@ public class ClusterValidationStage extends AbstractDistStage {
       return CONFIRMATION_KEY + slaveIndex;
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
       logDurationInfo(acks);
-      boolean success = true;
+      StageResult result = StageResult.SUCCESS;
       for (DistStageAck ack : acks) {
          if (ack.isError()) {
             log.warn("Ack error from remote slave: " + ack);
-            return false;
+            result = errorResult();
          }
          if (!(ack instanceof ReplicationAck)) {
             log.info("Slave " + ack.getSlaveIndex() + " did not sent any response");
@@ -110,18 +111,18 @@ public class ClusterValidationStage extends AbstractDistStage {
          if (partialReplication) {
             if (replicationAck.result <= 0) {
                log.warn("Replication hasn't occurred on slave: " + ack);
-               success = false;
+               result = errorResult();
             }
          } else { //total replication expected
             int expectedRepl = getExecutingSlaves().size() - 1;
             if (!(replicationAck.result == expectedRepl)) {
                log.warn("On slave " + ack + " total replication hasn't occurred. Expected " + expectedRepl + " and received " + replicationAck.result);
-               success = false;
+               result = errorResult();
             }
          }
       }
-      if (!success) log.warn("Cluster hasn't formed!");
-      return success;
+      if (result.isError()) log.warn("Cluster hasn't formed!");
+      return result;
    }
 
 

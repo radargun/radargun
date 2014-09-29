@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Init;
 import org.radargun.config.Path;
 import org.radargun.config.Property;
@@ -285,11 +286,13 @@ public class StressTestStage extends AbstractDistStage {
       return new StatisticsAck(slaveState, iterations, iterationName, iterationValue);
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) return false;
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError()) return result;
+
       if (testName == null || testName.isEmpty()) {
          log.info("No test name - results are not recorded");
-         return true;
+         return StageResult.SUCCESS;
       }
       Report report = masterState.getReport();
       Report.Test test = report.getOrCreateTest(testName, amendTest);
@@ -304,10 +307,10 @@ public class StressTestStage extends AbstractDistStage {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }
       }
-      return true;
+      return StageResult.SUCCESS;
    }
 
-   protected boolean defaultProcessAck(List<DistStageAck> acks) {
+   protected StageResult defaultProcessAck(List<DistStageAck> acks) {
       return super.processAckOnMaster(acks);
    }
 

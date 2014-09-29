@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
@@ -39,11 +40,12 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) return false;
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult res = super.processAckOnMaster(acks);
+      if (res.isError()) return res;
       if (testName == null || testName.isEmpty()) {
          log.info("No test name - results are not recorded");
-         return true;
+         return StageResult.SUCCESS;
       }
       Report report = masterState.getReport();
       Report.Test test = report.createTest(testName);
@@ -67,7 +69,7 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
          Report.TestResult result = new Report.TestResult(slaveResults, min < max ? String.format("%d .. %d", min, max) : "-", false, null, null);
          test.addResult(iteration, Collections.singletonMap(BackgroundOpsManager.CACHE_SIZE, result));
       }
-      return true;
+      return StageResult.SUCCESS;
    }
 
    private static class StatisticsAck extends DistStageAck {

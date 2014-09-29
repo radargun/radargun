@@ -82,7 +82,7 @@ public class LocalSlaveConnection implements SlaveConnection {
       if (stageId < 0) {
          return Collections.singletonList(new DistStageAck(slaveState));
       }
-      Stage stage = scenario.getStage(stageId, extras);
+      Stage stage = scenario.getStage(stageId, slaveState, extras, null);
       TraitHelper.InjectResult result = TraitHelper.inject(stage, traits);
       if (result == TraitHelper.InjectResult.FAILURE) {
          return Collections.singletonList(new DistStageAck(slaveState)

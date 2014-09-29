@@ -199,6 +199,16 @@ public class Utils {
       return pluginPath;
    }
 
+   public static String concat(String separator, String... parts) {
+      StringBuilder sb = new StringBuilder();
+      for (String part : parts) {
+         if (part == null || part.isEmpty()) continue;
+         if (sb.length() != 0) sb.append(separator);
+         sb.append(part);
+      }
+      return sb.toString();
+   }
+
    public static class JarFilenameFilter implements FilenameFilter {
       public boolean accept(File dir, String name) {
          String fileName = name.toUpperCase(Locale.ENGLISH);
