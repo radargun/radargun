@@ -32,6 +32,7 @@ import org.radargun.utils.Utils;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+// TODO: rewrite to inherit from TestStage
 @Stage(doc = "Iterates through all entries.")
 public class IterateStage extends AbstractDistStage {
 
@@ -162,10 +163,12 @@ public class IterateStage extends AbstractDistStage {
       if (result.isError()) return result;
 
       Report.Test test = null;
-      if (testName != null && !testName.isEmpty()) {
-         test = masterState.getReport().getOrCreateTest(testName, amendTest);
+      if (testName == null || testName.isEmpty()) {
+         log.warn("No test name - results are not recorded");
+      } else if (testName.equalsIgnoreCase("warmup")) {
+         log.info("This test was executed as a warmup");
       } else {
-         log.info("No test name - results are not recorded");
+         test = masterState.getReport().getOrCreateTest(testName, amendTest);
       }
       long prevTotalSize = -1;
       long totalMinElements = -1, totalMaxElements = -1;
@@ -256,7 +259,7 @@ public class IterateStage extends AbstractDistStage {
 
    protected String resolveIterationValue() {
       if (iterationProperty != null) {
-         Map<String, Path> properties = PropertyHelper.getProperties(getClass(), true, false);
+         Map<String, Path> properties = PropertyHelper.getProperties(getClass(), true, false, true);
          String propertyString = PropertyHelper.getPropertyString(properties.get(iterationProperty), this);
          if (propertyString == null) {
             throw new IllegalStateException("Unable to resolve iteration property '" + iterationProperty + "'.");

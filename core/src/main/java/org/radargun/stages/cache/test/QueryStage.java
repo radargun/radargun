@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.stresstest;
+package org.radargun.stages.cache.test;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -16,6 +16,9 @@ import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
+import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.TestStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
@@ -23,7 +26,7 @@ import org.radargun.traits.Queryable;
 import org.radargun.utils.NumberConverter;
 import org.radargun.utils.ObjectConverter;
 import org.radargun.utils.Projections;
-import org.radargun.utils.ReflexiveListConverter;
+import org.radargun.utils.ReflexiveConverters;
 
 /**
  * Executes Queries using Infinispan-Query API against the cache.
@@ -31,8 +34,7 @@ import org.radargun.utils.ReflexiveListConverter;
  * @author Anna Manukyan
  */
 @Stage(doc = "Stage which executes a Query using Infinispan-query API against all keys in the cache.")
-public class QueryStage extends StressTestStage {
-
+public class QueryStage extends TestStage {
    @Property(optional = false, doc = "Full class name of the object that should be queried. Mandatory.")
    private String queryObjectClass;
 
@@ -62,20 +64,13 @@ public class QueryStage extends StressTestStage {
    protected AtomicInteger expectedSize = new AtomicInteger(-1);
 
    @Override
-   protected Stressor createStressor(int threadIndex) {
-      Stressor stressor = super.createStressor(threadIndex);
-      stressor.setQueryable(queryable);
-      return stressor;
-   }
-
-   @Override
    public OperationLogic getLogic() {
-      return new QueryRunnerLogic();
+      return new Logic();
    }
 
    @Override
-   protected QueryAck newStatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations, String iterationName, String iterationValue) {
-      return new QueryAck(slaveState, iterations, expectedSize.get(), iterationProperty, resolveIterationValue());
+   protected QueryAck newStatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
+      return new QueryAck(slaveState, iterations, expectedSize.get());
    }
 
    @Override
@@ -100,32 +95,33 @@ public class QueryStage extends StressTestStage {
          maxSize = Math.max(maxSize, ack.queryResultSize);
          slaveResults.put(ack.getSlaveIndex(), new Report.SlaveResult(String.valueOf(ack.queryResultSize), false));
       }
-      if (testName != null && !testName.isEmpty()) {
+      Report.Test test = getTest(true);
+      if (test != null) {
          String sizeString = minSize == maxSize ? String.valueOf(maxSize) : String.format("%d .. %d", minSize, maxSize);
-         Report.Test test = masterState.getReport().getTest(testName);
          test.addResult(getTestIteration(),
                Collections.singletonMap("Query result size", new Report.TestResult(slaveResults, sizeString, false, iterationProperty, resolveIterationValue())));
       } else {
          log.info("No test name - results are not recorded");
       }
-      return StageResult.SUCCESS;
+      return result;
    }
 
    protected static class QueryAck extends StatisticsAck {
       public final int queryResultSize;
 
-      public QueryAck(SlaveState slaveState, List<List<Statistics>> iterations, int queryResultSize, String iterationName, String iterationValue) {
-         super(slaveState, iterations, iterationName, iterationValue);
+      public QueryAck(SlaveState slaveState, List<List<Statistics>> iterations, int queryResultSize) {
+         super(slaveState, iterations);
          this.queryResultSize = queryResultSize;
       }
    }
 
-   protected class QueryRunnerLogic implements OperationLogic {
+   protected class Logic extends OperationLogic {
       protected Queryable.QueryBuilder builder;
       protected Queryable.QueryResult previousQueryResult = null;
 
       @Override
       public void init(Stressor stressor) {
+         super.init(stressor);
          Class<?> clazz;
          try {
             clazz = slaveState.getClassLoader().loadClass(queryObjectClass);
@@ -153,9 +149,9 @@ public class QueryStage extends StressTestStage {
       }
 
       @Override
-      public Object run(Stressor stressor) throws RequestException {
+      public Object run() throws RequestException {
          Queryable.Query query = builder.build();
-         Queryable.QueryResult queryResult = (Queryable.QueryResult) stressor.makeRequest(Queryable.QUERY, query);
+         Queryable.QueryResult queryResult = (Queryable.QueryResult) stressor.makeRequest(new Invocations.Query(query));
 
          if (previousQueryResult != null) {
             if (queryResult.size() != previousQueryResult.size()) {
@@ -322,15 +318,9 @@ public class QueryStage extends StressTestStage {
       }
    }
 
-   private static class ConditionConverter extends ReflexiveListConverter {
+   private static class ConditionConverter extends ReflexiveConverters.ListConverter {
       public ConditionConverter() {
          super(new Class[] {Eq.class, Lt.class, Le.class, Gt.class, Ge.class, Like.class, Contains.class, IsNull.class, Not.class, Any.class, All.class});
-      }
-   }
-
-   private static class ObjectsConverter extends ReflexiveListConverter {
-      public ObjectsConverter() {
-         super(new Class[] { /* TODO */ });
       }
    }
 

@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.stresstest;
+package org.radargun.stages.test;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -6,7 +6,7 @@ import org.radargun.utils.Utils;
 
 /**
  * Completion limited by absolute number of executed operations.
- * All stressors share the total amount of requested operations.
+ * All stressors share the total number of requested operations.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

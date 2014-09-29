@@ -11,7 +11,6 @@ import org.radargun.Operation;
 public interface BasicOperations {
    String TRAIT = BasicOperations.class.getSimpleName();
    Operation GET =            Operation.register(TRAIT + ".Get");
-   Operation GET_NULL =       Operation.register(TRAIT + ".GetNull");
    Operation CONTAINS_KEY =   Operation.register(TRAIT + ".ContainsKey");
    Operation PUT =            Operation.register(TRAIT + ".Put");
    Operation GET_AND_PUT =    Operation.register(TRAIT + ".GetAndPut");

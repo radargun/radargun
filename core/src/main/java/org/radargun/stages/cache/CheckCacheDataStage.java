@@ -20,7 +20,7 @@ import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
-import org.radargun.stages.helpers.BucketPolicy;
+import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.stages.helpers.Range;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
@@ -203,7 +203,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
    }
 
    private String getCacheName() {
-      return (String) slaveState.get(BucketPolicy.LAST_BUCKET);
+      CacheSelector selector = (CacheSelector) slaveState.get(CacheSelector.CACHE_SELECTOR);
+      return selector == null ? null : selector.getCacheName(-1);
    }
 
    private class CheckRangeTask implements Callable<CheckResult> {

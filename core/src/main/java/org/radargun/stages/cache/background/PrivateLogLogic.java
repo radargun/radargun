@@ -122,7 +122,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
          log.error("Value is not an instance of PrivateLogValue: " + prevValue);
          throw new IllegalStateException();
       } else {
-         stressor.stats.registerRequest(endTime - startTime, prevValue == null ? BasicOperations.GET_NULL : BasicOperations.GET);
+         stressor.stats.registerRequest(endTime - startTime, prevValue == null ? GET_NULL : BasicOperations.GET);
          return (PrivateLogValue) prevValue;
       }
    }
