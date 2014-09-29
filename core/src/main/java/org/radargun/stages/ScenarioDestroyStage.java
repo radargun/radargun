@@ -4,11 +4,13 @@ import java.util.List;
 
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
+import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.lifecycle.LifecycleHelper;
 import org.radargun.state.ServiceListener;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Lifecycle;
+import org.radargun.utils.TimeConverter;
 import org.radargun.utils.Utils;
 
 /**
@@ -20,6 +22,10 @@ import org.radargun.utils.Utils;
  */
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is automatically inserted after the last stage in each scenario.")
 public class ScenarioDestroyStage extends InternalDistStage {
+   @Property(doc = "Timeout for the Lifecycle.stop() execution - if the stop() does not return within this timeout," +
+         " Killable.kill() is called (if it is supported). Default is 30 seconds.", converter = TimeConverter.class)
+   protected long gracefulStopTimeout = 30000;
+
    @InjectTrait
    protected Lifecycle lifecycle;
 
@@ -29,7 +35,7 @@ public class ScenarioDestroyStage extends InternalDistStage {
       log.info("Memory before cleanup: \n" + Utils.getMemoryInfo());
       try {
          if (lifecycle != null && lifecycle.isRunning()) {
-            LifecycleHelper.stop(slaveState, true, false);
+            LifecycleHelper.stop(slaveState, true, false, gracefulStopTimeout);
             log.info("Service successfully stopped.");
          } else {
             log.info("No service deployed on this slave, nothing to do.");

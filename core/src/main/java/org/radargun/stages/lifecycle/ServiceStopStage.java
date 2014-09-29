@@ -22,6 +22,10 @@ public class ServiceStopStage extends AbstractDistStage {
    @Property(doc = "If set to false, the node crash should be simulated. By default node should be shutdown gracefully.")
    private boolean graceful = true;
 
+   @Property(doc = "Timeout for the Lifecycle.stop() execution - if the stop() does not return within this timeout," +
+         " Killable.kill() is called (if it is supported). Default is 2 minutes.", converter = TimeConverter.class)
+   protected long gracefulStopTimeout = 120000;
+
    @Property(doc = "If set to true the benchmark will not wait until the node is stopped. Default is false.")
    private boolean async = false;
 
@@ -60,7 +64,7 @@ public class ServiceStopStage extends AbstractDistStage {
                   if (lifecycle == null || !lifecycle.isRunning()) {
                      log.info("The service on this node is not running or cannot be stopped");
                   } else {
-                     LifecycleHelper.stop(slaveState, graceful, async);
+                     LifecycleHelper.stop(slaveState, graceful, async, gracefulStopTimeout);
                   }
                }
             };
