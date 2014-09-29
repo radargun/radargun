@@ -19,20 +19,15 @@
    <scenario>
       <service-start />
 
-      <!-- You should do longer warm-ups for real tests -->
-      <stress-test-warmup duration="10s" num-entries="100" entry-size="0"
-                          value-generator-class="org.radargun.stages.cache.generators.SingleWordGenerator"
-                          value-generator-param="file:conf/test-data/animals.txt"/>
-
-      <!-- Testing write performance and also loading the data -->
-      <stress-test test-name="loading"
-                   duration="10s" num-entries="500" entry-size="0" write-percentage="100"
-                   value-generator-class="org.radargun.stages.cache.generators.SingleWordGenerator"
-                   value-generator-param="file:conf/test-data/animals.txt"/>
+      <!-- Loading the data -->
+      <load-data num-entries="5000" entry-size="0"
+                 value-generator-class="org.radargun.query.SingleWordGenerator"
+                 value-generator-param="file:${org.radargun.query.dictionary:conf/test-data/animals.txt}"/>
 
       <!-- Logic does only queries - we don't have to specify any generator -->
       <query test-name="querying"
              duration="10s"
+             num-threads-per-node="10"
              query-object-class="org.radargun.query.TextObject">
          <conditions>
             <!-- The conditions are ANDed -->

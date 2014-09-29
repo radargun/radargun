@@ -1,9 +1,10 @@
 package org.radargun.stages;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.radargun.DistStage;
 import org.radargun.DistStageAck;
@@ -67,13 +68,24 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       return execBySlave && execByGroup && execByRole;
    }
 
-   protected Set<Integer> getExecutingSlaves() {
-      Set<Integer> slaves = this.slaves;
-      if (slaves == null) {
-         slaves = new TreeSet<Integer>();
+   /**
+    * @return List of slave indices that are executing this stage
+    *         (unless the slaves/groups was evaluated differently on each slave).
+    *         The order is guaranteed to be same across slaves.
+    */
+   protected List<Integer> getExecutingSlaves() {
+      if (executingSlaves != null) {
+         return executingSlaves;
+      }
+      List<Integer> slaves;
+      if (this.slaves == null) {
+         slaves = new ArrayList<>();
          for (int i = 0; i < slaveState.getClusterSize(); ++i) {
             slaves.add(i);
          }
+      } else {
+         slaves = new ArrayList<>(this.slaves);
+         Collections.sort(slaves);
       }
       if (groups != null) {
          for (Iterator<Integer> it = slaves.iterator(); it.hasNext();) {
@@ -84,7 +96,11 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
          }
       }
       // roles are not supported here as we can't determine if the slave has some role remotely
-      return slaves;
+      return executingSlaves = slaves;
+   }
+
+   protected int getExecutingSlaveIndex() {
+      return getExecutingSlaves().indexOf(slaveState.getSlaveIndex());
    }
 
    @Override

@@ -4,7 +4,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.PropertyDelegate;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.helpers.BucketPolicy;
+import org.radargun.stages.helpers.CacheSelector;
 
 /**
  * 
@@ -27,7 +27,7 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      slaveState.put(BucketPolicy.LAST_BUCKET, generalConfiguration.cacheName);
+      slaveState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector(CacheSelector.Type.ALL, generalConfiguration.cacheName));
       try {
          BackgroundOpsManager instance = BackgroundOpsManager.getOrCreateInstance(slaveState,
                generalConfiguration, legacyLogicConfiguration, logLogicConfiguration);

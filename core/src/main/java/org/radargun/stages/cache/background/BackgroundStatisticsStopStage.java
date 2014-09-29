@@ -44,7 +44,10 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
       StageResult res = super.processAckOnMaster(acks);
       if (res.isError()) return res;
       if (testName == null || testName.isEmpty()) {
-         log.info("No test name - results are not recorded");
+         log.warn("No test name - results are not recorded");
+         return StageResult.SUCCESS;
+      } else if (testName.equalsIgnoreCase("warmup")) {
+         log.info("This test was executed as a warmup");
          return StageResult.SUCCESS;
       }
       Report report = masterState.getReport();

@@ -134,7 +134,7 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
          log.error("Value is not an instance of SharedLogValue: " + prevValue);
          throw new IllegalStateException();
       } else {
-         stressor.stats.registerRequest(endTime - startTime, prevValue == null ? BasicOperations.GET_NULL : BasicOperations.GET);
+         stressor.stats.registerRequest(endTime - startTime, prevValue == null ? GET_NULL : BasicOperations.GET);
          return (SharedLogValue) prevValue;
       }
    }
@@ -145,10 +145,10 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
       Operation operation = Operation.UNKNOWN;
       try {
          if (oldValue == null) {
-            operation = ConditionalOperations.PUT_IF_ABSENT_EXEC;
+            operation = ConditionalOperations.PUT_IF_ABSENT;
             returnValue = conditionalCache.putIfAbsent(keyGenerator.generateKey(keyId), newValue);
          } else {
-            operation = ConditionalOperations.REPLACE_EXEC;
+            operation = ConditionalOperations.REPLACE;
             returnValue = conditionalCache.replace(keyGenerator.generateKey(keyId), oldValue, newValue);
          }
       } catch (Exception e) {
@@ -166,10 +166,10 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
       try {
          boolean returnValue = conditionalCache.remove(keyGenerator.generateKey(keyId), oldValue);
          long endTime = System.nanoTime();
-         stressor.stats.registerRequest(endTime - startTime, ConditionalOperations.REMOVE_EXEC);
+         stressor.stats.registerRequest(endTime - startTime, ConditionalOperations.REMOVE);
          return returnValue;
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, ConditionalOperations.REMOVE_EXEC);
+         stressor.stats.registerError(System.nanoTime() - startTime, ConditionalOperations.REMOVE);
          throw e;
       }
    }

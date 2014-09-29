@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.stresstest;
+package org.radargun.stages.test;
 
 import java.util.concurrent.TimeUnit;
 

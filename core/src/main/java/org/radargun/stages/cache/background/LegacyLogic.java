@@ -124,7 +124,7 @@ class LegacyLogic extends AbstractLogic {
          Object result;
          if (operation == BasicOperations.GET) {
             result = basicCache.get(key);
-            if (result == null) operation = BasicOperations.GET_NULL;
+            if (result == null) operation = GET_NULL;
          } else if (operation == BasicOperations.PUT) {
             if (putWithReplace) {
                conditionalCache.replace(key, generateRandomEntry(rand, manager.getLegacyLogicConfiguration().getEntrySize()));

@@ -413,8 +413,9 @@ public class TestReportDocument extends HtmlDocument {
       private double getRequestsAverage(String operation) {
          long requests = 0;
          int slaveStatsCount = 0;
-         for (Statistics statistics : nodeStats) {
-            OperationStats operationStats = statistics.getOperationsStats().get(operation);
+         for (Statistics ns : nodeStats) {
+            if (ns == null) continue;
+            OperationStats operationStats = ns.getOperationsStats().get(operation);
             if (operationStats != null) {
                DefaultOutcome defaultOutcome = operationStats.getRepresentation(DefaultOutcome.class);
                if (defaultOutcome != null) {

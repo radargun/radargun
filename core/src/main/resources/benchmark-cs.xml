@@ -54,10 +54,23 @@
    <scenario>
       <!-- Start services on all nodes -->
       <service-start />
+
+      <load-data groups="client" num-entries="10000"/>
+
       <!-- Warmup executed only on the slave 1 = client -->
-      <stress-test-warmup slaves="1" num-requests="100000" />
+      <basic-operations-test groups="client" test-name="warmup" num-threads-per-node="10">
+         <key-selector>
+            <concurrent-keys num-entries-per-thread="100" />
+         </key-selector>
+      </basic-operations-test>
+
       <!-- Stress test executed only on the slave 1 = client -->
-      <stress-test slaves="1" duration="60s" />
+      <basic-operations-test slaves="1" duration="60s" num-threads-per-node="10">
+         <key-selector>
+            <concurrent-keys num-entries-per-thread="1000" />
+         </key-selector>
+      </basic-operations-test>
+
       <!-- Stop services on all nodes: in cleanup this would happen anyway -->
       <service-stop />
    </scenario>

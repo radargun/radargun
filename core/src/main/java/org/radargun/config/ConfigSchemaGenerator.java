@@ -290,6 +290,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       String name = XmlHelper.camelCaseToDash(propertyName);
       String type, documentation = null;
       boolean createElement = true;
+      int elementMinOccurs = 0;
 
       if (!path.isComplete()) {
          type = generateClass(doc, schema, path.getTargetType());
@@ -307,6 +308,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
          boolean hasComplexConverter = propertyAnnotation.complexConverter() != ComplexConverter.Dummy.class;
          if (hasComplexConverter) {
             type = generateComplexType(doc, schema, path.getTargetType(), propertyAnnotation.complexConverter());
+            elementMinOccurs = propertyAnnotation.optional() ? 0 : 1;
          } else {
             type = generateSimpleType(doc, schema, path.getTargetType(), propertyAnnotation.converter());
             if (generateAttributes) {
@@ -318,7 +320,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
          documentation = propertyAnnotation.doc();
       }
       if (createElement && path.isTrivial()) {
-         Element propertyElement = createReference(doc, parentSequence, name, type, 0, 1);
+         Element propertyElement = createReference(doc, parentSequence, name, type, elementMinOccurs, 1);
          addDocumentation(doc, propertyElement, documentation);
       }
    }
@@ -336,7 +338,6 @@ public class ConfigSchemaGenerator implements ConfigSchema {
 
       Element typeElement = doc.createElementNS(NS_XS, XS_COMPLEX_TYPE);
       typeElement.setAttribute(XS_NAME, typeName);
-      Element choice = createChoice(doc, createSequence(doc, typeElement), 0, -1);
       ComplexConverter<?> converter;
       try {
          Constructor<? extends ComplexConverter<?>> ctor = complexConverterClass.getDeclaredConstructor();
@@ -345,6 +346,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       } catch (Exception e) {
          throw new IllegalArgumentException("Cannot create " + complexConverterClass.getName(), e);
       }
+      Element choice = createChoice(doc, createSequence(doc, typeElement), converter.minAttributes(), converter.maxAttributes());
       for (Class<?> inner : converter.content()) {
          DefinitionElement de = inner.getAnnotation(DefinitionElement.class);
          if (de == null) throw new IllegalArgumentException(inner.getName());
@@ -448,8 +450,14 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       return RG_PREFIX + typeName;
    }
 
+   private static String maxOccurs(int maxOccurs) {
+      return maxOccurs < 0 ? "unbounded" : String.valueOf(maxOccurs);
+   }
+
    private static Element createSequence(Document doc, Element parentComplex) {
       Element sequence = doc.createElementNS(NS_XS, XS_SEQUENCE);
+      sequence.setAttribute(XS_MIN_OCCURS, "1");
+      sequence.setAttribute(XS_MAX_OCCURS, "1");
       parentComplex.appendChild(sequence);
       return sequence;
    }
@@ -457,7 +465,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
    private static Element createChoice(Document doc, Element sequence, int minOccurs, int maxOccurs) {
       Element choice = doc.createElementNS(NS_XS, XS_CHOICE);
       choice.setAttribute(XS_MIN_OCCURS, String.valueOf(minOccurs));
-      choice.setAttribute(XS_MAX_OCCURS, maxOccurs < 0 ? "unbounded" : String.valueOf(maxOccurs));
+      choice.setAttribute(XS_MAX_OCCURS, maxOccurs(maxOccurs));
       sequence.appendChild(choice);
       return choice;
    }
@@ -466,7 +474,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       Element element = doc.createElementNS(NS_XS, XS_ELEMENT);
       element.setAttribute(XS_NAME, name);
       if (minOccurs >= 0) element.setAttribute(XS_MIN_OCCURS, String.valueOf(minOccurs));
-      element.setAttribute(XS_MAX_OCCURS, maxOccurs < 0 ? "unbounded" : String.valueOf(maxOccurs));
+      element.setAttribute(XS_MAX_OCCURS, maxOccurs(maxOccurs));
       parentSequence.appendChild(element);
       Element complex = doc.createElementNS(NS_XS, XS_COMPLEX_TYPE);
       element.appendChild(complex);
@@ -500,7 +508,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       reference.setAttribute(XS_NAME, name);
       reference.setAttribute(XS_TYPE, type);
       if (minOccurs >= 0) reference.setAttribute(XS_MIN_OCCURS, String.valueOf(minOccurs));
-      if (maxOccurs >= 0 || minOccurs >= 0) reference.setAttribute(XS_MAX_OCCURS, maxOccurs < 0 ? "unbounded" : String.valueOf(maxOccurs));
+      if (maxOccurs >= 0 || minOccurs >= 0) reference.setAttribute(XS_MAX_OCCURS, maxOccurs(maxOccurs));
       parent.appendChild(reference);
       return reference;
    }

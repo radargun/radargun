@@ -21,12 +21,27 @@
       <service-start />
       <!-- Begin monitoring of CPU, memory usage and GC -->
       <jvm-monitor-start />
+
+      <!-- Preload the cache with data -->
+      <load-data num-entries="5000"/>
+
       <!-- 5 threads will execute total of 10,000,000 random requests against the default cache ('testCache')-->
-      <stress-test-warmup num-requests="10000000" num-threads="5" />
-      <!-- Remove all data from the default cache -->
-      <clear-cache />
-      <!-- 10 threads will execute random request for 1 minute against the default cache ('testCache') -->
-      <stress-test duration="1m" num-threads="10" />
+      <!-- As the test is called 'warmup', performance statistics won't be reported -->
+      <basic-operations-test test-name="warmup"
+                             num-requests="10000000" num-threads-per-node="5">
+         <key-selector>
+            <concurrent-keys total-entries="5000" />
+         </key-selector>
+      </basic-operations-test>
+
+      <!-- 10 will execute random requests for 1 minute against the default cache ('testCache') -->
+      <basic-operations-test test-name="stress-test"
+                             duration="1m" num-threads-per-node="10">
+         <key-selector>
+            <concurrent-keys total-entries="5000"/>
+         </key-selector>
+      </basic-operations-test>
+
       <!-- Stop JVM monitoring -->
       <jvm-monitor-stop />
    </scenario>

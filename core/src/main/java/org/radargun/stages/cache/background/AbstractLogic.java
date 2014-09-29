@@ -1,8 +1,10 @@
 package org.radargun.stages.cache.background;
 
+import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.cache.generators.KeyGenerator;
+import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Transactional;
 
 /**
@@ -12,6 +14,7 @@ import org.radargun.traits.Transactional;
  */
 public abstract class AbstractLogic implements Logic {
 
+   protected static final Operation GET_NULL = BasicOperations.GET.derive("Null");
    protected final Log log = LogFactory.getLog(getClass());
    protected final boolean trace = log.isTraceEnabled();
 

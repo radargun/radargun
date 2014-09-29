@@ -11,7 +11,21 @@ public interface ComplexConverter<T> {
 
    T convert(ComplexDefinition definition, Type type);
    String convertToString(T value);
+
+   /**
+    * @return Classes that could be the conversion result
+    */
    Collection<Class<?>> content();
+
+   /**
+    * @return Minimal number of attributes that the definition should contain.
+    */
+   int minAttributes();
+
+   /**
+    * @return Maximal number of attributes that the definition should contain. -1 means unlimited.
+    */
+   int maxAttributes();
 
    public static class Dummy implements ComplexConverter<Object> {
       @Override
@@ -27,6 +41,16 @@ public interface ComplexConverter<T> {
       @Override
       public Collection<Class<?>> content() {
          return null;
+      }
+
+      @Override
+      public int minAttributes() {
+         return 0;
+      }
+
+      @Override
+      public int maxAttributes() {
+         return 0;
       }
    }
 
