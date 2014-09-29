@@ -39,7 +39,7 @@ public class StageHelper {
             name = annotation.name();
          } else {
             if (!clazz.getSimpleName().endsWith("Stage")) {
-               log.error("Stage does not keep the conventional name *Stage");
+               log.warn(clazz.getName() + " does not keep the conventional name *Stage");
                continue;
             }
             name = clazz.getSimpleName().substring(0, clazz.getSimpleName().length() - 5);

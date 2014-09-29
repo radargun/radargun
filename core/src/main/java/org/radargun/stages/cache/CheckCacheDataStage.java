@@ -12,6 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
@@ -301,11 +302,10 @@ public class CheckCacheDataStage extends AbstractDistStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      boolean success = super.processAckOnMaster(acks);
-      if (!success) {
-         return false;
-      }
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError()) return result;
+
       int sumSize = 0;
       Integer numReplicas = null;
       Map<Object, Map<Integer, Integer>> subparts = new HashMap<Object, Map<Integer, Integer>>();
@@ -319,7 +319,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
          if (numReplicas == null) numReplicas = info.numReplicas;
          else if (numReplicas != info.numReplicas) {
             log.error("Slave " + ack.getSlaveIndex() + " reports " + info.numReplicas + " replicas but other slave reported " + numReplicas);
-            success = false;
+            result = errorResult();
          }
          int sumSubpartSize = 0;
          for (Map.Entry<?, Integer> subpart : info.structuredSize.entrySet()) {
@@ -335,7 +335,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
                   if ((int) subpart.getValue() != (int) os.getValue()) {
                      log.errorf("Slave %d reports %s = %d but slave %d reported size %d",
                            info.getSlaveIndex(), subpart.getKey(), subpart.getValue(), os.getKey(), os.getValue());
-                     success = false;
+                     result = errorResult();
                   }
                }
                otherSubparts.put(info.getSlaveIndex(), subpart.getValue());
@@ -344,14 +344,14 @@ public class CheckCacheDataStage extends AbstractDistStage {
          if (checkSubpartsSumLocal && sumSubpartSize != info.localSize) {
             log.errorf("On slave %d sum of subparts sizes (%d) is not the same as local size (%d)",
                   info.getSlaveIndex(), sumSubpartSize, info.localSize);
-            success = false;
+            result = errorResult();
          }
       }
       if (checkSubpartsAreReplicas) {
          for (Map.Entry<Object, Map<Integer, Integer>> subpart : subparts.entrySet()) {
             if (subpart.getValue().size() != numReplicas) {
                log.errorf("Subpart %s was found in %s, should have %d replicas.", subpart.getKey(), subpart.getValue().keySet(), numReplicas);
-               success = false;
+               result = errorResult();
             }
          }
       }
@@ -368,12 +368,12 @@ public class CheckCacheDataStage extends AbstractDistStage {
          }
          if (expectedSize != sumSize) {
             log.error("The cache should contain " + expectedSize + " entries (including backups) but contains " + sumSize + " entries.");
-            success = false;
+            result = errorResult();
          } else {
             log.trace("The sum size is " + sumSize + " entries as expected");
          }
       }
-      return success;
+      return result;
    }
 
    public int getNumEntries() {

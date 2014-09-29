@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.SlaveState;
@@ -88,23 +89,24 @@ public class IsolationLevelCheckStage extends CheckStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) return false;
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError()) return result;
 
       boolean anyValueChangeDetected = false;
       for (ChangeAck ack : Projections.instancesOf(acks, ChangeAck.class)) {
          log.debugf("Value change detected on slave %d: %s", ack.getSlaveIndex(), ack.valueChangeDetected);
          if (expectedLevel.equalsIgnoreCase(REPEATABLE_READ) && ack.valueChangeDetected) {
             log.error("Value change was detected but this should not happen with isolation " + expectedLevel);
-            return false;
+            return errorResult();
          }
          anyValueChangeDetected |= ack.valueChangeDetected;
       }
       if (expectedLevel.equalsIgnoreCase(READ_COMMITTED) && !anyValueChangeDetected) {
          log.error("Value change was expected with isolation " + expectedLevel + " but none was detected");
-         return false;
+         return errorResult();
       }
-      return true;
+      return StageResult.SUCCESS;
    }
 
    private static class ChangeAck extends DistStageAck {

@@ -35,7 +35,7 @@ public interface DistStage extends Stage, Serializable {
     * After all slaves replied through {@link #executeOnSlave()}, this method will be called on the master.
     * @return returning false will cause the benchmark to stop.
     */
-   boolean processAckOnMaster(List<DistStageAck> acks);
+   StageResult processAckOnMaster(List<DistStageAck> acks);
 
    //TODO: remove the call from stages
    /**

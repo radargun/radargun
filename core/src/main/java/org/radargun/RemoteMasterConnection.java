@@ -86,7 +86,7 @@ public class RemoteMasterConnection {
    }
 
    /**
-    * Receives total amount of connected slaves. Should be called after receiveSlaveIndex().
+    * Receives total number of connected slaves. Should be called after receiveSlaveIndex().
     * @return
     * @throws IOException
     */

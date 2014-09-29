@@ -12,5 +12,5 @@ public interface MasterStage extends Stage {
 
    void init(MasterState masterState);
 
-   boolean execute() throws Exception;
+   StageResult execute() throws Exception;
 }

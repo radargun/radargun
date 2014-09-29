@@ -7,12 +7,13 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.ConfigurationProvider;
 import org.radargun.traits.InjectTrait;
+import org.radargun.utils.TimeConverter;
 
 /**
  * Stage that starts a CacheWrapper on each slave.
@@ -105,8 +106,10 @@ public class ServiceStartStage extends AbstractServiceStartStage {
       }
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      boolean result = super.processAckOnMaster(acks);
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError()) return result;
+
       if (dumpConfig) {
          for (DistStageAck ack : acks) {
             if (ack instanceof ServiceStartAck) {
@@ -116,7 +119,7 @@ public class ServiceStartStage extends AbstractServiceStartStage {
             }
          }
       }
-      return result;
+      return StageResult.SUCCESS;
    }
 
    public static class ServiceStartAck extends DistStageAck {

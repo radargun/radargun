@@ -15,6 +15,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
@@ -102,15 +103,15 @@ public class TpccBenchmarkStage extends AbstractDistStage {
       }
    }
 
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
       logDurationInfo(acks);
-      boolean success = true;
+      StageResult result = StageResult.SUCCESS;
       Map<Integer, Map<String, Object>> results = new HashMap<Integer, Map<String, Object>>();
       // TODO: move this into test report
       masterState.put("results", results);
       for (DistStageAck ack : acks) {
          if (ack.isError()) {
-            success = false;
+            result = errorResult();
             log.warn("Received error ack: " + ack);
             continue;
          }
@@ -128,7 +129,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
             log.trace("No report received from slave: " + ack.getSlaveIndex());
          }
       }
-      return success;
+      return result;
    }
 
    public Map<String, Object> stress() {

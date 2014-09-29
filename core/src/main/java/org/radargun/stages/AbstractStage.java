@@ -1,5 +1,6 @@
 package org.radargun.stages;
 
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.config.StageHelper;
@@ -25,9 +26,8 @@ public abstract class AbstractStage implements org.radargun.Stage {
       return StageHelper.getStageName(getClass());
    }
 
-   @Override
-   public boolean isExitOnFailure() {
-      return exitOnFailure;
+   protected StageResult errorResult() {
+      return exitOnFailure ? StageResult.EXIT : StageResult.FAIL;
    }
 
    @Override

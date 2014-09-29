@@ -5,11 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
+import org.radargun.utils.TimeConverter;
 
 /**
  * Collects configuration for JMXClusterValidationStage.
@@ -60,12 +61,12 @@ public class JMXClusterValidationPrepareStage extends AbstractDistStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
       List<InetSocketAddress> slaveAddrs = new ArrayList<InetSocketAddress>(acks.size());
       for (DistStageAck ack : acks) {
          if (ack.isError()) {
             log.error("Error from slave " + ack.getSlaveIndex() + ": " + ack);
-            return false;
+            return errorResult();
          } else if (ack instanceof AddressAck) {
             slaveAddrs.add(((AddressAck) ack).address);
          }
@@ -83,7 +84,7 @@ public class JMXClusterValidationPrepareStage extends AbstractDistStage {
       if (prop3 != null) {
          masterState.put(STATE_PROP3, prop3);
       }
-      return true;
+      return StageResult.SUCCESS;
    }
 
    private static class AddressAck extends DistStageAck {

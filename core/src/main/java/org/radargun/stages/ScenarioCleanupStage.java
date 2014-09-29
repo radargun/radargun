@@ -8,11 +8,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.radargun.DistStage;
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.Projections;
 import org.radargun.utils.TimeConverter;
@@ -24,7 +23,7 @@ import org.radargun.utils.Utils;
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is automatically inserted after the last stage in each scenario. You can alter the properties in &lt;cleanup/&gt element.")
-public final class ScenarioCleanupStage extends AbstractStage implements DistStage {
+public final class ScenarioCleanupStage extends InternalDistStage {
 
    @Property(doc = "Specifies whether the check for amount of free memory should be performed. Default is true.", deprecatedName = "checkMemoryReleased")
    private boolean checkMemory = true;
@@ -47,18 +46,6 @@ public final class ScenarioCleanupStage extends AbstractStage implements DistSta
 
    @Property(doc = "Timeout for stopped threads to join. Default is 10 seconds.", converter = TimeConverter.class)
    private long stopTimeout = 10000;
-
-   private SlaveState slaveState;
-
-   @Override
-   public void initOnMaster(MasterState masterState) {
-      // not needed
-   }
-
-   @Override
-   public void initOnSlave(SlaveState slaveState) {
-      this.slaveState = slaveState;
-   }
 
    public DistStageAck executeOnSlave() {
       try {
@@ -102,7 +89,7 @@ public final class ScenarioCleanupStage extends AbstractStage implements DistSta
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
       boolean result = true;
       for (CleanupAck ack : Projections.instancesOf(acks, CleanupAck.class)) {
          log.infof("Node %d has changed available memory from %d MB to %d MB and has %d unfinished threads",
@@ -112,12 +99,7 @@ public final class ScenarioCleanupStage extends AbstractStage implements DistSta
          }
          result = result && !ack.isError() && ack.memoryCheckResult && ack.unfinishedThreads == 0;
       }
-      return result;
-   }
-
-   @Override
-   public boolean shouldExecute() {
-      return true;
+      return result ? StageResult.SUCCESS : errorResult();
    }
 
    private boolean checkMemoryReleased() {

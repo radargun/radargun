@@ -9,6 +9,4 @@ public interface Stage {
    String STAGE = "Stage";
 
    String getName();
-
-   boolean isExitOnFailure();
 }

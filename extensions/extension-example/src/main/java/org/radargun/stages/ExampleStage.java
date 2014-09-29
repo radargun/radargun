@@ -3,6 +3,7 @@ package org.radargun.stages;
 import java.util.List;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.SlaveState;
@@ -33,14 +34,14 @@ public class ExampleStage extends AbstractDistStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      boolean successful = super.processAckOnMaster(acks);
-      if (successful) {
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (!result.isError()) {
          for (ExampleAck ack : Projections.instancesOf(acks, ExampleAck.class)) {
             log.infof("Slave %d reports: %s", ack.getSlaveIndex(), ack.getExampleMessage());
          }
       }
-      return successful;
+      return result;
    }
 
    private static class ExampleAck extends DistStageAck {

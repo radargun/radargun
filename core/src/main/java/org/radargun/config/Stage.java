@@ -17,4 +17,5 @@ public @interface Stage {
    String deprecatedName() default NO_DEPRECATED_NAME;
    String doc();
    boolean internal() default false;
+   Label label() default @Label();
 }

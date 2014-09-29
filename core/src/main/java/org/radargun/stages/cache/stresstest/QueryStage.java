@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Converter;
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
@@ -78,8 +79,10 @@ public class QueryStage extends StressTestStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
-      if (!super.processAckOnMaster(acks)) return false;
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError()) return result;
+
       int minSize = Integer.MAX_VALUE, maxSize = Integer.MIN_VALUE;
       Map<Integer, Report.SlaveResult> slaveResults = new HashMap<Integer, Report.SlaveResult>();
       for (QueryAck ack : Projections.instancesOf(acks, QueryAck.class)) {
@@ -88,7 +91,7 @@ public class QueryStage extends StressTestStage {
                   ack.getSlaveIndex(), ack.queryResultSize, minSize, maxSize);
             if (checkSameResult) {
                log.error(message);
-               return false;
+               return errorResult();
             } else {
                log.info(message);
             }
@@ -105,7 +108,7 @@ public class QueryStage extends StressTestStage {
       } else {
          log.info("No test name - results are not recorded");
       }
-      return true;
+      return StageResult.SUCCESS;
    }
 
    protected static class QueryAck extends StatisticsAck {

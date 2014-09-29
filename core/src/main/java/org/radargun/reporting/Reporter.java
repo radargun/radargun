@@ -10,5 +10,5 @@ import org.radargun.config.Scenario;
  * It is expected that the implementation of this class will use @Property annotations to fill in the properties.
  */
 public interface Reporter {
-   void run(Scenario scenario, Collection<Report> reports);
+   void run(Collection<Report> reports);
 }

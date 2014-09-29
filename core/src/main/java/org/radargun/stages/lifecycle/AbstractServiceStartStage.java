@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
@@ -20,13 +21,13 @@ public abstract class AbstractServiceStartStage extends AbstractDistStage {
    protected Collection<Integer> mayFailOn;
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
       boolean success = true;
       logDurationInfo(acks);
       for (DistStageAck ack : acks) {
          if (ack.isError() && (mayFailOn == null || !mayFailOn.contains(ack.getSlaveIndex()))) {
             log.warn("Received error ack " + ack);
-            return false;
+            return errorResult();
          } else if (ack.isError()) {
             log.info("Received allowed error ack " + ack);
          } else {
@@ -35,6 +36,6 @@ public abstract class AbstractServiceStartStage extends AbstractDistStage {
       }
       if (log.isTraceEnabled())
          log.trace("All ack messages were successful");
-      return success;
+      return StageResult.SUCCESS;
    }
 }

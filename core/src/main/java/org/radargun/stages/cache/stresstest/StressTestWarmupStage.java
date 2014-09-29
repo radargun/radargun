@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.radargun.DistStageAck;
+import org.radargun.StageResult;
 import org.radargun.config.Stage;
 
 /**
@@ -47,7 +48,7 @@ public class StressTestWarmupStage extends StressTestStage {
    }
 
    @Override
-   public boolean processAckOnMaster(List<DistStageAck> acks) {
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
       return defaultProcessAck(acks);
    }
 }

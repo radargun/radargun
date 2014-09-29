@@ -78,8 +78,10 @@ public class ConfigSchemaGenerator implements ConfigSchema {
    private static final String XS_DOCUMENTATION = "documentation";
    private static final String TYPE_CLUSTER_BASE = "cluster_base";
    private static final String TYPE_CLUSTER = "cluster";
-   private static final String TYPE_REPEAT = "repeat";
    private static final String TYPE_PROPERTY = "property";
+   private static final String TYPE_REPEAT = "repeat";
+   private static final String TYPE_SCENARIO = "scenario";
+   private static final String TYPE_STAGES = "stages";
 
    private static Set<String> generatedTypes = new HashSet<String>();
    /* Stages classes sorted by name with its source jar */
@@ -178,18 +180,20 @@ public class ConfigSchemaGenerator implements ConfigSchema {
 
       createReference(doc, benchmarkSequence, ELEMENT_INIT, RG_PREFIX + class2xmlId(ScenarioInitStage.class), 0, 1);
 
-      Element scenarioComplex = createComplexElement(doc, benchmarkSequence, ELEMENT_SCENARIO, 1, 1);
-      Element scenarioChoice = createChoice(doc, createSequence(doc, scenarioComplex), 1, -1);
-      Element repeatType = createComplexType(doc, schema, TYPE_REPEAT, null, true, false, null);
-      Element repeatChoice = createChoice(doc, createSequence(doc, repeatType), 1, -1);
-      createReference(doc, scenarioChoice, ELEMENT_REPEAT, RG_PREFIX + TYPE_REPEAT);
-      createReference(doc, repeatChoice, ELEMENT_REPEAT, RG_PREFIX + TYPE_REPEAT);
+      Element stagesType = createComplexType(doc, schema, TYPE_STAGES, null, true, true, null);
+      Element stagesChoice = createChoice(doc, createSequence(doc, stagesType), 1, -1);
+      Element scenarioType = createComplexType(doc, schema, ELEMENT_SCENARIO, RG_PREFIX + TYPE_STAGES, true, false, null);
+      createReference(doc, benchmarkSequence, ELEMENT_SCENARIO, RG_PREFIX + TYPE_SCENARIO);
+
+      Element repeatType = createComplexType(doc, schema, TYPE_REPEAT, RG_PREFIX + TYPE_STAGES, true, false, null);
       addAttribute(doc, repeatType, ATTR_TIMES, intType, null, false);
       addAttribute(doc, repeatType, ATTR_FROM, intType, null, false);
       addAttribute(doc, repeatType, ATTR_TO, intType, null, false);
       addAttribute(doc, repeatType, ATTR_INC, intType, null, false);
       addAttribute(doc, repeatType, ATTR_NAME, false);
-      generateStageDefinitions(doc, schema, new Element[]{scenarioChoice, repeatChoice});
+      createReference(doc, stagesChoice, ELEMENT_REPEAT, RG_PREFIX + TYPE_REPEAT);
+
+      generateStageDefinitions(doc, schema, new Element[]{ stagesChoice });
 
       createReference(doc, benchmarkSequence, ELEMENT_DESTROY, RG_PREFIX + class2xmlId(ScenarioDestroyStage.class), 0, 1);
       createReference(doc, benchmarkSequence, ELEMENT_CLEANUP, RG_PREFIX + class2xmlId(ScenarioCleanupStage.class), 0, 1);
@@ -257,7 +261,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       Element typeElement = createComplexType(doc, schema, typeName, superType, true,
             Modifier.isAbstract(clazz.getModifiers()), findDocumentation(clazz));
       Element propertiesSequence = createSequence(doc, typeElement);
-      for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(clazz, true).entrySet()) {
+      for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(clazz, true, true).entrySet()) {
          generateProperty(doc, schema, typeElement, propertiesSequence, property.getKey(), property.getValue(), true);
       }
       return RG_PREFIX + typeName;
@@ -276,7 +280,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
             throw new IllegalArgumentException("Can't use empty property name this way.");
          } else {
             // we have to put copy all properties directly here
-            for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(path.getTargetType(), true).entrySet()) {
+            for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(path.getTargetType(), true, true).entrySet()) {
                // do not generate attributes as these already have been generated in the parent class
                generateProperty(doc, schema, parentType, parentSequence, property.getKey(), property.getValue(), false);
             }
@@ -348,7 +352,7 @@ public class ConfigSchemaGenerator implements ConfigSchema {
          createReference(doc, choice, de.name(), RG_PREFIX + subtypeName);
          if (!generatedTypes.contains(subtypeName)) {
             generatedTypes.add(subtypeName);
-            Map<String, Path> subtypeProperties = PropertyHelper.getProperties(inner, true, false);
+            Map<String, Path> subtypeProperties = PropertyHelper.getProperties(inner, true, false, true);
             String extended = null;
             Path valueProperty = subtypeProperties.get("");
             if (valueProperty != null && valueProperty.getTargetAnnotation().complexConverter() != ComplexConverter.Dummy.class) {

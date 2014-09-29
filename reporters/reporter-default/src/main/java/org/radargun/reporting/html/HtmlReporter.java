@@ -7,7 +7,6 @@ import java.util.*;
 import org.radargun.config.Configuration;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyDelegate;
-import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
@@ -31,18 +30,16 @@ public class HtmlReporter implements Reporter {
    @PropertyDelegate(prefix = "timeline.chart.")
    private TimelineDocument.Configuration timelineConfig = new TimelineDocument.Configuration();
 
-   private Scenario scenario;
    private Collection<Report> reports;
 
    @Override
-   public void run(Scenario scenario, Collection<Report> reports) {
-      this.scenario = scenario;
+   public void run(Collection<Report> reports) {
       this.reports = reports;
       IndexDocument index = new IndexDocument(targetDir);
       try {
          index.open();
          index.writeConfigurations(reports);
-         index.writeScenario(scenario);
+         index.writeScenario(reports);
          index.writeTimelines(reports);
          index.writeTests(reports);
          index.writeFooter();
