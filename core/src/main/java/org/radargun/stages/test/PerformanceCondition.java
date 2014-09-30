@@ -16,6 +16,7 @@ import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.utils.NanoTimeConverter;
 import org.radargun.utils.Projections;
 import org.radargun.utils.ReflexiveConverters;
+import org.radargun.utils.Utils;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -108,7 +109,7 @@ public abstract class PerformanceCondition {
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          DefaultOutcome outcome = stats.getRepresentation(DefaultOutcome.class);
          if (outcome == null) throw new IllegalStateException("Cannot determine mean from " + stats);
-         log.info("Mean is " + outcome.responseTimeMean + " ns " + PropertyHelper.toString(this));
+         log.info("Mean is " + Utils.prettyPrintTime((long) outcome.responseTimeMean, TimeUnit.NANOSECONDS) + PropertyHelper.toString(this));
          if (below != null) return outcome.responseTimeMean < below;
          if (over != null) return outcome.responseTimeMean > over;
          throw new IllegalStateException();
@@ -235,7 +236,7 @@ public abstract class PerformanceCondition {
          org.radargun.stats.representation.Percentile percentile
                = stats.getRepresentation(org.radargun.stats.representation.Percentile.class, value);
          if (percentile == null) throw new IllegalStateException("Cannot determine percentile from " + stats);
-         log.info("Response time is " + percentile.responseTimeMax + " ns " + PropertyHelper.toString(this));
+         log.info("Response time is " + Utils.prettyPrintTime((long) percentile.responseTimeMax, TimeUnit.NANOSECONDS) + PropertyHelper.toString(this));
          if (below != null) return percentile.responseTimeMax < below;
          if (over != null) return percentile.responseTimeMax > over;
          throw new IllegalStateException();
