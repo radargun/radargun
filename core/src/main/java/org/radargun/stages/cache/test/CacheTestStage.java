@@ -83,13 +83,23 @@ public abstract class CacheTestStage extends TestStage {
       }
       log.info("Using cache selector " + cacheSelector);
 
-      slaveState.addServiceListener(new ServiceListenerAdapter() {
-         @Override
-         public void serviceDestroyed() {
-            slaveState.remove(KeyGenerator.KEY_GENERATOR);
-            slaveState.remove(ValueGenerator.VALUE_GENERATOR);
-            slaveState.remove(CacheSelector.CACHE_SELECTOR);
-         }
-      });
+      slaveState.addServiceListener(new Cleanup(slaveState));
+   }
+
+   // this class needs to be static in order to not keep reference to the stage until service destruction
+   private static class Cleanup extends ServiceListenerAdapter {
+      private final SlaveState slaveState;
+
+      public Cleanup(SlaveState slaveState) {
+         this.slaveState = slaveState;
+      }
+
+      @Override
+      public void serviceDestroyed() {
+         slaveState.remove(KeyGenerator.KEY_GENERATOR);
+         slaveState.remove(ValueGenerator.VALUE_GENERATOR);
+         slaveState.remove(CacheSelector.CACHE_SELECTOR);
+         slaveState.removeServiceListener(this);
+      }
    }
 }

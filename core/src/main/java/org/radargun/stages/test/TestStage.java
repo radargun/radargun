@@ -88,7 +88,6 @@ public abstract class TestStage extends AbstractDistStage {
    protected volatile boolean finished = false;
    protected volatile boolean terminated = false;
    protected int testIteration; // first iteration we should use for setting the statistics
-   protected List<Stressor> stressors = new ArrayList<>();
 
    @Init
    public void init() {
@@ -196,6 +195,7 @@ public abstract class TestStage extends AbstractDistStage {
       int myFirstThread = getFirstThreadOn(slaveState.getSlaveIndex());
       int myNumThreads = getNumThreadsOn(slaveState.getSlaveIndex());
       finishLatch = new CountDownLatch(myNumThreads);
+      List<Stressor> stressors = new ArrayList<>();
       for (int threadIndex = stressors.size(); threadIndex < myNumThreads; threadIndex++) {
          Stressor stressor = new Stressor(this, getLogic(), myFirstThread + threadIndex, threadIndex);
          stressors.add(stressor);
