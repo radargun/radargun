@@ -290,7 +290,18 @@ public class Utils {
    }
 
    public static String prettyPrintTime(long time, TimeUnit unit) {
-      return prettyPrintMillis(unit.toMillis(time));
+      NumberFormat nf = NumberFormat.getNumberInstance();
+      nf.setMaximumFractionDigits(2);
+      if (unit.toNanos(time) < 1000) return nf.format(convert(time, unit, TimeUnit.NANOSECONDS)) + " ns";
+      if (unit.toMicros(time) < 1000) return nf.format(convert(time, unit, TimeUnit.MICROSECONDS)) + " us";
+      if (unit.toMillis(time) < 1000) return nf.format(convert(time, unit, TimeUnit.MILLISECONDS)) + " ms";
+      if (unit.toSeconds(time) < 300) return nf.format(convert(time, unit, TimeUnit.SECONDS)) + " seconds";
+      if (unit.toMinutes(time) < 120) return nf.format(convert(time, unit, TimeUnit.MINUTES)) + " minutes";
+      return nf.format(convert(time, unit, TimeUnit.HOURS)) + " hours";
+   }
+
+   private static double convert(long time, TimeUnit unitIn, TimeUnit unitOut) {
+      return (double) unitIn.toNanos(time) / (double) unitOut.toNanos(1);
    }
 
    /**
@@ -300,23 +311,7 @@ public class Utils {
     * @return the time, represented as millis, seconds, minutes or hours as appropriate, with suffix
     */
    public static String prettyPrintMillis(long millis) {
-      if (millis < 1000) return millis + " milliseconds";
-      NumberFormat nf = NumberFormat.getNumberInstance();
-      nf.setMaximumFractionDigits(2);
-      double toPrint = ((double) millis) / 1000;
-      if (toPrint < 300) {
-         return nf.format(toPrint) + " seconds";
-      }
-
-      toPrint = toPrint / 60;
-
-      if (toPrint < 120) {
-         return nf.format(toPrint) + " minutes";
-      }
-
-      toPrint = toPrint / 60;
-
-      return nf.format(toPrint) + " hours";
+      return prettyPrintTime(millis, TimeUnit.MILLISECONDS);
    }
 
    public static void sleep(long duration) {
