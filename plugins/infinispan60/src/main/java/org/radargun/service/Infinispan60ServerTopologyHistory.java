@@ -1,5 +1,6 @@
 package org.radargun.service;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 /**
@@ -15,38 +16,59 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
     */
    public Infinispan60ServerTopologyHistory(InfinispanServerService service) {
       this.service = service;
+      // we cannot detect changes for single cache - we have to track all of them as one
+      final AtomicInteger topologyChangesOngoing = new AtomicInteger(0);
+      final AtomicInteger hashChangesOngoing = new AtomicInteger(0);
       service.registerAction(Pattern.compile(".*Installing new cache topology.*"), new Runnable() {
          @Override
          public void run() {
-            log.debug("Topology change started");
-            addEvent(topologyChanges, true, 0, 0);
+            if (topologyChangesOngoing.getAndIncrement() == 0) {
+               log.debug("First topology change started");
+               addEvent(topologyChanges, true, 0, 0);
+            } else {
+               log.debug("Another topology change started");
+            }
          }
       });
       service.registerAction(Pattern.compile(".*Topology changed, recalculating minTopologyId.*"), new Runnable() {
          @Override
          public void run() {
-            log.debug("Topology change finished");
-            addEvent(topologyChanges, false, 0, 0);
+            if (topologyChangesOngoing.decrementAndGet() == 0) {
+               log.debug("All topology changes finished");
+               addEvent(topologyChanges, false, 0, 0);
+            } else {
+               log.debug("Another topology change finished");
+            }
          }
       });
       service.registerAction(Pattern.compile(".*Lock State Transfer in Progress for topology ID.*"), new Runnable() {
          @Override
          public void run() {
-            log.debug("Rehash started");
-            addEvent(hashChanges, true, 0, 0);
+            if (hashChangesOngoing.getAndIncrement() == 0) {
+               log.debug("First rehash started");
+               addEvent(hashChanges, true, 0, 0);
+            } else {
+               log.debug("Another rehash started");
+            }
          }
       });
       service.registerAction(Pattern.compile(".*Unlock State Transfer in Progress for topology ID.*"), new Runnable() {
          @Override
          public void run() {
-            log.debug("Rehash finished");
-            addEvent(hashChanges, false, 0, 0);
+            if (hashChangesOngoing.decrementAndGet() == 0) {
+               log.debug("All rehashes finished");
+               addEvent(hashChanges, false, 0, 0);
+            } else {
+               log.debug("Another rehash finished");
+            }
          }
       });
       service.lifecycle.registerOnStop(new Runnable() {
          @Override
          public void run() {
             reset();
+            topologyChangesOngoing.set(0);
+            hashChangesOngoing.set(0);
          }
       });
    }
