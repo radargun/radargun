@@ -17,6 +17,7 @@ import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.stages.test.TransactionMode;
 import org.radargun.state.ServiceListenerAdapter;
+import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -82,7 +83,6 @@ public class LoadDataStage extends AbstractDistStage {
    @InjectTrait
    protected Transactional transactional;
 
-   protected List<Loader> loaders = new ArrayList<>();
    protected KeyGenerator keyGenerator;
    protected ValueGenerator valueGenerator;
    protected AtomicLong entryCounter = new AtomicLong(0);
@@ -108,16 +108,10 @@ public class LoadDataStage extends AbstractDistStage {
       slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
       slaveState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
       slaveState.put(CacheSelector.CACHE_SELECTOR, cacheSelector);
-      slaveState.addServiceListener(new ServiceListenerAdapter() {
-         @Override
-         public void serviceDestroyed() {
-            slaveState.remove(KeyGenerator.KEY_GENERATOR);
-            slaveState.remove(ValueGenerator.VALUE_GENERATOR);
-            slaveState.remove(CacheSelector.CACHE_SELECTOR);
-         }
-      });
+      slaveState.addServiceListener(new Cleanup(slaveState));
 
       int threadBase = getExecutingSlaveIndex() * numThreads;
+      List<Loader> loaders = new ArrayList<>();
       for (int i = 0; i < numThreads; ++i) {
          String cacheName = cacheSelector.getCacheName(threadBase + i);
          boolean useTransactions = this.useTransactions.use(transactional, cacheName, transactionSize);
@@ -346,6 +340,22 @@ public class LoadDataStage extends AbstractDistStage {
       long totalSize = sizeSum.addAndGet(size);
       if (prevEntryCount / logPeriod < currentEntryCount / logPeriod) {
          log.infof("This node loaded %d entries (~%d bytes)", currentEntryCount, totalSize);
+      }
+   }
+
+   private static class Cleanup extends ServiceListenerAdapter {
+      private final SlaveState slaveState;
+
+      public Cleanup(SlaveState slaveState) {
+         this.slaveState = slaveState;
+      }
+
+      @Override
+      public void serviceDestroyed() {
+         slaveState.remove(KeyGenerator.KEY_GENERATOR);
+         slaveState.remove(ValueGenerator.VALUE_GENERATOR);
+         slaveState.remove(CacheSelector.CACHE_SELECTOR);
+         slaveState.removeServiceListener(this);
       }
    }
 }
