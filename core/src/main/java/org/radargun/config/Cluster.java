@@ -19,7 +19,7 @@ public class Cluster implements Serializable, Comparable<Cluster> {
    public final static Cluster LOCAL = new Cluster();
 
    static {
-      LOCAL.addGroup("local", 1);
+      LOCAL.addGroup(DEFAULT_GROUP, 1);
    }
 
    private List<Group> groups = new ArrayList<Group>();

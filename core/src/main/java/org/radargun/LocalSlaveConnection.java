@@ -6,29 +6,27 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
-import org.radargun.config.InitHelper;
 import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
-import org.radargun.state.SlaveState;
-import org.radargun.traits.TraitHelper;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class LocalSlaveConnection implements SlaveConnection {
+public class LocalSlaveConnection extends SlaveBase implements SlaveConnection {
    private static final Log log = LogFactory.getLog(LocalSlaveConnection.class);
 
-   private SlaveState slaveState = new SlaveState();
-   private Scenario scenario;
-   private Configuration configuration;
    private Map<String, String> extras = new HashMap<String, String>();
-   private Object service;
-   private Map<Class<?>, Object> traits;
+   private BlockingQueue<Integer> stageIds = new SynchronousQueue<>();
+   private BlockingQueue<DistStageAck> acks = new ArrayBlockingQueue<>(1);
+   private ScenarioRunner runner;
 
    public LocalSlaveConnection() {
       extras.put(Properties.PROPERTY_CLUSTER_SIZE, "1");
@@ -36,10 +34,10 @@ public class LocalSlaveConnection implements SlaveConnection {
       extras.put(Properties.PROPERTY_SLAVE_INDEX, "0");
       extras.put(Properties.PROPERTY_GROUP_NAME, Cluster.DEFAULT_GROUP);
       extras.put(Properties.PROPERTY_GROUP_SIZE, "1");
-      slaveState.setMaxClusterSize(1);
-      slaveState.setCluster(Cluster.LOCAL);
-      slaveState.setSlaveIndex(0);
-      slaveState.setLocalAddress(InetAddress.getLoopbackAddress());
+      state.setMaxClusterSize(1);
+      state.setCluster(Cluster.LOCAL);
+      state.setSlaveIndex(0);
+      state.setLocalAddress(InetAddress.getLoopbackAddress());
    }
 
    @Override
@@ -60,65 +58,82 @@ public class LocalSlaveConnection implements SlaveConnection {
       }
       this.configuration = configuration;
       extras.put(Properties.PROPERTY_CONFIG_NAME, configuration.name);
-      String plugin = setups.get(0).plugin;
-      String service = setups.get(0).service;
-      extras.put(Properties.PROPERTY_PLUGIN_NAME, plugin);
-      slaveState.setPlugin(plugin);
-      slaveState.setService(service);
-      slaveState.setConfigName(configuration.name);
-      this.service = ServiceHelper.createService(slaveState.getClassLoader(), plugin, service, configuration.name, setups.get(0).file, 0, setups.get(0).getProperties(), extras);
-      this.traits = TraitHelper.retrieve(this.service);
-      slaveState.setTraits(traits);
-      slaveState.setTimeline(new Timeline(0));
+      extras.put(Properties.PROPERTY_PLUGIN_NAME, setups.get(0).plugin);
+      state.setConfigName(configuration.name);
    }
 
    @Override
    public void sendCluster(Cluster cluster) throws IOException {
-      // noop
+      if (cluster != Cluster.LOCAL) {
+         throw new IllegalArgumentException("Only local cluster is expected");
+      }
+      this.cluster = cluster;
    }
 
    @Override
    public List<DistStageAck> runStage(int stageId, int numSlaves) {
-      if (stageId < 0) {
-         return Collections.singletonList(new DistStageAck(slaveState));
+      if (runner == null) {
+         runner = new ScenarioRunner();
+         runner.start();
       }
-      Stage stage = scenario.getStage(stageId, slaveState, extras, null);
-      TraitHelper.InjectResult result = TraitHelper.inject(stage, traits);
-      if (result == TraitHelper.InjectResult.FAILURE) {
-         return Collections.singletonList(new DistStageAck(slaveState)
-               .error("The stage missed some mandatory traits."));
-      } else if (result == TraitHelper.InjectResult.SKIP) {
-         log.info("Stage " + stage.getName() + " was skipped as it was missing some traits.");
+      try {
+         stageIds.put(stageId);
+      } catch (InterruptedException e) {
+         log.error("Interrupted when requesting stage execution", e);
+         Thread.currentThread().interrupt();
+         return Collections.EMPTY_LIST;
       }
-
-      InitHelper.init(stage);
-      if (stage instanceof DistStage) {
-         DistStage distStage = (DistStage) stage;
-         distStage.initOnSlave(slaveState);
-         long start = System.currentTimeMillis(), end;
-         DistStageAck ack;
+      if (stageId < 0 || stageId == scenario.getStageCount() - 1) {
          try {
-            ack = distStage.executeOnSlave();
-            end = System.currentTimeMillis();
-         } catch (Exception e) {
-            end = System.currentTimeMillis();
-            log.error("Stage execution failed", e);
-            ack = new DistStageAck(slaveState).error("Failure", e);
+            runner.join();
+         } catch (InterruptedException e) {
+            log.error("Interrupted waiting for the runner to finish.", e);
          }
-         slaveState.getTimeline().addEvent(Stage.STAGE, new Timeline.IntervalEvent(start, stage.getName(), end - start));
+         runner = null;
+         try {
+            runCleanup();
+         } catch (IOException e) {
+            log.error("Failed executing cleanup", e);
+         }
+      }
+      try {
+         DistStageAck ack = acks.take();
          return Collections.singletonList(ack);
-      } else {
-         throw new IllegalArgumentException("Cannot run non-distributed stage " + stageId + " = " + stage.getName() + " via connection!");
+      } catch (InterruptedException e) {
+         log.error("Waiting was interrupted", e);
+         Thread.currentThread().interrupt();
+         return Collections.EMPTY_LIST;
       }
    }
 
    @Override
    public List<Timeline> receiveTimelines(int numSlaves) throws IOException {
-      return Collections.singletonList(slaveState.getTimeline());
+      return Collections.singletonList(state.getTimeline());
    }
 
    @Override
    public void release() {
       // noop
+   }
+
+   @Override
+   protected int getNextStageId() {
+      try {
+         return stageIds.take();
+      } catch (InterruptedException e) {
+         log.error("Waiting was interrupted", e);
+         Thread.currentThread().interrupt();
+         return -1;
+      }
+   }
+
+   @Override
+   protected void sendResponse(DistStageAck response) {
+      acks.add(response);
+   }
+
+   @Override
+   protected Map<String, String> getCurrentExtras(Configuration configuration, Cluster cluster) {
+      return extras;
    }
 }
