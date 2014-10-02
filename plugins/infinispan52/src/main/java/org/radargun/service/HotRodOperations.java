@@ -46,8 +46,9 @@ public class HotRodOperations implements BasicOperations, ConditionalOperations 
 
       @Override
       public V get(K key) {
-         if (trace) log.tracef("GET cache=%s key=%s", forceReturn.getName(), key);
-         return forceReturn.get(key);
+         if (trace) log.tracef("GET cache=%s key=%s", noReturn.getName(), key);
+         // causes a warning on server, and Get always returns the value
+         return noReturn.get(key);
       }
 
       @Override
