@@ -11,6 +11,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
+import org.radargun.reporting.commons.AggregationHolder;
 
 /**
  * Reporter presenting the statistics and timelines in form of directory
@@ -27,6 +28,9 @@ public class HtmlReporter implements Reporter {
    @Property(doc = "Generate separate charts for different cluster sizes. Default is false.")
    private boolean separateClusterCharts = false;
 
+   @Property(doc = "Generate combined charts for different tests. Default is false.")
+   private boolean combineTestReports = false;
+
    @PropertyDelegate(prefix = "timeline.chart.")
    private TimelineDocument.Configuration timelineConfig = new TimelineDocument.Configuration();
 
@@ -41,7 +45,7 @@ public class HtmlReporter implements Reporter {
          index.writeConfigurations(reports);
          index.writeScenario(reports);
          index.writeTimelines(reports);
-         index.writeTests(reports);
+         index.writeTests(reports, combineTestReports);
          index.writeFooter();
       } catch (IOException e) {
          log.error("Failed to write HTML report.", e);
@@ -73,15 +77,36 @@ public class HtmlReporter implements Reporter {
             list.add(t);
          }
       }
-      for (Map.Entry<String, List<Report.Test>> entry : tests.entrySet()) {
-         TestReportDocument testReport = new TestReportDocument(targetDir, entry.getKey(), entry.getValue(), separateClusterCharts);
+
+      if (combineTestReports) {
+         List<AggregationHolder> holders = new ArrayList<AggregationHolder>();
+         for (Map.Entry<String, List<Report.Test>> entry : tests.entrySet()) {
+            AggregationHolder holder = new AggregationHolder(entry.getKey(), entry.getValue()).initAggregations();
+            holders.add(holder);
+         }
+
+         CombinedReportDocument testReport = new CombinedReportDocument(holders, targetDir, tests, separateClusterCharts);
          try {
             testReport.open();
             testReport.writeTest();
          } catch (IOException e) {
-            log.error("Failed to create test report " + entry.getKey(), e);
-         } finally {
+            log.error("Failed to create test report combined", e);
+         }
+         finally {
             testReport.close();
+         }
+      } else {
+         for (Map.Entry<String, List<Report.Test>> entry : tests.entrySet()) {
+            AggregationHolder holder = new AggregationHolder(entry.getKey(), entry.getValue()).initAggregations();
+            TestReportDocument testReport = new TestReportDocument(holder, targetDir, separateClusterCharts);
+            try {
+               testReport.open();
+               testReport.writeTest();
+            } catch (IOException e) {
+               log.error("Failed to create test report " + entry.getKey(), e);
+            } finally {
+               testReport.close();
+            }
          }
       }
 

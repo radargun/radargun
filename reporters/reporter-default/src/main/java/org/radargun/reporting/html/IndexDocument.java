@@ -29,6 +29,7 @@ import org.radargun.reporting.Report;
 public class IndexDocument extends HtmlDocument {
 
    private static final Log log = LogFactory.getLog(IndexDocument.class);
+   private static final String COMBINED_TEST_NAME = "combined";
 
    private int elementCounter = 0;
 
@@ -254,19 +255,25 @@ public class IndexDocument extends HtmlDocument {
       write("\n</ul>");
    }
 
-   protected void writeTests(Collection<Report> reports) {
+   protected void writeTests(Collection<Report> reports, boolean combineTestReports) {
       writeTag("h2", "Tests");
-      TreeSet<String> testNames = new TreeSet<String>();
-      for (Report report : reports) {
-         for (Report.Test test : report.getTests()) {
-            testNames.add(test.name);
+      if (!combineTestReports) {
+         TreeSet<String> testNames = new TreeSet<String>();
+         for (Report report : reports) {
+            for (Report.Test test : report.getTests()) {
+               testNames.add(test.name);
+            }
          }
+         write("<ul>\n");
+         for (String test : testNames) {
+            write(String.format("<li><a href=\"test_%s.html\">%s</a></li>", test, test));
+         }
+         write("\n</ul>");
+      } else {
+         write("<ul>\n");
+         write(String.format("<li><a href=\"test_%s.html\">%s</a></li>", COMBINED_TEST_NAME, COMBINED_TEST_NAME));
+         write("\n</ul>");
       }
-      write("<ul>\n");
-      for (String test : testNames) {
-         write(String.format("<li><a href=\"test_%s.html\">%s</a></li>", test, test));
-      }
-      write("\n</ul>");
    }
 
    protected void writeFooter() {
