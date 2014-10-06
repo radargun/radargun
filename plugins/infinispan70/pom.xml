@@ -112,7 +112,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>7.0.0.Alpha5</version.infinispan>
+            <version.infinispan>7.0.0.CR1</version.infinispan>
          </properties>
       </profile>
       <profile>
@@ -168,6 +168,22 @@
             <dependency>
                <groupId>org.infinispan</groupId>
                <artifactId>infinispan-persistence-soft-index</artifactId>
+               <version>${version.infinispan}</version>
+               <optional>true</optional>
+            </dependency>
+         </dependencies>
+      </profile>
+      <profile>
+         <id>demos</id>
+         <activation>
+            <property>
+               <name>!no-demos</name>
+            </property>
+         </activation>
+         <dependencies>
+            <dependency>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-distexec-demo</artifactId>
                <version>${version.infinispan}</version>
                <optional>true</optional>
             </dependency>

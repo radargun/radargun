@@ -14,10 +14,41 @@
    <name>JDG 6.2.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>6.0.3.Final-redhat-3</version.infinispan>
+      <!-- There is no productized version of infinispan-distexec-demo -->
+      <version.infinispan.public>6.0.2.Final</version.infinispan.public>
       <version.jbossts>4.17.7.Final-redhat-4</version.jbossts>
       <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
    </properties>
+
+   <profiles>
+      <profile>
+         <id>jdg62-infinispan-version-default</id>
+         <activation>
+            <property>
+               <name>!jdg62.infinispan.version</name>
+            </property>
+         </activation>
+         <properties>
+            <version.infinispan>6.0.3.Final-redhat-3</version.infinispan>
+         </properties>
+      </profile>
+      <profile>
+         <id>demos</id>
+         <activation>
+            <property>
+               <name>!no-demos</name>
+            </property>
+         </activation>
+         <dependencies>
+            <dependency>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-distexec-demo</artifactId>
+               <version>${version.infinispan.public}</version>
+               <optional>true</optional>
+            </dependency>
+         </dependencies>
+      </profile>
+   </profiles>
 
    <dependencies>
       <dependency>
