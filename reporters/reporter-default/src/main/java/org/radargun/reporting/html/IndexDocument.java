@@ -149,7 +149,7 @@ public class IndexDocument extends HtmlDocument {
 
    private void writeConfig(Cluster cluster, Configuration.Setup setup, OriginalConfig config, boolean writeSlaves) {
       String configFile = String.format("original_%s_%s_%d_%s",
-            setup.getConfiguration().name, setup.group, cluster.getClusterIndex(), config.filename);
+            setup.getConfiguration().name, setup.group, cluster.getClusterIndex(), config.filename).replace(File.separator, "_");
       FileOutputStream contentWriter = null;
       boolean written = false;
       try {

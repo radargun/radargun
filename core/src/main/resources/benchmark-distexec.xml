@@ -1,0 +1,52 @@
+<benchmark xmlns="urn:radargun:benchmark:2.0">
+
+	<!-- Specifies where should the master open socket -->
+	<master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+
+	<!-- List of cluster configurations where the benchmark should run -->
+	<clusters>
+		<scale from="1" to="${slaves:1}" inc="1">
+			<cluster />
+		</scale>
+	</clusters>
+
+	<!-- List of configurations of the services -->
+	<configurations>
+		<config name="Infinispan 7.0 - distributed">
+			<setup plugin="infinispan70" file="dist-sync.xml" />
+		</config>
+	</configurations>
+
+	<!-- Sequence of stages executed on the cluster -->
+	<scenario>
+		<!-- Start services on all nodes -->
+		<service-start />
+
+		<!-- Fill the cache with 100 randomly generated words consuming 1% of the JVM heap -->
+		<random-data 
+			value-size="1024" 
+			ram-percentage="0.01"
+            random-seed = "13"
+			string-data="true" 
+			limit-word-count="true" 
+			share-words="true"
+			max-word-count="100" />
+
+		<!-- Execute a distributed executor that searches the cache values for a string -->
+		<distributed-task 
+			distributed-callable-fqn="org.infinispan.demo.distexec.CacheValueRegEx"
+			distributed-execution-params="setPattern: tJêÇvJrTÇëälJú" />
+
+		<!-- Stop services on all nodes -->
+		<service-stop />
+	</scenario>
+
+	<!-- How the statistics are reported -->
+	<reports>
+		<!-- Produce CSV statistics report -->
+		<reporter type="csv" />
+		<!-- Produce HTML statistics report -->
+		<reporter type="html" />
+	</reports>
+
+</benchmark>
