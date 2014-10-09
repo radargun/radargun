@@ -5,9 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.radargun.reporting.Report;
-import org.radargun.reporting.commons.AggregationHolder;
-
-import static org.radargun.reporting.commons.AggregationHolder.operations;
+import org.radargun.reporting.commons.TestAggregations;
 
 /**
  * Shows results of the tests executed in the benchmark.
@@ -18,36 +16,36 @@ import static org.radargun.reporting.commons.AggregationHolder.operations;
 // TODO: reduce max report size in order to not overload browser with huge tables
 public class TestReportDocument extends ReportDocument {
 
-   private AggregationHolder holder;
+   private TestAggregations testAggregations;
 
-   public TestReportDocument(AggregationHolder holder, String targetDir, boolean separateClusterCharts) {
-      super(targetDir, holder.testName(), holder.tests().size(), separateClusterCharts);
-      this.holder = holder;
+   public TestReportDocument(TestAggregations testAggregations, String targetDir, boolean separateClusterCharts) {
+      super(targetDir, testAggregations.testName(), testAggregations.byReports().size(), testAggregations.getAllClusters().size(), testAggregations.getMaxIterations(), separateClusterCharts);
+      this.testAggregations = testAggregations;
    }
 
    @Override
    protected ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, boolean xLabelClusterSize) {
-      return createComparisonChart(chart, "", operation, rangeAxisLabel, statisticType, holder.byReports(), xLabelClusterSize);
+      return createComparisonChart(chart, "", operation, rangeAxisLabel, statisticType, testAggregations.byReports(), xLabelClusterSize);
    }
 
    public void writeTest() throws IOException {
       writeTag("h1", "Test " + testName);
 
-      for (Map.Entry<String, Map<Report, List<Report.TestResult>>> result : holder.results().entrySet()) {
+      for (Map.Entry<String, Map<Report, List<Report.TestResult>>> result : testAggregations.results().entrySet()) {
          writeTag("h2", result.getKey());
          writeResult(result.getValue());
       }
 
-      for (String operation : operations()) {
+      for (String operation : testAggregations.getAllOperations()) {
          writeTag("h2", operation);
          if (separateClusterCharts) {
-               for (Integer clusterSize : holder.byClusterSize().keySet()) {
+               for (Integer clusterSize : testAggregations.byClusterSize().keySet()) {
                   createAndWriteCharts(operation, "_" + clusterSize);
-                  writeOperation(operation, holder.byReports());
+                  writeOperation(operation, testAggregations.byReports());
                }
          } else {
             createAndWriteCharts(operation, "");
-               writeOperation(operation, holder.byReports());
+               writeOperation(operation, testAggregations.byReports());
          }
       }
    }

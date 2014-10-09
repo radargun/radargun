@@ -1,11 +1,15 @@
 package org.radargun.reporting.html;
 
-import org.radargun.config.Cluster;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.commons.Aggregation;
-import org.radargun.reporting.commons.AggregationHolder;
 import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DefaultOutcome;
@@ -13,19 +17,6 @@ import org.radargun.stats.representation.Histogram;
 import org.radargun.stats.representation.MeanAndDev;
 import org.radargun.stats.representation.Throughput;
 import org.radargun.utils.Projections;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
-
-import static org.radargun.reporting.commons.AggregationHolder.clusters;
-import static org.radargun.reporting.commons.AggregationHolder.maxIterations;
 
 /**
  * Shows results of the tests executed in the benchmark. Also creates the image files displayed in this HTML document.
@@ -42,16 +33,21 @@ public abstract class ReportDocument extends HtmlDocument {
    private int histogramBuckets = 40;
    private double histogramPercentile = 99d;
    private int histogramWidth = 800, histogramHeight = 600;
-   private final int testSize;
+
+   protected final int maxConfigurations;
+   protected final int maxIterations;
+   protected final int maxClusters;
 
    protected boolean separateClusterCharts;
    protected final String testName;
 
-   public ReportDocument(String targetDir, String testName, int testsSize, boolean separateClusterCharts) {
+   public ReportDocument(String targetDir, String testName, int maxConfigurations, int maxClusters, int maxIterations, boolean separateClusterCharts) {
       super(targetDir, String.format("test_%s.html", testName), "Test " + testName);
 
       this.testName = testName;
-      this.testSize = testsSize;
+      this.maxConfigurations = maxConfigurations;
+      this.maxClusters = maxClusters;
+      this.maxIterations = maxIterations;
       this.separateClusterCharts = separateClusterCharts;
    }
 
@@ -75,10 +71,10 @@ public abstract class ReportDocument extends HtmlDocument {
 
    protected void writeResult(Map<Report, List<Report.TestResult>> results) {
       write("<table>\n");
-      if (maxIterations() > 1) {
+      if (maxIterations > 1) {
          write("<tr><th colspan=\"2\">&nbsp;</th>");
          Map.Entry<Report, List<Report.TestResult>> entry = results.entrySet().iterator().next();
-         for (int iteration = 0; iteration < maxIterations(); ++iteration) {
+         for (int iteration = 0; iteration < maxIterations; ++iteration) {
             String iterationValue;
             if (entry != null) {
                Report.TestResult testResult = entry.getValue().get(iteration);
@@ -92,7 +88,7 @@ public abstract class ReportDocument extends HtmlDocument {
          write("</tr>\n");
       }
       write("<tr><th colspan=\"2\">Configuration</th>\n");
-      for (int i = 0; i < maxIterations(); ++i) {
+      for (int i = 0; i < maxIterations; ++i) {
          write("<th style=\"text-align: center; border-left-color: black; border-left-width: 2px;\">Value</th>\n");
       }
       write("</tr>\n");
@@ -130,12 +126,12 @@ public abstract class ReportDocument extends HtmlDocument {
 
    protected void createChart(String filename, String operation, String rangeAxisLabel, StatisticType statisticType) throws IOException {
       ComparisonChart chart = null;
-      boolean xLabelClusterSize = !separateClusterCharts && (clusters().size() > 1 || maxIterations() <= 1);
+      boolean xLabelClusterSize = !separateClusterCharts && (maxClusters > 1 || maxIterations <= 1);
 
       chart = generateChart(chart, operation, rangeAxisLabel, statisticType, xLabelClusterSize);
 
-      chart.setWidth(Math.min(Math.max(testSize, maxIterations()) * 100 + 200, 1800));
-      chart.setHeight(Math.min(testSize * 100 + 200, 800));
+      chart.setWidth(Math.min(Math.max(maxConfigurations, maxIterations) * 100 + 200, 1800));
+      chart.setHeight(Math.min(maxConfigurations * 100 + 200, 800));
       chart.save(filename);
    }
 
@@ -144,7 +140,7 @@ public abstract class ReportDocument extends HtmlDocument {
          int iterationIndex = 0;
          for (Aggregation aggregation : entry.getValue()) {
             if (chart == null) {
-               if ((clusters().size() > 1 && !separateClusterCharts) || maxIterations() > 1) {
+               if ((maxClusters > 1 && !separateClusterCharts) || maxIterations> 1) {
                   chart = new LineChart(xLabelClusterSize ? "Cluster size" : (aggregation.iterationValue() != null ? aggregation.iterationName() : "Iteration"), rangeAxisLabel);
                } else {
                   chart = new BarChart("Cluster size", rangeAxisLabel);
@@ -153,7 +149,7 @@ public abstract class ReportDocument extends HtmlDocument {
             String columnKey = aggregation.iterationName() == null ? String.valueOf(iterationIndex) : aggregation.iterationValue();
             try {
                String categoryName = entry.getKey().getConfiguration().name;
-               if (!separateClusterCharts && clusters().size() > 1)
+               if (!separateClusterCharts && maxClusters > 1)
                   categoryName = String.format("%s_%s", categoryName, columnKey);
                if (!testName.isEmpty())
                   categoryName = String.format("%s_%s", categoryName, testName);
@@ -196,10 +192,10 @@ public abstract class ReportDocument extends HtmlDocument {
          }
       });
       int columns = hasHistograms ? 7 : 6;
-      if (maxIterations() > 1) {
+      if (maxIterations > 1) {
          write("<tr><th colspan=\"2\">&nbsp;</th>");
          Map.Entry<Report, List<Aggregation>> entry = reportAggregationMap.entrySet().iterator().next();
-         for (int iteration = 0; iteration < maxIterations(); ++iteration) {
+         for (int iteration = 0; iteration < maxIterations; ++iteration) {
             String iterationValue;
             if (entry != null) {
                Aggregation aggregation = entry.getValue().get(iteration);
@@ -213,7 +209,7 @@ public abstract class ReportDocument extends HtmlDocument {
          write("</tr>\n");
       }
       write("<tr><th colspan=\"2\">Configuration</th>\n");
-      for (int i = 0; i < maxIterations(); ++i) {
+      for (int i = 0; i < maxIterations; ++i) {
          write("<th style=\"text-align: center; border-left-color: black; border-left-width: 2px;\">requests</th>\n");
          write("<th style=\"text-align: center\">errors</th>\n");
          write("<th>mean</td><th>std.dev</th><th>theoretical&nbsp;TP</th><th>actual&nbsp;TP</th>\n");

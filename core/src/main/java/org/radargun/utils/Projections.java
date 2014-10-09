@@ -61,6 +61,16 @@ public class Projections {
       return out;
    }
 
+   public static <A extends Comparable> A max(Collection<A> collection) {
+      A max = null;
+      for (A a : collection) {
+         if (a == null) continue;
+         else if (max == null) max = a;
+         else if (max.compareTo(a) < 0) max = a;
+      }
+      return max;
+   }
+
    public static <A, B> Collection<B> instancesOf(Collection<A> collection, final Class<? extends B> clazz) {
       return where(collection, new Condition<A>() {
          @Override
