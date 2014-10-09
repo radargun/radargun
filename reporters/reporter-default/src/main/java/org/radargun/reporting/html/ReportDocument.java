@@ -2,8 +2,10 @@ package org.radargun.reporting.html;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.radargun.logging.Log;
@@ -194,15 +196,26 @@ public abstract class ReportDocument extends HtmlDocument {
       int columns = hasHistograms ? 6 : 5;
       if (maxIterations > 1) {
          write("<tr><th colspan=\"2\">&nbsp;</th>");
-         Map.Entry<Report, List<Aggregation>> entry = reportAggregationMap.entrySet().iterator().next();
          for (int iteration = 0; iteration < maxIterations; ++iteration) {
+            Set<String> iterationValues = new HashSet<>();
+            for (List<Aggregation> aggregations : reportAggregationMap.values()) {
+               if (aggregations != null && iteration < aggregations.size()) {
+                  Aggregation aggregation = aggregations.get(iteration);
+                  if (aggregation != null && aggregation.iterationName() != null) {
+                     iterationValues.add(aggregation.iterationName() + "=" + aggregation.iterationValue());
+                  }
+               }
+            }
             String iterationValue;
-            if (entry != null) {
-               Aggregation aggregation = entry.getValue().get(iteration);
-               iterationValue = aggregation != null && aggregation.iterationName() != null
-                     ? aggregation.iterationName() + "=" + aggregation.iterationValue() : "iteration " + String.valueOf(iteration);
-            } else {
+            if (iterationValues.isEmpty()) {
                iterationValue = "iteration " + String.valueOf(iteration);
+            } else {
+               StringBuilder sb = new StringBuilder();
+               for (String value : iterationValues) {
+                  if (sb.length() > 0) sb.append(", ");
+                  sb.append(value);
+               }
+               iterationValue = sb.toString();
             }
             write(String.format("<th colspan=\"%d\" style=\"border-left-color: black; border-left-width: 2px;\">%s</th>", columns, iterationValue));
          }
