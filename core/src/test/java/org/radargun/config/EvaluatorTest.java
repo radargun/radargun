@@ -11,12 +11,12 @@ import org.testng.annotations.Test;
 @Test
 public class EvaluatorTest {
    public void testWithDefaultNoReplacement() {
-      assertEquals("aDefaultVal", Evaluator.parseString("${custom.property:aDefaultVal}"));
+      assertEvals("${custom.property:aDefaultVal}", "aDefaultVal");
    }
 
    public void testWithDefaultAndReplacement(){
       System.setProperty("org.radargun.testWithDefaultAndReplacement", "nonDefaultValue");
-      assertEquals("nonDefaultValue", Evaluator.parseString("${org.radargun.testWithDefaultAndReplacement:aDefaultVal}"));
+      assertEvals("${org.radargun.testWithDefaultAndReplacement:aDefaultVal}", "nonDefaultValue");
    }
 
    @Test(expectedExceptions = IllegalArgumentException.class)
@@ -26,38 +26,67 @@ public class EvaluatorTest {
 
    public void testNoDefaultAndExisting() {
       System.setProperty("org.radargun.testNoDefaultAndExisting", "nonDefaultValue");
-      assertEquals("nonDefaultValue", Evaluator.parseString("${org.radargun.testNoDefaultAndExisting}"));
+      assertEvals("${org.radargun.testNoDefaultAndExisting}", "nonDefaultValue");
    }
 
    public void testConcatWithVar() {
       System.setProperty("org.radargun.testConcatWithVar", "foo");
-      assertEquals("fooyyy", Evaluator.parseString("${org.radargun.testConcatWithVar}yyy"));
-      assertEquals("xxxfoo", Evaluator.parseString("xxx${org.radargun.testConcatWithVar}"));
-      assertEquals("xxxfooyyy", Evaluator.parseString("xxx${org.radargun.testConcatWithVar}yyy"));
+      assertEvals("${org.radargun.testConcatWithVar}yyy", "fooyyy");
+      assertEvals("xxx${org.radargun.testConcatWithVar}", "xxxfoo");
+      assertEvals("xxx${org.radargun.testConcatWithVar}yyy", "xxxfooyyy");
    }
 
    public void testSimpleExpression() {
-      assertEquals("6", Evaluator.parseString("#{1 + 2 * 3 - 1}"));
-      assertEquals("9", Evaluator.parseString("#{ (1+2 )*3}"));
-      assertEquals("4", Evaluator.parseString("#{ 9 / 3 + 1}"));
-      assertEquals("2", Evaluator.parseString("#{7 % 2 + 1}"));
-      assertEquals("2,5,6,7,8,10", Evaluator.parseString("#{2,5..8,10}"));
+      assertEvals("#{1 + 2 * 3 - 1}", "6");
+      assertEvals("#{ (1+2 )*3}", "9");
+      assertEvals("#{ 9 / 3 + 1}", "4");
+      assertEvals("#{7 % 2 + 1}", "2");
+      assertEvals("#{2,5..8,10}", "2, 5, 6, 7, 8, 10");
    }
 
    public void testConcatWithExpression() {
-      assertEquals("xxx3yyy", Evaluator.parseString("xxx#{1 + 2}yyy"));
-      assertEquals("3yyy", Evaluator.parseString("#{1 + 2}yyy"));
-      assertEquals("xxx3", Evaluator.parseString("xxx#{1 + 2}"));
+      assertEvals("xxx#{1 + 2}yyy", "xxx3yyy");
+      assertEvals("#{1 + 2}yyy", "3yyy");
+      assertEvals("xxx#{1 + 2}", "xxx3");
    }
 
    public void testExpressionWithVar() {
       System.setProperty("org.radargun.testExpressionWithVar", "2");
-      assertEquals("7", Evaluator.parseString("#{ 1 + ${ org.radargun.testExpressionWithVar } * ${org.radargun.noProperty: 3}}"));
+      assertEvals("#{ 1 + ${ org.radargun.testExpressionWithVar } * ${org.radargun.noProperty: 3}}", "7");
    }
 
    public void testColons() {
       System.setProperty("org.radargun.testColons", "xxx");
-      assertEquals("fo:oxxxbar:xxxbar:zzzbar:foo",
-            Evaluator.parseString("fo:o${org.radargun.testColons}bar:${org.radargun.testColons:yyy}bar:${org.radargun.noProperty:zzz}bar:foo"));
+      assertEvals("fo:o${org.radargun.testColons}bar:${org.radargun.testColons:yyy}bar:${org.radargun.noProperty:zzz}bar:foo",
+            "fo:oxxxbar:xxxbar:zzzbar:foo");
+   }
+
+   public void testNegative() {
+      System.setProperty("org.radargun.testNegative", "2");
+      assertEvals("#{ -1 }", "-1");
+      assertEvals("#{ - 2 }", "-2");
+      assertEvals("#{ 0 - 3 }", "-3");
+      assertEvals("#{ 5+ -4 }", "1");
+      assertEvals("#{ 6 + (-5) }", "1");
+      assertEvals("#{${org.radargun.testNegative} - 1}", "1");
+   }
+
+   public void testMinMax() {
+      assertEvals("#{ max(1, 2, 3) }", "3");
+      assertEvals("#{ min 2, 1, 3 }", "1");
+      // warning should be emitted
+      assertEvals("#{ max 2 }", "2");
+   }
+
+   public void testCeilFloorAbs() {
+      assertEvals("#{ ceil(0.6) }", "1");
+      assertEvals("#{ floor 42.1 }", "42");
+      assertEvals("#{ abs(-123) }", "123");
+      assertEvals("#{ 5 * abs(5) }", "25");
+      assertEvals("#{ 6 * abs(-6.5) }", "39.0");
+   }
+
+   private static void assertEvals(String expression, String expected) {
+      assertEquals(Evaluator.parseString(expression), expected);
    }
 }
