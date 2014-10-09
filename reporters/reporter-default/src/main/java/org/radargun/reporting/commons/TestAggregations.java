@@ -1,5 +1,13 @@
 package org.radargun.reporting.commons;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
 import org.radargun.config.Cluster;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -7,43 +15,27 @@ import org.radargun.reporting.Report;
 import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
 /**
  * Perform aggregations and holds them
  *
  * @author Vitalii Chepeliuk &lt;vchepeli@redhat.com&gt;
  * @since 2.0
  */
-public class AggregationHolder {
+public class TestAggregations {
    private Log log = LogFactory.getLog(getClass());
 
-   private String testName;
-   private List<Report.Test> tests;
+   private final String testName;
 
-   private Map<Report, List<Aggregation>> byReports;
-   private Map<Integer, Map<Report, List<Aggregation>>> byClusterSize;
-   private Map<String, Map<Report, List<Report.TestResult>>> results;
+   private Map<Report, List<Aggregation>> byReports = new TreeMap<>();
+   private Map<Integer, Map<Report, List<Aggregation>>> byClusterSize = new TreeMap<>();
+   private Map<String, Map<Report, List<Report.TestResult>>> results = new TreeMap<>();
 
-   private static int maxIterations = 0;
-   private static Set<String> operations = new TreeSet<String>();
-   private static Set<Cluster> clusters = new TreeSet<Cluster>();
+   private int maxIterations = 0;
+   private Set<String> operations = new TreeSet<>();
+   private Set<Cluster> clusters = new TreeSet<>();
 
-   public AggregationHolder(String testName, List<Report.Test> tests){
+   public TestAggregations(String testName, List<Report.Test> tests){
       this.testName = testName;
-      this.tests = tests;
-   }
-
-   public AggregationHolder initAggregations() {
-
-      Map<Report, List<Aggregation>> byReports = new TreeMap<Report, List<Aggregation>>();
-      Map<Integer, Map<Report, List<Aggregation>>> byClusterSize = new TreeMap<>();
-      Map<String, Map<Report, List<Report.TestResult>>> results = new TreeMap<String, Map<Report, List<Report.TestResult>>>();
 
       for (Report.Test test : tests) {
          List<Aggregation> iterations = new ArrayList<Aggregation>();
@@ -117,20 +109,10 @@ public class AggregationHolder {
          maxIterations = Math.max(maxIterations, iterations.size());
          clusters.add(test.getReport().getCluster());
       }
-
-      this.byReports = byReports;
-      this.byClusterSize = byClusterSize;
-      this.results = results;
-
-      return this;
    }
 
    public String testName() {
       return testName;
-   }
-
-   public List<Report.Test> tests() {
-      return tests;
    }
 
    public Map<Report, List<Aggregation>> byReports() {
@@ -145,16 +127,16 @@ public class AggregationHolder {
       return results;
    }
 
-   public static int maxIterations() {
+   public Set<String> getAllOperations() {
+      return Collections.unmodifiableSet(operations);
+   }
+
+   public Set<Cluster> getAllClusters() {
+      return Collections.unmodifiableSet(clusters);
+   }
+
+   public int getMaxIterations() {
       return maxIterations;
-   }
-
-   public static Set<String> operations() {
-      return operations;
-   }
-
-   public static Set<Cluster> clusters() {
-      return clusters;
    }
 }
 

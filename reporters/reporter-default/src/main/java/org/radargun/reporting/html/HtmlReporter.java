@@ -11,7 +11,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
-import org.radargun.reporting.commons.AggregationHolder;
+import org.radargun.reporting.commons.TestAggregations;
 
 /**
  * Reporter presenting the statistics and timelines in form of directory
@@ -34,11 +34,8 @@ public class HtmlReporter implements Reporter {
    @PropertyDelegate(prefix = "timeline.chart.")
    private TimelineDocument.Configuration timelineConfig = new TimelineDocument.Configuration();
 
-   private Collection<Report> reports;
-
    @Override
    public void run(Collection<Report> reports) {
-      this.reports = reports;
       IndexDocument index = new IndexDocument(targetDir);
       try {
          index.open();
@@ -79,13 +76,13 @@ public class HtmlReporter implements Reporter {
       }
 
       if (combineTestReports) {
-         List<AggregationHolder> holders = new ArrayList<AggregationHolder>();
+         List<TestAggregations> testAggregations = new ArrayList<TestAggregations>();
          for (Map.Entry<String, List<Report.Test>> entry : tests.entrySet()) {
-            AggregationHolder holder = new AggregationHolder(entry.getKey(), entry.getValue()).initAggregations();
-            holders.add(holder);
+            TestAggregations ta = new TestAggregations(entry.getKey(), entry.getValue());
+            testAggregations.add(ta);
          }
 
-         CombinedReportDocument testReport = new CombinedReportDocument(holders, targetDir, tests, separateClusterCharts);
+         CombinedReportDocument testReport = new CombinedReportDocument(testAggregations, targetDir, tests, separateClusterCharts);
          try {
             testReport.open();
             testReport.writeTest();
@@ -97,8 +94,8 @@ public class HtmlReporter implements Reporter {
          }
       } else {
          for (Map.Entry<String, List<Report.Test>> entry : tests.entrySet()) {
-            AggregationHolder holder = new AggregationHolder(entry.getKey(), entry.getValue()).initAggregations();
-            TestReportDocument testReport = new TestReportDocument(holder, targetDir, separateClusterCharts);
+            TestAggregations ta = new TestAggregations(entry.getKey(), entry.getValue());
+            TestReportDocument testReport = new TestReportDocument(ta, targetDir, separateClusterCharts);
             try {
                testReport.open();
                testReport.writeTest();
