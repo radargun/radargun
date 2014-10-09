@@ -1,6 +1,7 @@
 package org.radargun.service;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -19,9 +20,9 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
       // we cannot detect changes for single cache - we have to track all of them as one
       final AtomicInteger topologyChangesOngoing = new AtomicInteger(0);
       final AtomicInteger hashChangesOngoing = new AtomicInteger(0);
-      service.registerAction(Pattern.compile(".*Installing new cache topology.*"), new Runnable() {
+      service.registerAction(Pattern.compile(".*Installing new cache topology.*"), new ProcessService.OutputListener() {
          @Override
-         public void run() {
+         public void run(Matcher m) {
             if (topologyChangesOngoing.getAndIncrement() == 0) {
                log.debug("First topology change started");
                addEvent(topologyChanges, true, 0, 0);
@@ -30,9 +31,9 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
             }
          }
       });
-      service.registerAction(Pattern.compile(".*Topology changed, recalculating minTopologyId.*"), new Runnable() {
+      service.registerAction(Pattern.compile(".*Topology changed, recalculating minTopologyId.*"), new ProcessService.OutputListener() {
          @Override
-         public void run() {
+         public void run(Matcher m) {
             if (topologyChangesOngoing.decrementAndGet() == 0) {
                log.debug("All topology changes finished");
                addEvent(topologyChanges, false, 0, 0);
@@ -41,9 +42,9 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
             }
          }
       });
-      service.registerAction(Pattern.compile(".*Lock State Transfer in Progress for topology ID.*"), new Runnable() {
+      service.registerAction(Pattern.compile(".*Lock State Transfer in Progress for topology ID.*"), new ProcessService.OutputListener() {
          @Override
-         public void run() {
+         public void run(Matcher m) {
             if (hashChangesOngoing.getAndIncrement() == 0) {
                log.debug("First rehash started");
                addEvent(hashChanges, true, 0, 0);
@@ -52,9 +53,9 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
             }
          }
       });
-      service.registerAction(Pattern.compile(".*Unlock State Transfer in Progress for topology ID.*"), new Runnable() {
+      service.registerAction(Pattern.compile(".*Unlock State Transfer in Progress for topology ID.*"), new ProcessService.OutputListener() {
          @Override
-         public void run() {
+         public void run(Matcher m) {
             if (hashChangesOngoing.decrementAndGet() == 0) {
                log.debug("All rehashes finished");
                addEvent(hashChanges, false, 0, 0);

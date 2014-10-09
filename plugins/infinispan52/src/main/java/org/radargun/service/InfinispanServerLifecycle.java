@@ -2,6 +2,7 @@ package org.radargun.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -23,26 +24,26 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
 
    @Override
    public void start() {
-      service.registerAction(START_OK, new Runnable() {
+      service.registerAction(START_OK, new ProcessService.OutputListener() {
          @Override
-         public void run() {
+         public void run(Matcher m) {
             setServerStarted();
             service.unregisterAction(START_OK);
             service.unregisterAction(START_ERROR);
          }
       });
-      service.registerAction(START_ERROR, new Runnable() {
+      service.registerAction(START_ERROR, new ProcessService.OutputListener() {
          @Override
-         public void run() {
+         public void run(Matcher m) {
             log.warn("Server started with errors");
             setServerStarted();
             service.unregisterAction(START_OK);
             service.unregisterAction(START_ERROR);
          }
       });
-      service.registerAction(STOPPED, new Runnable() {
+      service.registerAction(STOPPED, new ProcessService.OutputListener() {
          @Override
-         public void run() {
+         public void run(Matcher m) {
             log.error("Server stopped before it started!");
             setServerStarted();
             setServerStopped();
