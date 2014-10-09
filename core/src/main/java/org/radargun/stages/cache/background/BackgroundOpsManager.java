@@ -600,7 +600,7 @@ public class BackgroundOpsManager implements ServiceListener {
     */
    private class SizeThread extends Thread {
       private boolean getSize = true;
-      private int size = -1;
+      private long size = -1;
 
       @Override
       public void run() {
@@ -613,7 +613,7 @@ public class BackgroundOpsManager implements ServiceListener {
                   getSize = false;
                }
                if (cacheInfo != null && lifecycle.isRunning()) {
-                  size = cacheInfo.getLocalSize();
+                  size = cacheInfo.getOwnedSize();
                } else {
                   size = 0;
                }
@@ -623,8 +623,8 @@ public class BackgroundOpsManager implements ServiceListener {
          }
       }
 
-      public synchronized int getAndResetSize() {
-         int rSize = size;
+      public synchronized long getAndResetSize() {
+         long rSize = size;
          size = -1;
          getSize = true;
          notify();

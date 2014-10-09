@@ -38,15 +38,15 @@ public class Infinispan52CacheInfo extends InfinispanCacheInfo {
       }
 
       @Override
-      public Map<?, Integer> getStructuredSize() {
+      public Map<?, Long> getStructuredSize() {
          ConsistentHash ch = ((DistributionManager) cache.getDistributionManager()).getReadConsistentHash();
          int segmentSizes[] = new int[ch.getNumSegments()];
          for (InternalCacheEntry entry : cache.getDataContainer()) {
             segmentSizes[ch.getSegment(entry.getKey())]++;
          }
-         Map<Integer, Integer> structured = new HashMap<Integer, Integer>();
+         Map<Integer, Long> structured = new HashMap<>();
          for (int i = 0; i < segmentSizes.length; ++i) {
-            structured.put(i, segmentSizes[i]);
+            structured.put(i, (long) segmentSizes[i]);
          }
          return structured;
       }
@@ -57,8 +57,8 @@ public class Infinispan52CacheInfo extends InfinispanCacheInfo {
       }
 
       @Override
-      public int getTotalSize() {
-         int totalSize = 0;
+      public long getTotalSize() {
+         long totalSize = 0;
          DistributedExecutorService des = new DefaultExecutorService(cache);
          CacheSizer<?, ?, Integer> cacheSizer = new CacheSizer<Object, Object, Integer>();
          DistributedTaskBuilder<Integer> taskBuilder = des.createDistributedTaskBuilder(cacheSizer);

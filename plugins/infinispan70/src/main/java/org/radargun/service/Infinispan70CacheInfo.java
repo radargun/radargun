@@ -33,8 +33,8 @@ public class Infinispan70CacheInfo extends Infinispan53CacheInfo {
       }
 
       @Override
-      public int getTotalSize() {
-         int totalSize = 0;
+      public long getTotalSize() {
+         long totalSize = 0;
          EntryIterable entryIterator = null;
          try {
             entryIterator = cache.filterEntries(AllFilter.INSTANCE);

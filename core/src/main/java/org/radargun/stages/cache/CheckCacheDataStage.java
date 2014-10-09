@@ -16,9 +16,7 @@ import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
 import org.radargun.stages.cache.generators.KeyGenerator;
-import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.stages.helpers.Range;
@@ -28,6 +26,7 @@ import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Debugable;
 import org.radargun.traits.InMemoryBasicOperations;
 import org.radargun.traits.InjectTrait;
+import org.radargun.utils.Utils;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -86,6 +85,18 @@ public class CheckCacheDataStage extends AbstractDistStage {
          "will be executed only against in-memory data. Default is false.")
    private boolean memoryOnly = false;
 
+   @Property(doc = "Full class name of the key generator. By default the generator is retrieved from slave state.")
+   protected String keyGeneratorClass = null;
+
+   @Property(doc = "Used to initialize the key generator. Null by default.")
+   protected String keyGeneratorParam = null;
+
+   @Property(doc = "Full class name of the value generator. By default the generator is retrieved from slave state.")
+   protected String valueGeneratorClass = null;
+
+   @Property(doc = "Used to initialize the value generator. Null by default.")
+   protected String valueGeneratorParam = null;
+
    // TODO: better names, even when these are kind of hacks
    @Property(doc = "Check whether the sum of subparts sizes is the same as local size. Default is false.")
    private boolean checkSubpartsSumLocal = false;
@@ -120,9 +131,10 @@ public class CheckCacheDataStage extends AbstractDistStage {
          return successfulResponse();
       }
       if (!sizeOnly) {
-         keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
-         if (keyGenerator == null) {
-            keyGenerator = new StringKeyGenerator();
+         if (keyGeneratorClass != null) {
+            keyGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), keyGeneratorClass, keyGeneratorParam);
+         } else {
+            keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
          }
          CheckResult result = new CheckResult();
          if (memoryOnly && inMemoryBasicOperations != null) {
@@ -159,6 +171,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
                   CheckResult value = future.get();
                   result.merge(value);
                }
+               executor.shutdown();
             }
          } catch (Exception e) {
             return errorResponse("Failed to check entries", e);
@@ -177,29 +190,31 @@ public class CheckCacheDataStage extends AbstractDistStage {
       CacheInformation.Cache info = cacheInformation.getCache(getCacheName());
       if (liveSlavesHint > 0) {
          // try to wait until data are properly replicated
-         int myExpectedSize;
          int extraEntries = getExtraEntries();
          int commonEntries = isDeleted() ? 0 : numEntries;
+         long myExpectedOwnedSize = (commonEntries + extraEntries) / liveSlavesHint;
          int numOwners = info.getNumReplicas();
-         if (numOwners < 0) {
-            myExpectedSize = -numOwners * slaveState.getClusterSize() * (commonEntries + extraEntries) / liveSlavesHint;
-         } else {
-            myExpectedSize = numOwners * (commonEntries + extraEntries) / liveSlavesHint;
-         }
+         long myExpectedLocalSize = myExpectedOwnedSize * (numOwners < 0 ? -numOwners * slaveState.getClusterSize() : numOwners);
          for (int attempt = 0; attempt < 5; ++attempt) {
-            int local = info.getLocalSize();
-            double ratio = (double) local / (double) myExpectedSize;
-            if (ratio < 0.9 || ratio > 1.1) {
-               log.warn("Local size (" + local + ") differs substantially from expected size (" + myExpectedSize + "), waiting 30s to let it replicate");
-               try {
-                  Thread.sleep(30000);
-               } catch (InterruptedException e) {
-                  break;
-               }
-            } else break;
+            long owned = info.getOwnedSize();
+            long local = info.getLocallyStoredSize();
+            double ratioOwned = (double) owned / (double) myExpectedOwnedSize;
+            double ratioLocal = (double) local / (double) myExpectedLocalSize;
+            if (ratioOwned < 0.9 || ratioOwned > 1.1) {
+               log.warn("Owned size (" + owned + ") differs substantially from expected size (" + myExpectedOwnedSize + "), waiting 30s to let it replicate");
+            } else if (ratioLocal < 0.9 || ratioLocal > 1.1) {
+               log.warn("Locally stored size (" + local + ") differs substantially from expected size (" + myExpectedLocalSize + "), waiting 30s to let it replicate");
+            } else {
+               break;
+            }
+            try {
+               Thread.sleep(30000);
+            } catch (InterruptedException e) {
+               break;
+            }
          }
       }
-      return new InfoAck(slaveState, info.getLocalSize(), info.getStructuredSize(), info.getNumReplicas());
+      return new InfoAck(slaveState, info.getOwnedSize(), info.getLocallyStoredSize(), info.getTotalSize(), info.getStructuredSize(), info.getNumReplicas());
    }
 
    private String getCacheName() {
@@ -219,8 +234,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
       public CheckResult call() throws Exception {
          try {
             CheckResult result = new CheckResult();
-            ValueChecker checker = new GeneratedValueChecker((ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR));
-            String bucketId = getCacheName();
+            ValueChecker checker = new GeneratedValueChecker(getValueGenerator());
             int entriesToCheck = to - from;
             for (int i = from * (stepEntryCount / checkEntryCount) + firstEntryOffset * slaveState.getSlaveIndex(); entriesToCheck > 0; i += stepEntryCount) {
                int checkAmount = Math.min(checkEntryCount, entriesToCheck);
@@ -239,7 +253,17 @@ public class CheckCacheDataStage extends AbstractDistStage {
          }
       }
    }
-   
+
+   protected ValueGenerator getValueGenerator() {
+      ValueGenerator valueGenerator;
+      if (valueGeneratorClass != null) {
+         valueGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), valueGeneratorClass, valueGeneratorParam);
+      } else {
+         valueGenerator = (ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR);
+      }
+      return valueGenerator;
+   }
+
    protected int getExpectedNumEntries() {
       return numEntries;
    }
@@ -307,33 +331,45 @@ public class CheckCacheDataStage extends AbstractDistStage {
       StageResult result = super.processAckOnMaster(acks);
       if (result.isError()) return result;
 
-      int sumSize = 0;
+      long sumOwnedSize = 0, sumLocalSize = 0;
+      Long totalSize = null;
       Integer numReplicas = null;
-      Map<Object, Map<Integer, Integer>> subparts = new HashMap<Object, Map<Integer, Integer>>();
+      Map<Object, Map<Integer, Long>> subparts = new HashMap<>();
       for (DistStageAck ack : acks) {
          if (!(ack instanceof InfoAck)) {
             continue;
          }
          InfoAck info = (InfoAck) ack;
-         log.debug("Slave " + ack.getSlaveIndex() + " has local size " + info.localSize);
-         sumSize += info.localSize;
+         log.debugf("Slave %d has owned size %d, local size %d and total size %d", ack.getSlaveIndex(), info.ownedSize, info.localSize, info.totalSize);
+         sumLocalSize += info.localSize;
+         sumOwnedSize += info.ownedSize;
+         if (info.totalSize >= 0) {
+            if (totalSize == null) totalSize = info.totalSize;
+            else if (totalSize != info.totalSize) {
+               log.errorf("Slave %d reports total size %d but other slave reported %d", ack.getSlaveIndex(), info.totalSize, totalSize);
+               result = errorResult();
+            }
+         } else if (totalSize != null) {
+            log.errorf("Slave %d does not report any total size but other slave reported %d", ack.getSlaveIndex(), totalSize);
+            result = errorResult();
+         }
          if (numReplicas == null) numReplicas = info.numReplicas;
          else if (numReplicas != info.numReplicas) {
-            log.error("Slave " + ack.getSlaveIndex() + " reports " + info.numReplicas + " replicas but other slave reported " + numReplicas);
+            log.errorf("Slave %d reports %d replicas but other slave reported %d replicas", ack.getSlaveIndex(), info.numReplicas, numReplicas);
             result = errorResult();
          }
          int sumSubpartSize = 0;
-         for (Map.Entry<?, Integer> subpart : info.structuredSize.entrySet()) {
-            log.trace("Subpart " + subpart.getKey() + " = " + subpart.getValue());
+         for (Map.Entry<?, Long> subpart : info.structuredSize.entrySet()) {
+            log.tracef("Subpart %s = %d", subpart.getKey(), subpart.getValue());
             if (subpart.getValue() == 0) continue;
 
             sumSubpartSize += subpart.getValue();
-            Map<Integer, Integer> otherSubparts = subparts.get(subpart.getKey());
+            Map<Integer, Long> otherSubparts = subparts.get(subpart.getKey());
             if (otherSubparts == null) {
-               subparts.put(subpart.getKey(), new HashMap<Integer, Integer>(Collections.singletonMap(info.getSlaveIndex(), subpart.getValue())));
+               subparts.put(subpart.getKey(), new HashMap<>(Collections.singletonMap(info.getSlaveIndex(), subpart.getValue())));
             } else if (checkSubpartsEqual) {
-               for (Map.Entry<Integer, Integer> os : otherSubparts.entrySet()) {
-                  if ((int) subpart.getValue() != (int) os.getValue()) {
+               for (Map.Entry<Integer, Long> os : otherSubparts.entrySet()) {
+                  if (Long.compare(subpart.getValue(), os.getValue()) != 0) {
                      log.errorf("Slave %d reports %s = %d but slave %d reported size %d",
                            info.getSlaveIndex(), subpart.getKey(), subpart.getValue(), os.getKey(), os.getValue());
                      result = errorResult();
@@ -349,7 +385,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
          }
       }
       if (checkSubpartsAreReplicas) {
-         for (Map.Entry<Object, Map<Integer, Integer>> subpart : subparts.entrySet()) {
+         for (Map.Entry<Object, Map<Integer, Long>> subpart : subparts.entrySet()) {
             if (subpart.getValue().size() != numReplicas) {
                log.errorf("Subpart %s was found in %s, should have %d replicas.", subpart.getKey(), subpart.getValue().keySet(), numReplicas);
                result = errorResult();
@@ -357,21 +393,35 @@ public class CheckCacheDataStage extends AbstractDistStage {
          }
       }
       if (ignoreSum) {
-         log.info("The sum size is " + sumSize);
+         log.infof("The sum of owned sizes is %d, sum of local sizes is %d", sumOwnedSize, sumLocalSize);
       } else {
-         int expectedSize;
          int extraEntries = getExtraEntries();
          int commonEntries = isDeleted() ? 0 : numEntries;
-         if (numReplicas < 0) {
-            expectedSize = -numReplicas * masterState.getClusterSize() * (commonEntries + extraEntries);
-         } else {
-            expectedSize = numReplicas * (commonEntries + extraEntries);
+         long expectedOwnedSize = extraEntries + commonEntries;
+         if (sumLocalSize >= 0) {
+            long expectedLocalSize = expectedOwnedSize * (numReplicas < 0 ? -numReplicas * masterState.getClusterSize() : numReplicas);
+            if (expectedLocalSize != sumLocalSize) {
+               log.errorf("The cache should contain %d entries (including backups, %d replicas) but contains %d entries.", expectedLocalSize, numReplicas, sumLocalSize);
+               result = errorResult();
+            } else {
+               log.tracef("The sum of local sizes is %d entries as expected", sumLocalSize);
+            }
          }
-         if (expectedSize != sumSize) {
-            log.error("The cache should contain " + expectedSize + " entries (including backups) but contains " + sumSize + " entries.");
-            result = errorResult();
-         } else {
-            log.trace("The sum size is " + sumSize + " entries as expected");
+         if (sumOwnedSize >= 0) {
+            if (expectedOwnedSize != sumOwnedSize) {
+               log.errorf("The cache should contain %d entries but contains %d entries.", expectedOwnedSize, sumOwnedSize);
+               result = errorResult();
+            } else {
+               log.tracef("The sum of owned sizes is %d entries as expected", sumOwnedSize);
+            }
+         }
+         if (totalSize != null) {
+            if (expectedOwnedSize != totalSize) {
+               log.errorf("The cache should contain %d entries but total size is %d.", expectedOwnedSize, totalSize);
+               result = errorResult();
+            } else {
+               log.tracef("The total size is %d as expected", totalSize);
+            }
          }
       }
       return result;
@@ -403,14 +453,16 @@ public class CheckCacheDataStage extends AbstractDistStage {
    }
 
    protected static class InfoAck extends DistStageAck {
-      final long localSize;
-      final Map<?, Integer> structuredSize;
+      final long ownedSize, localSize, totalSize;
+      final Map<?, Long> structuredSize;
       final int numReplicas;
       final CheckResult checkResult;
 
-      public InfoAck(SlaveState slaveState, long localSize, Map<?, Integer> structuredSize, int numReplicas) {
+      public InfoAck(SlaveState slaveState, long ownedSize, long localSize, long totalSize, Map<?, Long> structuredSize, int numReplicas) {
          super(slaveState);
+         this.ownedSize = ownedSize;
          this.localSize = localSize;
+         this.totalSize = totalSize;
          this.structuredSize = structuredSize;
          this.numReplicas = numReplicas;
          checkResult = null;
@@ -419,18 +471,9 @@ public class CheckCacheDataStage extends AbstractDistStage {
       public InfoAck(SlaveState slaveState, CheckResult checkResult) {
          super(slaveState);
          this.checkResult = checkResult;
-         localSize = -1;
+         ownedSize = localSize = totalSize = -1;
          structuredSize = null;
          numReplicas = -1;
-      }
-
-      @Override
-      public String toString() {
-         return "InfoAck{" +
-               "localSize=" + localSize +
-               ", numReplicas=" + numReplicas +
-               ", checkResult=" + checkResult +
-               "} " + super.toString();
       }
    }
 
@@ -465,7 +508,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
       private final ValueGenerator valueGenerator;
 
       public GeneratedValueChecker(ValueGenerator valueGenerator) {
-         this.valueGenerator = valueGenerator == null ? new ByteArrayValueGenerator() : valueGenerator;
+         this.valueGenerator = valueGenerator;
       }
 
       @Override

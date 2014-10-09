@@ -41,18 +41,28 @@ public class EHCacheInfo implements CacheInformation {
       }
 
       @Override
-      public int getLocalSize() {
+      public long getOwnedSize() {
          return cache.getSize();
       }
 
       @Override
-      public int getTotalSize() {
+      public long getLocallyStoredSize() {
+         return cache.getSize();
+      }
+
+      @Override
+      public long getMemoryStoredSize() {
+         return cache.getSize();
+      }
+
+      @Override
+      public long getTotalSize() {
          return -1;
       }
 
       @Override
-      public Map<?, Integer> getStructuredSize() {
-         return Collections.singletonMap(cache.getName(), getLocalSize());
+      public Map<?, Long> getStructuredSize() {
+         return Collections.singletonMap(cache.getName(), getLocallyStoredSize());
       }
 
       @Override

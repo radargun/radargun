@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.infinispan.AdvancedCache;
+import org.infinispan.context.Flag;
 import org.radargun.traits.CacheInformation;
 
 /**
@@ -40,18 +41,28 @@ public class InfinispanCacheInfo implements CacheInformation {
       }
 
       @Override
-      public int getLocalSize() {
-         return cache.size();
-      }
-
-      @Override
-      public int getTotalSize() {
+      public long getOwnedSize() {
          return -1;
       }
 
       @Override
-      public Map<?, Integer> getStructuredSize() {
-         return Collections.singletonMap(cache.getName(), getLocalSize());
+      public long getLocallyStoredSize() {
+         return cache.size();
+      }
+
+      @Override
+      public long getMemoryStoredSize() {
+         return cache.withFlags(Flag.SKIP_CACHE_LOAD).size();
+      }
+
+      @Override
+      public long getTotalSize() {
+         return -1;
+      }
+
+      @Override
+      public Map<?, Long> getStructuredSize() {
+         return Collections.singletonMap(cache.getName(), getOwnedSize());
       }
 
       @Override

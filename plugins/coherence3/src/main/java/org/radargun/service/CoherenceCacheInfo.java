@@ -8,7 +8,10 @@ import javax.management.AttributeList;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import com.tangosol.coherence.component.util.SafeNamedCache;
+import com.tangosol.coherence.component.util.daemon.queueProcessor.service.grid.ReplicatedCache;
 import com.tangosol.net.CacheFactory;
+import com.tangosol.net.CacheService;
 import com.tangosol.net.NamedCache;
 import com.tangosol.net.PartitionedService;
 import com.tangosol.net.management.MBeanHelper;
@@ -50,11 +53,23 @@ public class CoherenceCacheInfo implements CacheInformation {
       protected NamedCache nc;
 
       public Cache(NamedCache cache) {
-         nc = cache;
+         nc = cache instanceof SafeNamedCache ? ((SafeNamedCache) cache).getNamedCache() : cache;
       }
 
       @Override
-      public int getLocalSize() {
+      public long getOwnedSize() {
+         if (nc.getCacheService() instanceof PartitionedService) {
+            return getCacheSize();
+         } else {
+            return -1;
+         }
+      }
+
+      /**
+       * The size reports owned entries for distributed (partitioned) cache and all entries for replicated cache
+       * @return
+       */
+      protected long getCacheSize() {
          if (nc != null) {
             synchronized (this) {
                if (mBeanServer == null || jmxCacheName == null) {
@@ -77,19 +92,36 @@ public class CoherenceCacheInfo implements CacheInformation {
       }
 
       @Override
-      public int getTotalSize() {
+      public long getLocallyStoredSize() {
+         if (nc.getCacheService() instanceof PartitionedService) {
+            return -1;
+         } else {
+            return getCacheSize();
+         }
+      }
+
+      @Override
+      public long getMemoryStoredSize() {
+         return -1;
+      }
+
+      @Override
+      public long getTotalSize() {
          return nc == null ? -1 : nc.size();
       }
 
       @Override
-      public Map<?, Integer> getStructuredSize() {
-         return Collections.singletonMap(nc.getCacheName(), getLocalSize());
+      public Map<?, Long> getStructuredSize() {
+         return Collections.singletonMap(nc.getCacheName(), getOwnedSize());
       }
 
       @Override
       public int getNumReplicas() {
-         if (nc.getCacheService() instanceof PartitionedService) {
-            return ((PartitionedService) nc.getCacheService()).getBackupCount() + 1;
+         CacheService service = nc.getCacheService();
+         if (service instanceof PartitionedService) {
+            return ((PartitionedService) service).getBackupCount() + 1;
+         } else if (service instanceof ReplicatedCache) {
+            return service.getCluster().getMemberSet().size();
          } else {
             return 1;
          }
