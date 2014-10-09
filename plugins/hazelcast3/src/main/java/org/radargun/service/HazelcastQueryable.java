@@ -320,14 +320,14 @@ public class HazelcastQueryable implements Queryable {
       try {
          ArrayList<Accessor> list = new ArrayList<Accessor>();
          for (String attributePart : attribute.split("\\.")) {
-            Field f = clazz.getField(attribute);
+            Field f = clazz.getDeclaredField(attribute);
             if (f != null) {
                f.setAccessible(true);
                list.add(new FieldAccessor(f));
                clazz = f.getType();
                continue;
             }
-            Method m = clazz.getMethod("get" + Character.toUpperCase(attributePart.charAt(0)) + attributePart.substring(1));
+            Method m = clazz.getDeclaredMethod("get" + Character.toUpperCase(attributePart.charAt(0)) + attributePart.substring(1));
             if (m == null) {
                m = clazz.getMethod("is" + Character.toUpperCase(attributePart.charAt(0)) + attributePart.substring(1));
             }
