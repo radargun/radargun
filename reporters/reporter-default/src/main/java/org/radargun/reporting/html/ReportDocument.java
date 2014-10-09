@@ -191,7 +191,7 @@ public abstract class ReportDocument extends HtmlDocument {
             });
          }
       });
-      int columns = hasHistograms ? 7 : 6;
+      int columns = hasHistograms ? 6 : 5;
       if (maxIterations > 1) {
          write("<tr><th colspan=\"2\">&nbsp;</th>");
          Map.Entry<Report, List<Aggregation>> entry = reportAggregationMap.entrySet().iterator().next();
@@ -212,7 +212,7 @@ public abstract class ReportDocument extends HtmlDocument {
       for (int i = 0; i < maxIterations; ++i) {
          write("<th style=\"text-align: center; border-left-color: black; border-left-width: 2px;\">requests</th>\n");
          write("<th style=\"text-align: center\">errors</th>\n");
-         write("<th>mean</td><th>std.dev</th><th>theoretical&nbsp;TP</th><th>actual&nbsp;TP</th>\n");
+         write("<th>mean</td><th>std.dev</th><th>throughput</th>\n");
          if (hasHistograms) {
             write("<th>histogram</th>\n");
          }
@@ -276,7 +276,6 @@ public abstract class ReportDocument extends HtmlDocument {
       writeTD(defaultOutcome == null ? "&nbsp;" : String.valueOf(defaultOutcome.errors), rowStyle);
       writeTD(meanAndDev == null ? "&nbsp;" : String.format("%.2f ms", toMillis(meanAndDev.mean)), rowStyle);
       writeTD(meanAndDev == null ? "&nbsp;" : String.format("%.2f ms", toMillis(meanAndDev.dev)), rowStyle);
-      writeTD(throughput == null ? "&nbsp;" : String.format("%.0f reqs/s", throughput.theoretical), rowStyle);
       writeTD(throughput == null ? "&nbsp;" : String.format("%.0f reqs/s", throughput.actual), rowStyle);
       if (hasHistograms) {
          if (histogram == null) {
