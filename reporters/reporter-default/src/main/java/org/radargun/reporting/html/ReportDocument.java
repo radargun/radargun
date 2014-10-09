@@ -19,8 +19,10 @@ import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.Histogram;
 import org.radargun.stats.representation.MeanAndDev;
+import org.radargun.stats.representation.Percentile;
 import org.radargun.stats.representation.Throughput;
 import org.radargun.utils.Projections;
+import org.radargun.utils.Utils;
 
 /**
  * Shows results of the tests executed in the benchmark. Also creates the image files displayed in this HTML document.
@@ -126,22 +128,30 @@ public abstract class ReportDocument extends HtmlDocument {
 
    protected void createChart(String filename, String operation, String rangeAxisLabel, StatisticType statisticType) throws IOException {
       ComparisonChart chart = null;
-      boolean xLabelClusterSize = !configuration.separateClusterCharts && (maxClusters > 1 || maxIterations <= 1);
+      DomainAxisContents domainAxisContents = !configuration.separateClusterCharts && (maxClusters > 1 || maxIterations <= 1)
+            ? DomainAxisContents.CLUSTER_SIZE : DomainAxisContents.ITERATIONS;
 
-      chart = generateChart(chart, operation, rangeAxisLabel, statisticType, xLabelClusterSize);
+      chart = generateChart(chart, operation, rangeAxisLabel, statisticType, domainAxisContents);
 
       chart.setWidth(Math.min(Math.max(maxConfigurations, maxIterations) * 100 + 200, 1800));
       chart.setHeight(Math.min(maxConfigurations * 100 + 200, 800));
       chart.save(filename);
    }
 
-   protected ComparisonChart createComparisonChart(ComparisonChart chart, String testName, String operation, String rangeAxisLabel, StatisticType statisticType, Map<Report, List<Aggregation>> reportAggregationMap, boolean xLabelClusterSize) {
+   protected ComparisonChart createComparisonChart(ComparisonChart chart, String testName, String operation, String rangeAxisLabel, StatisticType statisticType, Map<Report, List<Aggregation>> reportAggregationMap, DomainAxisContents domainAxisContents) {
       for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
          int iterationIndex = 0;
          for (Aggregation aggregation : entry.getValue()) {
             if (chart == null) {
-               if ((maxClusters > 1 && !configuration.separateClusterCharts) || maxIterations> 1) {
-                  chart = new LineChart(xLabelClusterSize ? "Cluster size" : (aggregation.iterationValue() != null ? aggregation.iterationName() : "Iteration"), rangeAxisLabel);
+               if ((maxClusters > 1 && !configuration.separateClusterCharts) || maxIterations > 1) {
+                  switch (domainAxisContents) {
+                     case CLUSTER_SIZE:
+                        chart = new LineChart("Cluster size", rangeAxisLabel);
+                        break;
+                     case ITERATIONS:
+                        chart = new LineChart(aggregation.iterationValue() != null ? aggregation.iterationName() : "Iteration", rangeAxisLabel);
+                        break;
+                  }
                } else {
                   chart = new BarChart("Cluster size", rangeAxisLabel);
                }
@@ -155,18 +165,27 @@ public abstract class ReportDocument extends HtmlDocument {
                   categoryName = String.format("%s_%s", categoryName, testName);
                OperationStats operationStats = aggregation.totalStats().getOperationsStats().get(operation);
                if (operationStats == null) continue;
+               Comparable domainKey = null;
+               switch (domainAxisContents) {
+                  case CLUSTER_SIZE:
+                     domainKey = aggregation.nodeStats().size();
+                     break;
+                  case ITERATIONS:
+                     domainKey = columnKey;
+                     break;
+               }
                switch (statisticType) {
                   case MEAN_AND_DEV: {
                      MeanAndDev meanAndDev = operationStats.getRepresentation(MeanAndDev.class);
                      if (meanAndDev == null) continue;
-                     chart.addValue(meanAndDev.mean / 1000000, meanAndDev.dev / 1000000, categoryName, xLabelClusterSize ? aggregation.nodeStats().size() : columnKey);
+                     chart.addValue(meanAndDev.mean / 1000000, meanAndDev.dev / 1000000, categoryName, domainKey);
                      break;
                   }
                   case ACTUAL_THROUGHPUT: {
                      DefaultOutcome defaultOutcome = operationStats.getRepresentation(DefaultOutcome.class);
                      if (defaultOutcome == null) continue;
                      Throughput throughput = defaultOutcome.toThroughput(aggregation.totalThreads(), aggregation.totalStats().getEnd() - aggregation.totalStats().getBegin());
-                     chart.addValue(throughput.actual / 1000000, 0, categoryName, xLabelClusterSize ? aggregation.nodeStats().size() : columnKey);
+                     chart.addValue(throughput.actual / 1000000, 0, categoryName, domainKey);
                   }
                }
             } finally {
@@ -179,19 +198,9 @@ public abstract class ReportDocument extends HtmlDocument {
 
    protected void writeOperation(final String operation, Map<Report, List<Aggregation>> reportAggregationMap) {
       write("<table>\n");
-      boolean hasHistograms = Projections.any(Projections.notNull(reportAggregationMap.values()), new Projections.Condition<List<Aggregation>>() {
-         @Override
-         public boolean accept(List<Aggregation> aggregations) {
-            return Projections.any(Projections.notNull(aggregations), new Projections.Condition<Aggregation>() {
-               @Override
-               public boolean accept(Aggregation aggregation) {
-                  OperationStats operationStats = aggregation.totalStats().getOperationsStats().get(operation);
-                  return operationStats != null && operationStats.getRepresentation(Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile) != null;
-               }
-            });
-         }
-      });
-      int columns = hasHistograms ? 6 : 5;
+      boolean hasPercentiles = configuration.percentiles.length > 0 && hasRepresentation(operation, reportAggregationMap, Percentile.class, configuration.percentiles[0]);
+      boolean hasHistograms = hasRepresentation(operation, reportAggregationMap, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
+      int columns = (hasHistograms ? 6 : 5) + (hasPercentiles ? configuration.percentiles.length : 0);
       if (maxIterations > 1) {
          write("<tr><th colspan=\"2\">&nbsp;</th>");
          for (int iteration = 0; iteration < maxIterations; ++iteration) {
@@ -246,7 +255,7 @@ public abstract class ReportDocument extends HtmlDocument {
             OperationStats operationStats = statistics == null ? null : statistics.getOperationsStats().get(operation);
             long period = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
             writeRepresentations(operationStats, operation, entry.getKey().getCluster().getClusterIndex(), iteration, "total",
-                                 aggregation.totalThreads(), period, hasHistograms, false, aggregation.anySuspect(operation));
+                                 aggregation.totalThreads(), period, hasPercentiles, hasHistograms, false, aggregation.anySuspect(operation));
             ++iteration;
          }
 
@@ -264,7 +273,7 @@ public abstract class ReportDocument extends HtmlDocument {
                }
                int threads = node >= aggregation.nodeThreads().size() ? 0 : aggregation.nodeThreads().get(node);
                writeRepresentations(operationStats, operation, entry.getKey().getCluster().getClusterIndex(), iteration, "node" + node,
-                     threads, period, hasHistograms, false, aggregation.anySuspect(operation));
+                                    threads, period, hasPercentiles, hasHistograms, false, aggregation.anySuspect(operation));
             }
             write("</tr>\n");
          }
@@ -272,8 +281,23 @@ public abstract class ReportDocument extends HtmlDocument {
       write("</table><br>\n");
    }
 
+   private boolean hasRepresentation(final String operation, Map<Report, List<Aggregation>> reportAggregationMap, final Class<?> representationClass, final Object... representationArgs) {
+      return Projections.any(Projections.notNull(reportAggregationMap.values()), new Projections.Condition<List<Aggregation>>() {
+         @Override
+         public boolean accept(List<Aggregation> aggregations) {
+            return Projections.any(Projections.notNull(aggregations), new Projections.Condition<Aggregation>() {
+               @Override
+               public boolean accept(Aggregation aggregation) {
+                  OperationStats operationStats = aggregation.totalStats().getOperationsStats().get(operation);
+                  return operationStats != null && operationStats.getRepresentation(Histogram.class, representationClass, representationArgs) != null;
+               }
+            });
+         }
+      });
+   }
+
    private void writeRepresentations(OperationStats operationStats, String operation, int cluster, int iteration, String node,
-                                     int threads, long period, boolean hasHistograms, boolean gray, boolean suspect) {
+                                     int threads, long period, boolean hasPercentiles, boolean hasHistograms, boolean gray, boolean suspect) {
       DefaultOutcome defaultOutcome = operationStats == null ? null : operationStats.getRepresentation(DefaultOutcome.class);
       Throughput throughput = defaultOutcome == null ? null : defaultOutcome.toThroughput(threads, period);
       MeanAndDev meanAndDev = operationStats == null ? null : operationStats.getRepresentation(MeanAndDev.class);
@@ -285,9 +309,15 @@ public abstract class ReportDocument extends HtmlDocument {
       writeTD(defaultOutcome == null ? "&nbsp;" : String.valueOf(defaultOutcome.requests),
               rowStyle + "border-left-color: black; border-left-width: 2px;");
       writeTD(defaultOutcome == null ? "&nbsp;" : String.valueOf(defaultOutcome.errors), rowStyle);
-      writeTD(meanAndDev == null ? "&nbsp;" : String.format("%.2f ms", toMillis(meanAndDev.mean)), rowStyle);
-      writeTD(meanAndDev == null ? "&nbsp;" : String.format("%.2f ms", toMillis(meanAndDev.dev)), rowStyle);
-      writeTD(throughput == null ? "&nbsp;" : String.format("%.0f reqs/s", throughput.actual), rowStyle);
+      writeTD(meanAndDev == null ? "&nbsp;" : formatTime(meanAndDev.mean), rowStyle);
+      writeTD(meanAndDev == null ? "&nbsp;" : formatTime(meanAndDev.dev), rowStyle);
+      if (hasPercentiles) {
+         for (double percentile : configuration.percentiles) {
+            Percentile p = operationStats == null ? null : operationStats.getRepresentation(Percentile.class, percentile);
+            writeTD(p == null ? "&nbsp;" : formatTime(p.responseTimeMax), rowStyle);
+         }
+      }
+      writeTD(throughput == null ? "&nbsp;" : String.format("%.0f&nbsp;reqs/s", throughput.actual), rowStyle);
       if (hasHistograms) {
          if (histogram == null) {
             writeTD("none", rowStyle);
@@ -306,8 +336,8 @@ public abstract class ReportDocument extends HtmlDocument {
       }
    }
 
-   private double toMillis(double nanos) {
-      return nanos / 1000000;
+   private String formatTime(double value) {
+      return Utils.prettyPrintTime((long) value, TimeUnit.NANOSECONDS).replaceAll(" ", "&nbsp;");
    }
 
    private void writeTD(String content, String style) {
@@ -328,7 +358,11 @@ public abstract class ReportDocument extends HtmlDocument {
       write("    }\n}\n");
    }
 
-   protected abstract ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, boolean xLabelClusterSize);
+   protected abstract ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, DomainAxisContents domainAxisContents);
+
+   protected static enum DomainAxisContents {
+      CLUSTER_SIZE, ITERATIONS
+   }
 
    protected static enum StatisticType {
       MEAN_AND_DEV, ACTUAL_THROUGHPUT
@@ -352,5 +386,8 @@ public abstract class ReportDocument extends HtmlDocument {
 
       @Property(name = "histogram.chart.width", doc = "Height of the histogram chart in pixels. Default is 600.")
       protected int histogramHeight = 600;
+
+      @Property(doc = "Show response time at certain percentiles. Default is 95% and 99%.")
+      private double[] percentiles = new double[] { 95d, 99d };
    }
 }

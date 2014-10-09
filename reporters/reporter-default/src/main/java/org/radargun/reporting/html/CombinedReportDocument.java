@@ -46,9 +46,9 @@ public class CombinedReportDocument extends ReportDocument {
    }
 
    @Override
-   protected ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, boolean xLabelClusterSize) {
+   protected ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, DomainAxisContents domainAxisContents) {
       for (TestAggregations ta : testAggregations) {
-         chart = createComparisonChart(chart, ta.testName(), operation, rangeAxisLabel, statisticType, ta.byReports(),  xLabelClusterSize);
+         chart = createComparisonChart(chart, ta.testName(), operation, rangeAxisLabel, statisticType, ta.byReports(), domainAxisContents);
       }
       return chart;
    }
