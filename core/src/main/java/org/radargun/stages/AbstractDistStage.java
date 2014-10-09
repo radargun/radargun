@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.radargun.DistStage;
@@ -136,6 +137,11 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
    @Override
    public void initOnMaster(MasterState masterState) {
       this.masterState = masterState;
+   }
+
+   @Override
+   public Map<String, Object> createMasterData() {
+      return Collections.EMPTY_MAP;
    }
 
    @Override

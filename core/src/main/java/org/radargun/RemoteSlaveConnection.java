@@ -126,34 +126,39 @@ public class RemoteSlaveConnection implements SlaveConnection {
       flushBuffers(0);
    }
 
-   private void mcastObject(Serializable object, int numSlaves) throws IOException {
+   private void clearBuffer() {
       if (!writeBufferMap.isEmpty()) {
          throw new IllegalStateException("Something not sent to slaves yet: " + writeBufferMap);
       }
       mcastBuffer.clear();
-      mcastBuffer = SerializationHelper.serializeObjectWithLength(object, mcastBuffer);
+   }
+
+   private void mcastBuffer(int numSlaves) throws ClosedChannelException {
       for (int i = 0; i < numSlaves; ++i) {
          writeBufferMap.put(slaves[i], ByteBuffer.wrap(mcastBuffer.array(), 0, mcastBuffer.position()));
          slaves[i].register(communicationSelector, SelectionKey.OP_WRITE);
       }
    }
 
+   private void mcastObject(Serializable object, int numSlaves) throws IOException {
+      clearBuffer();
+      mcastBuffer = SerializationHelper.serializeObjectWithLength(object, mcastBuffer);
+      mcastBuffer(numSlaves);
+   }
+
    private void mcastInt(int value, int numSlaves) throws ClosedChannelException {
-      if (!writeBufferMap.isEmpty()) {
-         throw new IllegalStateException("Something not sent to slaves yet: " + writeBufferMap);
-      }
-      mcastBuffer.clear();
+      clearBuffer();
       mcastBuffer.putInt(value);
-      for (int i = 0; i < numSlaves; ++i) {
-         writeBufferMap.put(slaves[i], ByteBuffer.wrap(mcastBuffer.array(), 0, 4));
-         slaves[i].register(communicationSelector, SelectionKey.OP_WRITE);
-      }
+      mcastBuffer(numSlaves);
    }
 
    @Override
-   public List<DistStageAck> runStage(int stageId, int numSlaves) throws IOException {
+   public List<DistStageAck> runStage(int stageId, Map<String, Object> masterData, int numSlaves) throws IOException {
       responses.clear();
-      mcastInt(stageId, numSlaves);
+      clearBuffer();
+      mcastBuffer.putInt(stageId);
+      mcastBuffer = SerializationHelper.serializeObjectWithLength((Serializable) masterData, mcastBuffer);
+      mcastBuffer(numSlaves);
       flushBuffers(numSlaves);
       ArrayList<DistStageAck> list = new ArrayList<>(responses.size());
       for (Object o : responses) {

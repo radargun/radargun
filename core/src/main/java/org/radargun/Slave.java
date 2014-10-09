@@ -77,6 +77,11 @@ public class Slave extends SlaveBase {
    }
 
    @Override
+   protected Map<String, Object> getNextMasterData() throws IOException {
+      return (Map<String, Object>) connection.receiveObject();
+   }
+
+   @Override
    protected void sendResponse(DistStageAck response) throws IOException {
       connection.sendResponse(response);
    }

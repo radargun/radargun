@@ -220,10 +220,17 @@ public class Master {
       else
          log.info("Starting distributed stage " + stage.getName() + ".");
       int numSlaves = state.getClusterSize();
-      stage.initOnMaster(state);
+      Map<String, Object> masterData;
+      try {
+         stage.initOnMaster(state);
+         masterData = stage.createMasterData();
+      } catch (Exception e) {
+         log.error("Failed to initialize stage", e);
+         return StageResult.EXIT;
+      }
       List<DistStageAck> responses = null;
       try {
-         responses = connection.runStage(stageId, numSlaves);
+         responses = connection.runStage(stageId, masterData, numSlaves);
       } catch (IOException e) {
          log.error("Error when communicating to slaves");
          return StageResult.EXIT;
