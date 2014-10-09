@@ -22,20 +22,35 @@ public interface CacheInformation {
 
    interface Cache {
       /**
-       * @return Number of entries on this cache node.
+       * @return Number of entries that are 'owned' by this node. Sum of all nodes' {@link #getOwnedSize()}
+       * should be equal to {@link #getTotalSize()}. If this value is negative, this information is not available.
        */
-      int getLocalSize();
+      long getOwnedSize();
+
+      /**
+       * @return Number of entries physically stored on this cache node. Sum of all nodes' {@link #getLocallyStoredSize()}
+       * should be equal to {@link #getTotalSize()} * {@link #getNumReplicas()}. If the entry is stored multiple times
+       * (such as in-memory, on SSD disk and on conventional disk) it should be reported only once.
+       * If this value is negative, this information is not available.
+       */
+      long getLocallyStoredSize();
+
+      /**
+       * @return Number of entries physically stored on this cache node in heap memory. Entries persisted into
+       * disk or off-heap entries are not included.
+       */
+      long getMemoryStoredSize();
 
       /**
        * @return Number of entries in the whole cache, or negative number if the information is not available.
        */
-      int getTotalSize();
+      long getTotalSize();
 
       /**
        * The cache may be structured into different subparts.
        * @return Map of subpart-identification - subpart-size.
        */
-      Map<?, Integer> getStructuredSize();
+      Map<?, Long> getStructuredSize();
 
       /**
        * @return How many times is each entry replicated in the local cluster (group), or -1 if this cannot be determined.

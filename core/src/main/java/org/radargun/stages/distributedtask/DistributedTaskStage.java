@@ -109,7 +109,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    }
 
    private String getPayload(long durationNanos) {
-      return slaveState.getSlaveIndex() + ", " + clustered.getClusteredNodes() + ", " + cacheInformation.getCache(null).getLocalSize() + ", " + durationNanos;
+      return slaveState.getSlaveIndex() + ", " + clustered.getClusteredNodes() + ", " + cacheInformation.getCache(null).getLocallyStoredSize() + ", " + durationNanos;
    }
 
    private DistStageAck executeTask() {
@@ -138,7 +138,8 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
       ack.setText(getPayload(durationNanos));
 
       log.info("Distributed Execution task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
-      log.info(clustered.getClusteredNodes() + " nodes were used. " + cacheInformation.getCache(null).getLocalSize() + " entries on this node");
+      log.infof("%d nodes were used. %d entries on this node",
+            clustered.getClusteredNodes(), cacheInformation.getCache(null).getLocallyStoredSize());
       log.info("Distributed execution results:");
       log.info("--------------------");
       for (T t : resultList) {

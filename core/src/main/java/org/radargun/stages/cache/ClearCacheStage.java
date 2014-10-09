@@ -65,12 +65,12 @@ public class ClearCacheStage extends AbstractDistStage {
                if (cacheInformation == null) return successfulResponse();
             } else {
                if (Boolean.FALSE.equals(local) || localBasicOperations == null) {
-                  int size;
-                  for (int count = new Random().nextInt(20) + 10; count > 0 && (size = cacheInformation.getCache(cacheName).getLocalSize()) > 0; --count) {
+                  long size;
+                  for (int count = new Random().nextInt(20) + 10; count > 0 && (size = cacheInformation.getCache(cacheName).getLocallyStoredSize()) > 0; --count) {
                      log.debug("Waiting until the cache gets empty (contains " + size + " entries)");
                      Thread.sleep(1000);
                   }
-                  if ((size = cacheInformation.getCache(cacheName).getLocalSize()) > 0) {
+                  if ((size = cacheInformation.getCache(cacheName).getLocallyStoredSize()) > 0) {
                      log.error("The cache was not cleared from another node (contains " + size + " entries), clearing locally");
                      DistStageAck response = executeClear();
                      if (response != null) return response;

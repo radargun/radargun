@@ -157,7 +157,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
    private String getPayload(String duration, String resultSize) {
       return slaveState.getSlaveIndex() + ", " + clustered.getClusteredNodes() + ", "
-            + cacheInformation.getCache(cacheInformation.getDefaultCacheName()).getLocalSize() + ", " + duration + ", "
+            + cacheInformation.getCache(cacheInformation.getDefaultCacheName()).getLocallyStoredSize() + ", " + duration + ", "
             + resultSize + ", " + slaveState.getConfigName();
    }
 
@@ -251,9 +251,8 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          ack.error("executeMapReduceTask() threw an exception", e);
          log.error("executeMapReduceTask() returned an exception", e);
       }
-      log.info(clustered.getClusteredNodes() + " nodes were used. "
-            + cacheInformation.getCache(cacheInformation.getDefaultCacheName()).getLocalSize()
-            + " entries on this node");
+      log.infof("%d nodes were used. %d entries on this node", clustered.getClusteredNodes(),
+            cacheInformation.getCache(null).getLocallyStoredSize());
       log.info("--------------------");
 
       return ack;

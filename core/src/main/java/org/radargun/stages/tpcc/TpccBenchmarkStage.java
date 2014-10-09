@@ -94,7 +94,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
 
       try {
          Map<String, Object> results = stress();
-         String sizeInfo = "clusterSize:" + slaveState.getClusterSize() + ", nodeIndex:" + slaveState.getSlaveIndex() + ", cacheSize: " + cacheInformation.getCache(null).getLocalSize();
+         String sizeInfo = "clusterSize:" + slaveState.getClusterSize() + ", nodeIndex:" + slaveState.getSlaveIndex() + ", cacheSize: " + cacheInformation.getCache(null).getLocallyStoredSize();
          log.info(sizeInfo);
          results.put(SIZE_INFO, sizeInfo);
          return new MapAck(slaveState, results);

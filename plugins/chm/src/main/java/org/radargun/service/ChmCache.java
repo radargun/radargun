@@ -88,18 +88,28 @@ public class ChmCache implements BasicOperations.Cache, ConditionalOperations.Ca
    }
 
    @Override
-   public int getLocalSize() {
+   public long getOwnedSize() {
       return chm.size();
    }
 
    @Override
-   public int getTotalSize() {
-      return -1;
+   public long getLocallyStoredSize() {
+      return chm.size();
    }
 
    @Override
-   public Map<?, Integer> getStructuredSize() {
-      return Collections.singletonMap(name, chm.size());
+   public long getMemoryStoredSize() {
+      return chm.size();
+   }
+
+   @Override
+   public long getTotalSize() {
+      return chm.size();
+   }
+
+   @Override
+   public Map<?, Long> getStructuredSize() {
+      return Collections.singletonMap(name, (long) chm.size());
    }
 
    @Override

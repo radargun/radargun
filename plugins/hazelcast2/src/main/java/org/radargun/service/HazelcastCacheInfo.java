@@ -48,18 +48,28 @@ public class HazelcastCacheInfo implements CacheInformation {
       }
 
       @Override
-      public int getLocalSize() {
-         return (int) Math.min(map.getLocalMapStats().getOwnedEntryCount() + map.getLocalMapStats().getBackupEntryCount(), (long) Integer.MAX_VALUE);
+      public long getOwnedSize() {
+         return map.getLocalMapStats().getOwnedEntryCount();
       }
 
       @Override
-      public int getTotalSize() {
+      public long getLocallyStoredSize() {
+         return getMemoryStoredSize();
+      }
+
+      @Override
+      public long getMemoryStoredSize() {
+         return map.getLocalMapStats().getOwnedEntryCount() + map.getLocalMapStats().getBackupEntryCount();
+      }
+
+      @Override
+      public long getTotalSize() {
          return map.size();
       }
 
       @Override
-      public Map<?, Integer> getStructuredSize() {
-         return Collections.singletonMap(map.getName(), getLocalSize());
+      public Map<?, Long> getStructuredSize() {
+         return Collections.singletonMap(map.getName(), getOwnedSize());
       }
 
       @Override
