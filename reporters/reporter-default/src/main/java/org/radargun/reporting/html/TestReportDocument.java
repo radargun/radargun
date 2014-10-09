@@ -7,6 +7,7 @@ import java.util.Map;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.commons.TestAggregations;
 
+
 /**
  * Shows results of the tests executed in the benchmark.
  * Also creates the image files displayed in this HTML document.
@@ -24,8 +25,8 @@ public class TestReportDocument extends ReportDocument {
    }
 
    @Override
-   protected ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, boolean xLabelClusterSize) {
-      return createComparisonChart(chart, "", operation, rangeAxisLabel, statisticType, testAggregations.byReports(), xLabelClusterSize);
+   protected ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, DomainAxisContents domainAxisContents) {
+      return createComparisonChart(chart, "", operation, rangeAxisLabel, statisticType, testAggregations.byReports(), domainAxisContents);
    }
 
    public void writeTest() throws IOException {
