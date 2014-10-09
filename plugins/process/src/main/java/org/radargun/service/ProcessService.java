@@ -9,17 +9,18 @@ import java.util.Map;
 import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.radargun.Directories;
 import org.radargun.Service;
 import org.radargun.config.Converter;
 import org.radargun.config.Property;
-import org.radargun.utils.ArgsConverter;
-import org.radargun.utils.TimeConverter;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.ProvidesTrait;
+import org.radargun.utils.ArgsConverter;
+import org.radargun.utils.TimeConverter;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -92,7 +93,7 @@ public class ProcessService {
       return env;
    }
 
-   public void registerAction(Pattern pattern, Runnable action) {
+   public void registerAction(Pattern pattern, OutputListener action) {
       actions.add(new Action(pattern, action));
    }
 
@@ -105,8 +106,9 @@ public class ProcessService {
    public void reportOutput(String line) {
       System.out.println(line);
       for (Action action : actions) {
-         if (action.pattern.matcher(line).matches()) {
-            action.runnable.run();
+         Matcher m = action.pattern.matcher(line);
+         if (m.matches()) {
+            action.listener.run(m);
          }
       }
    }
@@ -117,6 +119,10 @@ public class ProcessService {
       } else {
          System.err.println(line);
       }
+   }
+
+   public interface OutputListener {
+      void run(Matcher matcher);
    }
 
    private static class EnvsConverter implements Converter<Map<String, String>> {
@@ -156,11 +162,11 @@ public class ProcessService {
 
    private static class Action {
       public final Pattern pattern;
-      public final Runnable runnable;
+      public final OutputListener listener;
 
-      private Action(Pattern pattern, Runnable runnable) {
+      private Action(Pattern pattern, OutputListener listener) {
          this.pattern = pattern;
-         this.runnable = runnable;
+         this.listener = listener;
       }
    }
 }
