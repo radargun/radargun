@@ -1,5 +1,8 @@
 package org.radargun.stages;
 
+import java.util.Collections;
+import java.util.Map;
+
 import org.radargun.DistStage;
 import org.radargun.DistStageAck;
 import org.radargun.config.Stage;
@@ -29,6 +32,11 @@ public abstract class InternalDistStage extends AbstractStage implements DistSta
    @Override
    public void initOnMaster(MasterState masterState) {
       this.masterState = masterState;
+   }
+
+   @Override
+   public Map<String, Object> createMasterData() {
+      return Collections.EMPTY_MAP;
    }
 
    @Override

@@ -25,6 +25,7 @@ public class LocalSlaveConnection extends SlaveBase implements SlaveConnection {
 
    private Map<String, String> extras = new HashMap<String, String>();
    private BlockingQueue<Integer> stageIds = new SynchronousQueue<>();
+   private BlockingQueue<Map<String, Object>> masterDatas = new SynchronousQueue<>();
    private BlockingQueue<DistStageAck> acks = new ArrayBlockingQueue<>(1);
    private ScenarioRunner runner;
 
@@ -71,13 +72,14 @@ public class LocalSlaveConnection extends SlaveBase implements SlaveConnection {
    }
 
    @Override
-   public List<DistStageAck> runStage(int stageId, int numSlaves) {
+   public List<DistStageAck> runStage(int stageId, Map<String, Object> masterData, int numSlaves) {
       if (runner == null) {
          runner = new ScenarioRunner();
          runner.start();
       }
       try {
          stageIds.put(stageId);
+         masterDatas.put(masterData);
       } catch (InterruptedException e) {
          log.error("Interrupted when requesting stage execution", e);
          Thread.currentThread().interrupt();
@@ -124,6 +126,17 @@ public class LocalSlaveConnection extends SlaveBase implements SlaveConnection {
          log.error("Waiting was interrupted", e);
          Thread.currentThread().interrupt();
          return -1;
+      }
+   }
+
+   @Override
+   protected Map<String, Object> getNextMasterData() {
+      try {
+         return masterDatas.take();
+      } catch (InterruptedException e) {
+         log.error("Waiting was interrupted", e);
+         Thread.currentThread().interrupt();
+         return Collections.EMPTY_MAP;
       }
    }
 

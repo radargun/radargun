@@ -2,6 +2,7 @@ package org.radargun;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
@@ -46,11 +47,12 @@ public interface SlaveConnection {
    /**
     * Signalizes to numSlaves slaves that these should run the stage from previously send scenario.
     * @param stageId
+    * @param masterData
     * @param numSlaves
     * @return Acknowledgement from each of the numSlaves slaves.
     * @throws IOException
     */
-   List<DistStageAck> runStage(int stageId, int numSlaves) throws IOException;
+   List<DistStageAck> runStage(int stageId, Map<String, Object> masterData, int numSlaves) throws IOException;
 
    /**
     * Retrieves timeline for the passed benchmark from numSlaves slaves.

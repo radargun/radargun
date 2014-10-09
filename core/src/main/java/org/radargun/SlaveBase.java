@@ -42,6 +42,10 @@ public abstract class SlaveBase {
       state.setTraits(traits);
       for (;;) {
          int stageId = getNextStageId();
+         Map<String, Object> masterData = getNextMasterData();
+         for (Map.Entry<String, Object> entry : masterData.entrySet()) {
+            state.put(entry.getKey(), entry.getValue());
+         }
          log.trace("Received stage ID " + stageId);
          DistStage stage = (DistStage) scenario.getStage(stageId, state, extras, null);
          if (stage instanceof ScenarioCleanupStage) {
@@ -95,6 +99,8 @@ public abstract class SlaveBase {
    }
 
    protected abstract int getNextStageId() throws IOException;
+
+   protected abstract Map<String, Object> getNextMasterData() throws IOException;
 
    protected abstract void sendResponse(DistStageAck response) throws IOException;
 
