@@ -7,12 +7,14 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.spy.memcached.DefaultConnectionFactory;
 import net.spy.memcached.FailureMode;
 import net.spy.memcached.MemcachedClient;
+import net.spy.memcached.compat.log.Log4JLogger;
 import org.radargun.Service;
 import org.radargun.config.Converter;
 import org.radargun.config.Property;
@@ -45,7 +47,11 @@ public class SpyMemcachedService implements Lifecycle {
          , converter = TimeConverter.class)
    protected long operationTimeout = 15000;
 
-   protected volatile MemcachedClient memcachedClient;
+   @Property(doc = "Number of memcached client instances (each keeps only single connection to each server). Default is 100.")
+   protected int poolSize = 100;
+
+   protected MemcachedClient[] memcachedClients;
+   protected AtomicInteger nextClient = new AtomicInteger(0);
 
    @ProvidesTrait
    public SpyMemcachedOperations createOperations() {
@@ -59,22 +65,27 @@ public class SpyMemcachedService implements Lifecycle {
 
    @Override
    public synchronized void start() {
-      if (memcachedClient != null) {
+      if (memcachedClients != null) {
          log.warn("Service already started");
          return;
       }
+      // TODO: route that through Radargun logging (to support log4j2)
+      System.setProperty("net.spy.log.LoggerImpl", Log4JLogger.class.getName());
       try {
-         memcachedClient = new MemcachedClient(new DefaultConnectionFactory() {
-            @Override
-            public FailureMode getFailureMode() {
-               return failureMode;
-            }
+         memcachedClients = new MemcachedClient[poolSize];
+         for (int i = 0; i < poolSize; ++i) {
+            memcachedClients[i] = new MemcachedClient(new DefaultConnectionFactory() {
+               @Override
+               public FailureMode getFailureMode() {
+                  return failureMode;
+               }
 
-            @Override
-            public long getOperationTimeout() {
-               return operationTimeout;
-            }
-         }, servers);
+               @Override
+               public long getOperationTimeout() {
+                  return operationTimeout;
+               }
+            }, servers);
+         }
       } catch (IOException e) {
          throw new RuntimeException("Failed to start SpyMemcachedService", e);
       }
@@ -82,17 +93,27 @@ public class SpyMemcachedService implements Lifecycle {
 
    @Override
    public synchronized void stop() {
-      if (memcachedClient == null) {
+      if (memcachedClients == null) {
          log.warn("Service not started");
          return;
       }
-      memcachedClient.shutdown();
-      memcachedClient = null;
+      for (MemcachedClient memcachedClient : memcachedClients) {
+         memcachedClient.shutdown();
+      }
+      memcachedClients = null;
    }
 
    @Override
    public synchronized boolean isRunning() {
-      return memcachedClient != null;
+      return memcachedClients != null;
+   }
+
+   /**
+    * Distributes clients between cache instances.
+    * @return Initialized memcached client, possibly shared.
+    */
+   public MemcachedClient nextClient() {
+      return memcachedClients[(nextClient.getAndIncrement() & Integer.MAX_VALUE) % poolSize];
    }
 
    private static class AddressListConverter implements Converter<List<InetSocketAddress>> {
