@@ -36,7 +36,7 @@ public class SpyMemcachedOperations implements BasicOperations, ConditionalOpera
       private final MemcachedClient client;
 
       public SpyMemcachedCache() {
-         client = service.memcachedClient;
+         client = service.nextClient();
       }
 
       @Override
