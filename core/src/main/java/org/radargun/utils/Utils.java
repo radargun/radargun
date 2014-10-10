@@ -540,8 +540,13 @@ public class Utils {
       List<String> lines = new ArrayList<String>();
       BufferedReader br = null;
 
+      InputStream resourceStream = Utils.class.getResourceAsStream(file);
       try {
-         br = new BufferedReader(new FileReader(file));
+         if (resourceStream != null) {
+            br = new BufferedReader(new InputStreamReader(resourceStream));
+         } else {
+            br = new BufferedReader(new FileReader(file));
+         }
          String line;
          while ((line = br.readLine()) != null) {
             lines.add(line);
@@ -550,16 +555,26 @@ public class Utils {
          log.error("Error is thrown during file reading!", ex);
          throw new RuntimeException(ex);
       } finally {
-         try {
-            if(br != null) br.close();
-         } catch (IOException ex) {
-            log.error("Error is thrown during closing file stream!", ex);
-            throw new RuntimeException(ex);
-         }
+         close(br, resourceStream);
       }
-
       return lines;
    }
+
+   public static void close(Closeable... closeables) {
+      IOException exception = null;
+      for (Closeable closeable : closeables) {
+         try {
+            if (closeable != null) closeable.close();
+         } catch (IOException ex) {
+            log.error("Error during closing!", ex);
+            if (exception == null) exception = ex;
+         }
+      }
+      if (exception != null) {
+         throw new RuntimeException(exception);
+      }
+   }
+
 
    public static void setField(Class<?> clazz, String fieldName, Object instance, Object value) {
       try {
