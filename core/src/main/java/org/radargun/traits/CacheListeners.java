@@ -36,10 +36,19 @@ public interface CacheListeners {
    void addExpiredListener(String cacheName, ExpiredListener listener);
 
    void removeCreatedListener(String cacheName, CreatedListener listener);
+   void removeCreatedListeners(String cacheName);
+
    void removeUpdatedListener(String cacheName, UpdatedListener listener);
+   void removeUpdatedListeners(String cacheName);
+
    void removeRemovedListener(String cacheName, RemovedListener listener);
+   void removeRemovedListeners(String cacheName);
+
    void removeEvictedListener(String cacheName, EvictedListener listener);
+   void removeEvictedListeners(String cacheName);
+
    void removeExpiredListener(String cacheName, ExpiredListener listener);
+   void removeExpiredListeners(String CacheName);
 
    interface CreatedListener<K, V> {
       void created(K key, V value);

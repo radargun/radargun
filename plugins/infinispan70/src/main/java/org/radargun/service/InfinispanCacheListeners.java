@@ -107,10 +107,19 @@ public class InfinispanCacheListeners implements CacheListeners {
    public void removeCreatedListener(String cacheName, CreatedListener listener) {
       getListenerOrThrow(cacheName).remove(listener);
    }
+   @Override
+   public void removeCreatedListeners(String cacheName) {
+      getListenerOrThrow(cacheName).created.clear();
+   }
 
    @Override
    public void removeUpdatedListener(String cacheName, UpdatedListener listener) {
       getListenerOrThrow(cacheName).remove(listener);
+   }
+
+   @Override
+   public void removeUpdatedListeners(String cacheName) {
+      getListenerOrThrow(cacheName).updated.clear();
    }
 
    @Override
@@ -119,12 +128,27 @@ public class InfinispanCacheListeners implements CacheListeners {
    }
 
    @Override
+   public void removeRemovedListeners(String cacheName) {
+      getListenerOrThrow(cacheName).removed.clear();
+   }
+
+   @Override
    public void removeEvictedListener(String cacheName, EvictedListener listener) {
       getListenerOrThrow(cacheName).remove(listener);
    }
 
    @Override
+   public void removeEvictedListeners(String cacheName) {
+      getListenerOrThrow(cacheName).evicted.clear();
+   }
+
+   @Override
    public void removeExpiredListener(String cacheName, ExpiredListener listener) {
+      throw new UnsupportedOperationException();
+   }
+
+   @Override
+   public void removeExpiredListeners(String CacheName) {
       throw new UnsupportedOperationException();
    }
 

@@ -38,34 +38,35 @@ public class RegisterListenersStage extends AbstractDistStage {
    @Override
    public void initOnSlave(SlaveState slaveState) {
       super.initOnSlave(slaveState);
-      createdListener = new CacheListeners.CreatedListener() {
-         @Override
-         public void created(Object key, Object value) {
-            log.trace("Created " + key + " -> " + value);
-         }
-      };
+      if (registerListeners) {
+         createdListener = new CacheListeners.CreatedListener() {
+            @Override
+            public void created(Object key, Object value) {
+               log.trace("Created " + key + " -> " + value);
+            }
+         };
 
-      evictedListener = new CacheListeners.EvictedListener() {
-         @Override
-         public void evicted(Object key, Object value) {
-            log.trace("Evicted " + key + " -> " + value);
-         }
-      };
+         evictedListener = new CacheListeners.EvictedListener() {
+            @Override
+            public void evicted(Object key, Object value) {
+               log.trace("Evicted " + key + " -> " + value);
+            }
+         };
 
-      removedListener = new CacheListeners.RemovedListener() {
-         @Override
-         public void removed(Object key, Object value) {
-            log.trace("Removed " + key + " -> " + value);
-         }
-      };
+         removedListener = new CacheListeners.RemovedListener() {
+            @Override
+            public void removed(Object key, Object value) {
+               log.trace("Removed " + key + " -> " + value);
+            }
+         };
 
-      updatedListener = new CacheListeners.UpdatedListener() {
-         @Override
-         public void updated(Object key, Object value) {
-            log.trace("Updated " + key + " -> " + value);
-         }
-      };
-
+         updatedListener = new CacheListeners.UpdatedListener() {
+            @Override
+            public void updated(Object key, Object value) {
+               log.trace("Updated " + key + " -> " + value);
+            }
+         };
+      }
    }
 
    @Override
@@ -95,14 +96,10 @@ public class RegisterListenersStage extends AbstractDistStage {
    public void unregisterListeners() {
 
       checkListenersSupported();
-      if (createdListener != null)
-         listenersTrait.removeCreatedListener(null, createdListener);
-      if (evictedListener != null)
-         listenersTrait.removeEvictedListener(null, evictedListener);
-      if (removedListener != null)
-         listenersTrait.removeRemovedListener(null, removedListener);
-      if (updatedListener != null)
-         listenersTrait.removeUpdatedListener(null, updatedListener);
+      listenersTrait.removeCreatedListeners(null);
+      listenersTrait.removeEvictedListeners(null);
+      listenersTrait.removeRemovedListeners(null);
+      listenersTrait.removeUpdatedListeners(null);
    }
 
    private void checkListenersSupported() {
