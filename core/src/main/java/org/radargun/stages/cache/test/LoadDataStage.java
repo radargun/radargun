@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.radargun.DistStageAck;
@@ -22,6 +23,7 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
 import org.radargun.utils.Fuzzy;
+import org.radargun.utils.TimeConverter;
 import org.radargun.utils.Utils;
 
 /**
@@ -65,6 +67,9 @@ public class LoadDataStage extends AbstractDistStage {
    @Property(doc = "This option forces local loading of all keys on all slaves in this group (not only numEntries/numNodes). Default is false.")
    protected boolean loadAllKeys = false;
 
+   @Property(doc = "If set to true, the entries are removed instead of being inserted. Default is false.")
+   private boolean remove = false;
+
    @Property(doc = "Seed used for initialization of random generators - with same seed (and other arguments)," +
          " the stage guarantees same entries added to the cache. By default the seed is not set.")
    protected Long seed;
@@ -79,6 +84,10 @@ public class LoadDataStage extends AbstractDistStage {
 
    @Property(doc = "Numbers of entries loaded in one transaction. Default is to not use transactions.")
    protected int transactionSize = 0;
+
+   @Property(converter = TimeConverter.class, doc = "Target period of put operations - e.g. when this is set to 10 ms" +
+         "the benchmark will try to do one put operation every 10 ms. By default the requests are executed at maximum speed.")
+   protected long requestPeriod = 0;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected BasicOperations basicOperations;
@@ -113,26 +122,43 @@ public class LoadDataStage extends AbstractDistStage {
       slaveState.put(CacheSelector.CACHE_SELECTOR, cacheSelector);
       slaveState.addServiceListener(new Cleanup(slaveState));
 
+      List<Thread> loaders = startLoaders();
+      try {
+         stopLoaders(loaders);
+      } catch (InterruptedException e) {
+         return errorResponse("Interrupted when waiting for the loader to finish");
+      } catch (Exception e) {
+         return errorResponse("Loader failed with exception", e);
+      }
+      return successfulResponse();
+   }
+
+   protected List<Thread> startLoaders() {
       int threadBase = getExecutingSlaveIndex() * numThreads;
-      List<Loader> loaders = new ArrayList<>();
+      List<Thread> loaders = new ArrayList<>();
       for (int i = 0; i < numThreads; ++i) {
          String cacheName = cacheSelector.getCacheName(threadBase + i);
          boolean useTransactions = this.useTransactions.use(transactional, cacheName, transactionSize);
-         Loader loader = useTransactions ? new TxLoader(i, getLoaderIds(i)) : new NonTxLoader(i, getLoaderIds(i));
+         long start = System.nanoTime();
+         Loader loader = useTransactions ? new TxLoader(i, getLoaderIds(i), start) : new NonTxLoader(i, getLoaderIds(i), start);
          loaders.add(loader);
          loader.start(); // no special synchronization needed
       }
-      for (Loader loader : loaders) {
-         try {
-            loader.join();
-         } catch (InterruptedException e) {
-            return errorResponse("Interrupted when waiting for the loader to finish");
+      return loaders;
+   }
+
+   protected void stopLoaders(List<Thread> loaders) throws Exception {
+      for (Thread thread : loaders) {
+         if (!(thread instanceof Loader)) {
+            throw new IllegalStateException(String.format("Unexpected loader class, expected %s, was %s.",
+                  Loader.class.getName(), thread.getClass().getName()));
          }
+         Loader loader = (Loader) thread;
+         loader.join();
          if (loader.getException() != null) {
-            return errorResponse("Loader failed with exception", loader.getException());
+            throw loader.getException();
          }
       }
-      return successfulResponse();
    }
 
    private LoaderIds getLoaderIds(int index) {
@@ -147,15 +173,18 @@ public class LoadDataStage extends AbstractDistStage {
       /** Create a mark we can later return to */
       void mark();
       void resetToMark();
+      /* Returns index of the key */
+      long currentKeyIndex();
    }
 
    private static class RangeIds implements LoaderIds {
+      private final long start;
       private long current;
       private long limit;
       private long mark;
 
       public RangeIds(long from, long to) {
-         current = from;
+         start = current = from;
          limit = to;
       }
 
@@ -177,19 +206,26 @@ public class LoadDataStage extends AbstractDistStage {
       public void resetToMark() {
          current = mark;
       }
+
+      @Override
+      public long currentKeyIndex() {
+         return current - start;
+      }
    }
 
    private abstract class Loader extends Thread {
       protected final Random random;
       protected final int threadIndex;
       protected final LoaderIds loaderIds;
+      protected long start;
       protected Throwable throwable;
 
-      private Loader(int index, LoaderIds loaderIds) {
+      private Loader(int index, LoaderIds loaderIds, long start) {
          super("Loader-" + index);
          this.loaderIds = loaderIds;
          threadIndex = slaveState.getSlaveIndex() * numThreads + index;
          random = seed == null ? new Random() : new Random(seed + threadIndex);
+         this.start = start;
       }
 
       public Exception getException() {
@@ -214,8 +250,8 @@ public class LoadDataStage extends AbstractDistStage {
    private class NonTxLoader extends Loader {
       private final BasicOperations.Cache<Object, Object> cache;
 
-      public NonTxLoader(int index, LoaderIds loaderIds) {
-         super(index, loaderIds);
+      public NonTxLoader(int index, LoaderIds loaderIds, long start) {
+         super(index, loaderIds, start);
          String cacheName = cacheSelector.getCacheName(threadIndex);
          cache = basicOperations.getCache(cacheName);
       }
@@ -223,25 +259,37 @@ public class LoadDataStage extends AbstractDistStage {
       @Override
       protected boolean loadEntry() {
          int size = entrySize.next(random);
+         long currentKeyIndex = loaderIds.currentKeyIndex();
+         delayRequest(start, System.nanoTime(), currentKeyIndex);
          long keyId = loaderIds.next(size);
          if (keyId < 0) {
-            log.info("Finished loading entries");
+            log.info(String.format("Finished %s entries", remove ? "removing" : "loading"));
             return false;
          }
          Object key = keyGenerator.generateKey(keyId);
          Object value = valueGenerator.generateValue(key, size, random);
-         boolean inserted = false;
+         boolean success = false;
          for (int i = 0; i < maxLoadAttempts; ++i) {
             try {
-               cache.put(key, value);
-               inserted = true;
+               if (remove) {
+                  cache.remove(key);
+               } else {
+                  cache.put(key, value);
+               }
+               success = true;
                break;
             } catch (Exception e) {
-               log.warn("Failed to insert entry into cache", e);
+               if (remove) {
+                  log.warn("Failed to remove entry from cache", e);
+               } else {
+                  log.warn("Failed to insert entry into cache", e);
+               }
             }
          }
-         if (!inserted) {
-            throw new RuntimeException("Failed to insert entry key=" + key + ", value=" + value + " " + maxLoadAttempts + " times.");
+         if (!success) {
+            String message = String.format("Failed to %s entry key=%s, value=%s %d times.",
+                  remove ? "remove" : "insert", key, value, maxLoadAttempts);
+            throw new RuntimeException(message);
          }
          logLoaded(1, size);
          return true;
@@ -257,8 +305,8 @@ public class LoadDataStage extends AbstractDistStage {
       private long txValuesSize;
       private long txBeginSeed;
 
-      public TxLoader(int index, LoaderIds loaderIds) {
-         super(index, loaderIds);
+      public TxLoader(int index, LoaderIds loaderIds, long start) {
+         super(index, loaderIds, start);
          String cacheName = cacheSelector.getCacheName(threadIndex);
          nonTxCache = basicOperations.getCache(cacheName);
       }
@@ -278,16 +326,26 @@ public class LoadDataStage extends AbstractDistStage {
             loaderIds.mark();
          }
          int size = entrySize.next(random);
+         long currentKeyIndex = loaderIds.currentKeyIndex();
+         delayRequest(start, System.nanoTime(), currentKeyIndex);
          long keyId = loaderIds.next(size);
          if (keyId >= 0) {
             Object key = keyGenerator.generateKey(keyId);
             Object value = valueGenerator.generateValue(key, size, random);
             try {
-               cache.put(key, value);
+               if (remove) {
+                  cache.remove(key);
+               } else {
+                  cache.put(key, value);
+               }
                txCurrentSize++;
                txValuesSize += size;
             } catch (Exception e) {
-               log.warn("Failed to insert entry into cache", e);
+               if (remove) {
+                  log.warn("Failed to remove entry from cache", e);
+               } else {
+                  log.warn("Failed to insert entry into cache", e);
+               }
                try {
                   tx.rollback();
                } catch (Exception re) {
@@ -312,7 +370,7 @@ public class LoadDataStage extends AbstractDistStage {
                return true;
             }
             if (keyId < 0) {
-               log.info("Finished loading entries");
+               log.info(String.format("Finished %s entries", remove ? "removing" : "loading"));
                return false;
             }
          }
@@ -333,6 +391,16 @@ public class LoadDataStage extends AbstractDistStage {
       }
    }
 
+   private void delayRequest(long start, long currentTime, long keyIndex) {
+      if (requestPeriod > 0) {
+         long nanoDelay = TimeUnit.MILLISECONDS.toNanos(requestPeriod);
+         long timeToWait = TimeUnit.NANOSECONDS.toMillis(start + keyIndex * nanoDelay - currentTime);
+         if (timeToWait > 0) {
+            Utils.sleep(timeToWait);
+         }
+      }
+   }
+
    private void logLoaded(long entries, long size) {
       long prevEntryCount, currentEntryCount;
       do {
@@ -342,7 +410,8 @@ public class LoadDataStage extends AbstractDistStage {
       // just for logs - don't worry about those two not in sync
       long totalSize = sizeSum.addAndGet(size);
       if (prevEntryCount / logPeriod < currentEntryCount / logPeriod) {
-         log.infof("This node loaded %d entries (~%d bytes)", currentEntryCount, totalSize);
+         log.infof("This node %s %d entries (~%d bytes)",
+               remove ? "removed" : "loaded", currentEntryCount, totalSize);
       }
    }
 

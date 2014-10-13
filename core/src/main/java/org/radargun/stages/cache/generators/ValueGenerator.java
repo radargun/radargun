@@ -14,5 +14,5 @@ public interface ValueGenerator {
 
    int sizeOf(Object value);
 
-   boolean checkValue(Object value, int expectedSize);
+   boolean checkValue(Object value, Object key, int expectedSize);
 }

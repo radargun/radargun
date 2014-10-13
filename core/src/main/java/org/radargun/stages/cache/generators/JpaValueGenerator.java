@@ -53,7 +53,7 @@ public class JpaValueGenerator implements ValueGenerator {
    }
 
    @Override
-   public boolean checkValue(Object value, int expectedSize) {
+   public boolean checkValue(Object value, Object key, int expectedSize) {
       return clazz.isInstance(value) && ((JpaValue) value).check(expectedSize);
    }
 

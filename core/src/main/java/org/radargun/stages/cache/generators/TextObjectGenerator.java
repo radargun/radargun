@@ -44,7 +44,7 @@ public abstract class TextObjectGenerator implements ValueGenerator {
    }
 
    @Override
-   public boolean checkValue(Object value, int expectedSize) {
+   public boolean checkValue(Object value, Object key, int expectedSize) {
       String text = getText(value);
       return text != null && text.length() == expectedSize;
    }
