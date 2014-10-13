@@ -30,42 +30,42 @@ public class RegisterListenersStage extends AbstractDistStage {
    @InjectTrait // with infinispan70 plugin
    private CacheListeners listenersTrait;
 
-   private CacheListeners.CreatedListener createdListener;
-   private CacheListeners.EvictedListener evictedListener;
-   private CacheListeners.RemovedListener removedListener;
-   private CacheListeners.UpdatedListener updatedListener;
-
    @Override
    public void initOnSlave(SlaveState slaveState) {
       super.initOnSlave(slaveState);
-      createdListener = new CacheListeners.CreatedListener() {
-         @Override
-         public void created(Object key, Object value) {
-            log.trace("Created " + key + " -> " + value);
-         }
-      };
+      if (registerListeners){
+         CacheListeners.CreatedListener createdListener = new CacheListeners.CreatedListener() {
+            @Override
+            public void created(Object key, Object value) {
+               log.trace("Created " + key + " -> " + value);
+            }
+         };
+         slaveState.setCreatedListener(createdListener);
 
-      evictedListener = new CacheListeners.EvictedListener() {
-         @Override
-         public void evicted(Object key, Object value) {
-            log.trace("Evicted " + key + " -> " + value);
-         }
-      };
+         CacheListeners.EvictedListener evictedListener = new CacheListeners.EvictedListener() {
+            @Override
+            public void evicted(Object key, Object value) {
+               log.trace("Evicted " + key + " -> " + value);
+            }
+         };
+         slaveState.setEvictedListener(evictedListener);
 
-      removedListener = new CacheListeners.RemovedListener() {
-         @Override
-         public void removed(Object key, Object value) {
-            log.trace("Removed " + key + " -> " + value);
-         }
-      };
+         CacheListeners.RemovedListener removedListener = new CacheListeners.RemovedListener() {
+            @Override
+            public void removed(Object key, Object value) {
+               log.trace("Removed " + key + " -> " + value);
+            }
+         };
+         slaveState.setRemovedListener(removedListener);
 
-      updatedListener = new CacheListeners.UpdatedListener() {
-         @Override
-         public void updated(Object key, Object value) {
-            log.trace("Updated " + key + " -> " + value);
-         }
-      };
-
+         CacheListeners.UpdatedListener updatedListener = new CacheListeners.UpdatedListener() {
+            @Override
+            public void updated(Object key, Object value) {
+               log.trace("Updated " + key + " -> " + value);
+            }
+         };
+         slaveState.setUpdatedListener(updatedListener);
+      }
    }
 
    @Override
@@ -82,27 +82,27 @@ public class RegisterListenersStage extends AbstractDistStage {
    public void registerListeners() {
 
       checkListenersSupported();
-      if (createdListener != null)
-         listenersTrait.addCreatedListener(null, createdListener);
-      if (evictedListener != null)
-         listenersTrait.addEvictedListener(null, evictedListener);
-      if (removedListener != null)
-         listenersTrait.addRemovedListener(null, removedListener);
-      if (updatedListener != null)
-         listenersTrait.addUpdatedListener(null, updatedListener);
+      if (slaveState.getCreatedListener() != null)
+         listenersTrait.addCreatedListener(null, slaveState.getCreatedListener());
+      if (slaveState.getEvictedListener() != null)
+         listenersTrait.addEvictedListener(null, slaveState.getEvictedListener());
+      if (slaveState.getRemovedListener() != null)
+         listenersTrait.addRemovedListener(null, slaveState.getRemovedListener());
+      if (slaveState.getUpdatedListener() != null)
+         listenersTrait.addUpdatedListener(null, slaveState.getUpdatedListener());
    }
 
    public void unregisterListeners() {
 
       checkListenersSupported();
-      if (createdListener != null)
-         listenersTrait.removeCreatedListener(null, createdListener);
-      if (evictedListener != null)
-         listenersTrait.removeEvictedListener(null, evictedListener);
-      if (removedListener != null)
-         listenersTrait.removeRemovedListener(null, removedListener);
-      if (updatedListener != null)
-         listenersTrait.removeUpdatedListener(null, updatedListener);
+      if (slaveState.getCreatedListener() != null)
+         listenersTrait.removeCreatedListener(null, slaveState.getCreatedListener());
+      if (slaveState.getEvictedListener() != null)
+         listenersTrait.removeEvictedListener(null, slaveState.getEvictedListener());
+      if (slaveState.getRemovedListener() != null)
+         listenersTrait.removeRemovedListener(null, slaveState.getRemovedListener());
+      if (slaveState.getUpdatedListener() != null)
+         listenersTrait.removeUpdatedListener(null, slaveState.getUpdatedListener());
    }
 
    private void checkListenersSupported() {
