@@ -1,6 +1,7 @@
 package org.radargun.state;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.radargun.config.Cluster;
 import org.radargun.reporting.Timeline;
+import org.radargun.traits.CacheListeners;
 import org.radargun.utils.Utils;
 
 /**
@@ -28,6 +30,11 @@ public class SlaveState extends StateBase {
    private Map<Class<?>, Object> traits;
    private Timeline timeline;
    private List<ServiceListener> serviceListeners = new CopyOnWriteArrayList<ServiceListener>();
+
+   private CacheListeners.CreatedListener createdListener;
+   private CacheListeners.EvictedListener evictedListener;
+   private CacheListeners.RemovedListener removedListener;
+   private CacheListeners.UpdatedListener updatedListener;
 
    public void setLocalAddress(InetAddress localAddress) {
       this.localAddress = localAddress;
@@ -126,5 +133,37 @@ public class SlaveState extends StateBase {
 
    public Iterable<ServiceListener> getServiceListeners() {
       return Collections.unmodifiableCollection(serviceListeners);
+   }
+
+   public CacheListeners.CreatedListener getCreatedListener() {
+      return createdListener;
+   }
+
+   public void setCreatedListener(CacheListeners.CreatedListener createdListener) {
+      this.createdListener = createdListener;
+   }
+
+   public CacheListeners.EvictedListener getEvictedListener() {
+      return evictedListener;
+   }
+
+   public void setEvictedListener(CacheListeners.EvictedListener evictedListener) {
+      this.evictedListener = evictedListener;
+   }
+
+   public CacheListeners.RemovedListener getRemovedListener() {
+      return removedListener;
+   }
+
+   public void setRemovedListener(CacheListeners.RemovedListener removedListener) {
+      this.removedListener = removedListener;
+   }
+
+   public CacheListeners.UpdatedListener getUpdatedListener() {
+      return updatedListener;
+   }
+
+   public void setUpdatedListener(CacheListeners.UpdatedListener updatedListener) {
+      this.updatedListener = updatedListener;
    }
 }
