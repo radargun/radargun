@@ -429,6 +429,18 @@ public class ConfigSchemaGenerator implements ConfigSchema {
             Element enumeration = doc.createElementNS(NS_XS, XS_ENUMERATION);
             propertyRestriction.appendChild(enumeration);
             enumeration.setAttribute(XS_VALUE, e.toString());
+            try {
+               DocumentedValue documentedValue = type.getField(e.toString()).getAnnotation(DocumentedValue.class);
+               if (documentedValue != null) {
+                  Element annotation = doc.createElementNS(NS_XS, XS_ANNOTATION);
+                  enumeration.appendChild(annotation);
+                  Element documentation = doc.createElementNS(NS_XS, XS_DOCUMENTATION);
+                  annotation.appendChild(documentation);
+                  documentation.setTextContent(documentedValue.value());
+               }
+            } catch (NoSuchFieldException e1) {
+               throw new IllegalStateException("Enum should always have its constants as fields!", e1);
+            }
          }
       } else {
          // all the elements are just dropped
