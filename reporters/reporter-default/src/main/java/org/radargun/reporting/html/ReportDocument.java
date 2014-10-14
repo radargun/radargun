@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
@@ -30,27 +31,23 @@ import org.radargun.utils.Projections;
 public abstract class ReportDocument extends HtmlDocument {
    protected final Log log = LogFactory.getLog(getClass());
 
-   // TODO: make us directly configurable through property delegate object
    private int elementCounter = 0;
-   private int histogramBuckets = 40;
-   private double histogramPercentile = 99d;
-   private int histogramWidth = 800, histogramHeight = 600;
 
    protected final int maxConfigurations;
    protected final int maxIterations;
    protected final int maxClusters;
 
-   protected boolean separateClusterCharts;
+   protected final Configuration configuration;
    protected final String testName;
 
-   public ReportDocument(String targetDir, String testName, int maxConfigurations, int maxClusters, int maxIterations, boolean separateClusterCharts) {
+   public ReportDocument(String targetDir, String testName, int maxConfigurations, int maxClusters, int maxIterations, Configuration configuration) {
       super(targetDir, String.format("test_%s.html", testName), "Test " + testName);
 
       this.testName = testName;
       this.maxConfigurations = maxConfigurations;
       this.maxClusters = maxClusters;
       this.maxIterations = maxIterations;
-      this.separateClusterCharts = separateClusterCharts;
+      this.configuration = configuration;
    }
 
    @Override
@@ -128,7 +125,7 @@ public abstract class ReportDocument extends HtmlDocument {
 
    protected void createChart(String filename, String operation, String rangeAxisLabel, StatisticType statisticType) throws IOException {
       ComparisonChart chart = null;
-      boolean xLabelClusterSize = !separateClusterCharts && (maxClusters > 1 || maxIterations <= 1);
+      boolean xLabelClusterSize = !configuration.separateClusterCharts && (maxClusters > 1 || maxIterations <= 1);
 
       chart = generateChart(chart, operation, rangeAxisLabel, statisticType, xLabelClusterSize);
 
@@ -142,7 +139,7 @@ public abstract class ReportDocument extends HtmlDocument {
          int iterationIndex = 0;
          for (Aggregation aggregation : entry.getValue()) {
             if (chart == null) {
-               if ((maxClusters > 1 && !separateClusterCharts) || maxIterations> 1) {
+               if ((maxClusters > 1 && !configuration.separateClusterCharts) || maxIterations> 1) {
                   chart = new LineChart(xLabelClusterSize ? "Cluster size" : (aggregation.iterationValue() != null ? aggregation.iterationName() : "Iteration"), rangeAxisLabel);
                } else {
                   chart = new BarChart("Cluster size", rangeAxisLabel);
@@ -151,7 +148,7 @@ public abstract class ReportDocument extends HtmlDocument {
             String columnKey = aggregation.iterationName() == null ? String.valueOf(iterationIndex) : aggregation.iterationValue();
             try {
                String categoryName = entry.getKey().getConfiguration().name;
-               if (!separateClusterCharts && maxClusters > 1)
+               if (!configuration.separateClusterCharts && maxClusters > 1)
                   categoryName = String.format("%s_%s", categoryName, columnKey);
                if (!testName.isEmpty())
                   categoryName = String.format("%s_%s", categoryName, testName);
@@ -188,7 +185,7 @@ public abstract class ReportDocument extends HtmlDocument {
                @Override
                public boolean accept(Aggregation aggregation) {
                   OperationStats operationStats = aggregation.totalStats().getOperationsStats().get(operation);
-                  return operationStats != null && operationStats.getRepresentation(Histogram.class, histogramBuckets, histogramPercentile) != null;
+                  return operationStats != null && operationStats.getRepresentation(Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile) != null;
                }
             });
          }
@@ -279,7 +276,7 @@ public abstract class ReportDocument extends HtmlDocument {
       DefaultOutcome defaultOutcome = operationStats == null ? null : operationStats.getRepresentation(DefaultOutcome.class);
       Throughput throughput = defaultOutcome == null ? null : defaultOutcome.toThroughput(threads, period);
       MeanAndDev meanAndDev = operationStats == null ? null : operationStats.getRepresentation(MeanAndDev.class);
-      Histogram histogram = operationStats == null ? null : operationStats.getRepresentation(Histogram.class, histogramBuckets, histogramPercentile);
+      Histogram histogram = operationStats == null ? null : operationStats.getRepresentation(Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
 
       String rowStyle = suspect ? "background-color: #FFBBBB; " : (gray ? "background-color: #F0F0F0; " : "");
       rowStyle += "text-align: right; ";
@@ -297,7 +294,7 @@ public abstract class ReportDocument extends HtmlDocument {
             String filename = String.format("histogram_%s_%s_%d_%d_%s.png", testName, operation, cluster, iteration, node);
             try {
                HistogramChart chart = new HistogramChart().setData(operation, histogram);
-               chart.setWidth(histogramWidth).setHeight(histogramHeight);
+               chart.setWidth(configuration.histogramWidth).setHeight(configuration.histogramHeight);
                chart.save(directory + File.separator + filename);
                writeTD(String.format("<a href=\"%s\">show</a>", filename), rowStyle);
             } catch (IOException e) {
@@ -330,9 +327,26 @@ public abstract class ReportDocument extends HtmlDocument {
       write("    }\n}\n");
    }
 
+   protected abstract ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, boolean xLabelClusterSize);
+
    protected static enum StatisticType {
       MEAN_AND_DEV, ACTUAL_THROUGHPUT
    }
 
-   protected abstract ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, boolean xLabelClusterSize);
+   protected static class Configuration {
+      @Property(doc = "Generate separate charts for different cluster sizes. Default is false.")
+      protected boolean separateClusterCharts = false;
+
+      @Property(name = "histogram.buckets", doc = "Number of bars the histogram chart will show. Default is 40.")
+      protected int histogramBuckets = 40;
+
+      @Property(name = "histogram.percentile", doc = "Percentage of fastest responses that will be presented in the chart. Default is 99%.")
+      protected double histogramPercentile = 99d;
+
+      @Property(name = "histogram.chart.width", doc = "Width of the histogram chart in pixels. Default is 800.")
+      protected int histogramWidth = 800;
+
+      @Property(name = "histogram.chart.width", doc = "Height of the histogram chart in pixels. Default is 600.")
+      protected int histogramHeight = 600;
+   }
 }

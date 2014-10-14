@@ -18,8 +18,8 @@ public class TestReportDocument extends ReportDocument {
 
    private TestAggregations testAggregations;
 
-   public TestReportDocument(TestAggregations testAggregations, String targetDir, boolean separateClusterCharts) {
-      super(targetDir, testAggregations.testName(), testAggregations.byReports().size(), testAggregations.getAllClusters().size(), testAggregations.getMaxIterations(), separateClusterCharts);
+   public TestReportDocument(TestAggregations testAggregations, String targetDir, Configuration configuration) {
+      super(targetDir, testAggregations.testName(), testAggregations.byReports().size(), testAggregations.getAllClusters().size(), testAggregations.getMaxIterations(), configuration);
       this.testAggregations = testAggregations;
    }
 
@@ -38,7 +38,7 @@ public class TestReportDocument extends ReportDocument {
 
       for (String operation : testAggregations.getAllOperations()) {
          writeTag("h2", operation);
-         if (separateClusterCharts) {
+         if (configuration.separateClusterCharts) {
                for (Integer clusterSize : testAggregations.byClusterSize().keySet()) {
                   createAndWriteCharts(operation, "_" + clusterSize);
                   writeOperation(operation, testAggregations.byReports());
@@ -49,5 +49,4 @@ public class TestReportDocument extends ReportDocument {
          }
       }
    }
-
 }
