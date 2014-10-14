@@ -2,6 +2,7 @@ package org.radargun.reporting.html;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -263,7 +264,7 @@ public abstract class ReportDocument extends HtmlDocument {
                }
                int threads = node >= aggregation.nodeThreads().size() ? 0 : aggregation.nodeThreads().get(node);
                writeRepresentations(operationStats, operation, entry.getKey().getCluster().getClusterIndex(), iteration, "node" + node,
-                                    threads, period, hasHistograms, false, aggregation.anySuspect(operation));
+                     threads, period, hasHistograms, false, aggregation.anySuspect(operation));
             }
             write("</tr>\n");
          }
@@ -336,6 +337,9 @@ public abstract class ReportDocument extends HtmlDocument {
    protected static class Configuration {
       @Property(doc = "Generate separate charts for different cluster sizes. Default is false.")
       protected boolean separateClusterCharts = false;
+
+      @Property(doc = "List of test names that should be reported together. Default is empty.")
+      protected List<List<String>> combinedTests = Collections.EMPTY_LIST;
 
       @Property(name = "histogram.buckets", doc = "Number of bars the histogram chart will show. Default is 40.")
       protected int histogramBuckets = 40;

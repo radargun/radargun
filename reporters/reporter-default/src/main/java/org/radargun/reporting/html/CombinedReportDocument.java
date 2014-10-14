@@ -19,16 +19,14 @@ import org.radargun.utils.Projections;
  */
 public class CombinedReportDocument extends ReportDocument {
 
-   private static final String TEST_NAME = "combined";
    private List<TestAggregations> testAggregations;
-   Map<String, List<Report.Test>> tests;
    Set<String> operations = new HashSet<>();
 
-   public CombinedReportDocument(List<TestAggregations> testAggregations, String targetDir, Map<String, List<Report.Test>> tests, Configuration configuration) {
-      super(targetDir, TEST_NAME, Projections.max(Projections.project(tests.values(), new Projections.Func<List<Report.Test>, Integer>() {
+   public CombinedReportDocument(List<TestAggregations> testAggregations, String testName, String targetDir, Configuration configuration) {
+      super(targetDir, testName, Projections.max(Projections.project(testAggregations, new Projections.Func<TestAggregations, Integer>() {
          @Override
-         public Integer project(List<Report.Test> tests) {
-            return tests.size();
+         public Integer project(TestAggregations testAggregations) {
+            return testAggregations.byReports().size();
          }
       })), Projections.max(Projections.project(testAggregations, new Projections.Func<TestAggregations, Integer>() {
          @Override
@@ -41,7 +39,6 @@ public class CombinedReportDocument extends ReportDocument {
             return testAggregations.getMaxIterations();
          }
       })), configuration);
-      this.tests = tests;
       this.testAggregations = testAggregations;
       for (TestAggregations h : testAggregations) {
          operations.addAll(h.getAllOperations());
@@ -57,7 +54,7 @@ public class CombinedReportDocument extends ReportDocument {
    }
 
    public void writeTest() throws IOException {
-      writeTag("h1", "Test " + TEST_NAME);
+      writeTag("h1", "Test " + testName);
 
       for (TestAggregations ta : testAggregations) {
          for (Map.Entry<String, Map<Report, List<Report.TestResult>>> result : ta.results().entrySet()) {

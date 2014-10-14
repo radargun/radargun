@@ -1,0 +1,52 @@
+<!-- RadarGun 2.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <clusters>
+      <cluster size="2"/>
+   </clusters>
+
+   <configurations>
+      <config name="Infinispan 6.0 - distributed">
+         <setup plugin="infinispan60" file="dist-sync.xml" />
+      </config>
+   </configurations>
+
+   <scenario>
+      <service-start />
+
+      <!-- Preload the cache with data -->
+      <load-data num-entries="5000"/>
+
+      <basic-operations-test test-name="warmup" duration="10s" num-threads-per-node="10">
+         <key-selector>
+            <colliding-keys num-entries="5000" />
+         </key-selector>
+      </basic-operations-test>
+
+      <basic-operations-test test-name="concurrent" duration="10s" num-threads-per-node="10">
+         <key-selector>
+            <concurrent-keys total-entries="5000" />
+         </key-selector>
+      </basic-operations-test>
+
+      <basic-operations-test test-name="colliding" duration="10s" num-threads-per-node="10">
+         <key-selector>
+            <colliding-keys num-entries="5000" />
+         </key-selector>
+      </basic-operations-test>
+   </scenario>
+
+   <reports>
+      <reporter type="html">
+         <properties>
+            <!-- Notice the square brackets, you might create multiple combinations using
+                  [testA, testB], [testB, testC]
+              -->
+            <property name="testreport.combinedTests">[concurrent, colliding]</property>
+         </properties>
+      </reporter>
+   </reports>
+
+</benchmark>

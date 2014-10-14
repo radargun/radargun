@@ -26,23 +26,47 @@ public class HtmlReporter implements Reporter {
    private String targetDir = "results" + File.separator + "html";
 
    @PropertyDelegate(prefix = "testReport.")
-   private TestReportDocument.Configuration testReportConfig = new TestReportDocument.Configuration();
-
-   @Property(doc = "Generate combined charts for different tests. Default is false.")
-   private boolean combineTestReports = false;
+   private ReportDocument.Configuration testReportConfig = new ReportDocument.Configuration();
 
    @PropertyDelegate(prefix = "timeline.chart.")
    private TimelineDocument.Configuration timelineConfig = new TimelineDocument.Configuration();
 
    @Override
    public void run(Collection<Report> reports) {
+      Set<String> allTests = new TreeSet<>();
+      Set<String> combinedTests = new TreeSet<>();
+      for (List<String> combination : testReportConfig.combinedTests) {
+         StringBuilder sb = new StringBuilder();
+         for (String testName : combination) {
+            combinedTests.add(testName);
+            if (sb.length() != 0) sb.append('_');
+            sb.append(testName);
+         }
+         allTests.add(sb.toString());
+      }
+
+      Map<String, List<Report.Test>> testsByName = new HashMap<String, List<Report.Test>>();
+      for (Report report : reports) {
+         for(Report.Test t : report.getTests()) {
+            List<Report.Test> list = testsByName.get(t.name);
+            if (list == null) {
+               list = new ArrayList<>();
+               testsByName.put(t.name, list);
+            }
+            list.add(t);
+            if (!combinedTests.contains(t.name)) {
+               allTests.add(t.name);
+            }
+         }
+      }
+
       IndexDocument index = new IndexDocument(targetDir);
       try {
          index.open();
          index.writeConfigurations(reports);
          index.writeScenario(reports);
          index.writeTimelines(reports);
-         index.writeTests(reports, combineTestReports);
+         index.writeTests(allTests);
          index.writeFooter();
       } catch (IOException e) {
          log.error("Failed to write HTML report.", e);
@@ -63,26 +87,38 @@ public class HtmlReporter implements Reporter {
             timelineDocument.close();
          }
       }
-      Map<String, List<Report.Test>> tests = new HashMap<String, List<Report.Test>>();
-      for (Report report : reports) {
-         for(Report.Test t : report.getTests()) {
-            List<Report.Test> list = tests.get(t.name);
-            if (list == null) {
-               list = new ArrayList<Report.Test>();
-               tests.put(t.name, list);
-            }
-            list.add(t);
+
+      for (Map.Entry<String, List<Report.Test>> entry : testsByName.entrySet()) {
+         if (combinedTests.contains(entry.getKey())) {
+            // do not write TestReportDocument for combined test
+            continue;
+         }
+         TestAggregations ta = new TestAggregations(entry.getKey(), entry.getValue());
+         TestReportDocument testReport = new TestReportDocument(ta, targetDir, testReportConfig);
+         try {
+            testReport.open();
+            testReport.writeTest();
+         } catch (IOException e) {
+            log.error("Failed to create test report " + entry.getKey(), e);
+         } finally {
+            testReport.close();
          }
       }
-
-      if (combineTestReports) {
-         List<TestAggregations> testAggregations = new ArrayList<TestAggregations>();
-         for (Map.Entry<String, List<Report.Test>> entry : tests.entrySet()) {
-            TestAggregations ta = new TestAggregations(entry.getKey(), entry.getValue());
+      for (List<String> combined : testReportConfig.combinedTests) {
+         List<TestAggregations> testAggregations = new ArrayList<>();
+         StringBuilder sb = new StringBuilder();
+         for (String testName : combined) {
+            if (sb.length() != 0) sb.append('_');
+            sb.append(testName);
+            List<Report.Test> reportedTests = testsByName.get(testName);
+            if (reportedTests == null) {
+               log.warn("Test " + testName + " was not found!");
+               continue;
+            }
+            TestAggregations ta = new TestAggregations(testName, reportedTests);
             testAggregations.add(ta);
          }
-
-         CombinedReportDocument testReport = new CombinedReportDocument(testAggregations, targetDir, tests, testReportConfig);
+         CombinedReportDocument testReport = new CombinedReportDocument(testAggregations, sb.toString(), targetDir, testReportConfig);
          try {
             testReport.open();
             testReport.writeTest();
@@ -91,19 +127,6 @@ public class HtmlReporter implements Reporter {
          }
          finally {
             testReport.close();
-         }
-      } else {
-         for (Map.Entry<String, List<Report.Test>> entry : tests.entrySet()) {
-            TestAggregations ta = new TestAggregations(entry.getKey(), entry.getValue());
-            TestReportDocument testReport = new TestReportDocument(ta, targetDir, testReportConfig);
-            try {
-               testReport.open();
-               testReport.writeTest();
-            } catch (IOException e) {
-               log.error("Failed to create test report " + entry.getKey(), e);
-            } finally {
-               testReport.close();
-            }
          }
       }
 
