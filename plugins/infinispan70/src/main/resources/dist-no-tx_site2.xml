@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:infinispan:config:7.0 http://www.infinispan.org/schemas/infinispan-config-7.0.xsd"
+        xmlns="urn:infinispan:config:7.0">
+
+    <jgroups>
+        <stack-file name="jgroupsStack" path="jgroups-site2.xml"/>
+    </jgroups>
+
+    <cache-container name="default" default-cache="testCacheSite2">
+        <transport stack="jgroupsStack" lock-timeout="600000" cluster="default" />
+        <serialization></serialization>
+        <jmx>
+            <property name="enabled">true</property>
+        </jmx>
+        <distributed-cache name="testCacheSite2" mode="SYNC" remote-timeout="60000" statistics="true" l1-lifespan="-1" owners="2" segments="512" >
+            <locking acquire-timeout="3000" concurrency-level="1000" />
+            <backups>
+                <backup site="SITE1"/>
+            </backups>
+            <state-transfer timeout="60000" />
+        </distributed-cache>
+
+        <distributed-cache name="testCacheSite1_backup" mode="SYNC" remote-timeout="60000" statistics="true" l1-lifespan="-1" owners="2" segments="512">
+            <locking acquire-timeout="3000" concurrency-level="1000" />
+            <backup-for remote-cache="testCacheSite1" remote-site="SITE1"/>
+            <state-transfer timeout="60000" />
+        </distributed-cache>
+    </cache-container>
+
+</infinispan>
