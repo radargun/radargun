@@ -33,7 +33,6 @@ import org.jfree.ui.RectangleAnchor;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.TextAnchor;
 import org.radargun.config.Converter;
-import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
@@ -45,19 +44,13 @@ import org.radargun.reporting.Timeline;
  */
 public class TimelineChart {
    private static final Log log = LogFactory.getLog(TimelineChart.class);
-   protected static final TimeZone GMT = TimeZone.getTimeZone("GMT");
-
-   private final static Paint[] defaultPaints = ChartColor.createDefaultPaintArray();
+   private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
+   private static final Paint[] DEFAULT_PAINTS = ChartColor.createDefaultPaintArray();
    private static final int LABEL_OFFSET = 15;
    private static final int DOMAIN_OFFSET = 3;
 
-   @Property(doc = "Width of the chart in pixels. Default is 1024.")
    private int width = 1024;
-
-   @Property(doc = "Height of the chart in pixels. Default is 768.")
    private int height = 768;
-
-   @Property(doc = "Time unit for the horizontal axis. Default is seconds.", converter = TimeUnitConverter.class)
    private Class<? extends RegularTimePeriod> timePeriodClass = Second.class;
 
    private Paint paint;
@@ -77,9 +70,9 @@ public class TimelineChart {
    }
 
    public void setEvents(List<? extends Timeline.Event> events, int slaveIndex, long startTimestamp, long endTimestamp, double lowerBound, double upperBound) {
-      int paintIndex = slaveIndex % defaultPaints.length;
-      if (paintIndex < 0) paintIndex += defaultPaints.length;
-      paint = defaultPaints[paintIndex];
+      int paintIndex = slaveIndex % DEFAULT_PAINTS.length;
+      if (paintIndex < 0) paintIndex += DEFAULT_PAINTS.length;
+      paint = DEFAULT_PAINTS[paintIndex];
       this.startTimestamp = startTimestamp;
       this.endTimestamp = endTimestamp;
       TimeSeries series = new TimeSeries("Slave " + slaveIndex);
@@ -198,7 +191,12 @@ public class TimelineChart {
 
    public static int getColorForIndex(int slaveIndex) {
       if (slaveIndex < 0) return 0;
-      return ((Color) defaultPaints[slaveIndex % defaultPaints.length]).getRGB() & 0xFFFFFF;
+      return ((Color) DEFAULT_PAINTS[slaveIndex % DEFAULT_PAINTS.length]).getRGB() & 0xFFFFFF;
+   }
+
+   public void setDimensions(int width, int height) {
+      this.width = width;
+      this.height = height;
    }
 
    private static class TimeUnitConverter implements Converter<Class<? extends RegularTimePeriod>> {

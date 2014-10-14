@@ -25,8 +25,8 @@ public class HtmlReporter implements Reporter {
    @Property(doc = "Directory to put the reports. Default is results/html.")
    private String targetDir = "results" + File.separator + "html";
 
-   @Property(doc = "Generate separate charts for different cluster sizes. Default is false.")
-   private boolean separateClusterCharts = false;
+   @PropertyDelegate(prefix = "testReport.")
+   private TestReportDocument.Configuration testReportConfig = new TestReportDocument.Configuration();
 
    @Property(doc = "Generate combined charts for different tests. Default is false.")
    private boolean combineTestReports = false;
@@ -82,7 +82,7 @@ public class HtmlReporter implements Reporter {
             testAggregations.add(ta);
          }
 
-         CombinedReportDocument testReport = new CombinedReportDocument(testAggregations, targetDir, tests, separateClusterCharts);
+         CombinedReportDocument testReport = new CombinedReportDocument(testAggregations, targetDir, tests, testReportConfig);
          try {
             testReport.open();
             testReport.writeTest();
@@ -95,7 +95,7 @@ public class HtmlReporter implements Reporter {
       } else {
          for (Map.Entry<String, List<Report.Test>> entry : tests.entrySet()) {
             TestAggregations ta = new TestAggregations(entry.getKey(), entry.getValue());
-            TestReportDocument testReport = new TestReportDocument(ta, targetDir, separateClusterCharts);
+            TestReportDocument testReport = new TestReportDocument(ta, targetDir, testReportConfig);
             try {
                testReport.open();
                testReport.writeTest();

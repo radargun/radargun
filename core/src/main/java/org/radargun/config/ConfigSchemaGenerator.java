@@ -202,8 +202,8 @@ public class ConfigSchemaGenerator implements ConfigSchema {
       Element reporterSequence = createSequence(doc, reporterComplex);
       Element reportComplex = createComplexElement(doc, reporterSequence, ELEMENT_REPORT, 0, -1);
       Element propertiesComplex = createComplexElement(doc, reporterSequence, ELEMENT_PROPERTIES, 0, 1);
-      createReference(doc, createSequence(doc, reportComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY);
-      createReference(doc, createSequence(doc, propertiesComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY);
+      createReference(doc, createSequence(doc, reportComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY, 1, -1);
+      createReference(doc, createSequence(doc, propertiesComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY, 1, -1);
       addAttribute(doc, reporterComplex, ATTR_TYPE, true);
       String runType = generateSimpleType(doc, schema, ReporterConfiguration.RunCondition.class, DefaultConverter.class);
       addAttribute(doc, reporterComplex, ATTR_RUN, runType, null, false);

@@ -11,7 +11,6 @@ import java.util.TreeMap;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Property;
-import org.radargun.config.PropertyHelper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
@@ -117,7 +116,7 @@ public class TimelineDocument extends HtmlDocument {
             {
                log.debug("Generating chart for " + valueCategory);
                TimelineChart chart = new TimelineChart();
-               PropertyHelper.copyProperties(configuration, chart);
+               chart.setDimensions(configuration.width, configuration.height);
                chart.setEvents(values, timeline.slaveIndex, startTimestamp, endTimestamp, minValues.get(valueCategory) * 1.1, maxValues.get(valueCategory) * 1.1);
 
                String chartFile = String.format("timeline_%s_v%d_%d.png", configName, valueCategoryId, timeline.slaveIndex);
@@ -156,7 +155,7 @@ public class TimelineDocument extends HtmlDocument {
             if (events == null) continue;
 
             TimelineChart chart = new TimelineChart();
-            PropertyHelper.copyProperties(configuration, chart);
+            chart.setDimensions(configuration.width, configuration.height);
             chart.setEvents(events, timeline.slaveIndex, startTimestamp, endTimestamp, 0, 0);
 
             String chartFile = String.format("timeline_%s_e%d_%d.png", configName, eventCategories.get(eventCategory), timeline.slaveIndex);
@@ -224,10 +223,10 @@ public class TimelineDocument extends HtmlDocument {
    }
 
    public static class Configuration {
-      @Property(doc = "Width of the chart in pixels. Default is 1024.")
+      @Property(name = "chart.width", doc = "Width of the chart in pixels. Default is 1024.")
       private int width = 1024;
 
-      @Property(doc = "Height of the chart in pixels. Default is 500.")
+      @Property(name = "chart.height", doc = "Height of the chart in pixels. Default is 500.")
       private int height = 500;
    }
 }

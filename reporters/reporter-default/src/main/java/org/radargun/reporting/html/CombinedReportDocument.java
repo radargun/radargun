@@ -24,7 +24,7 @@ public class CombinedReportDocument extends ReportDocument {
    Map<String, List<Report.Test>> tests;
    Set<String> operations = new HashSet<>();
 
-   public CombinedReportDocument(List<TestAggregations> testAggregations, String targetDir, Map<String, List<Report.Test>> tests, boolean separateClusterCharts) {
+   public CombinedReportDocument(List<TestAggregations> testAggregations, String targetDir, Map<String, List<Report.Test>> tests, Configuration configuration) {
       super(targetDir, TEST_NAME, Projections.max(Projections.project(tests.values(), new Projections.Func<List<Report.Test>, Integer>() {
          @Override
          public Integer project(List<Report.Test> tests) {
@@ -40,7 +40,7 @@ public class CombinedReportDocument extends ReportDocument {
          public Integer project(TestAggregations testAggregations) {
             return testAggregations.getMaxIterations();
          }
-      })), separateClusterCharts);
+      })), configuration);
       this.tests = tests;
       this.testAggregations = testAggregations;
       for (TestAggregations h : testAggregations) {
@@ -68,7 +68,7 @@ public class CombinedReportDocument extends ReportDocument {
 
       for (String operation : operations) {
          writeTag("h2", operation);
-         if (separateClusterCharts) {
+         if (configuration.separateClusterCharts) {
             for (TestAggregations ta : testAggregations) {
                for (Integer clusterSize : ta.byClusterSize().keySet()) {
                   createAndWriteCharts(operation, "_" + clusterSize);
