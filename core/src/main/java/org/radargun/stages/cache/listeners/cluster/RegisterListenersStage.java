@@ -80,38 +80,31 @@ public class RegisterListenersStage extends AbstractDistStage {
    }
 
    public void registerListeners() {
-
-      checkListenersSupported();
-      if (createdListener != null)
+      if (createdListener != null && isSupported(CacheListeners.Type.CREATED))
          listenersTrait.addCreatedListener(null, createdListener);
-      if (evictedListener != null)
+      if (evictedListener != null && isSupported(CacheListeners.Type.EVICTED))
          listenersTrait.addEvictedListener(null, evictedListener);
-      if (removedListener != null)
+      if (removedListener != null && isSupported(CacheListeners.Type.REMOVED))
          listenersTrait.addRemovedListener(null, removedListener);
-      if (updatedListener != null)
+      if (updatedListener != null && isSupported(CacheListeners.Type.UPDATED))
          listenersTrait.addUpdatedListener(null, updatedListener);
    }
 
    public void unregisterListeners() {
-
-      checkListenersSupported();
-      if (createdListener != null)
+      if (createdListener != null && isSupported(CacheListeners.Type.CREATED))
          listenersTrait.removeCreatedListener(null, createdListener);
-      if (evictedListener != null)
+      if (evictedListener != null && isSupported(CacheListeners.Type.EVICTED))
          listenersTrait.removeEvictedListener(null, evictedListener);
-      if (removedListener != null)
+      if (removedListener != null && isSupported(CacheListeners.Type.REMOVED))
          listenersTrait.removeRemovedListener(null, removedListener);
-      if (updatedListener != null)
+      if (updatedListener != null && isSupported(CacheListeners.Type.UPDATED))
          listenersTrait.removeUpdatedListener(null, updatedListener);
    }
 
-   private void checkListenersSupported() {
+   private boolean isSupported(CacheListeners.Type type) {
       if (listenersTrait == null) {
          throw new IllegalArgumentException("Service does not support cache listeners");
       }
-      Collection<CacheListeners.Type> supported = listenersTrait.getSupportedListeners();
-      if (!supported.containsAll(Arrays.asList(CacheListeners.Type.CREATED, CacheListeners.Type.EVICTED, CacheListeners.Type.REMOVED, CacheListeners.Type.UPDATED))) {
-         throw new IllegalArgumentException("Service does not support required listener types; supported are: " + supported);
-      }
+      return listenersTrait.getSupportedListeners().contains(type);
    }
 }
