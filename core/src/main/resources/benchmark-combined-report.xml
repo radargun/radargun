@@ -40,12 +40,12 @@
 
    <reports>
       <reporter type="html">
-         <properties>
+         <html xmlns="urn:radargun:reporters:reporter-default:2.0">
             <!-- Notice the square brackets, you might create multiple combinations using
                   [testA, testB], [testB, testC]
               -->
-            <property name="testreport.combinedTests">[concurrent, colliding]</property>
-         </properties>
+            <test-report combined-tests="[concurrent, colliding]"/>
+         </html>
       </reporter>
    </reports>
 

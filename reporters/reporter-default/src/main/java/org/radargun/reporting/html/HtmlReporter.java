@@ -60,50 +60,40 @@ public class HtmlReporter implements Reporter {
          }
       }
 
-      IndexDocument index = new IndexDocument(targetDir);
-      try {
-         index.open();
-         index.writeConfigurations(reports);
-         index.writeScenario(reports);
-         index.writeTimelines(reports);
-         index.writeTests(allTests);
-         index.writeFooter();
-      } catch (IOException e) {
-         log.error("Failed to write HTML report.", e);
-      } finally {
-         index.close();
-      }
+      writeIndexDocument(reports, allTests);
+      writeTimelineDocuments(reports);
+      writeTestReportDocuments(combinedTests, testsByName);
+      writeCombinedReportDocuments(testsByName);
+      writeNormalizedConfigDocuments(reports);
+   }
+
+   private void writeNormalizedConfigDocuments(Collection<Report> reports) {
       for (Report report : reports) {
-         String configName = report.getConfiguration().name;
-
-         TimelineDocument timelineDocument = new TimelineDocument(timelineConfig, targetDir,
-               configName + "_" + report.getCluster().getClusterIndex(), configName + " on " + report.getCluster(), report.getTimelines(), report.getCluster());
-         try {
-            timelineDocument.open();
-            timelineDocument.writeTimelines();
-         } catch (IOException e) {
-            log.error("Failed to create timeline report " + configName, e);
-         } finally {
-            timelineDocument.close();
+         for (Configuration.Setup setup : report.getConfiguration().getSetups()) {
+            Set<Integer> slaves = report.getCluster().getSlaves(setup.group);
+            Set<String> normalized = new HashSet<>();
+            for (Map.Entry<Integer, Map<String, Properties>> entry : report.getNormalizedServiceConfigs().entrySet()) {
+               if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
+                  normalized.addAll(entry.getValue().keySet());
+               }
+            }
+            for (String config : normalized) {
+               NormalizedConfigDocument document = new NormalizedConfigDocument(
+                     targetDir, report.getConfiguration().name, setup.group, report.getCluster(), config, report.getNormalizedServiceConfigs(), slaves);
+               try {
+                  document.open();
+                  document.writeProperties();
+               } catch (IOException e) {
+                  log.error("Failed to write normalized configuration", e);
+               } finally {
+                  document.close();
+               }
+            }
          }
       }
+   }
 
-      for (Map.Entry<String, List<Report.Test>> entry : testsByName.entrySet()) {
-         if (combinedTests.contains(entry.getKey())) {
-            // do not write TestReportDocument for combined test
-            continue;
-         }
-         TestAggregations ta = new TestAggregations(entry.getKey(), entry.getValue());
-         TestReportDocument testReport = new TestReportDocument(ta, targetDir, testReportConfig);
-         try {
-            testReport.open();
-            testReport.writeTest();
-         } catch (IOException e) {
-            log.error("Failed to create test report " + entry.getKey(), e);
-         } finally {
-            testReport.close();
-         }
-      }
+   private void writeCombinedReportDocuments(Map<String, List<Report.Test>> testsByName) {
       for (List<String> combined : testReportConfig.combinedTests) {
          List<TestAggregations> testAggregations = new ArrayList<>();
          StringBuilder sb = new StringBuilder();
@@ -129,29 +119,57 @@ public class HtmlReporter implements Reporter {
             testReport.close();
          }
       }
+   }
 
-      for (Report report : reports) {
-         for (Configuration.Setup setup : report.getConfiguration().getSetups()) {
-            Set<Integer> slaves = report.getCluster().getSlaves(setup.group);
-            Set<String> normalized = new HashSet<>();
-            for (Map.Entry<Integer, Map<String, Properties>> entry : report.getNormalizedServiceConfigs().entrySet()) {
-               if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
-                  normalized.addAll(entry.getValue().keySet());
-               }
-            }
-            for (String config : normalized) {
-               NormalizedConfigDocument document = new NormalizedConfigDocument(
-                     targetDir, report.getConfiguration().name, setup.group, report.getCluster(), config, report.getNormalizedServiceConfigs(), slaves);
-               try {
-                  document.open();
-                  document.writeProperties();
-               } catch (IOException e) {
-                  log.error("Failed to write normalized configuration", e);
-               } finally {
-                  document.close();
-               }
-            }
+   private void writeTestReportDocuments(Set<String> combinedTests, Map<String, List<Report.Test>> testsByName) {
+      for (Map.Entry<String, List<Report.Test>> entry : testsByName.entrySet()) {
+         if (combinedTests.contains(entry.getKey())) {
+            // do not write TestReportDocument for combined test
+            continue;
          }
+         TestAggregations ta = new TestAggregations(entry.getKey(), entry.getValue());
+         TestReportDocument testReport = new TestReportDocument(ta, targetDir, testReportConfig);
+         try {
+            testReport.open();
+            testReport.writeTest();
+         } catch (IOException e) {
+            log.error("Failed to create test report " + entry.getKey(), e);
+         } finally {
+            testReport.close();
+         }
+      }
+   }
+
+   private void writeTimelineDocuments(Collection<Report> reports) {
+      for (Report report : reports) {
+         String configName = report.getConfiguration().name;
+
+         TimelineDocument timelineDocument = new TimelineDocument(timelineConfig, targetDir,
+               configName + "_" + report.getCluster().getClusterIndex(), configName + " on " + report.getCluster(), report.getTimelines(), report.getCluster());
+         try {
+            timelineDocument.open();
+            timelineDocument.writeTimelines();
+         } catch (IOException e) {
+            log.error("Failed to create timeline report " + configName, e);
+         } finally {
+            timelineDocument.close();
+         }
+      }
+   }
+
+   private void writeIndexDocument(Collection<Report> reports, Set<String> allTests) {
+      IndexDocument index = new IndexDocument(targetDir);
+      try {
+         index.open();
+         index.writeConfigurations(reports);
+         index.writeScenario(reports);
+         index.writeTimelines(reports);
+         index.writeTests(allTests);
+         index.writeFooter();
+      } catch (IOException e) {
+         log.error("Failed to write HTML report.", e);
+      } finally {
+         index.close();
       }
    }
 }

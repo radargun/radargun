@@ -384,7 +384,7 @@ public abstract class ReportDocument extends HtmlDocument {
       @Property(name = "histogram.chart.width", doc = "Width of the histogram chart in pixels. Default is 800.")
       protected int histogramWidth = 800;
 
-      @Property(name = "histogram.chart.width", doc = "Height of the histogram chart in pixels. Default is 600.")
+      @Property(name = "histogram.chart.height", doc = "Height of the histogram chart in pixels. Default is 600.")
       protected int histogramHeight = 600;
 
       @Property(doc = "Show response time at certain percentiles. Default is 95% and 99%.")
