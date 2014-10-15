@@ -298,6 +298,71 @@
                </execution>
 
                <execution>
+                  <id>prepare_core</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <target>
+                        <echo message="Packaging the Core and common scripts" />
+                        <copy todir="${distribution.artifact}">
+                           <fileset dir="core/target/distribution/radargun-core-bin/radargun-core">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+                        <mkdir dir="${distribution.artifact}/specific" />
+                        <copy todir="${distribution.artifact}/specific">
+                           <fileset dir="specific/jpa/target" erroronmissingdir="false">
+                              <include name="radargun-jpa-*.jar" />
+                           </fileset>
+                        </copy>
+                        <copy todir="${distribution.artifact}/bin">
+                           <fileset dir="bin">
+                              <include name="**/*" />
+                           </fileset>
+                        </copy>
+                        <chmod perm="ugo+rwx" type="file">
+                           <fileset dir="${distribution.artifact}/bin">
+                              <include name="**/*.sh" />
+                              <include name="**/*.py" />
+                           </fileset>
+                        </chmod>
+                        <mkdir dir="${distribution.artifact}/schema" />
+                     </target>
+                  </configuration>
+               </execution>
+
+               <execution>
+                  <id>prepare_extensions</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <target>
+                        <echo message="Packaging extensions: " />
+
+                        <fileset id="core_jars" dir="core/target/distribution/radargun-core-bin/radargun-core/lib">
+                           <include name="*.jar" />
+                        </fileset>
+                        <pathconvert pathsep="," property="core_jar_list" refid="core_jars">
+                           <mapper type="flatten" />
+                        </pathconvert>
+
+                        <ac:for list="${extension.example},${extension.hdrhistogram}" param="extension" xmlns:ac="antlib:net.sf.antcontrib">
+                           <sequential>
+                              <echo message="Packaging extension @{extension}..." />
+                              <copy todir="${distribution.artifact}/lib">
+                                 <fileset dir="extensions/@{extension}/target/distribution/@{extension}-bin/@{extension}/lib" excludes="${core_jar_list}"/>
+                              </copy>
+                           </sequential>
+                        </ac:for>
+                     </target>
+                  </configuration>
+               </execution>
+
+               <execution>
                   <id>prepare_plugins</id>
                   <phase>prepare-package</phase>
                   <goals>
@@ -387,6 +452,9 @@
                         <pathconvert pathsep="," property="core_jar_list" refid="core_jars">
                            <mapper type="flatten" />
                         </pathconvert>
+                        <path id="core_and_extensions">
+                           <fileset dir="${distribution.artifact}/lib" includes="*.jar" />
+                        </path>
 
                         <ac:for list="${reporter.default}" param="reporter" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
@@ -394,72 +462,14 @@
                               <copy todir="${distribution.artifact}/reporters/@{reporter}">
                                  <fileset dir="reporters/@{reporter}/target/distribution/@{reporter}-bin/@{reporter}/lib" excludes="${core_jar_list}"/>
                               </copy>
+                              <java classname="org.radargun.config.ReporterSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
+                                 <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                                 <arg value="${distribution.artifact}/schema" />
+                                 <arg value="${distribution.artifact}/reporters/@{reporter}" />
+                                 <arg value="@{reporter}" />
+                              </java>
                            </sequential>
                         </ac:for>
-                     </target>
-                  </configuration>
-               </execution>
-
-               <execution>
-                  <id>prepare_extensions</id>
-                  <phase>prepare-package</phase>
-                  <goals>
-                     <goal>run</goal>
-                  </goals>
-                  <configuration>
-                     <target>
-                        <echo message="Packaging extensions: " />
-
-                        <fileset id="core_jars" dir="core/target/distribution/radargun-core-bin/radargun-core/lib">
-                           <include name="*.jar" />
-                        </fileset>
-                        <pathconvert pathsep="," property="core_jar_list" refid="core_jars">
-                           <mapper type="flatten" />
-                        </pathconvert>
-
-                        <ac:for list="${extension.example},${extension.hdrhistogram}" param="extension" xmlns:ac="antlib:net.sf.antcontrib">
-                           <sequential>
-                              <echo message="Packaging extension @{extension}..." />
-                              <copy todir="${distribution.artifact}/lib">
-                                 <fileset dir="extensions/@{extension}/target/distribution/@{extension}-bin/@{extension}/lib" excludes="${core_jar_list}"/>
-                              </copy>
-                           </sequential>
-                        </ac:for>
-                     </target>
-                  </configuration>
-               </execution>
-
-               <execution>
-                  <id>prepare_core</id>
-                  <phase>prepare-package</phase>
-                  <goals>
-                     <goal>run</goal>
-                  </goals>
-                  <configuration>
-                     <target>
-                        <echo message="Packaging the Core and common scripts" />
-                        <copy todir="${distribution.artifact}">
-                           <fileset dir="core/target/distribution/radargun-core-bin/radargun-core">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-			               <mkdir dir="${distribution.artifact}/specific" />
-                        <copy todir="${distribution.artifact}/specific">
-                           <fileset dir="specific/jpa/target" erroronmissingdir="false">
-                              <include name="radargun-jpa-*.jar" />
-                           </fileset>
-                        </copy>
-                        <copy todir="${distribution.artifact}/bin">
-                           <fileset dir="bin">
-                              <include name="**/*" />
-                           </fileset>
-                        </copy>
-                        <chmod perm="ugo+rwx" type="file">
-                           <fileset dir="${distribution.artifact}/bin">
-                              <include name="**/*.sh" />
-                              <include name="**/*.py" />
-                           </fileset>
-                        </chmod>
                      </target>
                   </configuration>
                </execution>
@@ -476,7 +486,6 @@
                         <path id="core_and_extensions">
                            <fileset dir="${distribution.artifact}/lib" includes="*.jar" />
                         </path>
-                        <mkdir dir="${distribution.artifact}/schema" />
                         <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
                            <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
                            <arg value="${distribution.artifact}/schema" />

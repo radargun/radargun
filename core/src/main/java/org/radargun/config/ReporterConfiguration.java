@@ -36,15 +36,19 @@ public class ReporterConfiguration {
     * Single report - set of properties, in fact.
     */
    public class Report {
-      private final Map<String, String> properties = new HashMap<String, String>();
+      private final Map<String, Definition> properties = new HashMap<>();
 
-      public void addProperty(String name, String value) {
-         if (properties.put(name, value) != null) {
+      public boolean isPropertyDefined(String name) {
+         return properties.containsKey(name);
+      }
+
+      public void addProperty(String name, Definition definition) {
+         if (properties.put(name, definition) != null) {
             throw new IllegalArgumentException("Property '" + name + "' already defined!");
          }
       }
 
-      public Map<String, String> getProperties() {
+      public Map<String, Definition> getProperties() {
          return Collections.unmodifiableMap(properties);
       }
    }

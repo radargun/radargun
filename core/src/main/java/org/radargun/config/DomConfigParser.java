@@ -4,12 +4,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.radargun.Properties;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.reporting.ReporterHelper;
 import org.radargun.stages.ScenarioCleanupStage;
 import org.radargun.stages.ScenarioDestroyStage;
 import org.radargun.stages.ScenarioInitStage;
@@ -30,6 +32,7 @@ import org.w3c.dom.Text;
  */
 public class DomConfigParser extends ConfigParser implements ConfigSchema {
    private static Log log = LogFactory.getLog(DomConfigParser.class);
+   private static final String ATTR_XMLNS = "xmlns";
 
    public MasterConfig parseConfig(String config) throws Exception {
       //the content in the new file is too dynamic, let's just use DOM for now
@@ -137,7 +140,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          // no clusters, leave empty
          return;
       } else if (!ELEMENT_CLUSTERS.equals(clustersElement.getNodeName())) {
-         throwExpected(clustersElement.getNodeName(), new String[] { ELEMENT_LOCAL, ELEMENT_CLUSTERS });
+         throw unexpected(clustersElement.getNodeName(), new String[]{ELEMENT_LOCAL, ELEMENT_CLUSTERS});
       }
       if (masterConfig.getPort() == 0 || masterConfig.getHost() == null) {
          throw new IllegalArgumentException("Master not configured for distributed scenario!");
@@ -167,7 +170,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                }
             }
          } else {
-            throwExpected(childElement.getNodeName(), new String[] { ELEMENT_CLUSTER, ELEMENT_SCALE} );
+            throw unexpected(childElement.getNodeName(), new String[]{ELEMENT_CLUSTER, ELEMENT_SCALE});
          }
          System.setProperty(Properties.PROPERTY_CLUSTER_SIZE, "");
       }
@@ -232,6 +235,10 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       }
    }
 
+   private IllegalArgumentException notExternal(Element element) {
+      return new IllegalArgumentException("Element " + element.getNodeName() + " does not refer to any external schema.");
+   }
+
    private void parseScenario(Scenario scenario, Element scenarioElement) {
       assertName(ELEMENT_SCENARIO, scenarioElement);
       NodeList childNodes = scenarioElement.getChildNodes();
@@ -248,6 +255,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       Map<String, Definition> properties = new HashMap<String, Definition>();
       for (int attrIndex = 0; attrIndex < attributes.getLength(); attrIndex++) {
          Attr attr = (Attr) attributes.item(attrIndex);
+         if (ATTR_XMLNS.equals(attr.getName())) continue;
          properties.put(attr.getName(), new SimpleDefinition(attr.getValue()));
       }
       if (!subElements) {
@@ -282,6 +290,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       ComplexDefinition definition = new ComplexDefinition();
       for (int i = 0; i < attributes.getLength(); ++i) {
          Attr attr = (Attr) attributes.item(i);
+         if (ATTR_XMLNS.equals(attr.getName())) continue;
          definition.add(attr.getName(), new SimpleDefinition(attr.getValue()));
       }
       for (int i = 0; i < children.getLength(); ++i) {
@@ -313,48 +322,36 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          String run = getAttribute(reporterElement, ATTR_RUN, ReporterConfiguration.RunCondition.ALWAYS.name());
          ReporterConfiguration reporter = new ReporterConfiguration(type, ReporterConfiguration.RunCondition.valueOf(run.toUpperCase(Locale.ENGLISH)));
          NodeList reportElements = reporterElement.getChildNodes();
-         Map<String, String> commonProperties = new HashMap<String, String>();
+         Map<String, Definition> commonProperties = new HashMap<>();
+         Set<String> reporterNames = ReporterHelper.getReporterNames();
+         String[] expectedReporters = reporterNames.toArray(new String[reporterNames.size()]);
+         String[] expectedElements = reporterNames.toArray(new String[reporterNames.size() + 1]);
+         expectedElements[expectedElements.length - 1] = ELEMENT_REPORT;
          for (int j = 0; j < reportElements.getLength(); ++j) {
             if (!(reportElements.item(j) instanceof Element)) continue;
-            Element reportElement = (Element) reportElements.item(j);
-            if (ELEMENT_REPORT.equals(reportElement.getNodeName())) {
+            Element element = (Element) reportElements.item(j);
+            if (ELEMENT_REPORT.equals(element.getNodeName())) {
                ReporterConfiguration.Report report = reporter.addReport();
-               NodeList properties = reportElement.getChildNodes();
-               for (int k = 0; k < properties.getLength(); ++k) {
-                  if (!(properties.item(k) instanceof Element)) continue;
-                  Element propertyElement = (Element) properties.item(k);
-                  assertName(ELEMENT_PROPERTY, propertyElement);
-                  String propertyName = getAttribute(propertyElement, ATTR_NAME);
-                  String content = propertyElement.getTextContent();
-                  if (content == null) {
-                     throw new IllegalArgumentException("Property cannot have null content!");
-                  }
-                  report.addProperty(propertyName, Evaluator.parseString(content.trim()));
-               }
-            } else if (ELEMENT_PROPERTIES.equals(reportElement.getNodeName())) {
-               NodeList properties = reportElement.getChildNodes();
-               for (int k = 0; k < properties.getLength(); ++k) {
-                  if (!(properties.item(k) instanceof Element)) continue;
-                  Element propertyElement = (Element) properties.item(k);
-                  assertName(ELEMENT_PROPERTY, propertyElement);
-                  String propertyName = getAttribute(propertyElement, ATTR_NAME);
-                  String content = propertyElement.getTextContent();
-                  if (content == null) {
-                     throw new IllegalArgumentException("Property cannot have null content!");
-                  }
-                  if (commonProperties.put(propertyName, Evaluator.parseString(content.trim())) != null) {
-                     throw new IllegalArgumentException("Property '" + propertyName + "' already defined!");
+               NodeList reportChildren = element.getChildNodes();
+               for (int k = 0; k < reportChildren.getLength(); ++k) {
+                  if (!(reportChildren.item(k) instanceof Element)) continue;
+                  Element childElement = (Element) reportChildren.item(k);
+                  for (Map.Entry<String, Definition> property : parseReportProperties(type, childElement, expectedReporters).entrySet()) {
+                     report.addProperty(property.getKey(), property.getValue());
                   }
                }
             } else {
-               throwExpected(reportElement.getNodeName(), new String[] { ELEMENT_REPORT, ELEMENT_PROPERTIES });
+               for (Map.Entry<String, Definition> property : parseReportProperties(type, element, expectedElements).entrySet()) {
+                  commonProperties.put(property.getKey(), property.getValue());
+               }
             }
          }
          if (reporter.getReports().isEmpty()) {
             reporter.addReport(); // default one
          }
          for (ReporterConfiguration.Report report : reporter.getReports()) {
-            for (Map.Entry<String, String> property : commonProperties.entrySet()) {
+            for (Map.Entry<String, Definition> property : commonProperties.entrySet()) {
+               if (report.isPropertyDefined(property.getKey())) continue;
                report.addProperty(property.getKey(), property.getValue());
             }
          }
@@ -362,13 +359,25 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       }
    }
 
-   private void throwExpected(String found, String[] expected) {
+   private Map<String, Definition> parseReportProperties(String type, Element element, String[] expectedElements) {
+      if (!element.hasAttribute(ATTR_XMLNS)) {
+         throw notExternal(element);
+      } else if (!type.equals(element.getNodeName())) {
+         throw new IllegalArgumentException("Expecting reporter type " + type + " but " + element.getNodeName() + " was used.");
+      } else if (ReporterHelper.isRegistered(element.getNodeName())) {
+         return parseProperties(element, true);
+      } else {
+         throw unexpected(element.getNodeName(), expectedElements);
+      }
+   }
+
+   private IllegalArgumentException unexpected(String found, String[] expected) {
       StringBuilder sb = new StringBuilder("Found '").append(found).append("', expected one of ");
       for (int i = 0; i < expected.length; ++i) {
          sb.append('\'').append(expected[i]).append('\'');
          if (i != expected.length - 1) sb.append(", ");
       }
-      throw new IllegalArgumentException(sb.toString());
+      return new IllegalArgumentException(sb.toString());
    }
 
    private void addScenarioItem(Scenario scenario, Element element) {
