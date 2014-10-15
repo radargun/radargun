@@ -129,11 +129,26 @@ public class InfinispanEmbeddedService {
    }
 
    protected void stopCaches() {
+      try {
+         cacheManager.stop();
+      } finally {
+         caches.clear();
+         forcedCleanup();
+      }
+   }
+
+   protected void forcedCleanup() {
+      try {
+         TxControl.disable(true);
+      } catch (Exception e) {
+         log.error("Failed to stop transaction manager", e);
+      }
+      try {
+         TransactionReaper.terminate(true);
+      } catch (Exception e) {
+         log.error("Failed to stop transaction reaper", e);
+      }
       String jmxDomain = getJmxDomain();
-      cacheManager.stop();
-      caches.clear();
-      TxControl.disable(true);
-      TransactionReaper.terminate(true);
       MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
       try {
          for (ObjectName objectName : mbeanServer.queryNames(new ObjectName(jmxDomain + ":*"), null)) {
@@ -144,7 +159,7 @@ public class InfinispanEmbeddedService {
             }
          }
       } catch (MalformedObjectNameException e) {
-         log.warn("Failed to unregister MBeans", e);
+         log.error("Failed to unregister MBeans", e);
       }
    }
 
