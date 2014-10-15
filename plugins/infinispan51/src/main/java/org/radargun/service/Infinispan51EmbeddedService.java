@@ -2,7 +2,9 @@ package org.radargun.service;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.Configuration;
@@ -13,6 +15,7 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.transaction.LockingMode;
 import org.infinispan.transaction.TransactionMode;
+import org.jgroups.JChannel;
 import org.radargun.Service;
 import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
@@ -33,6 +36,9 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
 
    protected InfinispanPartitionableLifecycle partitionable;
    protected InfinispanTopologyHistory topologyAware;
+
+   // stores channels used in JGroups for cleanup after unsuccessful shutdown
+   protected Set<JChannel> jgroupsChannels = new HashSet<>();
 
    // rather dirty hack to replace KeyGeneratorAware
    private static Infinispan51EmbeddedService instance;
@@ -88,6 +94,7 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
    protected void startCaches() throws Exception {
       super.startCaches();
       topologyAware.registerListener(getCache(null));
+      jgroupsChannels.addAll(partitionable.getChannels());
    }
 
    @Override
@@ -100,6 +107,19 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
          }
       }
       super.stopCaches();
+   }
+
+   @Override
+   protected void forcedCleanup() {
+      for (JChannel channel : jgroupsChannels) {
+         try {
+            channel.close();
+         } catch (Exception e) {
+            log.error("Failed to close channel " + channel.getName(), e);
+         }
+      }
+      jgroupsChannels.clear();
+      super.forcedCleanup();
    }
 
    @Override
