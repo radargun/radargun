@@ -63,6 +63,6 @@ public class ArgsConverter implements Converter<List<String>> {
 
    @Override
    public String allowedPattern(Type type) {
-      return ".*";
+      return ANY_MULTI_LINE;
    }
 }

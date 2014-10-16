@@ -150,7 +150,7 @@ public class ProcessService {
 
       @Override
       public String allowedPattern(Type type) {
-         return ".*";
+         return Converter.ANY_MULTI_LINE;
       }
    }
 
