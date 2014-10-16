@@ -26,7 +26,7 @@ public class InfinispanPartitionableLifecycle extends InfinispanKillableLifecycl
 
    @Override
    public void setMembersInPartition(int slaveIndex, Set<Integer> members) {
-      List<JChannel> channels = getChannels(null, true);
+      List<JChannel> channels = getChannels(null);
       log.trace("Found " + channels.size() + " channels");
       for (JChannel channel : channels) {
          setPartitionInChannel(channel, slaveIndex, members);
@@ -74,7 +74,7 @@ public class InfinispanPartitionableLifecycle extends InfinispanKillableLifecycl
       protected void startJGroupsChannelIfNeeded() {
          log.trace("My index is " + mySlaveIndex + " and these slaves should be reachable: " + initiallyReachable);
          if (mySlaveIndex >= 0 && initiallyReachable != null) {
-            List<JChannel> channels = getChannels((JChannel) this.channel, true);
+            List<JChannel> channels = getChannels((JChannel) this.channel);
             log.trace("Found " + channels.size() + " channels");
             for (JChannel channel : channels) {
                setPartitionInChannel(channel, mySlaveIndex, initiallyReachable);
