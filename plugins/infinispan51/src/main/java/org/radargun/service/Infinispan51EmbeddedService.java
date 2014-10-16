@@ -19,6 +19,7 @@ import org.jgroups.JChannel;
 import org.radargun.Service;
 import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
+import org.radargun.utils.TimeConverter;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -33,6 +34,10 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
 
    @Property(doc = "List of caches that should be removed prior to CacheManager.stop() - workarounds issues when stopping the server.")
    protected List<String> removedCaches = Collections.EMPTY_LIST;
+
+   @Property(doc = "Timeout for retrieving the JGroupsTransport and its channels. Default is 2 minutes.",
+         converter = TimeConverter.class)
+   public long channelRetrievalTimeout = 120000;
 
    protected InfinispanPartitionableLifecycle partitionable;
    protected InfinispanTopologyHistory topologyAware;

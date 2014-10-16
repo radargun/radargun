@@ -45,7 +45,7 @@ public class InfinispanEmbeddedService {
 
    protected final InfinispanLifecycle lifecycle;
 
-   protected DefaultCacheManager cacheManager;
+   protected volatile DefaultCacheManager cacheManager;
    protected volatile boolean enlistExtraXAResource;
    protected Map<String, Cache> caches = new HashMap<String, Cache>();
 

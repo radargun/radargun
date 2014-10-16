@@ -24,8 +24,11 @@ import org.radargun.traits.Killable;
  */
 public class InfinispanKillableLifecycle extends InfinispanLifecycle implements Killable {
 
-   public InfinispanKillableLifecycle(Infinispan51EmbeddedService wrapper) {
-      super(wrapper);
+   protected Infinispan51EmbeddedService service;
+
+   public InfinispanKillableLifecycle(Infinispan51EmbeddedService service) {
+      super(service);
+      this.service = service;
    }
 
    private enum KillRequest {
@@ -143,10 +146,11 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
    }
 
    protected List<JChannel> getChannels() {
-      return getChannels(null, false);
+      return getChannels(null);
    }
          
-   protected List<JChannel> getChannels(JChannel parentChannel, boolean failOnNotReady) {
+   protected List<JChannel> getChannels(JChannel parentChannel) {
+      long deadline = System.currentTimeMillis() + service.channelRetrievalTimeout;
       List<JChannel> list = new ArrayList<JChannel>();
       if (parentChannel != null) {
          list.add(parentChannel);
@@ -154,7 +158,10 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
       }
       JGroupsTransport transport;
       while (service.cacheManager == null) {
-         notReadyMessage("Cache manager is not ready", failOnNotReady);
+         if (System.currentTimeMillis() > deadline) {
+            return list;
+         }
+         log.trace("Cache Manager is not ready");
          Thread.yield();
       }
       // For local caches it has there is no transport - check that we have at least one clustered cache
@@ -169,26 +176,24 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
       for (;;) {
          transport = (JGroupsTransport) ((DefaultCacheManager) service.cacheManager).getTransport();
          if (transport != null) break;
-         notReadyMessage("Transport is not ready", failOnNotReady);
+         if (System.currentTimeMillis() > deadline) {
+            return list;
+         }
+         log.trace("Transport is not ready");
          Thread.yield();
       }
       JChannel channel;
       for(;;) {
          channel = (JChannel) transport.getChannel();
          if (channel != null && channel.getName() != null && channel.isOpen()) break;
-         notReadyMessage("Channel " + channel + " is not ready", failOnNotReady);
+         if (System.currentTimeMillis() > deadline) {
+            return list;
+         }
+         log.trace("Channel " + channel + " is not ready");
          Thread.yield();
       }
       list.add(channel);
       return list;
-   }
-
-   private void notReadyMessage(String message, boolean failOnNotAvailable) {
-      if (failOnNotAvailable) {
-         //throw new IllegalStateException(message);
-      } else {
-         log.trace("Cache Manager is not ready");
-      }
    }
 
    protected void startDiscarding() throws InterruptedException {

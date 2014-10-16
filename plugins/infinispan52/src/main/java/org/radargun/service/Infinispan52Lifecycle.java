@@ -16,10 +16,10 @@ public class Infinispan52Lifecycle extends InfinispanPartitionableLifecycle {
    }
 
    @Override
-   protected List<JChannel> getChannels(JChannel parentChannel, boolean failOnNotReady) {
+   protected List<JChannel> getChannels(JChannel parentChannel) {
       List<JChannel> list;
       if (parentChannel == null) {
-         list = super.getChannels(null, failOnNotReady);
+         list = super.getChannels(null);
       } else {
          list = new ArrayList<JChannel>();
          list.add(parentChannel);
