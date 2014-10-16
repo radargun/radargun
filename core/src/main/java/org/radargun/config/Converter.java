@@ -8,13 +8,14 @@ import java.lang.reflect.Type;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface Converter<T> {
-   public T convert(String string, Type type);
-   public String convertToString(T value);
+   String ANY_MULTI_LINE = "(.|\n|\r)*";
+
+   T convert(String string, Type type);
+   String convertToString(T value);
 
    /**
     * @return Regexp pattern of allowed input strings
     * @param type
     */
-   public String allowedPattern(Type type);
-
+   String allowedPattern(Type type);
 }

@@ -36,6 +36,6 @@ public class ObjectConverter implements Converter<Object> {
 
    @Override
    public String allowedPattern(Type type) {
-      return ".*";
+      return "string .*|true|false|" + NUMBER_CONVERTER.allowedPattern(type);
    }
 }

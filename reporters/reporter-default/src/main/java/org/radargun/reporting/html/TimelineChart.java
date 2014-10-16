@@ -226,7 +226,7 @@ public class TimelineChart {
 
       @Override
       public String allowedPattern(Type type) {
-         return ".*";
+         return "millisecond|second|minute|hour";
       }
    }
 }

@@ -258,11 +258,13 @@ public class PropertyHelper {
 
    private static void setPropertyFromString(Object target, String propName, Path path, String propertyString) {
       Class<? extends Converter> converterClass = path.getTargetAnnotation().converter();
+      String evaluated = null;
       try {
          Constructor<? extends Converter> ctor = converterClass.getDeclaredConstructor();
          ctor.setAccessible(true);
          Converter converter = ctor.newInstance();
-         path.set(target, converter.convert(Evaluator.parseString(propertyString), path.getTargetGenericType()));
+         evaluated = Evaluator.parseString(propertyString);
+         path.set(target, converter.convert(evaluated, path.getTargetGenericType()));
       } catch (InstantiationException e) {
          log.errorf(e, "Cannot instantiate converter %s for setting %s (%s)",
                converterClass.getName(), path, propName);
@@ -272,7 +274,7 @@ public class PropertyHelper {
                converterClass.getName(), path, propName);
          throw new IllegalArgumentException(e);
       } catch (Throwable t) {
-         log.error("Failed to convert value " + propertyString, t);
+         log.errorf(t, "Failed to convert value '%s' evaluated to '%s'", propertyString, evaluated);
          throw new IllegalArgumentException(t);
       }
    }

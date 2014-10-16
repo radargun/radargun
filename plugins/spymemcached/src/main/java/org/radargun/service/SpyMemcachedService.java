@@ -101,7 +101,7 @@ public class SpyMemcachedService implements Lifecycle {
       public List<InetSocketAddress> convert(String servers, Type type) {
          List<InetSocketAddress> addresses = new ArrayList<InetSocketAddress>();
          for (String server : servers.split(";")) {
-            Matcher matcher = ADDRESS_PATTERN.matcher(server);
+            Matcher matcher = ADDRESS_PATTERN.matcher(server.trim());
             if (matcher.matches()) {
                String v6host = matcher.group(2);
                String v4host = matcher.group(3);
