@@ -12,6 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.management.MBeanServerConnection;
+import javax.management.remote.JMXConnector;
+
 import org.radargun.Service;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
@@ -49,7 +52,18 @@ public class InfinispanServerService extends JavaProcessService {
    @Property(name = Service.SLAVE_INDEX, doc = "Index of this slave.")
    private int slaveIndex;
 
+   @Property(doc = "JMX domain. Default is 'org.infinispan'.")
+   protected String jmxDomain = "org.infinispan";
+
+   @Property(doc = "Name of the cache manager/cache container. Default is 'default'.")
+   protected String cacheManagerName = "default";
+
+   @Property(doc = "Start thread periodically dumping JGroups JMX data. Default is false.")
+   protected boolean jgroupsDumperEnabled = false;
+
    protected InfinispanServerLifecycle lifecycle = new InfinispanServerLifecycle(this);
+
+   protected volatile MBeanServerConnection connection;
 
    @Init
    public void init() {
@@ -69,6 +83,32 @@ public class InfinispanServerService extends JavaProcessService {
          log.error("Failed to copy configuration file", e);
          throw new RuntimeException(e);
       }
+      lifecycle.addListener(new ProcessLifecycle.ListenerAdapter() {
+         private JMXConnector connector;
+
+         @Override
+         public void afterStart() {
+            connector = createConnectionProvider().getConnector();
+            try {
+               connection = connector.getMBeanServerConnection();
+            } catch (IOException e) {
+               log.error("Failed to open MBean connection", e);
+            }
+         }
+
+         @Override
+         public void beforeStop(boolean graceful) {
+            connection = null;
+            try {
+               if (connector != null) connector.close();
+            } catch (IOException e) {
+               log.error("Failed to close JMX connector", e);
+            }
+         }
+      });
+      if (jgroupsDumperEnabled) {
+         new ServerJGroupsDumper(this).start();
+      }
    }
 
    @ProvidesTrait
@@ -80,6 +120,11 @@ public class InfinispanServerService extends JavaProcessService {
    @ProvidesTrait
    public ServerConfigurationProvider createServerConfigurationProvider() {
       return new ServerConfigurationProvider(this);
+   }
+
+   @ProvidesTrait
+   public InfinispanServerClustered createClustered() {
+      return new InfinispanServerClustered(this);
    }
 
    @Override

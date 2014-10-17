@@ -1,7 +1,5 @@
 package org.radargun.service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,7 +13,8 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
    private final static Pattern START_OK = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started in.*");
    private final static Pattern START_ERROR = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started \\(with errors\\) in.*");
    private final static Pattern STOPPED = Pattern.compile(".*\\[org\\.jboss\\.as\\].*stopped in.*");
-   private final List<Runnable> stopListeners = new ArrayList<>();
+
+   private volatile boolean gracefulStop = true;
 
    public InfinispanServerLifecycle(final InfinispanServerService service) {
       super(service);
@@ -30,6 +29,8 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
             setServerStarted();
             service.unregisterAction(START_OK);
             service.unregisterAction(START_ERROR);
+            fireAfterStart();
+
          }
       });
       service.registerAction(START_ERROR, new ProcessService.OutputListener() {
@@ -39,6 +40,7 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
             setServerStarted();
             service.unregisterAction(START_OK);
             service.unregisterAction(START_ERROR);
+            fireAfterStart();
          }
       });
       service.registerAction(STOPPED, new ProcessService.OutputListener() {
@@ -50,10 +52,17 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
             service.unregisterAction(START_OK);
             service.unregisterAction(START_ERROR);
             service.unregisterAction(STOPPED);
+            fireAfterStop(gracefulStop);
+
          }
       });
+      if (isRunning()) {
+         log.warn("Process is already running");
+         return;
+      }
+      fireBeforeStart();
+      startInternal();
 
-      super.start();
       long startTime = System.currentTimeMillis();
       synchronized (this) {
          while (!serverStarted) {
@@ -68,24 +77,40 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
             }
          }
       }
+      // fireAfterStart is called from output listener
    }
 
    @Override
    public void stop() {
-      super.stop();
-      // TODO: wait for the server to stop?
+      if (!isRunning()) {
+         log.warn("Process is not running, cannot stop");
+         return;
+      }
+      fireBeforeStop(true);
+      gracefulStop = true;
+      stopInternal();
       stopReaders();
    }
 
    @Override
    public void kill() {
-      super.kill();
+      gracefulStop = false;
+      Runnable waiting = killAsyncInternal();
+      if (waiting == null) return;
+      waiting.run();
       stopReaders();
    }
 
    @Override
    public void killAsync() {
-      super.killAsync();
+      gracefulStop = false;
+      Runnable waiting = killAsyncInternal();
+      if (waiting == null) {
+         return;
+      }
+      Thread listenerInvoker = new Thread(waiting, "StopListenerInvoker");
+      listenerInvoker.setDaemon(true);
+      listenerInvoker.start();
       synchronized (this) {
          outputReader = null;
          errorReader = null;
@@ -123,12 +148,5 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
       // no serverStarted = false!
       serverStopped = true;
       notifyAll();
-      for (Runnable listener : stopListeners) {
-         listener.run();
-      }
-   }
-
-   public synchronized void registerOnStop(Runnable runnable) {
-      stopListeners.add(runnable);
    }
 }
