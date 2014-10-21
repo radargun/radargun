@@ -47,6 +47,6 @@ public class ReporterSchemaGenerator extends SchemaGenerator {
       Map<String, Class<? extends Reporter>> reporters = new HashMap<>();
       ReporterHelper.loadReporters(new File(reporterDirectory), reporters);
       ReporterSchemaGenerator generator = new ReporterSchemaGenerator(reporterName, reporters);
-      generator.generate(schemaDirectory, String.format("%s-%s.xml", reporterName, VERSION));
+      generator.generate(schemaDirectory, String.format("%s-%s.xsd", reporterName, VERSION));
    }
 }
