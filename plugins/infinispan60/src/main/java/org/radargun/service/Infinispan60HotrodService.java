@@ -109,6 +109,11 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
       return queryable;
    }
 
+   @ProvidesTrait
+   public Infinispan60HotRodCacheInfo creeateCacheInfo() {
+      return new Infinispan60HotRodCacheInfo(this);
+   }
+
    @Override
    public void start() {
       managerNoReturn = new RemoteCacheManager(configuration, true);
