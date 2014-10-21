@@ -5,10 +5,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.radargun.config.Definition;
-import org.radargun.config.Evaluator;
 import org.radargun.config.InitHelper;
 import org.radargun.config.PropertyHelper;
-import org.radargun.config.SimpleDefinition;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.utils.Utils;
@@ -22,15 +20,48 @@ public class ServiceHelper {
    private static final Log log = LogFactory.getLog(ServiceHelper.class);
    private static final String SERVICE_PROPERTY_PREFIX = "service.";
 
+   private static String currentPlugin;
+   private static String currentConfigName;
+   private static int currentSlaveIndex;
+
+   public static String getPlugin() {
+      return currentPlugin;
+   }
+
+   public static String getConfigName() {
+      return currentConfigName;
+   }
+
+   public static int getSlaveIndex() {
+      return currentSlaveIndex;
+   }
+
+   /**
+    * As we expect only one service at time to be running on one node, this sets current
+    * plugin, configuration name and slave index that can be later retrieved, e.g. in some
+    * init method (annotated by {@link org.radargun.config.Init}) that would not be able
+    * to retrieve this information in another way.
+    *
+    * @param plugin
+    * @param configName
+    * @param slaveIndex
+    */
+   public static void setServiceContext(String plugin, String configName, int slaveIndex) {
+      currentPlugin = plugin;
+      currentConfigName = configName;
+      currentSlaveIndex = slaveIndex;
+   }
+
    /**
     * Instantiates the service, looking up file plugin.properties for the service name
     * (in form of service./service name/ /service class/
     * The service class must have public no-arg constructor.
     * Then, sets up all properties declared on the service (and its superclasses).
     * Finally calls any methods of the class annotated by {@link org.radargun.config.Init @Init}.
+    *
+    * Don't forget to call {@link #setServiceContext(String, String, int)} before calling this method.
     */
-   public static Object createService(ClassLoader classLoader, String plugin, String service, String configName,
-                                      int slaveIndex,
+   public static Object createService(ClassLoader classLoader, String plugin, String service,
                                       Map<String, Definition> properties, Map<String, String> extras) {
       String serviceClassName = Utils.getPluginProperty(plugin, SERVICE_PROPERTY_PREFIX + service);
       if (serviceClassName == null) {
@@ -72,10 +103,7 @@ public class ServiceHelper {
       for (Map.Entry<String, String> backup : backupExtras.entrySet()) {
          System.setProperty(backup.getKey(), backup.getValue() == null ? "" : backup.getValue());
       }
-      configProperties.put(Service.SLAVE_INDEX, new SimpleDefinition(String.valueOf(slaveIndex)));
-      configProperties.put(Service.CONFIG_NAME, new SimpleDefinition(configName));
-      configProperties.put(Service.PLUGIN, new SimpleDefinition(plugin));
-      PropertyHelper.setPropertiesFromDefinitions(instance, configProperties, true, false);
+      PropertyHelper.setPropertiesFromDefinitions(instance, configProperties, false, true);
       InitHelper.init(instance);
       return instance;
    }

@@ -15,11 +15,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Service {
-
-   String SLAVE_INDEX = "slaveIndex";
    String FILE = "file";
-   String CONFIG_NAME = "configName";
-   String PLUGIN = "plugin";
 
    String doc();
 }

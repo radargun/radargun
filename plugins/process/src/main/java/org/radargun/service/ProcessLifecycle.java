@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -28,6 +29,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
    protected final ProcessService service;
    protected ProcessOutputReader outputReader, errorReader;
 
+   private final CopyOnWriteArrayList<Listener> listeners = new CopyOnWriteArrayList<>();
    private String prefix;
    private String extension;
 
@@ -40,34 +42,63 @@ public class ProcessLifecycle implements Lifecycle, Killable {
 
    @Override
    public void kill() {
-      Process process = killAsyncInternal();
-      if (process == null) return;
-      for (;;) {
-         try {
-            process.waitFor();
-         } catch (InterruptedException e) {
-            log.trace("Interrupted waiting for kill", e);
-         }
-         if (!isRunning()) return;
+      fireBeforeStop(false);
+      try {
+         Runnable waiting = killAsyncInternal();
+         if (waiting == null) return;
+         waiting.run();
+      } finally {
+         fireAfterStop(false);
       }
    }
 
    @Override
    public void killAsync() {
-      killAsyncInternal();
+      fireBeforeStop(false);
+      final Runnable waiting = killAsyncInternal();
+      if (waiting == null) {
+         fireAfterStop(false);
+         return;
+      }
+      Thread listenerInvoker = new Thread(new Runnable() {
+         @Override
+         public void run() {
+            try {
+               waiting.run();
+            } finally {
+               fireAfterStop(false);
+            }
+         }
+      }, "StopListenerInvoker");
+      listenerInvoker.setDaemon(true);
+      listenerInvoker.start();
    }
 
-   private Process killAsyncInternal() {
+   protected Runnable killAsyncInternal() {
       if (!isRunning()) {
          log.warn("Cannot kill, process is not running");
          return null;
       }
       try {
-         return new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "kill" + extension, service.getCommandTag())).start();
+         fireBeforeStop(false);
+         final Process process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "kill" + extension, service.getCommandTag())).start();
+         return new Runnable() {
+            @Override
+            public void run() {
+               for (; ; ) {
+                  try {
+                     process.waitFor();
+                  } catch (InterruptedException e) {
+                     log.trace("Interrupted waiting for kill", e);
+                  }
+                  if (!isRunning()) return;
+               }
+            }
+         };
       } catch (IOException e) {
          log.error("Cannot kill service", e);
+         return null;
       }
-      return null;
    }
 
    @Override
@@ -76,6 +107,15 @@ public class ProcessLifecycle implements Lifecycle, Killable {
          log.warn("Process is already running");
          return;
       }
+      fireBeforeStart();
+      try {
+         startInternal();
+      } finally {
+         fireAfterStart();
+      }
+   }
+
+   protected void startInternal() {
       List<String> command = new ArrayList<String>();
       command.add(prefix + "start" + extension);
       command.add(service.getCommandTag());
@@ -115,10 +155,18 @@ public class ProcessLifecycle implements Lifecycle, Killable {
          log.warn("Process is not running, cannot stop");
          return;
       }
-      Process process;
+      fireBeforeStop(true);
       try {
-         process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "stop" + extension, service.getCommandTag())).start();
-         for (;;) {
+         stopInternal();
+      } finally {
+         fireAfterStop(true);
+      }
+   }
+
+   protected void stopInternal() {
+      try {
+         for (; ; ) {
+            Process process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "stop" + extension, service.getCommandTag())).start();
             try {
                process.waitFor();
             } catch (InterruptedException e) {
@@ -231,5 +279,78 @@ public class ProcessLifecycle implements Lifecycle, Killable {
             }
          }
       }
+   }
+
+   public void addListener(Listener listener) {
+      listeners.add(listener);
+   }
+
+   public void removeListener(Listener listener) {
+      listeners.remove(listener);
+   }
+
+   // lambdas, wish you were here...
+   private interface ListenerRunner {
+      void run(Listener listener);
+   }
+
+   private void fireListeners(ListenerRunner runner) {
+      for (Listener listener : listeners) {
+         try {
+            runner.run(listener);
+         } catch (Exception e) {
+            log.error("Listener has thrown an exception", e);
+         }
+      }
+   }
+
+   protected void fireBeforeStart() {
+      fireListeners(new ListenerRunner() {
+         @Override
+         public void run(Listener listener) {
+            listener.beforeStart();
+         }
+      });
+   }
+
+   protected void fireAfterStart() {
+      fireListeners(new ListenerRunner() {
+         @Override
+         public void run(Listener listener) {
+            listener.afterStart();
+         }
+      });
+   }
+
+   protected void fireBeforeStop(final boolean graceful) {
+      fireListeners(new ListenerRunner() {
+         @Override
+         public void run(Listener listener) {
+            listener.beforeStop(graceful);
+         }
+      });
+   }
+
+   protected void fireAfterStop(final boolean graceful) {
+      fireListeners(new ListenerRunner() {
+         @Override
+         public void run(Listener listener) {
+            listener.afterStop(graceful);
+         }
+      });
+   }
+
+   public interface Listener {
+      void beforeStart();
+      void afterStart();
+      void beforeStop(boolean graceful);
+      void afterStop(boolean graceful);
+   }
+
+   public static class ListenerAdapter implements Listener {
+      public void beforeStart() {}
+      public void afterStart() {}
+      public void beforeStop(boolean graceful) {}
+      public void afterStop(boolean graceful) {}
    }
 }
