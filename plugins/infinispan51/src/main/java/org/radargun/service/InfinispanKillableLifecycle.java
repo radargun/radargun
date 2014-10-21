@@ -57,6 +57,8 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
          startDiscarding();
       } catch (Exception e) {
          log.error("Failed to isolate failed service", e);
+      } finally {
+         setKillFinished();
       }
    }
 

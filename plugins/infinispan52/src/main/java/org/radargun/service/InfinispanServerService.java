@@ -16,6 +16,7 @@ import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 
 import org.radargun.Service;
+import org.radargun.ServiceHelper;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
@@ -49,9 +50,6 @@ public class InfinispanServerService extends JavaProcessService {
    @Property(doc = "Is this executed on Windows (should we use *.bat instead of *.sh)? Default is false.")
    private boolean windows = false;
 
-   @Property(name = Service.SLAVE_INDEX, doc = "Index of this slave.")
-   private int slaveIndex;
-
    @Property(doc = "JMX domain. Default is 'org.infinispan'.")
    protected String jmxDomain = "org.infinispan";
 
@@ -70,7 +68,7 @@ public class InfinispanServerService extends JavaProcessService {
       try {
          URL resource = getClass().getResource("/" + file);
          Path filesystemFile = FileSystems.getDefault().getPath(file);
-         Path target = FileSystems.getDefault().getPath(home, "standalone", "configuration", "radargun-" + slaveIndex + ".xml");
+         Path target = FileSystems.getDefault().getPath(home, "standalone", "configuration", "radargun-" + ServiceHelper.getSlaveIndex() + ".xml");
 
          if (resource != null) {
             Files.copy(resource.openStream(), target, StandardCopyOption.REPLACE_EXISTING);
@@ -131,13 +129,13 @@ public class InfinispanServerService extends JavaProcessService {
    protected List<String> getCommand() {
       ArrayList<String> command = new ArrayList<String>();
       command.add(FileSystems.getDefault().getPath(home, "bin", "standalone." + (windows ? "bat" : "sh")).toString());
-      command.add("-Djboss.node.name=slave" + slaveIndex);
+      command.add("-Djboss.node.name=slave" + ServiceHelper.getSlaveIndex());
       if (logDir != null) {
          command.add("-Djboss.server.log.dir=" + logDir);
       }
       command.addAll(args);
       command.add("-server-config");
-      command.add("radargun-" + slaveIndex + ".xml");
+      command.add("radargun-" + ServiceHelper.getSlaveIndex() + ".xml");
       return command;
    }
 
