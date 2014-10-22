@@ -1,14 +1,6 @@
 package org.radargun.reporting;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
@@ -78,29 +70,33 @@ public class Report implements Comparable<Report> {
       return Collections.unmodifiableList(timelines);
    }
 
-   public Test createTest(String testName) {
-      if (tests.containsKey(testName)) {
-         throw new IllegalArgumentException("Test '" + testName + "' is already defined");
-      }
-      Test test = new Test(testName);
-      tests.put(testName, test);
-      return test;
-   }
-
+   /**
+    * @param testName
+    * @return Existing test or null.
+    */
    public Test getTest(String testName) {
       return tests.get(testName);
    }
 
-   public Report.Test getOrCreateTest(String testName, boolean preferGet) {
-      Report.Test test;
-      if (preferGet) {
-         test = tests.get(testName);
-         if (test != null) {
+   /**
+    * @param testName
+    * @param iterationsName What is the changing property in different iterations. If set to null,
+    *                       the iterations will use just {@link org.radargun.reporting.Report.TestIteration#id}
+    * @param allowExisting Flag whether this method can return existing test.
+    * @return New or existing test (if allowExisting = true), or IllegalArgumentException (if allowExisting = false)
+    */
+   public Report.Test createTest(String testName, String iterationsName, boolean allowExisting) {
+      Test test = tests.get(testName);
+      if (test != null) {
+         if (allowExisting) {
             return test;
+         } else {
+            throw new IllegalArgumentException("Test '" + testName + "' is already defined");
          }
-         log.warn("Test '" + testName + "' was not found - creating new test.");
       }
-      return createTest(testName);
+      test = new Test(testName, iterationsName);
+      tests.put(testName, test);
+      return test;
    }
 
    public Configuration getConfiguration() {
@@ -121,38 +117,65 @@ public class Report implements Comparable<Report> {
       return c != 0 ? c : cluster.compareTo(o.cluster);
    }
 
+   /**
+    * One test can span multiple stages, and consists of one or more
+    * {@link org.radargun.reporting.Report.TestIteration iterations}.
+    * The results from single test should be plotted together in report.
+    */
    public class Test {
       public final String name;
+      public final String iterationsName;
       private ArrayList<TestIteration> iterations = new ArrayList<TestIteration>();
 
-      public Test(String name) {
+      private Test(String name, String iterationsName) {
          this.name = name;
+         this.iterationsName = iterationsName;
       }
 
+      /**
+       * Set 'description' of iteration - value of the property that is changing
+       * through different iterations of the same test.
+       *
+       * @param iteration Iteration id (numbered from 0).
+       * @param iterationValue String value. Cannot be null.
+       */
+      public void setIterationValue(int iteration, String iterationValue) {
+         if (iterationValue == null) {
+            throw new IllegalArgumentException("Null iteration value");
+         }
+         ensureIterations(iteration + 1);
+         TestIteration ti = iterations.get(iteration);
+         if (ti.value != null && !iterationValue.equals(ti.value)) {
+            throw new IllegalStateException("Previous iteration value " + ti.value + ", now it is " + iterationValue);
+         }
+         ti.value = iterationValue;
+      }
+
+      /**
+       * Set statistics from given slave for given iteration.
+       * @param iteration
+       * @param slaveIndex
+       * @param stats
+       */
       public void addStatistics(int iteration, int slaveIndex, List<Statistics> stats) {
-         addStatistics(iteration, slaveIndex, stats, null, null);
+         ensureIterations(iteration + 1);
+         TestIteration ti = iterations.get(iteration);
+         ti.addStatistics(slaveIndex, stats);
       }
 
-      public void addStatistics(int iteration, int slaveIndex, List<Statistics> stats, String iterationName, String iterationValue) {
+      /**
+       * Add the result to given iteration. Each iteration can contain only one result with the same name.
+       * @param iteration
+       * @param result
+       */
+      public void addResult(int iteration, TestResult result) {
          ensureIterations(iteration + 1);
-         checkIteration(iteration, iterationName, iterationValue);
-         iterations.get(iteration).addStatistics(slaveIndex, stats, iterationName, iterationValue);
-      }
-
-      public void addResult(int iteration, Map<String, TestResult> results) {
-         ensureIterations(iteration + 1);
-         iterations.get(iteration).setResults(results);
+         iterations.get(iteration).addResult(result);
       }
 
       private void ensureIterations(int size) {
          iterations.ensureCapacity(size);
-         for (int i = iterations.size(); i < size; ++i) iterations.add(new TestIteration());
-      }
-
-      private void checkIteration(int iteration, String iterationName, String iterationValue) {
-         TestIteration ti = iterations.get(iteration);
-         ti.iterationName = iterationName;
-         ti.iterationValue = iterationValue;
+         for (int i = iterations.size(); i < size; ++i) iterations.add(new TestIteration(this, i));
       }
 
       public List<TestIteration> getIterations() {
@@ -164,25 +187,48 @@ public class Report implements Comparable<Report> {
       }
    }
 
+   /**
+    * One part of {@link org.radargun.reporting.Report.Test}. Usually, the iteration reflects
+    * results from one stage but one stage can add more iterations.
+    * Each iteration has ID and 'value' - this describes the value that is changing between stages.
+    * This changing property is described in {@link Test#iterationsName}.
+    */
    public static class TestIteration {
+      public final Test test;
+      public final int id;
+      private String value;
+
       /* Slave index - Statistics from threads */
-      private Map<Integer, List<Statistics>> statistics = new HashMap<Integer, List<Statistics>>();
-      private Map<String, TestResult> results;
-
+      private Map<Integer, List<Statistics>> statistics = new HashMap<>();
+      private Map<String, TestResult> results = new TreeMap<>();
       private int threadCount;
-      private String iterationName;
-      private String iterationValue;
 
-      public void addStatistics(int slaveIndex, List<Statistics> slaveStats, String iterationName, String iterationValue) {
-         statistics.put(slaveIndex, slaveStats);
-         threadCount += slaveStats.size();
-         this.iterationName = iterationName;
-         this.iterationValue = iterationValue;
+      public TestIteration(Test test, int id) {
+         this.test = test;
+         this.id = id;
       }
 
-      public void setResults(Map<String, TestResult> results) {
-         if (this.results != null) throw new IllegalStateException("Results already set: " + this.results);
-         this.results = results;
+      /**
+       * Add statistics for given slave.
+       * @param slaveIndex
+       * @param slaveStats
+       */
+      public void addStatistics(int slaveIndex, List<Statistics> slaveStats) {
+         statistics.put(slaveIndex, slaveStats);
+         threadCount += slaveStats.size();
+      }
+
+      /**
+       * Add the result. The name must be unique in this iteration.
+       * @param result
+       */
+      public void addResult(TestResult result) {
+         if (results.containsKey(result.name)) {
+            throw new IllegalStateException("Result '" + result.name + "' already set: " + this.results.get(result.name));
+         } else {
+            result.setIteration(this);
+            this.results.put(result.name, result);
+         }
       }
 
       public Set<Map.Entry<Integer, List<Statistics>>> getStatistics() {
@@ -197,12 +243,8 @@ public class Report implements Comparable<Report> {
          return results == null ? null : Collections.unmodifiableMap(results);
       }
 
-      public String getIterationName() {
-         return iterationName;
-      }
-
-      public String getIterationValue() {
-         return iterationValue;
+      public String getValue() {
+         return value;
       }
    }
 
@@ -210,18 +252,31 @@ public class Report implements Comparable<Report> {
     * Other data of the test that should be reported but don't contain Operation execution times.
     */
    public static class TestResult {
+      public final String name;
       public final Map<Integer, SlaveResult> slaveResults;
       public final String aggregatedValue;
       public final boolean suspicious;
-      public final String iterationName;
-      public final String iterationValue;
+      private TestIteration iteration;
 
-      public TestResult(Map<Integer, SlaveResult> slaveResults, String aggregatedValue, boolean suspicious, String iterationName, String iterationValue) {
+      /**
+       * @param name Name of the result must be unique.
+       * @param slaveResults Results from each slave.
+       * @param aggregatedValue Results from slaves 'merged' together.
+       * @param suspicious Flag that the result is unexpected and should be highlighted in the report.
+       */
+      public TestResult(String name, Map<Integer, SlaveResult> slaveResults, String aggregatedValue, boolean suspicious) {
+         this.name = name;
          this.slaveResults = Collections.unmodifiableMap(slaveResults);
          this.aggregatedValue = aggregatedValue;
          this.suspicious = suspicious;
-         this.iterationName = iterationName;
-         this.iterationValue = iterationValue;
+      }
+
+      private void setIteration(TestIteration iteration) {
+         this.iteration = iteration;
+      }
+
+      public TestIteration getIteration() {
+         return iteration;
       }
    }
 

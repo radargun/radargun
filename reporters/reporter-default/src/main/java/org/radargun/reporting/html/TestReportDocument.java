@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.radargun.reporting.Report;
+import org.radargun.reporting.commons.Aggregation;
 import org.radargun.reporting.commons.TestAggregations;
 
 
@@ -20,13 +21,24 @@ public class TestReportDocument extends ReportDocument {
    private TestAggregations testAggregations;
 
    public TestReportDocument(TestAggregations testAggregations, String targetDir, Configuration configuration) {
-      super(targetDir, testAggregations.testName(), testAggregations.byReports().size(), testAggregations.getAllClusters().size(), testAggregations.getMaxIterations(), configuration);
+      super(targetDir, testAggregations.testName, testAggregations.byReports().size(), testAggregations.getAllClusters().size(), testAggregations.getMaxIterations(), configuration);
       this.testAggregations = testAggregations;
    }
 
    @Override
-   protected ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, DomainAxisContents domainAxisContents) {
-      return createComparisonChart(chart, "", operation, rangeAxisLabel, statisticType, testAggregations.byReports(), domainAxisContents);
+   protected ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, StatisticType statisticType) {
+      String subCategory;
+      Map<Report, List<Aggregation>> reportAggregationMap;
+      if (clusterSize > 0) {
+         reportAggregationMap = testAggregations.byClusterSize().get(clusterSize);
+         subCategory = "size " + clusterSize;
+      } else {
+         reportAggregationMap = testAggregations.byReports();
+         subCategory = null;
+      }
+      ComparisonChart chart = createComparisonChart(testAggregations.iterationsName, rangeAxisLabel);
+      addToChart(chart, subCategory, operation, statisticType, reportAggregationMap);
+      return chart;
    }
 
    public void writeTest() throws IOException {
@@ -39,15 +51,14 @@ public class TestReportDocument extends ReportDocument {
 
       for (String operation : testAggregations.getAllOperations()) {
          writeTag("h2", operation);
-         if (configuration.separateClusterCharts) {
-               for (Integer clusterSize : testAggregations.byClusterSize().keySet()) {
-                  createAndWriteCharts(operation, "_" + clusterSize);
-                  writeOperation(operation, testAggregations.byReports());
-               }
+         if (maxClusters > 1 && configuration.separateClusterCharts) {
+            for (Integer clusterSize : testAggregations.byClusterSize().keySet()) {
+               createAndWriteCharts(operation, clusterSize);
+            }
          } else {
-            createAndWriteCharts(operation, "");
-               writeOperation(operation, testAggregations.byReports());
+            createAndWriteCharts(operation, 0);
          }
+         writeOperation(operation, testAggregations.byReports());
       }
    }
 }

@@ -126,7 +126,7 @@ public abstract class TestStage extends AbstractDistStage {
       StageResult result = super.processAckOnMaster(acks);
       if (result.isError()) return result;
 
-      Report.Test test = getTest(amendTest);
+      Report.Test test = getTest();
       testIteration = test == null ? 0 : test.getIterations().size();
       Statistics aggregated = createStatistics();
       int threads = 0;
@@ -135,7 +135,12 @@ public abstract class TestStage extends AbstractDistStage {
             int i = getTestIteration();
             for (List<Statistics> threadStats : ack.iterations) {
                if (test != null) {
-                  test.addStatistics(++i, ack.getSlaveIndex(), threadStats, iterationProperty, resolveIterationValue());
+                  // TODO: this looks like we could get same iteration value for all iterations reported
+                  String iterationValue = resolveIterationValue();
+                  if (iterationValue != null) {
+                     test.setIterationValue(i, iterationValue);
+                  }
+                  test.addStatistics(i++, ack.getSlaveIndex(), threadStats);
                }
                threads = Math.max(threads, threadStats.size());
                for (Statistics s : threadStats) {
@@ -164,7 +169,7 @@ public abstract class TestStage extends AbstractDistStage {
       }
    }
 
-   protected Report.Test getTest(boolean existing) {
+   protected Report.Test getTest() {
       if (testName == null || testName.isEmpty()) {
          log.warn("No test name - results are not recorded");
          return null;
@@ -173,12 +178,7 @@ public abstract class TestStage extends AbstractDistStage {
          return null;
       } else {
          Report report = masterState.getReport();
-         if (existing) {
-            Report.Test test = report.getTest(testName);
-            return test == null ? report.createTest(testName) : test;
-         } else {
-            return report.createTest(testName);
-         }
+         return report.createTest(testName, iterationProperty, amendTest);
       }
    }
 

@@ -5,10 +5,14 @@
 
    <clusters>
       <cluster size="2"/>
+      <cluster size="4"/>
    </clusters>
 
    <configurations>
-      <config name="Infinispan 6.0 - distributed">
+      <config name="First configuration">
+         <setup plugin="infinispan60" file="dist-sync.xml" />
+      </config>
+      <config name="Second configuration">
          <setup plugin="infinispan60" file="dist-sync.xml" />
       </config>
    </configurations>
@@ -36,16 +40,39 @@
             <colliding-keys num-entries="5000" />
          </key-selector>
       </basic-operations-test>
+
+      <repeat from="1" to="10">
+         <basic-operations-test test-name="iterating" amend-test="true"
+                                iteration-property="num-threads-per-node"
+                                duration="5s" num-threads-per-node="#{2 ^ ${repeat.counter}}">
+            <key-selector>
+               <colliding-keys num-entries="5000"/>
+            </key-selector>
+         </basic-operations-test>
+      </repeat>
    </scenario>
 
    <reports>
       <reporter type="html">
-         <html xmlns="urn:radargun:reporters:reporter-default:2.0">
-            <!-- Notice the square brackets, you might create multiple combinations using
-                  [testA, testB], [testB, testC]
-              -->
-            <test-report combined-tests="[concurrent, colliding]"/>
-         </html>
+         <report>
+            <html xmlns="urn:radargun:reporters:reporter-default:2.0"
+                  target-dir="reports/html-default"/>
+         </report>
+         <report>
+            <html xmlns="urn:radargun:reporters:reporter-default:2.0"
+                  target-dir="reports/html-separate">
+               <test-report separate-cluster-charts="true" />
+            </html>
+         </report>
+         <report>
+            <html xmlns="urn:radargun:reporters:reporter-default:2.0"
+                  target-dir="reports/html-combined">
+               <!-- Notice the square brackets, you might create multiple combinations using
+                     [testA, testB], [testB, testC]
+                 -->
+               <test-report combined-tests="[concurrent, colliding]"/>
+            </html>
+         </report>
       </reporter>
    </reports>
 

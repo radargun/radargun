@@ -24,7 +24,8 @@ import org.radargun.stats.Statistics;
 public class TestAggregations {
    private Log log = LogFactory.getLog(getClass());
 
-   private final String testName;
+   public final String testName;
+   public final String iterationsName;
 
    private Map<Report, List<Aggregation>> byReports = new TreeMap<>();
    private Map<Integer, Map<Report, List<Aggregation>>> byClusterSize = new TreeMap<>();
@@ -36,67 +37,15 @@ public class TestAggregations {
 
    public TestAggregations(String testName, List<Report.Test> tests){
       this.testName = testName;
+      Set<String> iterationsNames = new TreeSet<>();
 
       for (Report.Test test : tests) {
+         if (test.iterationsName != null) {
+            iterationsNames.add(test.iterationsName);
+         }
          List<Aggregation> iterations = new ArrayList<Aggregation>();
          for (Report.TestIteration it : test.getIterations()) {
-            Statistics totalStats = null;
-            int totalThreads = 0;
-            List<Statistics> nodeStats = new ArrayList<Statistics>();
-            List<Integer> nodeThreads = new ArrayList<Integer>();
-            for (Map.Entry<Integer, List<Statistics>> entry : it.getStatistics()) {
-               int slaveIndex = entry.getKey();
-               List<Statistics> list = entry.getValue();
-
-               Statistics ns = null;
-               for (Statistics s : list) {
-                  if (ns == null) {
-                     ns = s.copy();
-                  } else {
-                     ns.merge(s);
-                  }
-               }
-
-               if (ns != null) {
-                  while (nodeStats.size() <= slaveIndex) {
-                     nodeStats.add(null);
-                     nodeThreads.add(0);
-                  }
-                  nodeStats.set(slaveIndex, ns);
-                  nodeThreads.set(slaveIndex, list.size());
-
-                  if (totalStats == null) {
-                     totalStats = ns.copy();
-                  } else {
-                     totalStats.merge(ns);
-                  }
-               }
-               totalThreads += list.size();
-            }
-            if (totalStats == null) {
-               log.warn("There are no stats for this iteration");
-            } else {
-               iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats, totalThreads, it.getIterationName(), it.getIterationValue()));
-               for (Map.Entry<String, OperationStats> op : totalStats.getOperationsStats().entrySet()) {
-                  if (!op.getValue().isEmpty()) operations.add(op.getKey());
-               }
-            }
-
-            if (it != null && it.getResults() != null) {
-               for (Map.Entry<String, Report.TestResult> entry : it.getResults().entrySet()) {
-                  Map<Report, List<Report.TestResult>> resultsByType = results.get(entry.getKey());
-                  if (resultsByType == null) {
-                     resultsByType = new TreeMap<Report, List<Report.TestResult>>();
-                     results.put(entry.getKey(), resultsByType);
-                  }
-                  List<Report.TestResult> resultsList = resultsByType.get(test.getReport());
-                  if (resultsList == null) {
-                     resultsList = new ArrayList<Report.TestResult>();
-                     resultsByType.put(test.getReport(), resultsList);
-                  }
-                  resultsList.add(entry.getValue());
-               }
-            }
+            addIteration(test, iterations, it);
          }
          byReports.put(test.getReport(), iterations);
          int clusterSize = test.getReport().getCluster().getSize();
@@ -109,10 +58,77 @@ public class TestAggregations {
          maxIterations = Math.max(maxIterations, iterations.size());
          clusters.add(test.getReport().getCluster());
       }
+
+      if (iterationsNames.isEmpty()) {
+         iterationsName = null;
+      } else {
+         StringBuilder sb = new StringBuilder();
+         for (String name : iterationsNames) {
+            if (sb.length() != 0) sb.append(", ");
+            sb.append(name);
+         }
+         iterationsName = sb.toString();
+      }
    }
 
-   public String testName() {
-      return testName;
+   private void addIteration(Report.Test test, List<Aggregation> iterations, Report.TestIteration it) {
+      Statistics totalStats = null;
+      int totalThreads = 0;
+      List<Statistics> nodeStats = new ArrayList<>();
+      List<Integer> nodeThreads = new ArrayList<>();
+      for (Map.Entry<Integer, List<Statistics>> entry : it.getStatistics()) {
+         int slaveIndex = entry.getKey();
+         List<Statistics> list = entry.getValue();
+
+         Statistics ns = null;
+         for (Statistics s : list) {
+            if (ns == null) {
+               ns = s.copy();
+            } else {
+               ns.merge(s);
+            }
+         }
+
+         if (ns != null) {
+            while (nodeStats.size() <= slaveIndex) {
+               nodeStats.add(null);
+               nodeThreads.add(0);
+            }
+            nodeStats.set(slaveIndex, ns);
+            nodeThreads.set(slaveIndex, list.size());
+
+            if (totalStats == null) {
+               totalStats = ns.copy();
+            } else {
+               totalStats.merge(ns);
+            }
+         }
+         totalThreads += list.size();
+      }
+      if (totalStats == null) {
+         log.warn("There are no stats for this iteration");
+      } else {
+         iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats, totalThreads, it));
+         for (Map.Entry<String, OperationStats> op : totalStats.getOperationsStats().entrySet()) {
+            if (!op.getValue().isEmpty()) operations.add(op.getKey());
+         }
+      }
+
+      if (it != null && it.getResults() != null) {
+         for (Map.Entry<String, Report.TestResult> entry : it.getResults().entrySet()) {
+            Map<Report, List<Report.TestResult>> resultsByType = results.get(entry.getKey());
+            if (resultsByType == null) {
+               resultsByType = new TreeMap<Report, List<Report.TestResult>>();
+               results.put(entry.getKey(), resultsByType);
+            }
+            List<Report.TestResult> resultsList = resultsByType.get(test.getReport());
+            if (resultsList == null) {
+               resultsList = new ArrayList<Report.TestResult>();
+               resultsByType.put(test.getReport(), resultsList);
+            }
+            resultsList.add(entry.getValue());
+         }
+      }
    }
 
    public Map<Report, List<Aggregation>> byReports() {

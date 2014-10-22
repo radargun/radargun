@@ -3,7 +3,6 @@ package org.radargun.stages.iteration;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -168,12 +167,16 @@ public class IterateStage extends AbstractDistStage {
       } else if (testName.equalsIgnoreCase("warmup")) {
          log.info("This test was executed as a warmup");
       } else {
-         test = masterState.getReport().getOrCreateTest(testName, amendTest);
+         test = masterState.getReport().createTest(testName, iterationProperty, amendTest);
       }
       long prevTotalSize = -1;
       long totalMinElements = -1, totalMaxElements = -1;
       Map<Integer, Report.SlaveResult> slaveResults = new HashMap<>();
       int testIteration = test.getIterations().size();
+      String iterationValue = resolveIterationValue();
+      if (iterationValue != null) {
+         test.setIterationValue(testIteration, iterationValue);
+      }
       for (IterationAck ack : Projections.instancesOf(acks, IterationAck.class)) {
          if (test != null) {
             test.addStatistics(testIteration, ack.getSlaveIndex(), Projections.project(ack.results, new Projections.Func<StressorResult, Statistics>() {
@@ -181,7 +184,7 @@ public class IterateStage extends AbstractDistStage {
                public Statistics project(StressorResult result) {
                   return result.stats;
                }
-            }), iterationProperty, resolveIterationValue());
+            }));
          }
          long slaveMinElements = -1, slaveMaxElements = -1;
          for (int i = 0; i < ack.results.size(); ++i) {
@@ -229,9 +232,8 @@ public class IterateStage extends AbstractDistStage {
                slaveMinElements != slaveMaxElements));
       }
       if (test != null) {
-         test.addResult(testIteration, Collections.singletonMap("Elements", new Report.TestResult(
-               slaveResults, range(totalMinElements, totalMaxElements), totalMinElements != totalMaxElements,
-               iterationProperty, resolveIterationValue())));
+         test.addResult(testIteration, new Report.TestResult("Elements", slaveResults,
+               range(totalMinElements, totalMaxElements), totalMinElements != totalMaxElements));
       }
       return result;
    }

@@ -108,6 +108,10 @@ public class HtmlReporter implements Reporter {
             TestAggregations ta = new TestAggregations(testName, reportedTests);
             testAggregations.add(ta);
          }
+         if (testAggregations.isEmpty()) {
+            log.warn("No tests to combine");
+            return;
+         }
          CombinedReportDocument testReport = new CombinedReportDocument(testAggregations, sb.toString(), targetDir, testReportConfig);
          try {
             testReport.open();

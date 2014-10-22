@@ -2,6 +2,8 @@ package org.radargun.reporting.html;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -60,14 +62,15 @@ public abstract class ReportDocument extends HtmlDocument {
       write("TH { border: 1px solid gray; padding: 2px; }\n");
    }
 
-   protected void createAndWriteCharts(String operation, String clusterSize) throws IOException {
-      createChart(String.format("%s%s%s_%s%s_mean_dev.png", directory, File.separator, testName, operation, clusterSize),
-                  operation, "Response time (ms)", StatisticType.MEAN_AND_DEV);
-      createChart(String.format("%s%s%s_%s%s_throughput.png", directory, File.separator, testName, operation, clusterSize),
-                  operation, "Operations/sec", StatisticType.ACTUAL_THROUGHPUT);
+   protected void createAndWriteCharts(String operation, int clusterSize) throws IOException {
+      String suffix = clusterSize > 0 ? "_" + clusterSize : "";
+      createChart(String.format("%s%s%s_%s%s_mean_dev.png", directory, File.separator, testName, operation, suffix),
+            clusterSize, operation, "Response time (ms)", StatisticType.MEAN_AND_DEV);
+      createChart(String.format("%s%s%s_%s%s_throughput.png", directory, File.separator, testName, operation, suffix),
+            clusterSize, operation, "Operations/sec", StatisticType.ACTUAL_THROUGHPUT);
       write("<table><th style=\"text-align: center;border: 0px;\">Response time mean</th><th style=\"text-align: center;border: 0px;\">Actual throughput</th><tr>");
-      write(String.format("<td style=\"border: 0px;\"><img src=\"%s_%s%s_mean_dev.png\" alt=\"%s\"/></div></div></td>\n", testName, operation, clusterSize, operation));
-      write(String.format("<td style=\"border: 0px;\"><img src=\"%s_%s%s_throughput.png\" alt=\"%s\"/></div></div>\n", testName, operation, clusterSize, operation));
+      write(String.format("<td style=\"border: 0px;\"><img src=\"%s_%s%s_mean_dev.png\" alt=\"%s\"/></div></div></td>\n", testName, operation, suffix, operation));
+      write(String.format("<td style=\"border: 0px;\"><img src=\"%s_%s%s_throughput.png\" alt=\"%s\"/></div></div>\n", testName, operation, suffix, operation));
       write("</tr></table>");
    }
 
@@ -80,8 +83,9 @@ public abstract class ReportDocument extends HtmlDocument {
             String iterationValue;
             if (entry != null) {
                Report.TestResult testResult = entry.getValue().get(iteration);
-               iterationValue = testResult != null && testResult.iterationName != null
-                     ? testResult.iterationName + "=" + testResult.iterationValue : "iteration " + String.valueOf(iteration);
+               String iterationsName = testResult.getIteration().test.iterationsName;
+               iterationValue = testResult != null && iterationsName != null
+                     ? iterationsName + "=" + testResult.getIteration().getValue() : "iteration " + String.valueOf(iteration);
             } else {
                iterationValue = "iteration " + String.valueOf(iteration);
             }
@@ -126,104 +130,140 @@ public abstract class ReportDocument extends HtmlDocument {
       writeTD(value, rowStyle + "border-left-color: black; border-left-width: 2px;");
    }
 
-   protected void createChart(String filename, String operation, String rangeAxisLabel, StatisticType statisticType) throws IOException {
-      ComparisonChart chart = null;
-      DomainAxisContents domainAxisContents = !configuration.separateClusterCharts && (maxClusters > 1 || maxIterations <= 1)
-            ? DomainAxisContents.CLUSTER_SIZE : DomainAxisContents.ITERATIONS;
-
-      chart = generateChart(chart, operation, rangeAxisLabel, statisticType, domainAxisContents);
+   protected void createChart(String filename, int clusterSize, String operation, String rangeAxisLabel, StatisticType statisticType) throws IOException {
+      ComparisonChart chart = generateChart(clusterSize, operation, rangeAxisLabel, statisticType);
 
       chart.setWidth(Math.min(Math.max(maxConfigurations, maxIterations) * 100 + 200, 1800));
       chart.setHeight(Math.min(maxConfigurations * 100 + 200, 800));
       chart.save(filename);
    }
 
-   protected ComparisonChart createComparisonChart(ComparisonChart chart, String testName, String operation, String rangeAxisLabel, StatisticType statisticType, Map<Report, List<Aggregation>> reportAggregationMap, DomainAxisContents domainAxisContents) {
-      for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
-         int iterationIndex = 0;
-         for (Aggregation aggregation : entry.getValue()) {
-            if (chart == null) {
-               if ((maxClusters > 1 && !configuration.separateClusterCharts) || maxIterations > 1) {
-                  switch (domainAxisContents) {
-                     case CLUSTER_SIZE:
-                        chart = new LineChart("Cluster size", rangeAxisLabel);
-                        break;
-                     case ITERATIONS:
-                        chart = new LineChart(aggregation.iterationValue() != null ? aggregation.iterationName() : "Iteration", rangeAxisLabel);
-                        break;
-                  }
-               } else {
-                  chart = new BarChart("Cluster size", rangeAxisLabel);
-               }
-            }
-            String columnKey = aggregation.iterationName() == null ? String.valueOf(iterationIndex) : aggregation.iterationValue();
-            try {
-               String categoryName = entry.getKey().getConfiguration().name;
-               if (!configuration.separateClusterCharts && maxClusters > 1)
-                  categoryName = String.format("%s_%s", categoryName, columnKey);
-               if (!testName.isEmpty())
-                  categoryName = String.format("%s_%s", categoryName, testName);
-               OperationStats operationStats = aggregation.totalStats().getOperationsStats().get(operation);
-               if (operationStats == null) continue;
-               Comparable domainKey = null;
-               switch (domainAxisContents) {
-                  case CLUSTER_SIZE:
-                     domainKey = aggregation.nodeStats().size();
-                     break;
-                  case ITERATIONS:
-                     domainKey = columnKey;
-                     break;
-               }
-               switch (statisticType) {
-                  case MEAN_AND_DEV: {
-                     MeanAndDev meanAndDev = operationStats.getRepresentation(MeanAndDev.class);
-                     if (meanAndDev == null) continue;
-                     chart.addValue(meanAndDev.mean / 1000000, meanAndDev.dev / 1000000, categoryName, domainKey);
-                     break;
-                  }
-                  case ACTUAL_THROUGHPUT: {
-                     DefaultOutcome defaultOutcome = operationStats.getRepresentation(DefaultOutcome.class);
-                     if (defaultOutcome == null) continue;
-                     Throughput throughput = defaultOutcome.toThroughput(aggregation.totalThreads(), aggregation.totalStats().getEnd() - aggregation.totalStats().getBegin());
-                     chart.addValue(throughput.actual / 1000000, 0, categoryName, domainKey);
-                  }
-               }
-            } finally {
-               ++iterationIndex;
-            }
-         }
+   protected ComparisonChart createComparisonChart(String iterationsName, String rangeAxisLabel) {
+      ComparisonChart chart;
+      // We've simplified the rule: when we have more iterations, it's always line chart,
+      // with tests/sizes included in the categoryName and iterations on domain axis.
+      // When there's only one iteration, we put cluster sizes on domain axis but use bar chart.
+      if (maxIterations > 1) {
+         chart = new LineChart(iterationsName != null ? iterationsName : "Iteration", rangeAxisLabel);
+      } else {
+         chart = new BarChart("Cluster size", rangeAxisLabel);
       }
       return chart;
    }
 
+   protected void addToChart(ComparisonChart chart, String subCategory, String operation, StatisticType statisticType, Map<Report, List<Aggregation>> reportAggregationMap) {
+      for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
+         for (Aggregation aggregation : entry.getValue()) {
+            OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
+            if (operationStats == null) continue;
+
+            String categoryName = entry.getKey().getConfiguration().name;
+            if (subCategory != null)
+               categoryName = String.format("%s, %s", categoryName, subCategory);
+
+            double subCategoryNumeric;
+            String subCategoryValue;
+            if (maxIterations > 1) {
+               subCategoryNumeric = aggregation.iteration.id;
+               subCategoryValue = aggregation.iteration.getValue() != null ? aggregation.iteration.getValue() : String.valueOf(aggregation.iteration.id);
+            } else {
+               subCategoryNumeric = entry.getKey().getCluster().getSize();
+               subCategoryValue = String.format("Size %.0f", subCategoryNumeric);
+            }
+            switch (statisticType) {
+               case MEAN_AND_DEV: {
+                  MeanAndDev meanAndDev = operationStats.getRepresentation(MeanAndDev.class);
+                  if (meanAndDev == null) continue;
+                  chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), categoryName, subCategoryNumeric, subCategoryValue);
+                  break;
+               }
+               case ACTUAL_THROUGHPUT: {
+                  DefaultOutcome defaultOutcome = operationStats.getRepresentation(DefaultOutcome.class);
+                  if (defaultOutcome == null) continue;
+                  Throughput throughput = defaultOutcome.toThroughput(aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
+                  chart.addValue(toMillis(throughput.actual), 0, categoryName, subCategoryNumeric, subCategoryValue);
+               }
+            }
+         }
+      }
+   }
+
+   private double toMillis(double nanos) {
+      return nanos / TimeUnit.MILLISECONDS.toNanos(1);
+   }
+
    protected void writeOperation(final String operation, Map<Report, List<Aggregation>> reportAggregationMap) {
-      write("<table>\n");
       boolean hasPercentiles = configuration.percentiles.length > 0 && hasRepresentation(operation, reportAggregationMap, Percentile.class, configuration.percentiles[0]);
       boolean hasHistograms = hasRepresentation(operation, reportAggregationMap, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
+
+      List<String> iterations = new ArrayList<>(maxIterations);
+      for (int iteration = 0; iteration < maxIterations; ++iteration) {
+         // in fact we shouldn't have different iterations values for iterations with the same id,
+         // but it's possible
+         Set<String> iterationValues = new HashSet<>();
+         for (List<Aggregation> aggregations : reportAggregationMap.values()) {
+            if (aggregations != null && iteration < aggregations.size()) {
+               Aggregation aggregation = aggregations.get(iteration);
+               if (aggregation != null && aggregation.iteration.getValue() != null) {
+                  iterationValues.add(aggregation.iteration.test.iterationsName + " = " + aggregation.iteration.getValue());
+               }
+            }
+         }
+         iterations.add(concatOrDefault(iterationValues, "iteration " + String.valueOf(iteration)));
+      }
+
+      writeOperationHeader(iterations, hasPercentiles, hasHistograms);
+      for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
+         writeOperationLine(operation, hasPercentiles, hasHistograms, entry.getKey(), entry.getValue());
+      }
+      write("</table><br>\n");
+   }
+
+   private void writeOperationLine(String operation, boolean hasPercentiles, boolean hasHistograms, Report report, List<Aggregation> aggregations) {
+      int nodeCount = aggregations.isEmpty() ? 0 : aggregations.get(0).nodeStats.size();
+
+      write("<tr><th style=\"text-align: left; cursor: pointer\" onClick=\"");
+      for (int i = 0; i < nodeCount; ++i) {
+         write("switch_visibility('e" + (elementCounter + i) + "'); ");
+      }
+      write(String.format("\">%s</th><th>%s</th>", report.getConfiguration().name, report.getCluster()));
+
+      int iteration = 0;
+      for (Aggregation aggregation : aggregations) {
+         Statistics statistics = aggregation.totalStats;
+         OperationStats operationStats = statistics == null ? null : statistics.getOperationsStats().get(operation);
+         long period = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
+         writeRepresentations(operationStats, operation, report.getCluster().getClusterIndex(), iteration, "total",
+                              aggregation.totalThreads, period, hasPercentiles, hasHistograms, false, aggregation.anySuspect(operation));
+         ++iteration;
+      }
+
+      write("</tr>\n");
+      for (int node = 0; node < nodeCount; ++node) {
+         write(String.format("<tr id=\"e%d\" style=\"visibility: collapse;\"><th colspan=\"2\" style=\"text-align: right\">node%d</th>", elementCounter++, node));
+         for (Aggregation aggregation : aggregations) {
+            Statistics statistics = node >= aggregation.nodeStats.size() ? null : aggregation.nodeStats.get(node);
+
+            OperationStats operationStats = null;
+            long period = 0;
+            if (statistics != null) {
+               operationStats = statistics.getOperationsStats().get(operation);
+               period = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
+            }
+            int threads = node >= aggregation.nodeThreads.size() ? 0 : aggregation.nodeThreads.get(node);
+            writeRepresentations(operationStats, operation, report.getCluster().getClusterIndex(), iteration, "node" + node,
+                                 threads, period, hasPercentiles, hasHistograms, false, aggregation.anySuspect(operation));
+         }
+         write("</tr>\n");
+      }
+   }
+
+   private void writeOperationHeader(List<String> iterationValues, boolean hasPercentiles, boolean hasHistograms) {
+      write("<table>\n");
       int columns = (hasHistograms ? 6 : 5) + (hasPercentiles ? configuration.percentiles.length : 0);
       if (maxIterations > 1) {
          write("<tr><th colspan=\"2\">&nbsp;</th>");
-         for (int iteration = 0; iteration < maxIterations; ++iteration) {
-            Set<String> iterationValues = new HashSet<>();
-            for (List<Aggregation> aggregations : reportAggregationMap.values()) {
-               if (aggregations != null && iteration < aggregations.size()) {
-                  Aggregation aggregation = aggregations.get(iteration);
-                  if (aggregation != null && aggregation.iterationName() != null) {
-                     iterationValues.add(aggregation.iterationName() + "=" + aggregation.iterationValue());
-                  }
-               }
-            }
-            String iterationValue;
-            if (iterationValues.isEmpty()) {
-               iterationValue = "iteration " + String.valueOf(iteration);
-            } else {
-               StringBuilder sb = new StringBuilder();
-               for (String value : iterationValues) {
-                  if (sb.length() > 0) sb.append(", ");
-                  sb.append(value);
-               }
-               iterationValue = sb.toString();
-            }
+         for (String iterationValue : iterationValues) {
             write(String.format("<th colspan=\"%d\" style=\"border-left-color: black; border-left-width: 2px;\">%s</th>", columns, iterationValue));
          }
          write("</tr>\n");
@@ -233,63 +273,40 @@ public abstract class ReportDocument extends HtmlDocument {
          write("<th style=\"text-align: center; border-left-color: black; border-left-width: 2px;\">requests</th>\n");
          write("<th style=\"text-align: center\">errors</th>\n");
          write("<th>mean</td><th>std.dev</th><th>throughput</th>\n");
+         if (hasPercentiles) {
+            for (double percentile : configuration.percentiles) {
+               write("<th>RTM at " + percentile + "%</th>");
+            }
+         }
          if (hasHistograms) {
             write("<th>histogram</th>\n");
          }
       }
       write("</tr>\n");
-      for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
-         Report report = entry.getKey();
-
-         int nodeCount = entry.getValue().isEmpty() ? 0 : entry.getValue().get(0).nodeStats().size();
-
-         write("<tr><th style=\"text-align: left; cursor: pointer\" onClick=\"");
-         for (int i = 0; i < nodeCount; ++i) {
-            write("switch_visibility('e" + (elementCounter + i) + "'); ");
-         }
-         write(String.format("\">%s</th><th>%s</th>", report.getConfiguration().name, report.getCluster()));
-
-         int iteration = 0;
-         for (Aggregation aggregation : entry.getValue()) {
-            Statistics statistics = aggregation.totalStats();
-            OperationStats operationStats = statistics == null ? null : statistics.getOperationsStats().get(operation);
-            long period = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
-            writeRepresentations(operationStats, operation, entry.getKey().getCluster().getClusterIndex(), iteration, "total",
-                                 aggregation.totalThreads(), period, hasPercentiles, hasHistograms, false, aggregation.anySuspect(operation));
-            ++iteration;
-         }
-
-         write("</tr>\n");
-         for (int node = 0; node < nodeCount; ++node) {
-            write(String.format("<tr id=\"e%d\" style=\"visibility: collapse;\"><th colspan=\"2\" style=\"text-align: right\">node%d</th>", elementCounter++, node));
-            for (Aggregation aggregation : entry.getValue()) {
-               Statistics statistics = node >= aggregation.nodeStats().size() ? null : aggregation.nodeStats().get(node);
-
-               OperationStats operationStats = null;
-               long period = 0;
-               if (statistics != null) {
-                  operationStats = statistics.getOperationsStats().get(operation);
-                  period = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
-               }
-               int threads = node >= aggregation.nodeThreads().size() ? 0 : aggregation.nodeThreads().get(node);
-               writeRepresentations(operationStats, operation, entry.getKey().getCluster().getClusterIndex(), iteration, "node" + node,
-                                    threads, period, hasPercentiles, hasHistograms, false, aggregation.anySuspect(operation));
-            }
-            write("</tr>\n");
-         }
-      }
-      write("</table><br>\n");
    }
 
-   private boolean hasRepresentation(final String operation, Map<Report, List<Aggregation>> reportAggregationMap, final Class<?> representationClass, final Object... representationArgs) {
+   protected static String concatOrDefault(Collection<String> values, String def) {
+      if (values.isEmpty()) {
+         return def;
+      } else {
+         StringBuilder sb = new StringBuilder();
+         for (String value : values) {
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(value);
+         }
+         return sb.toString();
+      }
+   }
+
+   protected static boolean hasRepresentation(final String operation, Map<Report, List<Aggregation>> reportAggregationMap, final Class<?> representationClass, final Object... representationArgs) {
       return Projections.any(Projections.notNull(reportAggregationMap.values()), new Projections.Condition<List<Aggregation>>() {
          @Override
          public boolean accept(List<Aggregation> aggregations) {
             return Projections.any(Projections.notNull(aggregations), new Projections.Condition<Aggregation>() {
                @Override
                public boolean accept(Aggregation aggregation) {
-                  OperationStats operationStats = aggregation.totalStats().getOperationsStats().get(operation);
-                  return operationStats != null && operationStats.getRepresentation(Histogram.class, representationClass, representationArgs) != null;
+                  OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
+                  return operationStats != null && operationStats.getRepresentation(representationClass, representationArgs) != null;
                }
             });
          }
@@ -328,7 +345,7 @@ public abstract class ReportDocument extends HtmlDocument {
                chart.setWidth(configuration.histogramWidth).setHeight(configuration.histogramHeight);
                chart.save(directory + File.separator + filename);
                writeTD(String.format("<a href=\"%s\">show</a>", filename), rowStyle);
-            } catch (IOException e) {
+            } catch (Exception e) {
                log.error("Failed to generate chart " + filename, e);
                writeTD("error", rowStyle);
             }
@@ -358,11 +375,7 @@ public abstract class ReportDocument extends HtmlDocument {
       write("    }\n}\n");
    }
 
-   protected abstract ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, DomainAxisContents domainAxisContents);
-
-   protected static enum DomainAxisContents {
-      CLUSTER_SIZE, ITERATIONS
-   }
+   protected abstract ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, StatisticType statisticType);
 
    protected static enum StatisticType {
       MEAN_AND_DEV, ACTUAL_THROUGHPUT
@@ -388,6 +401,6 @@ public abstract class ReportDocument extends HtmlDocument {
       protected int histogramHeight = 600;
 
       @Property(doc = "Show response time at certain percentiles. Default is 95% and 99%.")
-      private double[] percentiles = new double[] { 95d, 99d };
+      protected double[] percentiles = new double[] { 95d, 99d };
    }
 }

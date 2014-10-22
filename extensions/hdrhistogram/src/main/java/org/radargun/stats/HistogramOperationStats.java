@@ -89,6 +89,7 @@ public final class HistogramOperationStats implements OperationStats {
          ArrayList<Long> counts = new ArrayList<>();
          long min = Math.max(histogram.getMinValue(), 1);
          long max = Math.max(histogram.getValueAtPercentile(percentile), 1);
+         if (max < min) max = Math.max(histogram.getMaxValue(), min + 1);
          double exponent = Math.pow((double) max / (double) min, 1d / buckets);
          double current = min * exponent;
          long accCount = 0, lastCount = 0;
