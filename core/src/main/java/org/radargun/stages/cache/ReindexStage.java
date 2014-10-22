@@ -46,7 +46,7 @@ public class ReindexStage extends AbstractDistStage {
       StageResult result = super.processAckOnMaster(acks);
       if (result.isError()) return result;
 
-      Report.Test test = masterState.getReport().createTest(this.test);
+      Report.Test test = masterState.getReport().createTest(this.test, null, false);
       for (DistStageAck ack : acks) {
          if (ack instanceof StatisticsAck) {
             test.addStatistics(0, ack.getSlaveIndex(), Collections.singletonList(((StatisticsAck) ack).stats));

@@ -1,10 +1,11 @@
 package org.radargun.reporting.commons;
 
+import java.util.List;
+
+import org.radargun.reporting.Report;
 import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DefaultOutcome;
-
-import java.util.List;
 
 /**
  * Aggregates statistics information from test
@@ -14,21 +15,19 @@ import java.util.List;
  * @since 2.0
  */
 public class Aggregation {
-   final List<Statistics> nodeStats;
-   final Statistics totalStats;
-   final List<Integer> nodeThreads;
-   final int totalThreads;
-   final String iterationName;
-   final String iterationValue;
+   public final List<Statistics> nodeStats;
+   public final Statistics totalStats;
+   public final List<Integer> nodeThreads;
+   public final int totalThreads;
+   public final Report.TestIteration iteration;
 
    public Aggregation(List<Statistics> nodeStats, List<Integer> nodeThreads, Statistics totalStats,
-                      int totalThreads, String iterationName, String iterationValue) {
+                      int totalThreads, Report.TestIteration iteration) {
       this.nodeStats = nodeStats;
       this.nodeThreads = nodeThreads;
       this.totalStats = totalStats;
       this.totalThreads = totalThreads;
-      this.iterationName = iterationName;
-      this.iterationValue = iterationValue;
+      this.iteration = iteration;
    }
 
    public boolean anySuspect(String operation) {
@@ -74,29 +73,5 @@ public class Aggregation {
          }
       }
       return slaveStatsCount > 0 ? requests / slaveStatsCount : 0;
-   }
-
-   public List<Statistics> nodeStats() {
-      return nodeStats;
-   }
-
-   public Statistics totalStats() {
-      return totalStats;
-   }
-
-   public List<Integer> nodeThreads() {
-      return nodeThreads;
-   }
-
-   public int totalThreads() {
-      return totalThreads;
-   }
-
-   public String iterationName() {
-      return iterationName;
-   }
-
-   public String iterationValue() {
-      return iterationValue;
    }
 }

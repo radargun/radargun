@@ -2,7 +2,6 @@ package org.radargun.stages.cache.test;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,11 +94,10 @@ public class QueryStage extends TestStage {
          maxSize = Math.max(maxSize, ack.queryResultSize);
          slaveResults.put(ack.getSlaveIndex(), new Report.SlaveResult(String.valueOf(ack.queryResultSize), false));
       }
-      Report.Test test = getTest(true);
+      Report.Test test = getTest();
       if (test != null) {
          String sizeString = minSize == maxSize ? String.valueOf(maxSize) : String.format("%d .. %d", minSize, maxSize);
-         test.addResult(getTestIteration(),
-               Collections.singletonMap("Query result size", new Report.TestResult(slaveResults, sizeString, false, iterationProperty, resolveIterationValue())));
+         test.addResult(getTestIteration(), new Report.TestResult("Query result size", slaveResults, sizeString, false));
       } else {
          log.info("No test name - results are not recorded");
       }

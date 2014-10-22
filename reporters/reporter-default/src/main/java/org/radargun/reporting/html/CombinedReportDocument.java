@@ -5,8 +5,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.radargun.reporting.Report;
+import org.radargun.reporting.commons.Aggregation;
 import org.radargun.reporting.commons.TestAggregations;
 import org.radargun.utils.Projections;
 
@@ -46,9 +49,25 @@ public class CombinedReportDocument extends ReportDocument {
    }
 
    @Override
-   protected ComparisonChart generateChart(ComparisonChart chart, String operation, String rangeAxisLabel, StatisticType statisticType, DomainAxisContents domainAxisContents) {
+   protected ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, StatisticType statisticType) {
+      String iterationsName = concatOrDefault(Projections.project(testAggregations, new Projections.Func<TestAggregations, String>() {
+         @Override
+         public String project(TestAggregations testAggregations) {
+            return testAggregations.iterationsName;
+         }
+      }), null);
+      ComparisonChart chart = createComparisonChart(iterationsName, rangeAxisLabel);
       for (TestAggregations ta : testAggregations) {
-         chart = createComparisonChart(chart, ta.testName(), operation, rangeAxisLabel, statisticType, ta.byReports(), domainAxisContents);
+         String subCategory;
+         Map<Report, List<Aggregation>> reportAggregationMap;
+         if (clusterSize > 0) {
+            reportAggregationMap = ta.byClusterSize().get(clusterSize);
+            subCategory = ta.testName + ", size " + clusterSize;
+         } else {
+            reportAggregationMap = ta.byReports();
+            subCategory = ta.testName;
+         }
+         addToChart(chart, subCategory, operation, statisticType, reportAggregationMap);
       }
       return chart;
    }
@@ -56,27 +75,29 @@ public class CombinedReportDocument extends ReportDocument {
    public void writeTest() throws IOException {
       writeTag("h1", "Test " + testName);
 
+      Set<Integer> clusterSizes = new TreeSet<>();
       for (TestAggregations ta : testAggregations) {
          for (Map.Entry<String, Map<Report, List<Report.TestResult>>> result : ta.results().entrySet()) {
             writeTag("h2", result.getKey());
             writeResult(result.getValue());
          }
+         clusterSizes.addAll(ta.byClusterSize().keySet());
       }
 
-      for (String operation : operations) {
+      for (final String operation : operations) {
          writeTag("h2", operation);
+         Map<Report, List<Aggregation>> allAggregations = new TreeMap<>();
+         for (TestAggregations ta : testAggregations) {
+            allAggregations.putAll(ta.byReports());
+         }
          if (configuration.separateClusterCharts) {
-            for (TestAggregations ta : testAggregations) {
-               for (Integer clusterSize : ta.byClusterSize().keySet()) {
-                  createAndWriteCharts(operation, "_" + clusterSize);
-                  writeOperation(operation, ta.byReports());
-               }
+            for (Integer clusterSize : clusterSizes) {
+               createAndWriteCharts(operation, clusterSize);
             }
          } else {
-            createAndWriteCharts(operation, "");
-            for (TestAggregations ta : testAggregations)
-               writeOperation(operation, ta.byReports());
+            createAndWriteCharts(operation, 0);
          }
+         writeOperation(operation, allAggregations);
       }
    }
 }

@@ -1,8 +1,10 @@
 package org.radargun.reporting.html;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
+import org.jfree.chart.ChartColor;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 
@@ -12,6 +14,8 @@ import org.jfree.chart.JFreeChart;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class Chart {
+   protected static final Paint[] DEFAULT_PAINTS = ChartColor.createDefaultPaintArray();
+
    protected int width;
    protected int height;
 
