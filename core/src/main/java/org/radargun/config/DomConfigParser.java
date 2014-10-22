@@ -219,22 +219,27 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
             Element setupElement = (Element) setups.item(j);
             assertName(ELEMENT_SETUP, setupElement);
             String plugin = getAttribute(setupElement, ATTR_PLUGIN);
-            String file = getAttribute(setupElement, ATTR_FILE, null);
-            String service = getAttribute(setupElement, ATTR_SERVICE, Configuration.DEFAULT_SERVICE);
             String group = getAttribute(setupElement, ATTR_GROUP, Cluster.DEFAULT_GROUP);
-            Configuration.Setup setup = config.addSetup(plugin, file, service, group);
+            Map<String, Definition> propertyDefinitions = null;
+            String service = null;
             NodeList properties = setupElement.getChildNodes();
             for (int k = 0; k < properties.getLength(); ++k) {
                if (!(properties.item(k) instanceof Element)) continue;
-               Element propertyElement = (Element) properties.item(k);
-               assertName(ELEMENT_PROPERTY, propertyElement);
-               String propertyName = getAttribute(propertyElement, ATTR_NAME);
-               String content = propertyElement.getTextContent();
-               if (content == null) {
-                  throw new IllegalArgumentException("Property cannot have null content!");
+               Element setupChildElement = (Element) properties.item(k);
+               if (setupChildElement.hasAttribute(ATTR_XMLNS)) {
+                  service = setupChildElement.getNodeName();
+                  propertyDefinitions = parseProperties(setupChildElement, true);
+               } else {
+                  throw notExternal(setupChildElement);
                }
-               setup.addProperty(propertyName, content.trim());
             }
+            if (service == null) {
+               service = Configuration.DEFAULT_SERVICE;
+            }
+            if (propertyDefinitions == null) {
+               propertyDefinitions = Collections.EMPTY_MAP;
+            }
+            config.addSetup(group, plugin, service, propertyDefinitions);
          }
          masterConfig.addConfig(config);
       }

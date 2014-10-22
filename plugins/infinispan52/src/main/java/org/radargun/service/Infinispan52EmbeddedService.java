@@ -14,7 +14,6 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.util.FileLookupFactory;
 import org.radargun.Service;
-import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
 
 /**
@@ -23,16 +22,6 @@ import org.radargun.traits.ProvidesTrait;
  */
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
 public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
-
-   @Property(doc = "Wrap values inserted into cache as queryable objects. Default is false.")
-   protected boolean wrapForQuery = false;
-
-   @Property(name = Service.PLUGIN, doc = "Name of the current product.", optional = false)
-   protected String plugin;
-
-   @Property(name = Service.CONFIG_NAME, doc = "Name of the current config.", optional = false)
-   protected String configName;
-
    @Override
    protected Infinispan52Lifecycle createLifecycle() {
       return new Infinispan52Lifecycle(this);

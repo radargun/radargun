@@ -8,10 +8,14 @@
    <configurations>
       <config name="Infinispan 5.2 - local">
          <!-- All slaves use the same configuration -->
-         <setup plugin="infinispan52" file="local.xml" />
+         <setup plugin="infinispan52">
+            <embedded xmlns="urn:radargun:plugins:infinispan52:2.0" file="local.xml"/>
+         </setup>
       </config>
       <config name="Infinispan 6.0 - local">
-         <setup plugin="infinispan60" file="local.xml" />
+         <setup plugin="infinispan60">
+            <embedded xmlns="urn:radargun:plugins:infinispan60:2.0" file="local.xml"/>
+         </setup>
       </config>
    </configurations>
 

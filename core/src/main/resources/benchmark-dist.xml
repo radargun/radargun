@@ -17,10 +17,14 @@
    <configurations>
       <config name="Infinispan 5.2 - distributed">
          <!-- All slaves use the same configuration -->
-         <setup plugin="infinispan52" file="dist-sync.xml" />
+         <setup plugin="infinispan52">
+            <embedded xmlns="urn:radargun:plugins:infinispan52:2.0" file="dist-sync.xml"/>
+         </setup>
       </config>
       <config name="Infinispan 6.0 - distributed">
-         <setup plugin="infinispan60" file="dist-sync.xml" />
+         <setup plugin="infinispan60">
+            <embedded xmlns="urn:radargun:plugins:infinispan60:2.0" file="dist-sync.xml"/>
+         </setup>
       </config>
    </configurations>
 

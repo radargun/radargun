@@ -13,8 +13,12 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.radargun.Service;
 import org.radargun.config.Cluster;
+import org.radargun.config.ComplexDefinition;
 import org.radargun.config.Configuration;
+import org.radargun.config.Definition;
+import org.radargun.config.SimpleDefinition;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
@@ -72,8 +76,8 @@ public class IndexDocument extends HtmlDocument {
             writeConfigurationFiles(report, setup);
             if (!setup.getProperties().isEmpty()) {
                write("<li>Properties: <ul>\n");
-               for (Map.Entry<String, String> property : setup.getProperties().entrySet()) {
-                  writeTag("li", String.format("%s: %s", property.getKey(), property.getValue()));
+               for (Map.Entry<String, Definition> property : setup.getProperties().entrySet()) {
+                  writeProperty(property.getKey(), property.getValue());
                }
                write("</ul></li>\n");
             }
@@ -82,6 +86,18 @@ public class IndexDocument extends HtmlDocument {
          write("</ul><br>\n");
       }
 
+   }
+
+   private void writeProperty(String name, Definition definition) {
+      if (definition instanceof SimpleDefinition) {
+         write(String.format("<li>%s: %s</li>\n", name, definition));
+      } else if (definition instanceof ComplexDefinition) {
+         write("<li>" + name + ":<ul>\n");
+         for (ComplexDefinition.Entry property : ((ComplexDefinition) definition).getAttributes()) {
+            writeProperty(property.name, property.definition);
+         }
+         write("</ul></li>\n");
+      }
    }
 
    private static class OriginalConfig {
@@ -106,8 +122,9 @@ public class IndexDocument extends HtmlDocument {
             }
          }
       }
+      String file = String.valueOf(setup.getProperties().get(Service.FILE));
       if (configs.size() == 0) {
-         write("<li>Configuration file: " + setup.file + "</li>\n");
+         write("<li>Configuration file: " + file + "</li>\n");
       } else if (configs.size() == 1) {
          write("<li>Configuration file: ");
          writeConfig(report.getCluster(), setup, configs.iterator().next(), false);
@@ -115,14 +132,14 @@ public class IndexDocument extends HtmlDocument {
       } else {
          write("<li>Configuration files: <ul>\n");
          for (OriginalConfig config : configs) {
-            if (config.filename.equals(setup.file)) {
+            if (config.filename.equals(file)) {
                write("<li>");
                writeConfig(report.getCluster(), setup, config, config.slaves.size() != slaves.size());
                write("</li>\n");
             }
          }
          for (OriginalConfig config : configs) {
-            if (!config.filename.equals(setup.file)) {
+            if (!config.filename.equals(file)) {
                write("<li>");
                writeConfig(report.getCluster(), setup, config, config.slaves.size() != slaves.size());
                write("</li>\n");

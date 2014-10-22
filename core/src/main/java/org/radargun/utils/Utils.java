@@ -226,32 +226,31 @@ public class Utils {
       }
    }
 
-   public static String getPluginProperty(String plugin, String propertyName) {
+   public static Properties getPluginProperties(String plugin) {
       ArgsHolder.PluginParam pluginParam = ArgsHolder.getPluginParams().get(plugin);
+      Properties properties = new Properties();
       File pluginDir = pluginParam != null && pluginParam.getPath() != null
             ? new File(pluginParam.getPath()) : new File(Directories.PLUGINS_DIR, plugin);
       File confDir = new File(pluginDir, "conf");
       File file = new File(confDir, PROPERTIES_FILE);
       if (!file.exists()) {
          log.warn("Could not find a plugin descriptor : " + file);
-         return null;
+         return properties;
       }
-      Properties properties = new Properties();
       FileInputStream inStream = null;
       try {
          inStream = new FileInputStream(file);
          properties.load(inStream);
-         return properties.getProperty(propertyName);
+         return properties;
       } catch (IOException e) {
          throw new RuntimeException(e);
       } finally {
-         if (inStream != null)
-            try {
-               inStream.close();
-            } catch (IOException e) {
-               log.warn("Error closing properties stream", e);
-            }
+         close(inStream);
       }
+   }
+
+   public static String getPluginProperty(String plugin, String propertyName) {
+      return getPluginProperties(plugin).getProperty(propertyName);
    }
 
    public static File createOrReplaceFile(File parentDir, String actualFileName) throws IOException {

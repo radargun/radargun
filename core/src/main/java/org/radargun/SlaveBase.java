@@ -36,7 +36,7 @@ public abstract class SlaveBase {
       state.setService(setup.service);
       state.setTimeline(new Timeline(state.getSlaveIndex()));
       Map<String, String> extras = getCurrentExtras(configuration, cluster);
-      Object service = ServiceHelper.createService(state.getClassLoader(), setup.plugin, setup.service, configuration.name, setup.file, state.getSlaveIndex(), setup.getProperties(), extras);
+      Object service = ServiceHelper.createService(state.getClassLoader(), setup.plugin, setup.service, configuration.name, state.getSlaveIndex(), setup.getProperties(), extras);
       log.info("Service is " + service.getClass().getSimpleName() + PropertyHelper.toString(service));
       Map<Class<?>, Object> traits = TraitHelper.retrieve(service);
       state.setTraits(traits);
