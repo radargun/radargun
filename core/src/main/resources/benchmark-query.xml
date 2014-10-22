@@ -10,8 +10,8 @@
 
    <configurations>
       <config name="DistTxShared">
-         <setup plugin="infinispan60" file="query.xml">
-            <property name="cache">dist_tx_shared</property>
+         <setup plugin="infinispan60">
+            <default xmlns="urn:radargun:plugins:infinispan60:2.0" file="query.xml" cache="dist_tx_shared"/>
          </setup>
       </config>
    </configurations>

@@ -12,7 +12,9 @@
    <!-- List of configurations of the services -->
    <configurations>
       <config name="Infinispan 6.0 - distributed">
-         <setup plugin="infinispan60" file="dist-sync.xml" />
+         <setup plugin="infinispan60">
+            <embedded xmlns="urn:radargun:plugins:infinispan60:2.0" file="dist-sync.xml" />
+         </setup>
       </config>
    </configurations>
 

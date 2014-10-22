@@ -49,7 +49,7 @@ public class InfinispanEmbeddedService {
    protected volatile boolean enlistExtraXAResource;
    protected Map<String, Cache> caches = new HashMap<String, Cache>();
 
-   @Property(name = "file", doc = "File used as a configuration for this service.", deprecatedName = "config")
+   @Property(name = Service.FILE, doc = "File used as a configuration for this service.", deprecatedName = "config")
    protected String configFile;
 
    @Property(name = "cache", doc = "Name of the main cache. Default is 'testCache'")

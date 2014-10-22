@@ -330,6 +330,8 @@
                            </fileset>
                         </chmod>
                         <mkdir dir="${distribution.artifact}/schema" />
+                        <mkdir dir="${distribution.artifact}/reporters" />
+                        <mkdir dir="${distribution.artifact}/plugins" />
                      </target>
                   </configuration>
                </execution>
@@ -418,6 +420,10 @@
                            </sequential>
                         </macrodef>
 
+                        <path id="core_and_extensions">
+                           <fileset dir="${distribution.artifact}/lib" includes="*.jar" />
+                        </path>
+
                         <echo message="Packaging plugins: " />
                         <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
@@ -431,6 +437,11 @@
                                  <copy-plugin plugin="@{plugin}"/>
                               </ac:else>
                               </ac:if>
+                              <java classname="org.radargun.config.PluginSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
+                                 <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                                 <arg value="${distribution.artifact}/schema" />
+                                 <arg value="@{plugin}" />
+                              </java>
                            </sequential>
                         </ac:for>
                      </target>

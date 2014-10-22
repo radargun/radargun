@@ -3,7 +3,6 @@ package org.radargun.config;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,13 +23,13 @@ public class Configuration implements Serializable {
       this.name = name;
    }
 
-   public Setup addSetup(String plugin, String file, String service, String group) {
+   public Setup addSetup(String group, String plugin, String service, Map<String, Definition> propertyDefinitions) {
       for (Setup s : setups) {
          if (s.group.equals(group)) {
             throw new IllegalArgumentException("Setup for group '" + group + "' already set!");
          }
       }
-      Setup setup = new Setup(plugin, file, service, group);
+      Setup setup = new Setup(group, plugin, service, propertyDefinitions);
       setups.add(setup);
       return setup;
    }
@@ -49,28 +48,19 @@ public class Configuration implements Serializable {
    }
 
    public class Setup implements Serializable {
-      public final String plugin;
       public final String group;
-      public final String file;
+      public final String plugin;
       public final String service;
+      private final Map<String, Definition> properties;
 
-      private Map<String, String> properties = new HashMap<String, String>();
-
-      public Setup(String plugin, String file, String service, String group) {
+      public Setup(String group, String plugin, String service, Map<String, Definition> properties) {
          this.plugin = plugin;
-         this.group = group;
-         this.file = file;
          this.service = service;
+         this.group = group;
+         this.properties = properties;
       }
 
-      public void addProperty(String name, String value) {
-         if (properties.get(name) != null) {
-            throw new IllegalArgumentException("Property '" + name + "' already set!");
-         }
-         properties.put(name, value);
-      }
-
-      public Map<String, String> getProperties() {
+      public Map<String, Definition> getProperties() {
          return Collections.unmodifiableMap(properties);
       }
 

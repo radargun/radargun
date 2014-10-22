@@ -85,11 +85,9 @@ public class ConfigSchemaGenerator extends SchemaGenerator implements ConfigSche
       Element configurationsComplex = createComplexElement(benchmarkSequence, ELEMENT_CONFIGURATIONS, 1, 1);
       Element configComplex = createComplexElement(createSequence(configurationsComplex), ELEMENT_CONFIG, 1, -1);
       Element setupComplex = createComplexElement(createSequence(configComplex), ELEMENT_SETUP, 1, -1);
-      createReference(createSequence(setupComplex), ELEMENT_PROPERTY, RG_PREFIX + TYPE_PROPERTY, 0, -1);
+      createAny(createSequence(setupComplex));
       addAttribute(configComplex, ATTR_NAME, true);
       addAttribute(setupComplex, ATTR_PLUGIN, true);
-      addAttribute(setupComplex, ATTR_FILE, false);
-      addAttribute(setupComplex, ATTR_SERVICE, false);
       addAttribute(setupComplex, ATTR_GROUP, false);
 
       createReference(benchmarkSequence, ELEMENT_INIT, RG_PREFIX + class2xmlId(ScenarioInitStage.class), 0, 1);
