@@ -112,7 +112,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>7.0.0.CR1</version.infinispan>
+            <version.infinispan>7.0.0.CR2</version.infinispan>
          </properties>
       </profile>
       <profile>
