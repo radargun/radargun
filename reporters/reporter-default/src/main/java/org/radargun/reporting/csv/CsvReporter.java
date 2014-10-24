@@ -163,7 +163,9 @@ public class CsvReporter implements Reporter {
          rowData.put(operationName + ".Errors", String.valueOf(defaultOutcome.errors));
          rowData.put(operationName + ".ResponseTimeMax", String.valueOf(defaultOutcome.responseTimeMax));
          rowData.put(operationName + ".ResponseTimeMean", String.valueOf(defaultOutcome.responseTimeMean));
-         Throughput throughput = defaultOutcome.toThroughput(threadCount, TimeUnit.MILLISECONDS.toNanos(summary.getEnd() - summary.getBegin()));
+      }
+      Throughput throughput = os.getRepresentation(Throughput.class, threadCount, TimeUnit.MILLISECONDS.toNanos(summary.getEnd() - summary.getBegin()));
+      if (throughput != null) {
          rowData.put(operationName + ".TheoreticalThroughput", String.valueOf(throughput.theoretical));
          rowData.put(operationName + ".ActualThroughput", String.valueOf(throughput.actual));
       }

@@ -575,4 +575,9 @@ public class Utils {
          log.error("Failed to set " + clazz.getName() + "." + fieldName + " to value", e);
       }
    }
+
+   public static <T> T getArg(Object[] args, int arg, Class<T> clazz) {
+      if (args == null || args.length <= arg || !clazz.isInstance(args[arg])) throw new IllegalArgumentException(Arrays.toString(args));
+      return (T) args[arg];
+   }
 }

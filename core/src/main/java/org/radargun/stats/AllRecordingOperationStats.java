@@ -7,6 +7,7 @@ import org.radargun.config.DefinitionElement;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.Histogram;
 import org.radargun.stats.representation.Percentile;
+import org.radargun.stats.representation.Throughput;
 import org.radargun.utils.Projections;
 
 /**
@@ -82,42 +83,53 @@ public class AllRecordingOperationStats implements OperationStats {
             max = Math.max(max, responseTimes[i]);
          }
          return (T) new DefaultOutcome(requests, 0, (double) responseTimeSum / requests, max);
+      } else if (clazz == Throughput.class) {
+         long responseTimeSum = 0;
+         long requests = full ? responseTimes.length : pos;
+         for (int i = 0; i < requests; ++i) {
+            responseTimeSum += responseTimes[i];
+         }
+         return (T) Throughput.compute(requests, (double) responseTimeSum / requests, args);
       } else if (clazz == Percentile.class) {
          double percentile = Percentile.getPercentile(args);
          int size = full ? responseTimes.length : pos;
          Arrays.sort(responseTimes, 0, size);
          return (T) new Percentile(responseTimes[Math.min((int) Math.ceil(percentile / 100d * size), size - 1)]);
       } else if (clazz == Histogram.class) {
-         int buckets = Histogram.getBuckets(args);
-         double percentile = Histogram.getPercentile(args);
-         int size = full ? responseTimes.length : pos;
-         ArrayList<Long> ranges = new ArrayList<>();
-         ArrayList<Long> counts = new ArrayList<>();
-         Arrays.sort(responseTimes, 0, size);
-         long min = size == 0 ? 1 : responseTimes[0];
-         int end = (int) Math.ceil(size * percentile / 100);
-         long max = size == 0 ? 1 : responseTimes[end];
-         double exponent = Math.pow((double) max / (double) min, 1d / buckets);
-         double current = min * exponent;
-         long accCount, lastCount = 0;
-         for (accCount = 0; accCount < end;) {
-            long responseTime = responseTimes[(int) accCount];
-            accCount++;
-            if (responseTime >= current) {
-               ranges.add(responseTime);
-               counts.add(accCount - lastCount);
-               lastCount = accCount;
-               current = current * exponent;
-            }
-         }
-         if (accCount > 0) {
-            ranges.add(max);
-            counts.add(accCount - lastCount);
-         }
-         return (T) new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
+         return (T) getHistogram(args);
       } else {
          return null;
       }
+   }
+
+   private <T> Histogram getHistogram(Object[] args) {
+      int buckets = Histogram.getBuckets(args);
+      double percentile = Histogram.getPercentile(args);
+      int size = full ? responseTimes.length : pos;
+      ArrayList<Long> ranges = new ArrayList<>();
+      ArrayList<Long> counts = new ArrayList<>();
+      Arrays.sort(responseTimes, 0, size);
+      long min = size == 0 ? 1 : responseTimes[0];
+      int end = (int) Math.ceil(size * percentile / 100);
+      long max = size == 0 ? 1 : responseTimes[end];
+      double exponent = Math.pow((double) max / (double) min, 1d / buckets);
+      double current = min * exponent;
+      long accCount, lastCount = 0;
+      for (accCount = 0; accCount < end;) {
+         long responseTime = responseTimes[(int) accCount];
+         accCount++;
+         if (responseTime >= current) {
+            ranges.add(responseTime);
+            counts.add(accCount - lastCount);
+            lastCount = accCount;
+            current = current * exponent;
+         }
+      }
+      if (accCount > 0) {
+         ranges.add(max);
+         counts.add(accCount - lastCount);
+      }
+      return new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
    }
 
    @Override

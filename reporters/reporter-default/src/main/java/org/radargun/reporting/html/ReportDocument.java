@@ -178,9 +178,9 @@ public abstract class ReportDocument extends HtmlDocument {
                   break;
                }
                case ACTUAL_THROUGHPUT: {
-                  DefaultOutcome defaultOutcome = operationStats.getRepresentation(DefaultOutcome.class);
-                  if (defaultOutcome == null) continue;
-                  Throughput throughput = defaultOutcome.toThroughput(aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
+                  Throughput throughput = operationStats.getRepresentation(Throughput.class,
+                        aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
+                  if (throughput == null) continue;
                   chart.addValue(toMillis(throughput.actual), 0, categoryName, subCategoryNumeric, subCategoryValue);
                }
             }
@@ -316,7 +316,7 @@ public abstract class ReportDocument extends HtmlDocument {
    private void writeRepresentations(OperationStats operationStats, String operation, int cluster, int iteration, String node,
                                      int threads, long period, boolean hasPercentiles, boolean hasHistograms, boolean gray, boolean suspect) {
       DefaultOutcome defaultOutcome = operationStats == null ? null : operationStats.getRepresentation(DefaultOutcome.class);
-      Throughput throughput = defaultOutcome == null ? null : defaultOutcome.toThroughput(threads, period);
+      Throughput throughput = operationStats == null ? null : operationStats.getRepresentation(Throughput.class, threads, period);
       MeanAndDev meanAndDev = operationStats == null ? null : operationStats.getRepresentation(MeanAndDev.class);
       Histogram histogram = operationStats == null ? null : operationStats.getRepresentation(Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
 

@@ -14,6 +14,7 @@ import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.Histogram;
 import org.radargun.stats.representation.MeanAndDev;
 import org.radargun.stats.representation.Percentile;
+import org.radargun.stats.representation.Throughput;
 import org.radargun.utils.Projections;
 
 /**
@@ -78,6 +79,8 @@ public final class HistogramOperationStats implements OperationStats {
          return (T) new DefaultOutcome(histogram.getTotalCount(), errors, histogram.getMean(), histogram.getMaxValue());
       } else if (clazz == MeanAndDev.class) {
          return (T) new MeanAndDev(histogram.getMean(), histogram.getStdDeviation());
+      } else if (clazz == Throughput.class) {
+         return (T) Throughput.compute(histogram.getTotalCount(), histogram.getMean(), args);
       } else if (clazz == Percentile.class) {
          double percentile = Percentile.getPercentile(args);
          return (T) new Percentile(histogram.getValueAtPercentile(percentile));

@@ -1,6 +1,6 @@
 package org.radargun.stats.representation;
 
-import java.util.Arrays;
+import org.radargun.utils.Utils;
 
 /**
  * Representation holding buckets (time range) with number of results belonging to this bucket.
@@ -29,8 +29,7 @@ public final class Histogram {
     * @return Number of buckets the histogram should contain (counts.length)
     */
    public static int getBuckets(Object[] args) {
-      if (args == null || args.length < 1 || !(args[0] instanceof Integer)) throw new IllegalArgumentException(Arrays.toString(args));
-      int buckets = (Integer) args[0];
+      int buckets = Utils.getArg(args, 0, Integer.class);
       if (buckets <= 0) throw new IllegalArgumentException(String.valueOf(buckets));
       return buckets;
    }
@@ -40,8 +39,7 @@ public final class Histogram {
     * @return In order to truncate long tail, display only lower <= percentile values
     */
    public static double getPercentile(Object[] args) {
-      if (args == null || args.length < 2 || !(args[1] instanceof Double)) throw new IllegalArgumentException(Arrays.toString(args));
-      double percentile = (Double) args[1];
+      double percentile = Utils.getArg(args, 1, Double.class);
       if (percentile <= 0 || percentile > 100) throw new IllegalArgumentException(String.valueOf(percentile));
       return percentile;
    }
