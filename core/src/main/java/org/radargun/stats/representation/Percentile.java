@@ -1,6 +1,6 @@
 package org.radargun.stats.representation;
 
-import java.util.Arrays;
+import org.radargun.utils.Utils;
 
 /**
  * Representation used for retrieving value with certain percentile of occurence,
@@ -19,8 +19,7 @@ public class Percentile {
    }
 
    public static double getPercentile(Object[] args) {
-      if (args == null || args.length != 1 || !(args[0] instanceof Double)) throw new IllegalArgumentException(Arrays.toString(args));
-      double percentile = (Double) args[0];
+      double percentile = Utils.getArg(args, 0, Double.class);
       if (percentile < 0 || percentile > 100) throw new IllegalArgumentException(String.valueOf(percentile));
       return percentile;
    }

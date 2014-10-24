@@ -578,10 +578,8 @@ public class BackgroundOpsManager implements ServiceListener {
                aggregated.merge(stats.get(i));
             }
             for (Map.Entry<String, OperationStats> entry : aggregated.getOperationsStats().entrySet()) {
-               DefaultOutcome defaultOutcome = entry.getValue().getRepresentation(DefaultOutcome.class);
-               if (defaultOutcome.requests != 0 || timeline.getValues(entry.getKey() + " Throughput") != null) {
-                  Throughput throughput = defaultOutcome.toThroughput(
-                        stats.size(), TimeUnit.MILLISECONDS.toNanos(aggregated.getEnd() - aggregated.getBegin()));
+               Throughput throughput = entry.getValue().getRepresentation(Throughput.class, stats.size(), TimeUnit.MILLISECONDS.toNanos(aggregated.getEnd() - aggregated.getBegin()));
+               if (throughput != null && (throughput.actual != 0 || timeline.getValues(entry.getKey() + " Throughput") != null)) {
                   timeline.addValue(entry.getKey() + " Throughput", new Timeline.Value(now, throughput.actual));
                }
             }
