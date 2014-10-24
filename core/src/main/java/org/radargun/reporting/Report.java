@@ -1,5 +1,9 @@
 package org.radargun.reporting;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.*;
 
 import org.radargun.config.Cluster;
@@ -14,7 +18,7 @@ import org.radargun.stats.Statistics;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Report implements Comparable<Report> {
+public class Report implements Comparable<Report>, Serializable {
    private static final Log log = LogFactory.getLog(Report.class);
 
    /* Configuration part */
@@ -122,7 +126,7 @@ public class Report implements Comparable<Report> {
     * {@link org.radargun.reporting.Report.TestIteration iterations}.
     * The results from single test should be plotted together in report.
     */
-   public class Test {
+   public class Test implements Serializable {
       public final String name;
       public final String iterationsName;
       private ArrayList<TestIteration> iterations = new ArrayList<TestIteration>();
@@ -193,7 +197,7 @@ public class Report implements Comparable<Report> {
     * Each iteration has ID and 'value' - this describes the value that is changing between stages.
     * This changing property is described in {@link Test#iterationsName}.
     */
-   public static class TestIteration {
+   public static class TestIteration implements Serializable {
       public final Test test;
       public final int id;
       private String value;
@@ -251,7 +255,7 @@ public class Report implements Comparable<Report> {
    /**
     * Other data of the test that should be reported but don't contain Operation execution times.
     */
-   public static class TestResult {
+   public static class TestResult implements Serializable {
       public final String name;
       public final Map<Integer, SlaveResult> slaveResults;
       public final String aggregatedValue;
@@ -283,7 +287,7 @@ public class Report implements Comparable<Report> {
    /**
     * Result data from single slave.
     */
-   public static class SlaveResult {
+   public static class SlaveResult implements Serializable {
       public final String value;
       public final boolean suspicious;
 
@@ -293,7 +297,7 @@ public class Report implements Comparable<Report> {
       }
    }
 
-   public static class Stage {
+   public static class Stage implements Serializable {
       private final String name;
       private final List<Property> properties = new ArrayList<>();
 
@@ -314,7 +318,7 @@ public class Report implements Comparable<Report> {
       }
    }
 
-   public static class Property {
+   public static final class Property implements Serializable {
       private final String name;
       private final Definition definition;
       private final Object value;
@@ -335,6 +339,44 @@ public class Report implements Comparable<Report> {
 
       public Object getValue() {
          return value;
+      }
+
+      private Object writeReplace() {
+         return new PropertyProxy(name, definition, value);
+      }
+   }
+
+   private static final class PropertyProxy implements Serializable {
+      private String name;
+      private Definition definition;
+      private Object value;
+
+      private PropertyProxy(String name, Definition definition, Object value) {
+         this.name = name;
+         this.definition = definition;
+         this.value = value;
+      }
+
+      private void writeObject(ObjectOutputStream o) throws IOException {
+         o.writeObject(name);
+         o.writeObject(definition);
+         if (value == null) {
+            o.writeObject(null);
+         } else if (value instanceof Serializable) {
+            o.writeObject(value);
+         } else {
+            o.writeObject(String.valueOf(value));
+         }
+      }
+
+      private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException {
+         name = (String) in.readObject();
+         definition = (Definition) in.readObject();
+         value = in.readObject();
+      }
+
+      private Object readResolve() {
+         return new Property(name, definition, value);
       }
    }
 }
