@@ -48,6 +48,10 @@ public class ReporterHelper {
       }
    }
 
+   public static void registerReporters(String reporterDir) {
+      loadReporters(new File(reporterDir), reporters);
+   }
+
    public static void loadReporters(File reporterDir, Map<String, Class<? extends Reporter>> reporters) {
       try {
          if (!reporterDir.isDirectory()) {
