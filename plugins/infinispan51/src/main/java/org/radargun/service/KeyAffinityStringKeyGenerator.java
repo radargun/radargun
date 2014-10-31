@@ -25,6 +25,11 @@ import org.radargun.logging.LogFactory;
  *
  * Therefore, using shared keys with this generator is not advisable.
  *
+ * Note for RadarGun integration: as key generators can be loaded only from core libraries, you have to use
+ * &lt;plugin-specific class="org.radargun.service.KeyAffinityStringKeyGenerator"
+ *                     params="keyBufferSize:1000;cache=testCache" /&gt;
+ * to use this generator in test.
+ *
  */
 public class KeyAffinityStringKeyGenerator implements KeyGenerator {
 

@@ -1,5 +1,7 @@
 package org.radargun.stages.cache.generators;
 
+import org.radargun.utils.ReflexiveConverters;
+
 /**
  * Used for generating keys for caches. All implementations must have an default/no-arg public
  * constructor.
@@ -16,4 +18,10 @@ public interface KeyGenerator {
     * @return
     */
    Object generateKey(long keyIndex);
+
+   public static class ComplexConverter extends ReflexiveConverters.ObjectConverter {
+      public ComplexConverter() {
+         super(KeyGenerator.class);
+      }
+   }
 }

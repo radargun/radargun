@@ -4,9 +4,12 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Random;
 
+import org.radargun.config.DefinitionElement;
+
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@DefinitionElement(name = "wrapped-array", doc = "Generates random byte array wrapped in object that correctly implements equals() and hashCode().")
 public class WrappedArrayValueGenerator implements ValueGenerator {
    @Override
    public Object generateValue(Object key, int size, Random r) {

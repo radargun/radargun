@@ -4,15 +4,15 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Random;
 
+import org.radargun.config.DefinitionElement;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 
 /**
- * This generator creates key objects with the 8-byte index
- * and random byte-array of configurable length (equal to all keys).
- *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@DefinitionElement(name = "cargo", doc = "This generator creates key objects with the 8-byte index" +
+      " and random byte-array of configurable length (equal to all keys).")
 public class CargoKeyGenerator implements KeyGenerator {
    @Property(doc = "Size of the cargo (in bytes).", optional = false)
    private int size;

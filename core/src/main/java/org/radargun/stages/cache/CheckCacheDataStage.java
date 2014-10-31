@@ -20,14 +20,12 @@ import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.stages.helpers.Range;
-import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Debugable;
 import org.radargun.traits.InMemoryBasicOperations;
 import org.radargun.traits.InjectTrait;
-import org.radargun.utils.Utils;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -89,17 +87,13 @@ public class CheckCacheDataStage extends AbstractDistStage {
          "will be executed only against in-memory data. Default is false.")
    private boolean memoryOnly = false;
 
-   @Property(doc = "Full class name of the key generator. By default the generator is retrieved from slave state.")
-   protected String keyGeneratorClass = null;
+   @Property(doc = "Generator of keys (transforms key ID into key object). By default the generator is retrieved from slave state.",
+         complexConverter = KeyGenerator.ComplexConverter.class)
+   protected KeyGenerator keyGenerator = null;
 
-   @Property(doc = "Used to initialize the key generator. Null by default.")
-   protected String keyGeneratorParam = null;
-
-   @Property(doc = "Full class name of the value generator. By default the generator is retrieved from slave state.")
-   protected String valueGeneratorClass = null;
-
-   @Property(doc = "Used to initialize the value generator. Null by default.")
-   protected String valueGeneratorParam = null;
+   @Property(doc = "Generator of values. By default the generator is retrieved from slave state.",
+         complexConverter = ValueGenerator.ComplexConverter.class)
+   protected ValueGenerator valueGenerator = null;
 
    // TODO: better names, even when these are kind of hacks
    @Property(doc = "Check whether the sum of subparts sizes is the same as local size. Default is false.")
@@ -110,8 +104,6 @@ public class CheckCacheDataStage extends AbstractDistStage {
 
    @Property(doc = "Check that number of non-zero subparts is equal to number of replicas. Default is false.")
    private boolean checkSubpartsAreReplicas = false;
-
-   private transient KeyGenerator keyGenerator;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected BasicOperations basicOperations;
@@ -127,18 +119,22 @@ public class CheckCacheDataStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      if (!shouldExecute()) {
-         return successfulResponse();
-      }
       if (!isServiceRunning()) {
          // this slave is dead and does not participate on check
          return successfulResponse();
       }
       if (!sizeOnly) {
-         if (keyGeneratorClass != null) {
-            keyGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), keyGeneratorClass, keyGeneratorParam);
-         } else {
+         if (keyGenerator == null) {
             keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
+            if (keyGenerator == null) {
+               throw new IllegalStateException("Key generator was not specified and no key generator was used before.");
+            }
+         }
+         if (valueGenerator == null) {
+            valueGenerator = (ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR);
+            if (valueGenerator == null) {
+               throw new IllegalStateException("Value generator was not specified and no key generator was used before.");
+            }
          }
          CheckResult result = new CheckResult();
          if (memoryOnly && inMemoryBasicOperations != null) {
@@ -152,13 +148,12 @@ public class CheckCacheDataStage extends AbstractDistStage {
 
          try {
             if (checkThreads <= 1) {
-               ValueChecker checker = new GeneratedValueChecker((ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR));
                int entriesToCheck = numEntries;
                int initValue = firstEntryOffsetSlaveIndex > 0 ? firstEntryOffsetSlaveIndex * slaveState.getSlaveIndex() : firstEntryOffset;
                for (int i = initValue; entriesToCheck > 0; i += stepEntryCount) {
                   int checkAmount = Math.min(checkEntryCount, entriesToCheck);
                   for (int j = 0; j < checkAmount; ++j) {
-                     if (!checkKey(basicCache, debugableCache, i + j, result, checker)) {
+                     if (!checkKey(basicCache, debugableCache, i + j, result, valueGenerator)) {
                         entriesToCheck = 0;
                         break;
                      }
@@ -239,13 +234,12 @@ public class CheckCacheDataStage extends AbstractDistStage {
       public CheckResult call() throws Exception {
          try {
             CheckResult result = new CheckResult();
-            ValueChecker checker = new GeneratedValueChecker(getValueGenerator());
             int entriesToCheck = to - from;
             int addend = firstEntryOffsetSlaveIndex > 0 ? firstEntryOffsetSlaveIndex * slaveState.getSlaveIndex() : firstEntryOffset;
             for (int i = from * (stepEntryCount / checkEntryCount) + addend; entriesToCheck > 0; i += stepEntryCount) {
                int checkAmount = Math.min(checkEntryCount, entriesToCheck);
                for (int j = 0; j < checkAmount; ++j) {
-                  if (!checkKey(basicCache, debugableCache, i + j, result, checker)) {
+                  if (!checkKey(basicCache, debugableCache, i + j, result, valueGenerator)) {
                      entriesToCheck = 0;
                      break;
                   }
@@ -260,26 +254,16 @@ public class CheckCacheDataStage extends AbstractDistStage {
       }
    }
 
-   protected ValueGenerator getValueGenerator() {
-      ValueGenerator valueGenerator;
-      if (valueGeneratorClass != null) {
-         valueGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), valueGeneratorClass, valueGeneratorParam);
-      } else {
-         valueGenerator = (ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR);
-      }
-      return valueGenerator;
-   }
-
    protected int getExpectedNumEntries() {
       return numEntries;
    }
 
-   protected boolean checkKey(BasicOperations.Cache basicCache, Debugable.Cache debugableCache, int keyIndex, CheckResult result, ValueChecker checker) {
+   protected boolean checkKey(BasicOperations.Cache basicCache, Debugable.Cache debugableCache, int keyIndex, CheckResult result, ValueGenerator generator) {
       Object key = keyGenerator.generateKey(keyIndex);
       try {
          Object value = basicCache.get(key);
          if (!isDeleted()) {
-            if (value != null && checker.check(value, key)) {
+            if (value != null && generator.checkValue(value, key, entrySize)) {
                result.found++;
             } else {
                if (value == null) {
@@ -503,24 +487,6 @@ public class CheckCacheDataStage extends AbstractDistStage {
       public String toString() {
          return String.format("[checked=%d, found=%d, nullValues=%d, invalidValues=%d, exceptions=%d]",
                               checked, found, nullValues, invalidValues, exceptions);
-      }
-   }
-
-   protected interface ValueChecker {
-
-      boolean check(Object value, Object key);
-   }
-
-   protected class GeneratedValueChecker implements ValueChecker {
-      private final ValueGenerator valueGenerator;
-
-      public GeneratedValueChecker(ValueGenerator valueGenerator) {
-         this.valueGenerator = valueGenerator;
-      }
-
-      @Override
-      public boolean check(Object value, Object key) {
-         return valueGenerator.checkValue(value, key, entrySize);
       }
    }
 }

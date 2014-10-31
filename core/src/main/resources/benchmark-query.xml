@@ -20,9 +20,11 @@
       <service-start />
 
       <!-- Loading the data -->
-      <load-data num-entries="5000" entry-size="0"
-                 value-generator-class="org.radargun.query.SingleWordGenerator"
-                 value-generator-param="file:${org.radargun.query.dictionary:conf/test-data/animals.txt}"/>
+      <load-data num-entries="5000" entry-size="0" seed="12345">
+         <value-generator>
+            <single-word file="${org.radargun.query.dictionary:/test-data/animals.txt}" />
+         </value-generator>
+      </load-data>
 
       <!-- Logic does only queries - we don't have to specify any generator -->
       <query test-name="querying"

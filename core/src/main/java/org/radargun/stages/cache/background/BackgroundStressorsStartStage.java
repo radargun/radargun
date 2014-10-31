@@ -27,7 +27,7 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      slaveState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector(CacheSelector.Type.ALL, generalConfiguration.cacheName));
+      slaveState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.UseCache(generalConfiguration.cacheName));
       try {
          BackgroundOpsManager instance = BackgroundOpsManager.getOrCreateInstance(slaveState,
                generalConfiguration, legacyLogicConfiguration, logLogicConfiguration);

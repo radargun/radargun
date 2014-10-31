@@ -2,6 +2,8 @@ package org.radargun.stages.cache.generators;
 
 import java.util.Random;
 
+import org.radargun.utils.ReflexiveConverters;
+
 /**
  * Factory class which generates the values used for stress testing
  *
@@ -15,4 +17,10 @@ public interface ValueGenerator {
    int sizeOf(Object value);
 
    boolean checkValue(Object value, Object key, int expectedSize);
+
+   public static class ComplexConverter extends ReflexiveConverters.ObjectConverter {
+      public ComplexConverter() {
+         super(ValueGenerator.class);
+      }
+   }
 }

@@ -4,9 +4,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Random;
 
+import org.radargun.config.DefinitionElement;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * Generates number objects NumberObject (by default it is org.radargun.query.NumberObject)
@@ -22,7 +25,10 @@ import org.radargun.config.PropertyHelper;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@DefinitionElement(name = "number-object", doc = "Generates objects with integer and double values.")
 public class NumberObjectGenerator implements ValueGenerator {
+   protected static Log log = LogFactory.getLog(NumberObjectGenerator.class);
+
    @Property(doc = "Minimal value (inclusive) of generated integer part.")
    private long intMin = Integer.MIN_VALUE;
 
@@ -50,7 +56,8 @@ public class NumberObjectGenerator implements ValueGenerator {
          getInt = clazz.getMethod("getInt");
          getDouble = clazz.getMethod("getDouble");
       } catch (Exception e) {
-         throw new IllegalStateException(e);
+         // trace as this can happen on master node
+         log.trace("Could not initialize generator " + this, e);
       }
    }
 
@@ -63,6 +70,7 @@ public class NumberObjectGenerator implements ValueGenerator {
    }
 
    private Object newInstance(int i, double d) {
+      if (ctor == null)  throw new IllegalStateException("The generator was not properly initialized");
       try {
          return ctor.newInstance(i, d);
       } catch (Exception e) {
@@ -77,6 +85,7 @@ public class NumberObjectGenerator implements ValueGenerator {
 
    @Override
    public boolean checkValue(Object value, Object key, int expectedSize) {
+      if (getInt == null || getDouble == null)  throw new IllegalStateException("The generator was not properly initialized");
       try {
          int integerValue = (Integer) getInt.invoke(value);
          double doubleValue = (Double) getDouble.invoke(value);

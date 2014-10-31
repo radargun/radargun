@@ -75,6 +75,7 @@ public class ReflexiveConverters {
          } else if (definition instanceof SimpleDefinition) {
             PropertyHelper.setProperties(item, Collections.singletonMap("", ((SimpleDefinition) definition).value), false, true);
          }
+         InitHelper.init(item);
          return item;
       }
 
