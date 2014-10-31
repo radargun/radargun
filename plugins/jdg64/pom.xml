@@ -30,7 +30,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>6.4.0</version.infinispan>
+            <version.infinispan>6.2.0.ER2-redhat-1</version.infinispan>
          </properties>
       </profile>
       <profile>
