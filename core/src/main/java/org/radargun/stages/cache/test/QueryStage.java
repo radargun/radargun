@@ -94,7 +94,7 @@ public class QueryStage extends TestStage {
          maxSize = Math.max(maxSize, ack.queryResultSize);
          slaveResults.put(ack.getSlaveIndex(), new Report.SlaveResult(String.valueOf(ack.queryResultSize), false));
       }
-      Report.Test test = getTest();
+      Report.Test test = getTest(true); // the test was already created in super.processAckOnMaster
       if (test != null) {
          String sizeString = minSize == maxSize ? String.valueOf(maxSize) : String.format("%d .. %d", minSize, maxSize);
          test.addResult(getTestIteration(), new Report.TestResult("Query result size", slaveResults, sizeString, false));

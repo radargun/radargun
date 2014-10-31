@@ -126,7 +126,7 @@ public abstract class TestStage extends AbstractDistStage {
       StageResult result = super.processAckOnMaster(acks);
       if (result.isError()) return result;
 
-      Report.Test test = getTest();
+      Report.Test test = getTest(amendTest);
       testIteration = test == null ? 0 : test.getIterations().size();
       Statistics aggregated = createStatistics();
       int threads = 0;
@@ -169,7 +169,7 @@ public abstract class TestStage extends AbstractDistStage {
       }
    }
 
-   protected Report.Test getTest() {
+   protected Report.Test getTest(boolean allowExisting) {
       if (testName == null || testName.isEmpty()) {
          log.warn("No test name - results are not recorded");
          return null;
@@ -178,7 +178,7 @@ public abstract class TestStage extends AbstractDistStage {
          return null;
       } else {
          Report report = masterState.getReport();
-         return report.createTest(testName, iterationProperty, amendTest);
+         return report.createTest(testName, iterationProperty, allowExisting);
       }
    }
 
