@@ -47,12 +47,12 @@ public class InfinispanCacheInfo implements CacheInformation {
 
       @Override
       public long getLocallyStoredSize() {
-         return cache.size();
+         return cache.withFlags(Flag.CACHE_MODE_LOCAL).size();
       }
 
       @Override
       public long getMemoryStoredSize() {
-         return cache.withFlags(Flag.SKIP_CACHE_LOAD).size();
+         return cache.withFlags(Flag.SKIP_CACHE_LOAD, Flag.CACHE_MODE_LOCAL).size();
       }
 
       @Override
