@@ -31,14 +31,20 @@
     <!-- Sequence of stages executed on the cluster -->
     <scenario>
         <service-start groups="g1"/>
-        <load-data num-entries="1000" value-generator-class="org.radargun.stages.cache.generators.CacheAwareTextGenerator"
-                   value-generator-param="cacheName:testCacheSite1;suffix:SITE1_ORIGINAL" groups="g1" key-id-offset="0">
-            <cache-selector>all:testCacheSite1</cache-selector>
+        <load-data num-entries="1000" groups="g1" key-id-offset="0">
+            <cache-selector>
+               <use-cache cache="testCacheSite1" />
+            </cache-selector>
+           <value-generator>
+              <cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
+           </value-generator>
         </load-data>
 
-        <xs-repl-check entry-size="-1" num-entries="1000" first-entry-offset="0" groups="g1"
-                       value-generator-class="org.radargun.stages.cache.generators.CacheAwareTextGenerator"
-                       value-generator-param="cacheName:testCacheSite1;suffix:SITE1_ORIGINAL" />
+        <xs-repl-check entry-size="-1" num-entries="1000" first-entry-offset="0" groups="g1">
+           <value-generator>
+              <cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
+           </value-generator>
+        </xs-repl-check>
 
         <service-start groups="g2"/>
 
@@ -66,14 +72,23 @@
         </jmx-invocation>
 
         <!-- Start data loading into 2 caches simultaneously. Note that cache names are included in inserted values -->
-        <background-load-data-start num-entries="1000" value-generator-class="org.radargun.stages.cache.generators.CacheAwareTextGenerator"
-                                    value-generator-param="cacheName:testCacheSite1;suffix:SITE1_UPDATE" groups="g1" key-id-offset="1000">
-            <cache-selector>all:testCacheSite1</cache-selector>
+        <background-load-data-start num-entries="1000" groups="g1" key-id-offset="1000">
+           <cache-selector>
+              <use-cache cache="testCacheSite1"/>
+           </cache-selector>
+           <value-generator>
+              <cache-aware-text cache-name="testCacheSite1" suffix="SITE1_UPDATE" />
+           </value-generator>
         </background-load-data-start>
-        <background-load-data-start num-entries="400" value-generator-class="org.radargun.stages.cache.generators.CacheAwareTextGenerator"
-                                    value-generator-param="cacheName:testCacheSite1_backup;suffix:SITE1_BACKUP_UPDATE" groups="g2" key-id-offset="300"
+
+        <background-load-data-start num-entries="400" groups="g2" key-id-offset="300"
                                     request-period="75">
-            <cache-selector>all:testCacheSite1_backup</cache-selector>
+           <cache-selector>
+              <use-cache cache="testCacheSite1_backup"/>
+           </cache-selector>
+           <value-generator>
+              <cache-aware-text cache-name="testCacheSite1_backup" suffix="SITE1_BACKUP_UPDATE" />
+           </value-generator>
         </background-load-data-start>
 
         <!-- Wait until data loading finishes -->
@@ -83,21 +98,29 @@
 
         <!-- Check whether caches contain expected number of entries. Utilizes cache names specified in background-load-data-start -->
         <xs-repl-check entry-size="-1" num-entries="400" first-entry-offset="300" groups="g2"
-                       value-generator-class="org.radargun.stages.cache.generators.CacheAwareTextGenerator"
-                       value-generator-param="cacheName:testCacheSite1_backup;suffix:SITE1_BACKUP_UPDATE"
-                       ignore-sum="true"/>
+                       ignore-sum="true">
+            <value-generator>
+                <cache-aware-text cache-name="testCacheSite1_backup" suffix="SITE1_BACKUP_UPDATE" />
+            </value-generator>
+        </xs-repl-check>
         <xs-repl-check entry-size="-1" num-entries="300" first-entry-offset="0" groups="g2"
-                       value-generator-class="org.radargun.stages.cache.generators.CacheAwareTextGenerator"
-                       value-generator-param="cacheName:testCacheSite1;suffix:SITE1_ORIGINAL"
-                       ignore-sum="true"/>
+                       ignore-sum="true">
+            <value-generator>
+                <cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
+            </value-generator>
+        </xs-repl-check>
         <xs-repl-check entry-size="-1" num-entries="300" first-entry-offset="700" groups="g2"
-                       value-generator-class="org.radargun.stages.cache.generators.CacheAwareTextGenerator"
-                       value-generator-param="cacheName:testCacheSite1;suffix:SITE1_ORIGINAL"
-                       ignore-sum="true" />
+                       ignore-sum="true">
+            <value-generator>
+                <cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
+            </value-generator>
+        </xs-repl-check>
         <xs-repl-check entry-size="-1" num-entries="1000" first-entry-offset="1000" groups="g2"
-                       value-generator-class="org.radargun.stages.cache.generators.CacheAwareTextGenerator"
-                       value-generator-param="cacheName:testCacheSite1;suffix:SITE1_UPDATE"
-                       ignore-sum="true"/>
+                       ignore-sum="true">
+            <value-generator>
+                <cache-aware-text cache-name="testCacheSite1" suffix="SITE1_UPDATE" />
+            </value-generator>
+        </xs-repl-check>
 
         <!-- Check total number of entries in sites using jmx -->
         <jmx-invocation groups="g1" target-name="numberOfEntries"

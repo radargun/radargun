@@ -46,23 +46,17 @@ public class LoadDataStage extends AbstractDistStage {
    @Property(doc = "The number of threads that should load the entries on one slave. Default is 10.")
    protected int numThreads = 10;
 
-   @Property(doc = "Full class name of the key generator. Default is org.radargun.stressors.StringKeyGenerator.")
-   protected String keyGeneratorClass = StringKeyGenerator.class.getName();
+   @Property(doc = "Generator of keys (transforms key ID into key object). Default is 'string'.",
+         complexConverter = KeyGenerator.ComplexConverter.class)
+   protected KeyGenerator keyGenerator = new StringKeyGenerator();
 
-   @Property(doc = "Used to initialize the key generator. Null by default.")
-   protected String keyGeneratorParam = null;
+   @Property(doc = "Generator of values. Default is byte-array.",
+         complexConverter = ValueGenerator.ComplexConverter.class)
+   protected ValueGenerator valueGenerator = new ByteArrayValueGenerator();
 
-   @Property(doc = "Full class name of the value generator. Default is org.radargun.stressors.ByteArrayValueGenerator if useConditionalOperations=false and org.radargun.stressors.WrappedArrayValueGenerator otherwise.")
-   protected String valueGeneratorClass = ByteArrayValueGenerator.class.getName();
-
-   @Property(doc = "Used to initialize the value generator. Null by default.")
-   protected String valueGeneratorParam = null;
-
-   @Property(doc = "Which buckets will the stressors use. Available is 'none' (no buckets = null)," +
-         "'thread' (each thread will use bucked_/threadId/) or " +
-         "'all:/bucketName/' (all threads will use bucketName). Default is 'none'.",
-         converter = CacheSelector.Converter.class)
-   protected CacheSelector cacheSelector = new CacheSelector(CacheSelector.Type.DEFAULT, null);
+   @Property(doc = "Selects which caches will be loaded. Default is the default cache.",
+         complexConverter = CacheSelector.ComplexConverter.class)
+   protected CacheSelector cacheSelector = new CacheSelector.Default();
 
    @Property(doc = "This option forces local loading of all keys on all slaves in this group (not only numEntries/numNodes). Default is false.")
    protected boolean loadAllKeys = false;
@@ -95,8 +89,6 @@ public class LoadDataStage extends AbstractDistStage {
    @InjectTrait
    protected Transactional transactional;
 
-   protected KeyGenerator keyGenerator;
-   protected ValueGenerator valueGenerator;
    protected AtomicLong entryCounter = new AtomicLong(0);
    protected AtomicLong sizeSum = new AtomicLong(0);
 
@@ -112,10 +104,6 @@ public class LoadDataStage extends AbstractDistStage {
             return errorResponse("Transaction size was not configured");
          }
       }
-      log.info("Using key generator " + keyGeneratorClass + ", param " + keyGeneratorParam);
-      keyGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), keyGeneratorClass, keyGeneratorParam);
-      log.info("Using value generator " + valueGeneratorClass + ", param " + valueGeneratorParam);
-      valueGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), valueGeneratorClass, valueGeneratorParam);
 
       slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
       slaveState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);

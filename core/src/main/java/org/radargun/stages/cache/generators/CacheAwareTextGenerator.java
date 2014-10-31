@@ -2,6 +2,7 @@ package org.radargun.stages.cache.generators;
 
 import java.util.Random;
 
+import org.radargun.config.DefinitionElement;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 
@@ -11,6 +12,7 @@ import org.radargun.config.Property;
  *
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
  */
+@DefinitionElement(name = "cache-aware-text", doc = "Generates values containing specified cache name.")
 public class CacheAwareTextGenerator implements ValueGenerator {
 
    @Property(optional = false, doc = "Cache name to be included in the generated value.")

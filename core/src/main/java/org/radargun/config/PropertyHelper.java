@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.radargun.Master;
+import org.radargun.Slave;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
@@ -172,7 +174,8 @@ public class PropertyHelper {
 
          Path path = properties.get(propName);
          if (path != null) {
-            if (path.getTargetAnnotation().readonly()) {
+            Property propertyAnnotation = path.getTargetAnnotation();
+            if (propertyAnnotation.readonly()) {
                throw new IllegalArgumentException("Property " + propName + " -> " + path + " is readonly and therefore cannot be set!");
             }
             setPropertyFromString(target, propName, path, entry.getValue());
@@ -215,13 +218,14 @@ public class PropertyHelper {
                }
                continue;
             }
-            if (path.getTargetAnnotation().readonly()) {
+            Property propertyAnnotation = path.getTargetAnnotation();
+            if (propertyAnnotation.readonly()) {
                throw new IllegalArgumentException("Property " + propName + " -> " + path + " is readonly and therefore cannot be set!");
             }
             if (entry.getValue() instanceof SimpleDefinition) {
                setPropertyFromString(target, propName, path, ((SimpleDefinition) entry.getValue()).value);
             } else if (entry.getValue() instanceof ComplexDefinition) {
-               Class<? extends ComplexConverter<?>> converterClass = path.getTargetAnnotation().complexConverter();
+               Class<? extends ComplexConverter<?>> converterClass = propertyAnnotation.complexConverter();
                try {
                   Constructor<? extends ComplexConverter> ctor = converterClass.getDeclaredConstructor();
                   ctor.setAccessible(true);

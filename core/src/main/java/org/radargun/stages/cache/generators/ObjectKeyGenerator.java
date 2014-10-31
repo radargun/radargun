@@ -5,11 +5,12 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
+import org.radargun.config.DefinitionElement;
+
 /**
- * Generates externalizable keys wrapping long identifier of the key.
- *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
+@DefinitionElement(name = "object", doc = "Generates externalizable keys wrapping long identifier of the key.")
 public class ObjectKeyGenerator implements KeyGenerator {
    @Override
    public Object generateKey(long keyIndex) {

@@ -4,17 +4,20 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Random;
 
+import org.radargun.config.DefinitionElement;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
-import org.radargun.config.PropertyHelper;
-import org.radargun.utils.Utils;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * Generates the {@link org.radargun.query.ManyIntegersObject} instances
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@DefinitionElement(name = "many-integers", doc = "Generates objects with specified number of integers.")
 public class ManyIntegersObjectGenerator implements ValueGenerator {
+   protected static Log log = LogFactory.getLog(ManyIntegersObjectGenerator.class);
 
    @Property(doc = "Minimum value for all numbers (inclusive). Default is Integer.MIN_VALUE.")
    private int min = Integer.MIN_VALUE;
@@ -46,12 +49,14 @@ public class ManyIntegersObjectGenerator implements ValueGenerator {
          }
          ctor = clazz.getConstructor(params);
       } catch (Exception e) {
-         throw new IllegalArgumentException(e);
+         // trace as this can happen on master node
+         log.trace("Could not initialize generator " + this, e);
       }
    }
 
    @Override
    public Object generateValue(Object key, int size, Random random) {
+      if (ctor == null)  throw new IllegalStateException("The generator was not properly initialized");
       Object[] params = new Object[numInts];
       for (int i = 0; i < params.length; ++i) params[i] = randomInt(random);
       try {
@@ -73,6 +78,7 @@ public class ManyIntegersObjectGenerator implements ValueGenerator {
 
    @Override
    public boolean checkValue(Object value, Object key, int expectedSize) {
+      if (clazz == null)  throw new IllegalStateException("The generator was not properly initialized");
       if (!clazz.isInstance(value)) return false;
       try {
          for (Field f : fields) {

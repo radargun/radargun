@@ -1,14 +1,13 @@
 package org.radargun.jpa;
 
-import org.radargun.stages.cache.generators.JpaKeyGenerator;
-
+import java.io.Serializable;
 import javax.persistence.Embeddable;
 
 /**
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
 */
 @Embeddable
-public class EmbeddableId extends JpaKeyGenerator.JpaKey {
+public class EmbeddableId implements Serializable {
    public String firstPart;
    public String secondPart;
 

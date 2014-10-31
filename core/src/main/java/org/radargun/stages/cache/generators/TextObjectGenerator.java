@@ -5,6 +5,8 @@ import java.lang.reflect.Method;
 
 import org.radargun.config.Init;
 import org.radargun.config.Property;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
 
 /**
  * Generates text objects. TextObject (by default it is org.radargun.query.TextObject)
@@ -20,6 +22,7 @@ import org.radargun.config.Property;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class TextObjectGenerator implements ValueGenerator {
+   protected static Log log = LogFactory.getLog(TextObjectGenerator.class);
 
    @Property(name = "class", doc = "Class instantiated by this generator. Default is 'org.radargun.query.TextObject'.")
    private String clazz = "org.radargun.query.TextObject";
@@ -34,7 +37,8 @@ public abstract class TextObjectGenerator implements ValueGenerator {
          ctor = clazz.getConstructor(String.class);
          getText = clazz.getMethod("getText");
       } catch (Exception e) {
-         throw new IllegalStateException(e);
+         // trace as this can happen on master node
+         log.trace("Could not initialize generator " + this, e);
       }
    }
 
@@ -50,6 +54,7 @@ public abstract class TextObjectGenerator implements ValueGenerator {
    }
 
    protected Object newInstance(String text) {
+      if (ctor == null) throw new IllegalStateException("The generator was not properly initialized");
       try {
          return ctor.newInstance(text);
       } catch (Exception e) {
@@ -58,6 +63,7 @@ public abstract class TextObjectGenerator implements ValueGenerator {
    }
 
    protected String getText(Object value) {
+      if (getText == null) throw new IllegalStateException("The generator was not properly initialized");
       try {
          return (String) getText.invoke(value);
       } catch (Exception e) {

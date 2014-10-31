@@ -12,7 +12,6 @@ import org.radargun.state.SlaveState;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Fuzzy;
-import org.radargun.utils.Utils;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -23,59 +22,49 @@ public abstract class CacheTestStage extends TestStage {
    @Property(doc = "Size of the value in bytes. Default is 1000.", converter = Fuzzy.IntegerConverter.class)
    protected Fuzzy<Integer> entrySize = Fuzzy.always(1000);
 
-   @Property(doc = "Full class name of the key generator. By default the generator is retrieved from slave state.")
-   protected String keyGeneratorClass = null;
+   @Property(doc = "Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.",
+         complexConverter = KeyGenerator.ComplexConverter.class)
+   protected KeyGenerator keyGenerator = null;
 
-   @Property(doc = "Used to initialize the key generator. Null by default.")
-   protected String keyGeneratorParam = null;
+   @Property(doc = "Generator of values used in the test. By default the generator is retrieved from slave state.",
+         complexConverter = ValueGenerator.ComplexConverter.class)
+   protected ValueGenerator valueGenerator = null;
 
-   @Property(doc = "Full class name of the value generator. By default the generator is retrieved from slave state.")
-   protected String valueGeneratorClass = null;
-
-   @Property(doc = "Used to initialize the value generator. Null by default.")
-   protected String valueGeneratorParam = null;
-
-   @Property(doc = "Which buckets will the stressors use. Available is 'none' (no buckets = null)," +
-         "'thread' (each thread will use bucked_/threadId/) or " +
-         "'all:/bucketName/' (all threads will use bucketName). Default is the one retrieved from slave state.",
-         converter = CacheSelector.Converter.class)
+   @Property(doc = "Selects which caches will be used in the test. By default the selector is retrieved from slave state.",
+         complexConverter = CacheSelector.ComplexConverter.class)
    protected CacheSelector cacheSelector = null;
 
    @InjectTrait
    protected ConditionalOperations conditionalOperations;
-
-   protected KeyGenerator keyGenerator;
-   protected ValueGenerator valueGenerator;
 
    @Override
    public void initOnSlave(final SlaveState slaveState) {
       super.initOnSlave(slaveState);
       if (!shouldExecute()) return;
 
-      if (keyGeneratorClass == null) {
+      if (keyGenerator == null) {
          keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
          if (keyGenerator == null) {
             throw new IllegalStateException("Key generator was not specified and no key generator was used before.");
          }
       } else {
-         keyGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), keyGeneratorClass, keyGeneratorParam);
          slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
       }
       log.info("Using key generator " + keyGenerator.getClass().getName() + PropertyHelper.toString(keyGenerator));
 
-      if (valueGeneratorClass == null) {
+      if (valueGenerator == null) {
          valueGenerator = (ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR);
          if (valueGenerator == null) {
             throw new IllegalStateException("Value generator was not specified and no key generator was used before.");
          }
       } else {
-         valueGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), valueGeneratorClass, valueGeneratorParam);
          slaveState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
       }
       log.info("Using value generator " + valueGenerator.getClass().getName() + PropertyHelper.toString(valueGenerator));
 
       if (cacheSelector == null) {
-         if ((cacheSelector = (CacheSelector) slaveState.get(CacheSelector.CACHE_SELECTOR)) == null){
+         cacheSelector = (CacheSelector) slaveState.get(CacheSelector.CACHE_SELECTOR);
+         if (cacheSelector == null){
             throw new IllegalStateException("No cache selector defined.");
          }
       } else {
