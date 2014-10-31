@@ -328,13 +328,13 @@ public abstract class ReportDocument extends HtmlDocument {
       writeTD(defaultOutcome == null ? "&nbsp;" : String.valueOf(defaultOutcome.errors), rowStyle);
       writeTD(meanAndDev == null ? "&nbsp;" : formatTime(meanAndDev.mean), rowStyle);
       writeTD(meanAndDev == null ? "&nbsp;" : formatTime(meanAndDev.dev), rowStyle);
+      writeTD(throughput == null ? "&nbsp;" : String.format("%.0f&nbsp;reqs/s", throughput.actual), rowStyle);
       if (hasPercentiles) {
          for (double percentile : configuration.percentiles) {
             Percentile p = operationStats == null ? null : operationStats.getRepresentation(Percentile.class, percentile);
             writeTD(p == null ? "&nbsp;" : formatTime(p.responseTimeMax), rowStyle);
          }
       }
-      writeTD(throughput == null ? "&nbsp;" : String.format("%.0f&nbsp;reqs/s", throughput.actual), rowStyle);
       if (hasHistograms) {
          if (histogram == null) {
             writeTD("none", rowStyle);
