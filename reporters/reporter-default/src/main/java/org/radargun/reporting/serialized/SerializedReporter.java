@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.radargun.ShutDownHook;
 import org.radargun.config.DomConfigParser;
 import org.radargun.config.MasterConfig;
 import org.radargun.config.Property;
@@ -115,5 +116,7 @@ public class SerializedReporter implements Reporter {
             }
          }
       }
+
+      ShutDownHook.exit(0); // the shutdown is controlled
    }
 }
