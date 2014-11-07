@@ -124,6 +124,8 @@ public final class HistogramOperationStats implements OperationStats {
    }
 
    public void compact() {
+      if (compacted != null) return;
+      if (histogram == null) throw new IllegalStateException("Either compacted or expanded form has to be defined!");
       AbstractHistogram.AllValues values = histogram.allValues();
       ArrayList<Long> ranges = new ArrayList<>();
       ArrayList<Long> counts = new ArrayList<>();
