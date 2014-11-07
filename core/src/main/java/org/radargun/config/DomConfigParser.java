@@ -76,20 +76,25 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       index = nextElement(childNodes, index + 1);
 
       Map<String, Definition> destroyProperties = Collections.EMPTY_MAP;
-      if (ELEMENT_DESTROY.equals(childNodes.item(index).getNodeName())) {
+      Node elementDestroy = childNodes.item(index);
+      if (elementDestroy != null && ELEMENT_DESTROY.equals(childNodes.item(index).getNodeName())) {
          destroyProperties = parseProperties((Element) childNodes.item(index), true);
          index = nextElement(childNodes, index + 1);
       }
       scenario.addStage(ScenarioDestroyStage.class, destroyProperties, null);
 
       Map<String, Definition> cleanupProperties = Collections.EMPTY_MAP;
-      if (ELEMENT_CLEANUP.equals(childNodes.item(index).getNodeName())) {
+      Node elementCleanup = childNodes.item(index);
+      if (elementCleanup != null && ELEMENT_CLEANUP.equals(childNodes.item(index).getNodeName())) {
          cleanupProperties = parseProperties((Element) childNodes.item(index), true);
          index = nextElement(childNodes, index + 1);
       }
       scenario.addStage(ScenarioCleanupStage.class, cleanupProperties, null);
 
-      parseReporting(masterConfig, (Element) childNodes.item(index));
+      Element reportElement = (Element) childNodes.item(index);
+      if (reportElement != null && ELEMENT_REPORTS.equals(reportElement.getNodeName())) {
+         parseReporting(masterConfig, reportElement);
+      }
 
       return masterConfig;
    }
