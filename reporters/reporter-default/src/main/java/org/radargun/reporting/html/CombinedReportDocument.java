@@ -23,9 +23,10 @@ import org.radargun.utils.Projections;
 public class CombinedReportDocument extends ReportDocument {
 
    private List<TestAggregations> testAggregations;
-   Set<String> operations = new HashSet<>();
+   private Set<String> operations = new HashSet<>();
+   private List<String> combined;
 
-   public CombinedReportDocument(List<TestAggregations> testAggregations, String testName, String targetDir, Configuration configuration) {
+   public CombinedReportDocument(List<TestAggregations> testAggregations, String testName, List<String> combined, String targetDir, Configuration configuration) {
       super(targetDir, testName, Projections.max(Projections.project(testAggregations, new Projections.Func<TestAggregations, Integer>() {
          @Override
          public Integer project(TestAggregations testAggregations) {
@@ -43,6 +44,7 @@ public class CombinedReportDocument extends ReportDocument {
          }
       })), configuration);
       this.testAggregations = testAggregations;
+      this.combined = combined;
       for (TestAggregations h : testAggregations) {
          operations.addAll(h.getAllOperations());
       }
@@ -86,10 +88,7 @@ public class CombinedReportDocument extends ReportDocument {
 
       for (final String operation : operations) {
          writeTag("h2", operation);
-         Map<Report, List<Aggregation>> allAggregations = new TreeMap<>();
-         for (TestAggregations ta : testAggregations) {
-            allAggregations.putAll(ta.byReports());
-         }
+
          if (configuration.separateClusterCharts) {
             for (Integer clusterSize : clusterSizes) {
                createAndWriteCharts(operation, clusterSize);
@@ -97,7 +96,10 @@ public class CombinedReportDocument extends ReportDocument {
          } else {
             createAndWriteCharts(operation, 0);
          }
-         writeOperation(operation, allAggregations);
+         int i = 0;
+         for (TestAggregations ta : testAggregations) {
+            writeOperation(operation, ta.byReports(), combined.get(i++));
+         }
       }
    }
 }

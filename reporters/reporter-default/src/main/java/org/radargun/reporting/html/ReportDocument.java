@@ -192,7 +192,7 @@ public abstract class ReportDocument extends HtmlDocument {
       return nanos / TimeUnit.MILLISECONDS.toNanos(1);
    }
 
-   protected void writeOperation(final String operation, Map<Report, List<Aggregation>> reportAggregationMap) {
+   protected void writeOperation(final String operation, Map<Report, List<Aggregation>> reportAggregationMap, String singleTestName) {
       boolean hasPercentiles = configuration.percentiles.length > 0 && hasRepresentation(operation, reportAggregationMap, Percentile.class, configuration.percentiles[0]);
       boolean hasHistograms = hasRepresentation(operation, reportAggregationMap, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
 
@@ -212,7 +212,7 @@ public abstract class ReportDocument extends HtmlDocument {
          iterations.add(concatOrDefault(iterationValues, "iteration " + String.valueOf(iteration)));
       }
 
-      writeOperationHeader(iterations, hasPercentiles, hasHistograms);
+      writeOperationHeader(iterations, hasPercentiles, hasHistograms, singleTestName);
       for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
          writeOperationLine(operation, hasPercentiles, hasHistograms, entry.getKey(), entry.getValue());
       }
@@ -258,7 +258,7 @@ public abstract class ReportDocument extends HtmlDocument {
       }
    }
 
-   private void writeOperationHeader(List<String> iterationValues, boolean hasPercentiles, boolean hasHistograms) {
+   private void writeOperationHeader(List<String> iterationValues, boolean hasPercentiles, boolean hasHistograms, String singleTestName) {
       write("<table>\n");
       int columns = (hasHistograms ? 6 : 5) + (hasPercentiles ? configuration.percentiles.length : 0);
       if (maxIterations > 1) {
@@ -268,7 +268,7 @@ public abstract class ReportDocument extends HtmlDocument {
          }
          write("</tr>\n");
       }
-      write("<tr><th colspan=\"2\">Configuration</th>\n");
+      write(String.format("<tr><th colspan=\"2\">Configuration %s</th>\n", singleTestName));
       for (int i = 0; i < maxIterations; ++i) {
          write("<th style=\"text-align: center; border-left-color: black; border-left-width: 2px;\">requests</th>\n");
          write("<th style=\"text-align: center\">errors</th>\n");
