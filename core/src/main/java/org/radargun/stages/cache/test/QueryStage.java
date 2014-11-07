@@ -178,11 +178,7 @@ public class QueryStage extends TestStage {
       public abstract void apply(Queryable.QueryBuilder builder);
 
       public String toString() {
-         DefinitionElement de = getClass().getAnnotation(DefinitionElement.class);
-         StringBuilder sb = new StringBuilder();
-         if (de == null) sb.append(getClass().getSimpleName());
-         else sb.append(de.name());
-         return sb.append(PropertyHelper.toString(this)).toString();
+         return PropertyHelper.getDefinitionElementName(getClass()) + PropertyHelper.toString(this);
       }
    }
 

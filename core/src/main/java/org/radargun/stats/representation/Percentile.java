@@ -1,5 +1,8 @@
 package org.radargun.stats.representation;
 
+import org.radargun.config.DefinitionElement;
+import org.radargun.config.Property;
+import org.radargun.stats.OperationStats;
 import org.radargun.utils.Utils;
 
 /**
@@ -22,5 +25,18 @@ public class Percentile {
       double percentile = Utils.getArg(args, 0, Double.class);
       if (percentile < 0 || percentile > 100) throw new IllegalArgumentException(String.valueOf(percentile));
       return percentile;
+   }
+
+   @DefinitionElement(name = "percentile", doc = "Retrieve max response time at given percentile.")
+   public static class PercentileAt extends RepresentationType {
+      @Property(doc = "Percentile value, between 0 and 100.", optional = false)
+      protected double value;
+
+      @Override
+      public double getValue(OperationStats stats, int threads, long duration) {
+         Percentile percentile = stats.getRepresentation(Percentile.class, value);
+         if (percentile == null) throw new IllegalArgumentException("Cannot retrieve percentile from " + stats);
+         return percentile.responseTimeMax;
+      }
    }
 }

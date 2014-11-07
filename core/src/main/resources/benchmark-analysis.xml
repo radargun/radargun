@@ -1,0 +1,79 @@
+<!-- RadarGun 2.0 benchmark -->
+<!-- Demonstrates how to use the 'analyze-test' stage -->
+<benchmark xmlns="urn:radargun:benchmark:2.0">
+
+   <!-- Specifies where should the master open socket  -->
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <!-- List of cluster configurations where the benchmark should run-->
+   <clusters>
+      <cluster size="2" />
+   </clusters>
+
+   <!-- List of configurations of the services -->
+   <configurations>
+      <config name="Infinispan 6.0 - distributed">
+         <setup plugin="infinispan60" file="dist-sync.xml" />
+      </config>
+   </configurations>
+
+   <scenario>
+      <service-start />
+      <jvm-monitor-start />
+
+      <!-- We should do warmup here, and generally run the tests for longer time -->
+
+      <!-- Preload the cache with data -->
+      <load-data num-entries="10000"/>
+
+      <!-- Generate statistics for 10, 20, 30 .. 100 threads -->
+      <repeat times="10">
+         <basic-operations-test test-name="increase-thread-count" amend-test="true"
+                                duration="10s"
+                                total-threads="#{ 10 * ${repeat.counter} + 10 }"
+                                iteration-property="total-threads">
+            <key-selector>
+               <colliding-keys num-entries="10000"/>
+            </key-selector>
+         </basic-operations-test>
+      </repeat>
+
+      <!-- Find which iteration had maximum TX throughput -->
+      <analyze-test test-name="increase-thread-count" operation="Transactional.Duration"
+                    thread-grouping="GROUP_ALL" iteration-selection="EACH_ITERATION"
+                    analyzis-type="MAX" result-type="ITERATION"
+                    store-result-to="top.iteration">
+         <statistics-type>
+            <throughput />
+         </statistics-type>
+      </analyze-test>
+
+      <!-- Run a longer test to get reliable results -->
+      <basic-operations-test test-name="on-max-throughput"
+                             duration="1m" total-threads="#{ 10 * ${top.iteration} + 10 }">
+         <statistics>
+            <default>
+               <operation-stats>
+                  <default/>
+                  <histogram />
+               </operation-stats>
+            </default>
+         </statistics>
+         <key-selector>
+            <colliding-keys num-entries="10000"/>
+         </key-selector>
+      </basic-operations-test>
+
+      <!-- Stop JVM monitoring -->
+      <jvm-monitor-stop />
+   </scenario>
+
+   <!-- How the statistics are reported -->
+   <reports>
+      <!-- Produce CSV statistics report -->
+      <reporter type="csv" />
+      <!-- Produce HTML statistics report -->
+      <reporter type="html" />
+   </reports>
+
+</benchmark>
