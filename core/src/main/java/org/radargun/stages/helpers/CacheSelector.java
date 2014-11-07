@@ -74,7 +74,7 @@ public class CacheSelector implements Serializable {
       public String allowedPattern(java.lang.reflect.Type type) {
          StringBuilder sb = new StringBuilder("(");
          Type[] values = Type.values();
-         for (int i = 0; i < values.length - 1; ++i) {
+         for (int i = 0; i < values.length; ++i) {
             sb.append(values[i].name().toLowerCase()).append('|');
          }
          sb.append(")(:.*)?");

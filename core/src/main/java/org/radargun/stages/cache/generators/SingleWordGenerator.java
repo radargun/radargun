@@ -28,7 +28,7 @@ public class SingleWordGenerator extends TextObjectGenerator {
    }
 
    @Override
-   public boolean checkValue(Object value, int expectedSize) {
+   public boolean checkValue(Object value, Object key, int expectedSize) {
       return getText(value) != null;
    }
 }

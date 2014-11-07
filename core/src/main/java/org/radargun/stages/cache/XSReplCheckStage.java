@@ -1,112 +1,123 @@
 package org.radargun.stages.cache;
 
-import java.util.Iterator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.stages.cache.generators.CacheAwareTextGenerator;
+import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Debugable;
+import org.radargun.utils.Utils;
 
 /**
- * Checks data loaded in XSReplLoadStage.
+ * Checks loaded data for their validity.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Stage(doc = "Checks data loaded in XSReplLoadStage.")
+@Stage(doc = "Checks loaded data for validity. Useful for testing cross-site replication.")
 public class XSReplCheckStage extends CheckCacheDataStage {
 
-   @Property(doc = "Postfix part of the value contents. Default is empty string.")
-   private String valuePostFix = "";
+   @Property(doc = "Full class name of backup value generator. By default, only main (default) cache is chcecked. " +
+         "If specified, backup caches will be checked too.")
+   protected String backupValueGeneratorClass = null;
 
-   private transient BasicOperations.Cache[] backupCaches;
-   private transient Debugable.Cache[] backupDebugable;
-   private transient BackupCacheValueChecker[] backupCheckers;
+   @Property(doc = "Parameter used to initialize backup value generator. Null by default.")
+   protected String backupValueGeneratorParam = null;
+
+   @Property(doc = "Comma-separated list of all backup caches to be checked. Ignored if backup-value-generator is not specified.")
+   protected List<String> backupCaches = new ArrayList<>();
+
+   private MainCacheValueChecker mainCacheValueChecker;
+   private BackupCacheValueChecker backupCacheValueChecker;
+   private ValueGenerator valueGenerator;
+   private ValueGenerator backupValueGenerator;
+
+   private BasicOperations.Cache[] backupCacheInstances;
+   private Debugable.Cache[] backupDebugable;
 
    @Override
    public DistStageAck executeOnSlave() {
-      int numBackups = slaveState.getGroupCount();
-      backupCaches = new BasicOperations.Cache[numBackups];
-      backupCheckers = new BackupCacheValueChecker[numBackups];
-      if (debugable != null) {
-         backupDebugable = new Debugable.Cache[numBackups];
-      }
-      String mainCacheName = cacheInformation.getDefaultCacheName();
-      Iterator<String> iterator = cacheInformation.getCacheNames().iterator();
-      for (int i = 0; i < numBackups; ++i) {
-         String cacheName = iterator.next();
-         if (cacheName.equals(mainCacheName)) {
-            --i;
-            continue;
-         }
-         backupCaches[i] = basicOperations.getCache(cacheName);
-         backupCheckers[i] = new BackupCacheValueChecker(cacheName);
+      if (backupValueGeneratorClass != null) {
+         backupValueGenerator = Utils.instantiateAndInit(slaveState.getClassLoader(), backupValueGeneratorClass, backupValueGeneratorParam);
+         backupCacheValueChecker = new BackupCacheValueChecker();
+         int numBackups = backupCaches.size();
+         backupCacheInstances = new BasicOperations.Cache[numBackups];
          if (debugable != null) {
-            backupDebugable[i] = debugable.getCache(cacheName);
+            backupDebugable = new Debugable.Cache[numBackups];
+         }
+         for (int i = 0; i < backupCaches.size(); i++) {
+            String cacheName = backupCaches.get(i);
+            backupCacheInstances[i] = basicOperations.getCache(cacheName);
+            if (debugable != null) {
+               backupDebugable[i] = debugable.getCache(cacheName);
+            }
          }
       }
+      valueGenerator = getValueGenerator();
+      if (valueGenerator == null) {
+         throw new IllegalStateException("Value generator has not been specified");
+      }
+      mainCacheValueChecker = new MainCacheValueChecker();
       return super.executeOnSlave();
    }
 
    @Override
+   protected ValueGenerator getValueGenerator() {
+      ValueGenerator valueGenerator = super.getValueGenerator();
+      if (!(valueGenerator instanceof CacheAwareTextGenerator)) {
+         throw new IllegalArgumentException("XSReplCheckStage supports only org.radargun.stages.cache.generators.CacheAwareTextGenerator.");
+      }
+      return valueGenerator;
+   }
+
+   @Override
    protected boolean checkKey(BasicOperations.Cache basicCache, Debugable.Cache debugableCache, int keyIndex, CheckResult result, ValueChecker checker) {
-      boolean retval = super.checkKey(basicCache, debugableCache, keyIndex, result, new MainCacheValueChecker());
-      for (int i = 0; i < backupCaches.length; ++i) {
-         retval = retval && super.checkKey(backupCaches[i], backupDebugable[i], keyIndex, result, backupCheckers[i]);
+      boolean retval = super.checkKey(basicCache, debugableCache, keyIndex, result, mainCacheValueChecker);
+      for (int i = 0; i < backupCaches.size(); ++i) {
+         retval = retval && super.checkKey(backupCacheInstances[i], backupDebugable[i], keyIndex, result, backupCacheValueChecker);
       }
       return retval;
    }
 
    @Override
    protected int getExpectedNumEntries() {
-      return getNumEntries() * cacheInformation.getCacheNames().size();
+      return getNumEntries() * (backupCacheInstances != null ? backupCacheInstances.length + 1 : 1);
    }
 
+   /**
+    * Checks the values of main (default) cache
+    */
    private class MainCacheValueChecker implements ValueChecker {
+
+      public MainCacheValueChecker() {
+         if (valueGenerator == null) {
+            throw new IllegalStateException("Value generator has not been initialized.");
+         }
+      }
+
       @Override
-      public boolean check(int keyIndex, Object value) {
-         return value.equals("value" + keyIndex + valuePostFix + "@" + cacheInformation.getDefaultCacheName());
+      public boolean check(Object value, Object key) {
+         return valueGenerator.checkValue(value, key, entrySize);
       }
    }
 
+   /**
+    * Checks the values of backup cache
+    */
    private class BackupCacheValueChecker implements ValueChecker {
-      private Pattern valuePattern = Pattern.compile("value(\\d*)([^@]*)@(.*)");
-      private volatile String originCache = null;
-      private String cacheName;
 
-      private BackupCacheValueChecker(String cacheName) {
-         this.cacheName = cacheName;
+      private BackupCacheValueChecker() {
+         if (backupValueGenerator == null) {
+            throw new IllegalStateException("Backup value generator has not been specified.");
+         }
       }
 
       @Override
-      public boolean check(int keyIndex, Object value) {
-         Matcher m;
-         if (!(value instanceof String) || !(m = valuePattern.matcher((String) value)).matches()) {
-            return false;
-         }
-         try {
-            Integer.parseInt(m.group(1));
-         } catch (NumberFormatException e) {
-            return false;
-         }
-         if (!m.group(2).equals(valuePostFix)) {
-            return false;
-         }
-         if (originCache == null) {
-            synchronized (this) {
-               if (originCache == null) {
-                  log.info("Cache " + cacheName + " has entries from " + m.group(3));
-                  originCache = m.group(3);
-               }
-            }
-         } else if (!originCache.equals(m.group(3))) {
-            String message = "Cache " + cacheName + " has entries from " + m.group(3) + " but it also had entries from " + originCache + "!";
-            log.error(message);
-            return false;
-         }
-         return true;
+      public boolean check(Object value, Object key) {
+         return backupValueGenerator.checkValue(value, key, entrySize);
       }
    }
 

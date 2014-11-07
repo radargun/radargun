@@ -17,7 +17,7 @@ public class ByteArrayValueGenerator implements ValueGenerator {
    }
 
    @Override
-   public boolean checkValue(Object value, int expectedSize) {
+   public boolean checkValue(Object value, Object key, int expectedSize) {
       return value instanceof byte[] && (expectedSize <= 0 || ((byte[]) value).length == expectedSize);
    }
 

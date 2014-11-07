@@ -75,7 +75,7 @@ public class NumberObjectGenerator implements ValueGenerator {
    }
 
    @Override
-   public boolean checkValue(Object value, int expectedSize) {
+   public boolean checkValue(Object value, Object key, int expectedSize) {
       try {
          int integerValue = (Integer) getInt.invoke(value);
          double doubleValue = (Double) getDouble.invoke(value);

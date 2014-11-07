@@ -20,6 +20,7 @@ import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.stages.helpers.Range;
+import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
@@ -37,7 +38,10 @@ public class CheckCacheDataStage extends AbstractDistStage {
    @Property(optional = false, doc = "Number of entries with key in form specified by the last used key generator, in the cache.")
    private int numEntries;
 
-   @Property(doc = "Index of key of first entry. This number will be multiplied by slaveIndex. Default is 0.")
+   @Property(doc = "Index of key of the first entry. This number will be multiplied by slaveIndex. Default is 0. Has precedence over 'first-entry-offset'.")
+   private int firstEntryOffsetSlaveIndex = 0;
+
+   @Property(doc = "Index of key of the first entry.")
    private int firstEntryOffset = 0;
 
    @Property(doc = "Number of entries that will be checked in each step. Default is 1.")
@@ -47,7 +51,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
    private int stepEntryCount = 1;
 
    @Property(optional = false, doc = "Number of bytes carried in single entry.")
-   private int entrySize;
+   protected int entrySize;
 
    @Property(doc = "Entries that do not have the expected form but occur in the cluster. This string specifies " +
          "a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries." +
@@ -150,7 +154,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
             if (checkThreads <= 1) {
                ValueChecker checker = new GeneratedValueChecker((ValueGenerator) slaveState.get(ValueGenerator.VALUE_GENERATOR));
                int entriesToCheck = numEntries;
-               for (int i = firstEntryOffset * slaveState.getSlaveIndex(); entriesToCheck > 0; i += stepEntryCount) {
+               int initValue = firstEntryOffsetSlaveIndex > 0 ? firstEntryOffsetSlaveIndex * slaveState.getSlaveIndex() : firstEntryOffset;
+               for (int i = initValue; entriesToCheck > 0; i += stepEntryCount) {
                   int checkAmount = Math.min(checkEntryCount, entriesToCheck);
                   for (int j = 0; j < checkAmount; ++j) {
                      if (!checkKey(basicCache, debugableCache, i + j, result, checker)) {
@@ -236,7 +241,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
             CheckResult result = new CheckResult();
             ValueChecker checker = new GeneratedValueChecker(getValueGenerator());
             int entriesToCheck = to - from;
-            for (int i = from * (stepEntryCount / checkEntryCount) + firstEntryOffset * slaveState.getSlaveIndex(); entriesToCheck > 0; i += stepEntryCount) {
+            int addend = firstEntryOffsetSlaveIndex > 0 ? firstEntryOffsetSlaveIndex * slaveState.getSlaveIndex() : firstEntryOffset;
+            for (int i = from * (stepEntryCount / checkEntryCount) + addend; entriesToCheck > 0; i += stepEntryCount) {
                int checkAmount = Math.min(checkEntryCount, entriesToCheck);
                for (int j = 0; j < checkAmount; ++j) {
                   if (!checkKey(basicCache, debugableCache, i + j, result, checker)) {
@@ -273,7 +279,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
       try {
          Object value = basicCache.get(key);
          if (!isDeleted()) {
-            if (value != null && checker.check(keyIndex, value)) {
+            if (value != null && checker.check(value, key)) {
                result.found++;
             } else {
                if (value == null) {
@@ -501,7 +507,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
    }
 
    protected interface ValueChecker {
-      boolean check(int keyIndex, Object value);
+
+      boolean check(Object value, Object key);
    }
 
    protected class GeneratedValueChecker implements ValueChecker {
@@ -512,8 +519,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
       }
 
       @Override
-      public boolean check(int keyIndex, Object value) {
-         return valueGenerator.checkValue(value, entrySize);
+      public boolean check(Object value, Object key) {
+         return valueGenerator.checkValue(value, key, entrySize);
       }
    }
 }

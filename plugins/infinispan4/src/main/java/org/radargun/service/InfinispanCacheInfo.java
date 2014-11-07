@@ -34,7 +34,7 @@ public class InfinispanCacheInfo implements CacheInformation {
    }
 
    protected class Cache implements CacheInformation.Cache {
-      AdvancedCache cache;
+      protected AdvancedCache cache;
 
       public Cache(AdvancedCache cache) {
          this.cache = cache;

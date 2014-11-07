@@ -121,7 +121,8 @@ public class Master {
                returnCode = 127;
             }
          }
-         log.info("All reporters have been executed, exiting.");
+         String reportersMessage = reporters.isEmpty() ? "No reporters have been specified." : "All reporters have been executed, exiting.";
+         log.info(reportersMessage);
       } catch (Throwable e) {
          log.error("Exception in Master.run: ", e);
          returnCode = 127;

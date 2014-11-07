@@ -19,7 +19,7 @@ public class WrappedArrayValueGenerator implements ValueGenerator {
    }
 
    @Override
-   public boolean checkValue(Object value, int expectedSize) {
+   public boolean checkValue(Object value, Object key, int expectedSize) {
       if (!(value instanceof ByteArrayWrapper)) return false;
       ByteArrayWrapper wrapper = (ByteArrayWrapper) value;
       return wrapper.array != null && (expectedSize <= 0 || wrapper.array.length == expectedSize);

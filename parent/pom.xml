@@ -73,6 +73,14 @@
          <timezone>GMT</timezone>
       </developer>
 
+       <developer>
+         <name>Matej Cimbora</name>
+         <roles>
+            <role>Contributor</role>
+         </roles>
+         <timezone>CET</timezone>
+      </developer>
+
    </developers>
 
    <build>

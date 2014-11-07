@@ -72,7 +72,7 @@ public class ManyIntegersObjectGenerator implements ValueGenerator {
    }
 
    @Override
-   public boolean checkValue(Object value, int expectedSize) {
+   public boolean checkValue(Object value, Object key, int expectedSize) {
       if (!clazz.isInstance(value)) return false;
       try {
          for (Field f : fields) {

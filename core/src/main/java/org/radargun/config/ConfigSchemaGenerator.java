@@ -112,7 +112,7 @@ public class ConfigSchemaGenerator extends SchemaGenerator implements ConfigSche
       createReference(benchmarkSequence, ELEMENT_DESTROY, RG_PREFIX + class2xmlId(ScenarioDestroyStage.class), 0, 1);
       createReference(benchmarkSequence, ELEMENT_CLEANUP, RG_PREFIX + class2xmlId(ScenarioCleanupStage.class), 0, 1);
 
-      Element reportsComplex = createComplexElement(benchmarkSequence, ELEMENT_REPORTS, 1, 1);
+      Element reportsComplex = createComplexElement(benchmarkSequence, ELEMENT_REPORTS, 0, 1);
       Element reporterComplex = createComplexElement(createSequence(reportsComplex), ELEMENT_REPORTER, 1, -1);
       Element reporterSequence = createSequence(reporterComplex);
       createAny(reporterSequence);
