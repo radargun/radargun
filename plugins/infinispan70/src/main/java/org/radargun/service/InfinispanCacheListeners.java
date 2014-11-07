@@ -19,6 +19,7 @@ import org.radargun.logging.LogFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Generic listener is registered only once for each cache, then it multiplexes the events to the
@@ -38,29 +39,25 @@ public class InfinispanCacheListeners extends
       this.service = service;
    }
 
+   @Override
    protected GenericCacheListener getOrCreateListener(String cacheName, boolean sync) {
       if (cacheName == null) {
          cacheName = service.getCache(null).getName();
       }
-      GenericCacheListener generic = listeners.get(cacheName);
-      if (((!generic.sync() || !sync)) && (generic.sync() || sync)) {
-         listeners.remove(generic);
-         generic = null;
-      }
-
+      GenericCacheListener generic = sync ? syncListeners.get(cacheName) : asyncListeners.get(cacheName);
       if (generic == null) {
          // make sure the cacheManagerListener is registered
          log.trace("Adding cache manager listener");
          service.cacheManager.addListener(cacheManagerListener);
 
-         generic = sync ? new SyncCacheListener() : new AsyncCacheListener();
-         GenericCacheListener old = listeners.putIfAbsent(cacheName, generic);
-         if (old != null) {
-            if ((old.sync() && sync) || (!old.sync() && !sync)) {
-               return old;
-            }
+         if (sync)
+            generic = new SyncCacheListener();
+         else
+            generic = new AsyncCacheListener();
 
-            listeners.replace(cacheName, old, generic);
+         GenericCacheListener old = sync ? syncListeners.putIfAbsent(cacheName, generic) : asyncListeners.putIfAbsent(cacheName, generic);
+         if (old != null) {
+            return old;
          } else {
             service.getCache(cacheName).getAdvancedCache().addListener(generic);
          }
@@ -68,11 +65,17 @@ public class InfinispanCacheListeners extends
       return generic;
    }
 
-   protected GenericListener getListenerOrThrow(String cacheName) {
+   @Override
+   protected GenericListener getListenerOrThrow(String cacheName, boolean sync) {
       if (cacheName == null) {
          cacheName = service.getCache(null).getName();
       }
-      GenericListener generic = listeners.get(cacheName);
+      GenericListener generic;
+      if (sync)
+         generic = syncListeners.get(cacheName);
+      else
+         generic = asyncListeners.get(cacheName);
+
       if (generic == null)
          throw new IllegalArgumentException("No listener was registered on cache " + cacheName);
       return generic;
@@ -89,7 +92,7 @@ public class InfinispanCacheListeners extends
    }
 
    @Override
-   public void removeExpiredListener(String cacheName, ExpiredListener listener) {
+   public void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync) {
       throw new UnsupportedOperationException();
    }
 
@@ -179,7 +182,8 @@ public class InfinispanCacheListeners extends
       @CacheStopped
       public void cacheStopped(CacheStoppedEvent e) {
          log.trace("Cache " + e.getCacheName() + " has stopped");
-         listeners.remove(e.getCacheName());
+         syncListeners.remove(e.getCacheName());
+         asyncListeners.remove(e.getCacheName());
       }
    }
 }

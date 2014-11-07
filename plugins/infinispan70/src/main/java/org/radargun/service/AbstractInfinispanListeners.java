@@ -9,11 +9,12 @@ import org.radargun.traits.CacheListeners;
 public abstract class AbstractInfinispanListeners<T extends AbstractInfinispanListeners.GenericListener> implements
       CacheListeners {
 
-   protected final ConcurrentMap<String, T> listeners = new ConcurrentHashMap<String, T>();
+   protected final ConcurrentMap<String, T> syncListeners = new ConcurrentHashMap<String, T>();
+   protected final ConcurrentMap<String, T> asyncListeners = new ConcurrentHashMap<String, T>();
 
    protected abstract GenericListener getOrCreateListener(String cacheName, boolean sync);
 
-   protected abstract GenericListener getListenerOrThrow(String cacheName);
+   protected abstract GenericListener getListenerOrThrow(String cacheName, boolean sync);
 
    @Override
    public void addCreatedListener(String cacheName, CreatedListener listener, boolean sync) {
@@ -41,28 +42,28 @@ public abstract class AbstractInfinispanListeners<T extends AbstractInfinispanLi
    }
 
    @Override
-   public void removeCreatedListener(String cacheName, CreatedListener listener) {
-      getListenerOrThrow(cacheName).remove(listener);
+   public void removeCreatedListener(String cacheName, CreatedListener listener, boolean sync) {
+      getListenerOrThrow(cacheName, sync).remove(listener);
    }
 
    @Override
-   public void removeUpdatedListener(String cacheName, UpdatedListener listener) {
-      getListenerOrThrow(cacheName).remove(listener);
+   public void removeUpdatedListener(String cacheName, UpdatedListener listener, boolean sync) {
+      getListenerOrThrow(cacheName, sync).remove(listener);
    }
 
    @Override
-   public void removeRemovedListener(String cacheName, RemovedListener listener) {
-      getListenerOrThrow(cacheName).remove(listener);
+   public void removeRemovedListener(String cacheName, RemovedListener listener, boolean sync) {
+      getListenerOrThrow(cacheName, sync).remove(listener);
    }
 
    @Override
-   public void removeEvictedListener(String cacheName, EvictedListener listener) {
-      getListenerOrThrow(cacheName).remove(listener);
+   public void removeEvictedListener(String cacheName, EvictedListener listener, boolean sync) {
+      getListenerOrThrow(cacheName, sync).remove(listener);
    }
 
    @Override
-   public void removeExpiredListener(String cacheName, ExpiredListener listener) {
-      getListenerOrThrow(cacheName).remove(listener);
+   public void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync) {
+      getListenerOrThrow(cacheName, sync).remove(listener);
    }
 
    protected static class GenericListener {

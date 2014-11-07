@@ -44,11 +44,11 @@ public interface CacheListeners {
    void addEvictedListener(String cacheName, EvictedListener listener, boolean sync);
    void addExpiredListener(String cacheName, ExpiredListener listener, boolean sync);
 
-   void removeCreatedListener(String cacheName, CreatedListener listener);
-   void removeUpdatedListener(String cacheName, UpdatedListener listener);
-   void removeRemovedListener(String cacheName, RemovedListener listener);
-   void removeEvictedListener(String cacheName, EvictedListener listener);
-   void removeExpiredListener(String cacheName, ExpiredListener listener);
+   void removeCreatedListener(String cacheName, CreatedListener listener, boolean sync);
+   void removeUpdatedListener(String cacheName, UpdatedListener listener, boolean sync);
+   void removeRemovedListener(String cacheName, RemovedListener listener, boolean sync);
+   void removeEvictedListener(String cacheName, EvictedListener listener, boolean sync);
+   void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync);
 
    interface CreatedListener<K, V> {
       void created(K key, V value);

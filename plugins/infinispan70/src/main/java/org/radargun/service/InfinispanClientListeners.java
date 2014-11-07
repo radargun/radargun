@@ -35,6 +35,7 @@ public class InfinispanClientListeners extends
       this.service = service;
    }
 
+   @Override
    protected GenericClientListener getOrCreateListener(String cacheName, boolean sync) {
       final RemoteCacheManager remoteManager = service.getRemoteManager(false);
       if (cacheName == null)
@@ -48,7 +49,8 @@ public class InfinispanClientListeners extends
       return listenerContainer;
    }
 
-   protected GenericClientListener getListenerOrThrow(String cacheName) {
+   @Override
+   protected GenericClientListener getListenerOrThrow(String cacheName, boolean sync) {
       if (cacheName == null) {
          final RemoteCacheManager remoteManager = service.getRemoteManager(false);
          cacheName = remoteManager.getCache().getName();
@@ -75,12 +77,12 @@ public class InfinispanClientListeners extends
    }
 
    @Override
-   public void removeEvictedListener(String cacheName, EvictedListener listener) {
+   public void removeEvictedListener(String cacheName, EvictedListener listener, boolean sync) {
       throw new UnsupportedOperationException("HotRod doesn't support client listeners for eviction");
    }
 
    @Override
-   public void removeExpiredListener(String cacheName, ExpiredListener listener) {
+   public void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync) {
       throw new UnsupportedOperationException("HotRod doesn't support client listeners for expiration");
    }
 
