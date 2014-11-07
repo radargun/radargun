@@ -58,7 +58,7 @@ public class TestReportDocument extends ReportDocument {
          } else {
             createAndWriteCharts(operation, 0);
          }
-         writeOperation(operation, testAggregations.byReports());
+         writeOperation(operation, testAggregations.byReports(), testName);
       }
    }
 }
