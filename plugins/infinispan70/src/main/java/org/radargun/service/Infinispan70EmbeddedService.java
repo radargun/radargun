@@ -7,6 +7,7 @@ import org.infinispan.commons.util.FileLookup;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
 import org.infinispan.configuration.parsing.ParserRegistry;
 import org.radargun.Service;
+import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
 
 /**
@@ -41,10 +42,13 @@ public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
    }
 
    @ProvidesTrait
-   public InfinispanIterable createIterable() { return new InfinispanIterable(this); }
+   public InfinispanIterable createIterable() {
+      return new InfinispanIterable(this);
+   }
 
    @ProvidesTrait
    public InfinispanCacheListeners createListeners() {
       return new InfinispanCacheListeners(this);
    }
+
 }

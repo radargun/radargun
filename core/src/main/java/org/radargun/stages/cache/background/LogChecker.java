@@ -210,7 +210,7 @@ public abstract class LogChecker extends Thread {
          this.cache = manager.getBasicCache();
       }
 
-      protected void registerListeners() {
+      protected void registerListeners(boolean sync) {
          if (!manager.getLogLogicConfiguration().isCheckNotifications()) {
             return;
          }
@@ -223,8 +223,8 @@ public abstract class LogChecker extends Thread {
             throw new IllegalArgumentException("Service does not support required listener types; supported are: " + supported);
          }
          String cacheName = manager.getGeneralConfiguration().getCacheName();
-         manager.getListeners().addCreatedListener(cacheName, this);
-         manager.getListeners().addUpdatedListener(cacheName, this);
+         manager.getListeners().addCreatedListener(cacheName, this, sync);
+         manager.getListeners().addUpdatedListener(cacheName, this, sync);
       }
 
       public long getMissingOperations() {

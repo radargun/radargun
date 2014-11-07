@@ -11,33 +11,33 @@ public abstract class AbstractInfinispanListeners<T extends AbstractInfinispanLi
 
    protected final ConcurrentMap<String, T> listeners = new ConcurrentHashMap<String, T>();
 
-   protected abstract GenericListener getOrCreateListener(String cacheName);
+   protected abstract GenericListener getOrCreateListener(String cacheName, boolean sync);
 
    protected abstract GenericListener getListenerOrThrow(String cacheName);
 
    @Override
-   public void addCreatedListener(String cacheName, CreatedListener listener) {
-      getOrCreateListener(cacheName).add(listener);
+   public void addCreatedListener(String cacheName, CreatedListener listener, boolean sync) {
+      getOrCreateListener(cacheName, sync).add(listener);
    }
 
    @Override
-   public void addUpdatedListener(String cacheName, UpdatedListener listener) {
-      getOrCreateListener(cacheName).add(listener);
+   public void addUpdatedListener(String cacheName, UpdatedListener listener, boolean sync) {
+      getOrCreateListener(cacheName, sync).add(listener);
    }
 
    @Override
-   public void addRemovedListener(String cacheName, RemovedListener listener) {
-      getOrCreateListener(cacheName).add(listener);
+   public void addRemovedListener(String cacheName, RemovedListener listener, boolean sync) {
+      getOrCreateListener(cacheName, sync).add(listener);
    }
 
    @Override
-   public void addEvictedListener(String cacheName, EvictedListener listener) {
-      getOrCreateListener(cacheName).add(listener);
+   public void addEvictedListener(String cacheName, EvictedListener listener, boolean sync) {
+      getOrCreateListener(cacheName, sync).add(listener);
    }
 
    @Override
-   public void addExpiredListener(String cacheName, ExpiredListener listener) {
-      getOrCreateListener(cacheName).add(listener);
+   public void addExpiredListener(String cacheName, ExpiredListener listener, boolean sync) {
+      getOrCreateListener(cacheName, sync).add(listener);
    }
 
    @Override

@@ -1,5 +1,7 @@
 package org.radargun.traits;
 
+import org.radargun.Operation;
+
 import java.util.Collection;
 
 /**
@@ -19,6 +21,13 @@ import java.util.Collection;
 @Trait(doc = "Allows to listen for events on the cache.")
 public interface CacheListeners {
 
+   String TRAIT = CacheListeners.class.getSimpleName();
+   Operation CREATED = Operation.register(TRAIT + ".Created");
+   Operation EVICTED = Operation.register(TRAIT + ".Evicted");
+   Operation REMOVED = Operation.register(TRAIT + ".Removed");
+   Operation UPDATED = Operation.register(TRAIT + ".Updated");
+   Operation EXPIRED = Operation.register(TRAIT + ".Expired");
+
    enum Type {
       CREATED,
       UPDATED,
@@ -29,11 +38,11 @@ public interface CacheListeners {
 
    Collection<Type> getSupportedListeners();
 
-   void addCreatedListener(String cacheName, CreatedListener listener);
-   void addUpdatedListener(String cacheName, UpdatedListener listener);
-   void addRemovedListener(String cacheName, RemovedListener listener);
-   void addEvictedListener(String cacheName, EvictedListener listener);
-   void addExpiredListener(String cacheName, ExpiredListener listener);
+   void addCreatedListener(String cacheName, CreatedListener listener, boolean sync);
+   void addUpdatedListener(String cacheName, UpdatedListener listener, boolean sync);
+   void addRemovedListener(String cacheName, RemovedListener listener, boolean sync);
+   void addEvictedListener(String cacheName, EvictedListener listener, boolean sync);
+   void addExpiredListener(String cacheName, ExpiredListener listener, boolean sync);
 
    void removeCreatedListener(String cacheName, CreatedListener listener);
    void removeUpdatedListener(String cacheName, UpdatedListener listener);

@@ -80,7 +80,7 @@ public class PrivateLogChecker extends LogChecker {
                addNew(new StressorRecord(slaveId * numThreads + threadId, range));
             }
          }
-         registerListeners();
+         registerListeners(true); // synchronous listeners
       }
 
       @Override
