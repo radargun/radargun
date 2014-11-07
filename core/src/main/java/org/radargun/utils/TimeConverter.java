@@ -23,6 +23,6 @@ public class TimeConverter implements Converter<Long> {
 
    @Override
    public String allowedPattern(Type type) {
-      return "[0-9]+\\s*[mMsS]?";
+      return "[-0-9]+\\s*[mMsS]?";
    }
 }

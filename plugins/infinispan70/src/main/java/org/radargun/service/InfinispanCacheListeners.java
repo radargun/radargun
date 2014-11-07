@@ -1,9 +1,5 @@
 package org.radargun.service;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntriesEvicted;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
@@ -20,6 +16,11 @@ import org.infinispan.notifications.cachemanagerlistener.event.CacheStoppedEvent
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
+
 /**
  * Generic listener is registered only once for each cache, then it multiplexes the events to the
  * RadarGun listeners. The listener registration is not expected to survive cache manager restarts.
@@ -28,7 +29,7 @@ import org.radargun.logging.LogFactory;
  */
 public class InfinispanCacheListeners extends
       AbstractInfinispanListeners<InfinispanCacheListeners.GenericCacheListener> {
-   
+
    protected static final Log log = LogFactory.getLog(InfinispanCacheListeners.class);
 
    protected final Infinispan70EmbeddedService service;
@@ -38,18 +39,23 @@ public class InfinispanCacheListeners extends
       this.service = service;
    }
 
-   protected GenericCacheListener getOrCreateListener(String cacheName) {
+   @Override
+   protected GenericCacheListener getOrCreateListener(String cacheName, boolean sync) {
       if (cacheName == null) {
          cacheName = service.getCache(null).getName();
       }
-      GenericCacheListener generic = listeners.get(cacheName);
+      GenericCacheListener generic = sync ? syncListeners.get(cacheName) : asyncListeners.get(cacheName);
       if (generic == null) {
          // make sure the cacheManagerListener is registered
          log.trace("Adding cache manager listener");
          service.cacheManager.addListener(cacheManagerListener);
 
-         generic = new GenericCacheListener();
-         GenericCacheListener old = listeners.putIfAbsent(cacheName, generic);
+         if (sync)
+            generic = new SyncCacheListener();
+         else
+            generic = new AsyncCacheListener();
+
+         GenericCacheListener old = sync ? syncListeners.putIfAbsent(cacheName, generic) : asyncListeners.putIfAbsent(cacheName, generic);
          if (old != null) {
             return old;
          } else {
@@ -59,11 +65,17 @@ public class InfinispanCacheListeners extends
       return generic;
    }
 
-   protected GenericListener getListenerOrThrow(String cacheName) {
+   @Override
+   protected GenericListener getListenerOrThrow(String cacheName, boolean sync) {
       if (cacheName == null) {
          cacheName = service.getCache(null).getName();
       }
-      GenericListener generic = listeners.get(cacheName);
+      GenericListener generic;
+      if (sync)
+         generic = syncListeners.get(cacheName);
+      else
+         generic = asyncListeners.get(cacheName);
+
       if (generic == null)
          throw new IllegalArgumentException("No listener was registered on cache " + cacheName);
       return generic;
@@ -75,17 +87,16 @@ public class InfinispanCacheListeners extends
    }
 
    @Override
-   public void addExpiredListener(String cacheName, ExpiredListener listener) {
+   public void addExpiredListener(String cacheName, ExpiredListener listener, boolean sync) {
       throw new UnsupportedOperationException();
    }
 
    @Override
-   public void removeExpiredListener(String cacheName, ExpiredListener listener) {
+   public void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync) {
       throw new UnsupportedOperationException();
    }
 
-   @Listener(clustered = true)
-   protected static class GenericCacheListener extends AbstractInfinispanListeners.GenericListener {
+   protected static abstract class GenericCacheListener extends AbstractInfinispanListeners.GenericListener {
 
       @CacheEntryCreated
       public void created(CacheEntryCreatedEvent e) {
@@ -140,6 +151,25 @@ public class InfinispanCacheListeners extends
             }
          }
       }
+      public abstract boolean sync();
+   }
+
+   @Listener(clustered = true, sync = true)
+   protected static class SyncCacheListener extends GenericCacheListener{
+
+      @Override
+      public boolean sync() {
+         return true;
+      }
+   }
+
+   @Listener(clustered = true, sync = false)
+   protected static class AsyncCacheListener extends GenericCacheListener {
+
+      @Override
+      public boolean sync() {
+         return false;
+      }
    }
 
    @Listener
@@ -152,7 +182,8 @@ public class InfinispanCacheListeners extends
       @CacheStopped
       public void cacheStopped(CacheStoppedEvent e) {
          log.trace("Cache " + e.getCacheName() + " has stopped");
-         listeners.remove(e.getCacheName());
+         syncListeners.remove(e.getCacheName());
+         asyncListeners.remove(e.getCacheName());
       }
    }
 }

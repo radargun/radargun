@@ -73,7 +73,7 @@ class SharedLogChecker extends LogChecker {
                addNew(new StressorRecord(slaveId * numThreads + threadId, numEntries));
             }
          }
-         registerListeners();
+         registerListeners(true); // synchronous listeners
       }
 
       @Override
