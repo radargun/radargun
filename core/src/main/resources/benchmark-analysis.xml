@@ -64,6 +64,12 @@
          </key-selector>
       </basic-operations-test>
 
+      <!-- Put the number of threads as a result to the test
+           so we can easily see the number of threads used for the test -->
+      <add-result test-name="on-max-throughput"
+                  result-name="Number of threads"
+                  value="#{ 10 * ${top.iteration} + 10 }" />
+
       <!-- Stop JVM monitoring -->
       <jvm-monitor-stop />
    </scenario>
