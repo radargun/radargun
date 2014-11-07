@@ -295,4 +295,13 @@ public class PropertyHelper {
       }
       return sb.append(" }").toString();
    }
+
+   /**
+    * @param clazz
+    * @return Name used in the {@link org.radargun.config.DefinitionElement} annotation, or simple name.
+    */
+   public static String getDefinitionElementName(Class<?> clazz) {
+      DefinitionElement de = clazz.getAnnotation(DefinitionElement.class);
+      return de != null ? de.name() : clazz.getSimpleName();
+   }
 }

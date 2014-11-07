@@ -3,10 +3,12 @@ package org.radargun.utils;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -59,6 +61,41 @@ public class Projections {
          }
       }
       return out;
+   }
+
+   /**
+    * Uses AND for keyCondition and valueCondition.
+    * @param map
+    * @param keyCondition Can be null (accepts all)
+    * @param valueCondition Can be null (Accepts all)
+    * @param <A>
+    * @param <B>
+    * @return
+    */
+   public static <A, B> Map<A, B> where(Map<A, B> map, Condition<A> keyCondition, Condition<B> valueCondition) {
+      // TODO: lazy collection would be better
+      Map<A, B> newMap = new HashMap<>();
+      for (Map.Entry<A, B> entry : map.entrySet()) {
+         if ((keyCondition == null || keyCondition.accept(entry.getKey()))
+               && (valueCondition == null || valueCondition.accept(entry.getValue()))) {
+            newMap.put(entry.getKey(), entry.getValue());
+         }
+      }
+      return newMap;
+   }
+
+   public static <K, V> Map<K, List<V>> groupBy(Collection<V> collection, Func<V, K> selector) {
+      Map<K, List<V>> map = new HashMap<>();
+      for (V v : collection) {
+         K key = selector.project(v);
+         List<V> list = map.get(key);
+         if (list == null) {
+            list = new ArrayList<>();
+            map.put(key, list);
+         }
+         list.add(v);
+      }
+      return map;
    }
 
    public static <A extends Comparable> A max(Collection<A> collection) {

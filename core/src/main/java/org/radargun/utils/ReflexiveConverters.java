@@ -12,13 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.radargun.Directories;
-import org.radargun.config.AnnotatedHelper;
-import org.radargun.config.ComplexConverter;
-import org.radargun.config.ComplexDefinition;
-import org.radargun.config.Definition;
-import org.radargun.config.DefinitionElement;
-import org.radargun.config.PropertyHelper;
-import org.radargun.config.SimpleDefinition;
+import org.radargun.config.*;
 
 /**
  * Converts a elements in definition into list of instances. Instance class
@@ -89,11 +83,24 @@ public class ReflexiveConverters {
       }
    }
 
+   /**
+    * Creates single instance of provided classes.
+    */
    public static class ObjectConverter extends Base implements ComplexConverter<Object> {
+      /**
+       * Enumeration-based constructor.
+       * @param classes That can be instantiated.
+       */
       public ObjectConverter(Class<?>[] classes) {
          super(classes);
       }
 
+      /**
+       * Inheritance-based constructor - looks for all classes that inherit from this class
+       * and are annotated with {@link org.radargun.config.DefinitionElement}
+       * @param implementedClass
+       * @param <T>
+       */
       public <T> ObjectConverter(Class<T> implementedClass) {
          super(implementedClass);
       }
@@ -124,11 +131,24 @@ public class ReflexiveConverters {
       }
    }
 
+   /**
+    * Creates a list of instances of provided classes.
+    */
    public static class ListConverter extends Base implements ComplexConverter<List> {
+      /**
+       * Enumeration-based constructor.
+       * @param classes That can be instantiated.
+       */
       public ListConverter(Class<?>[] classes) {
          super(classes);
       }
 
+      /**
+       * Inheritance-based constructor - looks for all classes that inherit from this class
+       * and are annotated with {@link org.radargun.config.DefinitionElement}
+       * @param implementedClass
+       * @param <T>
+       */
       public <T> ListConverter(Class<T> implementedClass) {
          super(implementedClass);
       }
@@ -175,6 +195,80 @@ public class ReflexiveConverters {
       @Override
       public int maxAttributes() {
          return -1;
+      }
+   }
+
+   /**
+    * Converter that parses inline configuration in format definition-name=properties
+    * (the properties are optional).
+    */
+   public static class SimpleConverter extends Base implements Converter<Object> {
+      /**
+       * Enumeration-based constructor.
+       * @param classes That can be instantiated.
+       */
+      protected SimpleConverter(Class<?>[] classes) {
+         super(classes);
+      }
+
+      /**
+       * Inheritance-based constructor - looks for all classes that inherit from this class
+       * and are annotated with {@link org.radargun.config.DefinitionElement}
+       * @param implementedClass
+       * @param <T>
+       */
+      protected <T> SimpleConverter(Class<T> implementedClass) {
+         super(implementedClass);
+      }
+
+      @Override
+      public Object convert(String string, Type type) {
+         int index = string.indexOf(' ');
+         if (index < 0) {
+            return instantiate(string, null);
+         } else {
+            Map<String, String> properties = Utils.parseParams(string.substring(index + 1));
+            ComplexDefinition definition = new ComplexDefinition();
+            for (Map.Entry<String, String> property : properties.entrySet()) {
+               definition.add(property.getKey(), new SimpleDefinition(property.getValue()));
+            }
+            return instantiate(string.substring(0, index), definition);
+         }
+      }
+
+      @Override
+      public String convertToString(Object value) {
+         return value == null ? "null" : PropertyHelper.getDefinitionElementName(value.getClass()) + PropertyHelper.toString(value);
+      }
+
+      @Override
+      public String allowedPattern(Type type) {
+         StringBuilder sb = new StringBuilder();
+         for (Map.Entry<String, Class<?>> entry : this.classes.entrySet()) {
+            if (sb.length() != 0) sb.append("|");
+            sb.append('(').append(entry.getKey());
+            Map<String, Path> properties = PropertyHelper.getProperties(entry.getValue(), true, false, true);
+            Map<String, Path> mandatory = Projections.where(properties, null, new Projections.Condition<Path>() {
+               @Override
+               public boolean accept(Path path) {
+                  return !path.getTargetAnnotation().optional();
+               }
+            });
+            if (!mandatory.isEmpty()) {
+               sb.append(" +");
+               for (Map.Entry<String, Path> property : mandatory.entrySet()) {
+                  sb.append(property.getKey()).append(":[^;]*;");
+               }
+            } else {
+               sb.append(" *");
+            }
+            for (Map.Entry<String, Path> property : properties.entrySet()) {
+               if (mandatory.containsKey(property.getKey())) continue;
+               sb.append('(').append(property.getKey()).append(":[^;]*;)?");
+            }
+            sb.append(')');
+         }
+         return sb.toString();
       }
    }
 }

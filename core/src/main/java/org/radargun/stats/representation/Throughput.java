@@ -2,6 +2,8 @@ package org.radargun.stats.representation;
 
 import java.util.concurrent.TimeUnit;
 
+import org.radargun.config.DefinitionElement;
+import org.radargun.stats.OperationStats;
 import org.radargun.utils.Utils;
 
 /**
@@ -25,8 +27,8 @@ public class Throughput {
    }
 
    public static Throughput compute(long requests, double responseTimeMean, Object[] args) {
-      int threads = Throughput.getThreads(args);
-      long duration = Throughput.getDuration(args);
+      int threads = getThreads(args);
+      long duration = getDuration(args);
       if (duration == 0) return null;
       return new Throughput(TimeUnit.SECONDS.toNanos(1) * threads / responseTimeMean,
             TimeUnit.SECONDS.toNanos(1) * (double) requests / duration);
@@ -42,5 +44,16 @@ public class Throughput {
       long duration = Utils.getArg(args, 1, Long.class);
       if (duration < 0) throw new IllegalArgumentException(String.valueOf(duration));
       return duration;
+   }
+
+   @DefinitionElement(name = "throughput", doc = "Retrieve throughput.")
+   public static class ActualThroughput extends RepresentationType {
+      @Override
+      public double getValue(OperationStats stats, int threads, long duration) {
+         org.radargun.stats.representation.Throughput throughput
+               = stats.getRepresentation(org.radargun.stats.representation.Throughput.class, threads, duration);
+         if (throughput == null) throw new IllegalArgumentException("Cannot retrieve throughput from " + stats);
+         return throughput.actual;
+      }
    }
 }
