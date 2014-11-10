@@ -186,6 +186,12 @@
                <artifactId>infinispan-distexec-demo</artifactId>
                <version>${version.infinispan}</version>
                <optional>true</optional>
+               <exclusions>
+                   <exclusion>
+                       <groupId>org.infinispan</groupId>
+                       <artifactId>infinispan-embedded</artifactId>
+                   </exclusion>
+               </exclusions>
             </dependency>
          </dependencies>
       </profile>
