@@ -71,6 +71,10 @@ public class LoadDataStage extends AbstractDistStage {
    @Property(doc = "During loading phase, if the insert fails, try it again. This is the maximum number of attempts. Default is 10.")
    protected int maxLoadAttempts = 10;
 
+   @Property(doc = "When an attempt to load an entry fails, wait this period to reduce the chances of failing again. Default is one second.",
+         converter = TimeConverter.class)
+   protected long waitOnError = 1000;
+
    @Property(doc = "Specifies if the requests should be explicitly wrapped in transactions. " +
          "Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if " +
          "the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.")
@@ -267,10 +271,12 @@ public class LoadDataStage extends AbstractDistStage {
                success = true;
                break;
             } catch (Exception e) {
-               if (remove) {
-                  log.warn("Failed to remove entry from cache", e);
-               } else {
-                  log.warn("Failed to insert entry into cache", e);
+               log.warnf(e, "Attempt %d/%d to %s cache failed, waiting %d ms before next attempt",
+                     i + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
+               try {
+                  Thread.sleep(waitOnError);
+               } catch (InterruptedException e1) {
+                  log.warn("Interrupted when waiting after failed operation", e1);
                }
             }
          }
@@ -329,17 +335,19 @@ public class LoadDataStage extends AbstractDistStage {
                txCurrentSize++;
                txValuesSize += size;
             } catch (Exception e) {
-               if (remove) {
-                  log.warn("Failed to remove entry from cache", e);
-               } else {
-                  log.warn("Failed to insert entry into cache", e);
-               }
+               log.warnf(e, "Attempt %d/%d to %s cache failed, waiting %d ms before next attempt",
+                     txAttempts + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
                try {
                   tx.rollback();
                } catch (Exception re) {
                   log.error("Failed to rollback transaction", re);
                }
                restartTx();
+               try {
+                  Thread.sleep(waitOnError);
+               } catch (InterruptedException e1) {
+                  log.warn("Interrupted when waiting after failed operation", e1);
+               }
                return true;
             }
          }
