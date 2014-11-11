@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.radargun.config.Stage;
 import org.radargun.stages.cache.test.LoadDataStage;
-import org.radargun.state.ServiceListenerAdapter;
-import org.radargun.state.SlaveState;
 
 /**
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
@@ -25,27 +23,11 @@ public class BackgroundLoadDataStartStage extends LoadDataStage {
       } else {
          previousLoaders.addAll(newLoaders);
       }
-      slaveState.addServiceListener(new Cleanup(slaveState));
       return newLoaders;
    }
 
    @Override
    protected void stopLoaders(List<Thread> loaders) throws Exception {
       // do nothing
-   }
-
-   protected static class Cleanup extends ServiceListenerAdapter {
-
-      private final SlaveState slaveState;
-
-      public Cleanup(SlaveState slaveState) {
-         this.slaveState = slaveState;
-      }
-
-      @Override
-      public void serviceDestroyed() {
-         slaveState.remove(BACKGROUND_LOADERS);
-         slaveState.removeServiceListener(this);
-      }
    }
 }

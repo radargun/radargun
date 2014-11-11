@@ -3,6 +3,7 @@ package org.radargun.stages;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -82,7 +83,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
 
          Runtime runtime = Runtime.getRuntime();
          long availableMemory = runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory();
-         return new CleanupAck(slaveState, memoryCheckResult, (Long) slaveState.get(ScenarioInitStage.INITIAL_FREE_MEMORY), availableMemory, unfinishedThreads);
+         return new CleanupAck(slaveState, memoryCheckResult, (Long) slaveState.getPersistent(ScenarioInitStage.INITIAL_FREE_MEMORY), availableMemory, unfinishedThreads);
       } finally {
          log.info("Memory after cleanup: \n" + Utils.getMemoryInfo());
       }
@@ -105,7 +106,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
    private boolean checkMemoryReleased() {
       long percentage = -1;
       long currentFreeMemory = -1;
-      long initialFreeMemory = (Long) slaveState.get(ScenarioInitStage.INITIAL_FREE_MEMORY);
+      long initialFreeMemory = (Long) slaveState.getPersistent(ScenarioInitStage.INITIAL_FREE_MEMORY);
       long deadline = System.currentTimeMillis() + memoryReleaseTimeout;
       for (;;) {
          System.gc();
@@ -182,9 +183,14 @@ public final class ScenarioCleanupStage extends InternalDistStage {
       int activeCount = Thread.enumerate(activeThreads);
       Set<Thread> threads = new HashSet<>(activeCount);
       for (int i = 0; i < activeCount; ++i) threads.add(activeThreads[i]);
-      Set<Thread> initialThreads = (Set<Thread>) slaveState.get(ScenarioInitStage.INITIAL_THREADS);
-      threads.removeAll(initialThreads);
-      return threads;
+      Set<Thread> initialThreads = (Set<Thread>) slaveState.getPersistent(ScenarioInitStage.INITIAL_THREADS);
+      if (initialThreads == null) {
+         log.warn("No initial threads!");
+         return Collections.EMPTY_SET;
+      } else {
+         threads.removeAll(initialThreads);
+         return threads;
+      }
    }
 
 
