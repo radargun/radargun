@@ -17,8 +17,6 @@ import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.stages.test.TransactionMode;
-import org.radargun.state.ServiceListenerAdapter;
-import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -112,7 +110,6 @@ public class LoadDataStage extends AbstractDistStage {
       slaveState.put(KeyGenerator.KEY_GENERATOR, keyGenerator);
       slaveState.put(ValueGenerator.VALUE_GENERATOR, valueGenerator);
       slaveState.put(CacheSelector.CACHE_SELECTOR, cacheSelector);
-      slaveState.addServiceListener(new Cleanup(slaveState));
 
       List<Thread> loaders = startLoaders();
       try {
@@ -408,22 +405,6 @@ public class LoadDataStage extends AbstractDistStage {
       if (prevEntryCount / logPeriod < currentEntryCount / logPeriod) {
          log.infof("This node %s %d entries (~%d bytes)",
                remove ? "removed" : "loaded", currentEntryCount, totalSize);
-      }
-   }
-
-   private static class Cleanup extends ServiceListenerAdapter {
-      private final SlaveState slaveState;
-
-      public Cleanup(SlaveState slaveState) {
-         this.slaveState = slaveState;
-      }
-
-      @Override
-      public void serviceDestroyed() {
-         slaveState.remove(KeyGenerator.KEY_GENERATOR);
-         slaveState.remove(ValueGenerator.VALUE_GENERATOR);
-         slaveState.remove(CacheSelector.CACHE_SELECTOR);
-         slaveState.removeServiceListener(this);
       }
    }
 }

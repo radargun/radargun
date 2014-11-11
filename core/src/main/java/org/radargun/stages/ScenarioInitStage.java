@@ -29,13 +29,13 @@ public final class ScenarioInitStage extends AbstractDistStage {
 
       System.gc();
       Runtime runtime = Runtime.getRuntime();
-      slaveState.put(INITIAL_FREE_MEMORY, runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory());
+      slaveState.putPersistent(INITIAL_FREE_MEMORY, runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory());
 
       Thread[] activeThreads = new Thread[Thread.activeCount() * 2];
       int activeThreadCount = Thread.enumerate(activeThreads);
       Set<Thread> threads = new HashSet<>(activeThreadCount);
       for (int i = 0; i < activeThreadCount; ++i) threads.add(activeThreads[i]);
-      slaveState.put(INITIAL_THREADS, threads);
+      slaveState.putPersistent(INITIAL_THREADS, threads);
 
       if (heapDumpDir != null) {
          try {
