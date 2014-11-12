@@ -13,7 +13,7 @@ import org.radargun.logging.LogFactory;
 import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DefaultOutcome;
-import org.radargun.stats.representation.Throughput;
+import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.utils.NanoTimeConverter;
 import org.radargun.utils.Projections;
 import org.radargun.utils.ReflexiveConverters;
@@ -135,8 +135,8 @@ public abstract class PerformanceCondition {
       public boolean evaluate(int threads, Statistics statistics) {
          OperationStats stats = statistics.getOperationsStats().get(on);
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
-         org.radargun.stats.representation.Throughput throughput = stats.getRepresentation(
-               org.radargun.stats.representation.Throughput.class, threads,
+         org.radargun.stats.representation.OperationThroughput throughput = stats.getRepresentation(
+               org.radargun.stats.representation.OperationThroughput.class, threads,
                TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin()));
          if (throughput == null) throw new IllegalStateException("Cannot determine throughput from " + stats);
          log.info("Throughput is " + throughput.actual + " ops/s " + PropertyHelper.toString(this));

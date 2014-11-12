@@ -4,7 +4,7 @@ import org.radargun.config.DefinitionElement;
 import org.radargun.stats.representation.BoxAndWhiskers;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.MeanAndDev;
-import org.radargun.stats.representation.Throughput;
+import org.radargun.stats.representation.OperationThroughput;
 
 /**
 * Underlying statistical data gathered for single operation type.
@@ -100,8 +100,8 @@ public class DefaultOperationStats implements OperationStats {
          return (T) new DefaultOutcome(requests, errors, responseTimeMean, responseTimeMax);
       } else if (clazz == MeanAndDev.class) {
          return (T) getMeanAndDev();
-      } else if (clazz == Throughput.class) {
-         return (T) Throughput.compute(requests, responseTimeMean, args);
+      } else if (clazz == OperationThroughput.class) {
+         return (T) OperationThroughput.compute(requests, responseTimeMean, args);
       } else if (clazz == BoxAndWhiskers.class) {
          return (T) getBoxAndWhiskers();
       } else {

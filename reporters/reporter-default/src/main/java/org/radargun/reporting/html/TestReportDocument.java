@@ -37,7 +37,9 @@ public class TestReportDocument extends ReportDocument {
          subCategory = null;
       }
       ComparisonChart chart = createComparisonChart(testAggregations.iterationsName, rangeAxisLabel);
-      addToChart(chart, subCategory, operation, statisticType, reportAggregationMap);
+      if(!addToChart(chart, subCategory, operation, statisticType, reportAggregationMap)){
+         chart = null;
+      }
       return chart;
    }
 

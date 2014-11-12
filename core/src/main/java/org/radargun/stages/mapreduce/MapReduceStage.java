@@ -1,6 +1,7 @@
 package org.radargun.stages.mapreduce;
 
-import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -9,8 +10,13 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
+import org.radargun.stages.cache.RandomDataStage;
 import org.radargun.state.SlaveState;
+import org.radargun.stats.DataOperationStats;
+import org.radargun.stats.DefaultStatistics;
+import org.radargun.stats.Statistics;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Clustered;
@@ -28,8 +34,6 @@ import org.radargun.utils.Utils;
 public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
    public static final String MAPREDUCE_RESULT_KEY = "mapreduceResult";
-
-   private final String FIRST_SCALE_STAGE_KEY = "firstScalingStage";
 
    @Property(optional = false, doc = "Fully qualified class name of the "
          + "org.infinispan.distexec.mapreduce.Mapper implementation to execute.")
@@ -98,8 +102,14 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          + "property. The default is TimeUnit.MILLISECONDS.")
    private TimeUnit unit = TimeUnit.MILLISECONDS;
 
+   @Property(doc = "The number of times to execute the Map/Reduce task. The default is 10.")
+   private int iterations = 10;
+
+   private Map<KOut, VOut> payloadMap = null;
+   private R payloadObject = null;
+
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
-   private MapReducer mapReducer;
+   private MapReducer<KOut, VOut, R> mapReducer;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private Clustered clustered;
@@ -113,26 +123,36 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    @Override
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
       StageResult result = super.processAckOnMaster(acks);
-      if (result.isError()) return result;
+      if (result.isError())
+         return result;
 
-      StringBuilder reportCsvContent = new StringBuilder();
+      Report report = masterState.getReport();
+      Report.Test test = report.createTest("Map_Reduce_Stage", null, true);
+      int testIteration = test.getIterations().size();
 
-      // TODO: move this into test report
-      if (masterState.get(FIRST_SCALE_STAGE_KEY) == null) {
-         masterState.put(FIRST_SCALE_STAGE_KEY, masterState.getConfigName());
-         reportCsvContent.append("NODE_INDEX, NUMBER_OF_NODES, KEY_COUNT_ON_NODE, "
-               + "DURATION_NANOSECONDS, KEY_COUNT_IN_RESULT_MAP, CONFIGURATION_NAME\n");
-      }
+      Map<Integer, Report.SlaveResult> numberOfResultKeysResult = new HashMap<Integer, Report.SlaveResult>();
+      Map<Integer, Report.SlaveResult> durationsResult = new HashMap<Integer, Report.SlaveResult>();
 
-      for (TextAck ack : Projections.instancesOf(acks, TextAck.class)) {
-         reportCsvContent.append(ack.getText()).append("\n");
-      }
-      reportCsvContent.append("\n");
-
-      try {
-         Utils.createOutputFile("mapreduce.csv", reportCsvContent.toString(), false);
-      } catch (IOException e) {
-         log.error("Failed to create report.", e);
+      for (MapReduceAck ack : Projections.instancesOf(acks, MapReduceAck.class)) {
+         if (ack.stats != null) {
+            DataOperationStats opStats;
+            if (ack.stats.getOperationsStats().containsKey(MapReducer.MAPREDUCE.name)) {
+               opStats = (DataOperationStats) ack.stats.getOperationsStats().get(MapReducer.MAPREDUCE.name);
+            } else {
+               opStats = (DataOperationStats) ack.stats.getOperationsStats().get(
+                     MapReducer.MAPREDUCE_COLLATOR.name);
+            }
+            opStats.setTotalBytes((Long) masterState.get(RandomDataStage.RANDOMDATA_TOTALBYTES_KEY));
+            test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
+            durationsResult.put(ack.getSlaveIndex(), new Report.SlaveResult(opStats.getResponseTimes(), false));
+            test.addResult(testIteration, new Report.TestResult("Map/Reduce durations result map", durationsResult,
+                  "-", false));
+         }
+         if (ack.numberOfResultKeys != null) {
+            numberOfResultKeysResult.put(ack.getSlaveIndex(), new Report.SlaveResult(ack.numberOfResultKeys, false));
+            test.addResult(testIteration, new Report.TestResult("Key count in Map/Reduce result map",
+                  numberOfResultKeysResult, "-", false));
+         }
       }
 
       return StageResult.SUCCESS;
@@ -149,21 +169,43 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       }
 
       if (slaveState.getSlaveIndex() == 0) {
-         return executeMapReduceTask(mapReducer);
+         DistStageAck result = null;
+         Map<KOut, VOut> prevPayloadMap = null;
+         R prevPayloadObject = null;
+
+         Statistics stats = new DefaultStatistics(new DataOperationStats());
+
+         for (int i = 0; i < iterations; i++) {
+            prevPayloadMap = payloadMap;
+            prevPayloadObject = payloadObject;
+            stats.begin();
+            result = executeMapReduceTask(mapReducer, stats);
+            stats.end();
+            if (prevPayloadMap != null
+                  && (!prevPayloadMap.keySet().equals(payloadMap.keySet()) || !prevPayloadMap.entrySet().equals(
+                        payloadMap.entrySet()))) {
+               log.error("Did not get the same results for two Map/Reduce runs");
+               break;
+            } else {
+               log.info("Got the same results for two Map/Reduce runs");
+            }
+            if (prevPayloadObject != null && !prevPayloadObject.equals(payloadObject)) {
+               log.error("Did not get the same results for two Map/Reduce runs with collator");
+               break;
+            } else {
+               log.info("Got the same results for two Map/Reduce runs");
+            }
+            if (result.isError() && exitOnFailure) {
+               break;
+            }
+         }
+         return result;
       } else {
-         return new TextAck(slaveState).setText(getPayload("0", "-1"));
+         return new MapReduceAck(slaveState);
       }
    }
 
-   private String getPayload(String duration, String resultSize) {
-      return slaveState.getSlaveIndex() + ", " + clustered.getClusteredNodes() + ", "
-            + cacheInformation.getCache(cacheInformation.getDefaultCacheName()).getLocallyStoredSize() + ", " + duration + ", "
-            + resultSize + ", " + slaveState.getConfigName();
-   }
-
-   private DistStageAck executeMapReduceTask(MapReducer<KOut, VOut, R> mapReducer) {
-      Map<KOut, VOut> payloadMap = null;
-      R payloadObject = null;
+   private DistStageAck executeMapReduceTask(MapReducer<KOut, VOut, R> mapReducer, Statistics stats) {
       long durationNanos;
       long start;
 
@@ -190,17 +232,17 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       } else {
          log.info(mapReducer.getClass().getName() + " does not support MapReducer.setCombiner()");
       }
-      TextAck ack = new TextAck(slaveState);
+      MapReduceAck ack = new MapReduceAck(slaveState);
       try {
-         ack.setText(getPayload("noDuration", "noResultSize"));
          if (collatorFqn != null) {
+            mapReducer.configureMapReduceTask(mapperFqn, reducerFqn, collatorFqn);
             start = System.nanoTime();
-            payloadObject = mapReducer.executeMapReduceTask(mapperFqn, reducerFqn,
-                  collatorFqn);
+            payloadObject = mapReducer.executeMapReduceTaskWithCollator();
             durationNanos = System.nanoTime() - start;
+            stats.registerRequest(durationNanos, MapReducer.MAPREDUCE_COLLATOR);
             log.info("MapReduce task with Collator completed in "
                   + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
-            ack.setText(getPayload(String.valueOf(durationNanos), "-1"));
+            ack.setStats(stats);
             if (printResult) {
                log.info("MapReduce result: " + payloadObject.toString());
             }
@@ -219,14 +261,17 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                   log.info(mapReducer.getClass().getName() + " does not support MapReducer.setResultCacheName()");
                }
             }
+            mapReducer.configureMapReduceTask(mapperFqn, reducerFqn);
             start = System.nanoTime();
-            payloadMap = mapReducer.executeMapReduceTask(mapperFqn, reducerFqn);
+            payloadMap = mapReducer.executeMapReduceTask();
             durationNanos = System.nanoTime() - start;
+            stats.registerRequest(durationNanos, MapReducer.MAPREDUCE);
 
             if (payloadMap != null) {
                log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
                log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
-               ack.setText(getPayload(String.valueOf(durationNanos), String.valueOf(payloadMap.keySet().size())));
+               ack.setNumberOfResultKeys(payloadMap.keySet().size());
+               ack.setStats(stats);
                if (printResult) {
                   log.info("MapReduce result:");
                   for (Map.Entry<KOut, VOut> entry : payloadMap.entrySet()) {
@@ -238,40 +283,42 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                   log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
                   log.info("Result map contains '" + cacheInformation.getCache(MAPREDUCE_RESULT_KEY).getTotalSize()
                         + "' keys.");
-                  ack.setText(getPayload(String.valueOf(durationNanos),
-                        String.valueOf(cacheInformation.getCache(MAPREDUCE_RESULT_KEY).getTotalSize())));
+                  ack.setNumberOfResultKeys(cacheInformation.getCache(MAPREDUCE_RESULT_KEY).getTotalSize());
+                  ack.setStats(stats);
+                  //                  ack.setOpStats(mrStats);
                } else {
-                  ack.setText(getPayload("N/A", "N/A"));
+                  ack.setStats(stats);
+                  //                  ack.setOpStats(mrStats);
                   ack.error("executeMapReduceTask() returned null");
                }
             }
-
          }
       } catch (Exception e) {
          ack.error("executeMapReduceTask() threw an exception", e);
          log.error("executeMapReduceTask() returned an exception", e);
       }
-      log.infof("%d nodes were used. %d entries on this node", clustered.getClusteredNodes(),
-            cacheInformation.getCache(null).getLocallyStoredSize());
+      log.infof("%d nodes were used. %d entries on this node", clustered.getClusteredNodes(), cacheInformation
+            .getCache(null).getLocallyStoredSize());
       log.info("--------------------");
 
       return ack;
    }
 
-   private static class TextAck extends DistStageAck {
-      String text;
+   private static class MapReduceAck extends DistStageAck {
+      private Statistics stats;
+      private String numberOfResultKeys;
 
-      private TextAck(SlaveState slaveState) {
+      private MapReduceAck(SlaveState slaveState) {
          super(slaveState);
       }
 
-      public String getText() {
-         return text;
+      public void setStats(Statistics stats) {
+         this.stats = stats;
       }
 
-      public TextAck setText(String text) {
-         this.text = text;
-         return this;
+      public void setNumberOfResultKeys(long numberOfResultKeys) {
+         this.numberOfResultKeys = Long.toString(numberOfResultKeys);
       }
    }
+
 }
