@@ -2,11 +2,6 @@ package org.radargun.service;
 
 import java.util.Map;
 
-import org.infinispan.distexec.mapreduce.MapReduceTask;
-import org.infinispan.distexec.mapreduce.Mapper;
-import org.infinispan.distexec.mapreduce.Reducer;
-import org.radargun.utils.Utils;
-
 /**
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
@@ -16,40 +11,17 @@ public class Infinispan70MapReduce<KIn, VIn, KOut, VOut, R> extends Infinispan53
       super(service);
    }
 
-   @SuppressWarnings("unchecked")
    @Override
-   public Map<KOut, VOut> executeMapReduceTask(String mapperFqn, String reducerFqn) {
-      MapReduceTask<KIn, VIn, KOut, VOut> t = mapReduceTaskFactory();
-
-      Mapper<KIn, VIn, KOut, VOut> mapper = null;
-      Reducer<KOut, VOut> reducer = null;
-
+   public Map<KOut, VOut> executeMapReduceTask() {
       Map<KOut, VOut> result = null;
-      ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-      try {
-         mapper = Utils.instantiate(classLoader, mapperFqn);
-         t = t.mappedWith(mapper);
-      } catch (Exception e) {
-         throw (new IllegalArgumentException("Could not instantiate Mapper class: " + mapperFqn, e));
+      //      statistics.begin();
+      if (resultCacheName != null) {
+         mapReduceTask.execute(resultCacheName);
+      } else {
+         result = mapReduceTask.execute();
       }
-
-      try {
-         reducer = Utils.instantiate(classLoader, reducerFqn);
-         t = t.reducedWith(reducer);
-      } catch (Exception e) {
-         throw (new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e));
-      }
-
-      if (mapper != null && reducer != null) {
-         Utils.invokeMethodWithString(mapper, this.mapperParameters);
-         Utils.invokeMethodWithString(reducer, this.reducerParameters);
-         if (resultCacheName != null) {
-            t.execute(resultCacheName);
-         } else {
-            result = t.execute();
-         }
-      }
+      //      statistics.end();
+      //      statistics.registerRequest(statistics.getEnd() - statistics.getBegin(), MapReducer.MAPREDUCE);
       return result;
    }
 

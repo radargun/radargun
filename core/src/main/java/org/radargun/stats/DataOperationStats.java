@@ -90,7 +90,8 @@ public class DataOperationStats extends AllRecordingOperationStats {
          return (T) new DefaultOutcome(requests, errors, TimeUnit.NANOSECONDS.convert(responseTimeSum,
                TimeUnit.MILLISECONDS) / (requests * 1.0), TimeUnit.NANOSECONDS.convert(responseTimeMax,
                TimeUnit.MILLISECONDS));
-      } else if (clazz == Histogram.class || clazz == OperationThroughput.class) {// || clazz == Percentile.class) {
+      } else if (clazz == Histogram.class) {
+         //TODO: Find out why this causes an "IllegalArgumentException: Range(double, double): require lower <= upper" error
          return null;
       } else {
          return super.getRepresentation(clazz, args);

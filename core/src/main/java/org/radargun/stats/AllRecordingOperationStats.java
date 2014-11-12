@@ -7,7 +7,7 @@ import org.radargun.config.DefinitionElement;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.Histogram;
 import org.radargun.stats.representation.Percentile;
-import org.radargun.stats.representation.Throughput;
+import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.utils.Projections;
 
 /**
@@ -18,12 +18,13 @@ import org.radargun.utils.Projections;
 @DefinitionElement(name = "all", doc = "Operation statistics recording all requests' response times.")
 public class AllRecordingOperationStats implements OperationStats {
    private static final int INITIAL_CAPACITY = (1 << 10);
-   private static final int MAX_CAPACITY = (1 << 20); // max 8MB
+   protected static final int MAX_CAPACITY = (1 << 20); // max 8MB
 
    /* We don't use ArrayList because it would box all the longs */
-   private long[] responseTimes = new long[INITIAL_CAPACITY];
-   private int pos = 0;
-   private boolean full = false;
+   protected long[] responseTimes = new long[INITIAL_CAPACITY];
+   protected int pos = 0;
+   protected boolean full = false;
+   protected long errors;
 
 
    @Override
@@ -44,6 +45,7 @@ public class AllRecordingOperationStats implements OperationStats {
    @Override
    public void registerError(long responseTime) {
       registerRequest(responseTime);
+      errors++;
    }
 
    @Override
@@ -83,13 +85,13 @@ public class AllRecordingOperationStats implements OperationStats {
             max = Math.max(max, responseTimes[i]);
          }
          return (T) new DefaultOutcome(requests, 0, (double) responseTimeSum / requests, max);
-      } else if (clazz == Throughput.class) {
+      } else if (clazz == OperationThroughput.class) {
          long responseTimeSum = 0;
          long requests = full ? responseTimes.length : pos;
          for (int i = 0; i < requests; ++i) {
             responseTimeSum += responseTimes[i];
          }
-         return (T) Throughput.compute(requests, (double) responseTimeSum / requests, args);
+         return (T) OperationThroughput.compute(requests, (double) responseTimeSum / requests, args);
       } else if (clazz == Percentile.class) {
          double percentile = Percentile.getPercentile(args);
          int size = full ? responseTimes.length : pos;

@@ -3,8 +3,13 @@ package org.radargun.traits;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-@Trait(doc = "Provides interface for executing Map/Reduce tasks.")
+import org.radargun.Operation;
+
+@Trait(doc = "Provides interface for executing Map/Reduce tasks")
 public interface MapReducer<KOut, VOut, R> {
+   String TRAIT = MapReducer.class.getSimpleName();
+   Operation MAPREDUCE = Operation.register(TRAIT + ".MapReduce");
+   Operation MAPREDUCE_COLLATOR = Operation.register(TRAIT + ".MapReduceWithCollator");
 
    /**
     * 
@@ -22,11 +27,18 @@ public interface MapReducer<KOut, VOut, R> {
     * @param collatorFqn
     *           the fully qualified class name for the org.infinispan.distexec.mapreduce.Collator
     *           implementation. The implementation must have a no argument constructor.
-    *
+    * 
     * @return the collated result
     */
-   public R executeMapReduceTask(String mapperFqn, String reducerFqn,
-                                 String collatorFqn);
+   public void configureMapReduceTask(String mapperFqn, String reducerFqn, String collatorFqn);
+   
+   /**
+    * 
+    * FIXME Comment this
+    * 
+    * @return
+    */
+   public R executeMapReduceTaskWithCollator();
 
    /**
     * 
@@ -43,7 +55,15 @@ public interface MapReducer<KOut, VOut, R> {
     *
     * @return a Map where each key is an output key and value is reduced value for that output key
     */
-   public Map<KOut, VOut> executeMapReduceTask(String mapperFqn, String reducerFqn);
+   public void configureMapReduceTask(String mapperFqn, String reducerFqn);
+   
+   /**
+    * 
+    * FIXME Comment this
+    * 
+    * @return
+    */
+   public Map<KOut, VOut> executeMapReduceTask();
 
    /**
     * 
