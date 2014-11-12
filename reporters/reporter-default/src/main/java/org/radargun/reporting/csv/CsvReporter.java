@@ -17,7 +17,7 @@ import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.MeanAndDev;
-import org.radargun.stats.representation.Throughput;
+import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.utils.Utils;
 
 /**
@@ -164,7 +164,7 @@ public class CsvReporter implements Reporter {
          rowData.put(operationName + ".ResponseTimeMax", String.valueOf(defaultOutcome.responseTimeMax));
          rowData.put(operationName + ".ResponseTimeMean", String.valueOf(defaultOutcome.responseTimeMean));
       }
-      Throughput throughput = os.getRepresentation(Throughput.class, threadCount, TimeUnit.MILLISECONDS.toNanos(summary.getEnd() - summary.getBegin()));
+      OperationThroughput throughput = os.getRepresentation(OperationThroughput.class, threadCount, TimeUnit.MILLISECONDS.toNanos(summary.getEnd() - summary.getBegin()));
       if (throughput != null) {
          rowData.put(operationName + ".TheoreticalThroughput", String.valueOf(throughput.theoretical));
          rowData.put(operationName + ".ActualThroughput", String.valueOf(throughput.actual));
