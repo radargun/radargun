@@ -102,6 +102,10 @@ public class InfinispanEmbeddedService {
    protected void startCaches() throws Exception {
       log.trace("Using config file: " + configFile + " and cache name: " + cacheName);
 
+      TxControl.enable();
+      TransactionReaper.instantiate();
+      log.tracef("TxControl: %s", TxControl.isEnabled() ? "enabled" : "disabled");
+
       cacheManager = createCacheManager(configFile);
       try {
          String cacheNames = cacheManager.getDefinedCacheNames();
