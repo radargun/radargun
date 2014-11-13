@@ -78,6 +78,12 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       }
 
       @Override
+      public QueryBuilder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
+         context = getEndContext(attribute).between(lowerBound, upperBound).includeLower(lowerInclusive).includeUpper(upperInclusive);
+         return this;
+      }
+
+      @Override
       public QueryBuilder isNull(String attribute) {
          context = getEndContext(attribute).isNull();
          return this;
