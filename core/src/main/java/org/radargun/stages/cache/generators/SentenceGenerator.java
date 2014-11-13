@@ -2,26 +2,15 @@ package org.radargun.stages.cache.generators;
 
 import java.util.Random;
 
-import org.radargun.config.Init;
-import org.radargun.config.Property;
-import org.radargun.utils.Utils;
+import org.radargun.config.DefinitionElement;
 
 /**
  * Generates sentence made up from words in the dictionary.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class SentenceGenerator extends TextObjectGenerator {
-   @Property(doc = "File with words (one word per line).", optional = false)
-   private String file;
-
-   private String[] dictionary;
-
-   @Init
-   public void initDictionary() {
-      dictionary = Utils.readFile(file).toArray(new String[0]);
-   }
-
+@DefinitionElement(name = "sentence", doc = "Generates text-objects with string from randomly picked words.")
+public class SentenceGenerator extends DictionaryTextObjectGenerator {
    @Override
    public Object generateValue(Object key, int size, Random random) {
       StringBuilder sb = new StringBuilder(size);
