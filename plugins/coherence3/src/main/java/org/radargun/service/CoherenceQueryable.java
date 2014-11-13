@@ -105,6 +105,12 @@ public class CoherenceQueryable implements Queryable {
       }
 
       @Override
+      public QueryBuilder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
+         filters.add(new BetweenFilter(attribute, (Comparable) lowerBound, (Comparable) upperBound));
+         return this;
+      }
+
+      @Override
       public QueryBuilder isNull(String attribute) {
          filters.add(new IsNullFilter(attribute));
          return this;

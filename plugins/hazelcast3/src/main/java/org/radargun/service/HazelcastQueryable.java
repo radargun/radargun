@@ -98,6 +98,13 @@ public class HazelcastQueryable implements Queryable {
       }
 
       @Override
+      public QueryBuilder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
+         if (!lowerInclusive || !upperInclusive) throw new IllegalArgumentException("Hazelcast supports only inclusive bounds");
+         implicitAnd(Predicates.between(attribute, (Comparable) lowerBound, (Comparable) upperBound));
+         return this;
+      }
+
+      @Override
       public QueryBuilder isNull(String attribute) {
          implicitAnd(Predicates.equal(attribute, null));
          return this;

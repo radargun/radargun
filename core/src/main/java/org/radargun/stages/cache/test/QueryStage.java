@@ -236,6 +236,26 @@ public class QueryStage extends TestStage {
       }
    }
 
+   @DefinitionElement(name = "between", doc = "Target is between two values")
+   private static class Between extends PathCondition {
+      @Property(doc = "Lower bound for the value", optional = false, converter = NumberConverter.class)
+      public Number lowerBound;
+
+      @Property(doc = "Does the range include the lower-bound? Default is true.")
+      public boolean lowerInclusive = true;
+
+      @Property(doc = "Upper bound for the value", optional = false, converter = NumberConverter.class)
+      public Number upperBound;
+
+      @Property(doc = "Does the range include the upper-bound? Default is true.")
+      public boolean upperInclusive = true;
+
+      @Override
+      public void apply(Queryable.QueryBuilder builder) {
+         builder.between(path, lowerBound, lowerInclusive, upperBound, upperInclusive);
+      }
+   }
+
    @DefinitionElement(name = "like", doc = "Target string matches the value")
    private static class Like extends PathCondition {
       @Property(doc = "Value used in the condition", optional = false)
@@ -314,7 +334,7 @@ public class QueryStage extends TestStage {
 
    private static class ConditionConverter extends ReflexiveConverters.ListConverter {
       public ConditionConverter() {
-         super(new Class[] {Eq.class, Lt.class, Le.class, Gt.class, Ge.class, Like.class, Contains.class, IsNull.class, Not.class, Any.class, All.class});
+         super(new Class[] {Eq.class, Lt.class, Le.class, Gt.class, Ge.class, Between.class, Like.class, Contains.class, IsNull.class, Not.class, Any.class, All.class});
       }
    }
 

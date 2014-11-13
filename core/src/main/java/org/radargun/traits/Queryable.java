@@ -35,6 +35,7 @@ public interface Queryable {
       QueryBuilder le(String attribute, Object value);
       QueryBuilder gt(String attribute, Object value);
       QueryBuilder ge(String attribute, Object value);
+      QueryBuilder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive);
       QueryBuilder isNull(String attribute);
       QueryBuilder like(String attribute, String pattern);
       QueryBuilder contains(String attribute, Object value);
