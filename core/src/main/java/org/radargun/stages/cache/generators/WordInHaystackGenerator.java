@@ -2,27 +2,16 @@ package org.radargun.stages.cache.generators;
 
 import java.util.Random;
 
-import org.radargun.config.Init;
-import org.radargun.config.Property;
-import org.radargun.utils.Utils;
+import org.radargun.config.DefinitionElement;
 
 /**
  * Surrounds the word with nonsense. Use for wildcard queries.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class WordInHaystackGenerator extends TextObjectGenerator {
-   @Property(doc = "File with words (one word per line).", optional = false)
-   private String file;
-
+@DefinitionElement(name = "word-in-haystack", doc = "Generates text-objects with string with single randomly picked word surrounded by another characters.")
+public class WordInHaystackGenerator extends DictionaryTextObjectGenerator {
    private static char[] ALPHABET = "abcdefghijklmnopqrstuvw 1234567890".toCharArray();
-
-   private String[] dictionary;
-
-   @Init
-   public void initDictionary() {
-      dictionary = Utils.readFile(file).toArray(new String[0]);
-   }
 
    @Override
    public Object generateValue(Object key, int size, Random random) {

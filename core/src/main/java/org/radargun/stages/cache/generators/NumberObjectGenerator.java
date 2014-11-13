@@ -6,6 +6,7 @@ import java.util.Random;
 
 import org.radargun.config.Init;
 import org.radargun.config.Property;
+import org.radargun.config.PropertyHelper;
 
 /**
  * Generates number objects NumberObject (by default it is org.radargun.query.NumberObject)
@@ -56,7 +57,7 @@ public class NumberObjectGenerator implements ValueGenerator {
    @Override
    public Object generateValue(Object key, int size, Random random) {
       long l = random.nextLong();
-      int i =  intMax > intMin ? (int)((l < 0 ? ~l : l) % (intMax - intMin + 1) + intMin) : 0;
+      int i =  intMax >= intMin ? (int)((l < 0 ? ~l : l) % (intMax - intMin + 1) + intMin) : 0;
       double d = doubleMax > doubleMin ? random.nextDouble() * (doubleMax - doubleMin) + doubleMin : 0d;
       return newInstance(i, d);
    }
@@ -80,9 +81,14 @@ public class NumberObjectGenerator implements ValueGenerator {
          int integerValue = (Integer) getInt.invoke(value);
          double doubleValue = (Double) getDouble.invoke(value);
          return integerValue >= intMin && integerValue <= intMax
-               && doubleValue >= doubleMin && doubleValue <= doubleMax;
+               && doubleValue >= doubleMin && doubleValue < doubleMax;
       } catch (Exception e) {
          throw new IllegalStateException(e);
       }
+   }
+
+   @Override
+   public String toString() {
+      return PropertyHelper.getDefinitionElementName(getClass()) + PropertyHelper.toString(this);
    }
 }

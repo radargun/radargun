@@ -52,4 +52,13 @@ public class NumberObject implements Serializable, PortableObject {
       pofWriter.writeInt(0, integerValue);
       pofWriter.writeDouble(1, doubleValue);
    }
+
+   @Override
+   public String toString() {
+      final StringBuilder sb = new StringBuilder("NumberObject{");
+      sb.append("integerValue=").append(integerValue);
+      sb.append(", doubleValue=").append(doubleValue);
+      sb.append('}');
+      return sb.toString();
+   }
 }
