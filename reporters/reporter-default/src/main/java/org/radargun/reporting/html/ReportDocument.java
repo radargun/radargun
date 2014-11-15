@@ -18,11 +18,12 @@ import org.radargun.reporting.Report;
 import org.radargun.reporting.commons.Aggregation;
 import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
+import org.radargun.stats.representation.DataThroughput;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.Histogram;
 import org.radargun.stats.representation.MeanAndDev;
 import org.radargun.stats.representation.Percentile;
-import org.radargun.stats.representation.Throughput;
+import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.utils.Projections;
 import org.radargun.utils.Utils;
 
@@ -64,13 +65,35 @@ public abstract class ReportDocument extends HtmlDocument {
 
    protected void createAndWriteCharts(String operation, int clusterSize) throws IOException {
       String suffix = clusterSize > 0 ? "_" + clusterSize : "";
-      createChart(String.format("%s%s%s_%s%s_mean_dev.png", directory, File.separator, testName, operation, suffix),
-            clusterSize, operation, "Response time (ms)", StatisticType.MEAN_AND_DEV);
-      createChart(String.format("%s%s%s_%s%s_throughput.png", directory, File.separator, testName, operation, suffix),
-            clusterSize, operation, "Operations/sec", StatisticType.ACTUAL_THROUGHPUT);
-      write("<table><th style=\"text-align: center;border: 0px;\">Response time mean</th><th style=\"text-align: center;border: 0px;\">Actual throughput</th><tr>");
-      write(String.format("<td style=\"border: 0px;\"><img src=\"%s_%s%s_mean_dev.png\" alt=\"%s\"/></div></div></td>\n", testName, operation, suffix, operation));
-      write(String.format("<td style=\"border: 0px;\"><img src=\"%s_%s%s_throughput.png\" alt=\"%s\"/></div></div>\n", testName, operation, suffix, operation));
+      StringBuffer headerString = new StringBuffer("<table>");
+      StringBuffer chartString = new StringBuffer();
+      if (createChart(
+            String.format("%s%s%s_%s%s_mean_dev.png", directory, File.separator, testName, operation, suffix),
+            clusterSize, operation, "Response time (ms)", StatisticType.MEAN_AND_DEV)) {
+         headerString.append("<th style=\"text-align: center;border: 0px;\">Response time mean</th>");
+         chartString.append(String.format(
+               "<td style=\"border: 0px;\"><img src=\"%s_%s%s_mean_dev.png\" alt=\"%s\"/></div></div></td>\n",
+               testName, operation, suffix, operation));
+      }
+      if (createChart(
+            String.format("%s%s%s_%s%s_throughput.png", directory, File.separator, testName, operation, suffix),
+            clusterSize, operation, "Operations/sec", StatisticType.OPERATION_THROUGHPUT)) {
+         headerString.append("<th style=\"text-align: center;border: 0px;\">Operation throughput</th>");
+         chartString.append(String.format(
+               "<td style=\"border: 0px;\"><img src=\"%s_%s%s_throughput.png\" alt=\"%s\"/></div></div>\n", testName,
+               operation, suffix, operation));
+      }
+      if (createChart(
+            String.format("%s%s%s_%s%s_data_throughput.png", directory, File.separator, testName, operation, suffix),
+            clusterSize, operation, "MB/sec", StatisticType.DATA_THROUGHPUT)) {
+         headerString.append("<th style=\"text-align: center;border: 0px;\">Data throughput</th>");
+         chartString.append(String.format(
+               "<td style=\"border: 0px;\"><img src=\"%s_%s%s_data_throughput.png\" alt=\"%s\"/></div></div>\n",
+               testName, operation, suffix, operation));
+      }
+      headerString.append("<tr>");
+      write(headerString.toString());
+      write(chartString.toString());
       write("</tr></table>");
    }
 
@@ -130,12 +153,16 @@ public abstract class ReportDocument extends HtmlDocument {
       writeTD(value, rowStyle + "border-left-color: black; border-left-width: 2px;");
    }
 
-   protected void createChart(String filename, int clusterSize, String operation, String rangeAxisLabel, StatisticType statisticType) throws IOException {
+   protected boolean createChart(String filename, int clusterSize, String operation, String rangeAxisLabel,
+         StatisticType statisticType) throws IOException {
       ComparisonChart chart = generateChart(clusterSize, operation, rangeAxisLabel, statisticType);
-
-      chart.setWidth(Math.min(Math.max(maxConfigurations, maxIterations) * 100 + 200, 1800));
-      chart.setHeight(Math.min(maxConfigurations * 100 + 200, 800));
-      chart.save(filename);
+      if (chart != null) {
+         chart.setWidth(Math.min(Math.max(maxConfigurations, maxIterations) * 100 + 200, 1800));
+         chart.setHeight(Math.min(maxConfigurations * 100 + 200, 800));
+         chart.save(filename);
+         return true;
+      }
+      return false;
    }
 
    protected ComparisonChart createComparisonChart(String iterationsName, String rangeAxisLabel) {
@@ -151,11 +178,13 @@ public abstract class ReportDocument extends HtmlDocument {
       return chart;
    }
 
-   protected void addToChart(ComparisonChart chart, String subCategory, String operation, StatisticType statisticType, Map<Report, List<Aggregation>> reportAggregationMap) {
+   protected boolean addToChart(ComparisonChart chart, String subCategory, String operation, StatisticType statisticType,
+         Map<Report, List<Aggregation>> reportAggregationMap) {
       for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
          for (Aggregation aggregation : entry.getValue()) {
             OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
-            if (operationStats == null) continue;
+            if (operationStats == null)
+               return false;
 
             String categoryName = entry.getKey().getConfiguration().name;
             if (subCategory != null)
@@ -171,21 +200,31 @@ public abstract class ReportDocument extends HtmlDocument {
                subCategoryValue = String.format("Size %.0f", subCategoryNumeric);
             }
             switch (statisticType) {
-               case MEAN_AND_DEV: {
-                  MeanAndDev meanAndDev = operationStats.getRepresentation(MeanAndDev.class);
-                  if (meanAndDev == null) continue;
-                  chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), categoryName, subCategoryNumeric, subCategoryValue);
-                  break;
-               }
-               case ACTUAL_THROUGHPUT: {
-                  Throughput throughput = operationStats.getRepresentation(Throughput.class,
-                        aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
-                  if (throughput == null) continue;
-                  chart.addValue(toMillis(throughput.actual), 0, categoryName, subCategoryNumeric, subCategoryValue);
-               }
+            case MEAN_AND_DEV: {
+               MeanAndDev meanAndDev = operationStats.getRepresentation(MeanAndDev.class);
+               if (meanAndDev == null) return false;
+               chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), categoryName, subCategoryNumeric,
+                     subCategoryValue);
+               break;
+            }
+            case OPERATION_THROUGHPUT: {
+               OperationThroughput throughput = operationStats.getRepresentation(OperationThroughput.class,
+                     aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
+               if (throughput == null) return false;
+               chart.addValue(toMillis(throughput.actual), 0, categoryName, subCategoryNumeric, subCategoryValue);
+            }
+            case DATA_THROUGHPUT: {
+               DataThroughput dataThroughput = operationStats.getRepresentation(DataThroughput.class,
+                     aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
+               if (dataThroughput == null) return false;
+               chart.addValue(dataThroughput.minThroughput, 0, categoryName, subCategoryNumeric, subCategoryValue);               
+               chart.addValue(dataThroughput.maxThroughput, 0, categoryName, subCategoryNumeric, subCategoryValue);               
+               chart.addValue(dataThroughput.meanThroughput, 0, categoryName, subCategoryNumeric, subCategoryValue);               
+            }
             }
          }
       }
+      return true;
    }
 
    private double toMillis(double nanos) {
@@ -195,6 +234,8 @@ public abstract class ReportDocument extends HtmlDocument {
    protected void writeOperation(final String operation, Map<Report, List<Aggregation>> reportAggregationMap, String singleTestName) {
       boolean hasPercentiles = configuration.percentiles.length > 0 && hasRepresentation(operation, reportAggregationMap, Percentile.class, configuration.percentiles[0]);
       boolean hasHistograms = hasRepresentation(operation, reportAggregationMap, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
+      boolean hasOperationThroughput = hasRepresentation(operation, reportAggregationMap, OperationThroughput.class, 100, 100L);
+      boolean hasDataThroughput = hasRepresentation(operation, reportAggregationMap, DataThroughput.class, 100L, 100L, 100L, 100.0);
 
       List<String> iterations = new ArrayList<>(maxIterations);
       for (int iteration = 0; iteration < maxIterations; ++iteration) {
@@ -212,7 +253,7 @@ public abstract class ReportDocument extends HtmlDocument {
          iterations.add(concatOrDefault(iterationValues, "iteration " + String.valueOf(iteration)));
       }
 
-      writeOperationHeader(iterations, hasPercentiles, hasHistograms, singleTestName);
+      writeOperationHeader(iterations, hasPercentiles, hasHistograms, hasOperationThroughput, hasDataThroughput, singleTestName);
       for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
          writeOperationLine(operation, hasPercentiles, hasHistograms, entry.getKey(), entry.getValue());
       }
@@ -258,9 +299,13 @@ public abstract class ReportDocument extends HtmlDocument {
       }
    }
 
-   private void writeOperationHeader(List<String> iterationValues, boolean hasPercentiles, boolean hasHistograms, String singleTestName) {
+   private void writeOperationHeader(List<String> iterationValues, boolean hasPercentiles, boolean hasHistograms, boolean hasOperationThroughput, boolean hasDataThroughput, String singleTestName) {
       write("<table>\n");
-      int columns = (hasHistograms ? 6 : 5) + (hasPercentiles ? configuration.percentiles.length : 0);
+      int columns = columnCounter(4, hasHistograms, 1);
+      columns = columnCounter(columns, hasPercentiles, configuration.percentiles.length);
+      columns = columnCounter(columns, hasOperationThroughput, 1);
+      columns = columnCounter(columns, hasDataThroughput, 3);
+
       if (maxIterations > 1) {
          write("<tr><th colspan=\"2\">&nbsp;</th>");
          for (String iterationValue : iterationValues) {
@@ -272,7 +317,13 @@ public abstract class ReportDocument extends HtmlDocument {
       for (int i = 0; i < maxIterations; ++i) {
          write("<th style=\"text-align: center; border-left-color: black; border-left-width: 2px;\">requests</th>\n");
          write("<th style=\"text-align: center\">errors</th>\n");
-         write("<th>mean</td><th>std.dev</th><th>throughput</th>\n");
+         write("<th>mean</td><th>std.dev</th>\n");
+         if(hasOperationThroughput){
+            write("<th>operation throughput</th>\n");
+         }
+         if(hasDataThroughput){
+            write("<th colspan=\"3\">data throughput</th>\n");
+         }
          if (hasPercentiles) {
             for (double percentile : configuration.percentiles) {
                write("<th>RTM at " + percentile + "%</th>");
@@ -283,6 +334,14 @@ public abstract class ReportDocument extends HtmlDocument {
          }
       }
       write("</tr>\n");
+   }
+   
+   private int columnCounter(int initialValue, boolean shouldAdd, int columnsToAdd) {
+      if (shouldAdd) {
+         return initialValue + columnsToAdd;
+      } else {
+         return initialValue;
+      }
    }
 
    protected static String concatOrDefault(Collection<String> values, String def) {
@@ -313,10 +372,12 @@ public abstract class ReportDocument extends HtmlDocument {
       });
    }
 
-   private void writeRepresentations(OperationStats operationStats, String operation, int cluster, int iteration, String node,
-                                     int threads, long period, boolean hasPercentiles, boolean hasHistograms, boolean gray, boolean suspect) {
+   private void writeRepresentations(OperationStats operationStats, String operation, int cluster, int iteration,
+         String node, int threads, long period, boolean hasPercentiles, boolean hasHistograms, boolean gray,
+         boolean suspect) {
       DefaultOutcome defaultOutcome = operationStats == null ? null : operationStats.getRepresentation(DefaultOutcome.class);
-      Throughput throughput = operationStats == null ? null : operationStats.getRepresentation(Throughput.class, threads, period);
+      OperationThroughput operationThroughput = operationStats == null ? null : operationStats.getRepresentation(OperationThroughput.class, threads, period);
+      DataThroughput dataThroughput = operationStats == null ? null : operationStats.getRepresentation(DataThroughput.class);
       MeanAndDev meanAndDev = operationStats == null ? null : operationStats.getRepresentation(MeanAndDev.class);
       Histogram histogram = operationStats == null ? null : operationStats.getRepresentation(Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
 
@@ -328,7 +389,14 @@ public abstract class ReportDocument extends HtmlDocument {
       writeTD(defaultOutcome == null ? "&nbsp;" : String.valueOf(defaultOutcome.errors), rowStyle);
       writeTD(meanAndDev == null ? "&nbsp;" : formatTime(meanAndDev.mean), rowStyle);
       writeTD(meanAndDev == null ? "&nbsp;" : formatTime(meanAndDev.dev), rowStyle);
-      writeTD(throughput == null ? "&nbsp;" : String.format("%.0f&nbsp;reqs/s", throughput.actual), rowStyle);
+      if (operationThroughput != null) {
+         writeTD(String.format("%.0f&nbsp;reqs/s", operationThroughput.actual), rowStyle);
+      }
+      if (dataThroughput != null) {
+         writeTD(String.format("%.0f&nbsp;MB/s - min", dataThroughput.minThroughput / (1024.0 * 1024.0)), rowStyle);
+         writeTD(String.format("%.0f&nbsp;MB/s - max", dataThroughput.maxThroughput / (1024.0 * 1024.0)), rowStyle);
+         writeTD(String.format("%.0f&nbsp;MB/s - mean", dataThroughput.meanThroughput / (1024.0 * 1024.0)), rowStyle);
+      }
       if (hasPercentiles) {
          for (double percentile : configuration.percentiles) {
             Percentile p = operationStats == null ? null : operationStats.getRepresentation(Percentile.class, percentile);
@@ -378,7 +446,7 @@ public abstract class ReportDocument extends HtmlDocument {
    protected abstract ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, StatisticType statisticType);
 
    protected static enum StatisticType {
-      MEAN_AND_DEV, ACTUAL_THROUGHPUT
+      MEAN_AND_DEV, OPERATION_THROUGHPUT, DATA_THROUGHPUT
    }
 
    protected static class Configuration {

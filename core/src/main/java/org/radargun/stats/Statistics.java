@@ -30,14 +30,14 @@ public interface Statistics extends Serializable {
    void reset();
 
    /**
-    * Register response latency of successful operation.
+    * Register response latency in nanoseconds of successful operation.
     * @param responseTime
     * @param operation
     */
    void registerRequest(long responseTime, Operation operation);
 
    /**
-    * Register response latency of failed operation.
+    * Register response latency in nanoseconds of failed operation.
     * @param responseTime
     * @param operation
     */
