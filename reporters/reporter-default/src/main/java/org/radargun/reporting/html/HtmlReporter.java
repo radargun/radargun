@@ -33,8 +33,8 @@ public class HtmlReporter implements Reporter {
 
    @Override
    public void run(Collection<Report> reports) {
-      Set<String> allTests = new TreeSet<>();
-      Set<String> combinedTests = new TreeSet<>();
+      Set<String> allTests = new LinkedHashSet<>();
+      Set<String> combinedTests = new LinkedHashSet<>();
       for (List<String> combination : testReportConfig.combinedTests) {
          StringBuilder sb = new StringBuilder();
          for (String testName : combination) {
@@ -165,10 +165,10 @@ public class HtmlReporter implements Reporter {
       IndexDocument index = new IndexDocument(targetDir);
       try {
          index.open();
+         index.writeTests(allTests);
          index.writeConfigurations(reports);
          index.writeScenario(reports);
          index.writeTimelines(reports);
-         index.writeTests(allTests);
          index.writeFooter();
       } catch (IOException e) {
          log.error("Failed to write HTML report.", e);
