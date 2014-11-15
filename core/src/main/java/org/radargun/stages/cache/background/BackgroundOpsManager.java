@@ -23,7 +23,7 @@ import org.radargun.state.SlaveState;
 import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DefaultOutcome;
-import org.radargun.stats.representation.Throughput;
+import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.CacheListeners;
@@ -578,7 +578,7 @@ public class BackgroundOpsManager implements ServiceListener {
                aggregated.merge(stats.get(i));
             }
             for (Map.Entry<String, OperationStats> entry : aggregated.getOperationsStats().entrySet()) {
-               Throughput throughput = entry.getValue().getRepresentation(Throughput.class, stats.size(), TimeUnit.MILLISECONDS.toNanos(aggregated.getEnd() - aggregated.getBegin()));
+               OperationThroughput throughput = entry.getValue().getRepresentation(OperationThroughput.class, stats.size(), TimeUnit.MILLISECONDS.toNanos(aggregated.getEnd() - aggregated.getBegin()));
                if (throughput != null && (throughput.actual != 0 || timeline.getValues(entry.getKey() + " Throughput") != null)) {
                   timeline.addValue(entry.getKey() + " Throughput", new Timeline.Value(now, throughput.actual));
                }

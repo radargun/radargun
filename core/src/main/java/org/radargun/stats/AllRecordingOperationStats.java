@@ -2,12 +2,14 @@ package org.radargun.stats;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.radargun.config.DefinitionElement;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.Histogram;
+import org.radargun.stats.representation.MeanAndDev;
 import org.radargun.stats.representation.Percentile;
-import org.radargun.stats.representation.Throughput;
+import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.utils.Projections;
 
 /**
@@ -18,13 +20,23 @@ import org.radargun.utils.Projections;
 @DefinitionElement(name = "all", doc = "Operation statistics recording all requests' response times.")
 public class AllRecordingOperationStats implements OperationStats {
    private static final int INITIAL_CAPACITY = (1 << 10);
-   private static final int MAX_CAPACITY = (1 << 20); // max 8MB
+   protected static final int MAX_CAPACITY = (1 << 20); // max 8MB
 
    /* We don't use ArrayList because it would box all the longs */
-   private long[] responseTimes = new long[INITIAL_CAPACITY];
-   private int pos = 0;
-   private boolean full = false;
+   protected long[] responseTimes = new long[INITIAL_CAPACITY];
+   protected int pos = 0;
+   protected boolean full = false;
+   protected long errors;
 
+   /**
+    * 
+    * Factory method to use in the copy method
+    * 
+    * @return a new AllRecordingOperationStats instance
+    */
+   protected AllRecordingOperationStats getInstance() {
+      return new AllRecordingOperationStats();
+   }
 
    @Override
    public void registerRequest(long responseTime) {
@@ -44,6 +56,7 @@ public class AllRecordingOperationStats implements OperationStats {
    @Override
    public void registerError(long responseTime) {
       registerRequest(responseTime);
+      errors++;
    }
 
    @Override
@@ -65,31 +78,21 @@ public class AllRecordingOperationStats implements OperationStats {
 
    @Override
    public OperationStats copy() {
-      AllRecordingOperationStats copy = new AllRecordingOperationStats();
+      AllRecordingOperationStats copy = this.getInstance();
       copy.responseTimes = Arrays.copyOf(responseTimes, responseTimes.length);
       copy.full = full;
       copy.pos = pos;
       return copy;
    }
 
+   @SuppressWarnings("unchecked")
    @Override
    public <T> T getRepresentation(Class<T> clazz, Object... args) {
+      long requests = full ? responseTimes.length : pos;
       if (clazz == DefaultOutcome.class) {
-         long max = 0;
-         long responseTimeSum = 0;
-         long requests = full ? responseTimes.length : pos;
-         for (int i = 0; i < requests; ++i) {
-            responseTimeSum += responseTimes[i];
-            max = Math.max(max, responseTimes[i]);
-         }
-         return (T) new DefaultOutcome(requests, 0, (double) responseTimeSum / requests, max);
-      } else if (clazz == Throughput.class) {
-         long responseTimeSum = 0;
-         long requests = full ? responseTimes.length : pos;
-         for (int i = 0; i < requests; ++i) {
-            responseTimeSum += responseTimes[i];
-         }
-         return (T) Throughput.compute(requests, (double) responseTimeSum / requests, args);
+         return (T) new DefaultOutcome(requests, errors, getMeanDuration(), getMaxDuration());
+      } else if (clazz == OperationThroughput.class) {
+         return (T) OperationThroughput.compute(requests, getMeanDuration(), args);
       } else if (clazz == Percentile.class) {
          double percentile = Percentile.getPercentile(args);
          int size = full ? responseTimes.length : pos;
@@ -97,6 +100,17 @@ public class AllRecordingOperationStats implements OperationStats {
          return (T) new Percentile(responseTimes[Math.min((int) Math.ceil(percentile / 100d * size), size - 1)]);
       } else if (clazz == Histogram.class) {
          return (T) getHistogram(args);
+      } else if (clazz == MeanAndDev.class) {
+         double temp = 0;
+         double mean = getMeanDuration();
+         for (int i = 0; i < requests; ++i) {
+            temp += ((mean - responseTimes[i]) * (mean - responseTimes[i]));
+         }
+         if (requests < 2) {
+            return (T) new MeanAndDev(mean, 0);
+         } else {
+            return (T) new MeanAndDev(mean, Math.sqrt(temp / (requests - 1)));
+         }
       } else {
          return null;
       }
@@ -135,5 +149,44 @@ public class AllRecordingOperationStats implements OperationStats {
    @Override
    public boolean isEmpty() {
       return pos == 0 && !full;
+   }
+
+   protected long getMaxDuration() {
+      long max = Long.MIN_VALUE;
+      long requests = full ? responseTimes.length : pos;
+      if (requests == 0) {
+         return 0;
+      } else {
+         for (int i = 0; i < requests; ++i) {
+            max = Math.max(max, responseTimes[i]);
+         }
+         return max;
+      }
+   }
+
+   protected long getMinDuration() {
+      long min = Long.MAX_VALUE;
+      long requests = full ? responseTimes.length : pos;
+      if (requests == 0) {
+         return 0;
+      } else {
+         for (int i = 0; i < requests; ++i) {
+            min = Math.min(min, responseTimes[i]);
+         }
+         return min;
+      }
+   }
+
+   protected double getMeanDuration() {
+      long durationSum = 0;
+      long requests = full ? responseTimes.length : pos;
+      if (requests == 0) {
+         return 0;
+      } else {
+         for (int i = 0; i < requests; ++i) {
+            durationSum += responseTimes[i];
+         }
+         return durationSum / requests;
+      }
    }
 }

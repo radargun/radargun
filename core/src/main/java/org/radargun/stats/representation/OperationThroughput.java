@@ -11,7 +11,7 @@ import org.radargun.utils.Utils;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Throughput {
+public class OperationThroughput {
    /**
     * Inverse to the response time, multiplied by number of threads.
     */
@@ -21,16 +21,16 @@ public class Throughput {
     */
    public final double actual;
 
-   public Throughput(double theoretical, double actual) {
+   public OperationThroughput(double theoretical, double actual) {
       this.theoretical = theoretical;
       this.actual = actual;
    }
 
-   public static Throughput compute(long requests, double responseTimeMean, Object[] args) {
+   public static OperationThroughput compute(long requests, double responseTimeMean, Object[] args) {
       int threads = getThreads(args);
       long duration = getDuration(args);
       if (duration == 0) return null;
-      return new Throughput(TimeUnit.SECONDS.toNanos(1) * threads / responseTimeMean,
+      return new OperationThroughput(TimeUnit.SECONDS.toNanos(1) * threads / responseTimeMean,
             TimeUnit.SECONDS.toNanos(1) * (double) requests / duration);
    }
 
@@ -50,8 +50,7 @@ public class Throughput {
    public static class ActualThroughput extends RepresentationType {
       @Override
       public double getValue(OperationStats stats, int threads, long duration) {
-         org.radargun.stats.representation.Throughput throughput
-               = stats.getRepresentation(org.radargun.stats.representation.Throughput.class, threads, duration);
+         OperationThroughput throughput = stats.getRepresentation(OperationThroughput.class, threads, duration);
          if (throughput == null) throw new IllegalArgumentException("Cannot retrieve throughput from " + stats);
          return throughput.actual;
       }
