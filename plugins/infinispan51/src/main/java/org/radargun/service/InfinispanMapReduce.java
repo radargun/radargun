@@ -34,6 +34,8 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
 
    protected boolean printResult = false;
 
+   protected Collator<KOut, VOut, R> collator = null;
+
    public InfinispanMapReduce(Infinispan51EmbeddedService service) {
       this.service = service;
    }
@@ -41,35 +43,71 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
    public void setPrintResult(boolean printResult) {
       this.printResult = printResult;
    }
+   
+   class InfinispanMapReduceCollatorTask implements CollatorTask<R> {
+      MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask;
+      
 
-   @SuppressWarnings("unchecked")
+      public InfinispanMapReduceCollatorTask(MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask) {
+         this.mapReduceTask = mapReduceTask;
+      }
+
+      @Override
+      public R execute() {
+         return mapReduceTask.execute(collator);
+      }
+      
+   }
+
+   class InfinispanMapReduceTask implements MapTask<KOut, VOut> {
+      MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask;
+      
+
+      public InfinispanMapReduceTask(MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask) {
+         this.mapReduceTask = mapReduceTask;
+      }
+
+      @Override
+      public Map<KOut, VOut> execute() {
+         Map<KOut, VOut> result = mapReduceTask.execute();
+         if (resultCacheName != null) {
+            Cache<Object, Object> resultCache = service.getCache(resultCacheName);
+            for (Map.Entry<KOut, VOut> entry : result.entrySet()) {
+               if (printResult) {
+                  log.info("key: " + entry.getKey() + " value: " + entry.getValue());
+               }
+               resultCache.put(entry.getKey(), entry.getValue());
+            }
+         }
+         return result;
+      }
+      
+   }
+
    @Override
-   public R executeMapReduceTask(String mapperFqn, String reducerFqn,
-                                 String collatorFqn) {
-      MapReduceTask<KIn, VIn, KOut, VOut> t = mapReduceTaskFactory();
+   public CollatorTask configureMapReduceTask(String mapperFqn, String reducerFqn, String collatorFqn) {
+      MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask = mapReduceTaskFactory();
 
       Mapper<KIn, VIn, KOut, VOut> mapper = null;
       Reducer<KOut, VOut> reducer = null;
-      Collator<KOut, VOut, R> collator = null;
 
-      R result = null;
       ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
       try {
          mapper = Utils.instantiate(classLoader, mapperFqn);
-         t = t.mappedWith(mapper);
+         mapReduceTask = mapReduceTask.mappedWith(mapper);
       } catch (Exception e) {
          throw (new IllegalArgumentException("Could not instantiate Mapper class: " + mapperFqn, e));
       }
 
       try {
          reducer = Utils.instantiate(classLoader, reducerFqn);
-         t = t.reducedWith(reducer);
+         mapReduceTask = mapReduceTask.reducedWith(reducer);
       } catch (Exception e) {
          throw (new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e));
       }
 
-      setCombiner(t, combinerFqn);
+      setCombiner(mapReduceTask, combinerFqn);
 
       try {
          collator = Utils.instantiate(classLoader, collatorFqn);
@@ -81,32 +119,30 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
          Utils.invokeMethodWithString(mapper, this.mapperParameters);
          Utils.invokeMethodWithString(reducer, this.reducerParameters);
          Utils.invokeMethodWithString(collator, this.collatorParameters);
-         result = t.execute(collator);
       }
-      return result;
+      
+      return new InfinispanMapReduceCollatorTask(mapReduceTask);
    }
 
-   @SuppressWarnings("unchecked")
    @Override
-   public Map<KOut, VOut> executeMapReduceTask(String mapperFqn, String reducerFqn) {
-      MapReduceTask<KIn, VIn, KOut, VOut> t = mapReduceTaskFactory();
+   public MapTask configureMapReduceTask(String mapperFqn, String reducerFqn) {
+      MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask = mapReduceTaskFactory();
 
       Mapper<KIn, VIn, KOut, VOut> mapper = null;
       Reducer<KOut, VOut> reducer = null;
 
-      Map<KOut, VOut> result = null;
       ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
       try {
          mapper = Utils.instantiate(classLoader, mapperFqn);
-         t = t.mappedWith(mapper);
+         mapReduceTask = mapReduceTask.mappedWith(mapper);
       } catch (Exception e) {
          throw (new IllegalArgumentException("Could not instantiate Mapper class: " + mapperFqn, e));
       }
 
       try {
          reducer = Utils.instantiate(classLoader, reducerFqn);
-         t = t.reducedWith(reducer);
+         mapReduceTask = mapReduceTask.reducedWith(reducer);
       } catch (Exception e) {
          throw (new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e));
       }
@@ -114,20 +150,9 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
       if (mapper != null && reducer != null) {
          Utils.invokeMethodWithString(mapper, this.mapperParameters);
          Utils.invokeMethodWithString(reducer, this.reducerParameters);
-         result = t.execute();
-         if (resultCacheName != null) {
-            result = t.execute();
-            Cache<Object, Object> resultCache = service.getCache(resultCacheName);
-            for (Map.Entry<KOut, VOut> entry : result.entrySet()) {
-               if (printResult) {
-                  log.info("key: " + entry.getKey() + " value: " + entry.getValue());
-               }
-               resultCache.put(entry.getKey(), entry.getValue());
-            }
-         }
       }
-
-      return result;
+      
+      return new InfinispanMapReduceTask(mapReduceTask);
    }
 
    @Override
@@ -195,7 +220,7 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
     * @return the MapReduceTask with the combiner set if the CacheWrapper supports it
     */
    protected MapReduceTask<KIn, VIn, KOut, VOut> setCombiner(MapReduceTask<KIn, VIn, KOut, VOut> task,
-                                                             String combinerFqn) {
+         String combinerFqn) {
       return task;
    }
 

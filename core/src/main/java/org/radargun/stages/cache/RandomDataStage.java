@@ -3,6 +3,7 @@ package org.radargun.stages.cache;
 import java.nio.CharBuffer;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +15,12 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
+import org.radargun.stats.DefaultOperationStats;
+import org.radargun.stats.DefaultStatistics;
+import org.radargun.stats.Statistics;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
@@ -44,6 +49,10 @@ import org.radargun.utils.Utils;
  */
 @Stage(doc = "Generates random data to fill the cache.")
 public class RandomDataStage extends AbstractDistStage {
+
+   public static final String RANDOMDATA_TOTALBYTES_KEY = "randomDataTotalBytes";
+   public static final String RANDOMDATA_CLUSTER_WORDCOUNT_KEY = "randomDataClusterWordcount";
+
    @Property(doc = "The seed to use for the java.util.Random object. "
          + "The default is the return value of Calendar.getInstance().getWeekYear().")
    private long randomSeed = Calendar.getInstance().getWeekYear();
@@ -230,6 +239,8 @@ public class RandomDataStage extends AbstractDistStage {
       BasicOperations.Cache cache = basicOperations.getCache(bucket);
       try {
          byte[] buffer = new byte[valueSize];
+         Statistics stats = new DefaultStatistics(new DefaultOperationStats());
+         stats.begin();
          while (putCount > 0) {
             String key = Integer.toString(slaveState.getSlaveIndex()) + "-" + putCount + ":" + System.nanoTime();
 
@@ -253,20 +264,24 @@ public class RandomDataStage extends AbstractDistStage {
                start = System.nanoTime();
                cache.put(key, buffer);
             }
+
+            long durationNanos = System.nanoTime() - start;
+            stats.registerRequest(durationNanos, BasicOperations.PUT);
             if (printWriteStatistics) {
                log.info("Put on slave" + slaveState.getSlaveIndex() + " took "
-                     + Utils.prettyPrintTime(System.nanoTime() - start, TimeUnit.NANOSECONDS));
+                     + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
             }
 
             putCount--;
          }
+         stats.end();
          System.gc();
          log.info("Memory - free: " + Utils.kbString(runtime.freeMemory()) + " - max: "
                + Utils.kbString(runtime.maxMemory()) + "- total: " + Utils.kbString(runtime.totalMemory()));
          log.debug("nodePutCount = " + nodePutCount + "; bytesWritten = " + bytesWritten + "; targetMemoryUse = "
                + targetMemoryUse + "; countOfWordsInData = " + countOfWordsInData);
-         return new DataInsertAck(slaveState, nodePutCount, bytesWritten, targetMemoryUse, countOfWordsInData,
-               wordCount);
+         return new DataInsertAck(slaveState, nodePutCount, cacheInformation.getCache(null).getLocallyStoredSize(),
+               bytesWritten, targetMemoryUse, countOfWordsInData, wordCount, stats);
       } catch (Exception e) {
          return errorResponse("An exception occurred", e);
       } finally {
@@ -383,7 +398,8 @@ public class RandomDataStage extends AbstractDistStage {
    @Override
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
       StageResult result = super.processAckOnMaster(acks);
-      if (result.isError()) return result;
+      if (result.isError())
+         return result;
 
       log.info("--------------------");
       if (ramPercentage > 0) {
@@ -410,8 +426,18 @@ public class RandomDataStage extends AbstractDistStage {
                   + " byte arrays");
          }
       }
+
+      Report report = masterState.getReport();
+      Report.Test test = report.createTest("Random_Data_Stage", null, true);
+      int testIteration = test.getIterations().size();
+
+      Map<Integer, Report.SlaveResult> nodeKeyCountsResult = new HashMap<Integer, Report.SlaveResult>();
+      Map<Integer, Report.SlaveResult> nodeTargetMemoryUseResult = new HashMap<Integer, Report.SlaveResult>();
+      Map<Integer, Report.SlaveResult> nodeCountOfWordsInDataResult = new HashMap<Integer, Report.SlaveResult>();
+
       long totalValues = 0;
       long totalBytes = 0;
+      long totalNodeWordCount = 0;
       Map<String, Integer> clusterWordCount = new TreeMap<String, Integer>();
       for (DataInsertAck ack : Projections.instancesOf(acks, DataInsertAck.class)) {
          if (ack.wordCount != null) {
@@ -423,6 +449,10 @@ public class RandomDataStage extends AbstractDistStage {
                }
             }
          }
+
+         nodeKeyCountsResult.put(ack.getSlaveIndex(), new Report.SlaveResult(Long.toString(ack.nodeKeyCount), false));
+         test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.nodePutStats));
+
          totalValues += ack.nodePutCount;
          totalBytes += ack.bytesWritten;
          String logInfo = "Slave " + ack.getSlaveIndex() + " wrote " + ack.nodePutCount
@@ -449,26 +479,44 @@ public class RandomDataStage extends AbstractDistStage {
          for (String key : clusterWordCount.keySet()) {
             log.info("word: " + key + "; count: " + clusterWordCount.get(key));
          }
+         //TODO Will this take too much memory?
+         //         masterState.put(RANDOMDATA_CLUSTER_WORDCOUNT_KEY, clusterWordCount);
       }
       log.info("--------------------");
+      masterState.put(RANDOMDATA_TOTALBYTES_KEY, totalBytes);
+
+      test.addResult(testIteration, new Report.TestResult("Key count per node", nodeKeyCountsResult, "N/A", false));
+      if (!nodeTargetMemoryUseResult.isEmpty()) {
+         test.addResult(testIteration, new Report.TestResult("Target memory use per node", nodeTargetMemoryUseResult,
+               Utils.kbString(totalBytes), false));
+      }
+      if (!nodeCountOfWordsInDataResult.isEmpty()) {
+         test.addResult(testIteration, new Report.TestResult("Count of words in data per node",
+               nodeCountOfWordsInDataResult, Long.toString(totalNodeWordCount), false));
+      }
+
       return StageResult.SUCCESS;
    }
 
    private static class DataInsertAck extends DistStageAck {
       final long nodePutCount;
+      final long nodeKeyCount;
       final long bytesWritten;
       final long targetMemoryUse;
       final long countOfWordsInData;
       final Map<String, Integer> wordCount;
+      final Statistics nodePutStats;
 
-      private DataInsertAck(SlaveState slaveState, long nodePutCount, long bytesWritten, long targetMemoryUse,
-            long countOfWordsInData, Map<String, Integer> wordCount) {
+      private DataInsertAck(SlaveState slaveState, long nodePutCount, long nodeKeyCount, long bytesWritten,
+            long targetMemoryUse, long countOfWordsInData, Map<String, Integer> wordCount, Statistics nodePutStats) {
          super(slaveState);
          this.nodePutCount = nodePutCount;
+         this.nodeKeyCount = nodeKeyCount;
          this.bytesWritten = bytesWritten;
          this.targetMemoryUse = targetMemoryUse;
          this.countOfWordsInData = countOfWordsInData;
          this.wordCount = wordCount;
+         this.nodePutStats = nodePutStats;
       }
    }
 }
