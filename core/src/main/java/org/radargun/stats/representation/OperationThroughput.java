@@ -9,7 +9,7 @@ import org.radargun.utils.Utils;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Throughput {
+public class OperationThroughput {
    /**
     * Inverse to the response time, multiplied by number of threads.
     */
@@ -19,16 +19,16 @@ public class Throughput {
     */
    public final double actual;
 
-   public Throughput(double theoretical, double actual) {
+   public OperationThroughput(double theoretical, double actual) {
       this.theoretical = theoretical;
       this.actual = actual;
    }
 
-   public static Throughput compute(long requests, double responseTimeMean, Object[] args) {
-      int threads = Throughput.getThreads(args);
-      long duration = Throughput.getDuration(args);
+   public static OperationThroughput compute(long requests, double responseTimeMean, Object[] args) {
+      int threads = OperationThroughput.getThreads(args);
+      long duration = OperationThroughput.getDuration(args);
       if (duration == 0) return null;
-      return new Throughput(TimeUnit.SECONDS.toNanos(1) * threads / responseTimeMean,
+      return new OperationThroughput(TimeUnit.SECONDS.toNanos(1) * threads / responseTimeMean,
             TimeUnit.SECONDS.toNanos(1) * (double) requests / duration);
    }
 
