@@ -86,7 +86,7 @@ public abstract class ReportDocument extends HtmlDocument {
       if (createChart(
             String.format("%s%s%s_%s%s_data_throughput.png", directory, File.separator, testName, operation, suffix),
             clusterSize, operation, "MB/sec", StatisticType.DATA_THROUGHPUT)) {
-         headerString.append("<th style=\"text-align: center;border: 0px;\">Data throughput</th>");
+         headerString.append("<th style=\"text-align: center;border: 0px;\">Data throughput mean</th>");
          chartString.append(String.format(
                "<td style=\"border: 0px;\"><img src=\"%s_%s%s_data_throughput.png\" alt=\"%s\"/></div></div>\n",
                testName, operation, suffix, operation));
@@ -217,9 +217,8 @@ public abstract class ReportDocument extends HtmlDocument {
                DataThroughput dataThroughput = operationStats.getRepresentation(DataThroughput.class,
                      aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
                if (dataThroughput == null) return false;
-               chart.addValue(dataThroughput.minThroughput, 0, categoryName, subCategoryNumeric, subCategoryValue);               
-               chart.addValue(dataThroughput.maxThroughput, 0, categoryName, subCategoryNumeric, subCategoryValue);               
-               chart.addValue(dataThroughput.meanThroughput, 0, categoryName, subCategoryNumeric, subCategoryValue);               
+               chart.addValue(dataThroughput.meanThroughput / (1024.0 * 1024.0), dataThroughput.deviation
+                     / (1024.0 * 1024.0), categoryName, subCategoryNumeric, subCategoryValue);
             }
             }
          }
@@ -304,7 +303,7 @@ public abstract class ReportDocument extends HtmlDocument {
       int columns = columnCounter(4, hasHistograms, 1);
       columns = columnCounter(columns, hasPercentiles, configuration.percentiles.length);
       columns = columnCounter(columns, hasOperationThroughput, 1);
-      columns = columnCounter(columns, hasDataThroughput, 3);
+      columns = columnCounter(columns, hasDataThroughput, 4);
 
       if (maxIterations > 1) {
          write("<tr><th colspan=\"2\">&nbsp;</th>");
@@ -322,7 +321,7 @@ public abstract class ReportDocument extends HtmlDocument {
             write("<th>operation throughput</th>\n");
          }
          if(hasDataThroughput){
-            write("<th colspan=\"3\">data throughput</th>\n");
+            write("<th colspan=\"4\">data throughput</th>\n");
          }
          if (hasPercentiles) {
             for (double percentile : configuration.percentiles) {
@@ -396,6 +395,7 @@ public abstract class ReportDocument extends HtmlDocument {
          writeTD(String.format("%.0f&nbsp;MB/s - min", dataThroughput.minThroughput / (1024.0 * 1024.0)), rowStyle);
          writeTD(String.format("%.0f&nbsp;MB/s - max", dataThroughput.maxThroughput / (1024.0 * 1024.0)), rowStyle);
          writeTD(String.format("%.0f&nbsp;MB/s - mean", dataThroughput.meanThroughput / (1024.0 * 1024.0)), rowStyle);
+         writeTD(String.format("%.0f&nbsp;MB/s - std. dev", dataThroughput.deviation / (1024.0 * 1024.0)), rowStyle);
       }
       if (hasPercentiles) {
          for (double percentile : configuration.percentiles) {

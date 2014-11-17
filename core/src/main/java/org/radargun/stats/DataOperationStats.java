@@ -1,6 +1,5 @@
 package org.radargun.stats;
 
-import org.radargun.config.DefinitionElement;
 import org.radargun.stats.representation.DataThroughput;
 import org.radargun.stats.representation.Histogram;
 
@@ -61,7 +60,7 @@ public class DataOperationStats extends AllRecordingOperationStats {
    @Override
    public <T> T getRepresentation(Class<T> clazz, Object... args) {
       if (clazz == DataThroughput.class) {
-         return (T) DataThroughput.compute(totalBytes, getMinDuration(), getMaxDuration(), getMeanDuration());
+         return (T) DataThroughput.compute(totalBytes, responseTimes, full ? responseTimes.length : pos);
       } else if (clazz == Histogram.class) {
          //TODO: Find out why this causes an "IllegalArgumentException: Range(double, double): require lower <= upper" error
          return null;
