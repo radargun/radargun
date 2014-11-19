@@ -81,7 +81,7 @@ public class RegisterListenersStage extends AbstractDistStage {
       if (test != null) {
          int testIteration = test.getIterations().size();
 
-         for (ListenersAck ack : Projections.castProject(acks, ListenersAck.class)) {
+         for (ListenersAck ack : Projections.instancesOf(acks, ListenersAck.class)) {
             if (ack.stats != null)
                test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
          }
