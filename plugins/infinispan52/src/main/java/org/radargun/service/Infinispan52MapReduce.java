@@ -1,5 +1,7 @@
 package org.radargun.service;
 
+import java.util.Map;
+
 import org.infinispan.Cache;
 import org.infinispan.distexec.mapreduce.MapReduceTask;
 import org.infinispan.distexec.mapreduce.Reducer;
@@ -25,23 +27,24 @@ public class Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> extends InfinispanMa
 
    @Override
    protected MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTaskFactory() {
+      @SuppressWarnings("unchecked")
       Cache<KIn, VIn> cache = (Cache<KIn, VIn>) service.getCache(null);
       return new MapReduceTask<KIn, VIn, KOut, VOut>(cache, this.distributeReducePhase, this.useIntermediateSharedCache);
    }
 
    @Override
-   public boolean setCombiner(String combinerFqn) {
+   public boolean setCombiner(String combinerFqn, Map<String, String> combinerParameters) {
       this.combinerFqn = combinerFqn;
+      this.combinerParameters = combinerParameters;
       return true;
    }
 
    @Override
-   protected MapReduceTask<KIn, VIn, KOut, VOut> setCombiner(MapReduceTask<KIn, VIn, KOut, VOut> task,
-                                                             String combinerFqn) {
-      if (combinerFqn != null) {
+   protected MapReduceTask<KIn, VIn, KOut, VOut> setCombiner(MapReduceTask<KIn, VIn, KOut, VOut> task) {
+      if (this.combinerFqn != null) {
          try {
-            @SuppressWarnings("unchecked")
-            Reducer<KOut, VOut> combiner = Utils.instantiate(Thread.currentThread().getContextClassLoader(), combinerFqn);
+            Reducer<KOut, VOut> combiner = Utils.instantiate(Thread.currentThread().getContextClassLoader(),
+                  this.combinerFqn);
             Utils.invokeMethodWithString(combiner, this.combinerParameters);
             task = task.combinedWith(combiner);
          } catch (Exception e) {

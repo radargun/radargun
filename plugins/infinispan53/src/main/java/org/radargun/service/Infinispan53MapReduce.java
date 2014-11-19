@@ -20,6 +20,7 @@ public class Infinispan53MapReduce<KIn, VIn, KOut, VOut, R> extends Infinispan52
 
    @Override
    protected MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTaskFactory() {
+      @SuppressWarnings("unchecked")
       Cache<KIn, VIn> cache = (Cache<KIn, VIn>) service.getCache(null);
       MapReduceTask<KIn, VIn, KOut, VOut> task = new MapReduceTask<KIn, VIn, KOut, VOut>(cache,
             this.distributeReducePhase, this.useIntermediateSharedCache);
