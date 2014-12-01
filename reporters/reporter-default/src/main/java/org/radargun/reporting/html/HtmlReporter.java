@@ -28,7 +28,7 @@ public class HtmlReporter implements Reporter {
    @PropertyDelegate(prefix = "testReport.")
    private ReportDocument.Configuration testReportConfig = new ReportDocument.Configuration();
 
-   @PropertyDelegate(prefix = "timeline.chart.")
+   @PropertyDelegate(prefix = "timeline.")
    private TimelineDocument.Configuration timelineConfig = new TimelineDocument.Configuration();
 
    @Override
