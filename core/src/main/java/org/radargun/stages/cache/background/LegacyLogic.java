@@ -20,8 +20,8 @@ class LegacyLogic extends AbstractLogic {
    // but must not be used between begin() and commit() | rollback()
    private final BasicOperations.Cache nonTxBasicCache;
    private final ConditionalOperations.Cache nonTxConditionalCache;
-   private final int keyRangeStart;
-   private final int keyRangeEnd;
+   private final long keyRangeStart;
+   private final long keyRangeEnd;
    private final List<Range> deadSlavesRanges;
    private final boolean loadOnly;
    private final boolean putWithReplace;
@@ -63,7 +63,7 @@ class LegacyLogic extends AbstractLogic {
       }
    }
 
-   private void loadKeyRange(int from, int to) {
+   private void loadKeyRange(long from, long to) {
       int loaded_keys = 0;
       boolean loadWithPutIfAbsent = manager.getLegacyLogicConfiguration().isLoadWithPutIfAbsent();
       int entrySize = manager.getLegacyLogicConfiguration().getEntrySize();

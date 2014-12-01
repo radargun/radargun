@@ -66,12 +66,12 @@ class SharedLogChecker extends LogChecker {
 
    public static class Pool extends LogChecker.Pool {
 
-      public Pool(int numSlaves, int numThreads, int numEntries, BackgroundOpsManager manager) {
+      public Pool(int numSlaves, int numThreads, long numEntries, long keyIdOffset, BackgroundOpsManager manager) {
          super(numThreads, numSlaves, manager);
          int totalThreads = numThreads * numSlaves;
          for (int threadId = 0; threadId < totalThreads; ++threadId) {
             log.tracef("Record %d has range 0 - %d", threadId, numEntries);
-            addNew(new StressorRecord(threadId, numEntries));
+            addNew(new StressorRecord(threadId, numEntries, keyIdOffset));
          }
          registerListeners(true); // synchronous listeners
       }
@@ -100,23 +100,26 @@ class SharedLogChecker extends LogChecker {
 
 
    private static class StressorRecord extends AbstractStressorRecord {
-      private final int numEntries;
+      private final long numEntries;
+      private final long keyIdOffset;
 
-      public StressorRecord(int threadId, int numEntries) {
+      public StressorRecord(int threadId, long numEntries, long keyIdOffset) {
          super(new Random(threadId), threadId);
          this.numEntries = numEntries;
+         this.keyIdOffset = keyIdOffset;
          next();
       }
 
       public StressorRecord(SharedLogChecker.StressorRecord record, long operationId, long seed) {
          super(seed, record.getThreadId(), operationId);
          this.numEntries = record.numEntries;
+         this.keyIdOffset = record.keyIdOffset;
          next();
       }
 
       @Override
       public void next() {
-         currentKeyId = rand.nextInt(numEntries);
+         currentKeyId = (rand.nextLong() & Long.MAX_VALUE) % numEntries + keyIdOffset;
          discardNotification(currentOp++);
       }
    }

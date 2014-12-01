@@ -19,7 +19,10 @@ public class GeneralConfiguration {
    protected int removes = 0;
 
    @Property(doc = "Amount of entries (key-value pairs) inserted into the cache. Default is 1024.")
-   protected int numEntries = 1024;
+   protected long numEntries = 1024;
+
+   @Property(doc = "First key ID used for key generation. Default is 0.")
+   protected long keyIdOffset = 0;
 
    @Property(doc = "Number of stressor threads. Default is 10.")
    protected int numThreads = 10;
@@ -52,7 +55,7 @@ public class GeneralConfiguration {
       return removes;
    }
 
-   public int getNumEntries() {
+   public long getNumEntries() {
       return numEntries;
    }
 

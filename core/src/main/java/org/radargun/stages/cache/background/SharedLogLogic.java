@@ -16,21 +16,23 @@ import org.radargun.traits.ConditionalOperations;
 class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
 
    private final ConditionalOperations.Cache nonTxConditionalCache;
-   private ConditionalOperations.Cache conditionalCache;
    private final long numEntries;
+   private final long keyIdOffset;
+   private ConditionalOperations.Cache conditionalCache;
 
-   SharedLogLogic(BackgroundOpsManager manager, long threadId, long numEntries) {
+   SharedLogLogic(BackgroundOpsManager manager, long threadId, long numEntries, long keyIdOffset) {
       super(manager, threadId);
       nonTxConditionalCache = manager.getConditionalCache();
       if (transactionSize <= 0) {
          conditionalCache = nonTxConditionalCache;
       }
       this.numEntries = numEntries;
+      this.keyIdOffset = keyIdOffset;
    }
 
    @Override
    protected long nextKeyId() {
-      return keySelectorRandom.nextInt((int) numEntries);
+      return (keySelectorRandom.nextLong() & Long.MAX_VALUE) % numEntries + keyIdOffset;
    }
 
    @Override

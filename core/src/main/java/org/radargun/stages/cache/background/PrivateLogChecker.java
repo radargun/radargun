@@ -69,11 +69,11 @@ public class PrivateLogChecker extends LogChecker {
 
    public static class Pool extends LogChecker.Pool {
 
-      public Pool(int numSlaves, int numThreads, int numEntries, BackgroundOpsManager manager) {
+      public Pool(int numSlaves, int numThreads, long numEntries, long keyIdOffset, BackgroundOpsManager manager) {
          super(numThreads, numSlaves, manager);
          int totalThreads = numThreads * numSlaves;
          for (int threadId = 0; threadId < totalThreads; ++threadId) {
-            Range range = Range.divideRange(numEntries, totalThreads, threadId);
+            Range range = Range.divideRange(numEntries, totalThreads, threadId).shift(keyIdOffset);
             log.tracef("Record %d has range %s", threadId, range);
             addNew(new PrivateLogChecker.StressorRecord(threadId, range));
          }
@@ -103,7 +103,7 @@ public class PrivateLogChecker extends LogChecker {
 
    private static class StressorRecord extends AbstractStressorRecord {
       private final long keyRangeStart;
-      private final int keyRangeSize;
+      private final long keyRangeSize;
 
       public StressorRecord(int threadId, Range keyRange) {
          super(new Random(threadId), threadId);
@@ -121,7 +121,7 @@ public class PrivateLogChecker extends LogChecker {
 
       @Override
       public void next() {
-         currentKeyId = keyRangeStart + rand.nextInt(keyRangeSize);
+         currentKeyId = keyRangeStart + (rand.nextLong() & Long.MAX_VALUE) % keyRangeSize;
          discardNotification(currentOp++);
       }
    }

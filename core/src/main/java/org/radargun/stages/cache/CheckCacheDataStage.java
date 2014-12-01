@@ -34,19 +34,19 @@ import org.radargun.traits.InjectTrait;
 public class CheckCacheDataStage extends AbstractDistStage {
 
    @Property(optional = false, doc = "Number of entries with key in form specified by the last used key generator, in the cache.")
-   private int numEntries;
+   private long numEntries;
 
    @Property(doc = "Index of key of the first entry. This number will be multiplied by slaveIndex. Default is 0. Has precedence over 'first-entry-offset'.")
-   private int firstEntryOffsetSlaveIndex = 0;
+   private long firstEntryOffsetSlaveIndex = 0;
 
    @Property(doc = "Index of key of the first entry.")
-   private int firstEntryOffset = 0;
+   private long firstEntryOffset = 0;
 
    @Property(doc = "Number of entries that will be checked in each step. Default is 1.")
-   private int checkEntryCount = 1;
+   private long checkEntryCount = 1;
 
    @Property(doc = "Number of entries stepped in each step. Default is 1.")
-   private int stepEntryCount = 1;
+   private long stepEntryCount = 1;
 
    @Property(optional = false, doc = "Number of bytes carried in single entry.")
    protected int entrySize;
@@ -148,11 +148,11 @@ public class CheckCacheDataStage extends AbstractDistStage {
 
          try {
             if (checkThreads <= 1) {
-               int entriesToCheck = numEntries;
-               int initValue = firstEntryOffsetSlaveIndex > 0 ? firstEntryOffsetSlaveIndex * slaveState.getSlaveIndex() : firstEntryOffset;
-               for (int i = initValue; entriesToCheck > 0; i += stepEntryCount) {
-                  int checkAmount = Math.min(checkEntryCount, entriesToCheck);
-                  for (int j = 0; j < checkAmount; ++j) {
+               long entriesToCheck = numEntries;
+               long initValue = firstEntryOffsetSlaveIndex > 0 ? firstEntryOffsetSlaveIndex * slaveState.getSlaveIndex() : firstEntryOffset;
+               for (long i = initValue; entriesToCheck > 0; i += stepEntryCount) {
+                  long checkAmount = Math.min(checkEntryCount, entriesToCheck);
+                  for (long j = 0; j < checkAmount; ++j) {
                      if (!checkKey(basicCache, debugableCache, i + j, result, valueGenerator)) {
                         entriesToCheck = 0;
                         break;
@@ -190,8 +190,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
       CacheInformation.Cache info = cacheInformation.getCache(getCacheName());
       if (liveSlavesHint > 0) {
          // try to wait until data are properly replicated
-         int extraEntries = getExtraEntries();
-         int commonEntries = isDeleted() ? 0 : numEntries;
+         long extraEntries = getExtraEntries();
+         long commonEntries = isDeleted() ? 0 : numEntries;
          long myExpectedOwnedSize = (commonEntries + extraEntries) / liveSlavesHint;
          int numOwners = info.getNumReplicas();
          long myExpectedLocalSize = myExpectedOwnedSize * (numOwners < 0 ? -numOwners * slaveState.getClusterSize() : numOwners);
@@ -223,9 +223,9 @@ public class CheckCacheDataStage extends AbstractDistStage {
    }
 
    private class CheckRangeTask implements Callable<CheckResult> {
-      private int from, to;
+      private long from, to;
       
-      public CheckRangeTask(int from, int to) {
+      public CheckRangeTask(long from, long to) {
          this.from = from;
          this.to = to;
       }
@@ -234,11 +234,11 @@ public class CheckCacheDataStage extends AbstractDistStage {
       public CheckResult call() throws Exception {
          try {
             CheckResult result = new CheckResult();
-            int entriesToCheck = to - from;
-            int addend = firstEntryOffsetSlaveIndex > 0 ? firstEntryOffsetSlaveIndex * slaveState.getSlaveIndex() : firstEntryOffset;
-            for (int i = from * (stepEntryCount / checkEntryCount) + addend; entriesToCheck > 0; i += stepEntryCount) {
-               int checkAmount = Math.min(checkEntryCount, entriesToCheck);
-               for (int j = 0; j < checkAmount; ++j) {
+            long entriesToCheck = to - from;
+            long addend = firstEntryOffsetSlaveIndex > 0 ? firstEntryOffsetSlaveIndex * slaveState.getSlaveIndex() : firstEntryOffset;
+            for (long i = from * (stepEntryCount / checkEntryCount) + addend; entriesToCheck > 0; i += stepEntryCount) {
+               long checkAmount = Math.min(checkEntryCount, entriesToCheck);
+               for (long j = 0; j < checkAmount; ++j) {
                   if (!checkKey(basicCache, debugableCache, i + j, result, valueGenerator)) {
                      entriesToCheck = 0;
                      break;
@@ -254,11 +254,11 @@ public class CheckCacheDataStage extends AbstractDistStage {
       }
    }
 
-   protected int getExpectedNumEntries() {
+   protected long getExpectedNumEntries() {
       return numEntries;
    }
 
-   protected boolean checkKey(BasicOperations.Cache basicCache, Debugable.Cache debugableCache, int keyIndex, CheckResult result, ValueGenerator generator) {
+   protected boolean checkKey(BasicOperations.Cache basicCache, Debugable.Cache debugableCache, long keyIndex, CheckResult result, ValueGenerator generator) {
       Object key = keyGenerator.generateKey(keyIndex);
       try {
          Object value = basicCache.get(key);
@@ -348,7 +348,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
             log.errorf("Slave %d reports %d replicas but other slave reported %d replicas", ack.getSlaveIndex(), info.numReplicas, numReplicas);
             result = errorResult();
          }
-         int sumSubpartSize = 0;
+         long sumSubpartSize = 0;
          for (Map.Entry<?, Long> subpart : info.structuredSize.entrySet()) {
             log.tracef("Subpart %s = %d", subpart.getKey(), subpart.getValue());
             if (subpart.getValue() == 0) continue;
@@ -385,8 +385,8 @@ public class CheckCacheDataStage extends AbstractDistStage {
       if (ignoreSum) {
          log.infof("The sum of owned sizes is %d, sum of local sizes is %d", sumOwnedSize, sumLocalSize);
       } else {
-         int extraEntries = getExtraEntries();
-         int commonEntries = isDeleted() ? 0 : numEntries;
+         long extraEntries = getExtraEntries();
+         long commonEntries = isDeleted() ? 0 : numEntries;
          long expectedOwnedSize = extraEntries + commonEntries;
          if (sumLocalSize >= 0) {
             long expectedLocalSize = expectedOwnedSize * (numReplicas < 0 ? -numReplicas * masterState.getClusterSize() : numReplicas);
@@ -417,18 +417,18 @@ public class CheckCacheDataStage extends AbstractDistStage {
       return result;
    }
 
-   public int getNumEntries() {
+   public long getNumEntries() {
       return this.numEntries;
    }
 
-   private int getExtraEntries() {
+   private long getExtraEntries() {
       if (extraEntries == null) return 0;
       
-      int sum = 0;
-      int multiplicator = 1;      
+      long sum = 0;
+      int multiplicator = 1;
       try {
          for (String entries : extraEntries.split(",")) {
-            int count = Integer.parseInt(entries);
+            long count = Long.parseLong(entries);
             sum += count * multiplicator;
             multiplicator *= slaveState.getClusterSize();
          }
