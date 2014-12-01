@@ -9,12 +9,14 @@ import java.util.concurrent.TimeUnit;
 import org.HdrHistogram.AbstractHistogram;
 import org.HdrHistogram.HistogramIterationValue;
 import org.radargun.config.DefinitionElement;
+import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.Histogram;
 import org.radargun.stats.representation.MeanAndDev;
 import org.radargun.stats.representation.Percentile;
 import org.radargun.stats.representation.OperationThroughput;
+import org.radargun.utils.NanoTimeConverter;
 import org.radargun.utils.Projections;
 
 /**
@@ -25,7 +27,7 @@ import org.radargun.utils.Projections;
 */
 @DefinitionElement(name = "histogram", doc = "Stores data required for producing histogram or percentiles.")
 public final class HistogramOperationStats implements OperationStats {
-   @Property(doc = "Maximum value that could be recorded. Default is one hour.")
+   @Property(doc = "Maximum value that could be recorded. Default is one hour.", converter = NanoTimeConverter.class)
    private long maxValue = TimeUnit.HOURS.toNanos(1);
 
    @Property(doc = "Number of significant digits. Default is 2.")
@@ -36,6 +38,11 @@ public final class HistogramOperationStats implements OperationStats {
    private Histogram compacted;
 
    public HistogramOperationStats() {
+   }
+
+   @Init
+   public void init() {
+      if (this.histogram != null) throw new IllegalStateException("This histogram was already initialized!");
       this.histogram = new org.HdrHistogram.Histogram(maxValue, digits);
    }
 
