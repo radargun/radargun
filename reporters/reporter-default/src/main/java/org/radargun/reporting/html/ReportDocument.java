@@ -135,20 +135,22 @@ public abstract class ReportDocument extends HtmlDocument {
             writeResult(result.aggregatedValue, false, result.suspicious);
          }
          write("</tr>\n");
-         for (int node = 0; node < nodeCount; ++node) {
-            write(String.format("<tr id=\"e%d\" style=\"visibility: collapse;\"><th colspan=\"2\" style=\"text-align: right\">node%d</th>", elementCounter++, node));
-            for (Report.TestResult result : entry.getValue()) {
-               Report.SlaveResult sr = result.slaveResults.get(node);
-               writeResult(sr.value, false, sr.suspicious);
+         if (configuration.generateNodeStats) {
+            for (int node = 0; node < nodeCount; ++node) {
+               write(String.format("<tr id=\"e%d\" style=\"visibility: collapse;\"><th colspan=\"2\" style=\"text-align: right\">node%d</th>", elementCounter++, node));
+               for (Report.TestResult result : entry.getValue()) {
+                  Report.SlaveResult sr = result.slaveResults.get(node);
+                  writeResult(sr.value, false, sr.suspicious);
+               }
+               write("</tr>\n");
             }
-            write("</tr>\n");
          }
       }
       write("</table><br>\n");
    }
 
    private void writeResult(String value, boolean gray, boolean suspect) {
-      String rowStyle = suspect ? "background-color: #FFBBBB; " : (gray ? "background-color: #F0F0F0; " : "");
+      String rowStyle = suspect && configuration.highlightSuspects ? "background-color: #FFBBBB; " : (gray ? "background-color: #F0F0F0; " : "");
       rowStyle += "text-align: right; ";
       writeTD(value, rowStyle + "border-left-color: black; border-left-width: 2px;");
    }
@@ -180,6 +182,12 @@ public abstract class ReportDocument extends HtmlDocument {
 
    protected boolean addToChart(ComparisonChart chart, String subCategory, String operation, StatisticType statisticType,
          Map<Report, List<Aggregation>> reportAggregationMap) {
+      Map<String, List<Report>> byConfiguration = Projections.groupBy(reportAggregationMap.keySet(), new Projections.Func<Report, String>() {
+         @Override
+         public String project(Report report) {
+            return report.getConfiguration().name;
+         }
+      });
       for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
          for (Aggregation aggregation : entry.getValue()) {
             OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
@@ -187,8 +195,13 @@ public abstract class ReportDocument extends HtmlDocument {
                return false;
 
             String categoryName = entry.getKey().getConfiguration().name;
-            if (subCategory != null)
+            if (subCategory != null) {
                categoryName = String.format("%s, %s", categoryName, subCategory);
+            }
+            // if there are multiple reports for the same configuration (multiple clusters), use cluster size in category
+            if (byConfiguration.get(entry.getKey().getConfiguration().name).size() > 1) {
+               categoryName = String.format("%s, size %d", categoryName, entry.getKey().getCluster().getSize());
+            }
 
             double subCategoryNumeric;
             String subCategoryValue;
@@ -279,22 +292,24 @@ public abstract class ReportDocument extends HtmlDocument {
       }
 
       write("</tr>\n");
-      for (int node = 0; node < nodeCount; ++node) {
-         write(String.format("<tr id=\"e%d\" style=\"visibility: collapse;\"><th colspan=\"2\" style=\"text-align: right\">node%d</th>", elementCounter++, node));
-         for (Aggregation aggregation : aggregations) {
-            Statistics statistics = node >= aggregation.nodeStats.size() ? null : aggregation.nodeStats.get(node);
+      if (configuration.generateNodeStats) {
+         for (int node = 0; node < nodeCount; ++node) {
+            write(String.format("<tr id=\"e%d\" style=\"visibility: collapse;\"><th colspan=\"2\" style=\"text-align: right\">node%d</th>", elementCounter++, node));
+            for (Aggregation aggregation : aggregations) {
+               Statistics statistics = node >= aggregation.nodeStats.size() ? null : aggregation.nodeStats.get(node);
 
-            OperationStats operationStats = null;
-            long period = 0;
-            if (statistics != null) {
-               operationStats = statistics.getOperationsStats().get(operation);
-               period = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
+               OperationStats operationStats = null;
+               long period = 0;
+               if (statistics != null) {
+                  operationStats = statistics.getOperationsStats().get(operation);
+                  period = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
+               }
+               int threads = node >= aggregation.nodeThreads.size() ? 0 : aggregation.nodeThreads.get(node);
+               writeRepresentations(operationStats, operation, report.getCluster().getClusterIndex(), iteration, "node" + node,
+                     threads, period, hasPercentiles, hasHistograms, false, aggregation.anySuspect(operation));
             }
-            int threads = node >= aggregation.nodeThreads.size() ? 0 : aggregation.nodeThreads.get(node);
-            writeRepresentations(operationStats, operation, report.getCluster().getClusterIndex(), iteration, "node" + node,
-                                 threads, period, hasPercentiles, hasHistograms, false, aggregation.anySuspect(operation));
+            write("</tr>\n");
          }
-         write("</tr>\n");
       }
    }
 
@@ -380,7 +395,7 @@ public abstract class ReportDocument extends HtmlDocument {
       MeanAndDev meanAndDev = operationStats == null ? null : operationStats.getRepresentation(MeanAndDev.class);
       Histogram histogram = operationStats == null ? null : operationStats.getRepresentation(Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
 
-      String rowStyle = suspect ? "background-color: #FFBBBB; " : (gray ? "background-color: #F0F0F0; " : "");
+      String rowStyle = suspect && configuration.highlightSuspects ? "background-color: #FFBBBB; " : (gray ? "background-color: #F0F0F0; " : "");
       rowStyle += "text-align: right; ";
 
       writeTD(defaultOutcome == null ? "&nbsp;" : String.valueOf(defaultOutcome.requests),
@@ -470,5 +485,11 @@ public abstract class ReportDocument extends HtmlDocument {
 
       @Property(doc = "Show response time at certain percentiles. Default is 95% and 99%.")
       protected double[] percentiles = new double[] { 95d, 99d };
+
+      @Property(doc = "Generate statistics for each node (expandable menu). Default is true.")
+      protected boolean generateNodeStats = true;
+
+      @Property(doc = "Highlight suspicious results in the report. Default is true.")
+      protected boolean highlightSuspects = true;
    }
 }
