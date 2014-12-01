@@ -57,7 +57,7 @@ public class XSReplCheckStage extends CheckCacheDataStage {
    }
 
    @Override
-   protected boolean checkKey(BasicOperations.Cache basicCache, Debugable.Cache debugableCache, int keyIndex, CheckResult result, ValueGenerator valueGenerator) {
+   protected boolean checkKey(BasicOperations.Cache basicCache, Debugable.Cache debugableCache, long keyIndex, CheckResult result, ValueGenerator valueGenerator) {
       boolean retval = super.checkKey(basicCache, debugableCache, keyIndex, result, valueGenerator);
       for (int i = 0; i < backupCaches.size(); ++i) {
          retval = retval && super.checkKey(backupCacheInstances[i], backupDebugable[i], keyIndex, result, backupValueGenerator);
@@ -66,7 +66,7 @@ public class XSReplCheckStage extends CheckCacheDataStage {
    }
 
    @Override
-   protected int getExpectedNumEntries() {
+   protected long getExpectedNumEntries() {
       return getNumEntries() * (backupCacheInstances != null ? backupCacheInstances.length + 1 : 1);
    }
 }

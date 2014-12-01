@@ -23,7 +23,7 @@ class Stressor extends Thread {
    private volatile boolean terminate = false;
 
    public Stressor(BackgroundOpsManager manager, Logic logic, int id) {
-      super("StressorThread-" + id);
+      super(manager.getName() + "Stressor-" + id);
       GeneralConfiguration config = manager.getGeneralConfiguration();
       this.id = manager.getSlaveState().getIndexInGroup() * config.getNumThreads() + id;
       this.logic = logic;

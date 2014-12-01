@@ -24,6 +24,9 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
+      if (!isServiceRunning()) {
+         return successfulResponse();
+      }
       long startTime = System.currentTimeMillis();
       for (;;) {
          long now = System.currentTimeMillis();

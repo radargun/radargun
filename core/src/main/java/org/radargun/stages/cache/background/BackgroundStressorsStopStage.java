@@ -13,6 +13,8 @@ import org.radargun.stages.AbstractDistStage;
  */
 @Stage(doc = "Stop BackgroundStressors.")
 public class BackgroundStressorsStopStage extends AbstractDistStage {
+   @Property(doc = "Name of the background operations. Default is '" + BackgroundOpsManager.DEFAULT + "'.")
+   protected String name = BackgroundOpsManager.DEFAULT;
 
    @Property(doc = "If true, the phase does not finish until all stressors stop loading its data. Default is false.")
    private boolean legacyWaitUntilLoaded = false;
@@ -20,12 +22,12 @@ public class BackgroundStressorsStopStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       try {
-         BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState);
+         BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState, name);
          if (instance != null) {
             instance.waitUntilLoaded();
             instance.stopBackgroundThreads();
          } else {
-            return errorResponse("No " + BackgroundOpsManager.NAME);
+            return errorResponse("No background stressors " + name);
          }
          return successfulResponse();
       } catch (Exception e) {

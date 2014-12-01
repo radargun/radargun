@@ -6,31 +6,31 @@ import java.util.List;
 
 public class Range {
    
-   private int start;
-   private int end;
+   private long start;
+   private long end;
 
-   public Range(int start, int end) {
+   public Range(long start, long end) {
       this.start = start;
       this.end = end;
    }
 
-   public int getStart() {
+   public long getStart() {
       return start;
    }
-   public int getEnd() {
+   public long getEnd() {
       return end;
    }
-   public int getSize() {
+   public long getSize() {
       return end - start;
    }
 
-   public Range shift(int shift) {
+   public Range shift(long shift) {
       return new Range(start + shift, end + shift);
    }
 
    @Override
    public int hashCode() {
-      return start + 31*(end - 1);
+      return (int)(start + 31*(end - 1));
    }
 
    @Override
@@ -59,14 +59,14 @@ public class Range {
     *           Index of part we want to get
     * @return The pair [startKey, endKey]
     */
-   public static Range divideRange(int numKeys, int numParts, int partIdx) {
-      int base = (numKeys / numParts) + 1;
-      int mod = numKeys % numParts;
+   public static Range divideRange(long numKeys, int numParts, int partIdx) {
+      long base = (numKeys / numParts) + 1;
+      long mod = numKeys % numParts;
       if (partIdx < mod) {
-         int startKey = partIdx * base;
+         long startKey = partIdx * base;
          return new Range(startKey, startKey + base);
       } else {
-         int startKey = base * mod + (partIdx - mod) * (base - 1);
+         long startKey = base * mod + (partIdx - mod) * (base - 1);
          return new Range(startKey, startKey + base - 1);
       }
    }
@@ -87,7 +87,7 @@ public class Range {
       List<List<Range>> balanced = new ArrayList<List<Range>>(numParts);
 
       for (int i = 0; i < numParts; ++i) {
-         int myRangeSize = divideRange(totalSize, numParts, i).getSize();
+         long myRangeSize = divideRange(totalSize, numParts, i).getSize();
          List<Range> myRanges = new ArrayList<Range>();
 
          while (currentRange.getSize() <= myRangeSize) {

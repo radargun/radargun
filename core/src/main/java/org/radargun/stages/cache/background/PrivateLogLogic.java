@@ -12,8 +12,8 @@ import org.radargun.traits.BasicOperations;
  */
 class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
 
-   private final int keyRangeStart;
-   private final int keyRangeEnd;
+   private final long keyRangeStart;
+   private final long keyRangeEnd;
 
    PrivateLogLogic(BackgroundOpsManager manager, long threadId, Range range) {
       super(manager, threadId);
@@ -24,7 +24,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
 
    @Override
    protected long nextKeyId() {
-      return keySelectorRandom.nextInt(keyRangeEnd - keyRangeStart) + keyRangeStart;
+      return (keySelectorRandom.nextLong() & Long.MAX_VALUE) % (keyRangeEnd - keyRangeStart) + keyRangeStart;
    }
 
    @Override

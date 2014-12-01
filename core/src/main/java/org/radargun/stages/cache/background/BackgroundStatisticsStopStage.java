@@ -19,6 +19,8 @@ import org.radargun.utils.Table;
  */
 @Stage(doc = "Stop Statistics and return collected statistics to master.")
 public class BackgroundStatisticsStopStage extends AbstractDistStage {
+   @Property(doc = "Name of the background operations. Default is '" + BackgroundOpsManager.DEFAULT + "'.")
+   protected String name = BackgroundOpsManager.DEFAULT;
 
    @Property(doc = "Name of the test used for reports. Default is 'BackgroundStats'.")
    private String testName = "BackgroundStats";
@@ -26,12 +28,12 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       try {
-         BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState);
+         BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState, name);
          if (instance != null) {
             instance.stopStats();
             return new StatisticsAck(slaveState, instance.getStats());
          } else {
-            return errorResponse("No " + BackgroundOpsManager.NAME);
+            return errorResponse("No background statistics " + name);
          }
       } catch (Exception e) {
          return errorResponse("Error while stopping background statistics", e);
