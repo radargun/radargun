@@ -108,6 +108,12 @@ public class RandomDataStage extends AbstractDistStage {
          + "the code assumes this is an even multiple of (2 * valueSize) plus valueByteOverhead.")
    private long targetMemoryUse = -1;
 
+   @Property(doc = "The number of times to retry a put if it fails. Default is 10.")
+   private int putRetryCount = 10;
+
+   @Property(doc = "The maximum number of seconds to sleep before retrying a failed put command. The default is 5.")
+   private int maxSleepInterval = 5;
+
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private BasicOperations basicOperations;
 
@@ -244,32 +250,55 @@ public class RandomDataStage extends AbstractDistStage {
          while (putCount > 0) {
             String key = Integer.toString(slaveState.getSlaveIndex()) + "-" + putCount + ":" + System.nanoTime();
 
-            long start;
+            long start = -1;
+            boolean success = false;
+            String cacheData = null;
+            
             if (stringData) {
-               if (putCount % 5000 == 0) {
-                  log.info("Writing string length " + valueSize + " to cache key: " + key);
-               }
-
-               String cacheData = generateRandomStringData(valueSize);
-               bytesWritten += (valueSize * 2);
-               start = System.nanoTime();
-               cache.put(key, cacheData);
+               cacheData = generateRandomStringData(valueSize);
             } else {
-               if (putCount % 5000 == 0) {
-                  log.info("Writing " + valueSize + " bytes to cache key: " + key);
-               }
-
                random.nextBytes(buffer);
-               bytesWritten += valueSize;
-               start = System.nanoTime();
-               cache.put(key, buffer);
             }
 
-            long durationNanos = System.nanoTime() - start;
-            stats.registerRequest(durationNanos, BasicOperations.PUT);
-            if (printWriteStatistics) {
-               log.info("Put on slave" + slaveState.getSlaveIndex() + " took "
-                     + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+            for (int i = 0; i < putRetryCount; ++i) {
+               try {
+                  if (stringData) {
+                     if (putCount % 5000 == 0) {
+                        log.info(i + ": Writing string length " + valueSize + " to cache key: " + key);
+                     }
+
+                     start = System.nanoTime();
+                     cache.put(key, cacheData);
+                  } else {
+                     if (putCount % 5000 == 0) {
+                        log.info(i + ": Writing " + valueSize + " bytes to cache key: " + key);
+                     }
+
+                     start = System.nanoTime();
+                     cache.put(key, buffer);
+                  }
+                  long durationNanos = System.nanoTime() - start;
+                  stats.registerRequest(durationNanos, BasicOperations.PUT);
+                  if (printWriteStatistics) {
+                     log.info("Put on slave" + slaveState.getSlaveIndex() + " took "
+                           + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+                  }
+                  success = true;
+                  break;
+               } catch (Exception e) {
+                  // If the put fails, sleep to see if staggering the put will succeed
+                  Thread.sleep(maxSleepInterval * 1000);
+               }
+            }
+            if (!success) {
+               return errorResponse("Failed to insert entry into cache",
+                     new RuntimeException(String.format("Failed to insert entry %d times.", putRetryCount)));
+            }
+
+            if (stringData) {
+               bytesWritten += (valueSize * 2);
+            } else {
+               bytesWritten += valueSize;
             }
 
             putCount--;
