@@ -121,6 +121,8 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private BasicOperations basicOperations;
 
+   private boolean supportsResultCacheName = false;
+
    @Override
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
       StageResult result = super.processAckOnMaster(acks);
@@ -174,25 +176,31 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          R prevPayloadObject = null;
 
          Statistics stats = new DefaultStatistics(new DataOperationStats());
+         MapTask<KOut, VOut, R> mrTask = configureMapReduceTask(mapReducer);
 
          stats.begin();
          for (int i = 0; i < numExecutions; i++) {
             prevPayloadMap = payloadMap;
             prevPayloadObject = payloadObject;
-            result = executeMapReduceTask(mapReducer, stats);
-            if (prevPayloadMap != null
-                  && (!prevPayloadMap.keySet().equals(payloadMap.keySet()) || !prevPayloadMap.entrySet().equals(
-                        payloadMap.entrySet()))) {
-               log.error("Did not get the same results for two Map/Reduce runs");
-               break;
-            } else {
-               log.info("Got the same results for two Map/Reduce runs");
+            result = executeMapReduceTask(mrTask, stats, supportsResultCacheName);
+
+            if (prevPayloadMap != null) {
+               if (prevPayloadMap.keySet().equals(payloadMap.keySet())
+                     && prevPayloadMap.entrySet().equals(payloadMap.entrySet())) {
+                  log.info(i + ": Got the same results for two Map/Reduce runs");
+               } else {
+                  log.error(i + ": Did not get the same results for two Map/Reduce runs");
+                  break;
+               }
             }
-            if (prevPayloadObject != null && !prevPayloadObject.equals(payloadObject)) {
-               log.error("Did not get the same results for two Map/Reduce runs with collator");
-               break;
-            } else {
-               log.info("Got the same results for two Map/Reduce runs");
+
+            if (prevPayloadObject != null) {
+               if (prevPayloadObject.equals(payloadObject)) {
+                  log.info(i + ": Got the same results for two Map/Reduce runs with collator");
+               } else {
+                  log.error(i + ": Did not get the same results for two Map/Reduce runs with collator");
+                  break;
+               }
             }
             if (result.isError() && exitOnFailure) {
                break;
@@ -205,9 +213,8 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       }
    }
 
-   private DistStageAck executeMapReduceTask(MapReducer<KOut, VOut, R> mapReducer, Statistics stats) {
-      long durationNanos;
-      long start;
+   private MapTask<KOut, VOut, R> configureMapReduceTask(MapReducer<KOut, VOut, R> mapReducer) {
+      MapTask<KOut, VOut, R> task = null;
 
       log.info("--------------------");
       if (mapReducer.setDistributeReducePhase(distributeReducePhase)) {
@@ -230,12 +237,35 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       } else {
          log.info(mapReducer.getClass().getName() + " does not support MapReducer.setCombiner()");
       }
+
+      task = mapReducer.configureMapReduceTask(mapperFqn, Utils.parseParams(mapperParams), reducerFqn,
+            Utils.parseParams(reducerParams));
+
+      if (collatorFqn != null) {
+         task.setCollatorInstance(collatorFqn, Utils.parseParams(collatorParams));
+      } else {
+         // If the MapReducer doesn't support storing the results in the cache, then do it manually.
+         if (storeResultInCache) {
+            supportsResultCacheName = mapReducer.setResultCacheName(MAPREDUCE_RESULT_KEY);
+            if (supportsResultCacheName) {
+               log.info(mapReducer.getClass().getName() + " supports MapReducer.setResultCacheName()");
+            } else {
+               log.info(mapReducer.getClass().getName() + " does not support MapReducer.setResultCacheName()");
+            }
+         }
+      }
+
+      return task;
+   }
+
+   private DistStageAck executeMapReduceTask(MapTask<KOut, VOut, R> task, Statistics stats,
+         boolean supportsResultCacheName) {
+      long durationNanos;
+      long start;
+
       MapReduceAck ack = new MapReduceAck(slaveState);
       try {
          if (collatorFqn != null) {
-            MapTask<KOut, VOut, R> task = mapReducer.configureMapReduceTask(mapperFqn, Utils.parseParams(mapperParams),
-                  reducerFqn, Utils.parseParams(reducerParams));
-            task.setCollatorInstance(collatorFqn, Utils.parseParams(collatorParams));
             start = System.nanoTime();
             payloadObject = task.executeWithCollator();
             durationNanos = System.nanoTime() - start;
@@ -254,17 +284,6 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                }
             }
          } else {
-            boolean supportsResultCacheName = false;
-            if (storeResultInCache) {
-               supportsResultCacheName = mapReducer.setResultCacheName(MAPREDUCE_RESULT_KEY);
-               if (supportsResultCacheName) {
-                  log.info(mapReducer.getClass().getName() + " supports MapReducer.setResultCacheName()");
-               } else {
-                  log.info(mapReducer.getClass().getName() + " does not support MapReducer.setResultCacheName()");
-               }
-            }
-            MapTask<KOut, VOut, R> task = mapReducer.configureMapReduceTask(mapperFqn, Utils.parseParams(mapperParams),
-                  reducerFqn, Utils.parseParams(reducerParams));
             start = System.nanoTime();
             payloadMap = task.execute();
             durationNanos = System.nanoTime() - start;
