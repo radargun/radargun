@@ -101,6 +101,13 @@
          <optional>true</optional>
       </dependency>
 
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-persistence-soft-index</artifactId>
+         <version>${version.infinispan}</version>
+         <optional>true</optional>
+      </dependency>
+
    </dependencies>
 
    <profiles>
@@ -155,20 +162,6 @@
                <groupId>mysql</groupId>
                <artifactId>mysql-connector-java</artifactId>
                <version>${version.mysql.driver}</version>
-               <optional>true</optional>
-            </dependency>
-         </dependencies>
-      </profile>
-      <profile>
-         <id>sifs</id>
-         <activation>
-            <activeByDefault>false</activeByDefault>
-         </activation>
-         <dependencies>
-            <dependency>
-               <groupId>org.infinispan</groupId>
-               <artifactId>infinispan-persistence-soft-index</artifactId>
-               <version>${version.infinispan}</version>
                <optional>true</optional>
             </dependency>
          </dependencies>
