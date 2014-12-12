@@ -147,11 +147,14 @@ public class Evaluator {
          def = new Value(string.substring(colonIndex + 1, endIndex).trim());
       }
       String strValue = System.getProperty(property);
-      if (strValue != null) {
+      if (strValue != null && !strValue.isEmpty()) {
          value = new Value(strValue.trim());
       } else {
          if (property.startsWith("env.")) {
-            value = new Value(System.getenv(property.substring(4)).trim());
+            String env = System.getenv(property.substring(4));
+            if (env != null && !env.isEmpty()) {
+               value = new Value(env.trim());
+            }
          } else if (property.startsWith("random.")) {
             value = random(property);
          }
