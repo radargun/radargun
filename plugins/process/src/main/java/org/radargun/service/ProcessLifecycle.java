@@ -165,8 +165,10 @@ public class ProcessLifecycle implements Lifecycle, Killable {
 
    protected void stopInternal() {
       try {
+         long startTime = System.currentTimeMillis();
          for (; ; ) {
-            Process process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "stop" + extension, service.getCommandTag())).start();
+            String command = service.stopTimeout < 0 || System.currentTimeMillis() < startTime + service.stopTimeout ? "stop" : "kill";
+            Process process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + command + extension, service.getCommandTag())).start();
             try {
                process.waitFor();
             } catch (InterruptedException e) {

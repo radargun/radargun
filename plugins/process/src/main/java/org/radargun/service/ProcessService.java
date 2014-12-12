@@ -43,8 +43,11 @@ public class ProcessService {
    @Property(doc = "Current operating system. Default is UNIX.")
    protected String os = "unix";
 
-   @Property(doc = "Timeout to start the server. Default is 1 minute.", converter = TimeConverter.class)
+   @Property(doc = "Timeout to start the service. Default is 1 minute.", converter = TimeConverter.class)
    public long startTimeout = 60000;
+
+   @Property(doc = "Timeout to stop the service. Default is 1 minute.", converter = TimeConverter.class)
+   public long stopTimeout = 60000;
 
    @Property(doc = "Process standard error as standard output. Default is false.")
    public boolean stderrToStdout = false;
