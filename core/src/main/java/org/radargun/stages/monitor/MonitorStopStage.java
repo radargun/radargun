@@ -11,8 +11,8 @@ import org.radargun.sysmonitor.Monitors;
  * 
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
-@Stage(doc = "Stop collecting JVM statistics on each slave node and return collected statistics to the master node.")
-public class JVMMonitorStopStage extends AbstractDistStage {
+@Stage(doc = "Stop collecting statistics on each slave node and return collected statistics to the master node.", deprecatedName = "jvm-monitor-stop")
+public class MonitorStopStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
@@ -21,7 +21,7 @@ public class JVMMonitorStopStage extends AbstractDistStage {
          monitor.stop();
          return successfulResponse();
       } else {
-         return errorResponse("No JVMMonitor object found on slave: " + slaveState.getSlaveIndex());
+         return errorResponse("No Monitors object found on slave: " + slaveState.getSlaveIndex());
       }
    }
 }
