@@ -1,7 +1,5 @@
 package org.radargun.stages.monitor;
 
-import java.util.concurrent.TimeUnit;
-
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
@@ -16,6 +14,7 @@ import org.radargun.sysmonitor.OpenFilesMonitor;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.JmxConnectionProvider;
+import org.radargun.utils.TimeConverter;
 
 /**
  * 
@@ -31,12 +30,8 @@ public class MonitorStartStage extends AbstractDistStage {
          + "If not specified, then statistics are not collected.")
    private String interfaceName;
 
-   @Property(doc = "An integer that specifies the frequency that statistics are collected. The default is one.")
-   private int frequency = 1;
-
-   @Property(doc = "Specifies the time unit that statistics are collected. "
-         + "One of: MILLISECONDS, SECONDS, MINUTES, or HOURS. The default is SECONDS.")
-   private TimeUnit timeUnit = TimeUnit.SECONDS;
+   @Property(doc = "Period of statistics collection. The default is 1 second.", converter = TimeConverter.class)
+   private long period = 1000;
 
    @InjectTrait
    private JmxConnectionProvider jmxConnectionProvider;
@@ -48,7 +43,7 @@ public class MonitorStartStage extends AbstractDistStage {
    public DistStageAck executeOnSlave() {
       Monitors monitor = (Monitors) slaveState.get(Monitors.MONITORS);
       if (monitor == null) {
-         monitor = new Monitors(slaveState, frequency, timeUnit);
+         monitor = new Monitors(slaveState, period);
       }
       monitor.addMonitor(new CpuUsageMonitor(jmxConnectionProvider, slaveState.getTimeline()));
       monitor.addMonitor(new MemoryUsageMonitor(jmxConnectionProvider, slaveState.getTimeline()));
