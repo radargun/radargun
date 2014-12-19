@@ -95,4 +95,24 @@ public class NetworkBytesMonitor implements Monitor {
    public void stop() {
       // nothing to do
    }
+
+   @Override
+   public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      NetworkBytesMonitor that = (NetworkBytesMonitor) o;
+
+      if (valueIndex != that.valueIndex) return false;
+      if (!iface.equals(that.iface)) return false;
+
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      int result = iface.hashCode();
+      result = 31 * result + valueIndex;
+      return result;
+   }
 }

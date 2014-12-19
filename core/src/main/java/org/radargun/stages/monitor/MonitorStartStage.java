@@ -8,11 +8,13 @@ import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.sysmonitor.CpuUsageMonitor;
 import org.radargun.sysmonitor.GcMonitor;
+import org.radargun.sysmonitor.InternalsMonitor;
 import org.radargun.sysmonitor.MemoryUsageMonitor;
 import org.radargun.sysmonitor.Monitors;
 import org.radargun.sysmonitor.NetworkBytesMonitor;
 import org.radargun.sysmonitor.OpenFilesMonitor;
 import org.radargun.traits.InjectTrait;
+import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.JmxConnectionProvider;
 
 /**
@@ -22,8 +24,8 @@ import org.radargun.traits.JmxConnectionProvider;
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 
-@Stage(doc = "Starts collecting JVM statistics locally on each slave node.")
-public class JVMMonitorStartStage extends AbstractDistStage {
+@Stage(doc = "Starts collecting statistics locally on each slave node.", deprecatedName = "jvm-monitor-start")
+public class MonitorStartStage extends AbstractDistStage {
 
    @Property(doc = "Specifies the network interface where statistics are gathered. "
          + "If not specified, then statistics are not collected.")
@@ -39,13 +41,15 @@ public class JVMMonitorStartStage extends AbstractDistStage {
    @InjectTrait
    private JmxConnectionProvider jmxConnectionProvider;
 
+   @InjectTrait
+   private InternalsExposition internalsExposition;
+
    @Override
    public DistStageAck executeOnSlave() {
-      if (slaveState.get(Monitors.MONITORS) != null) {
-         log.warn("Monitors are already started");
-         return successfulResponse();
+      Monitors monitor = (Monitors) slaveState.get(Monitors.MONITORS);
+      if (monitor == null) {
+         monitor = new Monitors(slaveState, frequency, timeUnit);
       }
-      Monitors monitor = new Monitors(slaveState, frequency, timeUnit);
       monitor.addMonitor(new CpuUsageMonitor(jmxConnectionProvider, slaveState.getTimeline()));
       monitor.addMonitor(new MemoryUsageMonitor(jmxConnectionProvider, slaveState.getTimeline()));
       monitor.addMonitor(new GcMonitor(jmxConnectionProvider, slaveState.getTimeline()));
@@ -53,6 +57,9 @@ public class JVMMonitorStartStage extends AbstractDistStage {
       if (interfaceName != null) {
          monitor.addMonitor(NetworkBytesMonitor.createReceiveMonitor(interfaceName, slaveState.getTimeline()));
          monitor.addMonitor(NetworkBytesMonitor.createTransmitMonitor(interfaceName, slaveState.getTimeline()));
+      }
+      if (internalsExposition != null) {
+         monitor.addMonitor(new InternalsMonitor(internalsExposition, slaveState.getTimeline()));
       }
       monitor.start();
       return successfulResponse();

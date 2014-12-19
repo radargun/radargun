@@ -59,10 +59,9 @@ public class Monitors implements ServiceListener {
    }
 
    public synchronized void addMonitor(Monitor monitor) {
-      for (Monitor m : monitors) {
-         if (m == monitor || m.getClass() == monitor.getClass()) {
-            log.warnf("Monitor for %s is already registered, ignoring", monitor.getClass());
-         }
+      if (monitors.contains(monitor)) {
+         log.warnf("Monitor %s is already registered, ignoring", monitor);
+         return;
       }
       monitors.add(monitor);
       if (exec != null) {
