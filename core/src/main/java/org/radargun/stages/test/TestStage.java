@@ -79,6 +79,9 @@ public abstract class TestStage extends AbstractDistStage {
       complexConverter = PerformanceCondition.Converter.class)
    protected PerformanceCondition repeatCondition;
 
+   @Property(doc = "Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.")
+   protected boolean mergeThreadStats = false;
+
    @InjectTrait
    protected Transactional transactional;
 
@@ -233,13 +236,25 @@ public abstract class TestStage extends AbstractDistStage {
                while (iteration >= all.size()) {
                   all.add(new ArrayList<Statistics>(stats.size()));
                }
-               all.get(iteration++).add(it.statistics);
+               addStatistics(all.get(iteration++), it.statistics);
             }
          } else {
-            all.get(0).add(s);
+            addStatistics(all.get(0), s);
          }
       }
       return all;
+   }
+
+   private void addStatistics(List<Statistics> iterationStats, Statistics statistics) {
+      if (mergeThreadStats) {
+         if (iterationStats.isEmpty()) {
+            iterationStats.add(statistics);
+         } else {
+            iterationStats.get(0).merge(statistics);
+         }
+      } else {
+         iterationStats.add(statistics);
+      }
    }
 
    public int getTotalThreads() {
