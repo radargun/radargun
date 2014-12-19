@@ -155,9 +155,17 @@ public class KeyExpirationTestStage extends CacheTestStage {
                }
                return value;
             } else {
-               int size = entrySize.next(random);
-               Load load = loadForSize.get(size);
-               if (load.scheduledKeys.size() < load.max) {
+               int size = 0;
+               Load load = null;
+               for (int attempt = 0; attempt < 100; ++attempt) {
+                  size = entrySize.next(random);
+                  load = loadForSize.get(size);
+                  if (load.max != 0) break;
+               }
+               if (load.max == 0) {
+                  log.error("Cannot add any entry");
+                  return null;
+               } else if (load.scheduledKeys.size() < load.max) {
                   long keyIndex = nextKeyIndex;
                   nextKeyIndex += getTotalThreads();
                   pair = new KeyWithRemovalTime(keyGenerator.generateKey(keyIndex), getRandomTimestamp(timestamp, random));
