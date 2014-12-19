@@ -179,6 +179,7 @@ public class TimelineDocument extends HtmlDocument {
       }
 
       write("<br><br>");
+      List<Cluster.Group> groups = cluster.getGroups();
       for (Timeline timeline : timelines) {
          write(String.format("<span style=\"background-color: #%06X;\">&nbsp;</span>" +
                "<input type=\"checkbox\" checked=\"checked\" id=\"slave_%d\" onClick=\"",
@@ -193,7 +194,7 @@ public class TimelineDocument extends HtmlDocument {
          }
          if (timeline.slaveIndex >= 0) {
             write("\"><strong>Slave ");
-            if (cluster.getGroups().size() > 1)  {
+            if (groups.size() > 1)  {
                write(String.format("%d (%s)", timeline.slaveIndex, cluster.getGroup(timeline.slaveIndex).name));
             } else {
                write(String.valueOf(timeline.slaveIndex));
@@ -201,6 +202,23 @@ public class TimelineDocument extends HtmlDocument {
             write("</strong><br>\n");
          } else {
             write("\"><strong>Master</strong><br>\n");
+         }
+      }
+      if (groups.size() > 1) {
+         for (int groupId = 0; groupId < groups.size(); ++groupId) {
+            write(String.format("<span>&nbsp;</span><input type=\"checkbox\" checked=\"checked\" id=\"group_%d\" onClick=\"", groupId));
+            for (int slaveIndex : cluster.getSlaves(groups.get(groupId).name)) {
+               for (int valuesId : valueCategories.values()) {
+                  write(String.format("document.getElementById('slave_%d').checked = this.checked;", slaveIndex));
+                  write(String.format("reset_display('layer_%d_%d', this.checked, 'block');",
+                        valuesId, slaveIndex));
+                  for (int eventsId : eventCategories.values()) {
+                     write(String.format("reset_display('layer_%d_%d_%d', this.checked && is_checked('cat_%d'), 'block');",
+                           valuesId, eventsId, slaveIndex, eventsId));
+                  }
+               }
+            }
+            write("\"><strong>Group " + groups.get(groupId).name + "</strong><br>\n");
          }
       }
       write("</div>");

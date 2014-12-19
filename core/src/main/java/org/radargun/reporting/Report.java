@@ -239,6 +239,10 @@ public class Report implements Comparable<Report>, Serializable {
          return Collections.unmodifiableSet(statistics.entrySet());
       }
 
+      public List<Statistics> getStatistics(int slaveIndex) {
+         return statistics.get(slaveIndex);
+      }
+
       public int getThreadCount() {
          return threadCount;
       }
