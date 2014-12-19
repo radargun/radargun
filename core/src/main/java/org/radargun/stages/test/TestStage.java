@@ -131,7 +131,8 @@ public abstract class TestStage extends AbstractDistStage {
 
       Report.Test test = getTest(amendTest);
       testIteration = test == null ? 0 : test.getIterations().size();
-      Statistics aggregated = createStatistics();
+      // we cannot use aggregated = createStatistics() since with PeriodicStatistics the merge would fail
+      Statistics aggregated = null;
       int threads = 0;
       for (StatisticsAck ack : Projections.instancesOf(acks, StatisticsAck.class)) {
          if (ack.iterations != null) {
@@ -147,7 +148,11 @@ public abstract class TestStage extends AbstractDistStage {
                }
                threads = Math.max(threads, threadStats.size());
                for (Statistics s : threadStats) {
-                  aggregated.merge(s);
+                  if (aggregated == null) {
+                     aggregated = s.copy();
+                  } else {
+                     aggregated.merge(s);
+                  }
                }
             }
          } else {

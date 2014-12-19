@@ -27,10 +27,14 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationS
 
    private final List<IterationStatistics.Iteration> buckets;
 
+   public PeriodicStatistics() {
+      this.buckets = new ArrayList<>();
+   }
+
    public PeriodicStatistics(Statistics prototype, long period) {
+      this();
       this.prototype = prototype;
       this.period = period;
-      this.buckets = new ArrayList<>();
    }
 
    public PeriodicStatistics(PeriodicStatistics other) {
@@ -46,7 +50,13 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationS
       long currentTime = System.currentTimeMillis();
       int bucket = (int)((currentTime - getBegin()) / period);
       while (buckets.size() <= bucket) {
-         buckets.add(new Iteration("Period " + bucket, prototype.copy()));
+         Statistics bucketStats = prototype.copy();
+         if (bucketStats instanceof IntervalStatistics) {
+            IntervalStatistics intervalStats = (IntervalStatistics) bucketStats;
+            intervalStats.setBegin(getBegin() + bucket * period);
+            intervalStats.setEnd(getBegin() + (bucket + 1) * period);
+         }
+         buckets.add(new Iteration("Period " + bucket, bucketStats));
       }
       return buckets.get(bucket).statistics;
    }
@@ -69,6 +79,22 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationS
    @Override
    public void reset() {
       buckets.clear();
+   }
+
+   @Override
+   public void end() {
+      super.end();
+      // Discard last bucket if it contains < 5% of the period, as those data are usually
+      // just some leftovers that screw the charts
+      int numBuckets = buckets.size();
+      if (numBuckets == 0) return;
+      Statistics lastStats = buckets.get(numBuckets - 1).statistics;
+      if (lastStats instanceof IntervalStatistics) {
+         IntervalStatistics intervalStats = (IntervalStatistics) lastStats;
+         if (getEnd() - intervalStats.getBegin() < period / 20) {
+            buckets.remove(numBuckets - 1);
+         }
+      }
    }
 
    @Override
