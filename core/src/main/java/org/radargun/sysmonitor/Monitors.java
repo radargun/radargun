@@ -21,17 +21,14 @@ public class Monitors implements ServiceListener {
    public static final String MONITORS = Monitors.class.getName();
    private static Log log = LogFactory.getLog(Monitors.class);
 
-   private int frequency = 1;
-   private TimeUnit timeUnit = TimeUnit.SECONDS;
-
+   private final long period;
    private final SlaveState slaveState;
    private ScheduledExecutorService exec;
    private List<Monitor> monitors = new ArrayList<>();
 
-   public Monitors(SlaveState slaveState, int frequency, TimeUnit timeUnit) {
+   public Monitors(SlaveState slaveState, long period) {
       this.slaveState = slaveState;
-      this.frequency = frequency;
-      this.timeUnit = timeUnit;
+      this.period = period;
    }
 
    public synchronized void start() {
@@ -53,9 +50,9 @@ public class Monitors implements ServiceListener {
       });
       for (Monitor m : monitors) {
          m.start();
-         exec.scheduleAtFixedRate(m, 0, frequency, timeUnit);
+         exec.scheduleAtFixedRate(m, 0, period, TimeUnit.MILLISECONDS);
       }
-      log.infof("Gathering statistics every %d %s", frequency, timeUnit.name());
+      log.infof("Gathering statistics every %d ms", period);
    }
 
    public synchronized void addMonitor(Monitor monitor) {
@@ -65,7 +62,7 @@ public class Monitors implements ServiceListener {
       }
       monitors.add(monitor);
       if (exec != null) {
-         exec.scheduleAtFixedRate(monitor, 0, frequency, timeUnit);
+         exec.scheduleAtFixedRate(monitor, 0, period, TimeUnit.MILLISECONDS);
       }
    }
 
@@ -82,7 +79,7 @@ public class Monitors implements ServiceListener {
       }
       exec.shutdownNow();
       try {
-         exec.awaitTermination(2 * frequency, timeUnit);
+         exec.awaitTermination(2 * period, TimeUnit.MILLISECONDS);
       } catch (InterruptedException e) {
          log.error("Failed to terminate local monitoring.");
       }
