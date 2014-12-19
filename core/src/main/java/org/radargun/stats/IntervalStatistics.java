@@ -29,6 +29,14 @@ public abstract class IntervalStatistics implements Statistics {
       return endTime;
    }
 
+   public void setBegin(long beginTime) {
+      this.beginTime = beginTime;
+   }
+
+   public void setEnd(long endTime) {
+      this.endTime = endTime;
+   }
+
    @Override
    public void merge(Statistics otherStats) {
       beginTime = Math.min(otherStats.getBegin(), beginTime);
