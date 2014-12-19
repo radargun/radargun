@@ -15,6 +15,7 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.radargun.Service;
 import org.radargun.config.Property;
+import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.Utils;
 
@@ -28,6 +29,9 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
    @Property(doc = "Start thread periodically dumping JGroups state. Use for debug purposes. Default is false.")
    private boolean jgroupsDumperEnabled = false;
 
+   @Property(doc = "Enables presentation of internal state of Infinispan. Use for debugging and monitoring purposes. Default is false.")
+   protected boolean internalsExpositionEnabled = false;
+
    private JGroupsDumper jgroupsDumper;
    private ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
 
@@ -39,6 +43,11 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
    @ProvidesTrait
    public EmbeddedConfigurationProvider createConfigurationProvider() {
       return new EmbeddedConfigurationProvider60(this);
+   }
+
+   @ProvidesTrait
+   public InternalsExposition createInternalsExposition() {
+      return new Infinispan60InternalsExposition(this);
    }
 
    @Override
