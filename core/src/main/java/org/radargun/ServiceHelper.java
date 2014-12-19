@@ -91,19 +91,15 @@ public class ServiceHelper {
       }
 
       // The properties are evaluated only on the slave, using the extras (such as ${slave.index} etc...)
-      Map<String, Definition> configProperties = new HashMap<>();
       Map<String, String> backupExtras = new HashMap<String, String>();
       for (Map.Entry<String, String> extra : extras.entrySet()) {
          backupExtras.put(extra.getKey(), System.getProperty(extra.getKey()));
          System.setProperty(extra.getKey(), extra.getValue());
       }
-      for (Map.Entry<String, Definition> entry : properties.entrySet()) {
-         configProperties.put(entry.getKey(), entry.getValue());
-      }
+      PropertyHelper.setPropertiesFromDefinitions(instance, properties, false, true);
       for (Map.Entry<String, String> backup : backupExtras.entrySet()) {
          System.setProperty(backup.getKey(), backup.getValue() == null ? "" : backup.getValue());
       }
-      PropertyHelper.setPropertiesFromDefinitions(instance, configProperties, false, true);
       InitHelper.init(instance);
       return instance;
    }

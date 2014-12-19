@@ -164,7 +164,14 @@ public class Evaluator {
       } else if (def != null) {
          return def;
       } else {
-         throw new IllegalArgumentException("Property " + property + " not defined!");
+         log.debugf("Failed to resolve property ${%s}, defined properties are: ", property);
+         for (Map.Entry<Object, Object> prop : System.getProperties().entrySet()) {
+            log.debugf("${%s} -> '%s'", prop.getKey(), prop.getValue());
+         }
+         for (Map.Entry<String, String> env : System.getenv().entrySet()) {
+            log.debugf("${env.%s} -> '%s'", env.getKey(), env.getValue());
+         }
+         throw new IllegalArgumentException("Property '" + property + "' not defined!");
       }
    }
 
