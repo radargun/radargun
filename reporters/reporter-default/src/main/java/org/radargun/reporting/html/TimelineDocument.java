@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Property;
@@ -87,12 +90,13 @@ public class TimelineDocument extends HtmlDocument {
       write("<center><h1>" + title + " Timeline</h1></center>");
 
       write("<table style=\"float: left\">");
-      boolean firstDomain = true;
-      String relativeDomainFile = "domain_" + configName + "_relative.png";
-      String absoluteDomainFile = "domain_" + configName + "_absolute.png";
+      final AtomicBoolean firstDomain = new AtomicBoolean(true);
+      final String relativeDomainFile = "domain_" + configName + "_relative.png";
+      final String absoluteDomainFile = "domain_" + configName + "_absolute.png";
+      ArrayList<Future> chartTaskFutures = new ArrayList<>();
       for (Map.Entry<String, Integer> valueEntry : valueCategories.entrySet()) {
-         String valueCategory = valueEntry.getKey();
-         int valueCategoryId = valueEntry.getValue();
+         final String valueCategory = valueEntry.getKey();
+         final int valueCategoryId = valueEntry.getValue();
          write(String.format("<tr><th colspan=\"2\">%s</th></tr>", valueCategory));
 
          /* Range */
@@ -103,45 +107,50 @@ public class TimelineDocument extends HtmlDocument {
          minValues.put(valueCategory, min);
          maxValues.put(valueCategory, max);
 
-         String rangeFile = String.format("timeline_%s_%d_range.png", configName, valueCategoryId);
+         final String rangeFile = String.format("timeline_%s_%d_range.png", configName, valueCategoryId);
          write(String.format("<tr><td style=\"text-align: right\"><img src=\"%s\"></td>\n", rangeFile));
 
          /* Charts */
          write(String.format("<td><div style=\"position: relative; width: %d; height: %d\">\n", configuration.width, configuration.height));
-         boolean firstRange = true;
+         final AtomicBoolean firstRange = new AtomicBoolean(true);
          for (Timeline timeline : timelines) {
-            List<Timeline.Value> values = timeline.getValues(valueCategory);
-            if (values == null) values = Collections.emptyList();
+            List<Timeline.Value> categoryValues = timeline.getValues(valueCategory);
+            final List<Timeline.Value> values = categoryValues != null ? categoryValues : Collections.EMPTY_LIST;
+            final int slaveIndex = timeline.slaveIndex;
+            final String valueChartFile = String.format("timeline_%s_v%d_%d.png", configName, valueCategoryId, slaveIndex);
+            write(String.format("<img id=\"layer_%d_%d\" src=\"%s\" style=\"position: absolute; left: 0; top: 0\">\n",
+                  valueCategoryId, slaveIndex, valueChartFile));
 
-            {
-               log.debug("Generating chart for " + valueCategory);
-               TimelineChart chart = new TimelineChart();
-               chart.setDimensions(configuration.width, configuration.height);
-               chart.setEvents(values, timeline.slaveIndex, startTimestamp, endTimestamp, minValues.get(valueCategory) * 1.1, maxValues.get(valueCategory) * 1.1);
+            chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
+               @Override
+               public Void call() throws Exception {
+                  log.debug("Generating chart for " + valueCategory);
+                  TimelineChart chart = new TimelineChart();
+                  chart.setDimensions(configuration.width, configuration.height);
 
-               String chartFile = String.format("timeline_%s_v%d_%d.png", configName, valueCategoryId, timeline.slaveIndex);
-               write(String.format("<img id=\"layer_%d_%d\" src=\"%s\" style=\"position: absolute; left: 0; top: 0\">\n",
-                     valueCategoryId, timeline.slaveIndex, chartFile));
-               chart.saveChart(directory + File.separator + chartFile);
+                  chart.setEvents(values, slaveIndex, startTimestamp, endTimestamp, minValues.get(valueCategory) * 1.1, maxValues.get(valueCategory) * 1.1);
 
-               if (firstRange) {
-                  chart.saveRange(directory + File.separator + rangeFile);
-                  firstRange = false;
+
+                  chart.saveChart(directory + File.separator + valueChartFile);
+
+                  if (firstRange.compareAndSet(true, false)) {
+                     chart.saveRange(directory + File.separator + rangeFile);
+                  }
+                  if (firstDomain.compareAndSet(true, false)) {
+                     chart.saveRelativeDomain(directory + File.separator + relativeDomainFile);
+                     chart.saveAbsoluteDomain(directory + File.separator + absoluteDomainFile);
+                  }
+                  return null;
                }
-               if (firstDomain) {
-                  chart.saveRelativeDomain(directory + File.separator + relativeDomainFile);
-                  chart.saveAbsoluteDomain(directory + File.separator + absoluteDomainFile);
-                  firstDomain = false;
-               }
-            }
+            }));
 
             for (String eventCategory : timeline.getEventCategories()) {
                if (timeline.getEvents(eventCategory) == null) continue;
 
                int eventCategoryId = eventCategories.get(eventCategory);
-               String chartFile = String.format("timeline_%s_e%d_%d.png", configName, eventCategoryId, timeline.slaveIndex);
+               String eventChartFile = String.format("timeline_%s_e%d_%d.png", configName, eventCategoryId, timeline.slaveIndex);
                write(String.format("<img id=\"layer_%d_%d_%d\" src=\"%s\" style=\"position: absolute; left: 0; top: 0\">\n",
-                     valueCategoryId, eventCategoryId, timeline.slaveIndex, chartFile));
+                     valueCategoryId, eventCategoryId, timeline.slaveIndex, eventChartFile));
             }
          }
          write("</div></td></tr>");
@@ -149,17 +158,34 @@ public class TimelineDocument extends HtmlDocument {
          write("<tr><td>&nbsp;</td><td><img src=\"" + absoluteDomainFile + "\"></td></tr>");
       }
       write("</table>");
+
       for (Timeline timeline : timelines) {
-         for (String eventCategory : timeline.getEventCategories()) {
-            List<Timeline.Event> events = timeline.getEvents(eventCategory);
+         final int slaveIndex = timeline.slaveIndex;
+         for (String ec : timeline.getEventCategories()) {
+            final String eventCategory = ec;
+            final List<Timeline.Event> events = timeline.getEvents(eventCategory);
             if (events == null) continue;
 
-            TimelineChart chart = new TimelineChart();
-            chart.setDimensions(configuration.width, configuration.height);
-            chart.setEvents(events, timeline.slaveIndex, startTimestamp, endTimestamp, 0, 0);
+            chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
+               @Override
+               public Void call() throws Exception {
+                  TimelineChart chart = new TimelineChart();
+                  chart.setDimensions(configuration.width, configuration.height);
+                  chart.setEvents(events, slaveIndex, startTimestamp, endTimestamp, 0, 0);
 
-            String chartFile = String.format("timeline_%s_e%d_%d.png", configName, eventCategories.get(eventCategory), timeline.slaveIndex);
-            chart.saveChart(directory + File.separator + chartFile);
+                  String chartFile = String.format("timeline_%s_e%d_%d.png", configName, eventCategories.get(eventCategory), slaveIndex);
+                  chart.saveChart(directory + File.separator + chartFile);
+                  return null;
+               }
+            }));
+         }
+      }
+      /* wait until all charts are generated */
+      for (Future f : chartTaskFutures) {
+         try {
+            f.get();
+         } catch (Exception e) {
+            log.error("Failed to generate on of the charts: ", e);
          }
       }
 

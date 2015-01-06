@@ -3,6 +3,8 @@ package org.radargun.reporting.html;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.radargun.config.Configuration;
 import org.radargun.config.Property;
@@ -21,6 +23,10 @@ import org.radargun.reporting.commons.TestAggregations;
  */
 public class HtmlReporter implements Reporter {
    private static final Log log = LogFactory.getLog(HtmlReporter.class);
+   /**
+    * Shared executor used for long-running tasks when the report is generated.
+    */
+   public static final ExecutorService executor = Executors.newFixedThreadPool(2 * Runtime.getRuntime().availableProcessors());
 
    @Property(doc = "Directory to put the reports. Default is results/html.")
    private String targetDir = "results" + File.separator + "html";
