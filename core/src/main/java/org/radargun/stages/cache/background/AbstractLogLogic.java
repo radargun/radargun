@@ -35,9 +35,9 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
    protected final BasicOperations.Cache nonTxBasicCache;
    protected BasicOperations.Cache basicCache;
 
-   protected final Random keySelectorRandom;
    protected final Random operationTypeRandom = new Random();
 
+   protected Random keySelectorRandom;
    protected volatile long operationId = 0;
    protected volatile long keyId;
    protected Map<Long, DelayedRemove> delayedRemoves = new HashMap<Long, DelayedRemove>();
@@ -47,7 +47,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
    private boolean txRolledBack = false;
    private volatile long lastSuccessfulOpTimestamp;
    private volatile long lastSuccessfulTxTimestamp;
-   protected int remainingTxOps;
+   private int remainingTxOps;
 
    public AbstractLogLogic(BackgroundOpsManager manager, long stressorId) {
       super(manager);
@@ -55,25 +55,31 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
       if (transactionSize <= 0) {
          basicCache = nonTxBasicCache;
       }
-
-      Random rand = null;
-      try {
-         Object last = nonTxBasicCache.get(LogChecker.lastOperationKey((int) stressorId));
-         if (last != null) {
-            operationId = ((LogChecker.LastOperation) last).getOperationId() + 1;
-            rand = Utils.setRandomSeed(new Random(0), ((LogChecker.LastOperation) last).getSeed());
-            log.debug("Restarting operations from operation " + operationId);
-         }
-      } catch (Exception e) {
-         log.error("Failure getting last operation", e);
-      }
-      if (rand == null) {
-         log.trace("Initializing stressor random with " + stressorId);
-         this.keySelectorRandom = new Random(stressorId);
-      } else {
-         this.keySelectorRandom = rand;
-      }
       remainingTxOps = transactionSize;
+   }
+
+   /**
+    * This operation has to be called within the stressor thread and should be sensitive to interruptions
+    */
+   public void init() {
+      Random random = null;
+      while (random == null && !Thread.currentThread().isInterrupted()) {
+         try {
+            Object last = nonTxBasicCache.get(LogChecker.lastOperationKey(stressor.id));
+            if (last != null) {
+               operationId = ((LogChecker.LastOperation) last).getOperationId() + 1;
+               random = Utils.setRandomSeed(new Random(0), ((LogChecker.LastOperation) last).getSeed());
+               log.debug("Restarting operations from operation " + operationId);
+            } else {
+               log.trace("Initializing stressor random with " + stressor.id);
+               random = new Random(stressor.id);
+            }
+         } catch (Exception e) {
+            // exception cannot be understood as 0 because of AvailabilityExceptions
+            log.error("Failure getting last operation", e);
+         }
+      }
+      keySelectorRandom = random;
    }
 
    @Override
@@ -211,29 +217,32 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    private void afterCommit() {
       boolean inTransaction = false;
-      while (!stressor.isTerminated()) {
-         try {
-            if (inTransaction) {
-               try {
-                  ongoingTx.rollback();
-               } catch (Exception e) {
+      try {
+         while (!stressor.isTerminated()) {
+            try {
+               if (inTransaction) {
+                  try {
+                     ongoingTx.rollback();
+                  } catch (Exception e) {
+                     log.error("Failed to rollback ongoing transaction", e);
+                  }
                }
+               startTransaction();
+               inTransaction = true;
+               for (DelayedRemove delayedRemove : delayedRemoves.values()) {
+                  checkedRemoveValue(delayedRemove.keyId, delayedRemove.oldValue);
+               }
+               ongoingTx.commit();
+               lastSuccessfulTxTimestamp = System.currentTimeMillis();
+               inTransaction = false;
+               delayedRemoves.clear();
+               return;
+            } catch (Exception e) {
+               log.error("Error while executing delayed removes.", e);
             }
-            startTransaction();
-            inTransaction = true;
-            for (DelayedRemove delayedRemove : delayedRemoves.values()) {
-               checkedRemoveValue(delayedRemove.keyId, delayedRemove.oldValue);
-            }
-            ongoingTx.commit();
-            lastSuccessfulTxTimestamp = System.currentTimeMillis();
-            inTransaction = false;
-            delayedRemoves.clear();
-            return;
-         } catch (Exception e) {
-            log.error("Error while executing delayed removes.", e);
-         } finally {
-            clearTransaction();
          }
+      } finally {
+         clearTransaction();
       }
    }
 

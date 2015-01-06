@@ -200,14 +200,12 @@ public abstract class LogChecker extends Thread {
       private final BackgroundOpsManager manager;
       private final AtomicLong missingOperations = new AtomicLong();
       private final AtomicLong missingNotifications = new AtomicLong();
-      private final BasicOperations.Cache cache;
 
       public Pool(int numThreads, int numSlaves, BackgroundOpsManager manager) {
          totalThreads = numThreads * numSlaves;
          allRecords = new AtomicReferenceArray<AbstractStressorRecord>(totalThreads);
          log.trace("Pool will contain " + allRecords.length() + records);
          this.manager = manager;
-         this.cache = manager.getBasicCache();
       }
 
       protected void registerListeners(boolean sync) {
@@ -273,7 +271,8 @@ public abstract class LogChecker extends Thread {
             AbstractStressorRecord record = allRecords.get(i);
             if (record == null) continue;
             try {
-               LastOperation lastOperation = (LastOperation) cache.get(lastOperationKey(record.getThreadId()));
+               // as the pool survives service restarts, we have to always grab actual cache
+               LastOperation lastOperation = (LastOperation) manager.getBasicCache().get(lastOperationKey(record.getThreadId()));
                if (lastOperation == null) {
                   log.trace("Thread " + record.getThreadId() + " has no recorded operation.");
                } else {

@@ -35,6 +35,7 @@ class Stressor extends Thread {
    @Override
    public void run() {
       try {
+         logic.init();
          while (!isInterrupted() && !terminate) {
             logic.invoke();
             if (delayBetweenRequests > 0)
@@ -42,6 +43,7 @@ class Stressor extends Thread {
          }
       } catch (InterruptedException e) {
          log.trace("Stressor interrupted.", e);
+      } finally {
          logic.finish();
       }
    }

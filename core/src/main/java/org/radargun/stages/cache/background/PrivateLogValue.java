@@ -47,6 +47,15 @@ public class PrivateLogValue implements Serializable {
       return threadId;
    }
 
+   public boolean contains(long operationId) {
+      for (long id : operationIds) {
+         if (id == operationId) {
+            return true;
+         }
+      }
+      return false;
+   }
+
    @Override
    public boolean equals(Object obj) {
       if (!(obj instanceof PrivateLogValue)) return false;

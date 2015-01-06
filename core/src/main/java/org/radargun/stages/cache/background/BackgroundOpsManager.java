@@ -73,6 +73,7 @@ public class BackgroundOpsManager implements ServiceListener {
    private boolean loaded = false;
    private LogChecker[] logCheckers;
    private LogChecker.Pool logCheckerPool;
+   private boolean stressorsPaused, checkersPaused;
 
    private Lifecycle lifecycle;
    private CacheListeners listeners;
@@ -188,7 +189,8 @@ public class BackgroundOpsManager implements ServiceListener {
       }
       startStressorThreads();
       if (logLogicConfiguration.enabled) {
-         startCheckers();
+         createLogCheckerPool();
+         startCheckerThreads();
          if (logLogicConfiguration.ignoreDeadCheckers) {
             keepAliveTask = executor.scheduleAtFixedRate(new KeepAliveTask(), 0, 1000, TimeUnit.MILLISECONDS);
          }
@@ -205,6 +207,10 @@ public class BackgroundOpsManager implements ServiceListener {
    }
 
    private synchronized void startStressorThreads() {
+      if (stressorsPaused) {
+         log.info("Not starting stressors, paused");
+         return;
+      }
       stressorThreads = new Stressor[generalConfiguration.numThreads];
       if (generalConfiguration.numThreads <= 0) {
          log.warn("Stressor thread number set to 0!");
@@ -253,36 +259,48 @@ public class BackgroundOpsManager implements ServiceListener {
       }
    }
 
-   private synchronized void startCheckers() {
+   private synchronized void startCheckerThreads() {
+      if (checkersPaused) {
+         log.info("Checkers are paused, not starting");
+         return;
+      }
       if (logLogicConfiguration.checkingThreads <= 0) {
          log.error("LogValue checker set to 0!");
-      } else if (generalConfiguration.sharedKeys) {
-         logCheckers = new LogChecker[logLogicConfiguration.checkingThreads];
-         SharedLogChecker.Pool pool = new SharedLogChecker.Pool(
-               slaveState.getGroupSize(), generalConfiguration.numThreads, generalConfiguration.numEntries, generalConfiguration.keyIdOffset, this);
-         logCheckerPool = pool;
-         for (int i = 0; i < logLogicConfiguration.checkingThreads; ++i) {
-            logCheckers[i] = new SharedLogChecker(i, pool, this);
-            logCheckers[i].start();
-         }
+      } else if (logCheckers != null) {
+         throw new IllegalStateException("Log checkers are started");
       } else {
          logCheckers = new LogChecker[logLogicConfiguration.checkingThreads];
-         PrivateLogChecker.Pool pool = new PrivateLogChecker.Pool(
-               slaveState.getGroupSize(), generalConfiguration.numThreads, generalConfiguration.numEntries, generalConfiguration.keyIdOffset, this);
-         logCheckerPool = pool;
          for (int i = 0; i < logLogicConfiguration.checkingThreads; ++i) {
-            logCheckers[i] = new PrivateLogChecker(i, pool, this);
+            if (generalConfiguration.sharedKeys) {
+               logCheckers[i] = new SharedLogChecker(i, (SharedLogChecker.Pool) logCheckerPool, this);
+            } else {
+               logCheckers[i] = new PrivateLogChecker(i, (PrivateLogChecker.Pool) logCheckerPool, this);
+            }
             logCheckers[i].start();
          }
       }
    }
 
+   private synchronized void createLogCheckerPool() {
+      if (logCheckerPool != null) {
+         log.debug("Checker pool already exists, not creating another");
+         return;
+      }
+      if (generalConfiguration.sharedKeys) {
+         logCheckerPool = new SharedLogChecker.Pool(
+               slaveState.getGroupSize(), generalConfiguration.numThreads, generalConfiguration.numEntries, generalConfiguration.keyIdOffset, this);
+      } else {
+         logCheckerPool = new PrivateLogChecker.Pool(
+               slaveState.getGroupSize(), generalConfiguration.numThreads, generalConfiguration.numEntries, generalConfiguration.keyIdOffset, this);
+      }
+   }
+
    /**
-    * 
+    *
     * Waits until all stressor threads load data.
-    * 
+    *
     * @throws InterruptedException
-    * 
+    *
     */
    public synchronized void waitUntilLoaded() throws InterruptedException {
       if (logLogicConfiguration.isEnabled()) {
@@ -323,15 +341,21 @@ public class BackgroundOpsManager implements ServiceListener {
       if (error != null) {
          return error;
       }
+      stopBackgroundThreads(false, true, false);
+      stressorsPaused = true;
+      checkersPaused = true;
       return null;
    }
 
    public void resumeAfterChecked() {
+      stressorsPaused = false;
+      checkersPaused = false;
       if (stressorThreads == null) {
          startStressorThreads();
       } else {
          log.error("Stressors already started.");
       }
+      startCheckerThreads();
    }
 
    /**
@@ -443,7 +467,7 @@ public class BackgroundOpsManager implements ServiceListener {
       return keyGenerator;
    }
 
-   public String getError() {
+   public synchronized String getError() {
       if (logLogicConfiguration.enabled) {
          if (logCheckerPool != null && (logCheckerPool.getMissingOperations() > 0 || logCheckerPool.getMissingNotifications() > 0)) {
             return String.format("Background stressors report %d missing operations and %d missing notifications!",
@@ -465,12 +489,17 @@ public class BackgroundOpsManager implements ServiceListener {
                }
             }
             if (!progress) {
-               StringBuilder sb = new StringBuilder(1000).append("Current stressors info:\n");
-               for (Stressor stressor : stressorThreads) {
-                  sb.append(stressor.getStatus()).append(", stacktrace:\n");
-                  for (StackTraceElement ste : stressor.getStackTrace()) {
-                     sb.append(ste).append("\n");
+               StringBuilder sb = new StringBuilder(1000);
+               if (stressorThreads != null) {
+                  sb.append("Current stressors info:\n");
+                  for (Stressor stressor : stressorThreads) {
+                     sb.append(stressor.getStatus()).append(", stacktrace:\n");
+                     for (StackTraceElement ste : stressor.getStackTrace()) {
+                        sb.append(ste).append("\n");
+                     }
                   }
+               } else {
+                  sb.append("No stressors are running, ");
                }
                sb.append("Other threads:\n");
                for (Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces().entrySet()) {

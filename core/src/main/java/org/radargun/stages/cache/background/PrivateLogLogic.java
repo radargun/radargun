@@ -41,7 +41,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
             nextValue = getNextValue(prevValue);
          } else {
             // the value may have been removed, look for backup
-             backupValue = checkedGetValue(~keyId);
+            backupValue = checkedGetValue(~keyId);
             if (backupValue == null) {
                nextValue = new PrivateLogValue(stressor.id, operationId);
             } else {

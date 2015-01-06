@@ -12,7 +12,7 @@ import org.radargun.stages.helpers.Range;
 public class PrivateLogChecker extends LogChecker {
 
    public PrivateLogChecker(int id, Pool logCheckerPool, BackgroundOpsManager manager) {
-      super("PrivateLogChecker-" + id, manager, logCheckerPool);
+      super(manager.getName() + "-Checker-" + id, manager, logCheckerPool);
    }
 
    @Override

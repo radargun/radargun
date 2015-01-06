@@ -90,6 +90,11 @@ class LegacyLogic extends AbstractLogic {
       log.debug("Loaded all " + (to - from) + " keys");
    }
 
+   @Override
+   public void init() {
+      // TODO: maybe loadData should go here?
+   }
+
    public void invoke() throws InterruptedException {
       if (!loaded) {
          loadData();
