@@ -7,6 +7,10 @@ package org.radargun.stages.cache.background;
  */
 interface Logic {
    /**
+    * Initialize the logic within thread. Called before first invoke but with all the caches set.
+    */
+   void init();
+   /**
     * Execute one (logical) operation on the cache.
     *
     * @throws InterruptedException

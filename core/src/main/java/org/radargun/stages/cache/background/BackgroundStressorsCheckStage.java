@@ -46,6 +46,9 @@ public class BackgroundStressorsCheckStage extends AbstractDistStage {
       if (waitUntilChecked && resumeAfterChecked) {
          return errorResponse("Cannot both wait and resume in the same stage; other node may have not finished checking.");
       }
+      if (!isServiceRunning()) {
+         return successfulResponse();
+      }
       if (waitUntilChecked) {
          error = manager.waitUntilChecked();
          if (error != null) {

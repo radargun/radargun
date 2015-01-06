@@ -51,7 +51,9 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
          prevValue = checkedGetValue(keyId);
          backupValue = checkedGetValue(~keyId);
          nextValue = getNextValue(prevValue, backupValue);
-         if (stressor.isTerminated() || stressor.isInterrupted()) return false;
+         if (stressor.isTerminated() || stressor.isInterrupted()) {
+            return false;
+         }
       } while (nextValue == null);
       // now for modify operations, execute it
       if (operation == BasicOperations.PUT) {

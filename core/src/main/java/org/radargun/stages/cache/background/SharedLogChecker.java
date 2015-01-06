@@ -10,7 +10,7 @@ import java.util.Random;
 class SharedLogChecker extends LogChecker {
 
    public SharedLogChecker(int id, Pool pool, BackgroundOpsManager manager) {
-      super("SharedLogChecker-" + id, manager, pool);
+      super(manager.getName() + "-Checker-" + id, manager, pool);
    }
 
    @Override
