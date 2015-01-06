@@ -17,15 +17,15 @@ import java.util.Set;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Projections {
-   public static <A, B> Collection<B> project(Collection<A> collection, Func<A, B> func) {
-      return new ProjectCollection<A, B>(collection, func);
+   public static <A, B> Collection<B> project(Collection<? extends A> collection, Func<A, B> func) {
+      return new ProjectCollection<>(collection, func);
    }
 
-   public static <A, B> List<B> project(List<A> collection, Func<A, B> func) {
-      return new ProjectList<A, B>(collection, func);
+   public static <A, B> List<B> project(List<? extends A> collection, Func<A, B> func) {
+      return new ProjectList<>(collection, func);
    }
 
-   public static <A, B extends A> List<B> castProject(List<A> list, Class<B> clazz) {
+   public static <A, B extends A> List<B> castProject(List<? extends A> list, Class<B> clazz) {
       return new ProjectList<A, B>(list, new Func<A, B>() {
          @Override
          public B project(A a) {
@@ -108,6 +108,16 @@ public class Projections {
       return max;
    }
 
+   public static <A extends Comparable> A min(Collection<A> collection) {
+      A min = null;
+      for (A a : collection) {
+         if (a == null) continue;
+         else if (min == null) min = a;
+         else if (min.compareTo(a) > 0) min = a;
+      }
+      return min;
+   }
+
    public static <A, B> Collection<B> instancesOf(Collection<A> collection, final Class<? extends B> clazz) {
       return where(collection, new Condition<A>() {
          @Override
@@ -157,10 +167,10 @@ public class Projections {
    }
 
    private static class ProjectCollection<A, B> implements Collection<B> {
-      private final Collection<A> collection;
+      private final Collection<? extends A> collection;
       protected final Func<A, B> func;
 
-      private ProjectCollection(Collection<A> collection, Func<A, B> func) {
+      private ProjectCollection(Collection<? extends A> collection, Func<A, B> func) {
          this.collection = collection;
          this.func = func;
       }
@@ -187,7 +197,7 @@ public class Projections {
       @Override
       public Iterator<B> iterator() {
          return new Iterator<B>() {
-            Iterator<A> ait = collection.iterator();
+            Iterator<? extends A> ait = collection.iterator();
             @Override
             public boolean hasNext() {
                return ait.hasNext();
@@ -398,9 +408,9 @@ public class Projections {
    }
 
    private static class ProjectList<A, B> extends ProjectCollection<A,B> implements List<B> {
-      private final List<A> list;
+      private final List<? extends A> list;
 
-      public ProjectList(List<A> list, Func<A, B> func) {
+      public ProjectList(List<? extends A> list, Func<A, B> func) {
          super(list, func);
          this.list = list;
       }
@@ -472,9 +482,9 @@ public class Projections {
       }
 
       private class ProjectedListIterator implements ListIterator<B> {
-         private final ListIterator<A> it;
+         private final ListIterator<? extends A> it;
 
-         public ProjectedListIterator(ListIterator<A> it) {
+         public ProjectedListIterator(ListIterator<? extends A> it) {
             this.it = it;
          }
 

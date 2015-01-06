@@ -48,6 +48,7 @@ public class TimelineChart {
    private static final Paint[] DEFAULT_PAINTS = ChartColor.createDefaultPaintArray();
    private static final int LABEL_OFFSET = 15;
    private static final int DOMAIN_OFFSET = 3;
+   private static final int MAX_EVENT_VALUES = 1000;
 
    private int width = 1024;
    private int height = 768;
@@ -74,7 +75,7 @@ public class TimelineChart {
       if (paintIndex < 0) paintIndex += DEFAULT_PAINTS.length;
       paint = DEFAULT_PAINTS[paintIndex];
       this.startTimestamp = startTimestamp;
-      this.endTimestamp = endTimestamp;
+      this.endTimestamp = endTimestamp + (startTimestamp == endTimestamp ? 1 : 0);
       TimeSeries series = new TimeSeries("Slave " + slaveIndex);
       TimeSeriesCollection dataset = new TimeSeriesCollection(series, GMT);
       chart = ChartFactory.createTimeSeriesChart(null, "Time from start", null, dataset, false, false, false);
@@ -88,15 +89,30 @@ public class TimelineChart {
       plot.setRangeGridlinesVisible(false);
       plot.setRangeZeroBaselineVisible(true);
 
-      long lastTimestamp = Long.MIN_VALUE;
+      Number minValues[] = new Number[MAX_EVENT_VALUES];
+      Number maxValues[] = new Number[MAX_EVENT_VALUES];
+      long minTimestamps[] = new long[MAX_EVENT_VALUES];
+      long maxTimestamps[] = new long[MAX_EVENT_VALUES];
+      //long lastTimestamp = Long.MIN_VALUE;
       for (Timeline.Event event : events) {
          if (event instanceof Timeline.Value) {
             Timeline.Value value = (Timeline.Value) event;
-            if (lastTimestamp == event.timestamp) {
-               log.warn("Duplicate timestamp: " + event);
+            int bucket = (int) ((event.timestamp - startTimestamp) * MAX_EVENT_VALUES / (endTimestamp - startTimestamp));
+            if (minValues[bucket] == null) {
+               minValues[bucket] = value.value;
+               maxValues[bucket] = value.value;
+               minTimestamps[bucket] = event.timestamp;
+               maxTimestamps[bucket] = event.timestamp;
+            } else {
+               if (minValues[bucket].doubleValue() > value.value.doubleValue()) {
+                  minValues[bucket] = value.value;
+               }
+               if (maxValues[bucket].doubleValue() < value.value.doubleValue()) {
+                  maxValues[bucket] = value.value;
+               }
+               minTimestamps[bucket] = Math.min(minTimestamps[bucket], event.timestamp);
+               maxTimestamps[bucket] = Math.max(maxTimestamps[bucket], event.timestamp);
             }
-            series.addOrUpdate(time(event.timestamp - startTimestamp), value.value);
-            lastTimestamp = event.timestamp;
          } else if (event instanceof Timeline.IntervalEvent) {
             Timeline.IntervalEvent intervalEvent = (Timeline.IntervalEvent) event;
             IntervalMarker marker = new IntervalMarker(event.timestamp - startTimestamp, event.timestamp + intervalEvent.duration - startTimestamp, paint, stroke, paint, stroke, 0.3f);
@@ -113,6 +129,11 @@ public class TimelineChart {
             marker.setLabelOffset(new RectangleInsets(0, 0, (slaveIndex + 1) * LABEL_OFFSET, 0));
             plot.addDomainMarker(marker);
          }
+      }
+      for (int bucket = 0; bucket < MAX_EVENT_VALUES; ++bucket) {
+         if (minValues[bucket] == null) continue;
+         series.addOrUpdate(time(minTimestamps[bucket] - startTimestamp), minValues[bucket]);
+         series.addOrUpdate(time(maxTimestamps[bucket] - startTimestamp), maxValues[bucket]);
       }
 
       DateAxis dateAxis = (DateAxis) plot.getDomainAxis();
