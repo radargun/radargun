@@ -15,14 +15,6 @@ import org.radargun.traits.ProvidesTrait;
  */
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
 public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
-
-   @Override
-   protected ConfigurationBuilderHolder createConfiguration(String configFile) throws FileNotFoundException {
-      ClassLoader classLoader = getClass().getClassLoader();
-      InputStream input = new FileLookup().lookupFileStrict(configFile, classLoader);
-      return new ParserRegistry(classLoader).parse(input);
-   }
-
    @Override
    @ProvidesTrait
    public Infinispan70MapReduce createMapReduce() {
