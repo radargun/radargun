@@ -11,6 +11,7 @@ import javax.management.remote.JMXServiceURL;
 
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
+import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.JmxConnectionProvider;
@@ -25,9 +26,14 @@ public class JavaProcessService extends ProcessService {
    private static final String CONNECTOR_ADDRESS =
          "com.sun.management.jmxremote.localConnectorAddress";
 
+   @Property(doc = "Connect to the process and retrieve JMX connection. Default is true.")
+   protected boolean jmxConnectionEnabled = true;
 
    @ProvidesTrait
    public JmxConnectionProvider createConnectionProvider() {
+      if (!jmxConnectionEnabled) {
+         return null;
+      }
       return new JmxConnectionProvider() {
          @Override
          public JMXConnector getConnector() {
