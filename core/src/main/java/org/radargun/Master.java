@@ -185,6 +185,9 @@ public class Master {
       extras.put(Properties.PROPERTY_PLUGIN_NAME, "");
       extras.put(Properties.PROPERTY_GROUP_NAME, "");
       extras.put(Properties.PROPERTY_GROUP_SIZE, "");
+      for (Cluster.Group group : cluster.getGroups()) {
+         extras.put(Properties.PROPERTY_GROUP_PREFIX + group.name + Properties.PROPERTY_SIZE_SUFFIX, String.valueOf(group.size));
+      }
       extras.put(Properties.PROPERTY_SLAVE_INDEX, "");
       return extras;
    }
