@@ -21,6 +21,7 @@ import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.traits.ProvidesTrait;
 
 /**
@@ -86,7 +87,11 @@ public class InfinispanServerService extends JavaProcessService {
 
          @Override
          public void afterStart() {
-            connector = createConnectionProvider().getConnector();
+            JmxConnectionProvider connectionProvider = createConnectionProvider();
+            if (connectionProvider == null) {
+               return;
+            }
+            connector = connectionProvider.getConnector();
             try {
                connection = connector.getMBeanServerConnection();
             } catch (IOException e) {
