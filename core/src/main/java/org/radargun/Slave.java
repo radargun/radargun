@@ -97,6 +97,9 @@ public class Slave extends SlaveBase {
       Cluster.Group group = cluster.getGroup(state.getSlaveIndex());
       extras.put(Properties.PROPERTY_GROUP_NAME, group.name);
       extras.put(Properties.PROPERTY_GROUP_SIZE, String.valueOf(group.size));
+      for (Cluster.Group g : cluster.getGroups()) {
+         extras.put(Properties.PROPERTY_GROUP_PREFIX + g.name + Properties.PROPERTY_SIZE_SUFFIX, String.valueOf(group.size));
+      }
       return extras;
    }
 }
