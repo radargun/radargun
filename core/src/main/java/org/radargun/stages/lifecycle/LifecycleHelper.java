@@ -73,7 +73,12 @@ public class LifecycleHelper {
                      Thread.currentThread().interrupt();
                   }
                   if (System.currentTimeMillis() > clusterFormationDeadline) {
-                     throw new ClusterFormationTimeoutException(msg);
+                     if (numMembers < 0) {
+                        log.warn("Startup timed out without being able to confirm number of members.");
+                        break;
+                     } else {
+                        throw new ClusterFormationTimeoutException(msg);
+                     }
                   }
                } else {
                   log.info("Number of members is the one expected: " + clustered.getClusteredNodes());

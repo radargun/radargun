@@ -43,13 +43,13 @@ public class InfinispanServerClustered implements Clustered {
       }
       try {
          MBeanServerConnection connection = service.connection;
-         if (connection == null) return 0;
+         if (connection == null) return -1;
          ObjectName cacheManagerName = new ObjectName(getCacheManagerObjectName(service.jmxDomain, service.cacheManagerName));
          return (Integer) connection.getAttribute(cacheManagerName, getClusterSizeAttribute());
       } catch (Exception e) {
          log.error("Failed to retrieve data from JMX", e);
+         return -1;
       }
-      return 0;
    }
 
    protected String getClusterMembersAttribute() {

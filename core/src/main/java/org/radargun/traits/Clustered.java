@@ -12,6 +12,7 @@ public interface Clustered {
 
    /**
     * @return Number of nodes that currently form a cluster with this service (including this one).
+    * Negative value means that the value is currently unknown.
     */
    int getClusteredNodes();
 }
