@@ -104,14 +104,18 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
 
    @Override
    protected void stopCaches() {
-      for (String removedCache : removedCaches) {
-         try {
-            ((DefaultCacheManager) cacheManager).removeCache(removedCache);
-         } catch (Exception e) {
-            log.error("Failed to remove cache " + removedCache, e);
+      try {
+         for (String removedCache : removedCaches) {
+            try {
+               ((DefaultCacheManager) cacheManager).removeCache(removedCache);
+            } catch (Exception e) {
+               log.error("Failed to remove cache " + removedCache, e);
+            }
          }
+         super.stopCaches();
+      } finally {
+         topologyAware.reset();
       }
-      super.stopCaches();
    }
 
    @Override
