@@ -13,45 +13,64 @@ public class Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> extends InfinispanMa
       super(service);
    }
 
-   @Override
-   public boolean setDistributeReducePhase(boolean distributeReducePhase) {
-      this.distributeReducePhase = distributeReducePhase;
-      return true;
-   }
+   protected class Builder extends InfinispanMapReduce.Builder {
+      protected boolean distributedReducePhase;
+      protected boolean useIntermediateSharedCache;
+      protected Reducer<KOut, VOut> combiner;
 
-   @Override
-   public boolean setUseIntermediateSharedCache(boolean useIntermediateSharedCache) {
-      this.useIntermediateSharedCache = useIntermediateSharedCache;
-      return true;
-   }
+      public Builder(Cache cache) {
+         super(cache);
+      }
 
-   @Override
-   protected MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTaskFactory() {
-      @SuppressWarnings("unchecked")
-      Cache<KIn, VIn> cache = (Cache<KIn, VIn>) service.getCache(null);
-      return new MapReduceTask<KIn, VIn, KOut, VOut>(cache, this.distributeReducePhase, this.useIntermediateSharedCache);
-   }
+      @Override
+      public Builder distributedReducePhase(boolean distributedReducePhase) {
+         this.distributedReducePhase = distributedReducePhase;
+         return this;
+      }
 
-   @Override
-   public boolean setCombiner(String combinerFqn, Map<String, String> combinerParameters) {
-      this.combinerFqn = combinerFqn;
-      this.combinerParameters = combinerParameters;
-      return true;
-   }
+      @Override
+      public Builder useIntermediateSharedCache(boolean useIntermediateSharedCache) {
+         this.useIntermediateSharedCache = useIntermediateSharedCache;
+         return this;
+      }
 
-   @Override
-   protected MapReduceTask<KIn, VIn, KOut, VOut> setCombiner(MapReduceTask<KIn, VIn, KOut, VOut> task) {
-      if (this.combinerFqn != null) {
+      @Override
+      public Builder combiner(String combinerFqn, Map combinerParameters) {
          try {
-            Reducer<KOut, VOut> combiner = Utils.instantiate(Thread.currentThread().getContextClassLoader(),
-                  this.combinerFqn);
-            Utils.invokeMethodWithString(combiner, this.combinerParameters);
-            task = task.combinedWith(combiner);
+            combiner = Utils.instantiate(classLoader, combinerFqn);
+            Utils.invokeMethodWithString(combiner, combinerParameters);
          } catch (Exception e) {
             throw (new IllegalArgumentException("Could not instantiate Combiner class: " + combinerFqn, e));
          }
+         return this;
       }
-      return task;
+
+      @Override
+      public Task build() {
+         MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask
+               = new MapReduceTask<KIn, VIn, KOut, VOut>(cache, distributedReducePhase, useIntermediateSharedCache);
+         mapReduceTask.mappedWith(mapper).reducedWith(reducer).combinedWith(combiner);
+         return new Task(mapReduceTask, collator);
+      }
    }
 
+   @Override
+   protected Builder builder(Cache<KIn, VIn> cache) {
+      return new Builder(cache);
+   }
+
+   @Override
+   public boolean supportsIntermediateSharedCache() {
+      return true;
+   }
+
+   @Override
+   public boolean supportsDistributedReducePhase() {
+      return true;
+   }
+
+   @Override
+   public boolean supportsCombiner() {
+      return true;
+   }
 }

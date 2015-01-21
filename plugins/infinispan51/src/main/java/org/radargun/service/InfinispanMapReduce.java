@@ -18,32 +18,94 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
 
    protected Infinispan51EmbeddedService service;
 
-   protected boolean distributeReducePhase;
-   protected boolean useIntermediateSharedCache;
-   protected long timeout = 0;
-   protected TimeUnit unit = TimeUnit.MILLISECONDS;
-
-   protected String combinerFqn = null;
-   protected Map<String, String> combinerParameters;
-
-   protected String resultCacheName = null;
-
-   protected boolean printResult = false;
-
    public InfinispanMapReduce(Infinispan51EmbeddedService service) {
       this.service = service;
    }
 
-   public void setPrintResult(boolean printResult) {
-      this.printResult = printResult;
+   protected class Builder implements MapReducer.Builder<KOut, VOut, R> {
+      protected final Cache<KIn, VIn> cache;
+      protected ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+      protected Collator<KOut, VOut, R> collator = null;
+      protected Mapper<KIn, VIn, KOut, VOut> mapper = null;
+      protected Reducer<KOut, VOut> reducer = null;
+
+      public Builder(Cache<KIn, VIn> cache) {
+         this.cache = cache;
+      }
+
+      @Override
+      public Builder distributedReducePhase(boolean distributedReducePhase) {
+         throw new UnsupportedOperationException("Distributed reduce phase not supported");
+      }
+
+      @Override
+      public Builder useIntermediateSharedCache(boolean useIntermediateSharedCache) {
+         throw new UnsupportedOperationException("Intermediate shared cache not supported");
+      }
+
+      @Override
+      public Builder timeout(long timeout, TimeUnit unit) {
+         throw new UnsupportedOperationException("Timeout not supported");
+      }
+
+      @Override
+      public Builder resultCacheName(String resultCacheName) {
+         throw new UnsupportedOperationException("Result cache not supported");
+      }
+
+      @Override
+      public Builder mapper(String mapperFqn, Map<String, String> mapperParameters) {
+         try {
+            mapper = Utils.instantiate(classLoader, mapperFqn);
+            Utils.invokeMethodWithString(mapper, mapperParameters);
+         } catch (Exception e) {
+            throw new IllegalArgumentException("Could not instantiate Mapper class: " + mapperFqn, e);
+         }
+         return this;
+      }
+
+      @Override
+      public Builder reducer(String reducerFqn, Map<String, String> reducerParameters) {
+         try {
+            reducer = Utils.instantiate(classLoader, reducerFqn);
+            Utils.invokeMethodWithString(reducer, reducerParameters);
+         } catch (Exception e) {
+            throw new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e);
+         }
+         return this;
+      }
+
+      @Override
+      public Builder combiner(String combinerFqn, Map<String, String> combinerParameters) {
+         throw new UnsupportedOperationException("Combiner not supported");
+      }
+
+      @Override
+      public Builder collator(String collatorFqn, Map<String, String> collatorParameters) {
+         try {
+            collator = Utils.instantiate(classLoader, collatorFqn);
+            Utils.invokeMethodWithString(collator, collatorParameters);
+         } catch (Exception e) {
+            throw (new IllegalArgumentException("Could not instantiate Collator class: " + collatorFqn, e));
+         }
+         return this;
+      }
+
+      @Override
+      public Task build() {
+         MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask = new MapReduceTask<KIn, VIn, KOut, VOut>(cache);
+         mapReduceTask.mappedWith(mapper).reducedWith(reducer);
+         return new Task(mapReduceTask, collator);
+      }
    }
 
-   class InfinispanMapReduceTask implements MapTask<KOut, VOut, R> {
-      MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask;
-      Collator<KOut, VOut, R> collator = null;
+   protected class Task implements MapReducer.Task<KOut, VOut, R> {
+      protected final Collator<KOut, VOut, R> collator;
+      protected final MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask;
 
-      public InfinispanMapReduceTask(MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask) {
+      public Task(MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask, Collator<KOut, VOut, R> collator) {
          this.mapReduceTask = mapReduceTask;
+         this.collator = collator;
       }
 
       @Override
@@ -52,112 +114,51 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
       }
 
       @Override
-      public void setCollatorInstance(String collatorFqn, Map<String, String> collatorParameters) {
-
-         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-         collator = null;
-         try {
-            collator = Utils.instantiate(classLoader, collatorFqn);
-            Utils.invokeMethodWithString(collator, collatorParameters);
-         } catch (Exception e) {
-            throw (new IllegalArgumentException("Could not instantiate Collator class: " + collatorFqn, e));
-         }
-
-      }
-
-      @Override
       public R executeWithCollator() {
          return mapReduceTask.execute(collator);
       }
-
    }
 
    @Override
-   public MapTask<KOut, VOut, R> configureMapReduceTask(String mapperFqn, Map<String, String> mapperParameters,
-         String reducerFqn, Map<String, String> reducerParameters) {
-      MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask = mapReduceTaskFactory();
+   public Builder builder(String cacheName) {
+      Cache<KIn, VIn> cache = (Cache<KIn, VIn>) service.getCache(cacheName);
+      return builder(cache);
+   }
 
-      Mapper<KIn, VIn, KOut, VOut> mapper = null;
-      Reducer<KOut, VOut> reducer = null;
-
-      ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-      try {
-         mapper = Utils.instantiate(classLoader, mapperFqn);
-         Utils.invokeMethodWithString(mapper, mapperParameters);
-         mapReduceTask = mapReduceTask.mappedWith(mapper);
-      } catch (Exception e) {
-         throw (new IllegalArgumentException("Could not instantiate Mapper class: " + mapperFqn, e));
-      }
-
-      try {
-         reducer = Utils.instantiate(classLoader, reducerFqn);
-         Utils.invokeMethodWithString(reducer, reducerParameters);
-         mapReduceTask = mapReduceTask.reducedWith(reducer);
-      } catch (Exception e) {
-         throw (new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e));
-      }
-
-      mapReduceTask = setCombiner(mapReduceTask);
-
-      return new InfinispanMapReduceTask(mapReduceTask);
+   protected Builder builder(Cache<KIn, VIn> cache) {
+      return new Builder(cache);
    }
 
    @Override
+   public boolean supportsResultCacheName() {
+      return false;
+   }
+
+   @Override
+   public boolean supportsIntermediateSharedCache() {
+      return false;
+   }
+
+   @Override
+   public boolean supportsCombiner() {
+      return false;
+   }
+
+   @Override
+   public boolean supportsTimeout() {
+      return false;
+   }
+
+   @Override
+   public boolean supportsDistributedReducePhase() {
+      return false;
+   }
+
+/*   @Override
    public boolean setResultCacheName(String resultCacheName) {
       this.resultCacheName = resultCacheName;
-      // Add the result cache to the list of caches known by the service 
+      // Add the result cache to the list of caches known by the service
       service.caches.put(resultCacheName, service.cacheManager.getCache(resultCacheName, true));
       return true;
-   }
-
-   @Override
-   public boolean setDistributeReducePhase(boolean distributeReducePhase) {
-      return false;
-   }
-
-   @Override
-   public boolean setUseIntermediateSharedCache(boolean useIntermediateSharedCache) {
-      return false;
-   }
-
-   @Override
-   public boolean setTimeout(long timeout, TimeUnit unit) {
-      return false;
-   }
-
-   @Override
-   public boolean setCombiner(String combinerFqn, Map<String, String> combinerParameters) {
-      return false;
-   }
-
-   /**
-    * 
-    * Factory method to create a MapReduceTask class. Infinispan 5.1 executed the reduce phase on a
-    * single node. Infinispan 5.2 added the option to distribute the reduce phase and share
-    * intermediate results. These options are controlled by the {@link #distributeReducePhase} and
-    * {@link #useIntermediateSharedCache} properties.
-    * 
-    * @return a MapReduceTask object that executes against on the default cache
-    */
-   protected MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTaskFactory() {
-      Cache<KIn, VIn> cache = service.cacheManager.getCache(null);
-      return new MapReduceTask<KIn, VIn, KOut, VOut>(cache);
-   }
-
-   /**
-    * 
-    * Method to set the combiner on a MapReduceTask object. Infinispan 5.2 added the option to
-    * perform a combine phase on the local node before executing the global reduce phase.
-    * 
-    * @param task
-    *           the MapReduceTask object to modify
-    *
-    * @return the MapReduceTask with the combiner set if the CacheWrapper supports it
-    */
-   protected MapReduceTask<KIn, VIn, KOut, VOut> setCombiner(MapReduceTask<KIn, VIn, KOut, VOut> task) {
-      return task;
-   }
-
+   }*/
 }
