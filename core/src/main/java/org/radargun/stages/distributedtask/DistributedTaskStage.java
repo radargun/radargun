@@ -3,6 +3,7 @@ package org.radargun.stages.distributedtask;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -34,28 +35,27 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
 
    private final String FIRST_SCALE_STAGE_KEY = "firstScalingStage";
 
+   // TODO: use approach similar to generators
    @Property(optional = false, doc = "Fully qualified class name of the "
-         + "org.infinispan.distexec.DistributedCallable or "
          + "java.util.concurrent.Callable implementation to execute.")
-   private String distributedCallableFqn;
+   private String callable;
 
-   @Property(optional = true, doc = "The name of one of the "
-         + "org.infinispan.distexec.DistributedTaskExecutionPolicy enums. The default is null.")
-   private String executionPolicyName;
-
-   @Property(optional = true, doc = "The fully qualified class name for a custom "
-         + "org.infinispan.distexec.DistributedTaskFailoverPolicy implementation. The default is null.")
-   private String failoverPolicyFqn = null;
-
-   @Property(optional = true, doc = "The node address where the task will be "
-         + "executed. The default is null, and tasks will be executed against all nodes in the cluster.")
-   private String nodeAddress = null;
-
-   @Property(optional = true, doc = "A String in the form of "
+   @Property(doc = "A String in the form of "
          + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
-         + " invoking a method on the distributedCallableFqn Object. The method"
-         + " must be public and take a String parameter.")
-   private String distributedExecutionParams = null;
+         + " invoking a method on the callable. The method must be public and take a String parameter. Default is none.")
+   private String callableParams;
+
+   @Property(doc = "The name of the execution policy. The default is default policy of the service.")
+   private String executionPolicy;
+
+   @Property(doc = "The name of the failover policy. The default is default policy of the service.")
+   private String failoverPolicy;
+
+   // TODO: specify rather the slave ids/groups - RadarGun identifier.
+   // However, another stage + trait to gather these data would be required.
+   @Property(doc = "The node address where the task will be "
+         + "executed. The default is null, and tasks will be executed against all nodes in the cluster.")
+   private String nodeAddress;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private DistributedTaskExecutor executor;
@@ -97,7 +97,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          return errorResponse("Service not running", null);
       }
 
-      if (distributedCallableFqn == null) {
+      if (callable == null) {
          return errorResponse("The distributed task or callable class must be specified.", null);
       }
 
@@ -113,14 +113,21 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    }
 
    private DistStageAck executeTask() {
-      List<Future<T>> futureList = null;
-      List<T> resultList = new ArrayList<T>();
+      Callable<T> callable = Utils.instantiate(slaveState.getClassLoader(), this.callable);
+      callable = (Callable<T>) Utils.invokeMethodWithString(callable, Utils.parseParams(callableParams));
+
+      DistributedTaskExecutor.Builder<T> builder = executor.builder(null).callable(callable);
+      if (executionPolicy != null) builder.executionPolicy(executionPolicy);
+      if (failoverPolicy != null) builder.failoverPolicy(failoverPolicy);
+      if (nodeAddress != null) builder.nodeAddress(nodeAddress);
+      DistributedTaskExecutor.Task<T> task = builder.build();
 
       log.info("--------------------");
-      long start = System.nanoTime();
-      futureList = executor.executeDistributedTask(distributedCallableFqn,
-            executionPolicyName, failoverPolicyFqn, nodeAddress, Utils.parseParams(distributedExecutionParams));
       TextAck ack = new TextAck(slaveState);
+      List<T> resultList = new ArrayList<T>();
+
+      long start = System.nanoTime();
+      List<Future<T>> futureList = task.execute();
       if (futureList == null) {
          ack.error("No future objects returned from executing the distributed task.");
       } else {

@@ -22,7 +22,7 @@ import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.MapReducer;
-import org.radargun.traits.MapReducer.MapTask;
+import org.radargun.traits.MapReducer.Task;
 import org.radargun.utils.Projections;
 import org.radargun.utils.Utils;
 
@@ -36,8 +36,11 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
    public static final String MAPREDUCE_RESULT_KEY = "mapreduceResult";
 
+   @Property(doc = "Name of the cache on which should be the map-reduce executed. Default is the default cache.")
+   private String cacheName;
+
    @Property(optional = false, doc = "Fully qualified class name of the "
-         + "org.infinispan.distexec.mapreduce.Mapper implementation to execute.")
+         + "mapper implementation to execute.")
    private String mapperFqn;
 
    @Property(optional = true, doc = "A String in the form of "
@@ -176,7 +179,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          R prevPayloadObject = null;
 
          Statistics stats = new DefaultStatistics(new DataOperationStats());
-         MapTask<KOut, VOut, R> mrTask = configureMapReduceTask(mapReducer);
+         Task<KOut, VOut, R> mrTask = configureMapReduceTask();
 
          stats.begin();
          for (int i = 0; i < numExecutions; i++) {
@@ -213,52 +216,58 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       }
    }
 
-   private MapTask<KOut, VOut, R> configureMapReduceTask(MapReducer<KOut, VOut, R> mapReducer) {
-      MapTask<KOut, VOut, R> task = null;
+   private Task<KOut, VOut, R> configureMapReduceTask() {
+      MapReducer.Builder<KOut, VOut, R> builder = mapReducer.builder(cacheName)
+            .mapper(mapperFqn, Utils.parseParams(mapperParams))
+            .reducer(reducerFqn, Utils.parseParams(reducerParams));
 
       log.info("--------------------");
-      if (mapReducer.setDistributeReducePhase(distributeReducePhase)) {
-         log.info(mapReducer.getClass().getName() + " supports MapReducer.setDistributeReducePhase()");
+      String mapReducerName = mapReducer.getClass().getName();
+      if (mapReducer.supportsDistributedReducePhase()) {
+         log.info(mapReducerName + " supports MapReducer.setDistributeReducePhase()");
+         builder.distributedReducePhase(distributeReducePhase);
       } else {
-         log.info(mapReducer.getClass().getName() + " does not support MapReducer.setDistributeReducePhase()");
+         log.info(mapReducerName + " does not support MapReducer.setDistributeReducePhase()");
       }
-      if (mapReducer.setUseIntermediateSharedCache(useIntermediateSharedCache)) {
-         log.info(mapReducer.getClass().getName() + " supports MapReducer.setUseIntermediateSharedCache()");
+      if (mapReducer.supportsIntermediateSharedCache()) {
+         log.info(mapReducerName + " supports MapReducer.setUseIntermediateSharedCache()");
+         builder.useIntermediateSharedCache(useIntermediateSharedCache);
       } else {
-         log.info(mapReducer.getClass().getName() + " does not support MapReducer.setUseIntermediateSharedCache()");
+         log.info(mapReducerName + " does not support MapReducer.setUseIntermediateSharedCache()");
       }
-      if (mapReducer.setTimeout(timeout, unit)) {
-         log.info(mapReducer.getClass().getName() + " supports MapReducer.setTimeout()");
+      if (mapReducer.supportsTimeout()) {
+         log.info(mapReducerName + " supports MapReducer.setTimeout()");
+         builder.timeout(timeout, unit);
       } else {
-         log.info(mapReducer.getClass().getName() + " does not support MapReducer.setTimeout()");
+         log.info(mapReducerName + " does not support MapReducer.setTimeout()");
       }
-      if (mapReducer.setCombiner(combinerFqn, Utils.parseParams(combinerParams))) {
-         log.info(mapReducer.getClass().getName() + " supports MapReducer.setCombiner()");
+      if (mapReducer.supportsCombiner()) {
+         log.info(mapReducerName + " supports MapReducer.setCombiner()");
+         if (combinerFqn != null) {
+            builder.combiner(combinerFqn, Utils.parseParams(combinerParams));
+         }
       } else {
-         log.info(mapReducer.getClass().getName() + " does not support MapReducer.setCombiner()");
+         log.info(mapReducerName + " does not support MapReducer.setCombiner()");
       }
-
-      task = mapReducer.configureMapReduceTask(mapperFqn, Utils.parseParams(mapperParams), reducerFqn,
-            Utils.parseParams(reducerParams));
-
       if (collatorFqn != null) {
-         task.setCollatorInstance(collatorFqn, Utils.parseParams(collatorParams));
+         builder.collator(collatorFqn, Utils.parseParams(collatorParams));
       } else {
          // If the MapReducer doesn't support storing the results in the cache, then do it manually.
          if (storeResultInCache) {
-            supportsResultCacheName = mapReducer.setResultCacheName(MAPREDUCE_RESULT_KEY);
+            supportsResultCacheName = mapReducer.supportsResultCacheName();
             if (supportsResultCacheName) {
-               log.info(mapReducer.getClass().getName() + " supports MapReducer.setResultCacheName()");
+               log.info(mapReducerName + " supports MapReducer.setResultCacheName()");
+               builder.resultCacheName(MAPREDUCE_RESULT_KEY);
             } else {
-               log.info(mapReducer.getClass().getName() + " does not support MapReducer.setResultCacheName()");
+               log.info(mapReducerName + " does not support MapReducer.setResultCacheName()");
             }
          }
       }
 
-      return task;
+      return builder.build();
    }
 
-   private DistStageAck executeMapReduceTask(MapTask<KOut, VOut, R> task, Statistics stats,
+   private DistStageAck executeMapReduceTask(Task<KOut, VOut, R> task, Statistics stats,
          boolean supportsResultCacheName) {
       long durationNanos;
       long start;
@@ -278,7 +287,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             }
             if (storeResultInCache) {
                try {
-                  basicOperations.getCache(null).put(MAPREDUCE_RESULT_KEY, payloadObject);
+                  basicOperations.getCache(cacheName).put(MAPREDUCE_RESULT_KEY, payloadObject);
                } catch (Exception e) {
                   log.error("Failed to put collated result object into cache", e);
                }
@@ -333,7 +342,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          log.error("executeMapReduceTask() returned an exception", e);
       }
       log.infof("%d nodes were used. %d entries on this node", clustered.getClusteredNodes(), cacheInformation
-            .getCache(null).getLocallyStoredSize());
+            .getCache(cacheName).getLocallyStoredSize());
       log.info("--------------------");
 
       return ack;

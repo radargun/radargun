@@ -1,6 +1,7 @@
 package org.radargun.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -9,6 +10,7 @@ import java.util.concurrent.Future;
 import org.infinispan.Cache;
 import org.infinispan.distexec.DefaultExecutorService;
 import org.infinispan.distexec.DistributedExecutorService;
+import org.infinispan.distexec.DistributedTask;
 import org.infinispan.distexec.DistributedTaskBuilder;
 import org.infinispan.distexec.DistributedTaskExecutionPolicy;
 import org.infinispan.distexec.DistributedTaskFailoverPolicy;
@@ -36,79 +38,87 @@ public class InfinispanDistributedTask<K, V, T> implements DistributedTaskExecut
       this.service = service;
    }
 
-   @SuppressWarnings("unchecked")
-   @Override
-   public List<Future<T>> executeDistributedTask(String distributedCallableFqn,
-                                                 String executionPolicyName, String failoverPolicyFqn, String nodeAddress, Map<String, String> params) {
+   protected class Builder implements DistributedTaskExecutor.Builder<T> {
+      protected final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+      protected final DefaultExecutorService executorService;
+      protected Callable<T> callable;
+      protected DistributedTaskExecutionPolicy executionPolicy;
+      protected DistributedTaskFailoverPolicy failoverPolicy;
+      protected Address target;
 
-      Cache<K, V> cache = (Cache<K, V>) service.getCache(null);
-      DistributedExecutorService des = new DefaultExecutorService(cache);
-      Callable<T> callable = null;
-      DistributedTaskBuilder<T> taskBuilder = null;
-      List<Future<T>> result = null;
-      ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-      if (distributedCallableFqn == null) {
-         log.fatal("The distributedCallableFqn parameter must be specified.");
-      } else {
-         try {
-            callable = Utils.instantiate(classLoader, distributedCallableFqn);
-            taskBuilder = des.createDistributedTaskBuilder(callable);
-            callable = (Callable<T>) Utils.invokeMethodWithString(callable, params);
-         } catch (Exception e1) {
-            throw (new IllegalArgumentException("Could not instantiate '" + distributedCallableFqn + "' as a Callable",
-                  e1));
-         }
+      public Builder(Cache<K, V> cache) {
+         executorService = new DefaultExecutorService(cache);
       }
 
-      if (callable != null) {
-         if (executionPolicyName != null) {
-            DistributedTaskExecutionPolicy executionPolicy = Enum.valueOf(DistributedTaskExecutionPolicy.class,
-                  executionPolicyName);
-            if (executionPolicy == null) {
-               log.error("No DistributedTaskExecutionPolicy found with name: " + executionPolicyName);
-            } else {
-               taskBuilder = taskBuilder.executionPolicy(executionPolicy);
-            }
-         }
+      @Override
+      public DistributedTaskExecutor.Builder callable(Callable<T> callable) {
+         this.callable = callable;
+         return this;
+      }
 
-         if (failoverPolicyFqn != null) {
-            try {
-               DistributedTaskFailoverPolicy failoverPolicy = Utils.instantiate(classLoader, failoverPolicyFqn);
-               taskBuilder = taskBuilder.failoverPolicy(failoverPolicy);
-            } catch (Exception e) {
-               log.error("Could not instantiate DistributedTaskFailoverPolicy class: " + failoverPolicyFqn, e);
-            }
-         }
+      @Override
+      public DistributedTaskExecutor.Builder executionPolicy(String executionPolicy) {
+         this.executionPolicy = DistributedTaskExecutionPolicy.valueOf(executionPolicy);
+         return this;
+      }
 
-         if (nodeAddress != null) {
-            Address target = findHostPhysicalAddress(nodeAddress);
-            if (target == null) {
-               log.error("No host found with address: " + nodeAddress);
-            } else {
-               result = new ArrayList<Future<T>>();
-               result.add(des.submit(target, taskBuilder.build()));
-            }
+      @Override
+      public DistributedTaskExecutor.Builder failoverPolicy(String failoverPolicy) {
+         this.failoverPolicy = Utils.instantiate(classLoader, failoverPolicy);
+         return this;
+      }
+
+      @Override
+      public DistributedTaskExecutor.Builder nodeAddress(String nodeAddress) {
+         this.target = findHostPhysicalAddress(nodeAddress);
+         return this;
+      }
+
+      @Override
+      public Task build() {
+         DistributedTaskBuilder<T> taskBuilder = executorService.createDistributedTaskBuilder(callable);
+         if (executionPolicy != null) taskBuilder.executionPolicy(executionPolicy);
+         if (failoverPolicy != null) taskBuilder.failoverPolicy(failoverPolicy);
+         return new Task(executorService, taskBuilder.build(), target);
+      }
+   }
+
+   protected class Task implements DistributedTaskExecutor.Task<T> {
+      protected final DefaultExecutorService executorService;
+      protected final DistributedTask<T> task;
+      protected final Address target;
+
+      public Task(DefaultExecutorService executorService, DistributedTask<T> task, Address target) {
+         this.executorService = executorService;
+         this.task = task;
+         this.target = target;
+      }
+
+      @Override
+      public List<Future<T>> execute() {
+         if (target != null) {
+            return Collections.singletonList((Future<T>) executorService.submit(target, task));
          } else {
-            result = des.submitEverywhere(taskBuilder.build());
+            return executorService.submitEverywhere(task);
          }
       }
+   }
 
-      return result;
+   @Override
+   public Builder builder(String cacheName) {
+      return new Builder((Cache<K, V>) service.getCache(cacheName));
    }
 
    private Address findHostPhysicalAddress(String nodeAddress) {
-      Address result = null;
       Transport t = ((DefaultCacheManager) service.cacheManager).getTransport();
       if (t != null) {
-         for (Address add : t.getPhysicalAddresses()) {
-            if (add.toString().contains(nodeAddress)) {
-               result = add;
-               break;
+         for (Address address : t.getPhysicalAddresses()) {
+            if (address.toString().contains(nodeAddress)) {
+               return address;
             }
          }
       }
-      return result;
+      throw new IllegalArgumentException("Cannot find node with address " + nodeAddress);
    }
 
 }

@@ -3,7 +3,6 @@ package org.radargun.service;
 import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
-import org.infinispan.distexec.mapreduce.MapReduceTask;
 
 public class Infinispan53MapReduce<KIn, VIn, KOut, VOut, R> extends Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> {
 
@@ -11,20 +10,36 @@ public class Infinispan53MapReduce<KIn, VIn, KOut, VOut, R> extends Infinispan52
       super(service);
    }
 
-   @Override
-   public boolean setTimeout(long timeout, TimeUnit unit) {
-      this.timeout = timeout;
-      this.unit = unit;
-      return true;
+   protected class Builder extends Infinispan52MapReduce.Builder {
+      protected long timeout;
+      protected TimeUnit unit;
+
+      public Builder(Cache cache) {
+         super(cache);
+      }
+
+      @Override
+      public Builder timeout(long timeout, TimeUnit unit) {
+         this.timeout = timeout;
+         this.unit = unit;
+         return this;
+      }
+
+      @Override
+      public Task build() {
+         Task task = super.build();
+         task.mapReduceTask.timeout(timeout, unit);
+         return task;
+      }
    }
 
    @Override
-   protected MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTaskFactory() {
-      @SuppressWarnings("unchecked")
-      Cache<KIn, VIn> cache = (Cache<KIn, VIn>) service.getCache(null);
-      MapReduceTask<KIn, VIn, KOut, VOut> task = new MapReduceTask<KIn, VIn, KOut, VOut>(cache,
-            this.distributeReducePhase, this.useIntermediateSharedCache);
-      task.timeout(timeout, unit);
-      return task;
+   protected Builder builder(Cache<KIn, VIn> cache) {
+      return new Builder(cache);
+   }
+
+   @Override
+   public boolean supportsTimeout() {
+      return true;
    }
 }
