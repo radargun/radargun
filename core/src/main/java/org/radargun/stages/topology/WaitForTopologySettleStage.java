@@ -22,6 +22,9 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    TopologyHistory history;
 
+   @Property(doc = "Name of the cache where we detect the events. Default is the default cache.")
+   private String cacheName;
+
    @Override
    public DistStageAck executeOnSlave() {
       if (!isServiceRunning()) {
@@ -35,8 +38,8 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
          }
          boolean settled = true;
 
-         List<TopologyHistory.Event> topologyChangeHistory = history.getTopologyChangeHistory();
-         List<TopologyHistory.Event> rehashHistory = history.getRehashHistory();
+         List<TopologyHistory.Event> topologyChangeHistory = history.getTopologyChangeHistory(cacheName);
+         List<TopologyHistory.Event> rehashHistory = history.getRehashHistory(cacheName);
          if (topologyChangeHistory != null && !topologyChangeHistory.isEmpty()) {
             TopologyHistory.Event event = topologyChangeHistory.get(topologyChangeHistory.size() - 1);
             if (event.getEnded() == null) {

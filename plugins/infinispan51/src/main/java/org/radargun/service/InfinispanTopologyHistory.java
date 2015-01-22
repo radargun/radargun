@@ -18,17 +18,28 @@ public class InfinispanTopologyHistory extends AbstractTopologyHistory {
    }
 
    void registerListener(Cache<?, ?> cache) {
-      cache.addListener(new TopologyAwareListener());
+      cache.addListener(new TopologyAwareListener(cache.getName()));
+   }
+
+   @Override
+   protected String getDefaultCacheName() {
+      return service.getCache(null).getName();
    }
 
    @Listener
    public class TopologyAwareListener {
+      private final String cacheName;
+
+      public TopologyAwareListener(String cacheName) {
+         this.cacheName = cacheName;
+      }
+
       @TopologyChanged
       public void onTopologyChanged(TopologyChangedEvent<?,?> e) {
          log.debug("Topology change " + (e.isPre() ? "started" : "finished"));
          int atStart = service.membersCount(e.getConsistentHashAtStart());
          int atEnd = service.membersCount(e.getConsistentHashAtEnd());
-         addEvent(topologyChanges, e.isPre(), atStart, atEnd);
+         addEvent(topologyChanges, cacheName, e.isPre(), atStart, atEnd);
       }
 
       @DataRehashed
@@ -36,7 +47,7 @@ public class InfinispanTopologyHistory extends AbstractTopologyHistory {
          log.debug("Rehash " + (e.isPre() ? "started" : "finished"));
          int atStart = e.getMembersAtStart().size();
          int atEnd = e.getMembersAtEnd().size();
-         addEvent(hashChanges, e.isPre(), atStart, atEnd);
+         addEvent(hashChanges, cacheName, e.isPre(), atStart, atEnd);
       }
    }
 }

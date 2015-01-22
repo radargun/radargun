@@ -98,7 +98,9 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
    @Override
    protected void startCaches() throws Exception {
       super.startCaches();
-      topologyAware.registerListener(getCache(null));
+      for (Cache cache : caches.values()) {
+         topologyAware.registerListener(cache);
+      }
       jgroupsChannels.addAll(partitionable.getChannels());
    }
 
