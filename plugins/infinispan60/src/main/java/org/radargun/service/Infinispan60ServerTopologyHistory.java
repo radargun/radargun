@@ -7,6 +7,8 @@ import java.util.regex.Pattern;
 /**
  */
 public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
+   protected final static String ALL_CACHES = "__all_caches__";
+
    protected final InfinispanServerService service;
 
    /**
@@ -17,7 +19,7 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
     */
    public Infinispan60ServerTopologyHistory(InfinispanServerService service) {
       this.service = service;
-      // we cannot detect changes for single cache - we have to track all of them as one
+      /** we cannot detect changes for single cache - we have to track all of them as one {@link #ALL_CACHES} */
       final AtomicInteger topologyChangesOngoing = new AtomicInteger(0);
       final AtomicInteger hashChangesOngoing = new AtomicInteger(0);
       service.registerAction(Pattern.compile(".*Installing new cache topology.*"), new ProcessService.OutputListener() {
@@ -25,7 +27,7 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
          public void run(Matcher m) {
             if (topologyChangesOngoing.getAndIncrement() == 0) {
                log.debug("First topology change started");
-               addEvent(topologyChanges, true, 0, 0);
+               addEvent(topologyChanges, ALL_CACHES, true, 0, 0);
             } else {
                log.debug("Another topology change started");
             }
@@ -36,7 +38,7 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
          public void run(Matcher m) {
             if (topologyChangesOngoing.decrementAndGet() == 0) {
                log.debug("All topology changes finished");
-               addEvent(topologyChanges, false, 0, 0);
+               addEvent(topologyChanges, ALL_CACHES, false, 0, 0);
             } else {
                log.debug("Another topology change finished");
             }
@@ -47,7 +49,7 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
          public void run(Matcher m) {
             if (hashChangesOngoing.getAndIncrement() == 0) {
                log.debug("First rehash started");
-               addEvent(hashChanges, true, 0, 0);
+               addEvent(hashChanges, ALL_CACHES, true, 0, 0);
             } else {
                log.debug("Another rehash started");
             }
@@ -58,7 +60,7 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
          public void run(Matcher m) {
             if (hashChangesOngoing.decrementAndGet() == 0) {
                log.debug("All rehashes finished");
-               addEvent(hashChanges, false, 0, 0);
+               addEvent(hashChanges, ALL_CACHES, false, 0, 0);
             } else {
                log.debug("Another rehash finished");
             }
@@ -72,5 +74,10 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
             hashChangesOngoing.set(0);
          }
       });
+   }
+
+   @Override
+   protected String getDefaultCacheName() {
+      return ALL_CACHES;
    }
 }

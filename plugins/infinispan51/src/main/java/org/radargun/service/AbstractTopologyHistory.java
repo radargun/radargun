@@ -1,8 +1,11 @@
 package org.radargun.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -11,28 +14,45 @@ import org.radargun.traits.TopologyHistory;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class AbstractTopologyHistory implements TopologyHistory {
+public abstract class AbstractTopologyHistory implements TopologyHistory {
    protected final Log log = LogFactory.getLog(getClass());
-   protected final List<Event> topologyChanges = new ArrayList<Event>();
-   protected final List<Event> hashChanges = new ArrayList<Event>();
+   protected final Map<String, List<Event>> topologyChanges = new HashMap<>();
+   protected final Map<String, List<Event>> hashChanges = new HashMap<>();
+
+   protected abstract String getDefaultCacheName();
 
    @Override
-   public List<TopologyHistory.Event> getTopologyChangeHistory() {
-      return deepCopy(topologyChanges);
+   public synchronized List<TopologyHistory.Event> getTopologyChangeHistory(String cacheName) {
+      if (cacheName == null) {
+         cacheName = getDefaultCacheName();
+      }
+      return deepCopy(topologyChanges.get(cacheName));
    }
 
    @Override
-   public List<TopologyHistory.Event> getRehashHistory() {
-      return deepCopy(hashChanges);
+   public synchronized List<TopologyHistory.Event> getRehashHistory(String cacheName) {
+      if (cacheName == null) {
+         cacheName = getDefaultCacheName();
+      }
+      return deepCopy(hashChanges.get(cacheName));
    }
 
-   private synchronized List<TopologyHistory.Event> deepCopy(List<Event> events) {
+   private List<TopologyHistory.Event> deepCopy(List<Event> events) {
+      if (events == null || events.isEmpty()) {
+         return Collections.EMPTY_LIST;
+      }
       ArrayList<TopologyHistory.Event> newList = new ArrayList<TopologyHistory.Event>(events.size());
-      for (Event e : events) newList.add(e.copy());
+      for (Event e : events) {
+         newList.add(e.copy());
+      }
       return newList;
    }
 
-   protected synchronized void addEvent(List<Event> list, boolean isPre, int atStart, int atEnd) {
+   protected synchronized void addEvent(Map<String, List<Event>> map, String cacheName, boolean isPre, int atStart, int atEnd) {
+      List<Event> list = map.get(cacheName);
+      if (list == null) {
+         map.put(cacheName, list = new ArrayList<>());
+      }
       if (isPre) {
          list.add(new Event(false, atStart, atEnd));
       } else {

@@ -36,6 +36,9 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
       END
    }
 
+   @Property(doc = "Name of the cache where we detect the events. Default is the default cache.")
+   private String cacheName;
+
    @Property(doc = "Wait for the event to happen. Default is true.")
    private boolean wait = true;
 
@@ -113,9 +116,9 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
    private List<TopologyHistory.Event> getEventHistory(TopologyHistory wrapper) {
       switch (type) {
          case REHASH:
-            return wrapper.getRehashHistory();
+            return wrapper.getRehashHistory(cacheName);
          case TOPOLOGY_UPDATE:
-            return wrapper.getTopologyChangeHistory();
+            return wrapper.getTopologyChangeHistory(cacheName);
       }
       throw new IllegalStateException();
    }

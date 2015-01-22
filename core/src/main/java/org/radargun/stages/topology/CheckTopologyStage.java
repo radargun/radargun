@@ -26,6 +26,9 @@ public class CheckTopologyStage extends AbstractDistStage {
       TOPOLOGY
    }
 
+   @Property(doc = "Name of the cache. Default is the default cache.")
+   private String cacheName;
+
    @Property(doc = "What does this stage control. Default is both DataRehashed and TopologyChanged events.")
    private Type type = Type.HASH_AND_TOPOLOGY;
 
@@ -45,7 +48,7 @@ public class CheckTopologyStage extends AbstractDistStage {
          return successfulResponse();
       }
       if (type == Type.HASH_AND_TOPOLOGY || type == Type.TOPOLOGY) {
-         List<Event> history = topologyHistory.getTopologyChangeHistory();
+         List<Event> history = topologyHistory.getTopologyChangeHistory(cacheName);
          if (!check(history)) {
             return errorResponse("Topology check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1)));
          } else {
@@ -53,7 +56,7 @@ public class CheckTopologyStage extends AbstractDistStage {
          }
       }
       if (type == Type.HASH_AND_TOPOLOGY || type == Type.HASH) {
-         List<Event> history = topologyHistory.getRehashHistory();
+         List<Event> history = topologyHistory.getRehashHistory(cacheName);
          if (!check(history)) {
             return errorResponse("Hash check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1)));
          } else {

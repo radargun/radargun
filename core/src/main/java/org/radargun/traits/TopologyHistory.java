@@ -14,13 +14,15 @@ import java.util.List;
 public interface TopologyHistory {
    /**
     * @return Ordered list of events when the topology was changing (nodes were added/removed, coordinator changed)
+    * @param containerName
     */
-   List<Event> getTopologyChangeHistory();
+   List<Event> getTopologyChangeHistory(String containerName);
 
    /**
     * @return Ordered list of events when the data distribution was changing (rebalancing data)
+    * @param containerName
     */
-   List<Event> getRehashHistory();
+   List<Event> getRehashHistory(String containerName);
 
    /**
     * Topology event is a period of time
