@@ -15,30 +15,37 @@ public class Infinispan70MapReduce<KIn, VIn, KOut, VOut, R> extends Infinispan53
       super(service);
    }
 
-   protected class Builder extends Infinispan53MapReduce.Builder {
+   @Override
+   public boolean supportsResultCacheName() {
+      return true;
+   }
+
+   protected class Builder extends Infinispan53MapReduce<KIn, VIn, KOut, VOut, R>.Builder {
       private String resultCacheName;
 
-      public Builder(Cache cache) {
+      public Builder(Cache<KIn, VIn> cache) {
          super(cache);
       }
 
       @Override
       public Builder resultCacheName(String resultCacheName) {
          this.resultCacheName = resultCacheName;
+         // If this cache is not registered with the service, it can't be accessed by the stage
+         service.caches.put(resultCacheName, service.cacheManager.getCache(resultCacheName, true));
          return this;
       }
 
       @Override
       public Task build() {
-         InfinispanMapReduce.Task task =  super.build();
+         InfinispanMapReduce<KIn,VIn,KOut,VOut,R>.Task task =  super.build();
          return new Task(task.mapReduceTask, task.collator, resultCacheName);
       }
    }
 
-   protected class Task extends InfinispanMapReduce.Task {
+   protected class Task extends InfinispanMapReduce<KIn,VIn,KOut,VOut,R>.Task {
       protected final String resultCacheName;
 
-      public Task(MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask, Collator collator, String resultCacheName) {
+      public Task(MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask, Collator<KOut,VOut,R> collator, String resultCacheName) {
          super(mapReduceTask, collator);
          this.resultCacheName = resultCacheName;
       }

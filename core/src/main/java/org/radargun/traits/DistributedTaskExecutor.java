@@ -12,31 +12,31 @@ public interface DistributedTaskExecutor<T> {
        * @param callable Distributed task that should be executed.
        * @return This builder instance.
        */
-      Builder callable(Callable<T> callable);
+      Builder<T> callable(Callable<T> callable);
 
       /**
        * @param executionPolicy Custom argument for task execution.
        * @return This builder instance.
        */
-      Builder executionPolicy(String executionPolicy);
+      Builder<T> executionPolicy(String executionPolicy);
 
       /**
        * @param failoverPolicy Custom argument for failover.
        * @return This builder instance.
        */
-      Builder failoverPolicy(String failoverPolicy);
+      Builder<T> failoverPolicy(String failoverPolicy);
 
       /**
        * // TODO we should rather set list of slave ids where this should be executed
        * @param nodeAddress Describes target node in plugin-specific way.
        * @return
        */
-      Builder nodeAddress(String nodeAddress);
+      Builder<T> nodeAddress(String nodeAddress);
 
       /**
        * @return Task to be executed
        */
-      Task build();
+      Task<T> build();
    }
 
    interface Task<T> {
@@ -46,5 +46,5 @@ public interface DistributedTaskExecutor<T> {
       List<Future<T>> execute();
    }
 
-   Builder builder(String cacheName);
+   Builder<T> builder(String cacheName);
 }

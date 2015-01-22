@@ -16,7 +16,7 @@
    <properties>
       <version.infinispan>${jdg63.infinispan.version}</version.infinispan>
       <!-- There is no productized version of infinispan-distexec-demo -->
-      <version.infinispan.public>6.0.2.Final</version.infinispan.public>
+      <version.infinispan.public>7.0.3.Final</version.infinispan.public>
       <version.jbossts>4.17.15.Final-redhat-5</version.jbossts>
       <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
    </properties>
@@ -46,6 +46,12 @@
                <artifactId>infinispan-distexec-demo</artifactId>
                <version>${version.infinispan.public}</version>
                <optional>true</optional>
+               <exclusions>
+                   <exclusion>
+                       <groupId>org.infinispan</groupId>
+                       <artifactId>infinispan-embedded</artifactId>
+                   </exclusion>
+               </exclusions>
             </dependency>
          </dependencies>
       </profile>

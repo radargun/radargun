@@ -121,6 +121,7 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
 
    @Override
    public Builder builder(String cacheName) {
+      @SuppressWarnings("unchecked")
       Cache<KIn, VIn> cache = (Cache<KIn, VIn>) service.getCache(cacheName);
       return builder(cache);
    }
@@ -153,12 +154,4 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
    public boolean supportsDistributedReducePhase() {
       return false;
    }
-
-/*   @Override
-   public boolean setResultCacheName(String resultCacheName) {
-      this.resultCacheName = resultCacheName;
-      // Add the result cache to the list of caches known by the service
-      service.caches.put(resultCacheName, service.cacheManager.getCache(resultCacheName, true));
-      return true;
-   }*/
 }

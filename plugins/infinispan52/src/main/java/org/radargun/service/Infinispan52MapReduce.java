@@ -13,12 +13,12 @@ public class Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> extends InfinispanMa
       super(service);
    }
 
-   protected class Builder extends InfinispanMapReduce.Builder {
+   protected class Builder extends InfinispanMapReduce<KIn, VIn, KOut, VOut, R>.Builder {
       protected boolean distributedReducePhase;
       protected boolean useIntermediateSharedCache;
       protected Reducer<KOut, VOut> combiner;
 
-      public Builder(Cache cache) {
+      public Builder(Cache<KIn, VIn> cache) {
          super(cache);
       }
 
@@ -35,7 +35,7 @@ public class Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> extends InfinispanMa
       }
 
       @Override
-      public Builder combiner(String combinerFqn, Map combinerParameters) {
+      public Builder combiner(String combinerFqn, Map<String, String> combinerParameters) {
          try {
             combiner = Utils.instantiate(classLoader, combinerFqn);
             Utils.invokeMethodWithString(combiner, combinerParameters);

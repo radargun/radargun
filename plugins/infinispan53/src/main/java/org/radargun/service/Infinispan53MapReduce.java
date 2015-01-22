@@ -10,11 +10,11 @@ public class Infinispan53MapReduce<KIn, VIn, KOut, VOut, R> extends Infinispan52
       super(service);
    }
 
-   protected class Builder extends Infinispan52MapReduce.Builder {
+   protected class Builder extends Infinispan52MapReduce<KIn, VIn, KOut, VOut, R>.Builder {
       protected long timeout;
       protected TimeUnit unit;
 
-      public Builder(Cache cache) {
+      public Builder(Cache<KIn, VIn> cache) {
          super(cache);
       }
 
