@@ -353,7 +353,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          ack.error("executeMapReduceTask() threw an exception", e);
          log.error("executeMapReduceTask() returned an exception", e);
       }
-      log.infof("%d nodes were used. %d entries on this node", clustered.getClusteredNodes(), cacheInformation
+      log.infof("%d nodes were used. %d entries on this node", clustered.getMembers().size(), cacheInformation
             .getCache(cacheName).getLocallyStoredSize());
       log.info("--------------------");
 

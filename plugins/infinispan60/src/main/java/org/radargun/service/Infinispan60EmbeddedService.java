@@ -74,6 +74,7 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
 
    @Override
    protected void beforeCacheManagerStart(final DefaultCacheManager cacheManager) {
+      super.beforeCacheManagerStart(cacheManager);
       if (jgroupsDumperEnabled) {
          scheduledExecutor.schedule(new Runnable() {
             @Override

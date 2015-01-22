@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 
@@ -23,6 +25,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.traits.ProvidesTrait;
+import org.radargun.utils.TimeConverter;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -60,7 +63,13 @@ public class InfinispanServerService extends JavaProcessService {
    @Property(doc = "Start thread periodically dumping JGroups JMX data. Default is false.")
    protected boolean jgroupsDumperEnabled = false;
 
+   @Property(doc = "Period for checking current membership. Default is 10 seconds.", converter = TimeConverter.class)
+   protected long viewCheckPeriod = 10000;
+
+   protected ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
+
    protected InfinispanServerLifecycle lifecycle = new InfinispanServerLifecycle(this);
+   protected InfinispanServerClustered clustered = new InfinispanServerClustered(this);
 
    protected volatile MBeanServerConnection connection;
 
@@ -126,8 +135,8 @@ public class InfinispanServerService extends JavaProcessService {
    }
 
    @ProvidesTrait
-   public InfinispanServerClustered createClustered() {
-      return new InfinispanServerClustered(this);
+   public InfinispanServerClustered getClustered() {
+      return clustered;
    }
 
    @Override
@@ -161,5 +170,9 @@ public class InfinispanServerService extends JavaProcessService {
       }
       envs.put(JBOSS_HOME, home);
       return envs;
+   }
+
+   protected void schedule(Runnable task, long period) {
+      executor.scheduleAtFixedRate(task, 0, period, TimeUnit.MILLISECONDS);
    }
 }

@@ -1,5 +1,6 @@
 package org.radargun.stages.lifecycle;
 
+import java.util.Collection;
 import java.util.Set;
 
 import org.radargun.logging.Log;
@@ -28,7 +29,7 @@ public class LifecycleHelper {
    /**
     * Starts the service.
     * If the service supports {@link Clustered} trait and {@code validate} is set to true,
-    * the method waits until {@link org.radargun.traits.Clustered#getClusteredNodes() clustered trait}
+    * the method waits until {@link org.radargun.traits.Clustered#getMembers() clustered trait}
     * reports {@code expectedSlaves} slaves or for {@code clusterFormationTimeout} milliseconds.
     * If the service supports {@link Partitionable} trait, the set of {@code reachable} slaves
     * is set up before the service is started.
@@ -63,9 +64,9 @@ public class LifecycleHelper {
 
             long clusterFormationDeadline = System.currentTimeMillis() + clusterFormationTimeout;
             for (;;) {
-               int numMembers = clustered.getClusteredNodes();
-               if (numMembers != expectedNumberOfSlaves) {
-                  String msg = "Number of members=" + numMembers + " is not the one expected: " + expectedNumberOfSlaves;
+               Collection<Clustered.Member> members = clustered.getMembers();
+               if (members == null || members.size() != expectedNumberOfSlaves) {
+                  String msg = "Number of members=" + members + " is not the one expected: " + expectedNumberOfSlaves;
                   log.info(msg);
                   try {
                      Thread.sleep(1000);
@@ -73,7 +74,7 @@ public class LifecycleHelper {
                      Thread.currentThread().interrupt();
                   }
                   if (System.currentTimeMillis() > clusterFormationDeadline) {
-                     if (numMembers < 0) {
+                     if (members == null) {
                         log.warn("Startup timed out without being able to confirm number of members.");
                         break;
                      } else {
@@ -81,7 +82,7 @@ public class LifecycleHelper {
                      }
                   }
                } else {
-                  log.info("Number of members is the one expected: " + clustered.getClusteredNodes());
+                  log.info("Number of members is the one expected: " + members.size());
                   break;
                }
             }
