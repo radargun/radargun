@@ -1,6 +1,10 @@
 package org.radargun.service;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
@@ -86,7 +90,17 @@ public class EHCacheService implements Lifecycle, Clustered {
    }
 
    @Override
-   public int getClusteredNodes() {
-      return manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(getCache(null)).size() + 1;
+   public Collection<Member> getMembers() {
+      ArrayList<Member> members = new ArrayList<>();
+      for (Object peer: manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(getCache(null))) {
+         members.add(new Member(peer.toString(), false, false));
+      }
+      members.add(new Member("localhost", true, false));
+      return members;
+   }
+
+   @Override
+   public List<Membership> getMembershipHistory() {
+      return Collections.EMPTY_LIST; //TODO
    }
 }

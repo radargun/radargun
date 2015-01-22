@@ -44,6 +44,7 @@ public class InfinispanEmbeddedService {
    protected final boolean trace = log.isTraceEnabled();
 
    protected final InfinispanLifecycle lifecycle;
+   protected final InfinispanClustered clustered;
 
    protected volatile DefaultCacheManager cacheManager;
    protected volatile boolean enlistExtraXAResource;
@@ -63,11 +64,13 @@ public class InfinispanEmbeddedService {
 
    public InfinispanEmbeddedService() {
       lifecycle = createLifecycle();
+      clustered = createClustered();
    }
 
    protected InfinispanLifecycle createLifecycle() {
       return new InfinispanLifecycle(this);
    }
+   protected InfinispanClustered createClustered() { return new InfinispanClustered(this); }
 
    @ProvidesTrait
    public InfinispanLifecycle getLifecycle() {
@@ -95,8 +98,8 @@ public class InfinispanEmbeddedService {
    }
 
    @ProvidesTrait
-   public InfinispanClustered createClustered() {
-      return new InfinispanClustered(this);
+   public InfinispanClustered getClustered() {
+      return clustered;
    }
 
    protected void startCaches() throws Exception {
@@ -138,6 +141,7 @@ public class InfinispanEmbeddedService {
       } finally {
          caches.clear();
          forcedCleanup();
+         clustered.stopped();
       }
    }
 
@@ -179,6 +183,7 @@ public class InfinispanEmbeddedService {
    }
 
    protected void beforeCacheManagerStart(DefaultCacheManager cacheManager) {
+      cacheManager.addListener(getClustered());
    }
 
    protected void waitForRehash() throws InterruptedException {

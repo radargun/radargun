@@ -19,12 +19,6 @@
          <service-name>DistributedCache</service-name>
          <partition-count>2039</partition-count>
          <backup-count>1</backup-count>
-         <partition-listener>
-         	<class-name>org.radargun.listeners.PartitionListenerImpl</class-name>
-         </partition-listener>
-         <member-listener>
-         	<class-name>org.radargun.listeners.MemberListenerImpl</class-name>
-         </member-listener>
          <backing-map-scheme>
             <local-scheme>
                <scheme-ref>unlimited-backing-map</scheme-ref>

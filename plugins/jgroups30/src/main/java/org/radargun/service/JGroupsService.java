@@ -58,6 +58,7 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
    protected volatile boolean started = false;
    protected volatile Address localAddr;
    protected volatile List<Address> members = Collections.emptyList();
+   protected List<Membership> membershipHistory = new ArrayList<Membership>();
 
    public enum SelfRequests {
       execute,
@@ -149,6 +150,9 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
    @Override
    public void stop() {
       Util.close(ch);
+      synchronized (this) {
+         membershipHistory.add(Membership.empty());
+      }
       started = false;
    }
 
@@ -280,6 +284,15 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
       // put the local address at the end of the list
       Collections.rotate(members, members.size() - members.indexOf(ch.getAddress()));
       this.members = members;
+      ArrayList<Member> mbrs = new ArrayList<>(newView.getMembers().size());
+      boolean coord = true;
+      for (Address address : newView.getMembers()) {
+         mbrs.add(new Member(address.toString(), ch.getAddress().equals(address), coord));
+         coord = false;
+      }
+      synchronized (this) {
+         membershipHistory.add(Membership.create(mbrs));
+      }
    }
 
    @Override
@@ -290,9 +303,14 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
    }
 
    @Override
-   public int getClusteredNodes() {
-      View view = ch.getView();
-      return view != null ? view.size() : 0;
+   public synchronized Collection<Member> getMembers() {
+      if (membershipHistory.isEmpty()) return null;
+      return membershipHistory.get(membershipHistory.size() - 1).members;
+   }
+
+   @Override
+   public synchronized List<Membership> getMembershipHistory() {
+      return new ArrayList<>(membershipHistory);
    }
 
    private Address pickReadTarget() {

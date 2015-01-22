@@ -1,5 +1,9 @@
 package org.radargun.service;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
@@ -13,9 +17,17 @@ import org.radargun.traits.Clustered;
 public class InfinispanServerClustered implements Clustered {
    protected final Log log = LogFactory.getLog(getClass());
    protected final InfinispanServerService service;
+   protected final List<Membership> membershipHistory = new ArrayList<>();
+   protected String lastMembers = null;
 
    public InfinispanServerClustered(InfinispanServerService service) {
       this.service = service;
+      service.schedule(new Runnable() {
+         @Override
+         public void run() {
+            checkAndUpdateMembership();
+         }
+      }, service.viewCheckPeriod);
    }
 
    @Override
@@ -36,24 +48,55 @@ public class InfinispanServerClustered implements Clustered {
       return false;
    }
 
-   @Override
-   public int getClusteredNodes() {
+   protected Collection<Member> checkAndUpdateMembership() {
       if (!service.lifecycle.isRunning()) {
-         return 0;
+         synchronized (this) {
+            if (!membershipHistory.isEmpty() && membershipHistory.get(membershipHistory.size() - 1).members.size() > 0) {
+               membershipHistory.add(Membership.empty());
+            }
+         }
+         return Collections.EMPTY_LIST;
       }
       try {
          MBeanServerConnection connection = service.connection;
-         if (connection == null) return -1;
+         if (connection == null) return null;
          ObjectName cacheManagerName = new ObjectName(getCacheManagerObjectName(service.jmxDomain, service.cacheManagerName));
-         return (Integer) connection.getAttribute(cacheManagerName, getClusterSizeAttribute());
+         String membersString = (String) connection.getAttribute(cacheManagerName, getClusterMembersAttribute());
+         String nodeAddress = (String) connection.getAttribute(cacheManagerName, getNodeAddressAttribute());
+         synchronized (this) {
+            if (lastMembers != null && lastMembers.equals(membersString)) {
+               return membershipHistory.get(membershipHistory.size() - 1).members;
+            }
+            if (!membersString.startsWith("[") || !membersString.endsWith("]")) {
+               throw new IllegalArgumentException("Unexpected members string format: " + membersString);
+            }
+            lastMembers = membersString;
+            String[] nodes = membersString.substring(1, membersString.length() - 1).split(",", 0);
+            ArrayList<Member> members = new ArrayList<>();
+            for (int i = 0; i < nodes.length; ++i) {
+               members.add(new Member(nodes[i].trim(), nodes[i].equals(nodeAddress), i == 0));
+            }
+            membershipHistory.add(Membership.create(members));
+            return members;
+         }
       } catch (Exception e) {
          log.error("Failed to retrieve data from JMX", e);
-         return -1;
+         return null;
       }
    }
 
+   @Override
+   public Collection<Member> getMembers() {
+      return checkAndUpdateMembership();
+   }
+
+   @Override
+   public synchronized List<Membership> getMembershipHistory() {
+      return new ArrayList<>(membershipHistory);
+   }
+
    protected String getClusterMembersAttribute() {
-      return "clusterManager";
+      return "clusterMembers";
    }
 
    protected String getNodeAddressAttribute() {

@@ -1,12 +1,19 @@
 package org.radargun.service;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import com.hazelcast.config.Config;
 import com.hazelcast.config.XmlConfigBuilder;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
+import com.hazelcast.core.MembershipEvent;
+import com.hazelcast.core.MembershipListener;
 import org.radargun.Service;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
@@ -29,8 +36,9 @@ public class HazelcastService implements Lifecycle, Clustered {
    private final boolean trace = log.isTraceEnabled();
 
    protected HazelcastInstance hazelcastInstance;
+   protected List<Membership> membershipHistory = new ArrayList<>();
 
-   @Property(name = "file", doc = "Configuration file.")
+   @Property(name = Service.FILE, doc = "Configuration file.")
    private String config;
 
    @Property(name = "cache", doc = "Name of the map ~ cache", deprecatedName = "map")
@@ -62,12 +70,32 @@ public class HazelcastService implements Lifecycle, Clustered {
       InputStream configStream = getAsInputStreamFromClassLoader(config);
       Config cfg = new XmlConfigBuilder(configStream).build();
       hazelcastInstance = Hazelcast.newHazelcastInstance(cfg);
+      MembershipListener listener = new MembershipListener() {
+         @Override
+         public void memberAdded(MembershipEvent membershipEvent) {
+            updateMembers(membershipEvent.getMembers());
+         }
+
+         @Override
+         public void memberRemoved(MembershipEvent membershipEvent) {
+            updateMembers(membershipEvent.getMembers());
+         }
+      };
+      synchronized (this) {
+         addMembershipListener(listener);
+         updateMembers(hazelcastInstance.getCluster().getMembers());
+      }
       log.info("Hazelcast configuration:" + hazelcastInstance.getConfig().toString());
+   }
+
+   protected void addMembershipListener(MembershipListener listener) {
+      hazelcastInstance.getCluster().addMembershipListener(listener);
    }
 
    @Override
    public void stop() {
       hazelcastInstance.getLifecycleService().shutdown();
+      updateMembers(Collections.EMPTY_SET);
       hazelcastInstance = null;
    }
 
@@ -82,12 +110,22 @@ public class HazelcastService implements Lifecycle, Clustered {
    }
 
    @Override
-   public int getClusteredNodes() {
-      if (!hazelcastInstance.getLifecycleService().isRunning()) {
-         return -1;
-      } else {
-         return hazelcastInstance.getCluster().getMembers().size();
+   public synchronized Collection<Member> getMembers() {
+      if (membershipHistory.isEmpty()) return null;
+      return membershipHistory.get(membershipHistory.size() - 1).members;
+   }
+
+   @Override
+   public synchronized List<Membership> getMembershipHistory() {
+      return new ArrayList<>(membershipHistory);
+   }
+
+   protected synchronized void updateMembers(Set<com.hazelcast.core.Member> members) {
+      ArrayList<Member> mbrs = new ArrayList<>(members.size());
+      for (com.hazelcast.core.Member m : members) {
+         mbrs.add(new Member(m.getInetSocketAddress().getHostName() + "(" + m.getUuid() + ")", m.localMember(), false));
       }
+      membershipHistory.add(Membership.create(mbrs));
    }
 
    private InputStream getAsInputStreamFromClassLoader(String filename) {

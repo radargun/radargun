@@ -4,10 +4,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 
 import com.oracle.common.internal.net.MultiProviderSelectionService;
@@ -16,10 +18,14 @@ import com.oracle.common.net.SelectionServices;
 import com.tangosol.net.CacheFactory;
 import com.tangosol.net.ConfigurableCacheFactory;
 import com.tangosol.net.DefaultConfigurableCacheFactory;
+import com.tangosol.net.MemberEvent;
 import com.tangosol.net.NamedCache;
+import com.tangosol.net.PartitionedService;
 import org.radargun.Service;
 import org.radargun.config.Converter;
 import org.radargun.config.Property;
+import org.radargun.listeners.MemberListenerImpl;
+import org.radargun.listeners.PartitionListenerImpl;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Clustered;
@@ -39,7 +45,7 @@ public class Coherence3Service implements Lifecycle, Clustered {
    protected Map<String, NamedCache> caches = new HashMap<String, NamedCache>();
    protected boolean started = false;
 
-   @Property(name = "file", doc = "Configuration file.", deprecatedName = "config")
+   @Property(name = Service.FILE, doc = "Configuration file.", deprecatedName = "config")
    protected String configFile;
    @Property(name = "cache", doc = "Name of the default cache. Default is 'testCache'.")
    protected String cacheName = "testCache";
@@ -58,6 +64,8 @@ public class Coherence3Service implements Lifecycle, Clustered {
    protected boolean usePOF = true;
 
    protected CoherenceQueryable queryable = new CoherenceQueryable(this);
+
+   protected List<Membership> membershipHistory = new ArrayList<>();
 
    @ProvidesTrait
    public Coherence3Service getSelf() {
@@ -97,6 +105,9 @@ public class Coherence3Service implements Lifecycle, Clustered {
          }
          caches.put(name, nc);
          queryable.registerIndices(nc, indexedColumns);
+         if (nc.getCacheService() instanceof PartitionedService) {
+            ((PartitionedService) nc.getCacheService()).addPartitionListener(new PartitionListenerImpl());
+         }
          log.info("Started Coherence cache " + nc.getCacheName());
       }
       return nc;
@@ -118,7 +129,12 @@ public class Coherence3Service implements Lifecycle, Clustered {
 //      CacheFactory.setConfigurableCacheFactory(createCacheFactory());
       started = true;
       // ensure that at least the main cache is started
-      getCache(cacheName);
+      NamedCache cache = getCache(cacheName);
+      // register member listener
+      synchronized (this) {
+         cache.getCacheService().addMemberListener(new MemberListenerImpl(this));
+         updateMembership(null);
+      }
       log.info("Started Coherence Service");
    }
 
@@ -152,6 +168,9 @@ public class Coherence3Service implements Lifecycle, Clustered {
          log.error("Failed to shutdown selection services", e);
       }
       started = false;
+      synchronized (this) {
+         membershipHistory.add(Membership.empty());
+      }
       log.info("Cache factory was shut down.");
    }
 
@@ -165,18 +184,39 @@ public class Coherence3Service implements Lifecycle, Clustered {
       return false;
    }
 
-   @Override
-   public int getClusteredNodes() {
-      assertStarted();
+   public synchronized void updateMembership(MemberEvent event) {
+      List<Member> members;
       try {
-         return CacheFactory.ensureCluster().getMemberSet().size();
+         Set<com.tangosol.net.Member> memberSet = CacheFactory.ensureCluster().getMemberSet();
+         com.tangosol.net.Member localMember = CacheFactory.ensureCluster().getLocalMember();
+         members = new ArrayList<>(memberSet.size());
+         for (com.tangosol.net.Member m : memberSet) {
+            members.add(new Member(String.format("%d@%s[%s]", m.getId(), m.getMachineName(), m.getAddress().getHostName()), localMember.equals(m), false));
+         }
       } catch (IllegalStateException ise) {
          if (ise.getMessage().indexOf("SafeCluster has been explicitly stopped") >= 0) {
             log.info("The cluster is stopped.");
-            return 0;
+            members = Collections.EMPTY_LIST;
+         } else {
+            throw ise;
          }
-         throw ise;
       }
+      if (members.equals(getMembers())) {
+         log.trace("No change in membership: " + members + " -> " + getMembers());
+         return;
+      }
+      membershipHistory.add(Membership.create(members));
+   }
+
+   @Override
+   public synchronized Collection<Member> getMembers() {
+      if (membershipHistory.isEmpty()) return null;
+      return membershipHistory.get(membershipHistory.size() - 1).members;
+   }
+
+   @Override
+   public synchronized List<Membership> getMembershipHistory() {
+      return new ArrayList<>(membershipHistory);
    }
 
    protected void assertStarted() {

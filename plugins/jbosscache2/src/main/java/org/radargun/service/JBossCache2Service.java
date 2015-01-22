@@ -1,5 +1,8 @@
 package org.radargun.service;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -89,8 +92,20 @@ public class JBossCache2Service implements Lifecycle, Clustered
    }
 
    @Override
-   public int getClusteredNodes() {
-      List<Address> members = getCache(null).getMembers();
-      return members == null || members.isEmpty() ? 1 : members.size();
+   public Collection<Member> getMembers() {
+      Cache defaultCache = getCache(null);
+      ArrayList<Member> members = new ArrayList<>();
+      boolean coord = true;
+      List<Address> addresses = defaultCache.getMembers();
+      for (Address address : addresses) {
+         members.add(new Member(address.toString(), defaultCache.getLocalAddress().equals(address), coord));
+         coord = false;
+      }
+      return Collections.unmodifiableCollection(members);
+   }
+
+   @Override
+   public List<Membership> getMembershipHistory() {
+      return Collections.EMPTY_LIST; // TODO
    }
 }

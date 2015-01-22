@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.hazelcast.core.IMap;
+import com.hazelcast.core.MembershipListener;
 import org.radargun.Service;
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
@@ -35,6 +36,12 @@ public class Hazelcast3Service extends HazelcastService {
    @ProvidesTrait
    public HazelcastQueryable createQueryable() {
       return new HazelcastQueryable(this);
+   }
+
+   @Override
+   protected void addMembershipListener(MembershipListener listener) {
+      // Cluster interface changed 2 -> 3, binary compatibility was broken
+      hazelcastInstance.getCluster().addMembershipListener(listener);
    }
 
    @Override
