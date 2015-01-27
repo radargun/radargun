@@ -9,7 +9,7 @@ import org.radargun.utils.Utils;
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-public class TimeStressorCompletion extends Completion {
+public class TimeStressorCompletion extends AbstractCompletion {
 
    private volatile long lastPrint = -1;
    private final long duration;

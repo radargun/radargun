@@ -8,6 +8,7 @@ import java.util.Map;
 import org.radargun.Operation;
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
+import org.radargun.reporting.IterationData;
 import org.radargun.utils.TimeConverter;
 
 /**
@@ -18,14 +19,14 @@ import org.radargun.utils.TimeConverter;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @DefinitionElement(name = "periodic", doc = "Periodically switches the statistics where the operation is recorded.")
-public class PeriodicStatistics extends IntervalStatistics implements IterationStatistics {
+public class PeriodicStatistics extends IntervalStatistics implements IterationData<Statistics> {
    @Property(name = "implementation", doc = "Operation statistics prototype. Default is DefaultStatistics.", complexConverter = Statistics.Converter.class)
    private Statistics prototype = new DefaultStatistics();
 
    @Property(doc = "Duration of one sample.", optional = false, converter = TimeConverter.class)
    private long period;
 
-   private final List<IterationStatistics.Iteration> buckets;
+   private final List<IterationData.Iteration<Statistics>> buckets;
 
    public PeriodicStatistics() {
       this.buckets = new ArrayList<>();
@@ -41,8 +42,8 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationS
       this.prototype = other.prototype;
       this.period = other.period;
       this.buckets = new ArrayList<>(other.buckets.size());
-      for (Iteration s : other.buckets) {
-         this.buckets.add(new Iteration(s.name, s.statistics.copy()));
+      for (Iteration<Statistics> s : other.buckets) {
+         this.buckets.add(new Iteration(s.name, s.data.copy()));
       }
    }
 
@@ -58,7 +59,7 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationS
          }
          buckets.add(new Iteration("Period " + bucket, bucketStats));
       }
-      return buckets.get(bucket).statistics;
+      return buckets.get(bucket).data;
    }
 
    @Override
@@ -88,7 +89,7 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationS
       // just some leftovers that screw the charts
       int numBuckets = buckets.size();
       if (numBuckets == 0) return;
-      Statistics lastStats = buckets.get(numBuckets - 1).statistics;
+      Statistics lastStats = buckets.get(numBuckets - 1).data;
       if (lastStats instanceof IntervalStatistics) {
          IntervalStatistics intervalStats = (IntervalStatistics) lastStats;
          if (getEnd() - intervalStats.getBegin() < period / 20) {
@@ -117,7 +118,7 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationS
       throw new UnsupportedOperationException();
    }
 
-   public List<Iteration> getIterations() {
+   public List<Iteration<Statistics>> getIterations() {
       return Collections.unmodifiableList(buckets);
    }
 }

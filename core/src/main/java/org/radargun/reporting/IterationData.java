@@ -1,4 +1,4 @@
-package org.radargun.stats;
+package org.radargun.reporting;
 
 import java.util.List;
 
@@ -7,19 +7,19 @@ import java.util.List;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public interface IterationStatistics {
+public interface IterationData<T> {
    /**
     * @return Iterations that should this instance expand to.
     */
-   List<Iteration> getIterations();
+   List<Iteration<T>> getIterations();
 
-   public static class Iteration {
+   public static class Iteration<T> {
       public final String name;
-      public final Statistics statistics;
+      public final T data;
 
-      public Iteration(String name, Statistics statistics) {
+      public Iteration(String name, T data) {
          this.name = name;
-         this.statistics = statistics;
+         this.data = data;
       }
    }
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
@@ -16,7 +17,7 @@ import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.DefaultStatistics;
-import org.radargun.stats.IterationStatistics;
+import org.radargun.reporting.IterationData;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -68,6 +69,13 @@ public abstract class TestStage extends AbstractDistStage {
          "the benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.")
    protected long requestPeriod = 0;
 
+   @Property(doc = "Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, " +
+         "there is still the random ramp-up delay. Default is false.")
+   protected boolean synchronousRequests = false;
+
+   @Property(doc = "Max duration of the test. Default is infinite.", converter = TimeConverter.class)
+   protected long timeout = 0;
+
    @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'default' statistics " +
          "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
    protected Statistics statisticsPrototype = new DefaultStatistics();
@@ -113,16 +121,12 @@ public abstract class TestStage extends AbstractDistStage {
       try {
          long startNanos = System.nanoTime();
          log.info("Starting test " + testName);
-         List<List<Statistics>> results = execute();
+         List<Stressor> stressors = execute();
          log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
-         return newStatisticsAck(slaveState, results);
+         return newStatisticsAck(stressors);
       } catch (Exception e) {
          return errorResponse("Exception while initializing the test", e);
       }
-   }
-
-   protected StatisticsAck newStatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
-      return new StatisticsAck(slaveState, iterations);
    }
 
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
@@ -190,18 +194,23 @@ public abstract class TestStage extends AbstractDistStage {
       }
    }
 
-   public List<List<Statistics>> execute() {
+   public List<Stressor> execute() {
+      long startTime = System.currentTimeMillis();
+      int myFirstThread = getFirstThreadOn(slaveState.getSlaveIndex());
+      int myNumThreads = getNumThreadsOn(slaveState.getSlaveIndex());
+
       Completion completion;
       if (duration > 0) {
          completion = new TimeStressorCompletion(duration, requestPeriod);
       } else {
          completion = new OperationCountCompletion(numRequests, requestPeriod, logPeriod);
       }
+      if (synchronousRequests) {
+         completion = new SynchronousCompletion(completion, myNumThreads);
+      }
       setCompletion(completion);
 
       startLatch = new CountDownLatch(1);
-      int myFirstThread = getFirstThreadOn(slaveState.getSlaveIndex());
-      int myNumThreads = getNumThreadsOn(slaveState.getSlaveIndex());
       finishLatch = new CountDownLatch(myNumThreads);
       List<Stressor> stressors = new ArrayList<>();
       for (int threadIndex = stressors.size(); threadIndex < myNumThreads; threadIndex++) {
@@ -212,54 +221,82 @@ public abstract class TestStage extends AbstractDistStage {
       log.info("Started " + stressors.size() + " stressor threads.");
       startLatch.countDown();
       try {
-         finishLatch.await();
+         if (timeout > 0) {
+            long waitTime = getWaitTime(startTime);
+            if (waitTime <= 0 || !finishLatch.await(waitTime, TimeUnit.MILLISECONDS)) {
+               throw new TestTimeoutException();
+            }
+         } else {
+            finishLatch.await();
+         }
       } catch (InterruptedException e) {
          throw new IllegalStateException("Unexpected interruption", e);
       } finally {
          finished = true;
       }
-      List<Statistics> stats = new ArrayList<Statistics>(stressors.size());
       for (Stressor stressor : stressors) {
          try {
-            stressor.join();
-            Statistics s = stressor.getStats();
-            if (s != null) { // stressor could have crashed during initialization
-               stats.add(s);
+            if (timeout > 0) {
+               long waitTime = getWaitTime(startTime);
+               if (waitTime <= 0) throw new TestTimeoutException();
+               stressor.join(waitTime);
+            } else {
+               stressor.join();
             }
          } catch (InterruptedException e) {
-            throw new IllegalStateException("Unexpected interruption", e);
+            throw new TestTimeoutException(e);
+         }
+      }
+      return stressors;
+   }
+
+   protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
+      List<List<Statistics>> results = gatherResults(stressors, new StatisticsResultRetriever());
+      return new StatisticsAck(slaveState, results);
+   }
+
+   protected <T> List<List<T>> gatherResults(List<Stressor> stressors, ResultRetriever<T> retriever) {
+      List<T> results = new ArrayList<>(stressors.size());
+      for (Stressor stressor : stressors) {
+         T result = retriever.getResult(stressor);
+         if (result != null) { // stressor could have crashed during initialization
+            results.add(result);
          }
       }
 
-      List<List<Statistics>> all = new ArrayList<>();
-      all.add(new ArrayList<Statistics>());
+      List<List<T>> all = new ArrayList<>();
+      all.add(new ArrayList<T>());
       /* expand the iteration statistics into iterations */
-      for (Statistics s : stats) {
-         if (s instanceof IterationStatistics) {
+      for (T result : results) {
+         if (result instanceof IterationData) {
             int iteration = 0;
-            for (IterationStatistics.Iteration it : ((IterationStatistics) s).getIterations()) {
+            for (IterationData.Iteration<T> it : ((IterationData<T>) result).getIterations()) {
                while (iteration >= all.size()) {
-                  all.add(new ArrayList<Statistics>(stats.size()));
+                  all.add(new ArrayList<T>(results.size()));
                }
-               addStatistics(all.get(iteration++), it.statistics);
+               addResult(all.get(iteration++), it.data, retriever);
             }
          } else {
-            addStatistics(all.get(0), s);
+            addResult(all.get(0), result, retriever);
          }
       }
       return all;
    }
 
-   private void addStatistics(List<Statistics> iterationStats, Statistics statistics) {
+   private <T> void addResult(List<T> results, T result, ResultRetriever<T> retriever) {
       if (mergeThreadStats) {
-         if (iterationStats.isEmpty()) {
-            iterationStats.add(statistics);
+         if (results.isEmpty()) {
+            results.add(result);
          } else {
-            iterationStats.get(0).merge(statistics);
+            retriever.mergeResult(results.get(0), result);
          }
       } else {
-         iterationStats.add(statistics);
+         results.add(result);
       }
+   }
+
+   private long getWaitTime(long startTime) {
+      return startTime + timeout - System.currentTimeMillis();
    }
 
    public int getTotalThreads() {
@@ -354,6 +391,34 @@ public abstract class TestStage extends AbstractDistStage {
       protected StatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
          super(slaveState);
          this.iterations = iterations;
+      }
+   }
+
+   protected interface ResultRetriever<T> {
+      T getResult(Stressor stressor);
+      void mergeResult(T into, T that);
+   }
+
+   protected static class StatisticsResultRetriever implements ResultRetriever<Statistics> {
+      public StatisticsResultRetriever() {}
+
+      @Override
+      public Statistics getResult(Stressor stressor) {
+         return stressor.getStats();
+      }
+
+      @Override
+      public void mergeResult(Statistics into, Statistics that) {
+         into.merge(that);
+      }
+   }
+
+   private class TestTimeoutException extends RuntimeException {
+      public TestTimeoutException() {
+      }
+
+      public TestTimeoutException(Throwable cause) {
+         super(cause);
       }
    }
 }
