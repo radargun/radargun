@@ -22,10 +22,10 @@ import org.radargun.traits.Iterable;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InfinispanIterable implements Iterable {
-   private static final Log log = LogFactory.getLog(Iterable.class);
-   private static final boolean trace = log.isTraceEnabled();
+   protected static final Log log = LogFactory.getLog(Iterable.class);
+   protected static final boolean trace = log.isTraceEnabled();
 
-   private final InfinispanEmbeddedService service;
+   protected final InfinispanEmbeddedService service;
 
    public InfinispanIterable(InfinispanEmbeddedService service) {
       this.service = service;
@@ -36,12 +36,7 @@ public class InfinispanIterable implements Iterable {
       if (trace) log.tracef("Retrieving iterator for cache %s using filter %s", cacheName, filter);
       AdvancedCache<K, V> cache = (AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache();
       EntryIterable<K, V> iterable = cache.filterEntries(wrap(filter));
-      return new CloseableIteratorImpl<K, V, Map.Entry<K, V>>(iterable, new OutConverter<K, V, Map.Entry<K, V>>() {
-         @Override
-         public Map.Entry<K, V> convert(CacheEntry<K, V> entry) {
-            return entry;
-         }
-      });
+      return new CloseableIteratorImpl(iterable, new EntryOutConverter<K, V>());
    }
 
    @Override
@@ -49,19 +44,14 @@ public class InfinispanIterable implements Iterable {
       if (trace) log.tracef("Retrieving iterator for cache %s using filter %s and converter %s", cacheName, filter, converter);
       AdvancedCache<K, V> cache = (AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache();
       EntryIterable<K, V> iterable = cache.filterEntries(wrap(filter));
-      return new CloseableIteratorImpl<K, T, T>(iterable.converter(wrap(converter)), new OutConverter<K, T, T>() {
-         @Override
-         public T convert(CacheEntry<K, T> entry) {
-            return entry.getValue();
-         }
-      });
+      return new CloseableIteratorImpl(iterable.converter(wrap(converter)), new ValueOutConverter<K, T>());
    }
 
-   private <K, V, T> org.infinispan.filter.Converter<K, V, T> wrap(Converter<K, V, T> converter) {
-      return new ConverterWrapper<K, V, T>(converter);
+   protected <K, V, T> org.infinispan.filter.Converter<K, V, T> wrap(Converter<K, V, T> converter) {
+      return new ConverterWrapper<>(converter);
    }
 
-   private <K, V> KeyValueFilter<K, V> wrap(Filter<K, V> filter) {
+   protected <K, V> KeyValueFilter<K, V> wrap(Filter<K, V> filter) {
       if (filter == null) {
          return AllFilter.INSTANCE;
       } else {
@@ -108,10 +98,24 @@ public class InfinispanIterable implements Iterable {
       T convert(CacheEntry<K, V> entry);
    }
 
+   private static class EntryOutConverter<K, V> implements OutConverter<K, V, Map.Entry<K, V>> {
+      @Override
+      public Map.Entry<K, V> convert(CacheEntry<K, V> entry) {
+         return entry;
+      }
+   }
+
+   private static class ValueOutConverter<K, T> implements OutConverter<K, T, T> {
+      @Override
+      public T convert(CacheEntry<K, T> entry) {
+         return entry.getValue();
+      }
+   }
+
    /**
     * Implements the iterator
     */
-   private class CloseableIteratorImpl<K, V, T> implements CloseableIterator<T> {
+   private static class CloseableIteratorImpl<K, V, T> implements CloseableIterator<T> {
       private final CloseableIterable<CacheEntry<K, V>> iterable;
       private final Iterator<CacheEntry<K, V>> iterator;
       private final OutConverter<K, V, T> outConverter;

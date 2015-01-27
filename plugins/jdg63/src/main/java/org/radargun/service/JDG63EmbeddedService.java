@@ -36,6 +36,6 @@ public class JDG63EmbeddedService extends Infinispan60EmbeddedService {
    }
 
    @ProvidesTrait
-   public InfinispanIterable createIterable() { return new InfinispanIterable(this); }
+   public InfinispanIterable createIterable() { return new JDG63Iterable(this); }
 
 }
