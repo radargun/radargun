@@ -17,6 +17,7 @@ SLAVES=""
 DEBUG=""
 SLAVE_COUNT=0
 TAILF=false
+EXTRA_JAVA_OPTS=""
 PLUGIN_PATHS=""
 PLUGIN_CONFIGS=""
 REPORTER_PATHS=""
@@ -42,6 +43,8 @@ help_and_exit() {
   wrappedecho "   -t              After starting the benchmark it will run 'tail -f' on the master node's log file."
   wrappedecho ""
   wrappedecho "   -d              Open debugging port on each node."
+  wrappedecho ""
+  wrappedecho "   -J              Add Java option to both master and slaves."
   wrappedecho ""
   wrappedecho "   --add-plugin    Path to custom plugin directory. Can be specified multiple times."
   wrappedecho ""
@@ -103,6 +106,10 @@ do
       REPORTER_PATHS="--add-reporter=${2} ${REPORTER_PATHS}"
       shift
       ;;
+    "-J")
+      EXTRA_JAVA_OPTS="$EXTRA_JAVA_OPTS -J $2"
+      shift
+      ;;
     *)
       if [ ${1:0:1} = "-" ] ; then
         echo "Warning: unknown argument ${1}" 
@@ -128,7 +135,7 @@ DEBUG_CMD=""
 if [ "x$DEBUG" != "x" ]; then
    DEBUG_CMD="-d localhost:$DEBUG"
 fi
-${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD} ${REPORTER_PATHS}
+${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD} $EXTRA_JAVA_OPTS ${REPORTER_PATHS}
 #### Sleep for a few seconds so master can open its port
 
 ####### then start the rest of the nodes
@@ -136,7 +143,7 @@ ${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEB
 INDEX=0
 for slave in $SLAVES; do
   CMD="source ~/.bash_profile ; cd $WORKING_DIR"
-  CMD="$CMD ; ${RADARGUN_HOME}/bin/slave.sh -m ${MASTER} -n $slave -i $INDEX ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
+  CMD="$CMD ; ${RADARGUN_HOME}/bin/slave.sh -m ${MASTER} -n $slave -i $INDEX $EXTRA_JAVA_OPTS ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
   if [ "x$DEBUG" != "x" ]; then
      CMD="$CMD -d $slave:$DEBUG"
   fi
