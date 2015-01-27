@@ -51,15 +51,8 @@ class SharedLogChecker extends LogChecker {
          return false;
       }
       SharedLogValue logValue = (SharedLogValue) value;
-      for (int i = logValue.size() - 1; i >= 0; --i) {
-         if (logValue.getThreadId(i) != record.getThreadId()) {
-            continue;
-         }
-         // we can't increase the last stressor operation from seeing next one - these could be committed
-         // in different order than actually written
-         if (logValue.getOperationId(i) == record.getOperationId()) {
-            return true;
-         }
+      if (logValue.contains(record.getThreadId(), record.getOperationId())) {
+         return true;
       }
       return false;
    }

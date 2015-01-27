@@ -102,7 +102,7 @@ public class SharedLogValue implements Serializable {
    }
 
    public boolean contains(int threadId, long operationId) {
-      for (int i = 0; i < threadIds.length; ++i) {
+      for (int i = threadIds.length - 1; i >= 0; i--) {
          if (threadIds[i] == threadId && operationIds[i] == operationId)
             return true;
       }
