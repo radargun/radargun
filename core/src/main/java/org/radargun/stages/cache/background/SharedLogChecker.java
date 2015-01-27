@@ -32,7 +32,7 @@ class SharedLogChecker extends LogChecker {
          if (containsOperation(value, record) || (value != null && value.equals(prev2Value))) {
             break;
          }
-         if (keyId < 0 && record.getLastStressorOperation() < record.getOperationId()) {
+         if (keyId < 0 && record.getCurrentConfirmationTimestamp() < 0) {
             // do not poll it 100x when we're not sure that the operation is written, try just twice
             break;
          }
@@ -113,7 +113,7 @@ class SharedLogChecker extends LogChecker {
       @Override
       public void next() {
          currentKeyId = (rand.nextLong() & Long.MAX_VALUE) % numEntries + keyIdOffset;
-         discardNotification(currentOp++);
+         checkFinished(currentOp++);
       }
    }
 }

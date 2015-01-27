@@ -33,6 +33,10 @@ public class LogLogicConfiguration {
    @Property(doc = "Check that listeners have been fired for each operation on each node (at least once). Default is false.")
    protected boolean checkNotifications = false;
 
+   @Property(doc = "Maximum allowed delay to detect operation confirmed by stressor. Default is no delay.",
+         converter = TimeConverter.class)
+   protected long writeApplyMaxDelay = 0;
+
    public boolean isEnabled() {
       return enabled;
    }
@@ -59,5 +63,9 @@ public class LogLogicConfiguration {
 
    public boolean isCheckNotifications() {
       return checkNotifications;
+   }
+
+   public long getWriteApplyMaxDelay() {
+      return writeApplyMaxDelay;
    }
 }
