@@ -11,6 +11,7 @@ import java.util.Arrays;
 public class PrivateLogValue implements Serializable {
    private final int threadId;
    private final long[] operationIds;
+
    public PrivateLogValue(int threadId, long operationId) {
       this.threadId = threadId;
       operationIds = new long[] { operationId };
@@ -48,8 +49,8 @@ public class PrivateLogValue implements Serializable {
    }
 
    public boolean contains(long operationId) {
-      for (long id : operationIds) {
-         if (id == operationId) {
+      for (int i = operationIds.length - 1; i >= 0; i--) {
+         if (operationIds[i] == operationId) {
             return true;
          }
       }

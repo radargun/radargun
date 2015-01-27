@@ -56,10 +56,8 @@ public class PrivateLogChecker extends LogChecker {
       }
       PrivateLogValue logValue = (PrivateLogValue) value;
       if (logValue.getThreadId() == record.getThreadId()) {
-         for (int i = logValue.size() - 1; i >= 0; --i) {
-            if (logValue.getOperationId(i) == record.getOperationId()) {
-               return true;
-            }
+         if (logValue.contains(record.getOperationId())) {
+            return true;
          }
       } else {
          log.error("Expected value from threadId " + record.getThreadId() + " but found from " + logValue.getThreadId());
