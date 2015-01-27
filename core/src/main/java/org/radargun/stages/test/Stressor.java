@@ -12,7 +12,7 @@ import org.radargun.traits.Transactional;
  * Each stressor operates according to its {@link OperationLogic logic} - the instance is private to each thread.
  * After finishing the {@linkplain OperationLogic#init(Stressor) init phase}, all stressors synchronously
  * execute logic's {@link OperationLogic#run() run} method until
- * the {@link Completion#moreToRun(int)} returns false.
+ * the {@link AbstractCompletion#moreToRun(int)} returns false.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -182,6 +182,10 @@ public class Stressor extends Thread {
 
    public Statistics getStats() {
       return stats;
+   }
+
+   public OperationLogic getLogic() {
+      return logic;
    }
 
    public Random getRandom() {

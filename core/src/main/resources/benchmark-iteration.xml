@@ -1,0 +1,51 @@
+<benchmark xmlns="urn:radargun:benchmark:2.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+
+   <clusters>
+      <cluster size="2" />
+   </clusters>
+
+   <configurations>
+      <config name="Infinispan 7.0 dist">
+         <setup plugin="infinispan70">
+            <embedded xmlns="urn:radargun:plugins:infinispan70:2.0" file="dist-sync.xml"/>
+         </setup>
+      </config>
+   </configurations>
+
+   <scenario>
+      <jvm-monitor-start />
+      <service-start/>
+
+      <!-- Preload the cache with 10000 entries with values 0 - 99 -->
+      <load-data num-entries="10000" num-threads="10" entry-size="0" seed="12345">
+         <value-generator>
+            <number-object int-min="0" int-max="99" />
+         </value-generator>
+      </load-data>
+
+      <!-- Iterate 1000x through the cache, retrieving objects that have value 42 -->
+      <!-- NumberObjectFilter is plugin-specific class, therefore, this cannot be part of schema
+           unless the class would be implemented using reflection as NumberObjectGenerator -->
+      <iterate test-name="iteration"
+               num-requests="1000"
+               num-threads-per-node="10"
+               synchronous-requests="true"
+               fail-on-not-total-size="false"
+               filter-class="org.radargun.filters.NumberObjectFilter"
+               filter-param="integerValue:42" />
+   </scenario>
+
+   <reports>
+      <reporter type="html">
+         <html xmlns="urn:radargun:reporters:reporter-default:2.0"
+               target-dir="${env.PWD}/results/html" test-report-generate-thread-stats="true"/>
+      </reporter>
+      <reporter type="csv">
+         <csv xmlns="urn:radargun:reporters:reporter-default:2.0"
+               target-dir="${env.PWD}/results/csv"/>
+      </reporter>
+   </reports>
+
+</benchmark>

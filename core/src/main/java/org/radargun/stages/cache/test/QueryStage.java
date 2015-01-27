@@ -68,8 +68,8 @@ public class QueryStage extends TestStage {
    }
 
    @Override
-   protected QueryAck newStatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
-      return new QueryAck(slaveState, iterations, expectedSize.get());
+   protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
+      return new QueryAck(slaveState, gatherResults(stressors, new StatisticsResultRetriever()), expectedSize.get());
    }
 
    @Override

@@ -10,7 +10,7 @@ import org.radargun.utils.Utils;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class OperationCountCompletion extends Completion {
+public class OperationCountCompletion extends AbstractCompletion {
 
    private final AtomicLong requestsLeft;
    private final long numRequests;

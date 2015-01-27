@@ -1,47 +1,36 @@
 package org.radargun.stages.iteration;
 
+import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
 import org.radargun.DistStageAck;
+import org.radargun.Operation;
 import org.radargun.StageResult;
 import org.radargun.config.Init;
-import org.radargun.config.Path;
 import org.radargun.config.Property;
-import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
-import org.radargun.stages.AbstractDistStage;
+import org.radargun.stages.test.Invocation;
+import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.TestStage;
 import org.radargun.state.SlaveState;
-import org.radargun.stats.DefaultOperationStats;
-import org.radargun.stats.DefaultStatistics;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Iterable;
 import org.radargun.utils.Projections;
-import org.radargun.utils.TimeConverter;
 import org.radargun.utils.Utils;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-// TODO: rewrite to inherit from TestStage
 @Stage(doc = "Iterates through all entries.")
-public class IterateStage extends AbstractDistStage {
-
-   @Property(doc = "Name of this test. Default is 'IterationTest'.")
-   protected String testName = "IterationTest";
-
-   @Property(doc = "By default, each stage creates a new test. If this property is set to true, " +
-         "results are amended to existing test (as iterations). Default is false.")
-   protected boolean amendTest = false;
-
+public class IterateStage extends TestStage {
    @Property(doc = "Full class name of the filter used to iterate through entries. Default is none (accept all).")
    protected String filterClass;
 
@@ -57,15 +46,6 @@ public class IterateStage extends AbstractDistStage {
    @Property(doc = "Name of the container (e.g. cache, DB table etc.) that should be iterated. Default is the default container.")
    protected String containerName;
 
-   @Property(doc = "Number of stressor threads that should iterate the cache in parallel. Default is 10.")
-   protected int numThreads = 10;
-
-   @Property(doc = "Max duration of the iteration. Default is infinite.", converter = TimeConverter.class)
-   protected long timeout = 0;
-
-   @Property(doc = "Number of iterations that should be executed. Default is 100.")
-   protected int numLoops = 100;
-
    @Property(doc = "Number of next() calls that are allowed to fail until we break the loop. Default is 100.")
    protected int maxNextFailures = 100;
 
@@ -77,9 +57,6 @@ public class IterateStage extends AbstractDistStage {
 
    @Property(doc = "Fail when the number of elements is different than total size. Default is true if filter is not defined and false otherwise.")
    protected Boolean failOnNotTotalSize;
-
-   @Property(doc = "Property, which value will be used to identify individual iterations (e.g. num-threads).")
-   protected String iterationProperty;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected Iterable iterable;
@@ -93,67 +70,17 @@ public class IterateStage extends AbstractDistStage {
    }
 
    @Override
-   public DistStageAck executeOnSlave() {
-      // TODO: customize stats
-      Statistics stats = new DefaultStatistics(new DefaultOperationStats());
-      CountDownLatch startLatch = new CountDownLatch(1);
-      ArrayList<IteratingStressor> stressors = new ArrayList<IteratingStressor>(numThreads);
-      try {
-         for (int i = 0; i < numThreads; ++i) {
-            Iterable.Filter filter = null;
-            Iterable.Converter converter = null;
-            try {
-               if (filterClass != null) {
-                  filter = Utils.instantiateAndInit(slaveState.getClassLoader(), filterClass, filterParam);
-               }
-               if (converterClass != null) {
-                  converter = Utils.instantiateAndInit(slaveState.getClassLoader(), converterClass, converterParam);
-               }
-            } catch (Exception e) {
-               terminate(stressors);
-               return errorResponse("Failed to create the filter or converter", e);
-            }
-            IteratingStressor stressor = new IteratingStressor(i, iterable, containerName, filter, converter,
-                  maxNextFailures, numLoops, startLatch, stats.newInstance());
-            stressors.add(stressor);
-            stressor.start();
-         }
-      } finally {
-         startLatch.countDown();
+   protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
+      List<List<IterationResult>> results = gatherResults(stressors, new IterationResultRetriever());
+      if (results.size() != 1) {
+         throw new IllegalArgumentException("Expected single iteration: " + results);
       }
-      long testStart = System.currentTimeMillis();
-      int joined = 0;
-      outer_loop: while (joined < numThreads) {
-         for (IteratingStressor stressor : stressors) {
-            long waitTime;
-            if (timeout > 0) {
-               waitTime = testStart + timeout - System.currentTimeMillis();
-               if (waitTime <= 0) {
-                  log.warn("Timed out waiting for threads.");
-                  terminate(stressors);
-                  break outer_loop;
-               }
-            } else {
-               waitTime = 0;
-            }
-            try {
-               stressor.join(waitTime);
-               ++joined;
-            } catch (InterruptedException e) {
-               terminate(stressors);
-               return errorResponse("Interrupted when waiting for the stressors", e);
-            }
-         }
-      }
-      ArrayList<StressorResult> results = new ArrayList<StressorResult>(numThreads);
-      for (IteratingStressor stressor : stressors) {
-         results.add(new StressorResult(stressor.getStats(), stressor.getMinElements(), stressor.getMaxElements(), stressor.isFailed()));
-      }
+      List<IterationResult> resultList = results.get(0);
       long totalSize = -1;
       if (info != null) {
          totalSize = info.getCache(containerName).getTotalSize();
       }
-      return new IterationAck(slaveState, results, totalSize);
+      return new IterationAck(slaveState, resultList, totalSize);
    }
 
    @Override
@@ -161,34 +88,29 @@ public class IterateStage extends AbstractDistStage {
       StageResult result = super.processAckOnMaster(acks);
       if (result.isError()) return result;
 
-      Report.Test test = null;
-      if (testName == null || testName.isEmpty()) {
-         log.warn("No test name - results are not recorded");
-      } else if (testName.equalsIgnoreCase("warmup")) {
-         log.info("This test was executed as a warmup");
-      } else {
-         test = masterState.getReport().createTest(testName, iterationProperty, amendTest);
-      }
+      Report.Test test = getTest(true); // test already created in super
       long prevTotalSize = -1;
       long totalMinElements = -1, totalMaxElements = -1;
       Map<Integer, Report.SlaveResult> slaveResults = new HashMap<>();
-      int testIteration = test.getIterations().size();
-      String iterationValue = resolveIterationValue();
-      if (iterationValue != null) {
-         test.setIterationValue(testIteration, iterationValue);
+      if (test != null) {
+         int testIteration = test.getIterations().size();
+         String iterationValue = resolveIterationValue();
+         if (iterationValue != null) {
+            test.setIterationValue(testIteration, iterationValue);
+         }
       }
       for (IterationAck ack : Projections.instancesOf(acks, IterationAck.class)) {
          if (test != null) {
-            test.addStatistics(testIteration, ack.getSlaveIndex(), Projections.project(ack.results, new Projections.Func<StressorResult, Statistics>() {
+            test.addStatistics(testIteration, ack.getSlaveIndex(), Projections.project(ack.results, new Projections.Func<IterationResult, Statistics>() {
                @Override
-               public Statistics project(StressorResult result) {
+               public Statistics project(IterationResult result) {
                   return result.stats;
                }
             }));
          }
          long slaveMinElements = -1, slaveMaxElements = -1;
          for (int i = 0; i < ack.results.size(); ++i) {
-            StressorResult sr = ack.results.get(i);
+            IterationResult sr = ack.results.get(i);
             if (sr.failed) {
                result = failOnFailedIteration ? errorResult() : result;
                log.warnf("Slave %d, stressor %d has failed", ack.getSlaveIndex(), i);
@@ -242,56 +164,198 @@ public class IterateStage extends AbstractDistStage {
       return min == max ? String.valueOf(min) : String.format("%d .. %d", min, max);
    }
 
-   private void terminate(Collection<IteratingStressor> stressors) {
-      for (IteratingStressor stressor : stressors) {
-         stressor.terminate();
-      }
-      try {
-         Thread.sleep(1000);
-      } catch (InterruptedException e) {
-         Thread.currentThread().interrupt();
-         log.warn("Interrupted when terminating threads");
-      }
-      for (IteratingStressor stressor : stressors) {
-         if (stressor.getState() != Thread.State.TERMINATED) {
-            stressor.interrupt();
+   @Override
+   public OperationLogic getLogic() {
+      return new Logic();
+   }
+
+   private class Logic extends OperationLogic {
+      private Iterable.Filter filter;
+      private Iterable.Converter converter;
+      private boolean failed;
+      private long minElements = -1;
+      private long maxElements = -1;
+
+      @Override
+      public void init(Stressor stressor) {
+         super.init(stressor);
+         if (filterClass != null) {
+            filter = Utils.instantiateAndInit(slaveState.getClassLoader(), filterClass, filterParam);
          }
+         if (converterClass != null) {
+            converter = Utils.instantiateAndInit(slaveState.getClassLoader(), converterClass, converterParam);
+         }
+      }
+
+      @Override
+      public Object run() throws RequestException {
+         Iterable.CloseableIterator iterator;
+         try {
+            iterator = (Iterable.CloseableIterator) stressor.makeRequest(new GetIterator(iterable, containerName, filter, converter));
+         } catch (Exception e) {
+            log.error("Failed to retrieve iterator.", e);
+            failed = true;
+            return null;
+         }
+         int nextFailures = 0;
+         long elements = 0;
+         long loopStart = System.nanoTime();
+         Object lastElement = null;
+         while (!failed) {
+            try {
+               if (!(boolean) stressor.makeRequest(new HasNext(iterator))) break;
+            } catch (Exception e) {
+               failed = true;
+               log.error("hasNext() failed", e);
+               break;
+            }
+            try {
+               lastElement = stressor.makeRequest(new Next(iterator));
+               elements++;
+            } catch (Exception e) {
+               log.error("next() failed", e);
+               nextFailures++;
+               if (nextFailures > maxNextFailures) {
+                  failed = true;
+                  break;
+               }
+            }
+         }
+         if (!failed) {
+            if (minElements < 0 || elements < minElements) {
+               minElements = elements;
+            }
+            if (maxElements < 0 || elements > maxElements) {
+               maxElements = elements;
+            }
+         }
+         try {
+            iterator.close();
+         } catch (IOException e) {
+            log.error("Failed to close the iterator", e);
+            failed = true;
+         }
+         stressor.getStats().registerRequest(System.nanoTime() - loopStart, Iterable.FULL_LOOP);
+         return lastElement;
       }
    }
 
-   protected String resolveIterationValue() {
-      if (iterationProperty != null) {
-         Map<String, Path> properties = PropertyHelper.getProperties(getClass(), true, false, true);
-         String propertyString = PropertyHelper.getPropertyString(properties.get(iterationProperty), this);
-         if (propertyString == null) {
-            throw new IllegalStateException("Unable to resolve iteration property '" + iterationProperty + "'.");
-         }
-         return propertyString;
+   protected static class GetIterator implements Invocation {
+      private final Iterable iterable;
+      private final String containerName;
+      private final Iterable.Filter filter;
+      private final Iterable.Converter converter;
+
+      public GetIterator(Iterable iterable, String containerName, Iterable.Filter filter, Iterable.Converter converter) {
+         this.iterable = iterable;
+         this.containerName = containerName;
+         this.filter = filter;
+         this.converter = converter;
       }
-      return null;
+
+      @Override
+      public Object invoke() {
+         if (converter == null) {
+            return iterable.getIterator(containerName, filter);
+         } else {
+            return iterable.getIterator(containerName, filter, converter);
+         }
+      }
+
+      @Override
+      public Operation operation() {
+         return Iterable.GET_ITERATOR;
+      }
+
+      @Override
+      public Operation txOperation() {
+         return Iterable.GET_ITERATOR;
+      }
+   }
+
+   protected static class HasNext implements Invocation {
+      private final Iterator iterator;
+
+      public HasNext(Iterator iterator) {
+         this.iterator = iterator;
+      }
+
+      @Override
+      public Object invoke() {
+         return iterator.hasNext();
+      }
+
+      @Override
+      public Operation operation() {
+         return Iterable.HAS_NEXT;
+      }
+
+      @Override
+      public Operation txOperation() {
+         return Iterable.HAS_NEXT;
+      }
+   }
+
+   protected static class Next implements Invocation {
+      private final Iterator iterator;
+
+      public Next(Iterator iterator) {
+         this.iterator = iterator;
+      }
+
+      @Override
+      public Object invoke() {
+         return iterator.next();
+      }
+
+      @Override
+      public Operation operation() {
+         return Iterable.NEXT;
+      }
+
+      @Override
+      public Operation txOperation() {
+         return Iterable.NEXT;
+      }
    }
 
    private static class IterationAck extends DistStageAck {
-      private List<StressorResult> results;
+      private List<IterationResult> results;
       private long totalSize;
 
-      public IterationAck(SlaveState slaveState, List<StressorResult> results, long totalSize) {
+      public IterationAck(SlaveState slaveState, List<IterationResult> results, long totalSize) {
          super(slaveState);
          this.results = results;
          this.totalSize = totalSize;
       }
    }
 
-   private static class StressorResult implements Serializable {
+   private static class IterationResult implements Serializable {
       private Statistics stats;
       private long minElements, maxElements;
       private boolean failed;
 
-      private StressorResult(Statistics stats, long minElements, long maxElements, boolean failed) {
+      private IterationResult(Statistics stats, long minElements, long maxElements, boolean failed) {
          this.stats = stats;
          this.minElements = minElements;
          this.maxElements = maxElements;
          this.failed = failed;
+      }
+   }
+
+   private class IterationResultRetriever implements ResultRetriever<IterationResult> {
+      @Override
+      public IterationResult getResult(Stressor stressor) {
+         Logic logic = (Logic) stressor.getLogic();
+         return new IterationResult(stressor.getStats(), logic.minElements, logic.maxElements, logic.failed);
+      }
+
+      @Override
+      public void mergeResult(IterationResult into, IterationResult that) {
+         into.stats.merge(that.stats);
+         into.minElements = Math.min(into.minElements, that.minElements);
+         that.maxElements = Math.max(that.maxElements, that.maxElements);
+         into.failed = into.failed || that.failed;
       }
    }
 }
