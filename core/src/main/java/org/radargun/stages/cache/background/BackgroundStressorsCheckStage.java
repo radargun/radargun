@@ -38,7 +38,7 @@ public class BackgroundStressorsCheckStage extends AbstractDistStage {
       return successfulResponse();
    }
 
-   public DistStageAck checkManager(BackgroundOpsManager manager) {
+   private DistStageAck checkManager(BackgroundOpsManager manager) {
       String error = manager.getError();
       if (error != null) {
          return errorResponse("Background stressors " + manager.getName() + ": " + error);
