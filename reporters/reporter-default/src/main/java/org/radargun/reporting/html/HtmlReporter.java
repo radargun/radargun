@@ -41,6 +41,19 @@ public class HtmlReporter implements Reporter {
    public void run(Collection<Report> reports) {
       Set<String> allTests = new LinkedHashSet<>();
       Set<String> combinedTests = new LinkedHashSet<>();
+      Map<String, List<Report.Test>> testsByName = new HashMap<String, List<Report.Test>>();
+
+      resolveCombinedTests(allTests, combinedTests);
+      resolveTestsByName(reports, allTests, combinedTests, testsByName);
+
+      writeIndexDocument(reports, allTests);
+      writeTimelineDocuments(reports);
+      writeTestReportDocuments(combinedTests, testsByName);
+      writeCombinedReportDocuments(testsByName);
+      writeNormalizedConfigDocuments(reports);
+   }
+
+   private void resolveCombinedTests(Set<String> allTests, Set<String> combinedTests) {
       for (List<String> combination : testReportConfig.combinedTests) {
          StringBuilder sb = new StringBuilder();
          for (String testName : combination) {
@@ -50,27 +63,22 @@ public class HtmlReporter implements Reporter {
          }
          allTests.add(sb.toString());
       }
+   }
 
-      Map<String, List<Report.Test>> testsByName = new HashMap<String, List<Report.Test>>();
+   private void resolveTestsByName(Collection<Report> reports, Set<String> allTests, Set<String> combinedTests, Map<String, List<Report.Test>> testsByName) {
       for (Report report : reports) {
-         for(Report.Test t : report.getTests()) {
-            List<Report.Test> list = testsByName.get(t.name);
+         for(Report.Test test : report.getTests()) {
+            List<Report.Test> list = testsByName.get(test.name);
             if (list == null) {
                list = new ArrayList<>();
-               testsByName.put(t.name, list);
+               testsByName.put(test.name, list);
             }
-            list.add(t);
-            if (!combinedTests.contains(t.name)) {
-               allTests.add(t.name);
+            list.add(test);
+            if (!combinedTests.contains(test.name)) {
+               allTests.add(test.name);
             }
          }
       }
-
-      writeIndexDocument(reports, allTests);
-      writeTimelineDocuments(reports);
-      writeTestReportDocuments(combinedTests, testsByName);
-      writeCombinedReportDocuments(testsByName);
-      writeNormalizedConfigDocuments(reports);
    }
 
    private void writeNormalizedConfigDocuments(Collection<Report> reports) {

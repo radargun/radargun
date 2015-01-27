@@ -109,36 +109,6 @@ public class SharedLogValue implements Serializable {
       return false;
    }
 
-   private static class ThreadOperation {
-      public final int threadId;
-      public final long operationId;
-
-      private ThreadOperation(int threadId, long operationId) {
-         this.threadId = threadId;
-         this.operationId = operationId;
-      }
-
-      @Override
-      public boolean equals(Object o) {
-         if (this == o) return true;
-         if (o == null || getClass() != o.getClass()) return false;
-
-         ThreadOperation that = (ThreadOperation) o;
-
-         if (operationId != that.operationId) return false;
-         if (threadId != that.threadId) return false;
-
-         return true;
-      }
-
-      @Override
-      public int hashCode() {
-         int result = threadId;
-         result = 31 * result + (int) (operationId ^ (operationId >>> 32));
-         return result;
-      }
-   }
-
    public int size() {
       return threadIds.length;
    }
@@ -178,5 +148,35 @@ public class SharedLogValue implements Serializable {
          sb.append(threadIds[i]).append('~').append(operationIds[i]).append(", ");
       }
       return sb.append(']').toString();
+   }
+
+   private static class ThreadOperation {
+      public final int threadId;
+      public final long operationId;
+
+      private ThreadOperation(int threadId, long operationId) {
+         this.threadId = threadId;
+         this.operationId = operationId;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+         if (this == o) return true;
+         if (o == null || getClass() != o.getClass()) return false;
+
+         ThreadOperation that = (ThreadOperation) o;
+
+         if (operationId != that.operationId) return false;
+         if (threadId != that.threadId) return false;
+
+         return true;
+      }
+
+      @Override
+      public int hashCode() {
+         int result = threadId;
+         result = 31 * result + (int) (operationId ^ (operationId >>> 32));
+         return result;
+      }
    }
 }
