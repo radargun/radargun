@@ -44,6 +44,7 @@ public abstract class LogChecker extends Thread {
    protected final KeyGenerator keyGenerator;
    protected final int slaveIndex;
    protected final long logCounterUpdatePeriod;
+   protected final boolean ignoreDeadCheckers;
    protected final Pool pool;
    protected final BasicOperations.Cache basicCache;
    protected final Debugable.Cache debugableCache;
@@ -54,6 +55,7 @@ public abstract class LogChecker extends Thread {
       keyGenerator = manager.getKeyGenerator();
       slaveIndex = manager.getSlaveState().getIndexInGroup();
       logCounterUpdatePeriod = manager.getLogLogicConfiguration().getCounterUpdatePeriod();
+      ignoreDeadCheckers = manager.getLogLogicConfiguration().isIgnoreDeadCheckers();
       pool = logCheckerPool;
       this.basicCache = manager.getBasicCache();
       this.debugableCache = manager.getDebugableCache();
@@ -103,11 +105,13 @@ public abstract class LogChecker extends Thread {
                   LastOperation lastCheck = (LastOperation) last;
                   record = newRecord(record, lastCheck.getOperationId(), lastCheck.getSeed());
                }
-               Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
-               if (ignored != null && record.getOperationId() <= (Long) ignored) {
-                  log.debugf("Ignoring operations %d - %d for thread %d", record.getOperationId(), ignored, record.getThreadId());
-                  while (record.getOperationId() <= (Long) ignored) {
-                     record.next();
+               if (ignoreDeadCheckers) {
+                  Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
+                  if (ignored != null && record.getOperationId() <= (Long) ignored) {
+                     log.debugf("Ignoring operations %d - %d for thread %d", record.getOperationId(), ignored, record.getThreadId());
+                     while (record.getOperationId() <= (Long) ignored) {
+                        record.next();
+                     }
                   }
                }
                if (record.getOperationId() != 0) {
@@ -136,13 +140,15 @@ public abstract class LogChecker extends Thread {
             } else {
                if (record.getLastStressorOperation() >= record.getOperationId()) {
                   // one more check to see whether some operations should not be ignored
-                  Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
-                  if (ignored != null && record.getOperationId() <= (Long) ignored) {
-                     log.debugf("Operations %d - %d for thread %d are ignored.", record.getOperationId(), ignored, record.threadId);
-                     while (record.getOperationId() <= (Long) ignored) {
-                        record.next();
+                  if (ignoreDeadCheckers) {
+                     Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
+                     if (ignored != null && record.getOperationId() <= (Long) ignored) {
+                        log.debugf("Operations %d - %d for thread %d are ignored.", record.getOperationId(), ignored, record.threadId);
+                        while (record.getOperationId() <= (Long) ignored) {
+                           record.next();
+                        }
+                        continue;
                      }
-                     continue;
                   }
 
                   if (!notification) {
