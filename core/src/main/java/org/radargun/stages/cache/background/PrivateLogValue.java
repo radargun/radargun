@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /**
- * Log value that is written by single stressor - keeps his ID.
+ * Log value that is written by single stressor - keeps its ID.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

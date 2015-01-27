@@ -587,6 +587,26 @@ public class BackgroundOpsManager implements ServiceListener {
       return name;
    }
 
+   public void setLoaded(boolean loaded) {
+      this.loaded = loaded;
+   }
+
+   public SlaveState getSlaveState() {
+      return slaveState;
+   }
+
+   public GeneralConfiguration getGeneralConfiguration() {
+      return generalConfiguration;
+   }
+
+   public LegacyLogicConfiguration getLegacyLogicConfiguration() {
+      return legacyLogicConfiguration;
+   }
+
+   public LogLogicConfiguration getLogLogicConfiguration() {
+      return logLogicConfiguration;
+   }
+
    private class KeepAliveTask implements Runnable {
       @Override
       public void run() {
@@ -650,10 +670,10 @@ public class BackgroundOpsManager implements ServiceListener {
    }
 
    /**
-    * 
+    *
     * Used for fetching cache size. If the size can't be fetched during one stat iteration, value 0
     * will be used.
-    * 
+    *
     */
    private class SizeThread extends Thread {
       private boolean getSize = true;
@@ -687,26 +707,6 @@ public class BackgroundOpsManager implements ServiceListener {
          notify();
          return rSize;
       }
-   }
-
-   public void setLoaded(boolean loaded) {
-      this.loaded = loaded;
-   }
-
-   public SlaveState getSlaveState() {
-      return slaveState;
-   }
-
-   public GeneralConfiguration getGeneralConfiguration() {
-      return generalConfiguration;
-   }
-
-   public LegacyLogicConfiguration getLegacyLogicConfiguration() {
-      return legacyLogicConfiguration;
-   }
-
-   public LogLogicConfiguration getLogLogicConfiguration() {
-      return logLogicConfiguration;
    }
 
    public static class IterationStats implements Serializable {

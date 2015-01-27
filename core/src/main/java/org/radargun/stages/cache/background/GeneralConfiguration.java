@@ -18,7 +18,7 @@ public class GeneralConfiguration {
    @Property(doc = "Ratio of REMOVE requests. Default is 0.")
    protected int removes = 0;
 
-   @Property(doc = "Amount of entries (key-value pairs) inserted into the cache. Default is 1024.")
+   @Property(doc = "Number of entries (key-value pairs) inserted into the cache. Default is 1024.")
    protected long numEntries = 1024;
 
    @Property(doc = "First key ID used for key generation. Default is 0.")
@@ -27,7 +27,7 @@ public class GeneralConfiguration {
    @Property(doc = "Number of stressor threads. Default is 10.")
    protected int numThreads = 10;
 
-   @Property(doc = "Amount of request wrapped into single transaction. By default transactions are not used (explicitely).")
+   @Property(doc = "Number of requests wrapped into single transaction. By default transactions are not used (explicitly).")
    protected int transactionSize = -1;
 
    @Property(converter = TimeConverter.class, doc = "Time between consecutive requests of one stressor thread. Default is 0.")
