@@ -29,7 +29,7 @@ public class PrivateLogChecker extends LogChecker {
       for (int i = 0; i < 100; ++i) {
          value = basicCache.get(keyGenerator.generateKey(keyId));
          if (value == null) {
-            if (keyId < 0 && record.getLastStressorOperation() < record.getOperationId()) {
+            if (keyId < 0 && record.getCurrentConfirmationTimestamp() < 0) {
                // do not poll it 100x when we're not sure that the operation is written, try just twice
                break;
             }
@@ -120,7 +120,7 @@ public class PrivateLogChecker extends LogChecker {
       @Override
       public void next() {
          currentKeyId = keyRangeStart + (rand.nextLong() & Long.MAX_VALUE) % keyRangeSize;
-         discardNotification(currentOp++);
+         checkFinished(currentOp++);
       }
    }
 

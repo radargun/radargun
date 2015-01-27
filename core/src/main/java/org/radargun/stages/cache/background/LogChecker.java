@@ -1,12 +1,9 @@
 package org.radargun.stages.cache.background;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReferenceArray;
@@ -41,10 +38,17 @@ public abstract class LogChecker extends Thread {
    protected static final boolean trace = log.isTraceEnabled();
    protected static final long UNSUCCESSFUL_CHECK_MIN_DELAY_MS = 10;
    protected static final String LAST_OPERATION_PREFIX = "stressor_";
+   protected static final ThreadLocal<DateFormat> formatter = new ThreadLocal<DateFormat>() {
+      @Override
+      protected DateFormat initialValue() {
+         return new SimpleDateFormat("HH:mm:ss,S");
+      }
+   };
    protected final KeyGenerator keyGenerator;
    protected final int slaveIndex;
    protected final long logCounterUpdatePeriod;
    protected final boolean ignoreDeadCheckers;
+   protected final long writeApplyMaxDelay;
    protected final Pool pool;
    protected final BasicOperations.Cache basicCache;
    protected final Debugable.Cache debugableCache;
@@ -56,6 +60,7 @@ public abstract class LogChecker extends Thread {
       slaveIndex = manager.getSlaveState().getIndexInGroup();
       logCounterUpdatePeriod = manager.getLogLogicConfiguration().getCounterUpdatePeriod();
       ignoreDeadCheckers = manager.getLogLogicConfiguration().isIgnoreDeadCheckers();
+      writeApplyMaxDelay = manager.getLogLogicConfiguration().getWriteApplyMaxDelay();
       pool = logCheckerPool;
       this.basicCache = manager.getBasicCache();
       this.debugableCache = manager.getDebugableCache();
@@ -96,7 +101,8 @@ public abstract class LogChecker extends Thread {
                // the last check was unsuccessful -> grab lastOperation BEFORE the value to check if we've lost that
                Object last = basicCache.get(lastOperationKey(record.getThreadId()));
                if (last != null) {
-                  record.setLastStressorOperation(((LastOperation) last).getOperationId());
+                  LastOperation lastOperation = (LastOperation) last;
+                  record.addConfirmation(lastOperation.getOperationId(), lastOperation.getTimestamp());
                }
             }
             if (record.getOperationId() == 0) {
@@ -138,7 +144,12 @@ public abstract class LogChecker extends Thread {
                record.setLastUnsuccessfulCheckTimestamp(Long.MIN_VALUE);
                record.setLastSuccessfulCheckTimestamp(System.currentTimeMillis());
             } else {
-               if (record.getLastStressorOperation() >= record.getOperationId()) {
+               long confirmationTimestamp = record.getCurrentConfirmationTimestamp();
+               if (confirmationTimestamp >= 0) {
+                  log.debug("Detected stale read");
+               }
+               if (confirmationTimestamp >= 0
+                     && (writeApplyMaxDelay <= 0 || System.currentTimeMillis() > confirmationTimestamp + writeApplyMaxDelay)) {
                   // one more check to see whether some operations should not be ignored
                   if (ignoreDeadCheckers) {
                      Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
@@ -282,7 +293,7 @@ public abstract class LogChecker extends Thread {
                if (lastOperation == null) {
                   log.trace("Thread " + record.getThreadId() + " has no recorded operation.");
                } else {
-                  record.setLastStressorOperation(lastOperation.getOperationId());
+                  record.addConfirmation(lastOperation.getOperationId(), lastOperation.getTimestamp());
                }
             } catch (Exception e) {
                log.error("Failed to read last operation key for thread " + record.getThreadId(), e);
@@ -294,7 +305,8 @@ public abstract class LogChecker extends Thread {
             for (int i = 0; i < totalThreads; ++i) {
                AbstractStressorRecord record = allRecords.get(i);
                if (record == null) continue;
-               if (record.getOperationId() <= record.getLastStressorOperation()) {
+               long confirmationTimestamp = record.getCurrentConfirmationTimestamp();
+               if (confirmationTimestamp > 0) {
                   if (log.isTraceEnabled()) {
                      log.trace(record.getStatus());
                   }
@@ -315,7 +327,7 @@ public abstract class LogChecker extends Thread {
                   if (record == null) continue;
                   sb.append(record.getThreadId()).append("# ")
                         .append(record.getOperationId()).append(" (")
-                        .append(record.getLastStressorOperation()).append("), ");
+                        .append(record.getLastConfirmedOperationId()).append("), ");
                }
                log.debug(sb.toString());
                return null;
@@ -349,12 +361,14 @@ public abstract class LogChecker extends Thread {
    }
 
    public static class LastOperation implements Serializable {
-      private long operationId;
-      private long seed;
+      private final long operationId;
+      private final long seed;
+      private final long timestamp;
 
       public LastOperation(long operationId, long seed) {
          this.operationId = operationId;
          this.seed = seed;
+         this.timestamp = System.currentTimeMillis();
       }
 
       public long getOperationId() {
@@ -365,9 +379,14 @@ public abstract class LogChecker extends Thread {
          return seed;
       }
 
+      public long getTimestamp() {
+         return timestamp;
+      }
+
       @Override
       public String toString() {
-         return String.format("LastOperation{operationId=%d, seed=%016X}", operationId, seed);
+         return String.format("LastOperation{operationId=%d, seed=%016X, timestamp=%s}", operationId, seed,
+               formatter.get().format(new Date(timestamp)));
       }
    }
 
@@ -376,12 +395,22 @@ public abstract class LogChecker extends Thread {
       long getLastSuccessfulCheckTimestamp();
    }
 
+   protected static class StressorConfirmation {
+      public final long operationId;
+      public final long timestamp;
+
+      public StressorConfirmation(long operationId, long timestamp) {
+         this.operationId = operationId;
+         this.timestamp = timestamp;
+      }
+   }
+
    protected abstract static class AbstractStressorRecord implements StressorRecord {
       protected final Random rand;
       protected final int threadId;
       protected long currentKeyId;
       protected volatile long currentOp = -1;
-      private long lastStressorOperation = -1;
+      protected final List<StressorConfirmation> confirmations = new LinkedList<>();
       private long lastUnsuccessfulCheckTimestamp = Long.MIN_VALUE;
       private long lastSuccessfulCheckTimestamp = System.currentTimeMillis();
       private Set<Long> notifiedOps = new HashSet<Long>();
@@ -402,21 +431,18 @@ public abstract class LogChecker extends Thread {
 
       public String getStatus() {
          return String.format("thread=%d, lastStressorOperation=%d, currentOp=%d, currentKeyId=%08X, notifiedOps=%s, requireNotify=%d",
-               threadId, lastStressorOperation, currentOp, currentKeyId, notifiedOps, requireNotify);
+               threadId, getLastConfirmedOperationId(),
+               currentOp, currentKeyId, notifiedOps, requireNotify);
+      }
+
+      public Object getLastConfirmedOperationId() {
+         return confirmations.isEmpty() ? -1 : confirmations.get(confirmations.size() - 1);
       }
 
       public abstract void next();
 
       public int getThreadId() {
          return threadId;
-      }
-
-      public long getLastStressorOperation() {
-         return lastStressorOperation;
-      }
-
-      public void setLastStressorOperation(long lastStressorOperation) {
-         this.lastStressorOperation = lastStressorOperation;
       }
 
       public long getLastUnsuccessfulCheckTimestamp() {
@@ -441,11 +467,19 @@ public abstract class LogChecker extends Thread {
          }
       }
 
-      public synchronized void discardNotification(long operationId) {
-         notifiedOps.remove(operationId);
-         // temporary:
-         for (long op : notifiedOps) {
-            if (op < operationId) log.error("Old operation " + op + " in " + notifiedOps);
+      public void checkFinished(long operationId) {
+         // remove old confirmations
+         Iterator<StressorConfirmation> iterator = confirmations.iterator();
+         while (iterator.hasNext()) {
+            StressorConfirmation confirmation = iterator.next();
+            if (confirmation.operationId > operationId) {
+               break;
+            }
+            iterator.remove();
+         }
+         // remove old notifications
+         synchronized (this) {
+            notifiedOps.remove(operationId);
          }
       }
 
@@ -467,6 +501,40 @@ public abstract class LogChecker extends Thread {
       @Override
       public long getLastSuccessfulCheckTimestamp() {
          return lastSuccessfulCheckTimestamp;
+      }
+
+      public void addConfirmation(long operationId, long timestamp) {
+         try {
+            ListIterator<StressorConfirmation> iterator = confirmations.listIterator(confirmations.size());
+            if (trace) {
+               log.tracef("Confirmations for thread %d were %s", threadId, confirmations);
+            }
+            while (iterator.hasPrevious()) {
+               StressorConfirmation confirmation = iterator.previous();
+               if (confirmation.operationId < operationId) {
+                  confirmations.add(iterator.nextIndex(), new StressorConfirmation(operationId, timestamp));
+                  return;
+               } else if (confirmation.operationId == operationId) {
+                  return;
+               }
+            }
+         } finally {
+            if (trace) {
+               log.tracef("Confirmations for thread %d are %s", threadId, confirmations);
+            }
+         }
+      }
+
+      /**
+       * @return Epoch time (ms) timestamp or negative value if not confirmed yet.
+       */
+      public long getCurrentConfirmationTimestamp() {
+         for (StressorConfirmation confirmation : confirmations) {
+            if (confirmation.operationId > currentOp) {
+               return confirmation.timestamp;
+            }
+         }
+         return -1;
       }
    }
 }

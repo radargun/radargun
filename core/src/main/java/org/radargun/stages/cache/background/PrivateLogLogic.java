@@ -1,7 +1,12 @@
 package org.radargun.stages.cache.background;
 
-import org.radargun.stages.helpers.Range;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.radargun.Operation;
+import org.radargun.stages.helpers.Range;
 import org.radargun.traits.BasicOperations;
 
 /**
@@ -14,6 +19,20 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
 
    private final long keyRangeStart;
    private final long keyRangeEnd;
+   // Timestamps of the last writes into given values. As we can get stale read for some period,
+   // we cannot overwrite the value again until we can be sure that we can safely read current
+   // value of that entry. We have to keep the timestamps here, as we cannot reliably determine
+   // the last write timestamp from cache (because any value read could be stale).
+   // However, we still can't wait the timeout when we decide to overwrite an entry -
+   // due to the birthday paradox, this happens very often. We have to find out ourselves whether
+   // the read was stale or not.
+   // Note that this does not cause any problems with SharedLogLogic since all updates there are
+   // conditional; if stale value is read, the conditional operation will fail (stale read must
+   // not happen during the condition verification).
+   private final Map<Long, OperationTimestampPair> timestamps = new HashMap<>();
+   // Keys modified during current transaction, should be recorded to timestamps when
+   // the transaction is committed
+   private final Collection<KeyOperationPair> txModifications = new ArrayList<>(Math.max(0, transactionSize));
 
    PrivateLogLogic(BackgroundOpsManager manager, long threadId, Range range) {
       super(manager, threadId);
@@ -31,17 +50,34 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    protected boolean invokeLogic(long keyId) throws Exception {
       Operation operation = manager.getOperation(operationTypeRandom);
 
+      OperationTimestampPair prevOperation = timestamps.get(keyId);
       // first we have to get the value
       PrivateLogValue prevValue = checkedGetValue(keyId);
+      PrivateLogValue backupValue = null;
+      if (prevOperation != null) {
+         if (prevValue == null || !prevValue.contains(prevOperation.operationId)) {
+            // non-cleaned old value or stale read, try backup
+            backupValue = checkedGetValue(~keyId);
+            if (backupValue == null || !backupValue.contains(prevOperation.operationId)) {
+               // definitely stale read
+               waitForStaleRead(prevOperation.timestamp);
+               return false;
+            } else {
+               // pretend that we haven't read it at all
+               prevValue = null;
+            }
+         }
+      }
       // now for modify operations, execute it
       if (prevValue == null || operation == BasicOperations.PUT) {
          PrivateLogValue nextValue;
-         PrivateLogValue backupValue = null;
          if (prevValue != null) {
             nextValue = getNextValue(prevValue);
          } else {
             // the value may have been removed, look for backup
-            backupValue = checkedGetValue(~keyId);
+            if (backupValue == null) {
+               backupValue = checkedGetValue(~keyId);
+            }
             if (backupValue == null) {
                nextValue = new PrivateLogValue(stressor.id, operationId);
             } else {
@@ -67,7 +103,45 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
          // - each operationId must be written somewhere
          throw new UnsupportedOperationException("Only PUT and REMOVE operations are allowed for this logic.");
       }
+
+      if (transactionSize > 0) {
+         txModifications.add(new KeyOperationPair(keyId, operationId));
+      } else {
+         long now = System.currentTimeMillis();
+         timestamps.put(keyId, new OperationTimestampPair(operationId, now));
+         log.tracef("Operation %d on %08X finished at %d", operationId, keyId, now);
+      }
       return true;
+   }
+
+   private void waitForStaleRead(long lastWriteTimestamp) throws InterruptedException {
+      long writeApplyMaxDelay = manager.getLogLogicConfiguration().writeApplyMaxDelay;
+      if (writeApplyMaxDelay > 0) {
+         long now = System.currentTimeMillis();
+         if (lastWriteTimestamp > now - writeApplyMaxDelay){
+            log.debugf("Last write of %08X was at %d, waiting 5 seconds to evade stale reads", keyId);
+            Thread.sleep(5000);
+         }
+      } else {
+         throw new RuntimeException("Stale reads are not allowed in this configuration");
+      }
+   }
+
+   @Override
+   protected void afterRollback() {
+      super.afterRollback();
+      txModifications.clear();
+   }
+
+   @Override
+   protected void afterCommit() {
+      super.afterCommit();
+      long now = System.currentTimeMillis();
+      for (KeyOperationPair pair : txModifications) {
+         timestamps.put(pair.keyId, new OperationTimestampPair(pair.operationId, now));
+         log.tracef("Operation %d on %08X finished at %d", pair.operationId, pair.keyId, now);
+      }
+      txModifications.clear();
    }
 
    private PrivateLogValue getNextValue(PrivateLogValue prevValue) throws InterruptedException, BreakTxRequest {
@@ -173,6 +247,26 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       }
       long endTime = System.nanoTime();
       stressor.stats.registerRequest(endTime - startTime, BasicOperations.PUT);
+   }
+
+   protected static class OperationTimestampPair {
+      public final long operationId;
+      public final long timestamp;
+
+      public OperationTimestampPair(long operationId, long timestamp) {
+         this.operationId = operationId;
+         this.timestamp = timestamp;
+      }
+   }
+
+   protected static class KeyOperationPair {
+      public final long keyId;
+      public final long operationId;
+
+      public KeyOperationPair(long keyId, long operationId) {
+         this.keyId = keyId;
+         this.operationId = operationId;
+      }
    }
 
 }

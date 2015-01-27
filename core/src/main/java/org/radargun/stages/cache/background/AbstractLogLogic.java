@@ -211,11 +211,11 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
       }
    }
 
-   private void afterRollback() {
+   protected void afterRollback() {
       delayedRemoves.clear();
    }
 
-   private void afterCommit() {
+   protected void afterCommit() {
       boolean inTransaction = false;
       try {
          while (!stressor.isTerminated()) {
