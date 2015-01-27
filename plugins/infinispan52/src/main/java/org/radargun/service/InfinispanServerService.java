@@ -63,18 +63,28 @@ public class InfinispanServerService extends JavaProcessService {
    @Property(doc = "Start thread periodically dumping JGroups JMX data. Default is false.")
    protected boolean jgroupsDumperEnabled = false;
 
+   @Property(doc = "Period in which should be JGroups JMX data dumped. Default is 10 seconds.", converter = TimeConverter.class)
+   protected long jgroupsDumpPeriod = 10000;
+
    @Property(doc = "Period for checking current membership. Default is 10 seconds.", converter = TimeConverter.class)
    protected long viewCheckPeriod = 10000;
 
-   protected ScheduledExecutorService executor = new ScheduledThreadPoolExecutor(1);
+   @Property(doc = "Number of threads in scheduled tasks pool. Default is 2.")
+   protected int executorPoolSize = 2;
 
-   protected InfinispanServerLifecycle lifecycle = new InfinispanServerLifecycle(this);
-   protected InfinispanServerClustered clustered = new InfinispanServerClustered(this);
+   protected ScheduledExecutorService executor;
+
+   protected InfinispanServerLifecycle lifecycle;
+   protected InfinispanServerClustered clustered;
 
    protected volatile MBeanServerConnection connection;
 
    @Init
    public void init() {
+      executor = new ScheduledThreadPoolExecutor(executorPoolSize);
+      lifecycle = new InfinispanServerLifecycle(this);
+      clustered = new InfinispanServerClustered(this);
+
       try {
          URL resource = getClass().getResource("/" + file);
          Path filesystemFile = FileSystems.getDefault().getPath(file);
@@ -119,7 +129,7 @@ public class InfinispanServerService extends JavaProcessService {
          }
       });
       if (jgroupsDumperEnabled) {
-         new ServerJGroupsDumper(this).start();
+         schedule(new ServerJGroupsDumper(this), jgroupsDumpPeriod);
       }
    }
 

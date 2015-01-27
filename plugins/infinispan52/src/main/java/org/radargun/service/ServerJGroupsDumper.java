@@ -15,11 +15,11 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
 /**
- * // TODO: Document this
+ * Dumps JGroups information retrieved through JMX to log. Use for debug purposes only.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class ServerJGroupsDumper extends Thread {
+public class ServerJGroupsDumper implements Runnable {
    protected static final String CLUSTER_NAME = "cluster_name";
    protected static final Log log = LogFactory.getLog(ServerJGroupsDumper.class);
    protected static final String NAME = "name";
@@ -28,27 +28,17 @@ public class ServerJGroupsDumper extends Thread {
    private Map<ObjectName, String[]> attributeNameMap = new HashMap<>();
 
    public ServerJGroupsDumper(InfinispanServerService service) {
-      super("JGroupsDumper");
-      setDaemon(true);
       this.service = service;
    }
 
    @Override
    public void run() {
-      while (!Thread.interrupted()) {
-         MBeanServerConnection connection = service.connection;
-         if (connection != null) {
-            try {
-               dumpJGroups(connection);
-            } catch (Exception e) {
-               log.error("Failed to read JMX data", e);
-            }
-         }
+      MBeanServerConnection connection = service.connection;
+      if (connection != null) {
          try {
-            Thread.sleep(10000);
-         } catch (InterruptedException e) {
-            log.error("JGroupsDumper interrutped!", e);
-            break;
+            dumpJGroups(connection);
+         } catch (Exception e) {
+            log.error("Failed to read JMX data", e);
          }
       }
    }
