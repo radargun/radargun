@@ -19,5 +19,5 @@ public @interface PropertyDelegate {
     * Properties prefixed with this prefix will be delegated to the target object,
     * the prefix will be stripped out.
     */
-   String prefix();
+   String prefix() default "";
 }

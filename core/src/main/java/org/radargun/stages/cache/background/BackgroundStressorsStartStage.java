@@ -20,7 +20,7 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
    @Property(doc = "Name of the background operations. Default is '" + BackgroundOpsManager.DEFAULT + "'.")
    protected String name = BackgroundOpsManager.DEFAULT;
 
-   @PropertyDelegate(prefix = "")
+   @PropertyDelegate
    protected GeneralConfiguration generalConfiguration = new GeneralConfiguration();
 
    @PropertyDelegate(prefix = "legacy.")
