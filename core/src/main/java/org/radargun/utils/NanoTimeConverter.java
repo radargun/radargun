@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 import org.radargun.config.Converter;
 
 /**
- * // TODO: Document this
+ * Converts string in format number (ns|us|ms|s|m) into number of nanoseconds.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

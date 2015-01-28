@@ -4,7 +4,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
 /**
- * // TODO: Document this
+ * Used to exit the whole process and log crashes.
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
