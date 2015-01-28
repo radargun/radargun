@@ -5,7 +5,7 @@ import org.infinispan.query.SearchManager;
 import org.infinispan.query.dsl.QueryFactory;
 
 /**
- * // TODO: Document this
+ * Queryable implementation for embedded mode.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

@@ -1,7 +1,8 @@
 package org.radargun.sysmonitor;
 
 /**
- * // TODO: Document this
+ * The monitoring task, that should be {@link #start() started}, {@link #stop() stopped}
+ * and invoked through {@link #run()}.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
