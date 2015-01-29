@@ -17,10 +17,12 @@ SLAVES=""
 DEBUG=""
 SLAVE_COUNT=0
 TAILF=false
+WAITF=false
 EXTRA_JAVA_OPTS=""
 PLUGIN_PATHS=""
 PLUGIN_CONFIGS=""
 REPORTER_PATHS=""
+OUT_DIR=""
 
 help_and_exit() {
   wrappedecho "Usage: "
@@ -51,6 +53,10 @@ help_and_exit() {
   wrappedecho "   --add-config    Path to config file for specified plugin. Specified as pluginName:/path/config.xml. Can be specified multiple times."
   wrappedecho ""
   wrappedecho "   --add-reporter  Path to custom reporter directory. Can be specified multiple times."
+  wrappedecho ""
+  wrappedecho "   --wait          Wait until the master process finishes."
+  wrappedecho ""
+  wrappedecho "   -o              Output directory. The logs will then be master.log and slave_/hostname/.log in this directory."
   wrappedecho ""
   wrappedecho "   -h              Displays this help screen"
   wrappedecho ""
@@ -110,6 +116,13 @@ do
       EXTRA_JAVA_OPTS="$EXTRA_JAVA_OPTS -J $2"
       shift
       ;;
+    "--wait")
+      WAITF="true"
+      ;;
+    "-o")
+      OUT_DIR=$2
+      shift
+      ;;
     *)
       if [ ${1:0:1} = "-" ] ; then
         echo "Warning: unknown argument ${1}" 
@@ -132,10 +145,14 @@ fi
 
 ####### first start the master
 DEBUG_CMD=""
-if [ "x$DEBUG" != "x" ]; then
+if [ ! -z $DEBUG ]; then
    DEBUG_CMD="-d localhost:$DEBUG"
 fi
-${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD} $EXTRA_JAVA_OPTS ${REPORTER_PATHS}
+if [ ! -z $OUT_DIR ]; then
+   OUT_CMD="-o $OUT_DIR/master.log"
+fi
+${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD} ${OUT_CMD} ${EXTRA_JAVA_OPTS} ${REPORTER_PATHS} -w &
+MASTER_SH_PID=$!
 #### Sleep for a few seconds so master can open its port
 
 ####### then start the rest of the nodes
@@ -144,8 +161,11 @@ INDEX=0
 for slave in $SLAVES; do
   CMD="source ~/.bash_profile ; cd $WORKING_DIR"
   CMD="$CMD ; ${RADARGUN_HOME}/bin/slave.sh -m ${MASTER} -n $slave -i $INDEX $EXTRA_JAVA_OPTS ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
-  if [ "x$DEBUG" != "x" ]; then
+  if [ ! -z $DEBUG ]; then
      CMD="$CMD -d $slave:$DEBUG"
+  fi
+  if [ ! -z $OUT_DIR ]; then
+     CMD="$CMD -o $OUT_DIR/slave_${slave}.log"
   fi
   let INDEX=INDEX+1
 
@@ -160,8 +180,11 @@ for slave in $SLAVES; do
   eval $TOEXEC
 done
 
-if [ $TAILF == "true" ]
-then
+if [ $TAILF == "true" ]; then
   tail -f radargun.log --pid `cat master.pid`
+fi
+if [ $WAITF == "true" ]; then
+  wait $MASTER_SH_PID
+  exit $?
 fi
 

@@ -1,5 +1,6 @@
 package org.radargun.config;
 
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
@@ -9,6 +10,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.radargun.Properties;
+import org.radargun.ShutDownHook;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.ReporterHelper;
@@ -414,6 +416,40 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       }
       for (Class<? extends org.radargun.Stage> stage : stagesAfter) {
          scenario.addStage(stage, properties, labelName);
+      }
+   }
+
+   /**
+    * Parses
+    *
+    * @param args
+    */
+   public static void main(String[] args) {
+      if (args.length < 2) {
+         System.err.println("Usage: DomConfigParser config-file method");
+         ShutDownHook.exit(1);
+      }
+      MasterConfig config = null;
+      try {
+         config = getConfigParser().parseConfig(args[0]);
+      } catch (Exception e) {
+         System.err.printf("Failed to load config '%s'%n", args[0]);
+         ShutDownHook.exit(1);
+      }
+      Method method = null;
+      try {
+         method = config.getClass().getMethod(args[1]);
+      } catch (NoSuchMethodException e) {
+         System.err.printf("No method '%s.%s()'%n", config.getClass().getName(), args[1]);
+         ShutDownHook.exit(1);
+      }
+      try {
+         Object result = method.invoke(config);
+         System.out.println(String.valueOf(result));
+      } catch (Exception e) {
+         System.err.println("Failed to invoke method " + method);
+         e.printStackTrace(System.err);
+         ShutDownHook.exit(1);
       }
    }
 }

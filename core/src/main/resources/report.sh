@@ -75,6 +75,6 @@ if [ "x${DEBUG}" != "x" ]; then
   JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG}"
 fi
 
-RUN_CMD="${JAVA} ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.radargun.reporting.serialized.SerializedReporter $CONFIG $SERIALIZED_DIR ${REPORTER_PATHS}"
+RUN_CMD="${JAVA} ${JVM_OPTS} -classpath $CP org.radargun.reporting.serialized.SerializedReporter $CONFIG $SERIALIZED_DIR ${REPORTER_PATHS}"
 echo ${RUN_CMD}
 ${RUN_CMD}

@@ -1,3 +1,4 @@
+#!/bin/sh
 ### Util functions for all of the shell scripts
 #
 # NOTE that this *needs* to be loaded via the following snippet:
