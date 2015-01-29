@@ -2,7 +2,9 @@ package org.radargun.config;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Comntains master's configuration elements.
@@ -76,5 +78,16 @@ public class MasterConfig {
 
    public List<ReporterConfiguration> getReporters() {
       return Collections.unmodifiableList(reporters);
+   }
+
+   // this method is used from tests.sh
+   public Set<String> getPlugins() {
+      Set<String> plugins = new HashSet<>();
+      for (Configuration configuration : configurations) {
+         for (Configuration.Setup setup : configuration.getSetups()) {
+            plugins.add(setup.plugin);
+         }
+      }
+      return plugins;
    }
 }

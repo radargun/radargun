@@ -183,5 +183,8 @@ fi
 if [ $WAIT == "true" ]
 then
   wait $RADARGUN_MASTER_PID
+  EXIT_VALUE=$?
+  echo "Master $RADARGUN_MASTER_PID finished with value $EXIT_VALUE"
+  exit $EXIT_VALUE
 fi
 
