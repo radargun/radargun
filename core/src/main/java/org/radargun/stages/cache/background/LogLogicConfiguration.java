@@ -21,9 +21,10 @@ public class LogLogicConfiguration {
    @Property(doc = "Number of operations after which will the stressor or checker update in-cache operation counter. Default is 50.")
    protected long counterUpdatePeriod = 50;
 
-   @Property(doc = "Maximum time for which are the log value checkers allowed to show no new checked values " +
-         "(error is thrown in CheckBackgroundStressors stage). Default is one minute.", converter = TimeConverter.class)
-   protected long checkersNoProgressTimeout = 120000;
+   @Property(doc = "Maximum time for which are the log value checkers allowed to show no new checked values, " +
+         "when waiting for checks to complete or stressors to confirm new progress. Default is 10 minutes.",
+         converter = TimeConverter.class, deprecatedName = "checkersNoProgressTimeout")
+   protected long noProgressTimeout = 600000;
 
    @Property(doc = "When the log value is full, the stressor needs to wait until all checkers confirm that " +
          "the records have been checked before discarding oldest records. With ignoreDeadCheckers=true " +
@@ -53,8 +54,8 @@ public class LogLogicConfiguration {
       return counterUpdatePeriod;
    }
 
-   public long getCheckersNoProgressTimeout() {
-      return checkersNoProgressTimeout;
+   public long getNoProgressTimeout() {
+      return noProgressTimeout;
    }
 
    public boolean isIgnoreDeadCheckers() {

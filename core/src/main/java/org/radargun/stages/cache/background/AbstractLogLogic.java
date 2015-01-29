@@ -48,6 +48,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
    private volatile long lastSuccessfulOpTimestamp;
    private volatile long lastSuccessfulTxTimestamp;
    private int remainingTxOps;
+   private volatile long lastConfirmedOperation = -1;
 
    public AbstractLogLogic(BackgroundOpsManager manager, long stressorId) {
       super(manager);
@@ -135,6 +136,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          // for non-transactional caches write the stressor last operation anytime (once in a while)
          if (transactionSize <= 0 && operationId % manager.getLogLogicConfiguration().getCounterUpdatePeriod() == 0) {
             writeStressorLastOperation();
+            lastConfirmedOperation = operationId;
          }
 
          if (transactionSize > 0) {
@@ -176,6 +178,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                   startTransaction();
                   writeStressorLastOperation();
                   ongoingTx.commit();
+                  lastConfirmedOperation = operationId;
                } catch (Exception e) {
                   log.error("Cannot write stressor last operation", e);
                } finally {
@@ -324,6 +327,10 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          }
       }
       return minReadOperationId;
+   }
+
+   public long getLastConfirmedOperation() {
+      return lastConfirmedOperation;
    }
 
    protected class DelayedRemove {
