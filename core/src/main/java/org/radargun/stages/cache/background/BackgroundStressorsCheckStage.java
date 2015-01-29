@@ -13,11 +13,14 @@ public class BackgroundStressorsCheckStage extends AbstractDistStage {
    @Property(doc = "Name of the background operations. By default, all instances are checked.")
    protected String name = null;
 
-   @Property(doc = "Do not write additional operations until all operations are confirmed. Default is false.")
+   @Property(doc = "Stops stressors and waits until all confirmed operations are checked. Default is false.")
    private boolean waitUntilChecked = false;
 
-   @Property(doc = "Resume writers after we have stopped them in order to let checkers check everything. Default is false.")
+   @Property(doc = "Resume stressors after we have stopped them in order to let checkers check everything. Default is false.")
    private boolean resumeAfterChecked = false;
+
+   @Property(doc = "Waits until all stressors record new progress, or timeout (no-progress-timeout) elapses. Default is false.")
+   private boolean waitForProgress = false;
 
    @Override
    public DistStageAck executeOnSlave() {
@@ -48,6 +51,15 @@ public class BackgroundStressorsCheckStage extends AbstractDistStage {
       }
       if (!isServiceRunning()) {
          return successfulResponse();
+      }
+      if (waitForProgress) {
+         if (!manager.waitForProgress()) {
+            return errorResponse("Background stressors have not completed any progress within timeout.");
+         }
+         error = manager.getError(); // checking once more does not hurt
+         if (error != null) {
+            return errorResponse("Background stressors " + manager.getName() + ": " + error);
+         }
       }
       if (waitUntilChecked) {
          error = manager.waitUntilChecked();

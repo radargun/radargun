@@ -3,6 +3,8 @@ package org.radargun.stages.cache.background;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -337,7 +339,7 @@ public class BackgroundOpsManager implements ServiceListener {
       if (stressors != null) {
          stopBackgroundThreads(true, false, false);
       }
-      String error = logCheckerPool.waitUntilChecked(logLogicConfiguration.checkersNoProgressTimeout);
+      String error = logCheckerPool.waitUntilChecked(logLogicConfiguration.noProgressTimeout);
       if (error != null) {
          return error;
       }
@@ -345,6 +347,47 @@ public class BackgroundOpsManager implements ServiceListener {
       stressorsPaused = true;
       checkersPaused = true;
       return null;
+   }
+
+   public boolean waitForProgress() {
+      Stressor[] stressors = stressorThreads;
+      if (stressors == null) {
+         log.error("Stressors are not running!");
+         return false;
+      }
+      Map<Stressor, Long> confirmed = new HashMap<>(stressors.length);
+      for (Stressor stressor : stressors) {
+         Logic logic = stressor.getLogic();
+         if (logic instanceof AbstractLogLogic) {
+            long operationId = ((AbstractLogLogic) logic).getLastConfirmedOperation();
+            confirmed.put(stressor, operationId);
+         } else {
+            log.warnf("Cannot wait for stressor %d as it does not implement LogLogic", stressor.id);
+         }
+      }
+      long deadline = System.currentTimeMillis() + logLogicConfiguration.getNoProgressTimeout();
+      while (!confirmed.isEmpty()) {
+         for (Iterator<Map.Entry<Stressor, Long>> iterator = confirmed.entrySet().iterator(); iterator.hasNext(); ) {
+            Map.Entry<Stressor, Long> entry = iterator.next();
+            AbstractLogLogic logic = (AbstractLogLogic) entry.getKey().getLogic();
+            long operationId = logic.getLastConfirmedOperation();
+            if (operationId != entry.getValue()) {
+               iterator.remove();
+            }
+         }
+         if (System.currentTimeMillis() >= deadline) {
+            log.info("No progress within timeout");
+            return false;
+         }
+         try {
+            Thread.sleep(1000);
+         } catch (InterruptedException e) {
+            log.error("Interrupted when waiting for progress", e);
+            Thread.currentThread().interrupt();
+            return false;
+         }
+      }
+      return true;
    }
 
    public void resumeAfterChecked() {
@@ -483,7 +526,7 @@ public class BackgroundOpsManager implements ServiceListener {
             long now = System.currentTimeMillis();
             for (LogChecker.StressorRecord record : logCheckerPool.getRecords()) {
                log.info("Record: " + record.getStatus());
-               if (now - record.getLastSuccessfulCheckTimestamp() > logLogicConfiguration.checkersNoProgressTimeout) {
+               if (now - record.getLastSuccessfulCheckTimestamp() > logLogicConfiguration.noProgressTimeout) {
                   log.error("No progress in this record for " + (now - record.getLastSuccessfulCheckTimestamp()) + " ms");
                   progress = false;
                }
