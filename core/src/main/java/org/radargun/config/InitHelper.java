@@ -27,4 +27,21 @@ public class InitHelper {
          }
       }
    }
+
+   public static void destroy(Object target) {
+      if (target == null) throw new NullPointerException();
+      Class<?> clazz = target.getClass();
+      while (clazz != null) {
+         for (Method m : clazz.getDeclaredMethods()) {
+            if (m.getAnnotation(Destroy.class) != null) {
+               try {
+                  m.invoke(target);
+               } catch (Exception e) {
+                  throw new RuntimeException(e);
+               }
+            }
+         }
+         clazz = clazz.getSuperclass();
+      }
+   }
 }

@@ -19,6 +19,7 @@ import javax.management.remote.JMXConnector;
 
 import org.radargun.Service;
 import org.radargun.ServiceHelper;
+import org.radargun.config.Destroy;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
@@ -26,6 +27,7 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.TimeConverter;
+import org.radargun.utils.Utils;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -131,6 +133,11 @@ public class InfinispanServerService extends JavaProcessService {
       if (jgroupsDumperEnabled) {
          schedule(new ServerJGroupsDumper(this), jgroupsDumpPeriod);
       }
+   }
+
+   @Destroy
+   public void destroy() {
+      Utils.shutdownAndWait(executor);
    }
 
    @ProvidesTrait

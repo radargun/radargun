@@ -14,6 +14,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.management.MBeanServer;
@@ -207,6 +208,17 @@ public class Utils {
          sb.append(part);
       }
       return sb.toString();
+   }
+
+   public static void shutdownAndWait(ExecutorService executor) {
+      executor.shutdownNow();
+      try {
+         if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+            log.error("Failed to terminate executor.");
+         }
+      } catch (InterruptedException e) {
+         log.error("Interrupted when waiting for the executor to finish.");
+      }
    }
 
    public static class JarFilenameFilter implements FilenameFilter {

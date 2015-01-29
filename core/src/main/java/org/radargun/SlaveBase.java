@@ -38,64 +38,74 @@ public abstract class SlaveBase {
       Map<String, String> extras = getCurrentExtras(configuration, cluster);
       ServiceHelper.setServiceContext(setup.plugin, configuration.name, state.getSlaveIndex());
       Object service = ServiceHelper.createService(state.getClassLoader(), setup.plugin, setup.service, setup.getProperties(), extras);
-      log.info("Service is " + service.getClass().getSimpleName() + PropertyHelper.toString(service));
-      Map<Class<?>, Object> traits = TraitHelper.retrieve(service);
-      state.setTraits(traits);
-      for (;;) {
-         int stageId = getNextStageId();
-         Map<String, Object> masterData = getNextMasterData();
-         for (Map.Entry<String, Object> entry : masterData.entrySet()) {
-            state.put(entry.getKey(), entry.getValue());
-         }
-         log.trace("Received stage ID " + stageId);
-         DistStage stage = (DistStage) scenario.getStage(stageId, state, extras, null);
-         if (stage instanceof ScenarioCleanupStage) {
-            // this is always the last stage and is ran in main thread (not sc-main)
-            break;
-         }
-         TraitHelper.InjectResult result = null;
-         DistStageAck response;
-         Exception initException = null;
-         try {
-            result = TraitHelper.inject(stage, traits);
-            InitHelper.init(stage);
-            stage.initOnSlave(state);
-         } catch (Exception e) {
-            log.error("Stage initialization has failed", e);
-            initException = e;
-         }
-         if (initException != null) {
-            response = new DistStageAck(state).error("Stage initialization has failed", initException);
-         } else if (!stage.shouldExecute()) {
-            log.info("Stage should not be executed");
-            response = new DistStageAck(state);
-         } else if (result == TraitHelper.InjectResult.SKIP) {
-            log.info("Stage was skipped because it was missing some traits");
-            response = new DistStageAck(state);
-         } else if (result == TraitHelper.InjectResult.FAILURE) {
-            String message = "The stage was not executed because it missed some mandatory traits.";
-            log.error(message);
-            response = new DistStageAck(state).error(message, null);
-         } else {
-            log.info("Starting stage " + (log.isDebugEnabled() ? stage.toString() : stage.getName()));
-            long start = System.currentTimeMillis();
-            long end;
-            try {
-               response = stage.executeOnSlave();
-               end = System.currentTimeMillis();
-               if (response == null) {
-                  response = new DistStageAck(state).error("Stage returned null response", null);
-               }
-               log.info("Finished stage " + stage.getName());
-               response.setDuration(end - start);
-            } catch (Exception e) {
-               end = System.currentTimeMillis();
-               log.error("Stage execution has failed", e);
-               response = new DistStageAck(state).error("Stage execution has failed", e);
+      Map<Class<?>, Object> traits = null;
+      try {
+         log.info("Service is " + service.getClass().getSimpleName() + PropertyHelper.toString(service));
+         traits = TraitHelper.retrieve(service);
+         state.setTraits(traits);
+         for (; ; ) {
+            int stageId = getNextStageId();
+            Map<String, Object> masterData = getNextMasterData();
+            for (Map.Entry<String, Object> entry : masterData.entrySet()) {
+               state.put(entry.getKey(), entry.getValue());
             }
-            state.getTimeline().addEvent(Stage.STAGE, new Timeline.IntervalEvent(start, stage.getName(), end - start));
+            log.trace("Received stage ID " + stageId);
+            DistStage stage = (DistStage) scenario.getStage(stageId, state, extras, null);
+            if (stage instanceof ScenarioCleanupStage) {
+               // this is always the last stage and is ran in main thread (not sc-main)
+               break;
+            }
+            TraitHelper.InjectResult result = null;
+            DistStageAck response;
+            Exception initException = null;
+            try {
+               result = TraitHelper.inject(stage, traits);
+               InitHelper.init(stage);
+               stage.initOnSlave(state);
+            } catch (Exception e) {
+               log.error("Stage initialization has failed", e);
+               initException = e;
+            }
+            if (initException != null) {
+               response = new DistStageAck(state).error("Stage initialization has failed", initException);
+            } else if (!stage.shouldExecute()) {
+               log.info("Stage should not be executed");
+               response = new DistStageAck(state);
+            } else if (result == TraitHelper.InjectResult.SKIP) {
+               log.info("Stage was skipped because it was missing some traits");
+               response = new DistStageAck(state);
+            } else if (result == TraitHelper.InjectResult.FAILURE) {
+               String message = "The stage was not executed because it missed some mandatory traits.";
+               log.error(message);
+               response = new DistStageAck(state).error(message, null);
+            } else {
+               log.info("Starting stage " + (log.isDebugEnabled() ? stage.toString() : stage.getName()));
+               long start = System.currentTimeMillis();
+               long end;
+               try {
+                  response = stage.executeOnSlave();
+                  end = System.currentTimeMillis();
+                  if (response == null) {
+                     response = new DistStageAck(state).error("Stage returned null response", null);
+                  }
+                  log.info("Finished stage " + stage.getName());
+                  response.setDuration(end - start);
+               } catch (Exception e) {
+                  end = System.currentTimeMillis();
+                  log.error("Stage execution has failed", e);
+                  response = new DistStageAck(state).error("Stage execution has failed", e);
+               }
+               state.getTimeline().addEvent(Stage.STAGE, new Timeline.IntervalEvent(start, stage.getName(), end - start));
+            }
+            sendResponse(response);
          }
-         sendResponse(response);
+      } finally {
+         if (traits != null) {
+            for (Object trait : traits.values()) {
+               InitHelper.destroy(trait);
+            }
+         }
+         InitHelper.destroy(service);
       }
    }
 

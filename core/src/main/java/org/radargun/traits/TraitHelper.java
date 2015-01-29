@@ -2,6 +2,7 @@ package org.radargun.traits;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -97,7 +98,7 @@ public class TraitHelper {
             traitMap.put(trait, traitImpl);
          }
       }
-      return traitMap;
+      return Collections.unmodifiableMap(traitMap);
    }
 
    private static void addAllTraits(Set<Class<?>> traits, Class<?> clazz) {
