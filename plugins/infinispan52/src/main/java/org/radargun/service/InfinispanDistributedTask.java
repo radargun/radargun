@@ -1,11 +1,13 @@
 package org.radargun.service;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.infinispan.Cache;
 import org.infinispan.distexec.DefaultExecutorService;
@@ -17,6 +19,7 @@ import org.infinispan.distexec.DistributedTaskFailoverPolicy;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.Transport;
+import org.radargun.config.Destroy;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.DistributedTaskExecutor;
@@ -33,21 +36,33 @@ public class InfinispanDistributedTask<K, V, T> implements DistributedTaskExecut
 
    protected final Log log = LogFactory.getLog(getClass());
    protected final Infinispan52EmbeddedService service;
+   protected final ExecutorService executorService = Executors.newCachedThreadPool(new ThreadFactory() {
+      AtomicInteger counter = new AtomicInteger();
+      @Override
+      public Thread newThread(Runnable r) {
+         return new Thread(r, "DistributedTask-" + counter.incrementAndGet());
+      }
+   });
 
    public InfinispanDistributedTask(Infinispan52EmbeddedService service) {
       this.service = service;
    }
 
+   @Destroy
+   public void destroy() {
+      Utils.shutdownAndWait(executorService);
+   }
+
    protected class Builder implements DistributedTaskExecutor.Builder<T> {
       protected final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-      protected final DefaultExecutorService executorService;
+      protected final DistributedExecutorService executorService;
       protected Callable<T> callable;
       protected DistributedTaskExecutionPolicy executionPolicy;
       protected DistributedTaskFailoverPolicy failoverPolicy;
       protected Address target;
 
       public Builder(Cache<K, V> cache) {
-         executorService = new DefaultExecutorService(cache);
+         executorService = new DefaultExecutorService(cache, InfinispanDistributedTask.this.executorService);
       }
 
       @Override
@@ -84,11 +99,11 @@ public class InfinispanDistributedTask<K, V, T> implements DistributedTaskExecut
    }
 
    protected class Task implements DistributedTaskExecutor.Task<T> {
-      protected final DefaultExecutorService executorService;
+      protected final DistributedExecutorService executorService;
       protected final DistributedTask<T> task;
       protected final Address target;
 
-      public Task(DefaultExecutorService executorService, DistributedTask<T> task, Address target) {
+      public Task(DistributedExecutorService executorService, DistributedTask<T> task, Address target) {
          this.executorService = executorService;
          this.task = task;
          this.target = target;

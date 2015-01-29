@@ -14,6 +14,7 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.util.FileLookupFactory;
 import org.radargun.Service;
+import org.radargun.config.Init;
 import org.radargun.traits.ProvidesTrait;
 
 /**
@@ -22,6 +23,9 @@ import org.radargun.traits.ProvidesTrait;
  */
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
 public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
+
+   protected InfinispanDistributedTask distributedTaskExecutor;
+
    @Override
    protected Infinispan52Lifecycle createLifecycle() {
       return new Infinispan52Lifecycle(this);
@@ -40,13 +44,18 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
    }
 
    @ProvidesTrait
-   public InfinispanDistributedTask createDistributedTask() {
-      return new InfinispanDistributedTask(this);
+   public InfinispanDistributedTask getDistributedTaskExecutor() {
+      return distributedTaskExecutor;
    }
 
    @ProvidesTrait
    public EmbeddedConfigurationProvider createConfigurationProvider() {
       return new EmbeddedConfigurationProvider(this);
+   }
+
+   @Init
+   public void init() {
+       distributedTaskExecutor = new InfinispanDistributedTask(this);
    }
 
    @Override

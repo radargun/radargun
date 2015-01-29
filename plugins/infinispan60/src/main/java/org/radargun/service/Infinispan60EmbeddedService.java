@@ -14,6 +14,7 @@ import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.radargun.Service;
+import org.radargun.config.Destroy;
 import org.radargun.config.Property;
 import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.ProvidesTrait;
@@ -48,6 +49,11 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
    @ProvidesTrait
    public InternalsExposition createInternalsExposition() {
       return new Infinispan60InternalsExposition(this);
+   }
+
+   @Destroy
+   public void destroy() {
+      Utils.shutdownAndWait(scheduledExecutor);
    }
 
    @Override
@@ -100,6 +106,9 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
       // TODO: not sure when ForkJoinPool was added
       // disable further thread creation
       Utils.setField(ForkJoinPool.class, "factory", ForkJoinPool.commonPool(), null);
+      ForkJoinPool common = ForkJoinPool.commonPool();
+      Utils.setField(ForkJoinPool.class, "common", ForkJoinPool.commonPool(), null);
+      common.shutdownNow();
    }
 
    protected ConfigDumpHelper createConfigDumpHelper() {

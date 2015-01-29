@@ -1,14 +1,14 @@
 package org.radargun.state;
 
-import org.radargun.config.Cluster;
-import org.radargun.reporting.Timeline;
-import org.radargun.utils.Utils;
-
 import java.net.InetAddress;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.radargun.config.Cluster;
+import org.radargun.reporting.Timeline;
+import org.radargun.utils.Utils;
 
 /**
  * State residing on slave, passed to each's {@link org.radargun.DistStage#initOnSlave(SlaveState)}
@@ -68,7 +68,7 @@ public class SlaveState extends StateBase {
    @Override
    public void reset() {
       super.reset();
-      traits.clear();
+      traits = null;
       serviceListeners.clear();
       classLoader = getClass().getClassLoader();
    }
