@@ -4,8 +4,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
+import org.radargun.Operation;
+
 @Trait(doc = "Provides the interface for executing distributed tasks.")
 public interface DistributedTaskExecutor<T> {
+   String TRAIT = DistributedTaskExecutor.class.getSimpleName();
+   Operation EXECUTE = Operation.register(TRAIT + ".Execute");
 
    interface Builder<T> {
       /**
