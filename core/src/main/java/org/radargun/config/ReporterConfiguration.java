@@ -13,13 +13,10 @@ import java.util.Map;
  */
 public class ReporterConfiguration {
    public final String type;
-   @Deprecated
-   public final RunCondition run;
    public final List<Report> reports = new ArrayList<Report>();
 
-   public ReporterConfiguration(String type, RunCondition run) {
+   public ReporterConfiguration(String type) {
       this.type = type;
-      this.run = run;
    }
 
    public Report addReport() {
@@ -51,13 +48,5 @@ public class ReporterConfiguration {
       public Map<String, Definition> getProperties() {
          return Collections.unmodifiableMap(properties);
       }
-   }
-
-   @Deprecated
-   public enum RunCondition {
-      ALWAYS,
-      CLUSTER_SUCCESSFUL,
-      CONFIG_SUCCESSFUL,
-      ALL_SUCCESSFUL
    }
 }

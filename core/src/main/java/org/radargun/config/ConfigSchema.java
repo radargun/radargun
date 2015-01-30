@@ -13,7 +13,6 @@ interface ConfigSchema {
    String ATTR_NAME = "name";
    String ATTR_PORT = "port";
    String ATTR_PLUGIN = "plugin";
-   String ATTR_RUN = "run";
    String ATTR_SIZE = "size";
    String ATTR_TO = "to";
    String ATTR_TIMES = "times";

@@ -111,7 +111,6 @@ public class Master {
             }
          }
          log.info("Executed all benchmarks in " + Utils.getMillisDurationString(System.currentTimeMillis() - benchmarkStart) + ", reporting...");
-         // TODO run conditions: are these really necessary?
          for (Reporter reporter : reporters) {
             try {
                log.info("Running reporter " + reporter);
