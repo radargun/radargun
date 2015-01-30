@@ -242,7 +242,7 @@ public class RandomDataStage extends AbstractDistStage {
 
       long putCount = nodePutCount;
       long bytesWritten = 0;
-      BasicOperations.Cache cache = basicOperations.getCache(bucket);
+      BasicOperations.Cache<String, Object> cache = basicOperations.getCache(bucket);
       try {
          byte[] buffer = new byte[valueSize];
          Statistics stats = new DefaultStatistics(new DefaultOperationStats());
@@ -253,7 +253,7 @@ public class RandomDataStage extends AbstractDistStage {
             long start = -1;
             boolean success = false;
             String cacheData = null;
-            
+
             if (stringData) {
                cacheData = generateRandomStringData(valueSize);
             } else {
@@ -463,6 +463,7 @@ public class RandomDataStage extends AbstractDistStage {
       Map<Integer, Report.SlaveResult> nodeKeyCountsResult = new HashMap<Integer, Report.SlaveResult>();
       Map<Integer, Report.SlaveResult> nodeTargetMemoryUseResult = new HashMap<Integer, Report.SlaveResult>();
       Map<Integer, Report.SlaveResult> nodeCountOfWordsInDataResult = new HashMap<Integer, Report.SlaveResult>();
+      Map<Integer, Report.SlaveResult> nodeBytesWritten = new HashMap<Integer, Report.SlaveResult>();
 
       long totalValues = 0;
       long totalBytes = 0;
@@ -480,6 +481,7 @@ public class RandomDataStage extends AbstractDistStage {
          }
 
          nodeKeyCountsResult.put(ack.getSlaveIndex(), new Report.SlaveResult(Long.toString(ack.nodeKeyCount), false));
+         nodeBytesWritten.put(ack.getSlaveIndex(), new Report.SlaveResult(Long.toString(ack.bytesWritten), false));
          test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.nodePutStats));
 
          totalValues += ack.nodePutCount;
@@ -488,9 +490,11 @@ public class RandomDataStage extends AbstractDistStage {
                + " values to the cache with a total size of " + Utils.kbString(ack.bytesWritten);
          if (ramPercentage > 0) {
             logInfo += "; targetMemoryUse = " + Utils.kbString(ack.targetMemoryUse);
+            nodeTargetMemoryUseResult.put(ack.getSlaveIndex(), new Report.SlaveResult(Long.toString(ack.targetMemoryUse), false));
          }
          if (stringData) {
             logInfo += "; countOfWordsInData = " + ack.countOfWordsInData;
+            nodeCountOfWordsInDataResult.put(ack.getSlaveIndex(), new Report.SlaveResult(Long.toString(ack.countOfWordsInData), false));
          }
          log.info(logInfo);
       }
@@ -512,9 +516,13 @@ public class RandomDataStage extends AbstractDistStage {
          //         masterState.put(RANDOMDATA_CLUSTER_WORDCOUNT_KEY, clusterWordCount);
       }
       log.info("--------------------");
-      masterState.put(RANDOMDATA_TOTALBYTES_KEY, totalBytes);
 
-      test.addResult(testIteration, new Report.TestResult("Key count per node", nodeKeyCountsResult, "N/A", false));
+      masterState.put(RANDOMDATA_TOTALBYTES_KEY, totalBytes);
+      test.addResult(
+            testIteration,
+            new Report.TestResult("Kilobytes written per node", nodeBytesWritten, Utils.kbString(totalBytes), false));
+
+      test.addResult(testIteration, new Report.TestResult("Key count per node", nodeKeyCountsResult, "", false));
       if (!nodeTargetMemoryUseResult.isEmpty()) {
          test.addResult(testIteration, new Report.TestResult("Target memory use per node", nodeTargetMemoryUseResult,
                Utils.kbString(totalBytes), false));

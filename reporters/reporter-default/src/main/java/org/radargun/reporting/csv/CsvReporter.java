@@ -15,6 +15,7 @@ import org.radargun.reporting.Reporter;
 import org.radargun.reporting.Timeline;
 import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
+import org.radargun.stats.representation.DataThroughput;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.MeanAndDev;
 import org.radargun.stats.representation.OperationThroughput;
@@ -173,6 +174,15 @@ public class CsvReporter implements Reporter {
       if (meanAndDev != null) {
          rowData.put(operationName + ".ResponseTimeMean", String.valueOf(meanAndDev.mean));
          rowData.put(operationName + ".ResponseTimeDeviation", String.valueOf(meanAndDev.dev));
+      }
+      DataThroughput dataThroughput = os.getRepresentation(DataThroughput.class);
+      if (dataThroughput != null) {
+         rowData.put(operationName + ".DataThrouputMin", String.valueOf(dataThroughput.minThroughput));
+         rowData.put(operationName + ".DataThrouputMax", String.valueOf(dataThroughput.maxThroughput));
+         rowData.put(operationName + ".DataThrouputMean", String.valueOf(dataThroughput.meanThroughput));
+         rowData.put(operationName + ".DataThrouputStdDeviation", String.valueOf(dataThroughput.deviation));
+         rowData.put(operationName + ".TotalBytes", String.valueOf(dataThroughput.totalBytes));
+         rowData.put(operationName + ".ResponseTimes", Arrays.toString(dataThroughput.responseTimes).replace(",", ""));
       }
    }
 
