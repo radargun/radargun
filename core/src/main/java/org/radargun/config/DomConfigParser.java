@@ -3,7 +3,6 @@ package org.radargun.config;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
@@ -331,8 +330,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          Element reporterElement = (Element) childNodes.item(i);
          assertName(ELEMENT_REPORTER, reporterElement);
          String type = getAttribute(reporterElement, ATTR_TYPE);
-         String run = getAttribute(reporterElement, ATTR_RUN, ReporterConfiguration.RunCondition.ALWAYS.name());
-         ReporterConfiguration reporter = new ReporterConfiguration(type, ReporterConfiguration.RunCondition.valueOf(run.toUpperCase(Locale.ENGLISH)));
+         ReporterConfiguration reporter = new ReporterConfiguration(type);
          NodeList reportElements = reporterElement.getChildNodes();
          Map<String, Definition> commonProperties = new HashMap<>();
          Set<String> reporterNames = ReporterHelper.getReporterNames();

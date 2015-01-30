@@ -120,8 +120,6 @@ public class ConfigSchemaGenerator extends SchemaGenerator implements ConfigSche
       createAny(reportSequence);
 
       addAttribute(reporterComplex, ATTR_TYPE, true);
-      String runType = generateSimpleType(ReporterConfiguration.RunCondition.class, DefaultConverter.class);
-      addAttribute(reporterComplex, ATTR_RUN, runType, null, false);
    }
 
    private void generateStageDefinitions(Element[] parents) {
