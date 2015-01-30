@@ -1,13 +1,6 @@
 package org.radargun.service;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-
-import org.infinispan.commons.util.FileLookup;
-import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
-import org.infinispan.configuration.parsing.ParserRegistry;
 import org.radargun.Service;
-import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
 
 /**
@@ -15,6 +8,7 @@ import org.radargun.traits.ProvidesTrait;
  */
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
 public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
+   @SuppressWarnings("rawtypes")
    @Override
    @ProvidesTrait
    public Infinispan70MapReduce createMapReduce() {

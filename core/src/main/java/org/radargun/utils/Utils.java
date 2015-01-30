@@ -442,7 +442,7 @@ public class Utils {
     *           a Map where the public method name is the key, and the String parameter is the value
     * @return the modified Object, or <code>null</code> if the field can't be changed
     */
-   public static Object invokeMethodWithString(Object object, Map<String, String> properties) {
+   public static <T> T invokeMethodWithString(T object, Map<String, String> properties) {
       Class<? extends Object> clazz = object.getClass();
       for (Entry<String, String> entry : properties.entrySet()) {
          try {

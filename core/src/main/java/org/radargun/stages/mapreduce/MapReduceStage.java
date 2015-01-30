@@ -111,6 +111,10 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    @Property(doc = "The number of times to execute the Map/Reduce task. The default is 10.")
    private int numExecutions = 10;
 
+   @Property(doc = "The name of the key in the MasterState object that returns the total number of "
+         + "bytes processed by the Map/Reduce task. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
+   private String totalBytesKey = RandomDataStage.RANDOMDATA_TOTALBYTES_KEY;
+
    private Map<KOut, VOut> payloadMap = null;
    private R payloadObject = null;
 
@@ -152,16 +156,15 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             } else {
                opStats = (DataOperationStats) ack.stats.getOperationsStats().get(MapReducer.MAPREDUCE_COLLATOR.name);
             }
-            opStats.setTotalBytes((Long) masterState.get(RandomDataStage.RANDOMDATA_TOTALBYTES_KEY));
+            opStats.setTotalBytes((Long) masterState.get(totalBytesKey));
             test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
             durationsResult.put(ack.getSlaveIndex(), new Report.SlaveResult(opStats.getResponseTimes(), false));
-            test.addResult(testIteration, new Report.TestResult("Map/Reduce durations result map", durationsResult,
-                  "-", false));
+            test.addResult(testIteration, new Report.TestResult("Map/Reduce durations", durationsResult, "", false));
          }
          if (ack.numberOfResultKeys != null) {
             numberOfResultKeysResult.put(ack.getSlaveIndex(), new Report.SlaveResult(ack.numberOfResultKeys, false));
             test.addResult(testIteration, new Report.TestResult("Key count in Map/Reduce result map",
-                  numberOfResultKeysResult, "-", false));
+                  numberOfResultKeysResult, "", false));
          }
       }
 

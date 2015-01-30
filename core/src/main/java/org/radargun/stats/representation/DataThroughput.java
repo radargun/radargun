@@ -15,12 +15,16 @@ public class DataThroughput {
    public final double maxThroughput;
    public final double meanThroughput;
    public final double deviation;
+   public final long[] responseTimes;
+   public final long totalBytes;
 
-   public DataThroughput(double min, double max, double mean, double deviation) {
+   public DataThroughput(double min, double max, double mean, double deviation, long totalBytes, long[] responseTimes) {
       this.minThroughput = min;
       this.maxThroughput = max;
       this.meanThroughput = mean;
       this.deviation = deviation;
+      this.responseTimes = responseTimes;
+      this.totalBytes =totalBytes;
    }
 
    public static DataThroughput compute(long totalBytes, long[] responseTimes, int requestCount) {
@@ -28,24 +32,24 @@ public class DataThroughput {
       double maxDurationSecs = Long.MIN_VALUE;
       double meanDurationSecs = 0;
       double[] throughputs = new double[requestCount];
+      long[] requestTimes = new long[requestCount];
 
       if (requestCount == 0) {
-         return new DataThroughput(0, 0, 0, 0);
+         return new DataThroughput(0, 0, 0, 0, 0, new long[0]);
       } else {
          for (int i = 0; i < requestCount; ++i) {
-            minDurationSecs = Math.min(minDurationSecs, toSecs(responseTimes[i]));
-            maxDurationSecs = Math.max(maxDurationSecs, toSecs(responseTimes[i]));
+            minDurationSecs = Math.min(minDurationSecs, responseTimes[i]);
+            maxDurationSecs = Math.max(maxDurationSecs, responseTimes[i]);
             meanDurationSecs += responseTimes[i];
             throughputs[i] = totalBytes / toSecs(responseTimes[i]);
+            requestTimes[i] = responseTimes[i];
          }
+         minDurationSecs = toSecs(minDurationSecs);
+         maxDurationSecs = toSecs(maxDurationSecs);
          meanDurationSecs = toSecs(meanDurationSecs / requestCount);
       }
       return new DataThroughput(totalBytes / maxDurationSecs, totalBytes / minDurationSecs, totalBytes
-            / meanDurationSecs, getDeviation(throughputs));
-   }
-
-   private static double toSecs(long nanos) {
-      return nanos / TimeUnit.SECONDS.toNanos(1);
+            / meanDurationSecs, getDeviation(throughputs), totalBytes, requestTimes);
    }
 
    private static double toSecs(double nanos) {
