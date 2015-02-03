@@ -54,6 +54,10 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
    @Destroy
    public void destroy() {
       Utils.shutdownAndWait(scheduledExecutor);
+      Utils.setField(ForkJoinPool.class, "factory", ForkJoinPool.commonPool(), null);
+      ForkJoinPool common = ForkJoinPool.commonPool();
+      Utils.setField(ForkJoinPool.class, "common", ForkJoinPool.commonPool(), null);
+      Utils.shutdownAndWait(common);
    }
 
    @Override
@@ -103,12 +107,6 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
       super.stopCaches();
       if (jgroupsDumper != null) jgroupsDumper.interrupt();
       jgroupsDumper = null;
-      // TODO: not sure when ForkJoinPool was added
-      // disable further thread creation
-      Utils.setField(ForkJoinPool.class, "factory", ForkJoinPool.commonPool(), null);
-      ForkJoinPool common = ForkJoinPool.commonPool();
-      Utils.setField(ForkJoinPool.class, "common", ForkJoinPool.commonPool(), null);
-      common.shutdownNow();
    }
 
    protected ConfigDumpHelper createConfigDumpHelper() {
