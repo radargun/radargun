@@ -59,7 +59,9 @@ public class ServiceStopStage extends AbstractDistStage {
                public void run() {
                   try {
                      Thread.sleep(delayExecution);
-                  } catch (InterruptedException e) {                    
+                  } catch (InterruptedException e) {
+                     log.error("Thread has been interrupted", e);
+                     Thread.currentThread().interrupt();
                   }
                   if (lifecycle == null || !lifecycle.isRunning()) {
                      log.info("The service on this node is not running or cannot be stopped");

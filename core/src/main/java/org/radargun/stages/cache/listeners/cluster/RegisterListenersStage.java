@@ -95,8 +95,7 @@ public class RegisterListenersStage extends AbstractDistStage {
          return null;
       } else {
          Report report = masterState.getReport();
-         Report.Test test = report.createTest(testName, iterationName, true);
-         return test;
+         return report.createTest(testName, iterationName, true);
       }
    }
 

@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.radargun.Master;
-import org.radargun.Slave;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 

@@ -131,7 +131,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
    private void logUnfinished(Collection<Thread> threads) {
       for (Thread thread : threads) {
          StringBuilder sb = new StringBuilder();
-         sb.append("Unfinished thread " + getThreadId(thread));
+         sb.append("Unfinished thread ").append(getThreadId(thread));
          for (StackTraceElement ste : thread.getStackTrace()) {
             sb.append("\n\tat ");
             sb.append(ste.toString());

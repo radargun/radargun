@@ -191,7 +191,6 @@ public class TimelineDocument extends HtmlDocument {
 
       /* Checkboxes */
       write("<div style=\"float: left;\">\n");
-      int checkBoxCounter = 0;
       for (Map.Entry<String, Integer> eventEntry : eventCategories.entrySet()) {
          write(String.format("<input id=\"cat_%d\" type=\"checkbox\" checked=\"checked\" onClick=\"", eventEntry.getValue()));
 

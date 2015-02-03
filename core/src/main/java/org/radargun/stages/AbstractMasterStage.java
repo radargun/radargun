@@ -9,7 +9,7 @@ import org.radargun.state.MasterState;
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-@Stage(doc = "")
+@Stage(doc = "Parent class for stages performed on master.")
 public abstract class AbstractMasterStage extends AbstractStage implements MasterStage {
 
    protected MasterState masterState;

@@ -7,7 +7,6 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stages.cache.test.LoadDataStage;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.Utils;
 

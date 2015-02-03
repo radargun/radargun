@@ -14,7 +14,7 @@ import org.radargun.stages.AbstractDistStage;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Stage(doc = "")
+@Stage(doc = "Parent class for stages handling service start.")
 public abstract class AbstractServiceStartStage extends AbstractDistStage {
 
    @Property(doc = "Set of slaves where the start may fail but this will not cause an error. Default is none.")
@@ -22,7 +22,6 @@ public abstract class AbstractServiceStartStage extends AbstractDistStage {
 
    @Override
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      boolean success = true;
       logDurationInfo(acks);
       for (DistStageAck ack : acks) {
          if (ack.isError() && (mayFailOn == null || !mayFailOn.contains(ack.getSlaveIndex()))) {

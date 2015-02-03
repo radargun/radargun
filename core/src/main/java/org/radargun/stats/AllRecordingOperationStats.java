@@ -2,7 +2,6 @@ package org.radargun.stats;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import org.radargun.config.DefinitionElement;
 import org.radargun.stats.representation.DefaultOutcome;

@@ -111,6 +111,8 @@ public class StackTraceWatchdogStage extends AbstractDistStage {
             try {
                Thread.sleep(period);
             } catch (InterruptedException e) {
+               log.error("Thread has been interrupted", e);
+               Thread.currentThread().interrupt();
             }
          }
       }
@@ -133,6 +135,8 @@ public class StackTraceWatchdogStage extends AbstractDistStage {
                   try {
                      messageQueue.wait();
                   } catch (InterruptedException e) {
+                     log.error("Thread has been interrupted", e);
+                     Thread.currentThread().interrupt();
                   }
                   continue;
                }

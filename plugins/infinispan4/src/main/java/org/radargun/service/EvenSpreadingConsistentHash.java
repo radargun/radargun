@@ -58,7 +58,6 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
 
       List<Address> result = new ArrayList<Address>();
 
-      List<Address> addresses = Immutables.immutableListConvert(caches);
       for (int i = 0; i < replCount; i++) {
          Address address = cachesList.get((firstIndex + i) % clusterSize);
          result.add(address);

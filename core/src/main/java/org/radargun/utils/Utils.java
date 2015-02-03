@@ -455,7 +455,7 @@ public class Utils {
     * @return the modified Object, or <code>null</code> if the field can't be changed
     */
    public static <T> T invokeMethodWithString(T object, Map<String, String> properties) {
-      Class<? extends Object> clazz = object.getClass();
+      Class<?> clazz = object.getClass();
       for (Entry<String, String> entry : properties.entrySet()) {
          try {
             Method method = clazz.getDeclaredMethod(entry.getKey(), String.class);

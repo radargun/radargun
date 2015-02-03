@@ -430,7 +430,9 @@ public class BackgroundOpsManager implements ServiceListener {
       // give the threads a second to terminate
       try {
          Thread.sleep(1000);
-      } catch (InterruptedException e) {         
+      } catch (InterruptedException e) {
+         log.error("Thread has been interrupted", e);
+         Thread.currentThread().interrupt();
       }
       log.debug("Interrupting stressors");
       if (stressors && stressorThreads != null) {

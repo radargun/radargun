@@ -13,7 +13,6 @@ import org.radargun.logging.LogFactory;
 import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DefaultOutcome;
-import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.utils.NanoTimeConverter;
 import org.radargun.utils.Projections;
 import org.radargun.utils.ReflexiveConverters;

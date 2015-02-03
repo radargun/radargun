@@ -81,6 +81,8 @@ public class IsolationLevelCheckStage extends CheckStage {
       try {
          Thread.sleep(duration);
       } catch (InterruptedException e) {
+         log.error("Thread has been interrupted", e);
+         Thread.currentThread().interrupt();
       }
       finished = true;
       DistStageAck error = checkThreads(threads);

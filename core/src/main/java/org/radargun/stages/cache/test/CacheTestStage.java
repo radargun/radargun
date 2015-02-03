@@ -7,7 +7,6 @@ import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.stages.test.TestStage;
-import org.radargun.state.ServiceListenerAdapter;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;

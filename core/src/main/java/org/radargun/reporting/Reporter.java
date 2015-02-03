@@ -2,8 +2,6 @@ package org.radargun.reporting;
 
 import java.util.Collection;
 
-import org.radargun.config.Scenario;
-
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  *

@@ -19,7 +19,6 @@ import org.radargun.logging.LogFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Generic listener is registered only once for each cache, then it multiplexes the events to the

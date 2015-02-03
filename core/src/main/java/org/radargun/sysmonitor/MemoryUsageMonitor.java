@@ -32,7 +32,7 @@ public class MemoryUsageMonitor extends JmxMonitor {
          if (connection == null) {
             log.warn("MBean connection is not open, cannot read memory stats");
             return;
-         };
+         }
 
          MemoryMXBean memMbean = ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.MEMORY_MXBEAN_NAME,
                MemoryMXBean.class);

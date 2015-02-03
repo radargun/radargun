@@ -10,7 +10,6 @@
    </parent>
    <modelVersion>4.0.0</modelVersion>
 
-   <groupId>org.radargun</groupId>
    <artifactId>radargun-reporter-parent</artifactId>
    <packaging>pom</packaging>
    <name>Parent for reporter plugins</name>

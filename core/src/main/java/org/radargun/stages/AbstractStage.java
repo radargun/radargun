@@ -12,7 +12,7 @@ import org.radargun.logging.LogFactory;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Stage(doc = "")
+@Stage(doc = "Parent class for all stages.")
 public abstract class AbstractStage implements org.radargun.Stage {
 
    protected Log log = LogFactory.getLog(getClass());

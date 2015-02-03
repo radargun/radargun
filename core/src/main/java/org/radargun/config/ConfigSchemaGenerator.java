@@ -63,7 +63,7 @@ public class ConfigSchemaGenerator extends SchemaGenerator implements ConfigSche
       addAttribute(masterComplex, ATTR_PORT, intType, null, false);
 
       Element clustersChoice = createChoice(benchmarkSequence, 0, 1);
-      Element localComplex = createComplexElement(clustersChoice, ELEMENT_LOCAL, 0, 1);
+      createComplexElement(clustersChoice, ELEMENT_LOCAL, 0, 1);
       Element clustersComplex = createComplexElement(clustersChoice, ELEMENT_CLUSTERS, 0, 1);
       Element clusterChoice = createChoice(clustersComplex, 1, -1);
       Element baseClusterType = createComplexType(schema, TYPE_CLUSTER_BASE, null, true, false, null);
@@ -94,7 +94,7 @@ public class ConfigSchemaGenerator extends SchemaGenerator implements ConfigSche
 
       Element stagesType = createComplexType(schema, TYPE_STAGES, null, true, true, null);
       Element stagesChoice = createChoice(createSequence(stagesType), 1, -1);
-      Element scenarioType = createComplexType(schema, ELEMENT_SCENARIO, RG_PREFIX + TYPE_STAGES, true, false, null);
+      createComplexType(schema, ELEMENT_SCENARIO, RG_PREFIX + TYPE_STAGES, true, false, null);
       createReference(benchmarkSequence, ELEMENT_SCENARIO, RG_PREFIX + TYPE_SCENARIO);
 
       Element repeatType = createComplexType(schema, TYPE_REPEAT, RG_PREFIX + TYPE_STAGES, true, false, null);

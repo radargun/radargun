@@ -26,7 +26,7 @@ import org.radargun.utils.Utils;
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-@Stage(doc = "")
+@Stage(doc = "Parent class for distributed stages.")
 public abstract class AbstractDistStage extends AbstractStage implements DistStage {
    protected Log log = LogFactory.getLog(getClass());
 

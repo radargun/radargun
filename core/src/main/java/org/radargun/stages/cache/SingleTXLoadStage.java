@@ -110,6 +110,8 @@ public class SingleTXLoadStage extends AbstractDistStage {
                 	 log.trace("Sleeping for " + (duration / transactionSize));
                      Thread.sleep(duration / transactionSize);
                   } catch (InterruptedException e) {
+                     log.error("Thread has been interrupted", e);
+                     Thread.currentThread().interrupt();
                   }
                }            
             }

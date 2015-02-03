@@ -11,7 +11,7 @@ import org.radargun.stages.AbstractDistStage;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Stage(doc = "")
+@Stage(doc = "Parent class for check stages.")
 public abstract class CheckStage extends AbstractDistStage {
 
    protected DistStageAck checkThreads(List<ClientThread> threads) {

@@ -57,8 +57,7 @@ class Stressor extends Thread {
    }
 
    public SynchronizedStatistics getStatsSnapshot(boolean reset) {
-      SynchronizedStatistics snapshot = stats.snapshot(reset);
-      return snapshot;
+      return stats.snapshot(reset);
    }
 
    public String getStatus() {
