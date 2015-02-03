@@ -11,7 +11,7 @@ import org.radargun.ServiceHelper;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class PluginSchemaGenerator extends SchemaGenerator {
-   private static final String VERSION = "2.0"; // TODO: version plugins as plugin property
+   private static final String VERSION = "2.1"; // TODO: version plugins as plugin property
    protected final String plugin;
    protected final Map<String, Class<?>> services;
 

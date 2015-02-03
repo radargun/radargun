@@ -28,7 +28,7 @@ import org.w3c.dom.Element;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ConfigSchemaGenerator extends SchemaGenerator implements ConfigSchema {
-   private static final String VERSION = "2.0"; // TODO: read version from plugin
+   private static final String VERSION = "2.1"; // TODO: read version from plugin
    private static final String TYPE_CLUSTER_BASE = "cluster_base";
    private static final String TYPE_CLUSTER = "cluster";
    private static final String TYPE_PROPERTY = "property";

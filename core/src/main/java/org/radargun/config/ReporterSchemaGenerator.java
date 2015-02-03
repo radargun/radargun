@@ -13,7 +13,7 @@ import org.radargun.reporting.ReporterHelper;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ReporterSchemaGenerator extends SchemaGenerator {
-   private static final String VERSION = "2.0"; // TODO: version reporters as plugin property
+   private static final String VERSION = "2.1"; // TODO: version reporters as plugin property
    protected final String reporterModule;
    protected final Map<String, Class<? extends Reporter>> reporters;
 
