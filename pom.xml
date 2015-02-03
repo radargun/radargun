@@ -394,6 +394,11 @@
                                     <include name="**/*" />
                                  </fileset>
                               </copy>
+                              <copy todir="${distribution.artifact}/schema">
+                                 <fileset dir="plugins/@{plugin}">
+                                    <include name="*.xsd"/>
+                                 </fileset>
+                              </copy>
                               <chmod-if-exists dir="${distribution.artifact}/plugins/@{plugin}/bin" perm="ugo+x" />
                            </sequential>
                         </macrodef>
@@ -405,6 +410,11 @@
                                  <fileset dir="plugins/@{plugin}/target/distribution/plugin-@{plugin}-bin/plugin-@{plugin}">
                                     <include name="**/*" />
                                     <exclude name="**/*.jar" />
+                                 </fileset>
+                              </copy>
+                              <copy todir="${distribution.artifact}/schema">
+                                 <fileset dir="plugins/@{plugin}">
+                                    <include name="*.xsd"/>
                                  </fileset>
                               </copy>
                               <chmod-if-exists dir="${distribution.artifact}/plugins/@{plugin}/bin" perm="ugo+x" />
@@ -502,6 +512,9 @@
                            <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
                            <arg value="${distribution.artifact}/schema" />
                         </java>
+                        <copy todir="${distribution.artifact}/schema">
+                           <fileset dir="." includes="*.xsd"/>
+                        </copy>
                      </target>
                   </configuration>
                </execution>
