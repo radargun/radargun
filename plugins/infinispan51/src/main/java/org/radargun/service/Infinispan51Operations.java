@@ -50,73 +50,116 @@ public class Infinispan51Operations extends InfinispanOperations implements InMe
        */
       @Override
       public void put(K key, V value) {
-         boolean startedTx = startTxAndLock(key);
-         super.put(key, value);
-         stopTx(startedTx);
+         boolean startedTx = false;
+         try {
+            startedTx = startTxAndLock(key);
+            super.put(key, value);
+         } finally {
+            stopTx(startedTx);
+         }
       }
 
       @Override
       public V getAndPut(K key, V value) {
-         boolean startedTx = startTxAndLock(key);
-         V prev = super.getAndPut(key, value);
-         stopTx(startedTx);
+         boolean startedTx = false;
+         V prev = null;
+         try {
+            startedTx = startTxAndLock(key);
+            prev = super.getAndPut(key, value);
+         } finally {
+            stopTx(startedTx);
+         }
          return prev;
       }
 
       @Override
       public boolean remove(K key) {
-         boolean startedTx = startTxAndLock(key);
-         boolean retval = super.remove(key);
-         stopTx(startedTx);
+         boolean startedTx = false;
+         boolean retval = false;
+         try {
+            startedTx = startTxAndLock(key);
+            retval = super.remove(key);
+         } finally {
+            stopTx(startedTx);
+         }
          return retval;
       }
 
       @Override
       public V getAndRemove(K key) {
-         boolean startedTx = startTxAndLock(key);
-         boolean retval = super.remove(key);
-         V prev = super.getAndRemove(key);
-         stopTx(startedTx);
+         boolean startedTx = false;
+         V prev = null;
+         try {
+            startedTx = startTxAndLock(key);
+            prev = super.getAndRemove(key);
+         } finally {
+            stopTx(startedTx);
+         }
          return prev;
       }
 
       @Override
       public boolean replace(K key, V value) {
-         boolean startedTx = startTxAndLock(key);
-         boolean retval = super.replace(key, value);
-         stopTx(startedTx);
+         boolean startedTx = false;
+         boolean retval = false;
+         try {
+            startedTx = startTxAndLock(key);
+            retval = super.replace(key, value);
+         } finally {
+            stopTx(startedTx);
+         }
          return retval;
       }
 
       @Override
       public V getAndReplace(K key, V value) {
-         boolean startedTx = startTxAndLock(key);
-         V prev = super.getAndReplace(key, value);
-         stopTx(startedTx);
+         boolean startedTx = false;
+         V prev = null;
+         try {
+            startedTx = startTxAndLock(key);
+            prev = super.getAndReplace(key, value);
+         } finally {
+            stopTx(startedTx);
+         }
          return prev;
       }
 
       @Override
       public boolean replace(K key, V oldValue, V newValue) {
-         boolean startedTx = startTxAndLock(key);
-         boolean retval = super.replace(key, oldValue, newValue);
-         stopTx(startedTx);
+         boolean startedTx = false;
+         boolean retval = false;
+         try {
+            startedTx = startTxAndLock(key);
+            retval = super.replace(key, oldValue, newValue);
+         } finally {
+            stopTx(startedTx);
+         }
          return retval;
       }
 
       @Override
       public boolean putIfAbsent(K key, V value) {
-         boolean startedTx = startTxAndLock(key);
-         boolean retval = super.putIfAbsent(key, value);
-         stopTx(startedTx);
+         boolean startedTx = false;
+         boolean retval = false;
+         try {
+            startedTx = startTxAndLock(key);
+            retval = super.putIfAbsent(key, value);
+         } finally {
+            stopTx(startedTx);
+         }
          return retval;
       }
 
       @Override
       public boolean remove(K key, V oldValue) {
-         boolean startedTx = startTxAndLock(key);
-         boolean retval = super.remove(key, oldValue);
-         stopTx(startedTx);
+         boolean startedTx = false;
+         boolean retval = false;
+         try {
+            startedTx = startTxAndLock(key);
+            retval = super.remove(key, oldValue);
+         } finally {
+            stopTx(startedTx);
+         }
          return retval;
       }
 
