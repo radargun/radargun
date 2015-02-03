@@ -1,1 +1,56 @@
-../../target/distribution/RadarGun-2.0.0-SNAPSHOT/schema/jbosscache3-2.0.xsd
+<schema xmlns:rg="urn:radargun:plugins:jbosscache3:2.0" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:radargun:plugins:jbosscache3:2.0" version="1.0" xmlns="http://www.w3.org/2001/XMLSchema">
+   <!--From plugin-jbosscache2-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-j-boss-cache2service">
+      <annotation>
+         <documentation>JBossCache 2.x</documentation>
+      </annotation>
+      <sequence maxOccurs="1" minOccurs="1">
+         <element maxOccurs="1" minOccurs="0" name="file" type="string">
+            <annotation>
+               <documentation>Configuration file.</documentation>
+            </annotation>
+         </element>
+      </sequence>
+      <attribute name="file" type="string">
+         <annotation>
+            <documentation>Configuration file.</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <!--From plugin-jbosscache3-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-j-boss-cache3service">
+      <annotation>
+         <documentation>JBossCache 3.x</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-service-j-boss-cache2service">
+            <sequence maxOccurs="1" minOccurs="1">
+               <element maxOccurs="1" minOccurs="0" name="flat-cache" type="rg:boolean">
+                  <annotation>
+                     <documentation>Use flat cache</documentation>
+                  </annotation>
+               </element>
+            </sequence>
+            <attribute name="flat-cache" type="rg:boolean">
+               <annotation>
+                  <documentation>Use flat cache</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <element name="default" type="rg:org-radargun-service-j-boss-cache3service"/>
+   <element name="cache" type="rg:org-radargun-service-j-boss-cache3service"/>
+</schema>

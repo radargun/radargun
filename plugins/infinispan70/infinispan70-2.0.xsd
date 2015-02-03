@@ -1,1 +1,632 @@
-../../target/distribution/RadarGun-2.0.0-SNAPSHOT/schema/infinispan70-2.0.xsd
+<schema xmlns:rg="urn:radargun:plugins:infinispan70:2.0" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:radargun:plugins:infinispan70:2.0" version="1.0" xmlns="http://www.w3.org/2001/XMLSchema">
+   <!--From plugin-infinispan4-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan-embedded-service">
+      <annotation>
+         <documentation>Service hosting Infinispan in embedded (library) mode.</documentation>
+      </annotation>
+      <sequence maxOccurs="1" minOccurs="1">
+         <element maxOccurs="1" minOccurs="0" name="cache" type="string">
+            <annotation>
+               <documentation>Name of the main cache. Default is 'testCache'</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="config" type="string">
+            <annotation>
+               <documentation>File used as a configuration for this service.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="file" type="string">
+            <annotation>
+               <documentation>File used as a configuration for this service.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="keys-per-thread" type="rg:int">
+            <annotation>
+               <documentation>Keys per thread - for EvenConsistentHash.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="threads-per-node" type="rg:int">
+            <annotation>
+               <documentation>Threads per node - for EvenConsistentHash.</documentation>
+            </annotation>
+         </element>
+      </sequence>
+      <attribute name="cache" type="string">
+         <annotation>
+            <documentation>Name of the main cache. Default is 'testCache'</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="config" type="string">
+         <annotation>
+            <documentation>*DEPRECATED* File used as a configuration for this service.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="file" type="string">
+         <annotation>
+            <documentation>File used as a configuration for this service.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="keys-per-thread" type="rg:int">
+         <annotation>
+            <documentation>Keys per thread - for EvenConsistentHash.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="threads-per-node" type="rg:int">
+         <annotation>
+            <documentation>Threads per node - for EvenConsistentHash.</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <simpleType name="int">
+      <union>
+         <simpleType>
+            <restriction base="integer"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From plugin-infinispan51-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan51embedded-service">
+      <annotation>
+         <documentation>Service hosting Infinispan in embedded (library) mode.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-service-infinispan-embedded-service">
+            <sequence maxOccurs="1" minOccurs="1">
+               <element maxOccurs="1" minOccurs="0" name="batching" type="rg:boolean">
+                  <annotation>
+                     <documentation>Use batching instead of transactions. Default is false.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="channel-retrieval-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
+                  <annotation>
+                     <documentation>Timeout for retrieving the JGroupsTransport and its channels. Default is 2 minutes.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="explicit-locking" type="rg:boolean">
+                  <annotation>
+                     <documentation>Explicitely lock each modification. Default is false.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="removed-caches" type="string">
+                  <annotation>
+                     <documentation>List of caches that should be removed prior to CacheManager.stop() - workarounds issues when stopping the server.</documentation>
+                  </annotation>
+               </element>
+            </sequence>
+            <attribute name="batching" type="rg:boolean">
+               <annotation>
+                  <documentation>Use batching instead of transactions. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="channel-retrieval-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
+               <annotation>
+                  <documentation>Timeout for retrieving the JGroupsTransport and its channels. Default is 2 minutes.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="explicit-locking" type="rg:boolean">
+               <annotation>
+                  <documentation>Explicitely lock each modification. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="removed-caches" type="string">
+               <annotation>
+                  <documentation>List of caches that should be removed prior to CacheManager.stop() - workarounds issues when stopping the server.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="long-converted-by-org-radargun-utils-time-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[-0-9]+\s*[mMsS]?"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From plugin-infinispan52-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan52embedded-service">
+      <annotation>
+         <documentation>Service hosting Infinispan in embedded (library) mode.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-service-infinispan51embedded-service">
+            <sequence maxOccurs="1" minOccurs="1"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From plugin-infinispan53-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan53embedded-service">
+      <annotation>
+         <documentation>Service hosting Infinispan in embedded (library) mode.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-service-infinispan52embedded-service">
+            <sequence maxOccurs="1" minOccurs="1"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From plugin-infinispan60-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan60embedded-service">
+      <annotation>
+         <documentation>Service hosting Infinispan in embedded (library) mode.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-service-infinispan53embedded-service">
+            <sequence maxOccurs="1" minOccurs="1">
+               <element maxOccurs="1" minOccurs="0" name="internals-exposition-enabled" type="rg:boolean">
+                  <annotation>
+                     <documentation>Enables presentation of internal state of Infinispan. Use for debugging and monitoring purposes. Default is false.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="jgroups-dumper-enabled" type="rg:boolean">
+                  <annotation>
+                     <documentation>Start thread periodically dumping JGroups state. Use for debug purposes. Default is false.</documentation>
+                  </annotation>
+               </element>
+            </sequence>
+            <attribute name="internals-exposition-enabled" type="rg:boolean">
+               <annotation>
+                  <documentation>Enables presentation of internal state of Infinispan. Use for debugging and monitoring purposes. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="jgroups-dumper-enabled" type="rg:boolean">
+               <annotation>
+                  <documentation>Start thread periodically dumping JGroups state. Use for debug purposes. Default is false.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From plugin-infinispan70-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan70embedded-service">
+      <annotation>
+         <documentation>Service hosting Infinispan in embedded (library) mode.</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-service-infinispan60embedded-service">
+            <sequence maxOccurs="1" minOccurs="1"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <element name="default" type="rg:org-radargun-service-infinispan70embedded-service"/>
+   <!--From plugin-infinispan52-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan-hotrod-service">
+      <annotation>
+         <documentation>HotRod client</documentation>
+      </annotation>
+      <sequence maxOccurs="1" minOccurs="1">
+         <element maxOccurs="1" minOccurs="0" name="cache" type="string">
+            <annotation>
+               <documentation>Default cache name. By default, it's the default cache as retrived with getCache().</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="servers" type="string">
+            <annotation>
+               <documentation>List of server addresses the clients should connect to, separated by semicolons (;).</documentation>
+            </annotation>
+         </element>
+      </sequence>
+      <attribute name="cache" type="string">
+         <annotation>
+            <documentation>Default cache name. By default, it's the default cache as retrived with getCache().</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="servers" type="string">
+         <annotation>
+            <documentation>List of server addresses the clients should connect to, separated by semicolons (;).</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <!--From plugin-infinispan60-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan60hotrod-service">
+      <annotation>
+         <documentation>HotRod client</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-service-infinispan-hotrod-service">
+            <sequence maxOccurs="1" minOccurs="1">
+               <element maxOccurs="1" minOccurs="0" name="classes" type="rg:java-util-list-converted-by-org-radargun-service-infinispan60hotrod-service-registered-class-converter">
+                  <annotation>
+                     <documentation>Classes that should be registered as marshalled. By default, none.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="cluster-name" type="string">
+                  <annotation>
+                     <documentation>Name of the cluster (used for JMX operations). Default is 'default'.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="enable-query" type="rg:boolean">
+                  <annotation>
+                     <documentation>Enables query functionality. This requires using the ProtostreamMarshaller,defining the objects and involves further overhead. Default is false.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="jmx-domain" type="string">
+                  <annotation>
+                     <documentation>JMX Domain name for components looked up. Default is 'jboss.infinispan'</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="jmx-port" type="rg:int">
+                  <annotation>
+                     <documentation>JMX port to connect the server. Default is 9999.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="max-connections-server" type="rg:int">
+                  <annotation>
+                     <documentation>Maximal amount of active connections to single server. Default is unlimited.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="max-connections-total" type="rg:int">
+                  <annotation>
+                     <documentation>Maximal amount of active connections to all servers. Default is unlimited.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="protofiles" type="string">
+                  <annotation>
+                     <documentation>Paths to the .protobin files. Defaul is query/values.protobin</documentation>
+                  </annotation>
+               </element>
+            </sequence>
+            <attribute name="classes" type="rg:java-util-list-converted-by-org-radargun-service-infinispan60hotrod-service-registered-class-converter">
+               <annotation>
+                  <documentation>Classes that should be registered as marshalled. By default, none.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="cluster-name" type="string">
+               <annotation>
+                  <documentation>Name of the cluster (used for JMX operations). Default is 'default'.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="enable-query" type="rg:boolean">
+               <annotation>
+                  <documentation>Enables query functionality. This requires using the ProtostreamMarshaller,defining the objects and involves further overhead. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="jmx-domain" type="string">
+               <annotation>
+                  <documentation>JMX Domain name for components looked up. Default is 'jboss.infinispan'</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="jmx-port" type="rg:int">
+               <annotation>
+                  <documentation>JMX port to connect the server. Default is 9999.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="max-connections-server" type="rg:int">
+               <annotation>
+                  <documentation>Maximal amount of active connections to single server. Default is unlimited.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="max-connections-total" type="rg:int">
+               <annotation>
+                  <documentation>Maximal amount of active connections to all servers. Default is unlimited.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="protofiles" type="string">
+               <annotation>
+                  <documentation>Paths to the .protobin files. Defaul is query/values.protobin</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="java-util-list-converted-by-org-radargun-service-infinispan60hotrod-service-registered-class-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="([\p{L}_$][\p{L}\p{N}_$]*\.)*[\p{L}_$][\p{L}\p{N}_$]*(:([\p{L}_$][\p{L}\p{N}_$]*\.)*[\p{L}_$][\p{L}\p{N}_$]*)?(;\s*([\p{L}_$][\p{L}\p{N}_$]*\.)*[\p{L}_$][\p{L}\p{N}_$]*(:([\p{L}_$][\p{L}\p{N}_$]*\.)*[\p{L}_$][\p{L}\p{N}_$]*)?)*"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From plugin-infinispan70-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan70hotrod-service">
+      <annotation>
+         <documentation>HotRod client</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-service-infinispan60hotrod-service">
+            <sequence maxOccurs="1" minOccurs="1"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <element name="hotrod" type="rg:org-radargun-service-infinispan70hotrod-service"/>
+   <!--From plugin-process-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-process-service">
+      <annotation>
+         <documentation>Generic process control</documentation>
+      </annotation>
+      <sequence maxOccurs="1" minOccurs="1">
+         <element maxOccurs="1" minOccurs="0" name="args" type="rg:java-util-list-converted-by-org-radargun-utils-args-converter">
+            <annotation>
+               <documentation>Additional arguments. Empty by default.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="command" type="string">
+            <annotation>
+               <documentation>Command for starting the process</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="env" type="rg:java-util-map-converted-by-org-radargun-service-process-service-envs-converter">
+            <annotation>
+               <documentation>Environment arguments. Empty by default.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="file" type="string">
+            <annotation>
+               <documentation>Configuration file used as the last argument.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="os" type="string">
+            <annotation>
+               <documentation>Current operating system. Default is UNIX.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="start-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
+            <annotation>
+               <documentation>Timeout to start the service. Default is 1 minute.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="stderr-to-stdout" type="rg:boolean">
+            <annotation>
+               <documentation>Process standard error as standard output. Default is false.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="stop-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
+            <annotation>
+               <documentation>Timeout to stop the service. Default is 1 minute.</documentation>
+            </annotation>
+         </element>
+      </sequence>
+      <attribute name="args" type="rg:java-util-list-converted-by-org-radargun-utils-args-converter">
+         <annotation>
+            <documentation>Additional arguments. Empty by default.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="command" type="string">
+         <annotation>
+            <documentation>Command for starting the process</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="env" type="rg:java-util-map-converted-by-org-radargun-service-process-service-envs-converter">
+         <annotation>
+            <documentation>Environment arguments. Empty by default.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="file" type="string">
+         <annotation>
+            <documentation>Configuration file used as the last argument.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="os" type="string">
+         <annotation>
+            <documentation>Current operating system. Default is UNIX.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="start-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
+         <annotation>
+            <documentation>Timeout to start the service. Default is 1 minute.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="stderr-to-stdout" type="rg:boolean">
+         <annotation>
+            <documentation>Process standard error as standard output. Default is false.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="stop-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
+         <annotation>
+            <documentation>Timeout to stop the service. Default is 1 minute.</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <simpleType name="java-util-list-converted-by-org-radargun-utils-args-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="(.|&#10;|&#13;)*"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="java-util-map-converted-by-org-radargun-service-process-service-envs-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="(.|&#10;|&#13;)*"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <!--From plugin-process-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-java-process-service">
+      <complexContent>
+         <extension base="rg:org-radargun-service-process-service">
+            <sequence maxOccurs="1" minOccurs="1">
+               <element maxOccurs="1" minOccurs="0" name="jmx-connection-enabled" type="rg:boolean">
+                  <annotation>
+                     <documentation>Connect to the process and retrieve JMX connection. Default is true.</documentation>
+                  </annotation>
+               </element>
+            </sequence>
+            <attribute name="jmx-connection-enabled" type="rg:boolean">
+               <annotation>
+                  <documentation>Connect to the process and retrieve JMX connection. Default is true.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From plugin-infinispan52-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan-server-service">
+      <annotation>
+         <documentation>Service running Infinispan Server</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-service-java-process-service">
+            <sequence maxOccurs="1" minOccurs="1">
+               <element maxOccurs="1" minOccurs="0" name="cache-manager-name" type="string">
+                  <annotation>
+                     <documentation>Name of the cache manager/cache container. Default is 'default'.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="executor-pool-size" type="rg:int">
+                  <annotation>
+                     <documentation>Number of threads in scheduled tasks pool. Default is 2.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="home" type="string">
+                  <annotation>
+                     <documentation>Home directory for the server</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="java" type="string">
+                  <annotation>
+                     <documentation>Java binary used to start the server. Default is system-default.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="java-opts" type="string">
+                  <annotation>
+                     <documentation>Extra Java options used. Default is none.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="jgroups-dump-period" type="rg:long-converted-by-org-radargun-utils-time-converter">
+                  <annotation>
+                     <documentation>Period in which should be JGroups JMX data dumped. Default is 10 seconds.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="jgroups-dumper-enabled" type="rg:boolean">
+                  <annotation>
+                     <documentation>Start thread periodically dumping JGroups JMX data. Default is false.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="jmx-domain" type="string">
+                  <annotation>
+                     <documentation>JMX domain. Default is 'org.infinispan'.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="log-dir" type="string">
+                  <annotation>
+                     <documentation>Directory for storing logs</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="view-check-period" type="rg:long-converted-by-org-radargun-utils-time-converter">
+                  <annotation>
+                     <documentation>Period for checking current membership. Default is 10 seconds.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="windows" type="rg:boolean">
+                  <annotation>
+                     <documentation>Is this executed on Windows (should we use *.bat instead of *.sh)? Default is false.</documentation>
+                  </annotation>
+               </element>
+            </sequence>
+            <attribute name="cache-manager-name" type="string">
+               <annotation>
+                  <documentation>Name of the cache manager/cache container. Default is 'default'.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="executor-pool-size" type="rg:int">
+               <annotation>
+                  <documentation>Number of threads in scheduled tasks pool. Default is 2.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="home" type="string">
+               <annotation>
+                  <documentation>Home directory for the server</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="java" type="string">
+               <annotation>
+                  <documentation>Java binary used to start the server. Default is system-default.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="java-opts" type="string">
+               <annotation>
+                  <documentation>Extra Java options used. Default is none.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="jgroups-dump-period" type="rg:long-converted-by-org-radargun-utils-time-converter">
+               <annotation>
+                  <documentation>Period in which should be JGroups JMX data dumped. Default is 10 seconds.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="jgroups-dumper-enabled" type="rg:boolean">
+               <annotation>
+                  <documentation>Start thread periodically dumping JGroups JMX data. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="jmx-domain" type="string">
+               <annotation>
+                  <documentation>JMX domain. Default is 'org.infinispan'.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="log-dir" type="string">
+               <annotation>
+                  <documentation>Directory for storing logs</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="view-check-period" type="rg:long-converted-by-org-radargun-utils-time-converter">
+               <annotation>
+                  <documentation>Period for checking current membership. Default is 10 seconds.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="windows" type="rg:boolean">
+               <annotation>
+                  <documentation>Is this executed on Windows (should we use *.bat instead of *.sh)? Default is false.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <!--From plugin-infinispan60-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan60server-service">
+      <annotation>
+         <documentation>Service running Infinispan Server</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-radargun-service-infinispan-server-service">
+            <sequence maxOccurs="1" minOccurs="1"/>
+         </extension>
+      </complexContent>
+   </complexType>
+   <element name="server" type="rg:org-radargun-service-infinispan60server-service"/>
+   <element name="embedded" type="rg:org-radargun-service-infinispan70embedded-service"/>
+</schema>

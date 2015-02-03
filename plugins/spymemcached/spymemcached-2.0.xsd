@@ -1,1 +1,118 @@
-../../target/distribution/RadarGun-2.0.0-SNAPSHOT/schema/spymemcached-2.0.xsd
+<schema xmlns:rg="urn:radargun:plugins:spymemcached:2.0" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:radargun:plugins:spymemcached:2.0" version="1.0" xmlns="http://www.w3.org/2001/XMLSchema">
+   <!--From plugin-spymemcached-2.0.0.Final.jar-->
+   <complexType name="org-radargun-service-spy-memcached-service">
+      <annotation>
+         <documentation>SpyMemcached client</documentation>
+      </annotation>
+      <sequence maxOccurs="1" minOccurs="1">
+         <element maxOccurs="1" minOccurs="0" name="cache-name" type="string">
+            <annotation>
+               <documentation>Expected cache name. Requests for other caches will fail. Defaults to null.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="failure-mode" type="rg:net-spy-memcached-failure-mode">
+            <annotation>
+               <documentation>Failure mode for the client. Default is 'Redistribute' (continue with next living node).</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="operation-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
+            <annotation>
+               <documentation>Timeout for operation (request will throw exception after this timeout). Default is 15 seconds.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="pool-size" type="rg:int">
+            <annotation>
+               <documentation>Number of memcached client instances (each keeps only single connection to each server). Default is 100.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="servers" type="rg:java-util-list-converted-by-org-radargun-service-spy-memcached-service-address-list-converter">
+            <annotation>
+               <documentation>Semicolon-separated list of server addresses.</documentation>
+            </annotation>
+         </element>
+      </sequence>
+      <attribute name="cache-name" type="string">
+         <annotation>
+            <documentation>Expected cache name. Requests for other caches will fail. Defaults to null.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="failure-mode" type="rg:net-spy-memcached-failure-mode">
+         <annotation>
+            <documentation>Failure mode for the client. Default is 'Redistribute' (continue with next living node).</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="operation-timeout" type="rg:long-converted-by-org-radargun-utils-time-converter">
+         <annotation>
+            <documentation>Timeout for operation (request will throw exception after this timeout). Default is 15 seconds.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="pool-size" type="rg:int">
+         <annotation>
+            <documentation>Number of memcached client instances (each keeps only single connection to each server). Default is 100.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="servers" type="rg:java-util-list-converted-by-org-radargun-service-spy-memcached-service-address-list-converter">
+         <annotation>
+            <documentation>Semicolon-separated list of server addresses.</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <simpleType name="net-spy-memcached-failure-mode">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="Redistribute"/>
+               <enumeration value="Retry"/>
+               <enumeration value="Cancel"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="long-converted-by-org-radargun-utils-time-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[-0-9]+\s*[mMsS]?"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="int">
+      <union>
+         <simpleType>
+            <restriction base="integer"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="java-util-list-converted-by-org-radargun-service-spy-memcached-service-address-list-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="(\[([0-9A-Fa-f:]+)\]|([^:/?#]*))(?::(\d*))?"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <element name="default" type="rg:org-radargun-service-spy-memcached-service"/>
+   <element name="client" type="rg:org-radargun-service-spy-memcached-service"/>
+</schema>
