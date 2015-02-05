@@ -28,7 +28,7 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       try {
-         BackgroundOpsManager instance = BackgroundOpsManager.getInstance(slaveState, name);
+         BackgroundStatisticsManager instance = BackgroundStatisticsManager.getInstance(slaveState, name);
          if (instance != null) {
             instance.stopStats();
             return new StatisticsAck(slaveState, instance.getStats());
@@ -56,7 +56,7 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
       Table<Integer, Integer, Long> cacheSizes = new Table<Integer, Integer, Long>();
       for (StatisticsAck ack : Projections.instancesOf(acks, StatisticsAck.class)) {
          int i = 0;
-         for (BackgroundOpsManager.IterationStats stats : ack.iterations) {
+         for (BackgroundStatisticsManager.IterationStats stats : ack.iterations) {
             test.addStatistics(i, ack.getSlaveIndex(), stats.statistics);
             cacheSizes.put(ack.getSlaveIndex(), i, stats.cacheSize);
             ++i;
@@ -70,16 +70,16 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
             min = Math.min(min, iterationData.getValue());
             max = Math.max(max, iterationData.getValue());
          }
-         Report.TestResult result = new Report.TestResult(BackgroundOpsManager.CACHE_SIZE, slaveResults, min < max ? String.format("%d .. %d", min, max) : "-", false);
+         Report.TestResult result = new Report.TestResult(BackgroundStatisticsManager.CACHE_SIZE, slaveResults, min < max ? String.format("%d .. %d", min, max) : "-", false);
          test.addResult(iteration, result);
       }
       return StageResult.SUCCESS;
    }
 
    private static class StatisticsAck extends DistStageAck {
-      public final List<BackgroundOpsManager.IterationStats> iterations;
+      public final List<BackgroundStatisticsManager.IterationStats> iterations;
 
-      private StatisticsAck(SlaveState slaveState, List<BackgroundOpsManager.IterationStats> iterations) {
+      private StatisticsAck(SlaveState slaveState, List<BackgroundStatisticsManager.IterationStats> iterations) {
          super(slaveState);
          this.iterations = iterations;
       }

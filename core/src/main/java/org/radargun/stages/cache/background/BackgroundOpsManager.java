@@ -1,6 +1,5 @@
 package org.radargun.stages.cache.background;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,15 +15,11 @@ import java.util.concurrent.TimeUnit;
 import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.reporting.Timeline;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.helpers.Range;
-import org.radargun.state.ServiceListener;
+import org.radargun.state.ServiceListenerAdapter;
 import org.radargun.state.SlaveState;
-import org.radargun.stats.OperationStats;
-import org.radargun.stats.Statistics;
-import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.CacheListeners;
@@ -47,14 +42,13 @@ import org.radargun.traits.Transactional;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class BackgroundOpsManager implements ServiceListener {
+public class BackgroundOpsManager extends ServiceListenerAdapter {
    /**
     * Key to SlaveState to retrieve BackgroundOpsManager instance and to MasterState to retrieve results.
     */
    private static final String PREFIX = "BackgroundOps.";
    public static final String DEFAULT = "Default";
    public static final String ALL  = PREFIX + "All";
-   static final String CACHE_SIZE = "Cache size";
 
    private static Log log = LogFactory.getLog(BackgroundOpsManager.class);
 
@@ -66,12 +60,8 @@ public class BackgroundOpsManager implements ServiceListener {
    private String name;
    private SlaveState slaveState;
    private volatile Stressor[] stressorThreads;
-   private SizeThread sizeThread;
-   private ScheduledFuture statsTask;
    private ScheduledFuture keepAliveTask;
    private ScheduledExecutorService executor;
-   private List<IterationStats> stats;
-   private long statsIterationDuration;
    private boolean loaded = false;
    private LogChecker[] logCheckers;
    private LogCheckerPool logCheckerPool;
@@ -85,6 +75,9 @@ public class BackgroundOpsManager implements ServiceListener {
    private volatile ConditionalOperations.Cache conditionalCache;
    private volatile CacheInformation.Cache cacheInfo;
 
+   private BackgroundOpsManager() {
+   }
+
    public static BackgroundOpsManager getInstance(SlaveState slaveState, String name) {
       return (BackgroundOpsManager) slaveState.get(PREFIX + name);
    }
@@ -95,7 +88,7 @@ public class BackgroundOpsManager implements ServiceListener {
          instance = new BackgroundOpsManager();
          instance.name = name;
          instance.slaveState = slaveState;
-         instance.executor = Executors.newScheduledThreadPool(2);
+         instance.executor = Executors.newScheduledThreadPool(1);
          slaveState.put(PREFIX + name, instance);
          slaveState.addServiceListener(instance);
          List<BackgroundOpsManager> list = (List<BackgroundOpsManager>) slaveState.get(ALL);
@@ -120,12 +113,6 @@ public class BackgroundOpsManager implements ServiceListener {
       instance.lifecycle = slaveState.getTrait(Lifecycle.class);
       instance.listeners = slaveState.getTrait(CacheListeners.class);
       instance.loadCaches();
-      return instance;
-   }
-
-   public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, String name, long statsIterationDuration) {
-      BackgroundOpsManager instance = getOrCreateInstance(slaveState, name);
-      instance.statsIterationDuration = statsIterationDuration;
       return instance;
    }
 
@@ -157,9 +144,6 @@ public class BackgroundOpsManager implements ServiceListener {
       conditionalCache = null;
       debugableCache = null;
       cacheInfo = null;
-   }
-
-   private BackgroundOpsManager() {
    }
 
    public Operation getOperation(Random rand) {
@@ -479,42 +463,6 @@ public class BackgroundOpsManager implements ServiceListener {
       if (checkers) logCheckers = null;
    }
 
-   public synchronized void startStats() {
-      if (stats == null) {
-         stats = new ArrayList<IterationStats>();
-      }
-      if (sizeThread == null) {
-         sizeThread = new SizeThread();
-         sizeThread.start();
-      }
-      if (statsTask == null) {
-         statsTask = executor.scheduleAtFixedRate(new StatsTask(), 0, statsIterationDuration, TimeUnit.MILLISECONDS);
-      }
-   }
-
-   public synchronized void stopStats() {
-      if (statsTask != null) {
-         statsTask.cancel(true);
-         statsTask = null;
-      }
-      if (sizeThread != null) {
-         log.debug("Interrupting size thread");
-         sizeThread.interrupt();
-         try {
-            sizeThread.join();
-         } catch (InterruptedException e) {
-            log.error("Interrupted while waiting for stat thread to end.");
-         }
-         sizeThread = null;
-      }
-   }
-
-   public synchronized List<IterationStats> getStats() {
-      List<IterationStats> statsToReturn = stats;
-      stats = null;
-      return statsToReturn;
-   }
-
    public KeyGenerator getKeyGenerator() {
       KeyGenerator keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
       if (keyGenerator == null) {
@@ -606,40 +554,6 @@ public class BackgroundOpsManager implements ServiceListener {
       return listeners;
    }
 
-   // TODO:
-   // a) clear listener on the BasicOperations trait
-   // b) deal with the fact that the clear can be executed
-   public static void beforeCacheClear(SlaveState slaveState) {
-      List<BackgroundOpsManager> instances = getAllInstances(slaveState);
-      for (BackgroundOpsManager instance : instances) {
-         instance.setLoaded(false);
-      }
-   }
-
-   @Override
-   public void beforeServiceStart() {}
-
-   @Override
-   public void afterServiceStart() {
-      setLoaded(true); // don't load data at this stage
-      loadCaches(); // the object returned by a trait may be invalid after restart
-      startBackgroundThreads();
-   }
-
-   @Override
-   public void beforeServiceStop(boolean graceful) {
-      stopBackgroundThreads();
-      unloadCaches();
-   }
-
-   @Override
-   public void afterServiceStop(boolean graceful) {}
-
-   @Override
-   public void serviceDestroyed() {
-      stopStats();
-   }
-
    public String getName() {
       return name;
    }
@@ -664,6 +578,44 @@ public class BackgroundOpsManager implements ServiceListener {
       return logLogicConfiguration;
    }
 
+   public CacheInformation.Cache getCacheInfo() {
+      return cacheInfo;
+   }
+
+   public Lifecycle getLifecycle() {
+      return lifecycle;
+   }
+
+   public Stressor[] getStressorThreads() {
+      return stressorThreads;
+   }
+
+   // TODO:
+   // a) clear listener on the BasicOperations trait
+   // b) deal with the fact that the clear can be executed
+   public static void beforeCacheClear(SlaveState slaveState) {
+      List<BackgroundOpsManager> instances = getAllInstances(slaveState);
+      for (BackgroundOpsManager instance : instances) {
+         instance.setLoaded(false);
+      }
+   }
+
+   @Override
+   public void afterServiceStart() {
+      setLoaded(true); // don't load data at this stage
+      loadCaches(); // the object returned by a trait may be invalid after restart
+      startBackgroundThreads();
+   }
+
+   @Override
+   public void beforeServiceStop(boolean graceful) {
+      stopBackgroundThreads();
+      unloadCaches();
+   }
+
+   @Override
+   public void afterServiceStop(boolean graceful) {}
+
    private class KeepAliveTask implements Runnable {
       @Override
       public void run() {
@@ -675,104 +627,4 @@ public class BackgroundOpsManager implements ServiceListener {
       }
    }
 
-   private class StatsTask implements Runnable {
-      StatsTask() {
-         gatherStats(); // throw away first stats
-      }
-
-      public void run() {
-         stats.add(gatherStats());
-      }
-
-      private IterationStats gatherStats() {
-         Stressor[] threads = stressorThreads;
-         List<Statistics> stats;
-         if (threads == null) {
-            stats = Collections.EMPTY_LIST;
-         } else {
-            stats = new ArrayList<Statistics>(threads.length);
-            for (int i = 0; i < threads.length; i++) {
-               if (threads[i] != null) {
-                  stats.add(threads[i].getStatsSnapshot(true));
-               }
-            }
-         }
-         Timeline timeline = slaveState.getTimeline();
-         long now = System.currentTimeMillis();
-         long cacheSize = sizeThread.getAndResetSize();
-         timeline.addValue(CACHE_SIZE, new Timeline.Value(now, cacheSize));
-         if (stats.isEmpty()) {
-            // add zero for all operations we've already reported
-            for (String valueCategory : timeline.getValueCategories()) {
-               if (valueCategory.endsWith(" Throughput")) {
-                  timeline.addValue(valueCategory, new Timeline.Value(now, 0));
-               }
-            }
-         } else {
-            Statistics aggregated = stats.get(0).copy();
-            for (int i = 1; i < stats.size(); ++i) {
-               aggregated.merge(stats.get(i));
-            }
-            for (Map.Entry<String, OperationStats> entry : aggregated.getOperationsStats().entrySet()) {
-               OperationThroughput throughput = entry.getValue().getRepresentation(OperationThroughput.class, stats.size(), TimeUnit.MILLISECONDS.toNanos(aggregated.getEnd() - aggregated.getBegin()));
-               if (throughput != null && (throughput.actual != 0 || timeline.getValues(entry.getKey() + " Throughput") != null)) {
-                  timeline.addValue(entry.getKey() + " Throughput", new Timeline.Value(now, throughput.actual));
-               }
-            }
-         }
-
-         log.trace("Adding iteration " + BackgroundOpsManager.this.stats.size() + ": " + stats);
-         return new IterationStats(stats, cacheSize);
-      }
-   }
-
-   /**
-    *
-    * Used for fetching cache size. If the size can't be fetched during one stat iteration, value 0
-    * will be used.
-    *
-    */
-   private class SizeThread extends Thread {
-      private boolean getSize = true;
-      private long size = -1;
-
-      @Override
-      public void run() {
-         try {
-            while (!isInterrupted()) {
-               synchronized (this) {
-                  while (!getSize) {
-                     wait(100);
-                  }
-                  getSize = false;
-               }
-               if (cacheInfo != null && lifecycle.isRunning()) {
-                  size = cacheInfo.getOwnedSize();
-               } else {
-                  size = 0;
-               }
-            }
-         } catch (InterruptedException e) {
-            log.trace("SizeThread interrupted.");
-         }
-      }
-
-      public synchronized long getAndResetSize() {
-         long rSize = size;
-         size = -1;
-         getSize = true;
-         notify();
-         return rSize;
-      }
-   }
-
-   public static class IterationStats implements Serializable {
-      public final List<Statistics> statistics;
-      public final long cacheSize;
-
-      private IterationStats(List<Statistics> statistics, long cacheSize) {
-         this.statistics = statistics;
-         this.cacheSize = cacheSize;
-      }
-   }
 }
