@@ -74,7 +74,7 @@ public class BackgroundOpsManager implements ServiceListener {
    private long statsIterationDuration;
    private boolean loaded = false;
    private LogChecker[] logCheckers;
-   private LogChecker.Pool logCheckerPool;
+   private LogCheckerPool logCheckerPool;
    private boolean stressorsPaused, checkersPaused;
 
    private Lifecycle lifecycle;
@@ -274,9 +274,9 @@ public class BackgroundOpsManager implements ServiceListener {
          logCheckers = new LogChecker[logLogicConfiguration.checkingThreads];
          for (int i = 0; i < logLogicConfiguration.checkingThreads; ++i) {
             if (generalConfiguration.sharedKeys) {
-               logCheckers[i] = new SharedLogChecker(i, (SharedLogChecker.Pool) logCheckerPool, this);
+               logCheckers[i] = new SharedLogChecker(i, logCheckerPool, this);
             } else {
-               logCheckers[i] = new PrivateLogChecker(i, (PrivateLogChecker.Pool) logCheckerPool, this);
+               logCheckers[i] = new PrivateLogChecker(i, logCheckerPool, this);
             }
             logCheckers[i].start();
          }
@@ -288,12 +288,24 @@ public class BackgroundOpsManager implements ServiceListener {
          log.debug("Checker pool already exists, not creating another");
          return;
       }
+      int totalThreads = slaveState.getGroupSize() * generalConfiguration.numThreads;
+      List<StressorRecord> stressorRecords = new ArrayList<>();
       if (generalConfiguration.sharedKeys) {
-         logCheckerPool = new SharedLogChecker.Pool(
-               slaveState.getGroupSize(), generalConfiguration.numThreads, generalConfiguration.numEntries, generalConfiguration.keyIdOffset, this);
+         // initialize stressor records
+         for (int threadId = 0; threadId < totalThreads; ++threadId) {
+            Range range = new Range(generalConfiguration.keyIdOffset, generalConfiguration.keyIdOffset + generalConfiguration.numEntries);
+            stressorRecords.add(new StressorRecord(threadId, range));
+            log.tracef("Record for threadId %d has range %s", threadId, range);
+         }
+         logCheckerPool = new LogCheckerPool(totalThreads, stressorRecords, this);
       } else {
-         logCheckerPool = new PrivateLogChecker.Pool(
-               slaveState.getGroupSize(), generalConfiguration.numThreads, generalConfiguration.numEntries, generalConfiguration.keyIdOffset, this);
+         // initialize stressor records
+         for (int threadId = 0; threadId < totalThreads; ++threadId) {
+            Range range = Range.divideRange(generalConfiguration.getNumEntries(), totalThreads, threadId).shift(generalConfiguration.keyIdOffset);
+            stressorRecords.add(new StressorRecord(threadId, range));
+            log.tracef("Record for threadId %d has range %s", threadId, range);
+         }
+         logCheckerPool = new LogCheckerPool(totalThreads, stressorRecords, this);
       }
    }
 
@@ -526,7 +538,7 @@ public class BackgroundOpsManager implements ServiceListener {
          if (logCheckerPool != null) {
             boolean progress = true;
             long now = System.currentTimeMillis();
-            for (LogChecker.StressorRecord record : logCheckerPool.getRecords()) {
+            for (StressorRecord record : logCheckerPool.getRecords()) {
                log.info("Record: " + record.getStatus());
                if (now - record.getLastSuccessfulCheckTimestamp() > logLogicConfiguration.noProgressTimeout) {
                   log.error("No progress in this record for " + (now - record.getLastSuccessfulCheckTimestamp()) + " ms");
