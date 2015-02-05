@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class Range {
+public final class Range {
    
    private long start;
    private long end;
+
+   private Range() {}
 
    public Range(long start, long end) {
       this.start = start;

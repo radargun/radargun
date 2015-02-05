@@ -4,15 +4,11 @@ import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.traits.BasicOperations;
-import org.radargun.traits.CacheListeners;
 import org.radargun.traits.Debugable;
 import org.radargun.utils.Utils;
 
@@ -28,8 +24,8 @@ import org.radargun.utils.Utils;
  * even if the old records are not checked. Then, it has to notify the checker about this action
  * via ignored_* key, to prevent it from failing the test.
  *
- * @see AbstractLogLogic
- * @see Stressor
+ * @see org.radargun.stages.cache.background.AbstractLogLogic
+ * @see org.radargun.stages.cache.background.Stressor
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -49,12 +45,12 @@ public abstract class LogChecker extends Thread {
    protected final long logCounterUpdatePeriod;
    protected final boolean ignoreDeadCheckers;
    protected final long writeApplyMaxDelay;
-   protected final Pool pool;
+   protected final LogCheckerPool pool;
    protected final BasicOperations.Cache basicCache;
    protected final Debugable.Cache debugableCache;
    protected volatile boolean terminate = false;
 
-   public LogChecker(String name, BackgroundOpsManager manager, Pool logCheckerPool) {
+   public LogChecker(String name, BackgroundOpsManager manager, LogCheckerPool logCheckerPool) {
       super(name);
       keyGenerator = manager.getKeyGenerator();
       slaveIndex = manager.getSlaveState().getIndexInGroup();
@@ -86,7 +82,7 @@ public abstract class LogChecker extends Thread {
    public void run() {
       int delayedKeys = 0;
       while (!terminate) {
-         AbstractStressorRecord record = null;
+         StressorRecord record = null;
          try {
             if (delayedKeys > pool.getTotalThreads()) {
                Thread.sleep(UNSUCCESSFUL_CHECK_MIN_DELAY_MS);
@@ -138,7 +134,7 @@ public abstract class LogChecker extends Thread {
                }
                if (record.getOperationId() % logCounterUpdatePeriod == 0) {
                   basicCache.put(checkerKey(slaveIndex, record.getThreadId()),
-                        new LastOperation(record.getOperationId(), Utils.getRandomSeed(record.rand)));
+                        new LastOperation(record.getOperationId(), Utils.getRandomSeed(record.getRand())));
                }
                record.next();
                record.setLastUnsuccessfulCheckTimestamp(Long.MIN_VALUE);
@@ -154,7 +150,7 @@ public abstract class LogChecker extends Thread {
                   if (ignoreDeadCheckers) {
                      Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
                      if (ignored != null && record.getOperationId() <= (Long) ignored) {
-                        log.debugf("Operations %d - %d for thread %d are ignored.", record.getOperationId(), ignored, record.threadId);
+                        log.debugf("Operations %d - %d for thread %d are ignored.", record.getOperationId(), ignored, record.getThreadId());
                         while (record.getOperationId() <= (Long) ignored) {
                            record.next();
                         }
@@ -165,7 +161,7 @@ public abstract class LogChecker extends Thread {
                   if (!notification) {
                      log.errorf("Missing notification for operation %d for thread %d on key %d (%s), required for %d, notified for %s",
                            record.getOperationId(), record.getThreadId(), record.getKeyId(),
-                           keyGenerator.generateKey(record.getKeyId()), record.requireNotify, record.notifiedOps);
+                           keyGenerator.generateKey(record.getKeyId()), record.getRequireNotify(), record.getNotifiedOps());
                      pool.reportMissingNotification();
                   }
                   if (!contains) {
@@ -204,161 +200,11 @@ public abstract class LogChecker extends Thread {
       }
    }
 
-   protected abstract AbstractStressorRecord newRecord(AbstractStressorRecord record, long operationId, long seed);
+   protected abstract StressorRecord newRecord(StressorRecord record, long operationId, long seed);
 
-   protected abstract Object findValue(AbstractStressorRecord record) throws Exception;
+   protected abstract Object findValue(StressorRecord record) throws Exception;
 
-   protected abstract boolean containsOperation(Object value, AbstractStressorRecord record);
-
-   public static abstract class Pool implements CacheListeners.UpdatedListener, CacheListeners.CreatedListener {
-      private final int totalThreads;
-      private final AtomicReferenceArray<AbstractStressorRecord> allRecords;
-      private final ConcurrentLinkedQueue<AbstractStressorRecord> records = new ConcurrentLinkedQueue<AbstractStressorRecord>();
-      private final BackgroundOpsManager manager;
-      private final AtomicLong missingOperations = new AtomicLong();
-      private final AtomicLong missingNotifications = new AtomicLong();
-
-      public Pool(int numThreads, int numSlaves, BackgroundOpsManager manager) {
-         totalThreads = numThreads * numSlaves;
-         allRecords = new AtomicReferenceArray<AbstractStressorRecord>(totalThreads);
-         log.trace("Pool will contain " + allRecords.length() + records);
-         this.manager = manager;
-      }
-
-      protected void registerListeners(boolean sync) {
-         if (!manager.getLogLogicConfiguration().isCheckNotifications()) {
-            return;
-         }
-         CacheListeners listeners = manager.getListeners();
-         if (listeners == null) {
-            throw new IllegalArgumentException("Service does not support cache listeners");
-         }
-         Collection<CacheListeners.Type> supported = listeners.getSupportedListeners();
-         if (!supported.containsAll(Arrays.asList(CacheListeners.Type.CREATED, CacheListeners.Type.UPDATED))) {
-            throw new IllegalArgumentException("Service does not support required listener types; supported are: " + supported);
-         }
-         String cacheName = manager.getGeneralConfiguration().getCacheName();
-         manager.getListeners().addCreatedListener(cacheName, this, sync);
-         manager.getListeners().addUpdatedListener(cacheName, this, sync);
-      }
-
-      public long getMissingOperations() {
-         return missingOperations.get();
-      }
-
-      public long getMissingNotifications() {
-         return missingNotifications.get();
-      }
-
-      public void reportMissingOperation() {
-         missingOperations.incrementAndGet();
-      }
-
-      public void reportMissingNotification() {
-         missingNotifications.incrementAndGet();
-      }
-
-      public int getTotalThreads() {
-         return totalThreads;
-      }
-
-      public Collection<StressorRecord> getRecords() {
-         ArrayList<StressorRecord> records = new ArrayList<>();
-         for (int i = 0; i < allRecords.length(); ++i) {
-            records.add(allRecords.get(i));
-         }
-         return records;
-      }
-
-      public AbstractStressorRecord take() {
-         return records.poll();
-      }
-
-      public void add(AbstractStressorRecord record) {
-         records.add(record);
-      }
-
-      public void addNew(AbstractStressorRecord record) {
-         records.add(record);
-         allRecords.set(record.getThreadId(), record);
-      }
-
-      public String waitUntilChecked(long timeout) {
-         for (int i = 0; i < totalThreads; ++i) {
-            AbstractStressorRecord record = allRecords.get(i);
-            if (record == null) continue;
-            try {
-               // as the pool survives service restarts, we have to always grab actual cache
-               LastOperation lastOperation = (LastOperation) manager.getBasicCache().get(lastOperationKey(record.getThreadId()));
-               if (lastOperation == null) {
-                  log.trace("Thread " + record.getThreadId() + " has no recorded operation.");
-               } else {
-                  record.addConfirmation(lastOperation.getOperationId(), lastOperation.getTimestamp());
-               }
-            } catch (Exception e) {
-               log.error("Failed to read last operation key for thread " + record.getThreadId(), e);
-            }
-         }
-         for (;;) {
-            boolean allChecked = true;
-            long now = System.currentTimeMillis();
-            for (int i = 0; i < totalThreads; ++i) {
-               AbstractStressorRecord record = allRecords.get(i);
-               if (record == null) continue;
-               long confirmationTimestamp = record.getCurrentConfirmationTimestamp();
-               if (confirmationTimestamp > 0) {
-                  if (log.isTraceEnabled()) {
-                     log.trace(record.getStatus());
-                  }
-                  allChecked = false;
-                  break;
-               }
-               if (record.getLastSuccessfulCheckTimestamp() + timeout < now) {
-                  String error = "Waiting for checker for record [" + record.getStatus() + "] timed out after "
-                        + (now - record.getLastSuccessfulCheckTimestamp()) + " ms";
-                  log.error(error);
-                  return error;
-               }
-            }
-            if (allChecked) {
-               StringBuilder sb = new StringBuilder("All checks OK: ");
-               for (int i = 0; i < totalThreads; ++i) {
-                  AbstractStressorRecord record = allRecords.get(i);
-                  if (record == null) continue;
-                  sb.append(record.getThreadId()).append("# ")
-                        .append(record.getOperationId()).append(" (")
-                        .append(record.getLastConfirmedOperationId()).append("), ");
-               }
-               log.debug(sb.toString());
-               return null;
-            }
-            try {
-               Thread.sleep(1000);
-            } catch (InterruptedException e) {
-               log.error("Interrupted waiting for checkers.", e);
-               return e.toString();
-            }
-         }
-      }
-
-      protected void notify(int threadId, long operationId, Object key) {
-         AbstractStressorRecord record = allRecords.get(threadId);
-         record.notify(operationId, key);
-      }
-
-      protected void requireNotify(int threadId, long operationId) {
-         AbstractStressorRecord record = allRecords.get(threadId);
-         record.requireNotify(operationId);
-      }
-
-      protected void modified(Object key, Object value) {
-         if (key instanceof String && ((String) key).startsWith(LAST_OPERATION_PREFIX)) {
-            int threadId = Integer.parseInt(((String) key).substring(LAST_OPERATION_PREFIX.length()));
-            LastOperation last = (LastOperation) value;
-            requireNotify(threadId, last.getOperationId() + 1);
-         }
-      }
-   }
+   protected abstract boolean containsOperation(Object value, StressorRecord record);
 
    public static class LastOperation implements Serializable {
       private final long operationId;
@@ -390,151 +236,4 @@ public abstract class LogChecker extends Thread {
       }
    }
 
-   public interface StressorRecord {
-      String getStatus();
-      long getLastSuccessfulCheckTimestamp();
-   }
-
-   protected static class StressorConfirmation {
-      public final long operationId;
-      public final long timestamp;
-
-      public StressorConfirmation(long operationId, long timestamp) {
-         this.operationId = operationId;
-         this.timestamp = timestamp;
-      }
-   }
-
-   protected abstract static class AbstractStressorRecord implements StressorRecord {
-      protected final Random rand;
-      protected final int threadId;
-      protected long currentKeyId;
-      protected volatile long currentOp = -1;
-      protected final List<StressorConfirmation> confirmations = new LinkedList<>();
-      private long lastUnsuccessfulCheckTimestamp = Long.MIN_VALUE;
-      private long lastSuccessfulCheckTimestamp = System.currentTimeMillis();
-      private Set<Long> notifiedOps = new HashSet<Long>();
-      private long requireNotify = Long.MAX_VALUE;
-
-      public AbstractStressorRecord(long seed, int threadId, long operationId) {
-         log.trace("Initializing record random with " + seed);
-         this.rand = Utils.setRandomSeed(new Random(0), seed);
-         this.threadId = threadId;
-         this.currentOp = operationId;
-      }
-
-      public AbstractStressorRecord(Random rand, int threadId) {
-         log.trace("Initializing record random with " + Utils.getRandomSeed(rand));
-         this.rand = rand;
-         this.threadId = threadId;
-      }
-
-      public String getStatus() {
-         return String.format("thread=%d, lastStressorOperation=%d, currentOp=%d, currentKeyId=%08X, notifiedOps=%s, requireNotify=%d",
-               threadId, getLastConfirmedOperationId(),
-               currentOp, currentKeyId, notifiedOps, requireNotify);
-      }
-
-      public Object getLastConfirmedOperationId() {
-         return confirmations.isEmpty() ? -1 : confirmations.get(confirmations.size() - 1);
-      }
-
-      public abstract void next();
-
-      public int getThreadId() {
-         return threadId;
-      }
-
-      public long getLastUnsuccessfulCheckTimestamp() {
-         return lastUnsuccessfulCheckTimestamp;
-      }
-
-      public void setLastUnsuccessfulCheckTimestamp(long lastUnsuccessfulCheckTimestamp) {
-         this.lastUnsuccessfulCheckTimestamp = lastUnsuccessfulCheckTimestamp;
-      }
-
-      public long getKeyId() {
-         return currentKeyId;
-      }
-
-      public long getOperationId() {
-         return currentOp;
-      }
-
-      public synchronized void notify(long operationId, Object key) {
-         if (operationId < currentOp || !notifiedOps.add(operationId)) {
-            log.warn("Duplicit notification for operation " + operationId + " on key " + key);
-         }
-      }
-
-      public void checkFinished(long operationId) {
-         // remove old confirmations
-         Iterator<StressorConfirmation> iterator = confirmations.iterator();
-         while (iterator.hasNext()) {
-            StressorConfirmation confirmation = iterator.next();
-            if (confirmation.operationId > operationId) {
-               break;
-            }
-            iterator.remove();
-         }
-         // remove old notifications
-         synchronized (this) {
-            notifiedOps.remove(operationId);
-         }
-      }
-
-      public synchronized void requireNotify(long operationId) {
-         if (operationId < requireNotify) {
-            requireNotify = operationId;
-         }
-      }
-
-      public synchronized boolean hasNotification(long operationId) {
-         if (operationId < requireNotify) return true;
-         return notifiedOps.contains(operationId);
-      }
-
-      public void setLastSuccessfulCheckTimestamp(long timestamp) {
-         this.lastSuccessfulCheckTimestamp = timestamp;
-      }
-
-      @Override
-      public long getLastSuccessfulCheckTimestamp() {
-         return lastSuccessfulCheckTimestamp;
-      }
-
-      public void addConfirmation(long operationId, long timestamp) {
-         try {
-            ListIterator<StressorConfirmation> iterator = confirmations.listIterator(confirmations.size());
-            if (trace) {
-               log.tracef("Confirmations for thread %d were %s", threadId, confirmations);
-            }
-            while (iterator.hasPrevious()) {
-               StressorConfirmation confirmation = iterator.previous();
-               if (confirmation.operationId < operationId) {
-                  confirmations.add(iterator.nextIndex(), new StressorConfirmation(operationId, timestamp));
-                  return;
-               } else if (confirmation.operationId == operationId) {
-                  return;
-               }
-            }
-         } finally {
-            if (trace) {
-               log.tracef("Confirmations for thread %d are %s", threadId, confirmations);
-            }
-         }
-      }
-
-      /**
-       * @return Epoch time (ms) timestamp or negative value if not confirmed yet.
-       */
-      public long getCurrentConfirmationTimestamp() {
-         for (StressorConfirmation confirmation : confirmations) {
-            if (confirmation.operationId > currentOp) {
-               return confirmation.timestamp;
-            }
-         }
-         return -1;
-      }
-   }
 }
