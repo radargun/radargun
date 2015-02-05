@@ -20,7 +20,7 @@ public class BackgroundStatisticsStartStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       try {
-         BackgroundOpsManager instance = BackgroundOpsManager.getOrCreateInstance(slaveState, name, statsIterationDuration);
+         BackgroundStatisticsManager instance = BackgroundStatisticsManager.getOrCreateInstance(slaveState, name, statsIterationDuration);
 
          log.info("Starting statistics threads");
          instance.startStats();
