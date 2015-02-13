@@ -602,4 +602,17 @@ public class Utils {
       if (args == null || args.length <= arg || !clazz.isInstance(args[arg])) throw new IllegalArgumentException(Arrays.toString(args));
       return (T) args[arg];
    }
+
+   public static <T> T findThrowableCauseByClass(Throwable t, Class<T> clazz) {
+      if (clazz == null) {
+         throw new IllegalArgumentException("'clazz' parameter cannot be null.");
+      }
+      if (t == null) {
+         return null;
+      } else if (clazz.isAssignableFrom(t.getClass())) {
+         return (T) t;
+      } else {
+         return findThrowableCauseByClass(t.getCause(), clazz);
+      }
+   }
 }

@@ -45,13 +45,4 @@ public abstract class AbstractLogic implements Logic {
       this.stressor = stressor;
    }
 
-   protected static InterruptedException findInterruptionCause(Throwable eParent, Throwable e) {
-      if (e == null || eParent == e) {
-         return null;
-      } else if (e instanceof InterruptedException) {
-         return (InterruptedException) e;
-      } else {
-         return findInterruptionCause(e, e.getCause());
-      }
-   }
 }

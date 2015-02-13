@@ -8,6 +8,7 @@ import org.radargun.stages.helpers.Range;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.Transactional;
+import org.radargun.utils.Utils;
 
 /**
  * Original background stressors logic which loads all entries into cache and then overwrites them.
@@ -163,7 +164,7 @@ class LegacyLogic extends AbstractLogic {
             }
          }
       } catch (Exception e) {
-         InterruptedException ie = findInterruptionCause(null, e);
+         InterruptedException ie = Utils.findThrowableCauseByClass(e,InterruptedException.class);
          if (ie != null) {
             throw ie;
          } else if (e.getClass().getName().contains("SuspectException")) {
