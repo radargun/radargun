@@ -241,9 +241,10 @@
             <module>plugins/jdg62</module>
             <module>plugins/jdg63</module>
             <module>plugins/jdg64</module>
+            <module>plugins/jdg65</module>
          </modules>
          <properties>
-            <plugins.jdg>jdg60,jdg61,jdg62,jdg63,jdg64</plugins.jdg>
+            <plugins.jdg>jdg60,jdg61,jdg62,jdg63,jdg64,jdg65</plugins.jdg>
          </properties>
       </profile>
       <profile>
