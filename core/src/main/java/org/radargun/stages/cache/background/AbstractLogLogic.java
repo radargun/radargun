@@ -188,7 +188,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          }
          return true;
       } catch (Exception e) {
-         InterruptedException ie = findInterruptionCause(null, e);
+         InterruptedException ie = Utils.findThrowableCauseByClass(e, InterruptedException.class);
          if (ie != null) {
             throw ie;
          } else if (e.getClass().getName().contains("SuspectException")) {
