@@ -17,8 +17,6 @@ import org.radargun.traits.BasicOperations;
  */
 class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
 
-   private final long keyRangeStart;
-   private final long keyRangeEnd;
    // Timestamps of the last writes into given values. As we can get stale read for some period,
    // we cannot overwrite the value again until we can be sure that we can safely read current
    // value of that entry. We have to keep the timestamps here, as we cannot reliably determine
@@ -35,14 +33,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    private final Collection<KeyOperationPair> txModifications = new ArrayList<>(Math.max(0, transactionSize));
 
    PrivateLogLogic(BackgroundOpsManager manager, Range range) {
-      super(manager);
-      this.keyRangeStart = range.getStart();
-      this.keyRangeEnd = range.getEnd();
-   }
-
-   @Override
-   protected long nextKeyId() {
-      return (keySelectorRandom.nextLong() & Long.MAX_VALUE) % (keyRangeEnd - keyRangeStart) + keyRangeStart;
+      super(manager, range);
    }
 
    @Override

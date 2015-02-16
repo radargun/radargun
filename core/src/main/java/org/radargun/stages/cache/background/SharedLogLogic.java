@@ -3,6 +3,7 @@ package org.radargun.stages.cache.background;
 import java.util.Map;
 
 import org.radargun.Operation;
+import org.radargun.stages.helpers.Range;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 
@@ -16,23 +17,14 @@ import org.radargun.traits.ConditionalOperations;
 class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
 
    private final ConditionalOperations.Cache nonTxConditionalCache;
-   private final long numEntries;
-   private final long keyIdOffset;
    private ConditionalOperations.Cache conditionalCache;
 
-   SharedLogLogic(BackgroundOpsManager manager, long numEntries, long keyIdOffset) {
-      super(manager);
+   SharedLogLogic(BackgroundOpsManager manager, Range range) {
+      super(manager, range);
       nonTxConditionalCache = manager.getConditionalCache();
       if (transactionSize <= 0) {
          conditionalCache = nonTxConditionalCache;
       }
-      this.numEntries = numEntries;
-      this.keyIdOffset = keyIdOffset;
-   }
-
-   @Override
-   protected long nextKeyId() {
-      return (keySelectorRandom.nextLong() & Long.MAX_VALUE) % numEntries + keyIdOffset;
    }
 
    @Override

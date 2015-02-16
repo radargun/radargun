@@ -17,6 +17,7 @@ public class StressorRecord {
    protected static final Log log = LogFactory.getLog(StressorRecord.class);
    protected static final boolean trace = log.isTraceEnabled();
    protected final Random rand;
+   protected Range keyRange;
    protected final int threadId;
    protected long currentKeyId;
    protected volatile long currentOp = -1;
@@ -26,15 +27,11 @@ public class StressorRecord {
    private Set<Long> notifiedOps = new HashSet<Long>();
    private long requireNotify = Long.MAX_VALUE;
 
-   private long numEntries;
-   private long keyIdOffset;
-
    public StressorRecord(int threadId, Range keyRange) {
       this.rand = new Random(threadId);
       log.trace("Initializing record random with " + Utils.getRandomSeed(rand));
       this.threadId = threadId;
-      this.numEntries = keyRange.getSize();
-      this.keyIdOffset = keyRange.getStart();
+      this.keyRange = keyRange;
       privateNext();
    }
 
@@ -43,8 +40,6 @@ public class StressorRecord {
       log.trace("Initializing record random with " + seed);
       this.threadId = record.threadId;
       this.currentOp = operationId;
-      this.numEntries = record.numEntries;
-      this.keyIdOffset = record.keyIdOffset;
       privateNext();
    }
 
@@ -54,7 +49,7 @@ public class StressorRecord {
 
    // avoid calling overridable method in constructor, as object can be found in an inconsistent state
    private void privateNext() {
-      currentKeyId = keyIdOffset + (rand.nextLong() & Long.MAX_VALUE) % numEntries;
+      currentKeyId = keyRange.getStart() + (rand.nextLong() & Long.MAX_VALUE) % keyRange.getSize();
       checkFinished(currentOp++);
    }
 
