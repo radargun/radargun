@@ -39,13 +39,6 @@ public class LogCheckerPool implements CacheListeners.UpdatedListener, CacheList
       registerListeners(true); // synchronous listeners
    }
 
-   public LogCheckerPool(int totalThreads, BackgroundOpsManager manager) {
-      this.totalThreads = totalThreads;
-      this.allRecords = new AtomicReferenceArray<>(totalThreads);
-      log.trace("Pool will contain " + allRecords.length() + records);
-      this.manager = manager;
-   }
-
    protected void registerListeners(boolean sync) {
       if (!manager.getLogLogicConfiguration().isCheckNotifications()) {
          return;

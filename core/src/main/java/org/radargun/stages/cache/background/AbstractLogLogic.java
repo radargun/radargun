@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import org.radargun.stages.helpers.Range;
 import org.radargun.traits.BasicOperations;
 import org.radargun.utils.Utils;
 
@@ -37,6 +38,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    protected final Random operationTypeRandom = new Random();
 
+   protected Range keyRange;
    protected Random keySelectorRandom;
    protected volatile long operationId = 0;
    protected volatile long keyId;
@@ -50,8 +52,9 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
    private int remainingTxOps;
    private volatile long lastConfirmedOperation = -1;
 
-   public AbstractLogLogic(BackgroundOpsManager manager) {
+   public AbstractLogLogic(BackgroundOpsManager manager, Range keyRange) {
       super(manager);
+      this.keyRange = keyRange;
       this.nonTxBasicCache = manager.getBasicCache();
       if (transactionSize <= 0) {
          basicCache = nonTxBasicCache;
@@ -85,7 +88,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    @Override
    public void invoke() throws InterruptedException {
-      keyId = nextKeyId();
+      keyId = (keySelectorRandom.nextLong() & Long.MAX_VALUE) % keyRange.getSize() + keyRange.getStart();
       do {
          if (txRolledBack) {
             keyId = txStartKeyId;
@@ -110,8 +113,6 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                      txStartOperationId, keyGenerator.generateKey(txStartKeyId), remainingTxOps,
                      lastSuccessfulTxTimestamp - currentTime) : "");
    }
-
-   protected abstract long nextKeyId();
 
    /* Return value = true: follow with next operation,
                     false: txRolledBack ? restart from txStartOperationId : retry operationId */

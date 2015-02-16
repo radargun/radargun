@@ -212,7 +212,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
       int numThreads = generalConfiguration.numThreads;
       if (generalConfiguration.sharedKeys) {
          if (logLogicConfiguration.enabled) {
-            return new SharedLogLogic(this, generalConfiguration.numEntries, generalConfiguration.keyIdOffset);
+            return new SharedLogLogic(this, new Range(generalConfiguration.keyIdOffset, generalConfiguration.keyIdOffset + generalConfiguration.numEntries));
          } else {
             throw new IllegalArgumentException("Legacy logic cannot use shared keys.");
          }
