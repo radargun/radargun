@@ -18,7 +18,8 @@ public class GeneralConfiguration {
    @Property(doc = "Ratio of REMOVE requests. Default is 0.")
    protected int removes = 0;
 
-   @Property(doc = "Number of entries (key-value pairs) inserted into the cache. Default is 1024.")
+   @Property(doc = "Number of entries (key-value pairs) inserted into the cache. Default is 1024. Needs to be greater " +
+         "than or equal to the product of 'numThreads' and group size.")
    protected long numEntries = 1024;
 
    @Property(doc = "First key ID used for key generation. Default is 0.")
