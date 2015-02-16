@@ -31,6 +31,7 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
+      validateConfiguration();
       slaveState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.UseCache(generalConfiguration.cacheName));
       try {
          BackgroundOpsManager instance = BackgroundOpsManager.getOrCreateInstance(slaveState, name,
@@ -44,6 +45,14 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
          return successfulResponse();
       } catch (Exception e) {
          return errorResponse("Error while starting background stats", e);
+      }
+   }
+
+   private void validateConfiguration() {
+      if (generalConfiguration.numEntries < generalConfiguration.numThreads * slaveState.getGroupSize()) {
+         throw new IllegalArgumentException(String.format("'numEntries' needs to be greater than or equal to the product" +
+                     " of 'numThreads' and group size'. Required minimum '%d', was: '%d'.", generalConfiguration.numEntries,
+               generalConfiguration.numThreads * slaveState.getGroupSize()));
       }
    }
 }
