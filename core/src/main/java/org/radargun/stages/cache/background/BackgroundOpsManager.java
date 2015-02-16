@@ -212,7 +212,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
       int numThreads = generalConfiguration.numThreads;
       if (generalConfiguration.sharedKeys) {
          if (logLogicConfiguration.enabled) {
-            return new SharedLogLogic(this, numThreads * slaveState.getIndexInGroup() + index, generalConfiguration.numEntries, generalConfiguration.keyIdOffset);
+            return new SharedLogLogic(this, generalConfiguration.numEntries, generalConfiguration.keyIdOffset);
          } else {
             throw new IllegalArgumentException("Legacy logic cannot use shared keys.");
          }
@@ -222,7 +222,9 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
          Range range = Range.divideRange(generalConfiguration.numEntries, totalThreads, numThreads * slaveState.getIndexInGroup() + index).shift(generalConfiguration.keyIdOffset);
 
          if (logLogicConfiguration.enabled) {
-            return new PrivateLogLogic(this, numThreads * slaveState.getIndexInGroup() + index, range);
+            int threadId = numThreads * slaveState.getIndexInGroup() + index;
+            log.tracef("Stressor %d has range %s", threadId, range);
+            return new PrivateLogLogic(this, range);
          } else {
             // TODO: remove preloading from background stressors at all, use load-data instead
             List<Integer> deadSlaves = legacyLogicConfiguration.loadDataForDeadSlaves;

@@ -20,8 +20,8 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
    private final long keyIdOffset;
    private ConditionalOperations.Cache conditionalCache;
 
-   SharedLogLogic(BackgroundOpsManager manager, long threadId, long numEntries, long keyIdOffset) {
-      super(manager, threadId);
+   SharedLogLogic(BackgroundOpsManager manager, long numEntries, long keyIdOffset) {
+      super(manager);
       nonTxConditionalCache = manager.getConditionalCache();
       if (transactionSize <= 0) {
          conditionalCache = nonTxConditionalCache;

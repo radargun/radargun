@@ -34,9 +34,8 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    // the transaction is committed
    private final Collection<KeyOperationPair> txModifications = new ArrayList<>(Math.max(0, transactionSize));
 
-   PrivateLogLogic(BackgroundOpsManager manager, long threadId, Range range) {
-      super(manager, threadId);
-      log.tracef("Stressor %d has range %s", threadId, range);
+   PrivateLogLogic(BackgroundOpsManager manager, Range range) {
+      super(manager);
       this.keyRangeStart = range.getStart();
       this.keyRangeEnd = range.getEnd();
    }
