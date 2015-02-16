@@ -50,7 +50,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
    private int remainingTxOps;
    private volatile long lastConfirmedOperation = -1;
 
-   public AbstractLogLogic(BackgroundOpsManager manager, long stressorId) {
+   public AbstractLogLogic(BackgroundOpsManager manager) {
       super(manager);
       this.nonTxBasicCache = manager.getBasicCache();
       if (transactionSize <= 0) {
