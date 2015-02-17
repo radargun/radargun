@@ -38,7 +38,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
 
    @Override
    protected boolean invokeLogic(long keyId) throws Exception {
-      Operation operation = manager.getOperation(operationTypeRandom);
+      Operation operation = getOperation(operationTypeRandom);
 
       OperationTimestampPair prevOperation = timestamps.get(keyId);
       // first we have to get the value

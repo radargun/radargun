@@ -106,10 +106,9 @@ class LegacyLogic extends AbstractLogic {
          return;
       }
       long startTime = 0;
-      Object key = null;
-      Operation operation = manager.getOperation(rand);
+      Operation operation = getOperation(rand);
       try {
-         key = keyGenerator.generateKey(currentKey++);
+         Object key = keyGenerator.generateKey(currentKey++);
          if (currentKey == keyRangeEnd) {
             currentKey = keyRangeStart;
          }

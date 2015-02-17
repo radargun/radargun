@@ -286,37 +286,32 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    protected abstract boolean invokeLogic(long keyId) throws Exception;
 
-   protected Map<Integer, Long> getCheckedOperations(long minOperationId) throws StressorException, BreakTxRequest {
-      Map<Integer, Long> minIds = new HashMap<Integer, Long>();
-      for (int thread = 0; thread < manager.getGeneralConfiguration().getNumThreads() * manager.getSlaveState().getClusterSize(); ++thread) {
-         minIds.put(thread, getCheckedOperation(thread, minOperationId));
-      }
-      return minIds;
-   }
-
+   /**
+    * Returns minimum of checked (confirmed) operations for given stressor thread across all nodes.
+    */
    protected long getCheckedOperation(int thread, long minOperationId) throws StressorException, BreakTxRequest {
-      long minReadOperationId = Long.MAX_VALUE;
+      long minimumOperationId = Long.MAX_VALUE;
       for (int i = 0; i < manager.getSlaveState().getClusterSize(); ++i) {
-         Object lastCheck;
+         Object lastCheckedOperationId;
          try {
-            lastCheck = basicCache.get(LogChecker.checkerKey(i, thread));
+            lastCheckedOperationId = basicCache.get(LogChecker.checkerKey(i, thread));
          } catch (Exception e) {
             log.error("Cannot read last checked operation id for slave " + i + " and thread " + thread, e);
             throw new StressorException(e);
          }
-         long readOperationId = lastCheck == null ? Long.MIN_VALUE : ((LogChecker.LastOperation) lastCheck).getOperationId();
+         long readOperationId = lastCheckedOperationId == null ? Long.MIN_VALUE : ((LogChecker.LastOperation) lastCheckedOperationId).getOperationId();
          if (readOperationId < minOperationId && manager.getLogLogicConfiguration().isIgnoreDeadCheckers() && !manager.isSlaveAlive(i)) {
             try {
                Object ignored = basicCache.get(LogChecker.ignoredKey(i, thread));
                if (ignored == null || (Long) ignored < minOperationId) {
                   log.debugf("Setting ignore operation for checker slave %d and stressor %d: %s -> %d (last check %s)",
-                        i, thread, ignored, minOperationId, lastCheck);
+                             i, thread, ignored, minOperationId, lastCheckedOperationId);
                   basicCache.put(LogChecker.ignoredKey(i, thread), minOperationId);
                   if (transactionSize > 0) {
                      throw new BreakTxRequest();
                   }
                }
-               minReadOperationId = Math.min(minReadOperationId, minOperationId);
+               minimumOperationId = Math.min(minimumOperationId, minOperationId);
             } catch (BreakTxRequest request) {
                throw request;
             } catch (Exception e) {
@@ -324,10 +319,10 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                throw new StressorException(e);
             }
          } else {
-            minReadOperationId = Math.min(minReadOperationId, readOperationId);
+            minimumOperationId = Math.min(minimumOperationId, readOperationId);
          }
       }
-      return minReadOperationId;
+      return minimumOperationId;
    }
 
    public long getLastConfirmedOperation() {

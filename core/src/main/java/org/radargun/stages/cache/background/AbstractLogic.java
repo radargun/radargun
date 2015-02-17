@@ -7,6 +7,8 @@ import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Transactional;
 
+import java.util.Random;
+
 /**
  * Common operations for all logics.
  *
@@ -20,6 +22,7 @@ public abstract class AbstractLogic implements Logic {
 
    protected BackgroundOpsManager manager;
    protected KeyGenerator keyGenerator;
+   protected final int operations;
    protected final int transactionSize;
    protected Stressor stressor;
    protected Transactional.Transaction ongoingTx;
@@ -28,6 +31,7 @@ public abstract class AbstractLogic implements Logic {
       this.manager = manager;
       this.keyGenerator = manager.getKeyGenerator();
       this.transactionSize = manager.getGeneralConfiguration().getTransactionSize();
+      this.operations = manager.getGeneralConfiguration().puts + manager.getGeneralConfiguration().gets + manager.getGeneralConfiguration().removes;
    }
 
    @Override
@@ -41,8 +45,18 @@ public abstract class AbstractLogic implements Logic {
       }
    }
 
+   @Override
    public void setStressor(Stressor stressor) {
       this.stressor = stressor;
+   }
+
+   public Operation getOperation(Random rand) {
+      int r = rand.nextInt(operations);
+      if (r < manager.getGeneralConfiguration().gets) {
+         return BasicOperations.GET;
+      } else if (r < manager.getGeneralConfiguration().gets + manager.getGeneralConfiguration().puts) {
+         return BasicOperations.PUT;
+      } else return BasicOperations.REMOVE;
    }
 
 }
