@@ -55,7 +55,6 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
    private GeneralConfiguration generalConfiguration;
    private LegacyLogicConfiguration legacyLogicConfiguration;
    private LogLogicConfiguration logLogicConfiguration;
-   private int operations;
 
    private String name;
    private SlaveState slaveState;
@@ -108,7 +107,6 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
       instance.generalConfiguration = generalConfiguration;
       instance.legacyLogicConfiguration = legacyLogicConfiguration;
       instance.logLogicConfiguration = logLogicConfiguration;
-      instance.operations = generalConfiguration.puts + generalConfiguration.gets + generalConfiguration.removes;
 
       instance.lifecycle = slaveState.getTrait(Lifecycle.class);
       instance.listeners = slaveState.getTrait(CacheListeners.class);
@@ -144,15 +142,6 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
       conditionalCache = null;
       debugableCache = null;
       cacheInfo = null;
-   }
-
-   public Operation getOperation(Random rand) {
-      int r = rand.nextInt(operations);
-      if (r < generalConfiguration.gets) {
-         return BasicOperations.GET;
-      } else if (r < generalConfiguration.gets + generalConfiguration.puts) {
-         return BasicOperations.PUT;
-      } else return BasicOperations.REMOVE;
    }
 
    public synchronized void startBackgroundThreads() {

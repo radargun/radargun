@@ -1,5 +1,6 @@
 package org.radargun.stages.cache.background;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.radargun.Operation;
@@ -29,7 +30,7 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
 
    @Override
    protected boolean invokeLogic(long keyId) throws Exception {
-      Operation operation = manager.getOperation(operationTypeRandom);
+      Operation operation = getOperation(operationTypeRandom);
 
       // In shared mode, we can't ever atomically modify the two keys (main and backup) to have only
       // one of them with the actual value (this is not true even for private mode but there the moment
@@ -99,6 +100,14 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
       } else {
          return filtered;
       }
+   }
+
+   protected Map<Integer, Long> getCheckedOperations(long minOperationId) throws StressorException, BreakTxRequest {
+      Map<Integer, Long> minIds = new HashMap<Integer, Long>();
+      for (int thread = 0; thread < manager.getGeneralConfiguration().getNumThreads() * manager.getSlaveState().getClusterSize(); ++thread) {
+         minIds.put(thread, getCheckedOperation(thread, minOperationId));
+      }
+      return minIds;
    }
 
    @Override
