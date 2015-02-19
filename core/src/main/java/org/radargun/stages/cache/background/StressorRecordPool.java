@@ -13,29 +13,32 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.CacheListeners;
 
 /**
- * TODO document
+ * A pool of {@link org.radargun.stages.cache.background.StressorRecord}s. Used by log checkers to ensure all stressor
+ * records are handled in a fair way (once a stressor record is chcecked, it is returned to the pool in a FIFO fashion).
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class LogCheckerPool implements CacheListeners.UpdatedListener, CacheListeners.CreatedListener {
+public class StressorRecordPool implements CacheListeners.UpdatedListener, CacheListeners.CreatedListener {
 
-   protected static final Log log = LogFactory.getLog(LogCheckerPool.class);
+   protected static final Log log = LogFactory.getLog(StressorRecordPool.class);
 
    private final int totalThreads;
+   // Array of all stressor records
    private final AtomicReferenceArray<StressorRecord> allRecords;
-   private final ConcurrentLinkedQueue<StressorRecord> records = new ConcurrentLinkedQueue<StressorRecord>();
+   // Represents current state of pool
+   private final ConcurrentLinkedQueue<StressorRecord> availableRecords = new ConcurrentLinkedQueue<StressorRecord>();
    private final BackgroundOpsManager manager;
    private final AtomicLong missingOperations = new AtomicLong();
    private final AtomicLong missingNotifications = new AtomicLong();
 
-   public LogCheckerPool(int totalThreads, List<StressorRecord> stressorRecords, BackgroundOpsManager manager) {
+   public StressorRecordPool(int totalThreads, List<StressorRecord> stressorRecords, BackgroundOpsManager manager) {
       this.totalThreads = totalThreads;
       this.allRecords = new AtomicReferenceArray<>(totalThreads);
       this.manager = manager;
       for (StressorRecord stressorRecord: stressorRecords) {
          addNew(stressorRecord);
       }
-      log.trace("Pool will contain " + allRecords.length() + records);
+      log.trace("Pool will contain " + allRecords.length() + availableRecords);
       registerListeners(true); // synchronous listeners
    }
 
@@ -76,7 +79,7 @@ public class LogCheckerPool implements CacheListeners.UpdatedListener, CacheList
       return totalThreads;
    }
 
-   public Collection<StressorRecord> getRecords() {
+   public Collection<StressorRecord> getAvailableRecords() {
       ArrayList<StressorRecord> records = new ArrayList<>();
       for (int i = 0; i < allRecords.length(); ++i) {
          records.add(allRecords.get(i));
@@ -85,15 +88,15 @@ public class LogCheckerPool implements CacheListeners.UpdatedListener, CacheList
    }
 
    public StressorRecord take() {
-      return records.poll();
+      return availableRecords.poll();
    }
 
    public void add(StressorRecord record) {
-      records.add(record);
+      availableRecords.add(record);
    }
 
    private void addNew(StressorRecord record) {
-      records.add(record);
+      availableRecords.add(record);
       allRecords.set(record.getThreadId(), record);
    }
 

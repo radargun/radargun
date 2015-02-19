@@ -15,9 +15,10 @@ import org.radargun.utils.Utils;
 /**
  * Log checkers control that all operations executed by stressors are persisted in the log values.
  * Each node checks all writes from all stressors, but there's not a one-to-one stressor-checker
- * relation. Instead, each node holds a pool of checker threads and a shared data structure
- * with records about each stressor. All records are iterated through in a round-robin fashion
- * by the checker threads.
+ * relation. Instead, each node starts a set of of checker threads, which share a data structure
+ * {@link StressorRecordPool} with records about each stressor,
+ * represented by {@link org.radargun.stages.cache.background.StressorRecord} class.
+ * All records are iterated through in a round-robin fashion by the checker threads.
  *
  * When the checkers are dead on particular node, this node cannot check the stressors. For some
  * scenarios this is limiting - therefore, stressors may be configured to unwind the log values
@@ -45,19 +46,19 @@ public abstract class LogChecker extends Thread {
    protected final long logCounterUpdatePeriod;
    protected final boolean ignoreDeadCheckers;
    protected final long writeApplyMaxDelay;
-   protected final LogCheckerPool pool;
+   protected final StressorRecordPool stressorRecordPool;
    protected final BasicOperations.Cache basicCache;
    protected final Debugable.Cache debugableCache;
    protected volatile boolean terminate = false;
 
-   public LogChecker(String name, BackgroundOpsManager manager, LogCheckerPool logCheckerPool) {
+   public LogChecker(String name, BackgroundOpsManager manager, StressorRecordPool stressorRecordPool) {
       super(name);
       keyGenerator = manager.getKeyGenerator();
       slaveIndex = manager.getSlaveState().getIndexInGroup();
       logCounterUpdatePeriod = manager.getLogLogicConfiguration().getCounterUpdatePeriod();
       ignoreDeadCheckers = manager.getLogLogicConfiguration().isIgnoreDeadCheckers();
       writeApplyMaxDelay = manager.getLogLogicConfiguration().getWriteApplyMaxDelay();
-      pool = logCheckerPool;
+      this.stressorRecordPool = stressorRecordPool;
       this.basicCache = manager.getBasicCache();
       this.debugableCache = manager.getDebugableCache();
    }
@@ -84,10 +85,10 @@ public abstract class LogChecker extends Thread {
       while (!terminate) {
          StressorRecord record = null;
          try {
-            if (delayedKeys > pool.getTotalThreads()) {
+            if (delayedKeys > stressorRecordPool.getTotalThreads()) {
                Thread.sleep(UNSUCCESSFUL_CHECK_MIN_DELAY_MS);
             }
-            record = pool.take();
+            record = stressorRecordPool.take();
             if (System.currentTimeMillis() < record.getLastUnsuccessfulCheckTimestamp() + UNSUCCESSFUL_CHECK_MIN_DELAY_MS) {
                delayedKeys++;
                continue;
@@ -162,7 +163,7 @@ public abstract class LogChecker extends Thread {
                      log.errorf("Missing notification for operation %d for thread %d on key %d (%s), required for %d, notified for %s",
                            record.getOperationId(), record.getThreadId(), record.getKeyId(),
                            keyGenerator.generateKey(record.getKeyId()), record.getRequireNotify(), record.getNotifiedOps());
-                     pool.reportMissingNotification();
+                     stressorRecordPool.reportMissingNotification();
                   }
                   if (!contains) {
                      log.errorf("Missing operation %d for thread %d on key %d (%s) %s",
@@ -172,7 +173,7 @@ public abstract class LogChecker extends Thread {
                      if (trace) {
                         log.trace("Not found in " + value);
                      }
-                     pool.reportMissingOperation();
+                     stressorRecordPool.reportMissingOperation();
                      if (debugableCache != null) {
                         debugableCache.debugInfo();
                         debugableCache.debugKey(keyGenerator.generateKey(record.getKeyId()));
@@ -194,7 +195,7 @@ public abstract class LogChecker extends Thread {
                   Thread.interrupted();
                }
             } else {
-               pool.add(record);
+               stressorRecordPool.add(record);
             }
          }
       }

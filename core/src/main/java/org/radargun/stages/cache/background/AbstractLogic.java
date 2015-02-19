@@ -10,7 +10,7 @@ import org.radargun.traits.Transactional;
 import java.util.Random;
 
 /**
- * Common operations for all logics.
+ * Common operations for all logic types.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
