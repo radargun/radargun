@@ -6,13 +6,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.cache.generators.KeyGenerator;
@@ -29,13 +27,7 @@ import org.radargun.traits.Lifecycle;
 import org.radargun.traits.Transactional;
 
 /**
- * 
- * Manages background statistics collectors and stressors. The particular stressing strategy
- * is specified by Logic class implementation.
- *
- * @See LegacyLogic
- * @See PrivateLogLogic
- * @See SharedLogLogic
+ * Manages background stressors and log checkers (start/stop/check for errors).
  *
  * //TODO: more polishing to make this class agnostic to implemented logic (just pass configuration)
  * 
@@ -48,7 +40,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
     */
    private static final String PREFIX = "BackgroundOps.";
    public static final String DEFAULT = "Default";
-   public static final String ALL  = PREFIX + "All";
+   public static final String ALL = PREFIX + "All";
 
    private static Log log = LogFactory.getLog(BackgroundOpsManager.class);
 
@@ -63,7 +55,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
    private ScheduledExecutorService executor;
    private boolean loaded = false;
    private LogChecker[] logCheckers;
-   private LogCheckerPool logCheckerPool;
+   private StressorRecordPool stressorRecordPool;
    private boolean stressorsPaused, checkersPaused;
 
    private Lifecycle lifecycle;
@@ -249,9 +241,9 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
          logCheckers = new LogChecker[logLogicConfiguration.checkingThreads];
          for (int i = 0; i < logLogicConfiguration.checkingThreads; ++i) {
             if (generalConfiguration.sharedKeys) {
-               logCheckers[i] = new SharedLogChecker(i, logCheckerPool, this);
+               logCheckers[i] = new SharedLogChecker(i, stressorRecordPool, this);
             } else {
-               logCheckers[i] = new PrivateLogChecker(i, logCheckerPool, this);
+               logCheckers[i] = new PrivateLogChecker(i, stressorRecordPool, this);
             }
             logCheckers[i].start();
          }
@@ -259,7 +251,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
    }
 
    private synchronized void createLogCheckerPool() {
-      if (logCheckerPool != null) {
+      if (stressorRecordPool != null) {
          log.debug("Checker pool already exists, not creating another");
          return;
       }
@@ -272,7 +264,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
             stressorRecords.add(new StressorRecord(threadId, range));
             log.tracef("Record for threadId %d has range %s", threadId, range);
          }
-         logCheckerPool = new LogCheckerPool(totalThreads, stressorRecords, this);
+         stressorRecordPool = new StressorRecordPool(totalThreads, stressorRecords, this);
       } else {
          // initialize stressor records
          for (int threadId = 0; threadId < totalThreads; ++threadId) {
@@ -280,7 +272,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
             stressorRecords.add(new StressorRecord(threadId, range));
             log.tracef("Record for threadId %d has range %s", threadId, range);
          }
-         logCheckerPool = new LogCheckerPool(totalThreads, stressorRecords, this);
+         stressorRecordPool = new StressorRecordPool(totalThreads, stressorRecords, this);
       }
    }
 
@@ -318,7 +310,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
    }
 
    public String waitUntilChecked() {
-      if (logCheckerPool == null || logCheckers == null) {
+      if (stressorRecordPool == null || logCheckers == null) {
          log.warn("No log checker pool or active checkers.");
          return null;
       }
@@ -326,7 +318,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
       if (stressors != null) {
          stopBackgroundThreads(true, false, false);
       }
-      String error = logCheckerPool.waitUntilChecked(logLogicConfiguration.noProgressTimeout);
+      String error = stressorRecordPool.waitUntilChecked(logLogicConfiguration.noProgressTimeout);
       if (error != null) {
          return error;
       }
@@ -465,19 +457,19 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
 
    public synchronized String getError() {
       if (logLogicConfiguration.enabled) {
-         if (logCheckerPool != null && (logCheckerPool.getMissingOperations() > 0 || logCheckerPool.getMissingNotifications() > 0)) {
+         if (stressorRecordPool != null && (stressorRecordPool.getMissingOperations() > 0 || stressorRecordPool.getMissingNotifications() > 0)) {
             return String.format("Background stressors report %d missing operations and %d missing notifications!",
-                  logCheckerPool.getMissingOperations(), logCheckerPool.getMissingNotifications());
+                  stressorRecordPool.getMissingOperations(), stressorRecordPool.getMissingNotifications());
          }
          if (stressorThreads != null) {
             for (Stressor stressor : stressorThreads) {
                log.info("Stressor: threadId=" + stressor.id + ", " + stressor.getLogic().getStatus());
             }
          }
-         if (logCheckerPool != null) {
+         if (stressorRecordPool != null) {
             boolean progress = true;
             long now = System.currentTimeMillis();
-            for (StressorRecord record : logCheckerPool.getRecords()) {
+            for (StressorRecord record : stressorRecordPool.getAvailableRecords()) {
                log.info("Record: " + record.getStatus());
                if (now - record.getLastSuccessfulCheckTimestamp() > logLogicConfiguration.noProgressTimeout) {
                   log.error("No progress in this record for " + (now - record.getLastSuccessfulCheckTimestamp()) + " ms");

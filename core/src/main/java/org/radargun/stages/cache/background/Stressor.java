@@ -6,14 +6,18 @@ import org.radargun.stats.DefaultOperationStats;
 import org.radargun.stats.SynchronizedStatistics;
 
 /**
-* Stressor thread running in parallel to many stages.
+* Stressor thread running in parallel to many stages. Its behavior is specified by plugging in specific
+* {@link org.radargun.stages.cache.background.Logic} implementation.
+*
+* @See org.radargun.stages.cache.background.LegacyLogic
+* @See org.radargun.stages.cache.background.PrivateLogLogic
+* @See org.radargun.stages.cache.background.SharedLogLogic
 *
 * @author Radim Vansa &lt;rvansa@redhat.com&gt;
 */
 class Stressor extends Thread {
 
    private static final Log log = LogFactory.getLog(Stressor.class);
-   private static final boolean trace = log.isTraceEnabled();
 
    protected final int id;
    private final Logic logic;

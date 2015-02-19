@@ -7,7 +7,7 @@ package org.radargun.stages.cache.background;
  */
 public class PrivateLogChecker extends LogChecker {
 
-   public PrivateLogChecker(int id, LogCheckerPool pool, BackgroundOpsManager manager) {
+   public PrivateLogChecker(int id, StressorRecordPool pool, BackgroundOpsManager manager) {
       super(manager.getName() + "-Checker-" + id, manager, pool);
    }
 
