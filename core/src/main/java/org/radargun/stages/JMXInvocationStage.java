@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.management.Attribute;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectInstance;
@@ -22,9 +23,12 @@ import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.utils.PrimitiveValue;
 
 /**
+ * 
+ * See example configurations in the benchmark-xsite-jmx.xml file.
+ * 
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
  */
-@Stage(doc = "Allows to invoke JMX-exposed methods.")
+@Stage(doc = "Allows to invoke JMX-exposed methods and attributes.")
 public class JMXInvocationStage extends AbstractDistStage {
 
    @Property(optional = false, doc = "Method will be invoked on all ObjectInstances matching given query.")
@@ -33,12 +37,14 @@ public class JMXInvocationStage extends AbstractDistStage {
    @Property(optional = false, doc = "Name of the method to be invoked / attribute to be queried for.")
    private String targetName;
 
-   @Property(doc = "Type of action to be performed. Invocation of specified method (INVOKE_METHOD) is performed " +
-         "by default. Optionally, query for a specified attribute (via method-parameters) can be performed " +
-         "(GET_ATTRIBUTE_VALUE).")
+   @Property(doc = "Type of action to be performed. Invocation of specified method (INVOKE_METHOD) is performed "
+         + "by default. Optionally, query for a specified attribute (via method-parameters) can be performed "
+         + "(GET_ATTRIBUTE_VALUE) or setting a specified attribute (via method-parameters) can be performed"
+         + "(SET_ATTRIBUTE_VALUE).")
    private OperationType operationType = OperationType.INVOKE_METHOD;
 
-   @Property(doc = "Method parameters.", complexConverter = PrimitiveValue.ListConverter.class)
+   @Property(doc = "Method parameters. If specified, the number of parameters must match the number of parameter "
+         + "signatures supplied.", complexConverter = PrimitiveValue.ListConverter.class)
    private List<PrimitiveValue> methodParameters = new ArrayList<>();
 
    @Property(doc = "Method parameter signatures.")
@@ -107,6 +113,16 @@ public class JMXInvocationStage extends AbstractDistStage {
             } else if (operationType == OperationType.GET_ATTRIBUTE_VALUE) {
                log.trace("Getting value of attribute " + targetName);
                result = connection.getAttribute(objectInstance.getObjectName(), targetName);
+            } else if (operationType == OperationType.SET_ATTRIBUTE_VALUE) {
+               if (methodParameters != null && !methodParameters.isEmpty()) {
+                  log.trace("Setting value of attribute " + targetName + " to "
+                        + methodParameters.get(0).getElementValue().toString());
+                  Attribute attribute = new Attribute(targetName, methodParameters.get(0).getElementValue());
+                  connection.setAttribute(objectInstance.getObjectName(), attribute);
+                  result = connection.getAttribute(objectInstance.getObjectName(), targetName);
+               } else {
+                  return errorResponse("New value for attribute was not specified in methodParameters property.");
+               }
             }
             if (expectedSlaveResult != null && !expectedSlaveResult.getElementValue().equals(result)) {
                return errorResponse(String.format("Method invocation returned incorrect result. Expected '%s', was '%s'.", expectedSlaveResult.getElementValue(), result));
@@ -135,7 +151,7 @@ public class JMXInvocationStage extends AbstractDistStage {
          return stageResult;
       }
       if (expectedTotalResult != null) {
-         if (acks == null && acks.isEmpty()) {
+         if (acks == null || acks.isEmpty()) {
             log.error("Expected total result has been specified, but no results have been returned from slaves.");
             return StageResult.FAIL;
          }
@@ -195,7 +211,7 @@ public class JMXInvocationStage extends AbstractDistStage {
    }
 
    private static enum OperationType {
-      INVOKE_METHOD, GET_ATTRIBUTE_VALUE
+      INVOKE_METHOD, GET_ATTRIBUTE_VALUE, SET_ATTRIBUTE_VALUE
    }
 
    private static class JMXInvocationAck extends DistStageAck {
