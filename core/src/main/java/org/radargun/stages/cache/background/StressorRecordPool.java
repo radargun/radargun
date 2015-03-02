@@ -28,8 +28,10 @@ public class StressorRecordPool implements CacheListeners.UpdatedListener, Cache
    // Represents current state of pool
    private final ConcurrentLinkedQueue<StressorRecord> availableRecords = new ConcurrentLinkedQueue<StressorRecord>();
    private final BackgroundOpsManager manager;
+   // TODO move the following attributes to a separate class (or elsewhere)
    private final AtomicLong missingOperations = new AtomicLong();
    private final AtomicLong missingNotifications = new AtomicLong();
+   private final AtomicLong staleReads = new AtomicLong();
 
    public StressorRecordPool(int totalThreads, List<StressorRecord> stressorRecords, BackgroundOpsManager manager) {
       this.totalThreads = totalThreads;
@@ -67,12 +69,20 @@ public class StressorRecordPool implements CacheListeners.UpdatedListener, Cache
       return missingNotifications.get();
    }
 
+   public long getStaleReads() {
+      return staleReads.get();
+   }
+
    public void reportMissingOperation() {
       missingOperations.incrementAndGet();
    }
 
    public void reportMissingNotification() {
       missingNotifications.incrementAndGet();
+   }
+
+   public void reportStaleRead() {
+      staleReads.incrementAndGet();
    }
 
    public int getTotalThreads() {

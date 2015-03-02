@@ -89,6 +89,7 @@ public abstract class LogChecker extends Thread {
                Thread.sleep(UNSUCCESSFUL_CHECK_MIN_DELAY_MS);
             }
             record = stressorRecordPool.take();
+            log.trace("Checking record: " + record);
             if (System.currentTimeMillis() < record.getLastUnsuccessfulCheckTimestamp() + UNSUCCESSFUL_CHECK_MIN_DELAY_MS) {
                delayedKeys++;
                continue;

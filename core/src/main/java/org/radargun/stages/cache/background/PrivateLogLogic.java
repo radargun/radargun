@@ -113,7 +113,8 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
             Thread.sleep(5000);
          }
       } else {
-         throw new RuntimeException("Stale reads are not allowed in this configuration");
+         manager.getStressorRecordPool().reportStaleRead();
+         stressor.requestTerminate();
       }
    }
 
