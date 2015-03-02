@@ -457,9 +457,10 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
 
    public synchronized String getError() {
       if (logLogicConfiguration.enabled) {
-         if (stressorRecordPool != null && (stressorRecordPool.getMissingOperations() > 0 || stressorRecordPool.getMissingNotifications() > 0)) {
-            return String.format("Background stressors report %d missing operations and %d missing notifications!",
-                  stressorRecordPool.getMissingOperations(), stressorRecordPool.getMissingNotifications());
+         if (stressorRecordPool != null
+               && (stressorRecordPool.getMissingOperations() > 0 || stressorRecordPool.getMissingNotifications() > 0 || stressorRecordPool.getStaleReads() > 0)) {
+            return String.format("Background stressors report %d missing operations, %d missing notifications and %d stale reads!",
+                  stressorRecordPool.getMissingOperations(), stressorRecordPool.getMissingNotifications(), stressorRecordPool.getStaleReads());
          }
          if (stressorThreads != null) {
             for (Stressor stressor : stressorThreads) {
@@ -571,6 +572,10 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
 
    public Stressor[] getStressorThreads() {
       return stressorThreads;
+   }
+
+   public StressorRecordPool getStressorRecordPool() {
+      return stressorRecordPool;
    }
 
    // TODO:
