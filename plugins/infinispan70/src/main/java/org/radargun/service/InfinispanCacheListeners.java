@@ -31,10 +31,10 @@ public class InfinispanCacheListeners extends
 
    protected static final Log log = LogFactory.getLog(InfinispanCacheListeners.class);
 
-   protected final Infinispan70EmbeddedService service;
+   protected final Infinispan60EmbeddedService service;
    private InfinispanCacheListeners.CacheManagerListener cacheManagerListener = new CacheManagerListener();
 
-   public InfinispanCacheListeners(Infinispan70EmbeddedService service) {
+   public InfinispanCacheListeners(Infinispan60EmbeddedService service) {
       this.service = service;
    }
 
