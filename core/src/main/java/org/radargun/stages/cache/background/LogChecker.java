@@ -144,7 +144,7 @@ public abstract class LogChecker extends Thread {
             } else {
                long confirmationTimestamp = record.getCurrentConfirmationTimestamp();
                if (confirmationTimestamp >= 0) {
-                  log.debug("Detected stale read");
+                  log.debug("Detected stale read, keyId: " + record.getKeyId());
                }
                if (confirmationTimestamp >= 0
                      && (writeApplyMaxDelay <= 0 || System.currentTimeMillis() > confirmationTimestamp + writeApplyMaxDelay)) {
