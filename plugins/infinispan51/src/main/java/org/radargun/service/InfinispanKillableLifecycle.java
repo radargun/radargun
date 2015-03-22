@@ -215,7 +215,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
                return;
             }         
          }  
-         discard.setDiscardAll(true);
+         discard.setValue("discard_all", true);
          // The FD_SOCK requires special handling because it uses non-standard sockets to interconnect
          FD_SOCK fdSock = (FD_SOCK)channel.getProtocolStack().findProtocol(FD_SOCK.class);
          if (fdSock != null) {
@@ -233,7 +233,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
       for (JChannel channel : getChannels()) {
          DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
          if (discard != null) {
-            discard.setDiscardAll(false);            
+            discard.setValue("discard_all", false);
          } else {
             log.debug("No DISCARD protocol in stack for " + channel.getName());
          }
