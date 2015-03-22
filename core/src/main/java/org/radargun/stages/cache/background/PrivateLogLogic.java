@@ -50,6 +50,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
             backupValue = checkedGetValue(~keyId);
             if (backupValue == null || !backupValue.contains(prevOperation.operationId)) {
                // definitely stale read
+               log.trace("Detected stale read, keyId: " + keyId);
                waitForStaleRead(prevOperation.timestamp);
                return false;
             } else {
