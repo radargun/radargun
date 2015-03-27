@@ -1,6 +1,7 @@
 package org.radargun.stages.control;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Stack;
 
 import org.radargun.DistStageAck;
@@ -26,7 +27,7 @@ public class RepeatEndStage extends RepeatStage {
       log.trace("Removing counter " + counterName);
       state.remove(counterName);
       Stack<String> repeatNames = (Stack<String>) state.get(RepeatStage.REPEAT_NAMES);
-      if (repeatNames == null || repeatNames.isEmpty() || repeatNames.peek() != name) {
+      if (repeatNames == null || repeatNames.isEmpty() || !Objects.equals(repeatNames.peek(), name)) {
          throw new IllegalStateException("Cannot unwind repeat: " + repeatNames);
       }
       repeatNames.pop();
@@ -34,9 +35,7 @@ public class RepeatEndStage extends RepeatStage {
 
    @Override
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      String counterName = getCounterName();
-      log.trace("Removing counter " + counterName);
-      masterState.remove(counterName);
+      updateState(masterState);
       return StageResult.SUCCESS;
    }
 }
