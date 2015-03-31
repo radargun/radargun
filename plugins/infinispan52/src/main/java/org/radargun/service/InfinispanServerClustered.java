@@ -52,6 +52,7 @@ public class InfinispanServerClustered implements Clustered {
       if (!service.lifecycle.isRunning()) {
          synchronized (this) {
             if (!membershipHistory.isEmpty() && membershipHistory.get(membershipHistory.size() - 1).members.size() > 0) {
+               lastMembers = null;
                membershipHistory.add(Membership.empty());
             }
          }
