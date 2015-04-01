@@ -64,7 +64,11 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
    protected Configuration configuration;
 
    @Init
-   public void init() {
+   public void init() {   
+      configuration = getDefaultHotRodConfig().build();
+   }
+   
+   protected ConfigurationBuilder getDefaultHotRodConfig() {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       builder.connectionPool().maxActive(maxConnectionsServer).maxTotal(maxConnectionsTotal);
       for (String server : servers.split(";")) {
@@ -101,7 +105,7 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
             }
          }
       }
-      configuration = builder.build();
+      return builder;
    }
 
    @ProvidesTrait
