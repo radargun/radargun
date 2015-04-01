@@ -15,7 +15,7 @@
 
    <properties>
       <version.infinispan>${jdg65.infinispan.version}</version.infinispan>
-      <version.infinispan.public>7.1.0.Final</version.infinispan.public>
+      <version.infinispan.public>7.1.1.Final</version.infinispan.public>
       <version.jbossts>4.17.15.Final-redhat-5</version.jbossts>
       <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
    </properties>
@@ -65,7 +65,7 @@
 
        <dependency>
            <groupId>org.radargun</groupId>
-           <artifactId>plugin-infinispan70</artifactId>
+           <artifactId>plugin-infinispan71</artifactId>
            <version>${project.version}</version>
        </dependency>
 
