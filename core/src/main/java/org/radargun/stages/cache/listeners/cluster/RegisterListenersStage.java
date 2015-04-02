@@ -45,6 +45,9 @@ public class RegisterListenersStage extends AbstractDistStage {
 
    @Property(doc = "Setup if cache listener is synchronous/asynchronous. Default is true")
    private boolean sync = true;
+   
+   @Property(doc = "Allows to reset statistics at the begining of the stage. Default is false.")
+   private boolean resetStats = false;
 
    @InjectTrait // with infinispan70 plugin
    private CacheListeners listenersTrait;
@@ -59,6 +62,8 @@ public class RegisterListenersStage extends AbstractDistStage {
       if (statistics == null) {
          statistics = new SynchronizedStatistics(new DefaultOperationStats());
          slaveState.put(statsKey, statistics);
+      } else if (resetStats) {
+         statistics.reset();
       }
 
       if (registerListeners) {
