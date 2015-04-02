@@ -15,6 +15,7 @@ public class StateBase {
    private Map<String, Object> stateMap = new HashMap<>();
    private Map<String, Object> persistentMap = new HashMap<>();
    private String configName;
+   private Cluster cluster;
    private int clusterSize;
    private int maxClusterSize;
 
@@ -30,7 +31,12 @@ public class StateBase {
       return clusterSize;
    }
 
+   public Cluster getCluster() {
+      return cluster;
+   }
+
    public void setCluster(Cluster cluster) {
+      this.cluster = cluster;
       this.clusterSize = cluster.getSize();
    }
 

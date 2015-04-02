@@ -22,7 +22,6 @@ public class SlaveState extends StateBase {
    private String plugin;
    private ClassLoader classLoader;
    private String serviceName;
-   private Cluster cluster;
    private Cluster.Group group;
    private int indexInGroup;
    private Map<Class<?>, Object> traits;
@@ -48,7 +47,6 @@ public class SlaveState extends StateBase {
    @Override
    public void setCluster(Cluster cluster) {
       super.setCluster(cluster);
-      this.cluster = cluster;
       group = cluster.getGroup(slaveIndex);
       indexInGroup = cluster.getIndexInGroup(slaveIndex);
    }
@@ -88,14 +86,6 @@ public class SlaveState extends StateBase {
 
    public void setService(String service) {
       this.serviceName = plugin + "/" + service;
-   }
-
-   public String getGroupName(int slaveIndex) {
-      return cluster.getGroup(slaveIndex).name;
-   }
-
-   public int getGroupCount() {
-      return cluster.getGroups().size();
    }
 
    public int getIndexInGroup() {

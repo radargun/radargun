@@ -17,6 +17,7 @@ import org.radargun.logging.LogFactory;
 import org.radargun.stages.helpers.RoleHelper;
 import org.radargun.state.MasterState;
 import org.radargun.state.SlaveState;
+import org.radargun.state.StateBase;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Lifecycle;
 import org.radargun.utils.Utils;
@@ -73,15 +74,21 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
     * @return List of slave indices that are executing this stage
     *         (unless the slaves/groups was evaluated differently on each slave).
     *         The order is guaranteed to be same across slaves.
+    *         Assumes cluster has been set in master/slave state.
     */
    protected List<Integer> getExecutingSlaves() {
+      // Resolve according to invocation environment (master/slave)
+      StateBase state = masterState != null ? masterState : slaveState;
+      if (state.getCluster() == null) {
+         throw new IllegalStateException(String.format("Cluster has not been set in %s yet.", state));
+      }
       if (executingSlaves != null) {
          return executingSlaves;
       }
       List<Integer> slaves;
       if (this.slaves == null) {
          slaves = new ArrayList<>();
-         for (int i = 0; i < slaveState.getClusterSize(); ++i) {
+         for (int i = 0; i < state.getClusterSize(); ++i) {
             slaves.add(i);
          }
       } else {
@@ -91,7 +98,7 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       if (groups != null) {
          for (Iterator<Integer> it = slaves.iterator(); it.hasNext();) {
             int slaveIndex = it.next();
-            if (!groups.contains(slaveState.getGroupName(slaveIndex))) {
+            if (!groups.contains(state.getCluster().getGroup(slaveIndex).name)) {
                it.remove();
             }
          }
