@@ -34,7 +34,7 @@ public class StageHelper {
    }
 
    public static Map<String, Class<? extends org.radargun.Stage>> getStagesFromJar(String path, boolean dashNames) {
-      List<Class<? extends org.radargun.Stage>> list = AnnotatedHelper.getClassesFromJar(path, org.radargun.Stage.class, Stage.class);
+      List<Class<? extends org.radargun.Stage>> list = AnnotatedHelper.getClassesFromJar(path, org.radargun.Stage.class, Stage.class, null);
       Map<String, Class<? extends org.radargun.Stage>> stages = new TreeMap<String, Class<? extends org.radargun.Stage>>();
       for (Class<? extends org.radargun.Stage> clazz : list) {
          Stage annotation = clazz.getAnnotation(Stage.class);

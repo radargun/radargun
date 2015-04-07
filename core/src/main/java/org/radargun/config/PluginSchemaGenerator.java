@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.radargun.Service;
 import org.radargun.ServiceHelper;
+import org.radargun.utils.ArgsHolder;
 
 /**
  * Generates schemas for reporters
@@ -45,8 +46,11 @@ public class PluginSchemaGenerator extends SchemaGenerator {
       String schemaDirectory = args[0];
       String plugin = args[1];
 
+      ArgsHolder.setCurrentPlugin(plugin);
       Map<String, Class<?>> services = ServiceHelper.loadServices(plugin);
       PluginSchemaGenerator generator = new PluginSchemaGenerator(plugin, services);
       generator.generate(schemaDirectory, String.format("%s-%s.xsd", plugin, VERSION));
+      // explicitly shutdown if a dependency started non-daemon thread from static ctor
+      System.exit(0);
    }
 }

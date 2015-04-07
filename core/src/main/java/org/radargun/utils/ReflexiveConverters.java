@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,8 +43,15 @@ public class ReflexiveConverters {
       }
 
       protected <T> Base(Class<T> implementedClass) {
-         for (File file : Directories.LIB_DIR.listFiles(new Utils.JarFilenameFilter())) {
-            for (Class<? extends T> clazz : AnnotatedHelper.getClassesFromJar(file.getPath(), implementedClass, DefinitionElement.class)) {
+         addFromDir(Directories.LIB_DIR, implementedClass);
+         if (ArgsHolder.getCurrentPlugin() != null) {
+            addFromDir(Paths.get(Directories.PLUGINS_DIR.toString(), ArgsHolder.getCurrentPlugin(), "lib").toFile(), implementedClass);
+         }
+      }
+
+      private <T> void addFromDir(File dir, Class<T> implementedClass) {
+         for (File file : dir.listFiles(new Utils.JarFilenameFilter())) {
+            for (Class<? extends T> clazz : AnnotatedHelper.getClassesFromJar(file.getPath(), implementedClass, DefinitionElement.class, "org.radargun.")) {
                DefinitionElement de = clazz.getAnnotation(DefinitionElement.class);
                if (this.classes.containsKey(de.name())) {
                   throw new IllegalArgumentException("Trying to register " + clazz.getName() + " as '" + de.name()

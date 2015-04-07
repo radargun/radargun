@@ -85,6 +85,7 @@ public class RestartHelper {
         command.add(ArgsHolder.MASTER).add(ArgsHolder.getMasterHost() + ":" + ArgsHolder.getMasterPort());
         command.add(ArgsHolder.SLAVE_INDEX).add(String.valueOf(slaveIndex));
         command.add(ArgsHolder.UUID).add(nextUuid.toString());
+        command.add(ArgsHolder.CURRENT_PLUGIN).add(plugin);
         if (tempConfigDir != null) {
             command.add(ArgsHolder.TEMP_CONFIG_DIR).add(tempConfigDir.toString());
         }
