@@ -112,6 +112,10 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
    }
 
    private void loadCaches() {
+      if (lifecycle != null && !lifecycle.isRunning()) {
+         log.warn("Can't load caches, service is not running");
+         return;
+      }
       basicCache = slaveState.getTrait(BasicOperations.class).getCache(generalConfiguration.cacheName);
       ConditionalOperations conditionalOperations = slaveState.getTrait(ConditionalOperations.class);
       conditionalCache = conditionalOperations == null ? null : conditionalOperations.getCache(generalConfiguration.cacheName);
