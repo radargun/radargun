@@ -34,7 +34,7 @@ public class AnnotatedHelper {
    }
 
    public static <TClass, TAnnotation extends Annotation> List<Class<? extends TClass>>
-         getClassesFromJar(String path, Class<TClass> loadedClass, Class<TAnnotation> annotationClass) {
+         getClassesFromJar(String path, Class<TClass> loadedClass, Class<TAnnotation> annotationClass, String requirePackage) {
       log.tracef("Looking for @%s %s, loading classes from %s", annotationClass.getSimpleName(), loadedClass.getSimpleName(), path);
       List<Class<? extends TClass>> classes = new ArrayList<Class<? extends TClass>>();
       try {
@@ -44,6 +44,7 @@ public class AnnotatedHelper {
             if (entry == null) break;
             if (!entry.getName().endsWith(".class")) continue;
             String className = entry.getName().replace('/', '.').substring(0, entry.getName().length() - 6);
+            if (requirePackage != null && !className.startsWith(requirePackage)) continue;
             Class<?> clazz;
             try {
                System.setErr(NULL_PRINT_STREAM); // suppress any error output

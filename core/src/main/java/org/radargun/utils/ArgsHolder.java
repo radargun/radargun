@@ -42,6 +42,7 @@ public class ArgsHolder {
 
    protected static final String TEMP_CONFIG_DIR = "--temp-config-dir";
    protected static final String UUID = "--uuid";
+   protected static final String CURRENT_PLUGIN = "--current-plugin";
    protected static final String SLAVE_INDEX = "--slaveIndex";
    protected static final String MASTER = "--master";
 
@@ -50,7 +51,8 @@ public class ArgsHolder {
    private static int masterPort = RemoteSlaveConnection.DEFAULT_PORT;
    private static int slaveIndex = -1;
    private static UUID uuid;
-   private static String tempConfigDir = null;
+   private static String tempConfigDir;
+   private static String currentPlugin;
 
    private static Map<String, PluginParam> pluginParams = new HashMap<String, PluginParam>();
    private static List<String> reporterPaths = new ArrayList<String>();
@@ -115,6 +117,9 @@ public class ArgsHolder {
                   break;
                case TEMP_CONFIG_DIR:
                   tempConfigDir = nextArg(arg, argList);
+                  break;
+               case CURRENT_PLUGIN:
+                  currentPlugin = nextArg(arg, argList);
                   break;
                default:
                   processCommonArgs(arg, argList, type);
@@ -245,5 +250,13 @@ public class ArgsHolder {
 
    public static String getTempConfigDir() {
       return tempConfigDir;
+   }
+
+   public static String getCurrentPlugin() {
+      return currentPlugin;
+   }
+
+   public static void setCurrentPlugin(String currentPlugin) {
+      ArgsHolder.currentPlugin = currentPlugin;
    }
 }
