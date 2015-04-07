@@ -89,8 +89,9 @@ public abstract class LogChecker extends Thread {
                Thread.sleep(UNSUCCESSFUL_CHECK_MIN_DELAY_MS);
             }
             record = stressorRecordPool.take();
-            log.trace("Checking record: " + record);
+            log.trace("Checking record: " + record.getStatus());
             if (System.currentTimeMillis() < record.getLastUnsuccessfulCheckTimestamp() + UNSUCCESSFUL_CHECK_MIN_DELAY_MS) {
+               log.trace("Last unsuccessful check was performed too recently, delaying.");
                delayedKeys++;
                continue;
             }
@@ -109,18 +110,18 @@ public abstract class LogChecker extends Thread {
                   LastOperation lastCheck = (LastOperation) last;
                   record = newRecord(record, lastCheck.getOperationId(), lastCheck.getSeed());
                }
-               if (ignoreDeadCheckers) {
-                  Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
-                  if (ignored != null && record.getOperationId() <= (Long) ignored) {
-                     log.debugf("Ignoring operations %d - %d for thread %d", record.getOperationId(), ignored, record.getThreadId());
-                     while (record.getOperationId() <= (Long) ignored) {
-                        record.next();
-                     }
-                  }
-               }
                if (record.getOperationId() != 0) {
                   log.debugf("Check for thread %d continues from operation %d",
                         record.getThreadId(), record.getOperationId());
+               }
+            }
+            if (ignoreDeadCheckers) {
+               Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
+               if (ignored != null && record.getOperationId() <= (Long) ignored) {
+                  log.debugf("Ignoring operations %d - %d for thread %d", record.getOperationId(), ignored, record.getThreadId());
+                  while (record.getOperationId() <= (Long) ignored) {
+                     record.next();
+                  }
                }
             }
             if (trace) {
@@ -183,7 +184,9 @@ public abstract class LogChecker extends Thread {
                   }
                   record.next();
                } else {
-                  record.setLastUnsuccessfulCheckTimestamp(System.currentTimeMillis());
+                  long lastUnsuccessfulCheckTimestamp = System.currentTimeMillis();
+                  log.trace(String.format("Check unsuccessful, setting timestamp to %d", lastUnsuccessfulCheckTimestamp));
+                  record.setLastUnsuccessfulCheckTimestamp(lastUnsuccessfulCheckTimestamp);
                }
             }
          } catch (Exception e) {

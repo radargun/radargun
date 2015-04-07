@@ -56,9 +56,10 @@ public class StressorRecord {
    }
 
    public String getStatus() {
-      return String.format("thread=%d, lastStressorOperation=%d, currentOp=%d, currentKeyId=%08X, notifiedOps=%s, requireNotify=%d",
-            threadId, getLastConfirmedOperationId(),
-            currentOp, currentKeyId, notifiedOps, requireNotify);
+      return String.format("thread=%d, lastStressorOperation=%d, currentOp=%d, currentKeyId=%08X, notifiedOps=%s, requireNotify=%d, " +
+                                 "lastSuccessfulCheckTimestamp=%d, lastUnsuccessfulCheckTimestamp=%d.",
+            threadId, getLastConfirmedOperationId(), currentOp, currentKeyId, notifiedOps, requireNotify,
+            lastSuccessfulCheckTimestamp, lastUnsuccessfulCheckTimestamp);
    }
 
    public Object getLastConfirmedOperationId() {
