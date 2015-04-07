@@ -242,6 +242,19 @@
             <module>plugins/jdg62</module>
             <module>plugins/jdg63</module>
             <module>plugins/jdg64</module>
+         </modules>
+         <properties>
+            <plugins.jdg>jdg60,jdg61,jdg62,jdg63,jdg64</plugins.jdg>
+         </properties>
+      </profile>
+      <profile>
+         <id>jdg65</id>
+         <activation>
+            <property>
+               <name>jdg65.infinispan.version</name>
+            </property>
+         </activation>
+         <modules>
             <module>plugins/jdg65</module>
          </modules>
          <properties>
