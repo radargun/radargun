@@ -250,5 +250,7 @@
    <properties>
       <!-- By default don't run unit tests for the fwk! -->
       <maven.test.skip>true</maven.test.skip>
+      <!-- Use this version of infinispan-distexec-demo in the JDG plugins -->
+      <version.infinispan.public>7.1.1.Final</version.infinispan.public>
    </properties>
 </project>
