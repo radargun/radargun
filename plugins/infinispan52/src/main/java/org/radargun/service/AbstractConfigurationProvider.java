@@ -1,5 +1,7 @@
 package org.radargun.service;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +38,9 @@ public abstract class AbstractConfigurationProvider implements ConfigurationProv
       if (filename != null) {
          try {
             InputStream is = getClass().getClassLoader().getResourceAsStream(filename);
+            if(is == null) { //not attached as resource - assume the direct path on filesystem
+               is = new FileInputStream(new File(filename));
+            }
             configs.put(filename, Utils.readAsBytes(is));
          } catch (Exception e) {
             log.error("Error while reading configuration file (" + filename + ")", e);
