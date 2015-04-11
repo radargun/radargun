@@ -304,6 +304,18 @@
             <plugins.spymemcached>spymemcached</plugins.spymemcached>
          </properties>
       </profile>
+      <profile>
+         <id>jcache</id>
+         <!-- TODO trigger compilation only when a module which depends on JCache plugin is compiled -->
+         <activation>
+            <property>
+               <name>!no-jcache</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/jcache</module>
+         </modules>
+      </profile>
    </profiles>
 
    <build>

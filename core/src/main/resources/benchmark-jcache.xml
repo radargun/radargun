@@ -1,0 +1,58 @@
+<!-- RadarGun 2.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.0">
+
+   <!-- Specifies where should the master open socket  -->
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <!-- List of cluster configurations where the benchmark should run-->
+   <clusters>
+      <cluster size="1" />
+   </clusters>
+
+   <!-- List of configurations of the services -->
+   <configurations>
+      <config name="JCache (Infinispan 7.1.x) - local">
+         <setup plugin="infinispan71">
+            <jcache xmlns="urn:radargun:plugins:jcache:2.1"
+                     cache-name="testCache" />
+         </setup>
+      </config>
+      <config name="JCache (Hazelcast 3.4.x) - local">
+         <setup plugin="hazelcast3">
+            <jcache xmlns="urn:radargun:plugins:jcache:2.1"
+                    cache-name="testCache" />
+         </setup>
+      </config>
+   </configurations>
+
+   <!-- Sequence of stages executed on the cluster -->
+   <scenario>
+      <service-start />
+      <jvm-monitor-start />
+
+      <load-data num-entries="5000"/>
+      <basic-operations-test test-name="warmup" num-requests="100000" total-threads="10">
+         <key-selector>
+            <concurrent-keys total-entries="5000" />
+         </key-selector>
+      </basic-operations-test>
+
+      <load-data num-entries="10000"/>
+
+      <basic-operations-test test-name="stress-test"
+                             duration="1m" total-threads="10">
+         <key-selector>
+            <concurrent-keys total-entries="10000"/>
+         </key-selector>
+      </basic-operations-test>
+   </scenario>
+
+   <!-- How the statistics are reported -->
+   <reports>
+      <!-- Produce CSV statistics report -->
+      <reporter type="csv" />
+      <!-- Produce HTML statistics report -->
+      <reporter type="html" />
+   </reports>
+
+</benchmark>

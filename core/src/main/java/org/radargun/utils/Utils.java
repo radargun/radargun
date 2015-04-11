@@ -249,16 +249,23 @@ public class Utils {
          log.warn("Could not find a plugin descriptor : " + file);
          return properties;
       }
-      FileInputStream inStream = null;
       try {
-         inStream = new FileInputStream(file);
-         properties.load(inStream);
-         return properties;
+         loadProperties(properties, file);
       } catch (IOException e) {
-         throw new RuntimeException(e);
-      } finally {
-         close(inStream);
+         log.error(String.format("Exception while loading plugin specific properties file %s.", PROPERTIES_FILE), e);
       }
+      return properties;
+   }
+
+   public static Properties loadProperties(Properties properties, File file) throws IOException {
+      try (InputStream propertiesStream = new FileInputStream(file)) {
+         return loadProperties(properties, propertiesStream);
+      }
+   }
+
+   public static Properties loadProperties(Properties properties, InputStream inputStream) throws IOException {
+      properties.load(inputStream);
+      return properties;
    }
 
    public static String getPluginProperty(String plugin, String propertyName) {
