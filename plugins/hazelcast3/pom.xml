@@ -16,12 +16,18 @@
       <dependency>
          <groupId>com.hazelcast</groupId>
          <artifactId>hazelcast</artifactId>
-         <version>3.2.4</version>
+         <version>3.4.2</version>
       </dependency>
       <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>plugin-hazelcast2</artifactId>
          <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-jcache</artifactId>
+         <version>${project.version}</version>
+         <scope>runtime</scope>
       </dependency>
    </dependencies>
 
