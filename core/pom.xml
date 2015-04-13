@@ -58,7 +58,7 @@
          <id>log4j</id>
          <activation>
             <property>
-               <name>!log4j2</name>
+               <name>!no-log4j</name>
             </property>
          </activation>
          <dependencies>

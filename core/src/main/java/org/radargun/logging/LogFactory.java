@@ -26,12 +26,12 @@ public abstract class LogFactory {
    public static Log getLog(Class<?> clazz) {
       if (IS_LOG4J2_AVAILABLE) return new Log4j2Log(clazz);
       if (IS_LOG4J_AVAILABLE) return new Log4jLog(clazz);
-      throw new IllegalStateException("Cannot find any logger");
+      return new StdOutLog(clazz.getName());
    }
 
    public static Log getLog(String className) {
       if (IS_LOG4J2_AVAILABLE) return new Log4j2Log(className);
       if (IS_LOG4J_AVAILABLE) return new Log4jLog(className);
-      throw new IllegalStateException("Cannot find any logger");
+      return new StdOutLog(className);
    }
 }
