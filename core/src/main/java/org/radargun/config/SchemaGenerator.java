@@ -88,7 +88,7 @@ public abstract class SchemaGenerator {
       if (source == null) source = "unknown source";
       int lastSlash = source.lastIndexOf('/');
       if (lastSlash > 0) source = source.substring(lastSlash + 1);
-      schema.appendChild(doc.createComment("From " +  source));
+      schema.appendChild(doc.createComment("From " + source));
 
       Element typeElement = createComplexType(schema, typeName, superType, true,
             Modifier.isAbstract(clazz.getModifiers()), findDocumentation(clazz));
@@ -100,10 +100,14 @@ public abstract class SchemaGenerator {
    }
 
    protected Element createAny(Element parent) {
+      return createAny(parent, 0, 1);
+   }
+
+   protected Element createAny(Element parent, int minOccurs, int maxOccurs) {
       Element any = doc.createElementNS(NS_XS, XS_ANY);
       any.setAttribute(XS_NAMESPACE, XS_OTHER_NAMESPACE);
-      any.setAttribute(XS_MIN_OCCURS, "0");
-      any.setAttribute(XS_MAX_OCCURS, "1");
+      any.setAttribute(XS_MIN_OCCURS, String.valueOf(minOccurs));
+      any.setAttribute(XS_MAX_OCCURS, maxOccurs(maxOccurs));
       parent.appendChild(any);
       return any;
    }
@@ -183,31 +187,36 @@ public abstract class SchemaGenerator {
       } catch (Exception e) {
          throw new IllegalArgumentException("Cannot create " + complexConverterClass.getName(), e);
       }
-      Element choice = createChoice(createSequence(typeElement), converter.minAttributes(), converter.maxAttributes());
-      for (Class<?> inner : converter.content()) {
-         DefinitionElement de = inner.getAnnotation(DefinitionElement.class);
-         if (de == null) throw new IllegalArgumentException(inner.getName());
-         String subtypeName = class2xmlId(inner);
-         createReference(choice, de.name(), ConfigSchemaGenerator.RG_PREFIX + subtypeName);
-         if (!generatedTypes.contains(subtypeName)) {
-            generatedTypes.add(subtypeName);
-            Map<String, Path> subtypeProperties = PropertyHelper.getProperties(inner, true, false, true);
-            String extended = null;
-            Path valueProperty = subtypeProperties.get("");
-            if (valueProperty != null && valueProperty.getTargetAnnotation().complexConverter() != ComplexConverter.Dummy.class) {
-               // if we have complex value property, let's inherit from the value converter
-               extended = generateComplexType(valueProperty.getTargetType(), valueProperty.getTargetAnnotation().complexConverter());
-               subtypeProperties.remove("");
-            }
-            Element subtypeType = createComplexType(schema, subtypeName, extended, true, false, de.doc());
-            Element subtypeSequence = createSequence(subtypeType);
-            for (Map.Entry<String, Path> property : subtypeProperties.entrySet()) {
-               if (property.getKey().isEmpty()) {
-                  throw new IllegalArgumentException("Empty property in class " + inner.getName());
+      if (converter instanceof DefinitionElementConverter) {
+         DefinitionElementConverter<?> dec = (DefinitionElementConverter<?>) converter;
+         Element choice = createChoice(createSequence(typeElement), dec.minAttributes(), dec.maxAttributes());
+         for (Class<?> inner : dec.content()) {
+            DefinitionElement de = inner.getAnnotation(DefinitionElement.class);
+            if (de == null) throw new IllegalArgumentException(inner.getName());
+            String subtypeName = class2xmlId(inner);
+            createReference(choice, de.name(), ConfigSchemaGenerator.RG_PREFIX + subtypeName);
+            if (!generatedTypes.contains(subtypeName)) {
+               generatedTypes.add(subtypeName);
+               Map<String, Path> subtypeProperties = PropertyHelper.getProperties(inner, true, false, true);
+               String extended = null;
+               Path valueProperty = subtypeProperties.get("");
+               if (valueProperty != null && valueProperty.getTargetAnnotation().complexConverter() != ComplexConverter.Dummy.class) {
+                  // if we have complex value property, let's inherit from the value converter
+                  extended = generateComplexType(valueProperty.getTargetType(), valueProperty.getTargetAnnotation().complexConverter());
+                  subtypeProperties.remove("");
                }
-               generateProperty(subtypeType, subtypeSequence, property.getKey(), property.getValue(), true);
+               Element subtypeType = createComplexType(schema, subtypeName, extended, true, false, de.doc());
+               Element subtypeSequence = createSequence(subtypeType);
+               for (Map.Entry<String, Path> property : subtypeProperties.entrySet()) {
+                  if (property.getKey().isEmpty()) {
+                     throw new IllegalArgumentException("Empty property in class " + inner.getName());
+                  }
+                  generateProperty(subtypeType, subtypeSequence, property.getKey(), property.getValue(), true);
+               }
             }
          }
+      } else {
+         createAny(createSequence(typeElement), 1, -1);
       }
 
       schema.appendChild(typeElement);

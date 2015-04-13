@@ -15,10 +15,17 @@ package org.radargun.config;
  */
 public class SimpleDefinition implements Definition {
    public final String value;
+   public final Source source;
 
-   public SimpleDefinition(String value) {
-          this.value = value;
-       }
+   public enum Source {
+      ATTRIBUTE,
+      TEXT,
+   }
+
+   public SimpleDefinition(String value, Source source) {
+      this.value = value;
+      this.source = source;
+   }
 
    @Override
    public String toString() {
