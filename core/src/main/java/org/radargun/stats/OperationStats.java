@@ -5,8 +5,8 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 
-import org.radargun.config.ComplexConverter;
 import org.radargun.config.ComplexDefinition;
+import org.radargun.config.DefinitionElementConverter;
 import org.radargun.utils.ReflexiveConverters;
 
 /**
@@ -51,7 +51,7 @@ public interface OperationStats extends Serializable {
     */
    boolean isEmpty();
 
-   public static class Converter implements ComplexConverter<OperationStats> {
+   public static class Converter implements DefinitionElementConverter<OperationStats> {
       private ReflexiveConverters.ListConverter converter = new ReflexiveConverters.ListConverter(OperationStats.class);
 
       @Override

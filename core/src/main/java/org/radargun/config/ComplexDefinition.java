@@ -34,6 +34,7 @@ import java.util.Map;
  */
 public class ComplexDefinition implements Definition {
    private List<Entry> attributes;
+   private String namespace;
 
    /**
     * Definition can use multiple entries with same name - {@link ComplexConverter} should handle that.
@@ -81,6 +82,14 @@ public class ComplexDefinition implements Definition {
    public void add(String attribute, Definition definition) {
       if (attributes == null) attributes = new ArrayList<Entry>();
       attributes.add(new Entry(attribute, definition));
+   }
+
+   public void setNamespace(String namespace) {
+      this.namespace = namespace;
+   }
+
+   public String getNamespace() {
+      return namespace;
    }
 
    public static class Entry implements Serializable {

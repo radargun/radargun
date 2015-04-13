@@ -261,7 +261,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       for (int attrIndex = 0; attrIndex < attributes.getLength(); attrIndex++) {
          Attr attr = (Attr) attributes.item(attrIndex);
          if (ATTR_XMLNS.equals(attr.getName())) continue;
-         properties.put(attr.getName(), new SimpleDefinition(attr.getValue()));
+         properties.put(attr.getName(), new SimpleDefinition(attr.getValue(), SimpleDefinition.Source.ATTRIBUTE));
       }
       if (!subElements) {
          return properties;
@@ -290,13 +290,16 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       NamedNodeMap attributes = element.getAttributes();
       NodeList children = element.getChildNodes();
       if (attributes.getLength() == 0 && children.getLength() == 1 && children.item(0) instanceof Text) {
-         return new SimpleDefinition(((Text) children.item(0)).getWholeText());
+         return new SimpleDefinition(((Text) children.item(0)).getWholeText(), SimpleDefinition.Source.TEXT);
       }
       ComplexDefinition definition = new ComplexDefinition();
       for (int i = 0; i < attributes.getLength(); ++i) {
          Attr attr = (Attr) attributes.item(i);
-         if (ATTR_XMLNS.equals(attr.getName())) continue;
-         definition.add(attr.getName(), new SimpleDefinition(attr.getValue()));
+         if (ATTR_XMLNS.equals(attr.getName())) {
+            definition.setNamespace(attr.getValue());
+            continue;
+         }
+         definition.add(attr.getName(), new SimpleDefinition(attr.getValue(), SimpleDefinition.Source.ATTRIBUTE));
       }
       for (int i = 0; i < children.getLength(); ++i) {
          Node n = children.item(i);
@@ -305,7 +308,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          } else if (n instanceof Text) {
             String text = ((Text) n).getWholeText().trim();
             if (!text.isEmpty()) {
-               definition.add("", new SimpleDefinition(text));
+               definition.add("", new SimpleDefinition(text, SimpleDefinition.Source.TEXT));
             }
          } else if (n instanceof Comment) {
             continue;

@@ -95,7 +95,7 @@ public class ReflexiveConverters {
    /**
     * Creates single instance of provided classes.
     */
-   public static class ObjectConverter extends Base implements ComplexConverter<Object> {
+   public static class ObjectConverter extends Base implements DefinitionElementConverter<Object> {
       /**
        * Enumeration-based constructor.
        * @param classes That can be instantiated.
@@ -143,7 +143,7 @@ public class ReflexiveConverters {
    /**
     * Creates a list of instances of provided classes.
     */
-   public static class ListConverter extends Base implements ComplexConverter<List> {
+   public static class ListConverter extends Base implements DefinitionElementConverter<List> {
       /**
        * Enumeration-based constructor.
        * @param classes That can be instantiated.
@@ -239,7 +239,7 @@ public class ReflexiveConverters {
             Map<String, String> properties = Utils.parseParams(string.substring(index + 1));
             ComplexDefinition definition = new ComplexDefinition();
             for (Map.Entry<String, String> property : properties.entrySet()) {
-               definition.add(property.getKey(), new SimpleDefinition(property.getValue()));
+               definition.add(property.getKey(), new SimpleDefinition(property.getValue(), SimpleDefinition.Source.TEXT));
             }
             return instantiate(string.substring(0, index), definition);
          }
