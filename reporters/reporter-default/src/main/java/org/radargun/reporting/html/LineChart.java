@@ -32,7 +32,7 @@ public class LineChart extends ComparisonChart {
    protected final YIntervalSeriesCollection dataset = new YIntervalSeriesCollection();
    protected final Map<Comparable, YIntervalSeries> seriesMap = new HashMap<>();
    protected final SortedMap<Double, String> iterationValues = new TreeMap<>();
-
+   protected double upperRange = 0;
 
    public LineChart(String domainLabel, String rangeLabel) {
       super(domainLabel, rangeLabel);
@@ -48,6 +48,9 @@ public class LineChart extends ComparisonChart {
       CategorizedAxis domainAxis = new CategorizedAxis();
       domainAxis.setLabel(domainLabel);
       chart.getXYPlot().setDomainAxis(domainAxis);
+      if (upperRange > 0) {
+         chart.getXYPlot().getRangeAxis().setRange(0, upperRange * 1.1);
+      }
       for (int i = 0; i < chart.getXYPlot().getSeriesCount(); ++i) {
          renderer.setSeriesFillPaint(i, DEFAULT_PAINTS[i % DEFAULT_PAINTS.length]);
       }
@@ -61,6 +64,8 @@ public class LineChart extends ComparisonChart {
          seriesMap.put(seriesName, series = new YIntervalSeries(seriesName));
          dataset.addSeries(series);
       }
+      // don't let the chart scale according to deviation (values wouldn't be seen)
+      upperRange = Math.max(upperRange, Math.min(value + deviation, 3 * value));
       series.add(xValue, value, value - deviation, value + deviation);
       if (xString != null) {
          iterationValues.put(xValue, xString);
