@@ -413,7 +413,7 @@ public abstract class ReportDocument extends HtmlDocument {
             }
          }
          if (presentedStatistics.contains(StatisticType.HISTOGRAM)) {
-            write("<th>histogram</th>\n");
+            write("<th>histograms</th>\n");
          }
       }
       write("</tr>\n");
@@ -447,7 +447,7 @@ public abstract class ReportDocument extends HtmlDocument {
       });
    }
 
-   private void writeRepresentations(Statistics statistics, final String operation, String configurationName, int cluster, int iteration,
+   private void writeRepresentations(Statistics statistics, final String operation, final String configurationName, int cluster, int iteration,
                                      String node, int threads, Collection<StatisticType> presentedStatistics, boolean gray, boolean suspect) {
       OperationStats operationStats = null;
       long period = 0;
@@ -509,18 +509,31 @@ public abstract class ReportDocument extends HtmlDocument {
          if (histogram == null) {
             writeTD("none", rowStyle);
          } else {
-            final String filename = String.format("histogram_%s_%s_%s_%d_%d_%s.png", testName, operation, configurationName, cluster, iteration, node);
+            final String histogramFilename = String.format("histogram_%s_%s_%s_%d_%d_%s.png", testName, operation, configurationName, cluster, iteration, node);
             chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
                @Override
                public Void call() throws Exception {
-                  log.debug("Generating histogram " + filename);
+                  log.debug("Generating histogram " + histogramFilename);
                   HistogramChart chart = new HistogramChart().setData(operation, histogram);
                   chart.setWidth(configuration.histogramWidth).setHeight(configuration.histogramHeight);
-                  chart.save(directory + File.separator + filename);
+                  chart.save(directory + File.separator + histogramFilename);
                   return null;
                }
             }));
-            writeTD(String.format("<a href=\"%s\">show</a>", filename), rowStyle);
+
+            final Histogram fullHistogram = operationStats.getRepresentation(Histogram.class);
+            final String percentilesFilename = String.format("percentiles_%s_%s_%s_%d_%d_%s.png", testName, operation, configurationName, cluster, iteration, node);
+            chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
+               @Override
+               public Void call() throws Exception {
+                  log.debug("Generating percentiles " + percentilesFilename);
+                  PercentilesChart chart = new PercentilesChart().addSeries(configurationName, fullHistogram);
+                  chart.setWidth(configuration.histogramWidth).setHeight(configuration.histogramHeight);
+                  chart.save(directory + File.separator + percentilesFilename);
+                  return null;
+               }
+            }));
+            writeTD(String.format("<a href=\"%s\">histogram</a><br>\n<a href=\"%s\">percentiles</a>", histogramFilename, percentilesFilename), rowStyle);
          }
       }
    }

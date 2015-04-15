@@ -57,6 +57,14 @@
             <key-selector>
                <concurrent-keys total-entries="10000"/>
             </key-selector>
+            <statistics>
+               <default>
+                  <operation-stats>
+                     <default />
+                     <histogram />
+                  </operation-stats>
+               </default>
+            </statistics>
          </basic-operations-test>
       </repeat>
 

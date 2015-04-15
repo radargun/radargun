@@ -92,37 +92,58 @@ public final class HistogramOperationStats implements OperationStats {
          double percentile = Percentile.getPercentile(args);
          return (T) new Percentile(histogram.getValueAtPercentile(percentile));
       } else if (clazz == Histogram.class) {
-         int buckets = Histogram.getBuckets(args);
-         double percentile = Histogram.getPercentile(args);
-         AbstractHistogram.AllValues values = histogram.allValues();
-         ArrayList<Long> ranges = new ArrayList<>();
-         ArrayList<Long> counts = new ArrayList<>();
-         long min = Math.max(histogram.getMinValue(), 1);
-         long max = Math.max(histogram.getValueAtPercentile(percentile), 1);
-         if (max < min) max = Math.max(histogram.getMaxValue(), min + 1);
-         double exponent = Math.pow((double) max / (double) min, 1d / buckets);
-         double current = min * exponent;
-         long accCount = 0, lastCount = 0;
-         for (HistogramIterationValue value : values) {
-            accCount += value.getCountAddedInThisIterationStep();
-            if (value.getValueIteratedTo() >= current) {
-               ranges.add(value.getValueIteratedTo());
-               counts.add(accCount - lastCount);
-               lastCount = accCount;
-               current = current * exponent;
-            }
-            if (value.getValueIteratedTo() >= max) {
-               break;
-            }
+         if (args.length == 0) {
+            return (T) getFullHistogram(histogram);
+         } else {
+            return (T) getReformattedHistogram(histogram, args);
          }
-         if (accCount > 0) {
-            ranges.add(max);
-            counts.add(accCount - lastCount);
-         }
-         return (T) new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
       } else {
          return null;
       }
+   }
+
+   // this is different from the compacted histogram by having the lower bound as count, and including zero values, too
+   private Histogram getFullHistogram(AbstractHistogram histogram) {
+      AbstractHistogram.AllValues values = histogram.allValues();
+      ArrayList<Long> ranges = new ArrayList<>();
+      ArrayList<Long> counts = new ArrayList<>();
+      ranges.add(histogram.getMinValue());
+      for (HistogramIterationValue value : values) {
+         ranges.add(value.getValueIteratedTo());
+         counts.add(value.getCountAddedInThisIterationStep());
+      }
+      return new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
+   }
+
+   private Histogram getReformattedHistogram(AbstractHistogram histogram, Object[] args) {
+      int buckets = Histogram.getBuckets(args);
+      double percentile = Histogram.getPercentile(args);
+      AbstractHistogram.AllValues values = histogram.allValues();
+      ArrayList<Long> ranges = new ArrayList<>();
+      ArrayList<Long> counts = new ArrayList<>();
+      long min = Math.max(histogram.getMinValue(), 1);
+      long max = Math.max(histogram.getValueAtPercentile(percentile), 1);
+      if (max < min) max = Math.max(histogram.getMaxValue(), min + 1);
+      double exponent = Math.pow((double) max / (double) min, 1d / buckets);
+      double current = min * exponent;
+      long accCount = 0, lastCount = 0;
+      for (HistogramIterationValue value : values) {
+         accCount += value.getCountAddedInThisIterationStep();
+         if (value.getValueIteratedTo() >= current) {
+            ranges.add(value.getValueIteratedTo());
+            counts.add(accCount - lastCount);
+            lastCount = accCount;
+            current = current * exponent;
+         }
+         if (value.getValueIteratedTo() >= max) {
+            break;
+         }
+      }
+      if (accCount > 0) {
+         ranges.add(max);
+         counts.add(accCount - lastCount);
+      }
+      return new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
    }
 
    @Override
