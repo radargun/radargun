@@ -116,33 +116,44 @@ public class AllRecordingOperationStats implements OperationStats {
    }
 
    private <T> Histogram getHistogram(Object[] args) {
-      int buckets = Histogram.getBuckets(args);
-      double percentile = Histogram.getPercentile(args);
       int size = full ? responseTimes.length : pos;
-      ArrayList<Long> ranges = new ArrayList<>();
-      ArrayList<Long> counts = new ArrayList<>();
       Arrays.sort(responseTimes, 0, size);
-      long min = size == 0 ? 1 : responseTimes[0];
-      int end = (int) Math.ceil(size * percentile / 100);
-      long max = size == 0 ? 1 : responseTimes[end];
-      double exponent = Math.pow((double) max / (double) min, 1d / buckets);
-      double current = min * exponent;
-      long accCount, lastCount = 0;
-      for (accCount = 0; accCount < end;) {
-         long responseTime = responseTimes[(int) accCount];
-         accCount++;
-         if (responseTime >= current) {
-            ranges.add(responseTime);
-            counts.add(accCount - lastCount);
-            lastCount = accCount;
-            current = current * exponent;
+
+      if (args.length == 0) {
+         long[] ranges = new long[size + 1];
+         System.arraycopy(responseTimes, 0, ranges, 0, size);
+         ranges[size] = responseTimes[size - 1];
+         long[] counts = new long[size];
+         Arrays.fill(counts, 1L);
+         return new Histogram(ranges, counts);
+      } else {
+         ArrayList<Long> ranges = new ArrayList<>();
+         ArrayList<Long> counts = new ArrayList<>();
+         int buckets = Histogram.getBuckets(args);
+         double percentile = Histogram.getPercentile(args);
+         int end = (int) Math.ceil(size * percentile / 100);
+
+         long min = size == 0 ? 1 : responseTimes[0];
+         long max = size == 0 ? 1 : responseTimes[end];
+         double exponent = Math.pow((double) max / (double) min, 1d / buckets);
+         double current = min * exponent;
+         long accCount, lastCount = 0;
+         for (accCount = 0; accCount < end; ) {
+            long responseTime = responseTimes[(int) accCount];
+            accCount++;
+            if (responseTime >= current) {
+               ranges.add(responseTime);
+               counts.add(accCount - lastCount);
+               lastCount = accCount;
+               current = current * exponent;
+            }
          }
+         if (accCount > 0) {
+            ranges.add(max);
+            counts.add(accCount - lastCount);
+         }
+         return new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
       }
-      if (accCount > 0) {
-         ranges.add(max);
-         counts.add(accCount - lastCount);
-      }
-      return new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
    }
 
    @Override
