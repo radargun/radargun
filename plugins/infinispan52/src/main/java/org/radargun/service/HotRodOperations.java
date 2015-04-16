@@ -98,6 +98,9 @@ public class HotRodOperations implements BasicOperations, ConditionalOperations 
          if (trace) log.tracef("REMOVE cache=%s key=%s value=%s", forceReturn.getName(), key, oldValue);
          for (;;) {
             VersionedValue<V> versioned = forceReturn.getVersioned(key);
+            if (oldValue == null || versioned == null) {
+               return false;
+            }
             if (oldValue.equals(versioned.getValue())) {
                if (forceReturn.removeWithVersion(key, versioned.getVersion())) {
                   return true;
@@ -114,6 +117,9 @@ public class HotRodOperations implements BasicOperations, ConditionalOperations 
          if (trace) log.tracef("REPLACE cache=%s key=%s old=%s, new=%s", forceReturn.getName(), key, oldValue, newValue);
          for (;;) {
             VersionedValue<V> versioned = forceReturn.getVersioned(key);
+            if (oldValue == null || versioned == null) {
+               return false;
+            }
             if (oldValue.equals(versioned.getValue())) {
                if (forceReturn.replaceWithVersion(key, newValue, versioned.getVersion())) {
                   return true;
