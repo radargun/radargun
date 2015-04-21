@@ -11,7 +11,7 @@ import org.radargun.utils.ReflexiveConverters;
  */
 public abstract class RepresentationType {
 
-   public abstract double getValue(OperationStats stats, int threads, long duration);
+   public abstract double getValue(OperationStats stats, long duration);
 
    @Override
    public String toString() {

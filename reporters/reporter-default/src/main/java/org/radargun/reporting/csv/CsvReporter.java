@@ -83,7 +83,7 @@ public class CsvReporter implements Reporter {
                Map<String, String> rowData = new HashMap<String, String>();
                rows.add(rowData);
                for (Map.Entry<String, OperationStats> os : operationStats.entrySet()) {
-                  addRepresentations(aggregated, iteration.getThreadCount(), rowData, os.getKey(), os.getValue());
+                  addRepresentations(aggregated, rowData, os.getKey(), os.getValue());
                }
                columns.addAll(rowData.keySet());
 
@@ -144,7 +144,7 @@ public class CsvReporter implements Reporter {
       Map<String, String> rowData = new HashMap<String, String>();
       rows.add(rowData);
       for (Map.Entry<String, OperationStats> os : operationStats.entrySet()) {
-         addRepresentations(summary, slaveStats.getValue().size(), rowData, os.getKey(), os.getValue());
+         addRepresentations(summary, rowData, os.getKey(), os.getValue());
       }
       columns.addAll(rowData.keySet());
 
@@ -155,7 +155,7 @@ public class CsvReporter implements Reporter {
       return summary;
    }
 
-   private void addRepresentations(Statistics summary, int threadCount, Map<String, String> rowData, String operationName, OperationStats os) {
+   private void addRepresentations(Statistics summary, Map<String, String> rowData, String operationName, OperationStats os) {
       //Map.Entry<Integer, List<Statistics>> slaveStats = ; Map.Entry<String, OperationStats> os = ;
       DefaultOutcome defaultOutcome = os.getRepresentation(DefaultOutcome.class);
       if (defaultOutcome != null) {
@@ -165,10 +165,10 @@ public class CsvReporter implements Reporter {
          rowData.put(operationName + ".ResponseTimeMax", String.valueOf(defaultOutcome.responseTimeMax));
          rowData.put(operationName + ".ResponseTimeMean", String.valueOf(defaultOutcome.responseTimeMean));
       }
-      OperationThroughput throughput = os.getRepresentation(OperationThroughput.class, threadCount, TimeUnit.MILLISECONDS.toNanos(summary.getEnd() - summary.getBegin()));
+      OperationThroughput throughput = os.getRepresentation(OperationThroughput.class, TimeUnit.MILLISECONDS.toNanos(summary.getEnd() - summary.getBegin()));
       if (throughput != null) {
-         rowData.put(operationName + ".TheoreticalThroughput", String.valueOf(throughput.theoretical));
-         rowData.put(operationName + ".ActualThroughput", String.valueOf(throughput.actual));
+         rowData.put(operationName + ".ThroughputGross", String.valueOf(throughput.gross));
+         rowData.put(operationName + ".ThroughputNet", String.valueOf(throughput.net));
       }
       MeanAndDev meanAndDev = os.getRepresentation(MeanAndDev.class);
       if (meanAndDev != null) {

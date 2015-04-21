@@ -33,7 +33,7 @@ public class Percentile {
       protected double value;
 
       @Override
-      public double getValue(OperationStats stats, int threads, long duration) {
+      public double getValue(OperationStats stats, long duration) {
          Percentile percentile = stats.getRepresentation(Percentile.class, value);
          if (percentile == null) throw new IllegalArgumentException("Cannot retrieve percentile from " + stats);
          return percentile.responseTimeMax;

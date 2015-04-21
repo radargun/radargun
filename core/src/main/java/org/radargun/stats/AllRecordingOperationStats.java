@@ -91,7 +91,7 @@ public class AllRecordingOperationStats implements OperationStats {
       if (clazz == DefaultOutcome.class) {
          return (T) new DefaultOutcome(requests, errors, getMeanDuration(), getMaxDuration());
       } else if (clazz == OperationThroughput.class) {
-         return (T) OperationThroughput.compute(requests, getMeanDuration(), args);
+         return (T) OperationThroughput.compute(requests, errors, args);
       } else if (clazz == Percentile.class) {
          double percentile = Percentile.getPercentile(args);
          int size = full ? responseTimes.length : pos;

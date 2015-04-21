@@ -140,9 +140,9 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
                aggregated.merge(stats.get(i));
             }
             for (Map.Entry<String, OperationStats> entry : aggregated.getOperationsStats().entrySet()) {
-               OperationThroughput throughput = entry.getValue().getRepresentation(OperationThroughput.class, stats.size(), TimeUnit.MILLISECONDS.toNanos(aggregated.getEnd() - aggregated.getBegin()));
-               if (throughput != null && (throughput.actual != 0 || timeline.getValues(entry.getKey() + " Throughput") != null)) {
-                  timeline.addValue(entry.getKey() + " Throughput", new Timeline.Value(now, throughput.actual));
+               OperationThroughput throughput = entry.getValue().getRepresentation(OperationThroughput.class, TimeUnit.MILLISECONDS.toNanos(aggregated.getEnd() - aggregated.getBegin()));
+               if (throughput != null && (throughput.gross != 0 || timeline.getValues(entry.getKey() + " Throughput") != null)) {
+                  timeline.addValue(entry.getKey() + " Throughput", new Timeline.Value(now, throughput.gross));
                }
             }
          }

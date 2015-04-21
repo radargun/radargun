@@ -67,37 +67,48 @@ public abstract class ReportDocument extends HtmlDocument {
    }
 
    protected void createAndWriteCharts(String operation, int clusterSize) throws IOException {
+      final String chartTableCellFormat = "<td style=\"border: 0px;\"><img src=\"%s\" alt=\"%s\"/></td>\n";
+      final String chartTableHeaderBegin = "<th style=\"text-align: center;border: 0px;\">";
+      final String chartTableHeaderEnd = "</th>\n";
+
       String suffix = clusterSize > 0 ? "_" + clusterSize : "";
-      StringBuffer headerString = new StringBuffer("<table>");
-      StringBuffer chartString = new StringBuffer();
-      if (createChart(
-            String.format("%s%s%s_%s%s_mean_dev.png", directory, File.separator, testName, operation, suffix),
-            clusterSize, operation, "Response time (ms)", StatisticType.MEAN_AND_DEV)) {
-         headerString.append("<th style=\"text-align: center;border: 0px;\">Response time mean</th>");
-         chartString.append(String.format(
-               "<td style=\"border: 0px;\"><img src=\"%s_%s%s_mean_dev.png\" alt=\"%s\"/></div></div></td>\n",
-               testName, operation, suffix, operation));
+      StringBuilder headerString = new StringBuilder("<table>\n");
+      StringBuilder chartString = new StringBuilder();
+      String directory = this.directory.endsWith(File.separator) ? this.directory : this.directory + File.separator;
+
+      String responseTimeChartFile = String.format("%s_%s%s_mean_dev.png", testName, operation, suffix);
+      boolean hasResponseTimeChart = createChart(directory + responseTimeChartFile,
+            clusterSize, operation, "Response time (ms)", ChartType.MEAN_AND_DEV);
+      if (hasResponseTimeChart) {
+         headerString.append(chartTableHeaderBegin).append("Response time mean").append(chartTableHeaderEnd);
+         chartString.append(String.format(chartTableCellFormat, responseTimeChartFile, operation));
       }
-      if (createChart(
-            String.format("%s%s%s_%s%s_throughput.png", directory, File.separator, testName, operation, suffix),
-            clusterSize, operation, "Operations/sec", StatisticType.OPERATION_THROUGHPUT)) {
-         headerString.append("<th style=\"text-align: center;border: 0px;\">Operation throughput</th>");
-         chartString.append(String.format(
-               "<td style=\"border: 0px;\"><img src=\"%s_%s%s_throughput.png\" alt=\"%s\"/></div></div>\n", testName,
-               operation, suffix, operation));
+      String throughputGrossChartFile = String.format("%s_%s%s_throughput_gross.png", testName, operation, suffix);
+      boolean hasOperationThroughputGrossChart = createChart(directory + throughputGrossChartFile,
+            clusterSize, operation, "Operations/sec", ChartType.OPERATION_THROUGHPUT_GROSS);
+      if (hasOperationThroughputGrossChart) {
+         headerString.append(chartTableHeaderBegin).append("Gross operation throughput").append(chartTableHeaderEnd);
+         chartString.append(String.format(chartTableCellFormat, throughputGrossChartFile, operation));
       }
-      if (createChart(
-            String.format("%s%s%s_%s%s_data_throughput.png", directory, File.separator, testName, operation, suffix),
-            clusterSize, operation, "MB/sec", StatisticType.DATA_THROUGHPUT)) {
-         headerString.append("<th style=\"text-align: center;border: 0px;\">Data throughput mean</th>");
-         chartString.append(String.format(
-               "<td style=\"border: 0px;\"><img src=\"%s_%s%s_data_throughput.png\" alt=\"%s\"/></div></div>\n",
-               testName, operation, suffix, operation));
+      String throughputNetChartFile = String.format("%s_%s%s_throughput_net.png", testName, operation, suffix);
+      boolean hasOperationThroughputNetChart = createChart(directory + throughputNetChartFile,
+            clusterSize, operation, "Operations/sec", ChartType.OPERATION_THROUGHPUT_NET);
+      if (hasOperationThroughputNetChart) {
+         headerString.append(chartTableHeaderBegin).append("Net operation throughput").append(chartTableHeaderEnd);
+         chartString.append(String.format(chartTableCellFormat, throughputNetChartFile, operation));
       }
-      headerString.append("<tr>");
+      final String dataThroughputChartFile = String.format("%s_%s%s_data_throughput.png", testName, operation, suffix);
+      boolean hasDataThroughputChart = createChart(directory + dataThroughputChartFile,
+            clusterSize, operation, "MB/sec", ChartType.DATA_THROUGHPUT);
+      if (hasDataThroughputChart) {
+         headerString.append(chartTableHeaderBegin).append("Data throughput mean").append(chartTableHeaderEnd);
+         chartString.append(String.format(chartTableCellFormat, dataThroughputChartFile, operation));
+      }
+
+      headerString.append("<tr>\n");
       write(headerString.toString());
       write(chartString.toString());
-      write("</tr></table>");
+      write("</tr></table>\n");
    }
 
    protected void writeResult(Map<Report, List<Report.TestResult>> results) {
@@ -159,8 +170,8 @@ public abstract class ReportDocument extends HtmlDocument {
    }
 
    protected boolean createChart(String filename, int clusterSize, String operation, String rangeAxisLabel,
-         StatisticType statisticType) throws IOException {
-      ComparisonChart chart = generateChart(clusterSize, operation, rangeAxisLabel, statisticType);
+         ChartType chartType) throws IOException {
+      ComparisonChart chart = generateChart(clusterSize, operation, rangeAxisLabel, chartType);
       if (chart != null) {
          chart.setWidth(Math.min(Math.max(maxConfigurations, maxIterations) * 100 + 200, 1800));
          chart.setHeight(Math.min(maxConfigurations * 100 + 200, 800));
@@ -183,7 +194,7 @@ public abstract class ReportDocument extends HtmlDocument {
       return chart;
    }
 
-   protected boolean addToChart(ComparisonChart chart, String subCategory, String operation, StatisticType statisticType,
+   protected boolean addToChart(ComparisonChart chart, String subCategory, String operation, ChartType chartType,
          Map<Report, List<Aggregation>> reportAggregationMap) {
       Map<String, List<Report>> byConfiguration = Projections.groupBy(reportAggregationMap.keySet(), new Projections.Func<Report, String>() {
          @Override
@@ -215,7 +226,7 @@ public abstract class ReportDocument extends HtmlDocument {
                subCategoryNumeric = entry.getKey().getCluster().getSize();
                subCategoryValue = String.format("Size %.0f", subCategoryNumeric);
             }
-            switch (statisticType) {
+            switch (chartType) {
             case MEAN_AND_DEV: {
                MeanAndDev meanAndDev = operationStats.getRepresentation(MeanAndDev.class);
                if (meanAndDev == null) return false;
@@ -223,11 +234,18 @@ public abstract class ReportDocument extends HtmlDocument {
                      subCategoryValue);
                break;
             }
-            case OPERATION_THROUGHPUT: {
+            case OPERATION_THROUGHPUT_GROSS: {
                OperationThroughput throughput = operationStats.getRepresentation(OperationThroughput.class,
-                     aggregation.totalThreads, TimeUnit.MILLISECONDS.toNanos(aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin()));
+                     TimeUnit.MILLISECONDS.toNanos(aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin()));
                if (throughput == null) return false;
-               chart.addValue(throughput.actual, 0, categoryName, subCategoryNumeric, subCategoryValue);
+               chart.addValue(throughput.gross, 0, categoryName, subCategoryNumeric, subCategoryValue);
+               break;
+            }
+            case OPERATION_THROUGHPUT_NET: {
+               OperationThroughput throughput = operationStats.getRepresentation(OperationThroughput.class,
+                     TimeUnit.MILLISECONDS.toNanos(aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin()));
+               if (throughput == null) return false;
+               chart.addValue(throughput.net, 0, categoryName, subCategoryNumeric, subCategoryValue);
                break;
             }
             case DATA_THROUGHPUT: {
@@ -257,7 +275,7 @@ public abstract class ReportDocument extends HtmlDocument {
       if (hasRepresentation(operation, reportAggregationMap, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile)) {
          presentedStatistics.add(StatisticType.HISTOGRAM);
       }
-      if (hasRepresentation(operation, reportAggregationMap, OperationThroughput.class, 100, 100L)) {
+      if (hasRepresentation(operation, reportAggregationMap, OperationThroughput.class, 1L)) {
          presentedStatistics.add(StatisticType.OPERATION_THROUGHPUT);
       }
       if (hasRepresentation(operation, reportAggregationMap, DataThroughput.class, 100L, 100L, 100L, 100.0)) {
@@ -367,7 +385,7 @@ public abstract class ReportDocument extends HtmlDocument {
       int columns = 4;
       columns += presentedStatistics.contains(StatisticType.HISTOGRAM) ? 1 : 0;
       columns += presentedStatistics.contains(StatisticType.PERCENTILES) ? configuration.percentiles.length : 0;
-      columns += presentedStatistics.contains(StatisticType.OPERATION_THROUGHPUT) ? 1 : 0;
+      columns += presentedStatistics.contains(StatisticType.OPERATION_THROUGHPUT) ? 2 : 0;
       columns += presentedStatistics.contains(StatisticType.DATA_THROUGHPUT) ? 4 : 0;
 
       if (maxIterations > 1) {
@@ -382,8 +400,9 @@ public abstract class ReportDocument extends HtmlDocument {
          write("<th style=\"text-align: center; border-left-color: black; border-left-width: 2px;\">requests</th>\n");
          write("<th style=\"text-align: center\">errors</th>\n");
          write("<th>mean</td><th>std.dev</th>\n");
-         if (presentedStatistics.contains(StatisticType.OPERATION_THROUGHPUT)){
-            write("<th>operation throughput</th>\n");
+         if (presentedStatistics.contains(StatisticType.OPERATION_THROUGHPUT)) {
+            write("<th>gross operation throughput</th>\n");
+            write("<th>net operation throughput</th>\n");
          }
          if (presentedStatistics.contains(StatisticType.DATA_THROUGHPUT)){
             write("<th colspan=\"4\">data throughput</th>\n");
@@ -460,9 +479,10 @@ public abstract class ReportDocument extends HtmlDocument {
          }
       }
       if (presentedStatistics.contains(StatisticType.OPERATION_THROUGHPUT)) {
-         OperationThroughput operationThroughput = operationStats == null ? null : operationStats.getRepresentation(OperationThroughput.class, threads, period);
+         OperationThroughput operationThroughput = operationStats == null ? null : operationStats.getRepresentation(OperationThroughput.class, period);
          if (operationThroughput != null) {
-            writeTD(String.format("%.0f&nbsp;reqs/s", operationThroughput.actual), rowStyle);
+            writeTD(String.format("%.0f&nbsp;reqs/s", operationThroughput.gross), rowStyle);
+            writeTD(String.format("%.0f&nbsp;reqs/s", operationThroughput.net), rowStyle);
          } else {
             writeTD("&nbsp;", rowStyle);
          }
@@ -531,10 +551,14 @@ public abstract class ReportDocument extends HtmlDocument {
       write("    }\n}\n");
    }
 
-   protected abstract ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, StatisticType statisticType);
+   protected abstract ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, ChartType chartType);
 
-   protected static enum StatisticType {
+   protected enum StatisticType {
       MEAN_AND_DEV, OPERATION_THROUGHPUT, DATA_THROUGHPUT, HISTOGRAM, PERCENTILES
+   }
+
+   protected enum ChartType {
+      MEAN_AND_DEV, OPERATION_THROUGHPUT_NET, OPERATION_THROUGHPUT_GROSS, DATA_THROUGHPUT
    }
 
    protected static class Configuration {

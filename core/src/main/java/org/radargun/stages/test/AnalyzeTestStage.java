@@ -64,7 +64,7 @@ public class AnalyzeTestStage extends AbstractDistStage {
       double min = Double.MAX_VALUE, max = -Double.MAX_VALUE, sum = 0;
       Group minGroup = null, maxGroup = null;
       for (Group g : groups) {
-         double value = statisticsType.getValue(g.stats, g.threads, g.duration);
+         double value = statisticsType.getValue(g.stats, g.duration);
          log.tracef("iteration %d, node %d, thread %d: %d threads, duration %s -> value %f",
                g.origin.iteration, g.origin.node, g.origin.thread, g.threads,
                Utils.prettyPrintTime(g.duration, TimeUnit.NANOSECONDS), value);

@@ -50,7 +50,7 @@ public class CombinedReportDocument extends ReportDocument {
    }
 
    @Override
-   protected ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, StatisticType statisticType) {
+   protected ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, ChartType chartType) {
       String iterationsName = concatOrDefault(Projections.project(testAggregations, new Projections.Func<TestAggregations, String>() {
          @Override
          public String project(TestAggregations testAggregations) {
@@ -68,7 +68,7 @@ public class CombinedReportDocument extends ReportDocument {
             reportAggregationMap = ta.byReports();
             subCategory = ta.testName;
          }
-         addToChart(chart, subCategory, operation, statisticType, reportAggregationMap);
+         addToChart(chart, subCategory, operation, chartType, reportAggregationMap);
       }
       return chart;
    }
