@@ -30,7 +30,7 @@ public class DefaultOutcome {
    @DefinitionElement(name = "requests", doc = "Retrieve number of operations executed.")
    public static class Requests extends RepresentationType {
       @Override
-      public double getValue(OperationStats stats, int threads, long duration) {
+      public double getValue(OperationStats stats, long duration) {
          DefaultOutcome defaultOutcome = stats.getRepresentation(DefaultOutcome.class);
          if (defaultOutcome == null) throw new IllegalArgumentException("Cannot retrieve number of requests from " + stats);
          return defaultOutcome.requests;
@@ -40,7 +40,7 @@ public class DefaultOutcome {
    @DefinitionElement(name = "errors", doc = "Retrieve number of failed operations.")
    public static class Errors extends RepresentationType {
       @Override
-      public double getValue(OperationStats stats, int threads, long duration) {
+      public double getValue(OperationStats stats, long duration) {
          DefaultOutcome defaultOutcome = stats.getRepresentation(DefaultOutcome.class);
          if (defaultOutcome == null) throw new IllegalArgumentException("Cannot retrieve number of failed requests from " + stats);
          return defaultOutcome.errors;
@@ -52,7 +52,7 @@ public class DefaultOutcome {
    @DefinitionElement(name = "response-time-max", doc = "Retrieve maximum response time.")
    public static class ResponseTimeMax extends RepresentationType {
       @Override
-      public double getValue(OperationStats stats, int threads, long duration) {
+      public double getValue(OperationStats stats, long duration) {
          DefaultOutcome defaultOutcome = stats.getRepresentation(DefaultOutcome.class);
          if (defaultOutcome == null) throw new IllegalArgumentException("Cannot retrieve number of failed requests from " + stats);
          return defaultOutcome.responseTimeMax;

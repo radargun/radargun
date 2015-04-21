@@ -26,7 +26,7 @@ public class TestReportDocument extends ReportDocument {
    }
 
    @Override
-   protected ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, StatisticType statisticType) {
+   protected ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, ChartType chartType) {
       String subCategory;
       Map<Report, List<Aggregation>> reportAggregationMap;
       if (clusterSize > 0) {
@@ -37,7 +37,7 @@ public class TestReportDocument extends ReportDocument {
          subCategory = null;
       }
       ComparisonChart chart = createComparisonChart(testAggregations.iterationsName, rangeAxisLabel);
-      if(!addToChart(chart, subCategory, operation, statisticType, reportAggregationMap)){
+      if(!addToChart(chart, subCategory, operation, chartType, reportAggregationMap)){
          chart = null;
       }
       return chart;

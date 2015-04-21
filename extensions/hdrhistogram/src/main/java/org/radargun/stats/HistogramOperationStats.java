@@ -87,7 +87,7 @@ public final class HistogramOperationStats implements OperationStats {
       } else if (clazz == MeanAndDev.class) {
          return (T) new MeanAndDev(histogram.getMean(), histogram.getStdDeviation());
       } else if (clazz == OperationThroughput.class) {
-         return (T) OperationThroughput.compute(histogram.getTotalCount(), histogram.getMean(), args);
+         return (T) OperationThroughput.compute(histogram.getTotalCount(), errors, args);
       } else if (clazz == Percentile.class) {
          double percentile = Percentile.getPercentile(args);
          return (T) new Percentile(histogram.getValueAtPercentile(percentile));

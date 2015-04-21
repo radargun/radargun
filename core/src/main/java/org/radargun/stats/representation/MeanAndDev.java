@@ -20,7 +20,7 @@ public final class MeanAndDev {
    @DefinitionElement(name = "response-time-mean", doc = "Retrieve mean response time.")
    public static class Mean extends RepresentationType {
       @Override
-      public double getValue(OperationStats stats, int threads, long duration) {
+      public double getValue(OperationStats stats, long duration) {
          MeanAndDev md = stats.getRepresentation(MeanAndDev.class);
          if (md == null) throw new IllegalArgumentException("Cannot retrieve mean from " + stats);
          return md.mean;
@@ -30,7 +30,7 @@ public final class MeanAndDev {
    @DefinitionElement(name = "response-time-deviation", doc = "Retrieve response time deviation.")
    public static class Deviation extends RepresentationType {
       @Override
-      public double getValue(OperationStats stats, int threads, long duration) {
+      public double getValue(OperationStats stats, long duration) {
          MeanAndDev md = stats.getRepresentation(MeanAndDev.class);
          if (md == null) throw new IllegalArgumentException("Cannot retrieve mean from " + stats);
          return md.dev;

@@ -167,7 +167,7 @@ public abstract class TestStage extends AbstractDistStage {
          return StageResult.SUCCESS;
       } else {
          try {
-            if (repeatCondition.evaluate(threads, aggregated)) {
+            if (repeatCondition.evaluate(aggregated)) {
                log.info("Loop-condition condition was satisfied, continuing the loop.");
                return StageResult.SUCCESS;
             } else {

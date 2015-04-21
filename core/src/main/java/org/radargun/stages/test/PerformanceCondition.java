@@ -13,6 +13,7 @@ import org.radargun.logging.LogFactory;
 import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DefaultOutcome;
+import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.utils.NanoTimeConverter;
 import org.radargun.utils.Projections;
 import org.radargun.utils.ReflexiveConverters;
@@ -24,20 +25,18 @@ import org.radargun.utils.Utils;
 public abstract class PerformanceCondition {
    private static Log log = LogFactory.getLog(PerformanceCondition.class);
 
-   public abstract boolean evaluate(int threads, Statistics statistics);
+   public abstract boolean evaluate(Statistics statistics);
 
    private static class Predicate implements Projections.Condition<PerformanceCondition> {
-      private final int threads;
       private final Statistics statistics;
 
-      public Predicate(int threads, Statistics statistics) {
-         this.threads = threads;
+      public Predicate(Statistics statistics) {
          this.statistics = statistics;
       }
 
       @Override
       public boolean accept(PerformanceCondition cond) {
-         return cond.evaluate(threads, statistics);
+         return cond.evaluate(statistics);
       }
    }
 
@@ -47,8 +46,8 @@ public abstract class PerformanceCondition {
       public final List<PerformanceCondition> subs = new ArrayList<>();
 
       @Override
-      public boolean evaluate(int threads, final Statistics statistics) {
-         return Projections.any(subs, new Predicate(threads, statistics));
+      public boolean evaluate(final Statistics statistics) {
+         return Projections.any(subs, new Predicate(statistics));
       }
 
       @Override
@@ -66,8 +65,8 @@ public abstract class PerformanceCondition {
       public final List<PerformanceCondition> subs = new ArrayList<>();
 
       @Override
-      public boolean evaluate(int threads, final Statistics statistics) {
-         return Projections.all(subs, new Predicate(threads, statistics));
+      public boolean evaluate(final Statistics statistics) {
+         return Projections.all(subs, new Predicate(statistics));
       }
 
       @Override
@@ -104,7 +103,7 @@ public abstract class PerformanceCondition {
       }
 
       @Override
-      public boolean evaluate(int threads, Statistics statistics) {
+      public boolean evaluate(Statistics statistics) {
          OperationStats stats = statistics.getOperationsStats().get(on);
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          DefaultOutcome outcome = stats.getRepresentation(DefaultOutcome.class);
@@ -116,8 +115,7 @@ public abstract class PerformanceCondition {
       }
    }
 
-   @DefinitionElement(name = "throughput", doc = "Checks value of throughput of given operation.")
-   protected static class Throughput extends AbstractCondition {
+   protected static abstract class ThroughputBase extends AbstractCondition {
       @Property(doc = "Test if the actual throughput is below specified value (operations per second)")
       protected Long below;
 
@@ -131,17 +129,33 @@ public abstract class PerformanceCondition {
       }
 
       @Override
-      public boolean evaluate(int threads, Statistics statistics) {
+      public boolean evaluate(Statistics statistics) {
          OperationStats stats = statistics.getOperationsStats().get(on);
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          org.radargun.stats.representation.OperationThroughput throughput = stats.getRepresentation(
-               org.radargun.stats.representation.OperationThroughput.class, threads,
+               org.radargun.stats.representation.OperationThroughput.class,
                TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin()));
          if (throughput == null) throw new IllegalStateException("Cannot determine throughput from " + stats);
-         log.info("Throughput is " + throughput.actual + " ops/s " + PropertyHelper.toString(this));
-         if (below != null) return throughput.actual < below;
-         if (over != null) return throughput.actual > over;
+         log.info(getClass().getSimpleName() + " is " + getThroughput(throughput) + " ops/s " + PropertyHelper.toString(this));
+         if (below != null) return getThroughput(throughput) < below;
+         if (over != null) return getThroughput(throughput) > over;
          throw new IllegalStateException();
+      }
+
+      protected abstract double getThroughput(OperationThroughput throughput);
+   }
+
+   @DefinitionElement(name = "throughput-gross", doc = "Checks value of gross throughput of given operation.")
+   protected static class GrossThroughput extends ThroughputBase {
+      protected double getThroughput(OperationThroughput throughput) {
+         return throughput.gross;
+      }
+   }
+
+   @DefinitionElement(name = "throughput-net", doc = "Checks value of net throughput of given operation.")
+   protected static class NetThroughput extends ThroughputBase {
+      protected double getThroughput(OperationThroughput throughput) {
+         return throughput.net;
       }
    }
 
@@ -160,7 +174,7 @@ public abstract class PerformanceCondition {
       }
 
       @Override
-      public boolean evaluate(int threads, Statistics statistics) {
+      public boolean evaluate(Statistics statistics) {
          OperationStats stats = statistics.getOperationsStats().get(on);
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          DefaultOutcome outcome = stats.getRepresentation(DefaultOutcome.class);
@@ -197,7 +211,7 @@ public abstract class PerformanceCondition {
       }
 
       @Override
-      public boolean evaluate(int threads, Statistics statistics) {
+      public boolean evaluate(Statistics statistics) {
          OperationStats stats = statistics.getOperationsStats().get(on);
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          DefaultOutcome outcome = stats.getRepresentation(DefaultOutcome.class);
@@ -230,7 +244,7 @@ public abstract class PerformanceCondition {
       }
 
       @Override
-      public boolean evaluate(int threads, Statistics statistics) {
+      public boolean evaluate(Statistics statistics) {
          OperationStats stats = statistics.getOperationsStats().get(on);
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          org.radargun.stats.representation.Percentile percentile
@@ -245,13 +259,13 @@ public abstract class PerformanceCondition {
 
    public static class Converter extends ReflexiveConverters.ObjectConverter {
       public Converter() {
-         super(new Class<?>[] { Any.class, All.class, Mean.class, Throughput.class, Requests.class, Errors.class, Percentile.class});
+         super(new Class<?>[] { Any.class, All.class, Mean.class, GrossThroughput.class, NetThroughput.class, Requests.class, Errors.class, Percentile.class});
       }
    }
 
    protected static class ListConverter extends ReflexiveConverters.ListConverter {
       public ListConverter() {
-         super(new Class<?>[] { Any.class, All.class, Mean.class, Throughput.class, Requests.class, Errors.class, Percentile.class});
+         super(new Class<?>[] { Any.class, All.class, Mean.class, GrossThroughput.class, NetThroughput.class, Requests.class, Errors.class, Percentile.class});
       }
    }
 }

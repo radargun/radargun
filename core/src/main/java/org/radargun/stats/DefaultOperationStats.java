@@ -101,7 +101,7 @@ public class DefaultOperationStats implements OperationStats {
       } else if (clazz == MeanAndDev.class) {
          return (T) getMeanAndDev();
       } else if (clazz == OperationThroughput.class) {
-         return (T) OperationThroughput.compute(requests, responseTimeMean, args);
+         return (T) OperationThroughput.compute(requests, errors, args);
       } else if (clazz == BoxAndWhiskers.class) {
          return (T) getBoxAndWhiskers();
       } else {
