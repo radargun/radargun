@@ -6,6 +6,9 @@ import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
 import org.infinispan.notifications.cachelistener.annotation.TopologyChanged;
 import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
 import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
+import org.radargun.traits.TopologyHistory;
+
+import java.util.List;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -17,7 +20,7 @@ public class InfinispanTopologyHistory extends AbstractTopologyHistory {
       this.service = service;
    }
 
-   void registerListener(Cache<?, ?> cache) {
+   public void registerListener(Cache<?, ?> cache) {
       cache.addListener(new TopologyAwareListener(cache.getName()));
    }
 
@@ -28,7 +31,7 @@ public class InfinispanTopologyHistory extends AbstractTopologyHistory {
 
    @Listener
    public class TopologyAwareListener {
-      private final String cacheName;
+      protected final String cacheName;
 
       public TopologyAwareListener(String cacheName) {
          this.cacheName = cacheName;

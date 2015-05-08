@@ -29,6 +29,9 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
    @Property(doc = "Wait for data rehashes to settle. Default is true.")
    private boolean checkDataRehash = true;
 
+   @Property(doc = "Wait for partition status to settle. Default is true.")
+   private boolean checkPartitionStatus = true;
+
    @Property(doc = "Wait for cluster membership to settle. Default is true (if the Clustered trait is supported).")
    private boolean checkMembership = true;
 
@@ -53,6 +56,7 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
 
          List<TopologyHistory.Event> topologyChangeHistory = history.getTopologyChangeHistory(cacheName);
          List<TopologyHistory.Event> rehashHistory = history.getRehashHistory(cacheName);
+         List<TopologyHistory.Event> partitionStatusHistory = history.getCacheStatusChangeHistory(cacheName);
          List<Clustered.Membership> membershipHistory = clustered == null ? null : clustered.getMembershipHistory();
          if (checkTopology && topologyChangeHistory != null && !topologyChangeHistory.isEmpty()) {
             TopologyHistory.Event event = topologyChangeHistory.get(topologyChangeHistory.size() - 1);
@@ -71,6 +75,13 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
                settled = false;
             } else if (now < event.getEnded().getTime() + period) {
                log.debug("Last rehash event finished too recently: " + event);
+               settled = false;
+            }
+         }
+         if (checkPartitionStatus && partitionStatusHistory != null && !partitionStatusHistory.isEmpty()) {
+            TopologyHistory.Event event = partitionStatusHistory.get(partitionStatusHistory.size() - 1);
+            if (now < event.getEnded().getTime() + period) {
+               log.debug("Last partition status changed too recently: " + event);
                settled = false;
             }
          }

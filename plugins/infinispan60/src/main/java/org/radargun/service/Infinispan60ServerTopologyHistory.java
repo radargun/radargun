@@ -21,6 +21,9 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
    // Rehash strings
    protected final static String JMX_STATE_TRANSFER_MANAGER = "StateTransferManager";
    protected final static String JMX_STATE_TRANSFER_IN_PROGRESS_ATTR = "stateTransferInProgress";
+   // Cache status
+   protected final static String JMX_CACHE_IMPL = "Cache";
+   protected final static String JMX_CACHE_AVAILABILITY = "cacheAvailability";
 
    protected final Map<String, CacheStatus> cacheChangesOngoing = new HashMap<>();
    protected final Map<String, Map<ObjectName, String>> objectNameToCacheNames = new HashMap<>();
@@ -61,6 +64,7 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
     */
    protected void processCacheStatus() {
       Map<String, CacheStatus> newResult = cacheStatus();
+      processCacheAvailability(newResult);
       for (Map.Entry<String, CacheStatus> entry : newResult.entrySet()) {
          if (cacheChangesOngoing.containsKey(entry.getKey())) {
             if (entry.getValue().rehashInProgress && !cacheChangesOngoing.get(entry.getKey()).rehashInProgress) {
@@ -77,7 +81,10 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
                   && cacheChangesOngoing.get(entry.getKey()).topologyChangeInProgress) {
                addEvent(topologyChanges, entry.getKey(), false, 0, 0);
             }
-
+            // No cache availability change event start/end, just register an event with current timestamp
+            if (entry.getValue().cacheAvailabilityChanged) {
+               addEvent(cacheStatusChanges, entry.getKey(), false, 0, 0);
+            }
          } else {
             if (entry.getValue().rehashInProgress) {
                addEvent(hashChanges, entry.getKey(), true, 0, 0);
@@ -85,22 +92,59 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
             if (entry.getValue().topologyChangeInProgress) {
                addEvent(topologyChanges, entry.getKey(), true, 0, 0);
             }
+            if (entry.getValue().cacheAvailabilityChanged) {
+               addEvent(cacheStatusChanges, entry.getKey(), false, 0, 0);
+            }
          }
          cacheChangesOngoing.put(entry.getKey(), entry.getValue());
       }
    }
 
+   private void processCacheAvailability(Map<String, CacheStatus> statusMap) {
+      // Not yet initialized, skip
+      if (statusMap.size() == 0) {
+         return;
+      }
+      int cacheAvailabilityChanges = 0;
+      for (Map.Entry<String, CacheStatus> entry : statusMap.entrySet()) {
+         CacheStatus status = entry.getValue();
+         // Comparison with previous cache availability is required
+         CacheStatus oldStatus = cacheChangesOngoing.get(entry.getKey());
+         // init
+         if (oldStatus == null) {
+            oldStatus = status;
+         }
+         CacheAvailability cacheAvailability = entry.getValue().prevCacheAvailability;
+         if (cacheAvailability != oldStatus.prevCacheAvailability) {
+            status.cacheAvailabilityChanged = true;
+            cacheAvailabilityChanges++;
+            log.debugf("Availability status change for cache %s: %s -> %s", entry.getKey(), oldStatus.prevCacheAvailability, cacheAvailability);
+         }
+      }
+      // Keep track of all cache availability changes
+      CacheStatus status = statusMap.get(ALL_CACHES);
+      if (cacheAvailabilityChanges == 0) {
+         status.cacheAvailabilityChanged = false;
+      } else {
+         status.cacheAvailabilityChanged = true;
+      }
+   }
+
    /**
     * Uses JMX attributes to determine if a topology change or a rehash is occurring on a cache.
-    * 
+    *
     * The <code>pendingViewAsString</code> attribute of the RpcManager component of each defined
     * cache determines if a topology change is in progress on this cache. If
     * <code>pendingViewAsString</code> equals <code>null</code>, no topology change is in progress.
-    * 
+    *
     * The <code>stateTransferInProgress</code> attribute of the StateTransferManager component of
     * each defined cache determines if a rehash is in progress on this cache. If
     * <code>stateTransferInProgress</code> is <code>true</code>, a rehash is in progress.
-    * 
+    *
+    * The <code>cacheAvailability</code> attribute of the CacheImpl component of each defined
+    * cache determines whether cache resides in AVAILABLE or DEGRADED mode. This implementation
+    * keeps only track of changes in cache availability (i.e. without start/stop events).
+    *
     * @return a Map where the key is the cache name, and the value is a {@link CacheStatus} object.
     *         Also includes an entry for {@link #ALL_CACHES}.
     */
@@ -162,6 +206,15 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
             status.topologyChangeInProgress = true;
          }
          statusMap.put(ALL_CACHES, status);
+
+         // Check for cache availability changes.
+         cacheAttributes = this.retrieveJMXAttributeValues(connection,
+               String.format(JMX_CACHE_COMPONENT, service.jmxDomain, JMX_CACHE_IMPL), JMX_CACHE_AVAILABILITY);
+         for (Map.Entry<String, Object> entry : cacheAttributes.entrySet()) {
+            status = statusMap.get(entry.getKey());
+            status.prevCacheAvailability = CacheAvailability.valueOf(entry.getValue().toString());
+            statusMap.put(entry.getKey(), status);
+         }
       } catch (Exception e) {
          log.error("Failed to retrieve data from JMX", e);
       }
@@ -216,5 +269,13 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
    private static class CacheStatus {
       boolean rehashInProgress;
       boolean topologyChangeInProgress;
+
+      boolean cacheAvailabilityChanged;
+      // Stores previous availability status
+      CacheAvailability prevCacheAvailability;
+   }
+
+   private static enum CacheAvailability {
+      AVAILABLE, DEGRADED_MODE;
    }
 }

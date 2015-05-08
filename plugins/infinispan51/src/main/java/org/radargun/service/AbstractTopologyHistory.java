@@ -18,6 +18,7 @@ public abstract class AbstractTopologyHistory implements TopologyHistory {
    protected final Log log = LogFactory.getLog(getClass());
    protected final Map<String, List<Event>> topologyChanges = new HashMap<>();
    protected final Map<String, List<Event>> hashChanges = new HashMap<>();
+   protected final Map<String, List<Event>> cacheStatusChanges = new HashMap<>();
 
    protected abstract String getDefaultCacheName();
 
@@ -35,6 +36,14 @@ public abstract class AbstractTopologyHistory implements TopologyHistory {
          cacheName = getDefaultCacheName();
       }
       return deepCopy(hashChanges.get(cacheName));
+   }
+
+   @Override
+   public List<TopologyHistory.Event> getCacheStatusChangeHistory(String cacheName) {
+      if (cacheName == null) {
+         cacheName = getDefaultCacheName();
+      }
+      return deepCopy(cacheStatusChanges.get(cacheName));
    }
 
    private List<TopologyHistory.Event> deepCopy(List<Event> events) {
@@ -69,6 +78,7 @@ public abstract class AbstractTopologyHistory implements TopologyHistory {
    protected synchronized void reset() {
       topologyChanges.clear();
       hashChanges.clear();
+      cacheStatusChanges.clear();
    }
 
    protected static class Event extends TopologyHistory.Event {

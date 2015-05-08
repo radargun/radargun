@@ -5,7 +5,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.infinispan.notifications.Listener;
+import org.infinispan.notifications.cachemanagerlistener.annotation.Merged;
 import org.infinispan.notifications.cachemanagerlistener.annotation.ViewChanged;
+import org.infinispan.notifications.cachemanagerlistener.event.MergeEvent;
 import org.infinispan.notifications.cachemanagerlistener.event.ViewChangedEvent;
 import org.infinispan.remoting.transport.Address;
 import org.radargun.logging.Log;
@@ -34,6 +36,11 @@ public class InfinispanClustered implements Clustered {
 
    @ViewChanged
    public synchronized void viewChanged(ViewChangedEvent e) {
+      membershipHistory.add(Membership.create(convert(e.getNewMembers())));
+   }
+
+   @Merged
+   public synchronized void viewMerged(MergeEvent e) {
       membershipHistory.add(Membership.create(convert(e.getNewMembers())));
    }
 

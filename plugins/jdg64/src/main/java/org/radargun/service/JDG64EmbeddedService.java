@@ -16,5 +16,15 @@ public class JDG64EmbeddedService extends JDG63EmbeddedService  {
    public InfinispanCacheListeners createListeners() {
       return new InfinispanCacheListeners(this);
    }
+
+   @ProvidesTrait
+   public Infinispan70TopologyHistory getInfinispan70TopologyHistory() {
+      return (Infinispan70TopologyHistory) topologyAware;
+   }
+
+   @Override
+   protected InfinispanTopologyHistory createTopologyAware() {
+      return new Infinispan70TopologyHistory(this);
+   }
    
 }
