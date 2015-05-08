@@ -102,12 +102,12 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
       }
    }
 
-   protected Map<Integer, Long> getCheckedOperations(long minOperationId) throws StressorException, BreakTxRequest {
-      Map<Integer, Long> minIds = new HashMap<Integer, Long>();
-      for (int thread = 0; thread < manager.getGeneralConfiguration().getNumThreads() * manager.getSlaveState().getGroupSize(); ++thread) {
-         minIds.put(thread, getCheckedOperation(thread, minOperationId));
+   protected Map<Integer, Long> getCheckedOperations(long operationId) throws StressorException, BreakTxRequest {
+      Map<Integer, Long> minCheckedOperations = new HashMap<>();
+      for (int stressorId = 0; stressorId < manager.getGeneralConfiguration().getNumThreads() * manager.getSlaveState().getGroupSize(); ++stressorId) {
+         minCheckedOperations.put(stressorId, getCheckedOperation(stressorId, operationId));
       }
-      return minIds;
+      return minCheckedOperations;
    }
 
    @Override

@@ -8,6 +8,8 @@ import org.radargun.stages.helpers.Range;
 import org.radargun.traits.BasicOperations;
 import org.radargun.utils.Utils;
 
+import static org.radargun.stages.cache.background.LogChecker.LastOperation;
+
 /**
  * Logic based on log values. The general idea is that each operation on an entry
  * should be persisted in the value by appending the operation id to the value.
@@ -42,7 +44,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
    protected Random keySelectorRandom;
    protected volatile long operationId = 0;
    protected volatile long keyId;
-   protected Map<Long, DelayedRemove> delayedRemoves = new HashMap<Long, DelayedRemove>();
+   protected Map<Long, DelayedRemove> delayedRemoves = new HashMap<>();
    private volatile long txStartOperationId;
    private volatile long txStartKeyId = -1;
    private long txStartRandSeed;
@@ -51,6 +53,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
    private volatile long lastSuccessfulTxTimestamp;
    private int remainingTxOps;
    private volatile long lastConfirmedOperation = -1;
+   private volatile int txFailedAttempts;
 
    public AbstractLogLogic(BackgroundOpsManager manager, Range keyRange) {
       super(manager);
@@ -69,13 +72,13 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
       Random random = null;
       while (random == null && !Thread.currentThread().isInterrupted()) {
          try {
-            Object last = nonTxBasicCache.get(LogChecker.lastOperationKey(stressor.id));
-            if (last != null) {
-               operationId = ((LogChecker.LastOperation) last).getOperationId() + 1;
-               random = Utils.setRandomSeed(new Random(0), ((LogChecker.LastOperation) last).getSeed());
-               log.debug("Restarting operations from operation " + operationId);
+            LastOperation lastOperation = (LastOperation) nonTxBasicCache.get(LogChecker.lastOperationKey(stressor.id));
+            if (lastOperation != null) {
+               operationId = lastOperation.getOperationId() + 1;
+               random = Utils.setRandomSeed(new Random(0), lastOperation.getSeed());
+               log.debugf("Restarting operations from operation %d", operationId);
             } else {
-               log.trace("Initializing stressor random with " + stressor.id);
+               log.tracef("Initializing stressor random with %d", stressor.id);
                random = new Random(stressor.id);
             }
          } catch (Exception e) {
@@ -95,9 +98,14 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             operationId = txStartOperationId;
             Utils.setRandomSeed(keySelectorRandom, txStartRandSeed);
             txRolledBack = false;
+            txFailedAttempts++;
+            if (txFailedAttempts >= manager.getLogLogicConfiguration().getMaxTransactionAttempts()) {
+               log.error("Maximum number of transaction attempts attained, reporting.");
+               manager.getFailureHolder().reportFailedTransactionAttempt();
+            }
          }
          if (trace) {
-            log.trace("Operation " + operationId + " on key " + keyGenerator.generateKey(keyId));
+            log.tracef("Operation %d on key %s", operationId, keyGenerator.generateKey(keyId));
          }
       } while (!invokeOn(keyId) && !stressor.isInterrupted() && !stressor.isTerminated());
       operationId++;
@@ -146,8 +154,9 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                try {
                   ongoingTx.commit();
                   lastSuccessfulTxTimestamp = System.currentTimeMillis();
+                  txFailedAttempts = 0;
                } catch (Exception e) {
-                  log.trace("Transaction was rolled back, restarting from operation " + txStartOperationId);
+                  log.debugf("Transaction %s was rolled back, restarting from operation %d", ongoingTx, txStartOperationId);
                   txRolledBack = true;
                   afterRollback();
                   return false;
@@ -159,17 +168,17 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                   // If the thread was interrupted and cache is registered as Synchronization (not XAResource)
                   // commit phase may fail but no exception is thrown. Therefore, we should terminate immediatelly
                   // as we don't want to remove entries while the modifications have not been written.
-                  log.info("Thread is about to terminate, not executing delayed removes");
+                  log.debugf("Stressor %s is about to terminate, not executing delayed removes", stressor.getStatus());
                   return false;
                }
                afterCommit();
                if (stressor.isTerminated()) {
                   // the removes may have failed and we have not repeated them due to termination
-                  log.info("Thread is about to terminate, not writing the last operation");
+                  log.debugf("Stressor %s is about to terminate, not writing the last operation %d", stressor.getStatus(), operationId);
                   return false;
                }
                if (txBreakRequest) {
-                  log.trace("Transaction was committed sooner, retrying operation " + operationId);
+                  log.debugf("Transaction was committed sooner, retrying operation %d", operationId);
                   return false;
                }
 
@@ -200,11 +209,11 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          if (transactionSize > 0 && ongoingTx != null) {
             try {
                ongoingTx.rollback();
-               log.info("Transaction rolled back");
+               log.errorf("Transaction %s rolled back", ongoingTx);
             } catch (Exception e1) {
-               log.error("Error while rolling back transaction", e1);
+               log.errorf(e1, "Error while rolling back transaction %s", ongoingTx);
             } finally {
-               log.info("Restarting from operation " + txStartOperationId);
+               log.debugf("Restarting from operation %d, current operation %d", txStartOperationId, operationId);
                clearTransaction();
                remainingTxOps = transactionSize;
                txRolledBack = true;
@@ -219,12 +228,12 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
       delayedRemoves.clear();
    }
 
-   protected void afterCommit() {
-      boolean inTransaction = false;
+   protected boolean afterCommit() {
       try {
+         Map<Long, Integer> delayedRemoveAttemptsMap = new HashMap<>();
          while (!stressor.isTerminated()) {
             try {
-               if (inTransaction) {
+               if (ongoingTx != null) {
                   try {
                      ongoingTx.rollback();
                   } catch (Exception e) {
@@ -232,15 +241,30 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                   }
                }
                startTransaction();
-               inTransaction = true;
                for (DelayedRemove delayedRemove : delayedRemoves.values()) {
-                  checkedRemoveValue(delayedRemove.keyId, delayedRemove.oldValue);
+                  try {
+                     // avoid infinite loops -> try max 100 times for each key
+                     Integer currentDelayedRemoveAttempts = delayedRemoveAttemptsMap.get(delayedRemove.keyId);
+                     if (currentDelayedRemoveAttempts != null && currentDelayedRemoveAttempts > manager.getLogLogicConfiguration().getMaxDelayedRemoveAttempts()) {
+                        log.errorf("Maximum number of delayed remove attempts on key %s attained, reporting.", keyGenerator.generateKey(delayedRemove.keyId));
+                        manager.getFailureHolder().reportDelayedRemoveError();
+                        stressor.requestTerminate();
+                        return false;
+                     }
+                     checkedRemoveValue(delayedRemove.keyId, delayedRemove.oldValue);
+                  } catch (Exception e) {
+                     if (!delayedRemoveAttemptsMap.containsKey(delayedRemove.keyId)) {
+                        delayedRemoveAttemptsMap.put(delayedRemove.keyId, 1);
+                     } else {
+                        delayedRemoveAttemptsMap.put(delayedRemove.keyId, delayedRemoveAttemptsMap.get(delayedRemove.keyId) + 1);
+                     }
+                     throw e;
+                  }
                }
                ongoingTx.commit();
                lastSuccessfulTxTimestamp = System.currentTimeMillis();
-               inTransaction = false;
                delayedRemoves.clear();
-               return;
+               return true;
             } catch (Exception e) {
                log.error("Error while executing delayed removes.", e);
             }
@@ -248,6 +272,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
       } finally {
          clearTransaction();
       }
+      return true;
    }
 
    protected void startTransaction() {
@@ -278,9 +303,9 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          // we have to write down the keySelectorRandom as well in order to be able to continue work if this slave
          // is restarted
          basicCache.put(LogChecker.lastOperationKey(stressor.id),
-               new LogChecker.LastOperation(operationId, Utils.getRandomSeed(keySelectorRandom)));
+               new LastOperation(operationId, Utils.getRandomSeed(keySelectorRandom)));
       } catch (Exception e) {
-         log.error("Error writing stressor last operation", e);
+         log.errorf(e, "Error while writing last operation %d for stressor %s", operationId, stressor.getStatus());
       }
    }
 
@@ -289,40 +314,42 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
    /**
     * Returns minimum of checked (confirmed) operations for given stressor thread across all nodes.
     */
-   protected long getCheckedOperation(int thread, long minOperationId) throws StressorException, BreakTxRequest {
-      long minimumOperationId = Long.MAX_VALUE;
+   protected long getCheckedOperation(int stressorId, long operationId) throws StressorException, BreakTxRequest {
+      long minCheckedOperation = Long.MAX_VALUE;
       for (int i = 0; i < manager.getSlaveState().getGroupSize(); ++i) {
-         Object lastCheckedOperationId;
+         long lastCheckedOperationId = Long.MIN_VALUE;
          try {
-            lastCheckedOperationId = basicCache.get(LogChecker.checkerKey(i, thread));
+            LastOperation lastOperation = (LastOperation) basicCache.get(LogChecker.checkerKey(i, stressorId));
+            if (lastOperation != null) {
+               lastCheckedOperationId = lastOperation.getOperationId();
+            }
          } catch (Exception e) {
-            log.error("Cannot read last checked operation id for slave " + i + " and thread " + thread, e);
+            log.errorf(e, "Cannot read last checked operation id for slave %d, stressor %d", i, stressorId);
             throw new StressorException(e);
          }
-         long readOperationId = lastCheckedOperationId == null ? Long.MIN_VALUE : ((LogChecker.LastOperation) lastCheckedOperationId).getOperationId();
-         if (readOperationId < minOperationId && manager.getLogLogicConfiguration().isIgnoreDeadCheckers() && !manager.isSlaveAlive(i)) {
+         if (lastCheckedOperationId < operationId && manager.getLogLogicConfiguration().isIgnoreDeadCheckers() && !manager.isSlaveAlive(i)) {
             try {
-               Object ignored = basicCache.get(LogChecker.ignoredKey(i, thread));
-               if (ignored == null || (Long) ignored < minOperationId) {
-                  log.debugf("Setting ignore operation for checker slave %d and stressor %d: %s -> %d (last check %s)",
-                             i, thread, ignored, minOperationId, lastCheckedOperationId);
-                  basicCache.put(LogChecker.ignoredKey(i, thread), minOperationId);
+               Long ignoredOperationId = (Long) basicCache.get(LogChecker.ignoredKey(i, stressorId));
+               if (ignoredOperationId == null || ignoredOperationId < operationId) {
+                  log.debugf("Setting ignore operation for checker slave %d and stressor %d: %d -> %d (last checked operation %d).",
+                             i, stressorId, ignoredOperationId, operationId, lastCheckedOperationId);
+                  basicCache.put(LogChecker.ignoredKey(i, stressorId), operationId);
                   if (transactionSize > 0) {
                      throw new BreakTxRequest();
                   }
                }
-               minimumOperationId = Math.min(minimumOperationId, minOperationId);
+               minCheckedOperation = Math.min(minCheckedOperation, operationId);
             } catch (BreakTxRequest request) {
                throw request;
             } catch (Exception e) {
-               log.error("Cannot overwrite last checked operation id for slave " + i + " and thread " + thread, e);
+               log.errorf(e, "Cannot overwrite last checked operation id for slave %d", "stressor %d", i, stressorId);
                throw new StressorException(e);
             }
          } else {
-            minimumOperationId = Math.min(minimumOperationId, readOperationId);
+            minCheckedOperation = Math.min(minCheckedOperation, lastCheckedOperationId);
          }
       }
-      return minimumOperationId;
+      return minCheckedOperation;
    }
 
    public long getLastConfirmedOperation() {

@@ -21,6 +21,13 @@ public class LogLogicConfiguration {
    @Property(doc = "Number of operations after which will the stressor or checker update in-cache operation counter. Default is 50.")
    protected long counterUpdatePeriod = 50;
 
+   @Property(doc = "Maximum number of attempts to perform transaction. Default is 100.")
+   protected long maxTransactionAttempts = 100;
+
+   @Property(doc = "Maximum number of attempts to perform remove operation for a key when using transactions (as removes are performed in a separate TX," +
+         "which can fail independently of TX performing PUT operations). Default is 100.")
+   protected long maxDelayedRemoveAttempts = 100;
+
    @Property(doc = "Maximum time for which are the log value checkers allowed to show no new checked values, " +
          "when waiting for checks to complete or stressors to confirm new progress. Default is 10 minutes.",
          converter = TimeConverter.class, deprecatedName = "checkersNoProgressTimeout")
@@ -52,6 +59,14 @@ public class LogLogicConfiguration {
 
    public long getCounterUpdatePeriod() {
       return counterUpdatePeriod;
+   }
+
+   public long getMaxTransactionAttempts() {
+      return maxTransactionAttempts;
+   }
+
+   public long getMaxDelayedRemoveAttempts() {
+      return maxDelayedRemoveAttempts;
    }
 
    public long getNoProgressTimeout() {

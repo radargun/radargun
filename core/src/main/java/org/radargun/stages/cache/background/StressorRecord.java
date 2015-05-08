@@ -184,5 +184,13 @@ public class StressorRecord {
          this.operationId = operationId;
          this.timestamp = timestamp;
       }
+
+      @Override
+      public String toString() {
+         return "StressorConfirmation{" +
+               "operationId=" + operationId +
+               ", timestamp=" + timestamp +
+               '}';
+      }
    }
 }

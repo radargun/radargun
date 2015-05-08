@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -56,6 +57,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
    private boolean loaded = false;
    private LogChecker[] logCheckers;
    private StressorRecordPool stressorRecordPool;
+   private FailureHolder failureHolder;
    private boolean stressorsPaused, checkersPaused;
 
    private Lifecycle lifecycle;
@@ -160,7 +162,8 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
       }
       startStressorThreads();
       if (logLogicConfiguration.enabled) {
-         createLogCheckerPool();
+         createStressorRecordPool();
+         createFailureHolder();
          startCheckerThreads();
          if (logLogicConfiguration.ignoreDeadCheckers) {
             keepAliveTask = executor.scheduleAtFixedRate(new KeepAliveTask(), 0, 1000, TimeUnit.MILLISECONDS);
@@ -199,7 +202,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
          if (logLogicConfiguration.enabled) {
             return new SharedLogLogic(this, new Range(generalConfiguration.keyIdOffset, generalConfiguration.keyIdOffset + generalConfiguration.numEntries));
          } else {
-            throw new IllegalArgumentException("Legacy logic cannot use shared keys.");
+            throw new IllegalArgumentException("Legacy logic cannot use shared keys");
          }
       } else {
          // TODO: we may have broken totalThreads for legacy logic with dead slaves preloading
@@ -234,29 +237,39 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
 
    private synchronized void startCheckerThreads() {
       if (checkersPaused) {
-         log.info("Checkers are paused, not starting");
+         log.info("Checkers are paused, not starting.");
          return;
       }
       if (logLogicConfiguration.checkingThreads <= 0) {
          log.error("LogValue checker set to 0!");
       } else if (logCheckers != null) {
-         throw new IllegalStateException("Log checkers are started");
+         throw new IllegalStateException("Log checkers are started.");
       } else {
          logCheckers = new LogChecker[logLogicConfiguration.checkingThreads];
          for (int i = 0; i < logLogicConfiguration.checkingThreads; ++i) {
             if (generalConfiguration.sharedKeys) {
-               logCheckers[i] = new SharedLogChecker(i, stressorRecordPool, this);
+               logCheckers[i] = new SharedLogChecker(i, this);
             } else {
-               logCheckers[i] = new PrivateLogChecker(i, stressorRecordPool, this);
+               logCheckers[i] = new PrivateLogChecker(i, this);
             }
             logCheckers[i].start();
          }
       }
    }
 
-   private synchronized void createLogCheckerPool() {
+   private synchronized void createStressorRecordPool() {
       if (stressorRecordPool != null) {
-         log.debug("Checker pool already exists, not creating another");
+         log.debug("Checker pool already exists, not creating another.");
+         // TODO the following approach is not clean, as it can hide 'no progress' if the service is restarted over and over
+         //         log.debug("Checker pool already exists, not creating another. Reseting last successful check timestamps for stressor records.");
+         //         /**
+         //          * As stressorRecordPool survives service restarts, we might get false suspicion of checkers showing no progress when
+         //          * t(service_not_running) > logLogicConfiguration.noProgressTimeout after the service is started. Some time is required
+         //          * for checkers to go through individual StressorRecords.
+         //          */
+         //         for (StressorRecord stressorRecord : stressorRecordPool.getAvailableRecords()) {
+         //            stressorRecord.setLastSuccessfulCheckTimestamp(System.currentTimeMillis());
+         //         }
          return;
       }
       int totalThreads = slaveState.getGroupSize() * generalConfiguration.numThreads;
@@ -278,6 +291,14 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
          }
          stressorRecordPool = new StressorRecordPool(totalThreads, stressorRecords, this);
       }
+   }
+
+   private synchronized void createFailureHolder() {
+      if (failureHolder != null) {
+         log.debug("Failure holder already exists, not creating another.");
+         return;
+      }
+      failureHolder = new FailureHolder();
    }
 
    /**
@@ -322,7 +343,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
       if (stressors != null) {
          stopBackgroundThreads(true, false, false);
       }
-      String error = stressorRecordPool.waitUntilChecked(logLogicConfiguration.noProgressTimeout);
+      String error = waitUntilChecked(logLogicConfiguration.noProgressTimeout);
       if (error != null) {
          return error;
       }
@@ -330,6 +351,65 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
       stressorsPaused = true;
       checkersPaused = true;
       return null;
+   }
+
+   public String waitUntilChecked(long timeout) {
+      AtomicReferenceArray<StressorRecord> allRecords = stressorRecordPool.getAllRecords();
+      int totalThreads = stressorRecordPool.getTotalThreads();
+      for (int i = 0; i < totalThreads; ++i) {
+         StressorRecord record = allRecords.get(i);
+         if (record == null) continue;
+         try {
+            // as the pool survives service restarts, we have to always grab actual cache
+            LogChecker.LastOperation lastOperation = (LogChecker.LastOperation) getBasicCache().get(LogChecker.lastOperationKey(record.getThreadId()));
+            if (lastOperation == null) {
+               log.trace("Thread " + record.getThreadId() + " has no recorded operation.");
+            } else {
+               record.addConfirmation(lastOperation.getOperationId(), lastOperation.getTimestamp());
+            }
+         } catch (Exception e) {
+            log.errorf(e, "Failed to read last operation key for thread %d.", record.getThreadId(), e);
+         }
+      }
+      for (;;) {
+         boolean allChecked = true;
+         long now = System.currentTimeMillis();
+         for (int i = 0; i < totalThreads; ++i) {
+            StressorRecord record = allRecords.get(i);
+            if (record == null) continue;
+            long confirmationTimestamp = record.getCurrentConfirmationTimestamp();
+            if (confirmationTimestamp > 0) {
+               if (log.isTraceEnabled()) {
+                  log.trace(record.getStatus());
+               }
+               allChecked = false;
+               break;
+            }
+            if (record.getLastSuccessfulCheckTimestamp() + timeout < now) {
+               String error = String.format("Waiting for checker for record %s timed out after %d ms.", record.getStatus(), now - record.getLastSuccessfulCheckTimestamp());
+               log.error(error);
+               return error;
+            }
+         }
+         if (allChecked) {
+            StringBuilder sb = new StringBuilder("All checks OK: ");
+            for (int i = 0; i < totalThreads; ++i) {
+               StressorRecord record = allRecords.get(i);
+               if (record == null) continue;
+               sb.append(record.getThreadId()).append("# ")
+                     .append(record.getOperationId()).append(" (")
+                     .append(record.getLastConfirmedOperationId()).append("), ");
+            }
+            log.debug(sb.toString());
+            return null;
+         }
+         try {
+            Thread.sleep(1000);
+         } catch (InterruptedException e) {
+            log.error("Interrupted waiting for checkers.", e);
+            return e.toString();
+         }
+      }
    }
 
    public boolean waitForProgress() {
@@ -385,9 +465,9 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
    }
 
    /**
-    * 
+    *
     * Stops the stressors, call this before stopping CacheWrapper.
-    * 
+    *
     */
    public synchronized void stopBackgroundThreads() {
       stopBackgroundThreads(true, true, true);
@@ -461,10 +541,24 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
 
    public synchronized String getError() {
       if (logLogicConfiguration.enabled) {
-         if (stressorRecordPool != null
-               && (stressorRecordPool.getMissingOperations() > 0 || stressorRecordPool.getMissingNotifications() > 0 || stressorRecordPool.getStaleReads() > 0)) {
-            return String.format("Background stressors report %d missing operations, %d missing notifications and %d stale reads!",
-                  stressorRecordPool.getMissingOperations(), stressorRecordPool.getMissingNotifications(), stressorRecordPool.getStaleReads());
+         if (failureHolder != null && (
+               failureHolder.getMissingOperations() > 0
+                     || failureHolder.getMissingNotifications() > 0
+                     || failureHolder.getStaleReads() > 0
+                     || failureHolder.getDelayedRemovesErrors() > 0
+                     || failureHolder.getFailedTransactionAttempts() > 0)) {
+            return String.format("Background stressors report %d missing operations, %d missing notifications, %d stale reads, " +
+                                       "%d failed transaction attempts and %d delayed removes errors!",
+                                 failureHolder.getMissingOperations(), failureHolder.getMissingNotifications(), failureHolder.getStaleReads(),
+                                 failureHolder.getFailedTransactionAttempts(), failureHolder.getDelayedRemovesErrors());
+         }
+         if (!lifecycle.isRunning()) {
+            /**
+             * As stressorRecordPool survives service restarts, we might get false suspicion of checkers showing no progress when
+             * t(service_not_running) > logLogicConfiguration.noProgressTimeout during time the service is stopped.
+             */
+            log.debug("Service is not running, skipping verification of checker progress.");
+            return null;
          }
          if (stressorThreads != null) {
             for (Stressor stressor : stressorThreads) {
@@ -512,14 +606,14 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
    }
 
    public boolean isSlaveAlive(int slaveId) {
-      Object value = null;
+      Long keepAliveTimestamp = null;
       try {
-         value = basicCache.get("__keepAlive_" + slaveId);
+         keepAliveTimestamp = (Long) basicCache.get("__keepAlive_" + slaveId);
       } catch (Exception e) {
-         log.error("Failed to retrieve the keep alive timestamp", e);
+         log.error("Failed to retrieve the keep alive timestamp.", e);
          return true;
       }
-      return value != null &&  value instanceof Long && ((Long) value) > System.currentTimeMillis() - generalConfiguration.deadSlaveTimeout;
+      return keepAliveTimestamp != null && keepAliveTimestamp > System.currentTimeMillis() - generalConfiguration.deadSlaveTimeout;
    }
 
    public BasicOperations.Cache getBasicCache() {
@@ -580,6 +674,10 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
 
    public StressorRecordPool getStressorRecordPool() {
       return stressorRecordPool;
+   }
+
+   public FailureHolder getFailureHolder() {
+      return failureHolder;
    }
 
    // TODO:

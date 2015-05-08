@@ -42,6 +42,7 @@ public class BackgroundStressorsCheckStage extends AbstractDistStage {
    }
 
    private DistStageAck checkManager(BackgroundOpsManager manager) {
+      // Even if service is not running, check whether no errors had been logged before it stopped
       String error = manager.getError();
       if (error != null) {
          return errorResponse("Background stressors " + manager.getName() + ": " + error);
