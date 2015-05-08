@@ -2,6 +2,7 @@ package org.radargun.stages.lifecycle;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.radargun.DistStageAck;
@@ -30,6 +31,9 @@ public class ParallelStartStopStage extends AbstractServiceStartStage {
    @Property(doc = "Set of slaves which should be started in this stage. Default is empty.")
    private Collection<Integer> start = new ArrayList<Integer>();
 
+   @Property(doc = "Set of roles which should be stopped in this stage. Default is empty.")
+   private Set<RoleHelper.Role> stopRoles = new HashSet<>();
+
    @Property(converter = TimeConverter.class, doc = "Delay before the slaves are started. Default is 0.")
    private long startDelay = 0;
 
@@ -43,7 +47,7 @@ public class ParallelStartStopStage extends AbstractServiceStartStage {
          log.warn("No lifecycle for service " + slaveState.getServiceName());
          return successfulResponse();
       }
-      boolean stopMe = stop.contains(slaveState.getSlaveIndex()) || RoleHelper.hasAnyRole(slaveState, roles);
+      boolean stopMe = stop.contains(slaveState.getSlaveIndex()) || RoleHelper.hasAnyRole(slaveState, stopRoles);
       boolean startMe = start.contains(slaveState.getSlaveIndex());
       if (!(stopMe || startMe)) {
          log.info("Nothing to kill or start...");
