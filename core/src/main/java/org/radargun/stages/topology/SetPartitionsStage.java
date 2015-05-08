@@ -30,6 +30,9 @@ public class SetPartitionsStage extends AbstractDistStage {
    private Partitionable partitionable;
 
    public DistStageAck executeOnSlave() {
+      if (!shouldExecute() || !isServiceRunning()) {
+         return successfulResponse();
+      }
       if (partitions == null) {
          return errorResponse("No partitions configured!", null);
       }
