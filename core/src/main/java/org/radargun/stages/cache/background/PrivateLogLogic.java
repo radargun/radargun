@@ -3,7 +3,9 @@ package org.radargun.stages.cache.background;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.radargun.Operation;
 import org.radargun.stages.helpers.Range;
@@ -31,6 +33,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    // Keys modified during current transaction, should be recorded to timestamps when
    // the transaction is committed
    private final Collection<KeyOperationPair> txModifications = new ArrayList<>(Math.max(0, transactionSize));
+   private final Set<Long> txModificationKeyIds = new HashSet<>(Math.max(0, transactionSize));
 
    PrivateLogLogic(BackgroundOpsManager manager, Range range) {
       super(manager, range);
@@ -48,9 +51,10 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
          if (prevValue == null || !prevValue.contains(prevOperation.operationId)) {
             // non-cleaned old value or stale read, try backup
             backupValue = checkedGetValue(~keyId);
-            if (backupValue == null || !backupValue.contains(prevOperation.operationId)) {
+            // Modifying the same key within a single transaction may cause false stale reads, avoid it by checking txModificationKeyIds
+            if ((backupValue == null || !backupValue.contains(prevOperation.operationId)) && !txModificationKeyIds.contains(keyId)) {
                // definitely stale read
-               log.trace("Detected stale read, keyId: " + keyId);
+               log.debugf("Detected stale read, keyId=%s, previousValue=%s, complementValue=%s", keyId, prevValue, backupValue);
                waitForStaleRead(prevOperation.timestamp);
                return false;
             } else {
@@ -92,11 +96,12 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       } else {
          // especially GETs are not allowed here, because these would break the deterministic order
          // - each operationId must be written somewhere
-         throw new UnsupportedOperationException("Only PUT and REMOVE operations are allowed for this logic.");
+         throw new UnsupportedOperationException("Only PUT and REMOVE operations are allowed for this logic");
       }
 
       if (transactionSize > 0) {
          txModifications.add(new KeyOperationPair(keyId, operationId));
+         txModificationKeyIds.add(keyId);
       } else {
          long now = System.currentTimeMillis();
          timestamps.put(keyId, new OperationTimestampPair(operationId, now));
@@ -114,7 +119,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
             Thread.sleep(5000);
          }
       } else {
-         manager.getStressorRecordPool().reportStaleRead();
+         manager.getFailureHolder().reportStaleRead();
          stressor.requestTerminate();
       }
    }
@@ -123,17 +128,22 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    protected void afterRollback() {
       super.afterRollback();
       txModifications.clear();
+      txModificationKeyIds.clear();
    }
 
    @Override
-   protected void afterCommit() {
-      super.afterCommit();
-      long now = System.currentTimeMillis();
-      for (KeyOperationPair pair : txModifications) {
-         timestamps.put(pair.keyId, new OperationTimestampPair(pair.operationId, now));
-         log.tracef("Operation %d on %08X finished at %d", pair.operationId, pair.keyId, now);
+   protected boolean afterCommit() {
+      boolean result = super.afterCommit();
+      if (result) {
+         long now = System.currentTimeMillis();
+         for (KeyOperationPair pair : txModifications) {
+            timestamps.put(pair.keyId, new OperationTimestampPair(pair.operationId, now));
+            log.tracef("Operation %d on %08X finished at %d", pair.operationId, pair.keyId, now);
+         }
       }
       txModifications.clear();
+      txModificationKeyIds.clear();
+      return result;
    }
 
    private PrivateLogValue getNextValue(PrivateLogValue prevValue) throws InterruptedException, BreakTxRequest {
@@ -144,15 +154,18 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
             if (stressor.isInterrupted() || stressor.isTerminated()) {
                return null;
             }
-            long minReadOperationId;
+            long minCheckedOperation;
             try {
-               minReadOperationId = getCheckedOperation(stressor.id, prevValue.getOperationId(0));
+               minCheckedOperation = getCheckedOperation(stressor.id, prevValue.getOperationId(0));
             } catch (StressorException e) {
                return null;
             }
-            if (prevValue.getOperationId(0) <= minReadOperationId) {
-               for (checkedValues = 1; checkedValues < prevValue.size() && prevValue.getOperationId(checkedValues) <= minReadOperationId; ++checkedValues) {
-                  log.tracef("Discarding operation %d (minReadOperationId is %d)", prevValue.getOperationId(checkedValues), minReadOperationId);
+            /**
+             * If maximum size of a log value is attained, we trim all operations, which have already been checked by log checkers.
+             */
+            if (prevValue.getOperationId(0) <= minCheckedOperation) {
+               for (checkedValues = 1; checkedValues < prevValue.size() && prevValue.getOperationId(checkedValues) <= minCheckedOperation; ++checkedValues) {
+                  log.tracef("Discarding operation %d (minimum of checked operations is %d)", prevValue.getOperationId(checkedValues), minCheckedOperation);
                }
                break;
             } else {
@@ -209,16 +222,16 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       boolean successful = false;
       if (prevValue != null) {
          if (!(prevValue instanceof PrivateLogValue)) {
-            log.error("Value is not an instance of PrivateLogValue: " + prevValue);
+            log.errorf("Value is not an instance of PrivateLogValue: %s.", prevValue);
          } else if (!prevValue.equals(expectedValue)) {
-            log.error("Value is not the expected one: expected=" + expectedValue + ", found=" + prevValue);
+            log.errorf("Value is not the expected one: expected %s, found %s.", expectedValue, prevValue);
          } else {
             successful = true;
          }
       } else if (expectedValue == null) {
          successful = true;
       } else {
-         log.error("Expected to remove " + expectedValue + " but found " + prevValue);
+         log.errorf("Expected to remove %s but found %s.", expectedValue, prevValue);
       }
       if (successful) {
          stressor.stats.registerRequest(endTime - startTime, BasicOperations.REMOVE);

@@ -47,18 +47,20 @@ public abstract class LogChecker extends Thread {
    protected final boolean ignoreDeadCheckers;
    protected final long writeApplyMaxDelay;
    protected final StressorRecordPool stressorRecordPool;
+   protected final FailureHolder failureHolder;
    protected final BasicOperations.Cache basicCache;
    protected final Debugable.Cache debugableCache;
    protected volatile boolean terminate = false;
 
-   public LogChecker(String name, BackgroundOpsManager manager, StressorRecordPool stressorRecordPool) {
+   public LogChecker(String name, BackgroundOpsManager manager) {
       super(name);
       keyGenerator = manager.getKeyGenerator();
       slaveIndex = manager.getSlaveState().getIndexInGroup();
       logCounterUpdatePeriod = manager.getLogLogicConfiguration().getCounterUpdatePeriod();
       ignoreDeadCheckers = manager.getLogLogicConfiguration().isIgnoreDeadCheckers();
       writeApplyMaxDelay = manager.getLogLogicConfiguration().getWriteApplyMaxDelay();
-      this.stressorRecordPool = stressorRecordPool;
+      this.stressorRecordPool = manager.getStressorRecordPool();
+      this.failureHolder = manager.getFailureHolder();
       this.basicCache = manager.getBasicCache();
       this.debugableCache = manager.getDebugableCache();
    }
@@ -91,7 +93,7 @@ public abstract class LogChecker extends Thread {
             record = stressorRecordPool.take();
             log.trace("Checking record: " + record.getStatus());
             if (System.currentTimeMillis() < record.getLastUnsuccessfulCheckTimestamp() + UNSUCCESSFUL_CHECK_MIN_DELAY_MS) {
-               log.trace("Last unsuccessful check was performed too recently, delaying.");
+               log.trace("Last unsuccessful check was performed too recently, delaying");
                delayedKeys++;
                continue;
             }
@@ -110,23 +112,23 @@ public abstract class LogChecker extends Thread {
                   LastOperation lastCheck = (LastOperation) last;
                   record = newRecord(record, lastCheck.getOperationId(), lastCheck.getSeed());
                }
-               if (record.getOperationId() != 0) {
-                  log.debugf("Check for thread %d continues from operation %d",
-                        record.getThreadId(), record.getOperationId());
-               }
-            }
-            if (ignoreDeadCheckers) {
-               Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
-               if (ignored != null && record.getOperationId() <= (Long) ignored) {
-                  log.debugf("Ignoring operations %d - %d for thread %d", record.getOperationId(), ignored, record.getThreadId());
-                  while (record.getOperationId() <= (Long) ignored) {
-                     record.next();
+               if (ignoreDeadCheckers) {
+                  Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
+                  if (ignored != null && record.getOperationId() <= (Long) ignored) {
+                     log.tracef("Ignoring operations %d - %d for thread %d", record.getOperationId(), ignored, record.getThreadId());
+                     while (record.getOperationId() <= (Long) ignored) {
+                        record.next();
+                     }
                   }
+               }
+               if (record.getOperationId() != 0) {
+                  log.tracef("Check for thread %d continues from operation %d",
+                             record.getThreadId(), record.getOperationId());
                }
             }
             if (trace) {
                log.tracef("Checking operation %d for thread %d on key %d (%s)",
-                     record.getOperationId(), record.getThreadId(), record.getKeyId(), keyGenerator.generateKey(record.getKeyId()));
+                          record.getOperationId(), record.getThreadId(), record.getKeyId(), keyGenerator.generateKey(record.getKeyId()));
             }
             boolean notification = record.hasNotification(record.getOperationId());
             Object value = findValue(record);
@@ -143,39 +145,38 @@ public abstract class LogChecker extends Thread {
                record.setLastUnsuccessfulCheckTimestamp(Long.MIN_VALUE);
                record.setLastSuccessfulCheckTimestamp(System.currentTimeMillis());
             } else {
+               // one more check to see whether some operations should not be ignored
+               if (ignoreDeadCheckers) {
+                  Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
+                  if (ignored != null && record.getOperationId() <= (Long) ignored) {
+                     log.tracef("Operations %d - %d for thread %d are ignored.", record.getOperationId(), ignored, record.getThreadId());
+                     while (record.getOperationId() <= (Long) ignored) {
+                        record.next();
+                     }
+                     continue;
+                  }
+               }
                long confirmationTimestamp = record.getCurrentConfirmationTimestamp();
                if (confirmationTimestamp >= 0) {
-                  log.debug("Detected stale read, keyId: " + record.getKeyId());
+                  log.debug("Detected stale read, keyId: " + keyGenerator.generateKey(record.getKeyId()));
                }
                if (confirmationTimestamp >= 0
                      && (writeApplyMaxDelay <= 0 || System.currentTimeMillis() > confirmationTimestamp + writeApplyMaxDelay)) {
-                  // one more check to see whether some operations should not be ignored
-                  if (ignoreDeadCheckers) {
-                     Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
-                     if (ignored != null && record.getOperationId() <= (Long) ignored) {
-                        log.debugf("Operations %d - %d for thread %d are ignored.", record.getOperationId(), ignored, record.getThreadId());
-                        while (record.getOperationId() <= (Long) ignored) {
-                           record.next();
-                        }
-                        continue;
-                     }
-                  }
-
                   if (!notification) {
                      log.errorf("Missing notification for operation %d for thread %d on key %d (%s), required for %d, notified for %s",
-                           record.getOperationId(), record.getThreadId(), record.getKeyId(),
+                                record.getOperationId(), record.getThreadId(), record.getKeyId(),
                            keyGenerator.generateKey(record.getKeyId()), record.getRequireNotify(), record.getNotifiedOps());
-                     stressorRecordPool.reportMissingNotification();
+                     failureHolder.reportMissingNotification();
                   }
                   if (!contains) {
                      log.errorf("Missing operation %d for thread %d on key %d (%s) %s",
-                           record.getOperationId(), record.getThreadId(), record.getKeyId(),
+                                record.getOperationId(), record.getThreadId(), record.getKeyId(),
                            keyGenerator.generateKey(record.getKeyId()),
                            value == null ? " - entry was completely lost" : "");
                      if (trace) {
-                        log.trace("Not found in " + value);
+                        log.tracef("Not found in %s", value);
                      }
-                     stressorRecordPool.reportMissingOperation();
+                     failureHolder.reportMissingOperation();
                      if (debugableCache != null) {
                         debugableCache.debugInfo();
                         debugableCache.debugKey(keyGenerator.generateKey(record.getKeyId()));
@@ -185,7 +186,7 @@ public abstract class LogChecker extends Thread {
                   record.next();
                } else {
                   long lastUnsuccessfulCheckTimestamp = System.currentTimeMillis();
-                  log.trace(String.format("Check unsuccessful, setting timestamp to %d", lastUnsuccessfulCheckTimestamp));
+                  log.debugf("Check of record %s unsuccessful, setting timestamp to %d", record.getStatus(), lastUnsuccessfulCheckTimestamp);
                   record.setLastUnsuccessfulCheckTimestamp(lastUnsuccessfulCheckTimestamp);
                }
             }
