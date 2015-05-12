@@ -63,7 +63,7 @@ public class StressorRecord {
    }
 
    public Object getLastConfirmedOperationId() {
-      return confirmations.isEmpty() ? -1 : confirmations.get(confirmations.size() - 1);
+      return confirmations.isEmpty() ? -1 : confirmations.get(confirmations.size() - 1).operationId;
    }
 
    public int getThreadId() {
@@ -153,6 +153,9 @@ public class StressorRecord {
             } else if (confirmation.operationId == operationId) {
                return;
             }
+         }
+         if (confirmations.isEmpty()) {
+            confirmations.add(new StressorConfirmation(operationId, timestamp));
          }
       } finally {
          if (trace) {
