@@ -291,7 +291,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
     */
    protected long getCheckedOperation(int thread, long minOperationId) throws StressorException, BreakTxRequest {
       long minimumOperationId = Long.MAX_VALUE;
-      for (int i = 0; i < manager.getSlaveState().getClusterSize(); ++i) {
+      for (int i = 0; i < manager.getSlaveState().getGroupSize(); ++i) {
          Object lastCheckedOperationId;
          try {
             lastCheckedOperationId = basicCache.get(LogChecker.checkerKey(i, thread));
