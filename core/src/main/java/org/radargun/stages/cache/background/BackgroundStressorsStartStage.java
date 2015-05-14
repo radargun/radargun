@@ -44,7 +44,7 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
 
          return successfulResponse();
       } catch (Exception e) {
-         return errorResponse("Error while starting background stats", e);
+         return errorResponse("Error while starting background threads.", e);
       }
    }
 

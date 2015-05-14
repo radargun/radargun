@@ -101,7 +101,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             txFailedAttempts++;
             if (txFailedAttempts >= manager.getLogLogicConfiguration().getMaxTransactionAttempts()) {
                log.error("Maximum number of transaction attempts attained, reporting.");
-               manager.getFailureHolder().reportFailedTransactionAttempt();
+               manager.getFailureManager().reportFailedTransactionAttempt();
             }
          }
          if (trace) {
@@ -247,7 +247,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                      Integer currentDelayedRemoveAttempts = delayedRemoveAttemptsMap.get(delayedRemove.keyId);
                      if (currentDelayedRemoveAttempts != null && currentDelayedRemoveAttempts > manager.getLogLogicConfiguration().getMaxDelayedRemoveAttempts()) {
                         log.errorf("Maximum number of delayed remove attempts on key %s attained, reporting.", keyGenerator.generateKey(delayedRemove.keyId));
-                        manager.getFailureHolder().reportDelayedRemoveError();
+                        manager.getFailureManager().reportDelayedRemoveError();
                         stressor.requestTerminate();
                         return false;
                      }
@@ -327,11 +327,11 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             log.errorf(e, "Cannot read last checked operation id for slave %d, stressor %d", i, stressorId);
             throw new StressorException(e);
          }
-         if (lastCheckedOperationId < operationId && manager.getLogLogicConfiguration().isIgnoreDeadCheckers() && !manager.isSlaveAlive(i)) {
+         if (lastCheckedOperationId < operationId && manager.getLogLogicConfiguration().isIgnoreDeadCheckers() && !isSlaveAlive(i)) {
             try {
                Long ignoredOperationId = (Long) basicCache.get(LogChecker.ignoredKey(i, stressorId));
                if (ignoredOperationId == null || ignoredOperationId < operationId) {
-                  log.debugf("Setting ignore operation for checker slave %d and stressor %d: %d -> %d (last checked operation %d).",
+                  log.tracef("Setting ignore operation for checker slave %d and stressor %d: %d -> %d (last checked operation %d)",
                              i, stressorId, ignoredOperationId, operationId, lastCheckedOperationId);
                   basicCache.put(LogChecker.ignoredKey(i, stressorId), operationId);
                   if (transactionSize > 0) {
@@ -350,6 +350,17 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          }
       }
       return minCheckedOperation;
+   }
+
+   private boolean isSlaveAlive(int slaveId) {
+      Long keepAliveTimestamp = null;
+      try {
+         keepAliveTimestamp = (Long) basicCache.get("__keepAlive_" + slaveId);
+      } catch (Exception e) {
+         log.error("Failed to retrieve the keep alive timestamp.", e);
+         return true;
+      }
+      return keepAliveTimestamp != null && keepAliveTimestamp > System.currentTimeMillis() - manager.getGeneralConfiguration().deadSlaveTimeout;
    }
 
    public long getLastConfirmedOperation() {
