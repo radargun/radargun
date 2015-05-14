@@ -111,7 +111,7 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
       }
 
       private IterationStats gatherStats() {
-         Stressor[] threads = backgroundOpsManager.getStressorThreads();
+         Stressor[] threads = backgroundOpsManager.getThreadManager().getStressorThreads();
          List<Statistics> stats;
          if (threads == null) {
             stats = Collections.EMPTY_LIST;

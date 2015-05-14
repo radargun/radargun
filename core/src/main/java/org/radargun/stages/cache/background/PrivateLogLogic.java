@@ -51,6 +51,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
          if (prevValue == null || !prevValue.contains(prevOperation.operationId)) {
             // non-cleaned old value or stale read, try backup
             backupValue = checkedGetValue(~keyId);
+            // TODO examine other ways to check for stale reads (not ignoring the same keys from a common transaction)
             // Modifying the same key within a single transaction may cause false stale reads, avoid it by checking txModificationKeyIds
             if ((backupValue == null || !backupValue.contains(prevOperation.operationId)) && !txModificationKeyIds.contains(keyId)) {
                // definitely stale read
@@ -119,7 +120,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
             Thread.sleep(5000);
          }
       } else {
-         manager.getFailureHolder().reportStaleRead();
+         manager.getFailureManager().reportStaleRead();
          stressor.requestTerminate();
       }
    }
