@@ -99,7 +99,9 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             Utils.setRandomSeed(keySelectorRandom, txStartRandSeed);
             txRolledBack = false;
             txFailedAttempts++;
-            if (txFailedAttempts >= manager.getLogLogicConfiguration().getMaxTransactionAttempts()) {
+            log.tracef("Transaction rollbacked, number of attempts so far=%d", txFailedAttempts);
+            if (manager.getLogLogicConfiguration().getMaxTransactionAttempts() >= 0
+                  && txFailedAttempts >= manager.getLogLogicConfiguration().getMaxTransactionAttempts()) {
                log.error("Maximum number of transaction attempts attained, reporting.");
                manager.getFailureManager().reportFailedTransactionAttempt();
             }
@@ -230,7 +232,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    protected boolean afterCommit() {
       try {
-         Map<Long, Integer> delayedRemoveAttemptsMap = new HashMap<>();
+         int delayedRemoveAttempts = 0;
          while (!stressor.isTerminated()) {
             try {
                if (ongoingTx != null) {
@@ -243,9 +245,8 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                startTransaction();
                for (DelayedRemove delayedRemove : delayedRemoves.values()) {
                   try {
-                     // avoid infinite loops -> try max 100 times for each key
-                     Integer currentDelayedRemoveAttempts = delayedRemoveAttemptsMap.get(delayedRemove.keyId);
-                     if (currentDelayedRemoveAttempts != null && currentDelayedRemoveAttempts > manager.getLogLogicConfiguration().getMaxDelayedRemoveAttempts()) {
+                     // avoid infinite loops -> try 'maxDelayedRemoveAttempts' times
+                     if (manager.getLogLogicConfiguration().getMaxDelayedRemoveAttempts() >= 0 && delayedRemoveAttempts > manager.getLogLogicConfiguration().getMaxDelayedRemoveAttempts()) {
                         log.errorf("Maximum number of delayed remove attempts on key %s attained, reporting.", keyGenerator.generateKey(delayedRemove.keyId));
                         manager.getFailureManager().reportDelayedRemoveError();
                         stressor.requestTerminate();
@@ -253,10 +254,8 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                      }
                      checkedRemoveValue(delayedRemove.keyId, delayedRemove.oldValue);
                   } catch (Exception e) {
-                     if (!delayedRemoveAttemptsMap.containsKey(delayedRemove.keyId)) {
-                        delayedRemoveAttemptsMap.put(delayedRemove.keyId, 1);
-                     } else {
-                        delayedRemoveAttemptsMap.put(delayedRemove.keyId, delayedRemoveAttemptsMap.get(delayedRemove.keyId) + 1);
+                     if (manager.getLogLogicConfiguration().getMaxDelayedRemoveAttempts() >= 0) {
+                        delayedRemoveAttempts++;
                      }
                      throw e;
                   }
@@ -266,6 +265,9 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                delayedRemoves.clear();
                return true;
             } catch (Exception e) {
+               if (manager.getLogLogicConfiguration().getMaxDelayedRemoveAttempts() >= 0) {
+                  delayedRemoveAttempts++;
+               }
                log.error("Error while executing delayed removes.", e);
             }
          }
