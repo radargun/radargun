@@ -226,6 +226,14 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
             log.errorf("Value is not an instance of PrivateLogValue: %s.", prevValue);
          } else if (!prevValue.equals(expectedValue)) {
             log.errorf("Value is not the expected one: expected %s, found %s.", expectedValue, prevValue);
+            // As the transaction can be committed on TX coordinator & fail on other participating nodes, it can lead to
+            // exception being thrown on coordinator. For this reason an entry might not be present on the coordinator
+            // (has been removed), or its value can differ from the expected one. As this might cause false test
+            // failures, 'LogLogicConfiguration.checkDelayedRemoveExpectedValue' can be set to ignore expected value comparison.
+            if (!manager.getLogLogicConfiguration().isCheckDelayedRemoveExpectedValue()) {
+               log.trace("'LogLogicConfiguration.checkDelayedRemoveExpectedValue' set to false, ignoring check");
+               successful = true;
+            }
          } else {
             successful = true;
          }
@@ -233,6 +241,10 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
          successful = true;
       } else {
          log.errorf("Expected to remove %s but found %s.", expectedValue, prevValue);
+         if (!manager.getLogLogicConfiguration().isCheckDelayedRemoveExpectedValue()) {
+            log.trace("'LogLogicConfiguration.checkDelayedRemoveExpectedValue' set to false, ignoring check");
+            successful = true;
+         }
       }
       if (successful) {
          stressor.stats.registerRequest(endTime - startTime, BasicOperations.REMOVE);
