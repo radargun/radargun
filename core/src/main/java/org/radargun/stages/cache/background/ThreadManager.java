@@ -263,12 +263,14 @@ public class ThreadManager {
                   log.trace(record.getStatus());
                }
                allChecked = false;
-               break;
             }
             if (record.getLastSuccessfulCheckTimestamp() + timeout < now) {
                String error = String.format("Waiting for checker for record %s timed out after %d ms.", record.getStatus(), now - record.getLastSuccessfulCheckTimestamp());
                log.error(error);
                return error;
+            }
+            if (!allChecked) {
+               break;
             }
          }
          if (allChecked) {
