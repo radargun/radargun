@@ -174,6 +174,15 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
    public synchronized void createStressorRecordPool() {
       if (stressorRecordPool != null) {
          log.debug("Checker pool already exists, not creating another.");
+         // When service has been stopped for a longer period of time than LogLogicConfiguration.noProgressTimeout, this can lead
+         // to no progress timeouts causing test failures. Avoid this by re-setting records' lastSuccessfulCheck timestamps.
+         // When checkers truly show no progress, it will be reliably detected by ThreadManager.waitUntilChecked combined with
+         // ThreadManager.waitForProgress.
+         if (logLogicConfiguration.ignoreDeadCheckers) {
+            for (StressorRecord stressorRecord : stressorRecordPool.getAvailableRecords()) {
+               stressorRecord.setLastSuccessfulCheckTimestamp(System.currentTimeMillis());
+            }
+         }
          return;
       }
       int totalThreads = slaveState.getGroupSize() * generalConfiguration.numThreads;
