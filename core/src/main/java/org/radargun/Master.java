@@ -255,7 +255,7 @@ public class Master {
          return StageResult.EXIT;
       }
       if (result.isError()) {
-         log.error("Execution of distribute stage " + stage.getName() + " failed.");
+         log.error("Execution of distributed stage " + stage.getName() + " failed");
       } else {
          log.info("Finished distributed stage " + stage.getName() + ".");
       }

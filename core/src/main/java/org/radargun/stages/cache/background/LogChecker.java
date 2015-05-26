@@ -174,7 +174,7 @@ public abstract class LogChecker extends Thread {
                }
             }
          } catch (Exception e) {
-            log.error("Cannot check value " + record.getKeyId(), e);
+            log.error("Cannot check value for key " + keyGenerator.generateKey(record.getKeyId()), e);
          } finally {
             if (record == null) {
                try {
