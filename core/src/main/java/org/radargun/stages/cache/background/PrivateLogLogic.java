@@ -58,7 +58,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
                log.debugf("Detected stale read, keyId=%s, previousValue=%s, complementValue=%s", keyId, prevValue, backupValue);
                waitForStaleRead(prevOperation.timestamp);
                return false;
-            } else {
+            } else if (!txModificationKeyIds.contains(keyId)) {
                // pretend that we haven't read it at all
                prevValue = null;
             }
