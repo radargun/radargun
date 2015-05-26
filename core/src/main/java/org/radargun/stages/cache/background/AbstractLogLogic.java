@@ -329,7 +329,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             log.errorf(e, "Cannot read last checked operation id for slave %d, stressor %d", i, stressorId);
             throw new StressorException(e);
          }
-         if (lastCheckedOperationId < operationId && manager.getLogLogicConfiguration().isIgnoreDeadCheckers() && !isSlaveAlive(i)) {
+         if (lastCheckedOperationId < operationId && manager.getLogLogicConfiguration().isIgnoreDeadCheckers() && !manager.isSlaveAlive(i)) {
             try {
                Long ignoredOperationId = (Long) basicCache.get(LogChecker.ignoredKey(i, stressorId));
                if (ignoredOperationId == null || ignoredOperationId < operationId) {
@@ -352,17 +352,6 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          }
       }
       return minCheckedOperation;
-   }
-
-   private boolean isSlaveAlive(int slaveId) {
-      Long keepAliveTimestamp = null;
-      try {
-         keepAliveTimestamp = (Long) basicCache.get("__keepAlive_" + slaveId);
-      } catch (Exception e) {
-         log.error("Failed to retrieve the keep alive timestamp.", e);
-         return true;
-      }
-      return keepAliveTimestamp != null && keepAliveTimestamp > System.currentTimeMillis() - manager.getGeneralConfiguration().deadSlaveTimeout;
    }
 
    public long getLastConfirmedOperation() {

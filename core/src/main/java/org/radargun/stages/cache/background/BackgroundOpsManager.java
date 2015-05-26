@@ -259,8 +259,19 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
    }
 
    // Check whether an error was detected in test run and return it. Otherwise return null.
-   public synchronized String getError() {
-      return failureManager.getError();
+   public synchronized String getError(boolean failuresOnly) {
+      return failureManager.getError(failuresOnly);
+   }
+
+   public boolean isSlaveAlive(int slaveId) {
+      Long keepAliveTimestamp = null;
+      try {
+         keepAliveTimestamp = (Long) basicCache.get("__keepAlive_" + slaveId);
+      } catch (Exception e) {
+         log.error("Failed to retrieve the keep alive timestamp", e);
+         return true;
+      }
+      return keepAliveTimestamp != null && keepAliveTimestamp > System.currentTimeMillis() - generalConfiguration.deadSlaveTimeout;
    }
 
    public Transactional.Transaction newTransaction() {

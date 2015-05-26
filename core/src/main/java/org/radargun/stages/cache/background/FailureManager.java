@@ -68,7 +68,7 @@ public class FailureManager {
       delayedRemovesErrors.incrementAndGet();
    }
 
-   public synchronized String getError() {
+   public synchronized String getError(boolean failuresOnly) {
       if (!manager.getLogLogicConfiguration().isEnabled()) {
          return null;
       }
@@ -78,6 +78,9 @@ public class FailureManager {
                                     "%d failed transaction attempts and %d delayed removes errors",
                               getMissingOperations(), getMissingNotifications(), getStaleReads(),
                               getFailedTransactionAttempts(), getDelayedRemovesErrors());
+      }
+      if (failuresOnly) {
+         return null;
       }
       if (!manager.getLifecycle().isRunning()) {
          /**
@@ -100,6 +103,12 @@ public class FailureManager {
          long now = System.currentTimeMillis();
          for (StressorRecord record : manager.getStressorRecordPool().getAvailableRecords()) {
             log.debugf("Record: status=%s.", record.getStatus());
+            // Especially with elasticity tests a node can be dead for a long time period. Check for progress may need to be skipped as stressors
+            // on this node can't perform any operations.
+            if (manager.getLogLogicConfiguration().ignoreDeadCheckers && !manager.isSlaveAlive(record.getThreadId() / manager.getGeneralConfiguration().getNumThreads())) {
+               log.tracef("Node where stressor for this record resides is dead, skipping check");
+               continue;
+            }
             if (now - record.getLastSuccessfulCheckTimestamp() > manager.getLogLogicConfiguration().noProgressTimeout) {
                log.errorf("No progress in this record for %d ms", now - record.getLastSuccessfulCheckTimestamp());
                progress = false;

@@ -42,8 +42,9 @@ public class BackgroundStressorsCheckStage extends AbstractDistStage {
    }
 
    private DistStageAck checkManager(BackgroundOpsManager manager) {
+      boolean errorOnly = (waitUntilChecked || resumeAfterChecked || waitForProgress) && manager.getLogLogicConfiguration().isIgnoreDeadCheckers();
       // Even if service is not running, check whether no errors had been logged before it stopped
-      String error = manager.getError();
+      String error = manager.getError(errorOnly);
       if (error != null) {
          return errorResponse("Background stressors " + manager.getName() + ": " + error);
       }
@@ -57,7 +58,7 @@ public class BackgroundStressorsCheckStage extends AbstractDistStage {
          if (!manager.waitForProgress()) {
             return errorResponse("Background stressors have not completed any progress within timeout.");
          }
-         error = manager.getError(); // checking once more does not hurt
+         error = manager.getError(errorOnly); // checking once more does not hurt
          if (error != null) {
             return errorResponse("Background stressors " + manager.getName() + ": " + error);
          }
