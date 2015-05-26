@@ -23,7 +23,7 @@ public class StressorRecord {
    protected final int threadId;
    protected long currentKeyId;
    protected volatile long currentOp = -1;
-   protected final List<StressorConfirmation> confirmations = new LinkedList<>();
+   protected final LinkedList<StressorConfirmation> confirmations = new LinkedList<>();
    private long lastUnsuccessfulCheckTimestamp = Long.MIN_VALUE;
    private long lastSuccessfulCheckTimestamp = System.currentTimeMillis();
    private Set<Long> notifiedOps = new HashSet<Long>();
@@ -63,7 +63,9 @@ public class StressorRecord {
    }
 
    public Object getLastConfirmedOperationId() {
-      return confirmations.isEmpty() ? -1 : confirmations.get(confirmations.size() - 1).operationId;
+      synchronized (confirmations) {
+         return confirmations.isEmpty() ? -1 : confirmations.getLast().operationId;
+      }
    }
 
    public int getThreadId() {
@@ -106,13 +108,15 @@ public class StressorRecord {
 
    public void checkFinished(long operationId) {
       // remove old confirmations
-      Iterator<StressorConfirmation> iterator = confirmations.iterator();
-      while (iterator.hasNext()) {
-         StressorConfirmation confirmation = iterator.next();
-         if (confirmation.operationId > operationId) {
-            break;
+      synchronized (confirmations) {
+         Iterator<StressorConfirmation> iterator = confirmations.iterator();
+         while (iterator.hasNext()) {
+            StressorConfirmation confirmation = iterator.next();
+            if (confirmation.operationId > operationId) {
+               break;
+            }
+            iterator.remove();
          }
-         iterator.remove();
       }
       // remove old notifications
       synchronized (this) {
@@ -141,21 +145,23 @@ public class StressorRecord {
 
    public void addConfirmation(long operationId, long timestamp) {
       try {
-         ListIterator<StressorConfirmation> iterator = confirmations.listIterator(confirmations.size());
-         if (trace) {
-            log.tracef("Confirmations for thread %d were %s", threadId, confirmations);
-         }
-         while (iterator.hasPrevious()) {
-            StressorConfirmation confirmation = iterator.previous();
-            if (confirmation.operationId < operationId) {
-               confirmations.add(iterator.nextIndex(), new StressorConfirmation(operationId, timestamp));
-               return;
-            } else if (confirmation.operationId == operationId) {
-               return;
+         synchronized (confirmations) {
+            ListIterator<StressorConfirmation> iterator = confirmations.listIterator(confirmations.size());
+            if (trace) {
+               log.tracef("Confirmations for thread %d were %s", threadId, confirmations);
             }
-         }
-         if (confirmations.isEmpty()) {
-            confirmations.add(new StressorConfirmation(operationId, timestamp));
+            while (iterator.hasPrevious()) {
+               StressorConfirmation confirmation = iterator.previous();
+               if (confirmation.operationId < operationId) {
+                  confirmations.add(iterator.nextIndex(), new StressorConfirmation(operationId, timestamp));
+                  return;
+               } else if (confirmation.operationId == operationId) {
+                  return;
+               }
+            }
+            if (confirmations.isEmpty()) {
+               confirmations.add(new StressorConfirmation(operationId, timestamp));
+            }
          }
       } finally {
          if (trace) {
@@ -168,12 +174,14 @@ public class StressorRecord {
     * @return Epoch time (ms) timestamp or negative value if not confirmed yet.
     */
    public long getCurrentConfirmationTimestamp() {
-      for (StressorConfirmation confirmation : confirmations) {
-         if (confirmation.operationId > currentOp) {
-            return confirmation.timestamp;
+      synchronized (confirmations) {
+         for (StressorConfirmation confirmation : confirmations) {
+            if (confirmation.operationId > currentOp) {
+               return confirmation.timestamp;
+            }
          }
+         return -1;
       }
-      return -1;
    }
 
    public class StressorConfirmation {
