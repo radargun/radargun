@@ -45,6 +45,9 @@ public class LogLogicConfiguration {
    @Property(doc = "Check that listeners have been fired for each operation on each node (at least once). Default is false.")
    protected boolean checkNotifications = false;
 
+   @Property(doc = "Debug a key if a missing operation or notification is detected. Service needs to provide an implementation of Debuggable iterface.")
+   protected boolean debugFailures = false;
+
    @Property(doc = "Maximum allowed delay to detect operation confirmed by stressor. Default is no delay.",
          converter = TimeConverter.class)
    protected long writeApplyMaxDelay = 0;
@@ -87,6 +90,10 @@ public class LogLogicConfiguration {
 
    public boolean isCheckNotifications() {
       return checkNotifications;
+   }
+
+   public boolean isDebugFailures() {
+      return debugFailures;
    }
 
    public long getWriteApplyMaxDelay() {

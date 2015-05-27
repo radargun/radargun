@@ -43,9 +43,7 @@ public abstract class LogChecker extends Thread {
    };
    protected final KeyGenerator keyGenerator;
    protected final int slaveIndex;
-   protected final long logCounterUpdatePeriod;
-   protected final boolean ignoreDeadCheckers;
-   protected final long writeApplyMaxDelay;
+   protected final LogLogicConfiguration logLogicConfiguration;
    protected final StressorRecordPool stressorRecordPool;
    protected final FailureManager failureManager;
    protected final BasicOperations.Cache basicCache;
@@ -54,11 +52,9 @@ public abstract class LogChecker extends Thread {
 
    public LogChecker(String name, BackgroundOpsManager manager) {
       super(name);
-      keyGenerator = manager.getKeyGenerator();
-      slaveIndex = manager.getSlaveState().getIndexInGroup();
-      logCounterUpdatePeriod = manager.getLogLogicConfiguration().getCounterUpdatePeriod();
-      ignoreDeadCheckers = manager.getLogLogicConfiguration().isIgnoreDeadCheckers();
-      writeApplyMaxDelay = manager.getLogLogicConfiguration().getWriteApplyMaxDelay();
+      this.keyGenerator = manager.getKeyGenerator();
+      this.slaveIndex = manager.getSlaveState().getIndexInGroup();
+      this.logLogicConfiguration = manager.getLogLogicConfiguration();
       this.stressorRecordPool = manager.getStressorRecordPool();
       this.failureManager = manager.getFailureManager();
       this.basicCache = manager.getBasicCache();
@@ -129,7 +125,7 @@ public abstract class LogChecker extends Thread {
                if (trace) {
                   log.tracef("Found operation %d for thread %d", record.getOperationId(), record.getThreadId());
                }
-               if (record.getOperationId() % logCounterUpdatePeriod == 0) {
+               if (record.getOperationId() % logLogicConfiguration.getCounterUpdatePeriod() == 0) {
                   basicCache.put(checkerKey(slaveIndex, record.getThreadId()),
                         new LastOperation(record.getOperationId(), Utils.getRandomSeed(record.getRand())));
                }
@@ -142,8 +138,8 @@ public abstract class LogChecker extends Thread {
                   log.debug("Detected stale read, keyId: " + keyGenerator.generateKey(record.getKeyId()));
                }
                if (confirmationTimestamp >= 0
-                     && (writeApplyMaxDelay <= 0 || System.currentTimeMillis() > confirmationTimestamp + writeApplyMaxDelay)) {
-                  // Check one more time to be sure the record should not be ignored
+                     && (logLogicConfiguration.writeApplyMaxDelay <= 0 || System.currentTimeMillis() > confirmationTimestamp + logLogicConfiguration.writeApplyMaxDelay)) {
+                  // Verify whether record should not be ignored
                   if (checkIgnoreRecord(record)) {
                      continue;
                   }
@@ -152,6 +148,7 @@ public abstract class LogChecker extends Thread {
                                 record.getOperationId(), record.getThreadId(), record.getKeyId(),
                            keyGenerator.generateKey(record.getKeyId()), record.getRequireNotify(), record.getNotifiedOps());
                      failureManager.reportMissingNotification();
+                     debugFailure(record);
                   }
                   if (!contains) {
                      log.errorf("Missing operation %d for thread %d on key %d (%s) %s",
@@ -160,11 +157,7 @@ public abstract class LogChecker extends Thread {
                            value == null ? " - entry was completely lost" : "");
                      log.errorf("Not found in %s", value);
                      failureManager.reportMissingOperation();
-                     if (debugableCache != null) {
-                        debugableCache.debugInfo();
-                        debugableCache.debugKey(keyGenerator.generateKey(record.getKeyId()));
-                        debugableCache.debugKey(keyGenerator.generateKey(~record.getKeyId()));
-                     }
+                     debugFailure(record);
                   }
                   record.next();
                } else {
@@ -190,7 +183,7 @@ public abstract class LogChecker extends Thread {
    }
 
    private boolean checkIgnoreRecord(StressorRecord record) {
-      if (ignoreDeadCheckers) {
+      if (logLogicConfiguration.ignoreDeadCheckers) {
          Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
          if (ignored != null && record.getOperationId() <= (Long) ignored) {
             log.tracef("Operations %d - %d for thread %d are ignored", record.getOperationId(), ignored, record.getThreadId());
@@ -201,6 +194,14 @@ public abstract class LogChecker extends Thread {
          }
       }
       return false;
+   }
+
+   private void debugFailure(StressorRecord record) {
+      if (logLogicConfiguration.isDebugFailures() && debugableCache != null) {
+         debugableCache.debugInfo();
+         debugableCache.debugKey(keyGenerator.generateKey(record.getKeyId()));
+         debugableCache.debugKey(keyGenerator.generateKey(~record.getKeyId()));
+      }
    }
 
    protected abstract StressorRecord newRecord(StressorRecord record, long operationId, long seed);
