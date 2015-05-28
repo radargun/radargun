@@ -119,6 +119,28 @@
             <version.infinispan>7.1.1.Final</version.infinispan>
          </properties>
       </profile>
+      <profile>
+         <id>demos</id>
+         <activation>
+            <property>
+               <name>!no-demos</name>
+            </property>
+         </activation>
+         <dependencies>
+            <dependency>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-distexec-demo</artifactId>
+               <version>${version.infinispan}</version>
+               <optional>true</optional>
+               <exclusions>
+                   <exclusion>
+                       <groupId>org.infinispan</groupId>
+                       <artifactId>infinispan-embedded</artifactId>
+                   </exclusion>
+               </exclusions>
+            </dependency>
+         </dependencies>
+      </profile>
    </profiles>
 
 </project>

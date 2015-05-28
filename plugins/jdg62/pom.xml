@@ -15,8 +15,6 @@
 
    <properties>
       <version.infinispan>${jdg62.infinispan.version}</version.infinispan>
-      <!-- There is no productized version of infinispan-distexec-demo -->
-      <version.infinispan.public>6.0.2.Final</version.infinispan.public>
       <version.jbossts>4.17.7.Final-redhat-4</version.jbossts>
       <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
    </properties>
