@@ -3,6 +3,7 @@ package org.radargun.service;
 import org.infinispan.query.Search;
 import org.infinispan.query.SearchManager;
 import org.infinispan.query.dsl.QueryFactory;
+import org.radargun.traits.Query;
 
 /**
  * Queryable implementation for embedded mode.
@@ -17,7 +18,7 @@ public class InfinispanEmbeddedQueryable extends AbstractInfinispanQueryable {
    }
 
    @Override
-   public QueryBuilder getBuilder(String containerName, Class<?> clazz) {
+   public Query.Builder getBuilder(String containerName, Class<?> clazz) {
       SearchManager searchManager = Search.getSearchManager(service.getCache(containerName));
       QueryFactory factory = searchManager.getQueryFactory();
       return new QueryBuilderImpl(factory, clazz);

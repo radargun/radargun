@@ -601,14 +601,16 @@ public class Invocations {
    public static final class Query implements Invocation {
       protected static final Operation TX = Queryable.QUERY.derive("TX");
       private final org.radargun.traits.Query query;
+      private final org.radargun.traits.Query.Context context;
 
-      public Query(org.radargun.traits.Query query) {
+      public Query(org.radargun.traits.Query query, org.radargun.traits.Query.Context context) {
          this.query = query;
+         this.context = context;
       }
 
       @Override
       public Object invoke() {
-         return query.execute();
+         return query.execute(context);
       }
 
       @Override

@@ -1,6 +1,7 @@
 package org.radargun.service;
 
 import org.infinispan.query.Search;
+import org.radargun.traits.Query;
 
 /**
  * Supports non-indexed queries.
@@ -13,7 +14,7 @@ public class Infinispan70EmbeddedQueryable extends InfinispanEmbeddedQueryable {
    }
 
    @Override
-   public QueryBuilder getBuilder(String cacheName, Class<?> clazz) {
+   public Query.Builder getBuilder(String cacheName, Class<?> clazz) {
       return new QueryBuilderImpl(Search.getQueryFactory(service.getCache(cacheName)), clazz);
    }
 }

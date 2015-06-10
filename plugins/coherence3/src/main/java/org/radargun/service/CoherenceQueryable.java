@@ -1,15 +1,5 @@
 package org.radargun.service;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.tangosol.io.pof.PofReader;
 import com.tangosol.io.pof.PofWriter;
 import com.tangosol.io.pof.PortableObject;
@@ -24,10 +14,32 @@ import com.tangosol.util.comparator.InverseComparator;
 import com.tangosol.util.extractor.ChainedExtractor;
 import com.tangosol.util.extractor.MultiExtractor;
 import com.tangosol.util.extractor.ReflectionExtractor;
-import com.tangosol.util.filter.*;
+import com.tangosol.util.filter.AllFilter;
+import com.tangosol.util.filter.AnyFilter;
+import com.tangosol.util.filter.BetweenFilter;
+import com.tangosol.util.filter.ContainsFilter;
+import com.tangosol.util.filter.EqualsFilter;
+import com.tangosol.util.filter.GreaterEqualsFilter;
+import com.tangosol.util.filter.GreaterFilter;
+import com.tangosol.util.filter.IsNullFilter;
+import com.tangosol.util.filter.LessEqualsFilter;
+import com.tangosol.util.filter.LessFilter;
+import com.tangosol.util.filter.LikeFilter;
+import com.tangosol.util.filter.LimitFilter;
+import com.tangosol.util.filter.NotFilter;
 import org.radargun.aggregators.LimitAggregator;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.Projections;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -41,7 +53,12 @@ public class CoherenceQueryable implements Queryable {
 
    @Override
    public QueryBuilder getBuilder(String containerName, Class<?> clazz) {
-      return new QueryBuilderImpl(service.getCache(containerName));
+      return new QueryBuilderImpl();
+   }
+
+   @Override
+   public QueryContextImpl createContext(String containerName) {
+      return new QueryContextImpl(service.getCache(containerName));
    }
 
    @Override
@@ -60,18 +77,13 @@ public class CoherenceQueryable implements Queryable {
 
    private static class QueryBuilderImpl implements QueryBuilder {
       private final ArrayList<Filter> filters = new ArrayList<Filter>();
-      private final NamedCache cache;
       private LinkedHashMap<String, SortOrder> orderBy;
       private long offset = 0, limit = -1;
       private String[] projection;
 
-      public QueryBuilderImpl(NamedCache cache) {
-         this.cache = cache;
-      }
-
       @Override
       public QueryBuilder subquery() {
-         return new QueryBuilderImpl(null);
+         return new QueryBuilderImpl();
       }
 
       @Override
@@ -146,7 +158,6 @@ public class CoherenceQueryable implements Queryable {
 
       @Override
       public QueryBuilder orderBy(String attribute, SortOrder order) {
-         if (cache == null) throw new IllegalArgumentException("You have to call orderBy() on root query builder!");
          if (orderBy == null) orderBy = new LinkedHashMap<String, SortOrder>();
          if (orderBy.put(attribute, order) != null) {
             throw new IllegalArgumentException("Order by " + attribute + " already set");
@@ -183,7 +194,7 @@ public class CoherenceQueryable implements Queryable {
 
       @Override
       public Query build() {
-         return new QueryImpl(cache, getFilter(), projection, orderBy, offset, limit);
+         return new QueryImpl(getFilter(), projection, orderBy, offset, limit);
       }
 
       public Filter getFilter() {
@@ -196,15 +207,13 @@ public class CoherenceQueryable implements Queryable {
    }
 
    private static class QueryImpl implements Query {
-      private final NamedCache cache;
       private final Filter filter;
       private final Comparator comparator;
       private final int skip;
       private final int limit;
       private final String[] projection;
 
-      public QueryImpl(NamedCache cache, Filter filter, String[] projection, LinkedHashMap<String, SortOrder> orderBy, long offset, long limit) {
-         this.cache = cache;
+      public QueryImpl(Filter filter, String[] projection, LinkedHashMap<String, SortOrder> orderBy, long offset, long limit) {
          this.projection = projection;
          if (projection != null) {
             // we delay this to LimitAggregator
@@ -286,7 +295,8 @@ public class CoherenceQueryable implements Queryable {
       }
 
       @Override
-      public QueryResult execute() {
+      public QueryResult execute(QueryContext resource) {
+         NamedCache cache = getCache(resource);
          if (projection == null) {
             if (comparator == null) {
                return new QueryResultImpl(cache.entrySet(filter), skip, limit);
@@ -313,6 +323,11 @@ public class CoherenceQueryable implements Queryable {
             }
             return new QueryResultImpl(map.values(), skip, limit);
          }
+      }
+
+      protected NamedCache getCache(QueryContext context) {
+         QueryContextImpl impl = (QueryContextImpl) context;
+         return impl.cache;
       }
    }
 
@@ -375,6 +390,18 @@ public class CoherenceQueryable implements Queryable {
 
       private int limit() {
          return limit < 0 ? Integer.MAX_VALUE : limit;
+      }
+   }
+
+   protected static class QueryContextImpl implements Queryable.QueryContext {
+      protected final NamedCache cache;
+
+      public QueryContextImpl(NamedCache cache) {
+         this.cache = cache;
+      }
+
+      @Override
+      public void close() {
       }
    }
 

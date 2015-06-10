@@ -1,13 +1,13 @@
 package org.radargun.service;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.infinispan.query.dsl.FilterConditionContext;
 import org.infinispan.query.dsl.FilterConditionEndContext;
 import org.infinispan.query.dsl.QueryFactory;
 import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Provides implementation of querying suited to Infinispan DSL Queries
@@ -15,8 +15,18 @@ import org.radargun.traits.Queryable;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class AbstractInfinispanQueryable implements Queryable {
+   @Override
+   public Query.Context createContext(String containerName) {
+      return new QueryContextImpl();
+   }
 
-   protected static class QueryBuilderImpl implements QueryBuilder {
+   protected static class QueryContextImpl implements Query.Context {
+      @Override
+      public void close() {
+      }
+   }
+
+   protected static class QueryBuilderImpl implements Query.Builder {
       private final QueryFactory factory;
       private final org.infinispan.query.dsl.QueryBuilder builder;
       private FilterConditionContext context;
@@ -44,66 +54,66 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       }
 
       @Override
-      public QueryBuilder subquery() {
+      public Query.Builder subquery() {
          return new QueryBuilderImpl(factory);
       }
 
       @Override
-      public QueryBuilder eq(String attribute, Object value) {
+      public Query.Builder eq(String attribute, Object value) {
          context = getEndContext(attribute).eq(value);
          return this;
       }
 
       @Override
-      public QueryBuilder lt(String attribute, Object value) {
+      public Query.Builder lt(String attribute, Object value) {
          context = getEndContext(attribute).lt(value);
          return this;
       }
 
       @Override
-      public QueryBuilder le(String attribute, Object value) {
+      public Query.Builder le(String attribute, Object value) {
          context = getEndContext(attribute).lte(value);
          return this;
       }
 
       @Override
-      public QueryBuilder gt(String attribute, Object value) {
+      public Query.Builder gt(String attribute, Object value) {
          context = getEndContext(attribute).gt(value);
          return this;
       }
 
       @Override
-      public QueryBuilder ge(String attribute, Object value) {
+      public Query.Builder ge(String attribute, Object value) {
          context = getEndContext(attribute).gte(value);
          return this;
       }
 
       @Override
-      public QueryBuilder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
+      public Query.Builder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
          context = getEndContext(attribute).between(lowerBound, upperBound).includeLower(lowerInclusive).includeUpper(upperInclusive);
          return this;
       }
 
       @Override
-      public QueryBuilder isNull(String attribute) {
+      public Query.Builder isNull(String attribute) {
          context = getEndContext(attribute).isNull();
          return this;
       }
 
       @Override
-      public QueryBuilder like(String attribute, String pattern) {
+      public Query.Builder like(String attribute, String pattern) {
          context = getEndContext(attribute).like(pattern);
          return this;
       }
 
       @Override
-      public QueryBuilder contains(String attribute, Object value) {
+      public Query.Builder contains(String attribute, Object value) {
          context = getEndContext(attribute).contains(value);
          return this;
       }
 
       @Override
-      public QueryBuilder not(QueryBuilder subquery) {
+      public Query.Builder not(Query.Builder subquery) {
          FilterConditionContext subqueryContext = ((QueryBuilderImpl) subquery).context;
          if (subqueryContext == null) {
             return this;
@@ -119,12 +129,12 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       }
 
       @Override
-      public QueryBuilder any(QueryBuilder... subqueries) {
+      public Query.Builder any(Query.Builder... subqueries) {
          if (subqueries.length == 0) {
             return this;
          }
          FilterConditionContext innerContext = null;
-         for (QueryBuilder subquery : subqueries) {
+         for (Query.Builder subquery : subqueries) {
             if (innerContext == null) {
                innerContext = ((QueryBuilderImpl) subquery).context;
             } else {
@@ -142,29 +152,29 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       }
 
       @Override
-      public QueryBuilder orderBy(String attribute, SortOrder order) {
+      public Query.Builder orderBy(String attribute, Query.SortOrder order) {
          if (builder == null) throw new IllegalArgumentException("You have to call orderBy() on root query builder!");
-         builder.orderBy(attribute, order == SortOrder.ASCENDING ?
+         builder.orderBy(attribute, order == Query.SortOrder.ASCENDING ?
                org.infinispan.query.dsl.SortOrder.ASC : org.infinispan.query.dsl.SortOrder.DESC);
          return this;
       }
 
       @Override
-      public QueryBuilder projection(String... attributes) {
+      public Query.Builder projection(String... attributes) {
          if (builder == null) throw new IllegalArgumentException("You have to call projection() on root query builder!");
          builder.setProjection(attributes);
          return this;
       }
 
       @Override
-      public QueryBuilder offset(long offset) {
+      public Query.Builder offset(long offset) {
          if (builder == null) throw new IllegalArgumentException("You have to call offset() on root query builder!");
          builder.startOffset(offset);
          return this;
       }
 
       @Override
-      public QueryBuilder limit(long limit) {
+      public Query.Builder limit(long limit) {
          if (builder == null) throw new IllegalArgumentException("You have to call limit() on root query builder!");
          builder.maxResults(limit > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) limit);
          return this;
@@ -189,12 +199,12 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       }
 
       @Override
-      public QueryResult execute() {
+      public Result execute(Context resource) {
          return new QueryResultImpl(query.list());
       }
    }
 
-   protected static class QueryResultImpl implements Query.QueryResult {
+   protected static class QueryResultImpl implements Query.Result {
       private final List<Object> list;
 
       public QueryResultImpl(List<Object> list) {

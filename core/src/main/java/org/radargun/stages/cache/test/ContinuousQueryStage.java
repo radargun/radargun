@@ -1,6 +1,7 @@
 package org.radargun.stages.cache.test;
 
 import org.radargun.DistStageAck;
+import org.radargun.Operation;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
@@ -98,8 +99,8 @@ public class ContinuousQueryStage extends AbstractQueryStage {
         }
 
         @Override
-        public Object run() throws RequestException {
-            return null; //no-op
+        public void run(Operation operation) throws RequestException {
+            //no-op
         }
     }
 
@@ -121,13 +122,13 @@ public class ContinuousQueryStage extends AbstractQueryStage {
             throw new IllegalArgumentException("Cannot load class " + queryObjectClass, e);
         }
 
-        Queryable.QueryBuilder builder = queryable.getBuilder(null, clazz);
+        Query.Builder builder = queryable.getBuilder(null, clazz);
         for (Condition condition : conditions) {
             condition.apply(builder);
         }
         if (orderBy != null) {
             for (SortElement se : orderBy) {
-                builder.orderBy(se.attribute, se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
+                builder.orderBy(se.attribute, se.asc ? Query.SortOrder.ASCENDING : Query.SortOrder.DESCENDING);
             }
         }
         if (projection != null) {

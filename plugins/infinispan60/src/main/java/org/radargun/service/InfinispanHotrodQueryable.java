@@ -16,6 +16,7 @@ import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.remote.ProtobufMetadataManager;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.traits.Query;
 import org.radargun.utils.Utils;
 
 /**
@@ -32,7 +33,7 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
    }
 
    @Override
-   public QueryBuilder getBuilder(String cacheName, Class<?> clazz) {
+   public Query.Builder getBuilder(String cacheName, Class<?> clazz) {
       if (cacheName == null) {
          cacheName = service.cacheName;
       }

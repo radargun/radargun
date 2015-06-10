@@ -1,5 +1,6 @@
 package org.radargun.service;
 
+import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.transaction.TransactionContext;
 import org.radargun.logging.Log;
@@ -42,10 +43,16 @@ public class Hazelcast3Transactional implements Transactional {
       public <T> T wrap(T resource) {
          if (resource == null) {
             return null;
+         }
+         if (!started) begin();
+         if (resource instanceof DistributedObject) {
+            return (T) transactionContext.getMap(((DistributedObject) resource).getName());
          } else if (resource instanceof Hazelcast3Operations.Cache) {
             String cacheName = ((Hazelcast3Operations.Cache) resource).map.getName();
-            if (!started) begin();
             return (T) new Hazelcast3Operations.Cache(transactionContext.getMap(cacheName));
+         } else if (resource instanceof HazelcastQueryable.HazelcastQueryContext) {
+            String cacheName = ((HazelcastQueryable.HazelcastQueryContext) resource).map.getName();
+            return (T) new HazelcastQueryable.HazelcastQueryContext(transactionContext.getMap(cacheName));
          } else {
             throw new IllegalArgumentException(String.valueOf(resource));
          }
