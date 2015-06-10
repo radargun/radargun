@@ -13,11 +13,11 @@ import org.radargun.config.Path;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
+import org.radargun.reporting.IterationData;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.DefaultStatistics;
-import org.radargun.reporting.IterationData;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
@@ -80,6 +80,9 @@ public abstract class TestStage extends AbstractDistStage {
    @Property(doc = "Max duration of the test. Default is infinite.", converter = TimeConverter.class)
    protected long timeout = 0;
 
+   @Property(doc = "Delay to let all threads start executing operations. Default is 0.", converter = TimeConverter.class)
+   protected long rampUp = 0;
+
    @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'default' statistics " +
          "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
    protected Statistics statisticsPrototype = new DefaultStatistics();
@@ -97,12 +100,15 @@ public abstract class TestStage extends AbstractDistStage {
    @InjectTrait
    protected Transactional transactional;
 
-   protected CountDownLatch startLatch;
-   protected CountDownLatch finishLatch;
-   protected volatile Completion completion;
+   private CountDownLatch finishCountDown;
+   private Completion completion;
+   private OperationSelector operationSelector;
+
+   protected volatile boolean started = false;
    protected volatile boolean finished = false;
    protected volatile boolean terminated = false;
    protected int testIteration; // first iteration we should use for setting the statistics
+
 
    @Init
    public void init() {
@@ -120,10 +126,10 @@ public abstract class TestStage extends AbstractDistStage {
       try {
          long startNanos = TimeService.nanoTime();
          log.info("Starting test " + testName);
-         List<Stressor> stressors = execute();
+         Stressors stressors = execute();
          destroy();
          log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(TimeService.nanoTime() - startNanos));
-         return newStatisticsAck(stressors);
+         return newStatisticsAck(stressors.getStressors());
       } catch (Exception e) {
          return errorResponse("Exception while initializing the test", e);
       }
@@ -200,24 +206,89 @@ public abstract class TestStage extends AbstractDistStage {
       }
    }
 
-   public List<Stressor> execute() {
+   public Stressors execute() {
       long startTime = TimeService.currentTimeMillis();
+      completion = createCompletion();
+      finishCountDown = new CountDownLatch(1);
+      completion.setCompletionHandler(new Runnable() {
+         @Override
+         public void run() {
+            finished = true;
+            finishCountDown.countDown();
+         }
+      });
+      operationSelector = wrapOperationSelector(createOperationSelector());
+
+      Stressors stressors = startStressors();
+
+      if (rampUp > 0) {
+         try {
+            Thread.sleep(rampUp);
+         } catch (InterruptedException e) {
+            throw new IllegalStateException("Interrupted during ramp-up.", e);
+         }
+      }
+      started = true;
+      try {
+         if (timeout > 0) {
+            long waitTime = getWaitTime(startTime);
+            if (waitTime <= 0) {
+               throw new TestTimeoutException();
+            } else {
+               if (!finishCountDown.await(waitTime, TimeUnit.MILLISECONDS)) {
+                  throw new TestTimeoutException();
+               }
+            }
+         } else {
+            finishCountDown.await();
+         }
+      } catch (InterruptedException e) {
+         throw new IllegalStateException("Unexpected interruption", e);
+      }
+      for (Thread stressorThread : stressors.getStressors()) {
+         try {
+            if (timeout > 0) {
+               long waitTime = getWaitTime(startTime);
+               if (waitTime <= 0) throw new TestTimeoutException();
+               stressorThread.join(waitTime);
+            } else {
+               stressorThread.join();
+            }
+         } catch (InterruptedException e) {
+            throw new TestTimeoutException(e);
+         }
+      }
+      return stressors;
+   }
+
+   protected Completion createCompletion() {
+      Completion completion;
+      if (duration > 0) {
+         completion = new TimeStressorCompletion(duration);
+      } else {
+         completion = new OperationCountCompletion(numRequests, logPeriod);
+      }
+      return completion;
+   }
+
+   protected OperationSelector createOperationSelector() {
+      return OperationSelector.DUMMY;
+   }
+
+   protected OperationSelector wrapOperationSelector(OperationSelector operationSelector) {
+      if (requestPeriod > 0) {
+         operationSelector = new PeriodicOperationSelector(operationSelector, requestPeriod);
+      }
+      if (synchronousRequests) {
+         operationSelector = new SynchronousOperationSelector(operationSelector);
+      }
+      return operationSelector;
+   }
+
+   protected Stressors startStressors() {
       int myFirstThread = getFirstThreadOn(slaveState.getSlaveIndex());
       int myNumThreads = getNumThreadsOn(slaveState.getSlaveIndex());
 
-      Completion completion;
-      if (duration > 0) {
-         completion = new TimeStressorCompletion(duration, requestPeriod);
-      } else {
-         completion = new OperationCountCompletion(numRequests, requestPeriod, logPeriod);
-      }
-      if (synchronousRequests) {
-         completion = new SynchronousCompletion(completion, myNumThreads);
-      }
-      setCompletion(completion);
-
-      startLatch = new CountDownLatch(1);
-      finishLatch = new CountDownLatch(myNumThreads);
       List<Stressor> stressors = new ArrayList<>();
       for (int threadIndex = stressors.size(); threadIndex < myNumThreads; threadIndex++) {
          Stressor stressor = new Stressor(this, getLogic(), myFirstThread + threadIndex, threadIndex);
@@ -225,35 +296,7 @@ public abstract class TestStage extends AbstractDistStage {
          stressor.start();
       }
       log.info("Started " + stressors.size() + " stressor threads.");
-      startLatch.countDown();
-      try {
-         if (timeout > 0) {
-            long waitTime = getWaitTime(startTime);
-            if (waitTime <= 0 || !finishLatch.await(waitTime, TimeUnit.MILLISECONDS)) {
-               throw new TestTimeoutException();
-            }
-         } else {
-            finishLatch.await();
-         }
-      } catch (InterruptedException e) {
-         throw new IllegalStateException("Unexpected interruption", e);
-      } finally {
-         finished = true;
-      }
-      for (Stressor stressor : stressors) {
-         try {
-            if (timeout > 0) {
-               long waitTime = getWaitTime(startTime);
-               if (waitTime <= 0) throw new TestTimeoutException();
-               stressor.join(waitTime);
-            } else {
-               stressor.join();
-            }
-         } catch (InterruptedException e) {
-            throw new TestTimeoutException(e);
-         }
-      }
-      return stressors;
+      return new FixedStressors(stressors);
    }
 
    protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
@@ -353,6 +396,10 @@ public abstract class TestStage extends AbstractDistStage {
       return statisticsPrototype.copy();
    }
 
+   public boolean isStarted() {
+      return started;
+   }
+
    protected boolean isFinished() {
       return finished;
    }
@@ -362,33 +409,30 @@ public abstract class TestStage extends AbstractDistStage {
    }
 
    public void setTerminated() {
-      this.terminated = true;
-   }
-
-   protected void setCompletion(Completion completion) {
-      this.completion = completion;
+      terminated = true;
+      finishCountDown.countDown();
    }
 
    public Completion getCompletion() {
       return completion;
    }
 
-   public CountDownLatch getStartLatch() {
-      return startLatch;
+   public OperationSelector getOperationSelector() {
+      return operationSelector;
    }
 
-   public CountDownLatch getFinishLatch() {
-      return finishLatch;
-   }
-
-   public boolean useTransactions(String cacheName) {
-      return useTransactions.use(transactional, cacheName, transactionSize);
+   public boolean useTransactions(String resourceName) {
+      return useTransactions.use(transactional, resourceName, transactionSize);
    }
 
    public abstract OperationLogic getLogic();
 
    protected int getTestIteration() {
       return testIteration;
+   }
+
+   public boolean isSingleTxType() {
+      return transactionSize == 1;
    }
 
    protected static class StatisticsAck extends DistStageAck {
@@ -425,6 +469,23 @@ public abstract class TestStage extends AbstractDistStage {
 
       public TestTimeoutException(Throwable cause) {
          super(cause);
+      }
+   }
+
+   protected interface Stressors {
+      List<Stressor> getStressors();
+   }
+
+   protected class FixedStressors implements Stressors {
+      private final List<Stressor> stressors;
+
+      public FixedStressors(List<Stressor> stressors) {
+         this.stressors = stressors;
+      }
+
+      @Override
+      public List<Stressor> getStressors() {
+         return stressors;
       }
    }
 }

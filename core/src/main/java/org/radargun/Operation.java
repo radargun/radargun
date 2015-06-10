@@ -89,6 +89,11 @@ public final class Operation {
    }
 
    @Override
+   public String toString() {
+      return name;
+   }
+
+   @Override
    public boolean equals(Object o) {
       // there should be only one instance of each operation
       return this == o;

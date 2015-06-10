@@ -3,10 +3,11 @@ package org.radargun.stages.cache.test;
 import java.util.Random;
 
 import org.radargun.Operation;
-import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.OperationSelector;
+import org.radargun.stages.test.RatioOperationSelector;
 import org.radargun.stages.test.Stressor;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
@@ -40,11 +41,9 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected ConditionalOperations conditionalOperations;
 
-   protected OperationSelector operationSelector;
-
-   @Init
-   public void init() {
-      operationSelector = new OperationSelector.Builder()
+   @Override
+   protected OperationSelector createOperationSelector() {
+      return new RatioOperationSelector.Builder()
             .add(ConditionalOperations.REMOVE, removeRatio)
             .add(ConditionalOperations.REPLACE, replaceRatio)
             .add(ConditionalOperations.REPLACE_ANY, replaceAnyRatio)
@@ -104,10 +103,9 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
       }
 
       @Override
-      public Object run() throws RequestException {
+      public void run(Operation operation) throws RequestException {
          Random random = stressor.getRandom();
          Object key = keyGenerator.generateKey(keySelector.next());
-         Operation operation = operationSelector.next(random);
          Object newValue = valueGenerator.generateValue(key, entrySize.next(random), random);
          boolean shouldMatch = matchSelector.shouldMatch();
 
@@ -122,18 +120,15 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
                prevValue = stressor.makeRequest(new Invocations.GetAndReplace(conditionalCache, key, newValue));
                matchSelector.record(prevValue != null);
             }
-            return prevValue;
          } else if (operation == ConditionalOperations.REMOVE) {
             Boolean removed = (Boolean) stressor.makeRequest(new Invocations.RemoveConditionally(conditionalCache, key,
                   shouldMatch ? oldValue : newValue));
             matchSelector.record(removed);
-            return removed;
          } else if (operation == ConditionalOperations.REPLACE) {
             Object wrongValue = valueGenerator.generateValue(key, entrySize.next(random), random);
             Boolean replaced = (Boolean) stressor.makeRequest(new Invocations.Replace(conditionalCache, key,
                   shouldMatch ? oldValue : wrongValue, newValue));
             matchSelector.record(replaced);
-            return replaced;
          } else if (operation == ConditionalOperations.REPLACE_ANY) {
             Object prevValue;
             if (shouldMatch) {
@@ -143,7 +138,6 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
                prevValue = stressor.makeRequest(new Invocations.PutIfAbsent(conditionalCache, key, newValue));
                matchSelector.record(prevValue == null);
             }
-            return prevValue;
          } else if (operation == ConditionalOperations.GET_AND_REPLACE) {
             Object prevValue;
             if (shouldMatch) {
@@ -153,7 +147,6 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
                prevValue = stressor.makeRequest(new Invocations.PutIfAbsent(conditionalCache, key, newValue));
                matchSelector.record(prevValue == null);
             }
-            return prevValue;
          } else throw new IllegalStateException("Unable to execute operation: " + operation.name);
       }
    }

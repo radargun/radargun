@@ -7,11 +7,12 @@ import java.util.Random;
 import java.util.Set;
 
 import org.radargun.Operation;
-import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.test.Invocation;
 import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.OperationSelector;
+import org.radargun.stages.test.RatioOperationSelector;
 import org.radargun.stages.test.Stressor;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.InjectTrait;
@@ -46,11 +47,9 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
    @InjectTrait
    protected BulkOperations bulkOperations;
 
-   private OperationSelector operationSelector;
-
-   @Init
-   public void init() {
-      operationSelector = new OperationSelector.Builder()
+   @Override
+   protected OperationSelector createOperationSelector() {
+      return new RatioOperationSelector.Builder()
             .add(BulkOperations.GET_ALL_NATIVE, getAllNativeRatio)
             .add(BulkOperations.GET_ALL_ASYNC, getAllAsyncRatio)
             .add(BulkOperations.PUT_ALL_NATIVE, putAllNativeRatio)
@@ -98,9 +97,8 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
       }
 
       @Override
-      public Object run() throws RequestException {
+      public void run(Operation operation) throws RequestException {
          Random random = stressor.getRandom();
-         Operation operation = operationSelector.next(random);
 
          Invocation invocation;
          if (operation == BulkOperations.PUT_ALL_NATIVE || operation == BulkOperations.PUT_ALL_ASYNC) {
@@ -140,7 +138,7 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
                }
             }
          }
-         return stressor.makeRequest(invocation);
+         stressor.makeRequest(invocation);
       }
    }
 }

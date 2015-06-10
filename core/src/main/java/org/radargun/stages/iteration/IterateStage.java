@@ -10,7 +10,6 @@ import java.util.Map;
 import org.radargun.DistStageAck;
 import org.radargun.Operation;
 import org.radargun.StageResult;
-import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
@@ -65,8 +64,9 @@ public class IterateStage extends TestStage {
    @InjectTrait
    protected CacheInformation info;
 
-   @Init
+   @Override
    public void init() {
+      super.init();
       failOnNotTotalSize = (filterClass == null);
    }
 
@@ -189,19 +189,18 @@ public class IterateStage extends TestStage {
       }
 
       @Override
-      public Object run() throws RequestException {
+      public void run(Operation ignored) throws RequestException {
          Iterable.CloseableIterator iterator;
          try {
             iterator = (Iterable.CloseableIterator) stressor.makeRequest(new GetIterator(iterable, containerName, filter, converter));
          } catch (Exception e) {
             log.error("Failed to retrieve iterator.", e);
             failed = true;
-            return null;
+            return;
          }
          int nextFailures = 0;
          long elements = 0;
          long loopStart = TimeService.nanoTime();
-         Object lastElement = null;
          while (!failed) {
             try {
                if (!(boolean) stressor.makeRequest(new HasNext(iterator))) break;
@@ -211,7 +210,7 @@ public class IterateStage extends TestStage {
                break;
             }
             try {
-               lastElement = stressor.makeRequest(new Next(iterator));
+               stressor.makeRequest(new Next(iterator));
                elements++;
             } catch (Exception e) {
                log.error("next() failed", e);
@@ -237,7 +236,6 @@ public class IterateStage extends TestStage {
             failed = true;
          }
          stressor.getStats().registerRequest(TimeService.nanoTime() - loopStart, Iterable.FULL_LOOP);
-         return lastElement;
       }
    }
 

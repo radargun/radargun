@@ -1,8 +1,5 @@
 package org.radargun.stages.test;
 
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.utils.TimeService;
@@ -11,36 +8,32 @@ import org.radargun.utils.TimeService;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class AbstractCompletion implements Completion {
-   static final String PROGRESS_STRING = "Number of operations executed by this thread: %d. Elapsed time: %s. Remaining: %s. Total: %s.";
-   protected final static Log log = LogFactory.getLog(AbstractCompletion.class);
-   protected final long requestPeriod;
-   // prevents non-intended synchronization
-   protected final ThreadLocal<Long> privateRampUp = new ThreadLocal<>();
-   protected volatile long startTime = -1;
+   protected final static String PROGRESS_STRING = "Number of operations executed by this thread: %d. Elapsed time: %s. Remaining: %s. Total: %s.";
+   protected final static Log log = LogFactory.getLog(Completion.class);
 
-   public AbstractCompletion(long requestPeriod) {
-      this.requestPeriod = TimeUnit.MILLISECONDS.toNanos(requestPeriod);
+   protected boolean started, completed;
+   protected long startTime;
+   private Runnable handler;
+
+   @Override
+   public synchronized void start() {
+      if (!started) {
+         startTime = TimeService.nanoTime();
+         started = true;
+      }
    }
 
-   protected void waitForNextRequest(int opNumber, long now) {
-      if (startTime < 0) {
-         startTime = TimeService.nanoTime();
-      }
-      if (requestPeriod > 0) {
-         Long rampUp = privateRampUp.get();
-         if (rampUp == null) {
-            rampUp = new Random(Thread.currentThread().getId() ^ TimeService.nanoTime()).nextLong() % requestPeriod;
-            privateRampUp.set(rampUp);
-         }
-         long waitTime = TimeUnit.NANOSECONDS.toMillis(startTime + rampUp + requestPeriod * opNumber - now);
-         // for times < 1ms, do not wait
-         if (waitTime > 0) {
-            try {
-               Thread.sleep(waitTime);
-            } catch (InterruptedException e) {
-               Thread.currentThread().interrupt();
-            }
-         }
+   @Override
+   public synchronized void setCompletionHandler(Runnable handler) {
+      if (completed) throw new IllegalStateException();
+      this.handler = handler;
+   }
+
+   protected synchronized void runCompletionHandler() {
+      if (completed) return;
+      completed = true;
+      if (handler != null) {
+         handler.run();
       }
    }
 }

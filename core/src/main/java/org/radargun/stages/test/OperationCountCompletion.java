@@ -17,17 +17,19 @@ public class OperationCountCompletion extends AbstractCompletion {
    private final long numRequests;
    private final long logOps;
 
-   public OperationCountCompletion(long numRequests, long requestPeriod, long logPeriod) {
-      super(requestPeriod);
+   public OperationCountCompletion(long numRequests, long logPeriod) {
       this.requestsLeft = new AtomicLong(numRequests);
       this.numRequests = numRequests;
       this.logOps = logPeriod;
    }
 
    @Override
-   public boolean moreToRun(int opNumber) {
-      waitForNextRequest(opNumber, TimeService.nanoTime());
-      return requestsLeft.getAndDecrement() > 0;
+   public boolean moreToRun() {
+      boolean moreToRun = requestsLeft.getAndDecrement() > 0;
+      if (!moreToRun) {
+         runCompletionHandler();
+      }
+      return moreToRun;
    }
 
    @Override

@@ -3,11 +3,12 @@ package org.radargun.stages.cache.test;
 import java.util.Random;
 
 import org.radargun.Operation;
-import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.test.Invocation;
 import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.OperationSelector;
+import org.radargun.stages.test.RatioOperationSelector;
 import org.radargun.stages.test.Stressor;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
@@ -38,11 +39,9 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
    @InjectTrait
    protected BasicOperations basicOperations;
 
-   protected OperationSelector operationSelector;
-
-   @Init
-   public void init() {
-      operationSelector = new OperationSelector.Builder()
+   @Override
+   protected OperationSelector createOperationSelector() {
+      return new RatioOperationSelector.Builder()
             .add(BasicOperations.GET, getRatio)
             .add(BasicOperations.CONTAINS_KEY, containsRatio)
             .add(BasicOperations.PUT, putRatio)
@@ -85,15 +84,13 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
       }
 
       @Override
-      public Object run() throws RequestException {
+      public void run(Operation operation) throws RequestException {
          Object key = keyGenerator.generateKey(keySelector.next());
          Random random = stressor.getRandom();
-         Operation operation = operationSelector.next(random);
 
          Invocation invocation;
          if (operation == BasicOperations.GET) {
             invocation = new Invocations.Get(cache, key);
-            return stressor.makeRequest(invocation);
          } else if (operation == BasicOperations.PUT) {
             invocation = new Invocations.Put(cache, key, valueGenerator.generateValue(key, entrySize.next(random), random));
          } else if (operation == BasicOperations.REMOVE) {
@@ -105,7 +102,7 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
          } else if (operation == BasicOperations.GET_AND_REMOVE) {
             invocation = new Invocations.GetAndRemove(cache, key);
          } else throw new IllegalArgumentException(operation.name);
-         return stressor.makeRequest(invocation);
+         stressor.makeRequest(invocation);
       }
    }
 }

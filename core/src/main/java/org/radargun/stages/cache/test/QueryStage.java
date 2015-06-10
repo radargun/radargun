@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.radargun.DistStageAck;
+import org.radargun.Operation;
 import org.radargun.StageResult;
 import org.radargun.config.Converter;
 import org.radargun.config.DefinitionElement;
@@ -127,7 +128,7 @@ public class QueryStage extends AbstractQueryStage {
       }
 
       @Override
-      public Object run() throws RequestException {
+      public void run(Operation ignored) throws RequestException {
          Query query = builder.build();
          Query.QueryResult queryResult = (Query.QueryResult) stressor.makeRequest(new Invocations.Query(query));
 
@@ -151,8 +152,6 @@ public class QueryStage extends AbstractQueryStage {
             }
             previousQueryResult = queryResult;
          }
-
-         return queryResult;
       }
    }
 

@@ -6,10 +6,11 @@ import java.util.Random;
 import java.util.TreeSet;
 
 import org.radargun.Operation;
-import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.OperationSelector;
+import org.radargun.stages.test.RatioOperationSelector;
 import org.radargun.stages.test.Stressor;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
@@ -44,11 +45,12 @@ public class KeyExpirationTestStage extends CacheTestStage {
    @InjectTrait
    BasicOperations basicOperations;
 
-   protected OperationSelector operationSelector;
+   private OperationSelector operationSelector;
 
-   @Init
+   @Override
    public void init() {
-      operationSelector = new OperationSelector.Builder()
+      super.init();
+      operationSelector = new RatioOperationSelector.Builder()
             .add(BasicOperations.PUT, putRatio)
             .add(BasicOperations.GET, getRatio)
             .build();
@@ -113,7 +115,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
       }
 
       @Override
-      public Object run() throws RequestException {
+      public void run(Operation ignored) throws RequestException {
          Random random = stressor.getRandom();
          KeyWithRemovalTime pair;
          long timestamp = TimeService.currentTimeMillis();
@@ -125,13 +127,12 @@ public class KeyExpirationTestStage extends CacheTestStage {
                value = (Boolean) stressor.makeRequest(new Invocations.Remove(cache, pair.key));
             } catch (RequestException e) {
                load.scheduledKeys.add(pair);
-               return null;
+               return;
             }
             updateMin();
             if (!value && !expectLostKeys) {
                log.error("REMOVE: Entry for key " + pair.key + " was not found!");
             }
-            return value;
          } else {
             Operation operation = operationSelector.next(random);
             if (operation == BasicOperations.GET && minRemoveTimestamp < Long.MAX_VALUE) {
@@ -142,7 +143,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
                }
                if (load.scheduledKeys.isEmpty()) {
                   log.error("Current load seems to be null but timestamp is " + minRemoveTimestamp);
-                  return null;
+                  return;
                }
                pair = getRandomPair(load.scheduledKeys, timestamp, random);
                Object value = stressor.makeRequest(new Invocations.Get(cache, pair.key));
@@ -154,7 +155,6 @@ public class KeyExpirationTestStage extends CacheTestStage {
                      log.error("GET: Value for key " + pair.key + " is null!");
                   }
                }
-               return value;
             } else {
                int size = 0;
                Load load = null;
@@ -165,7 +165,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
                }
                if (load.max == 0) {
                   log.error("Cannot add any entry");
-                  return null;
+                  return;
                } else if (load.scheduledKeys.size() < load.max) {
                   long keyIndex = nextKeyIndex;
                   nextKeyIndex += getTotalThreads();
@@ -177,17 +177,17 @@ public class KeyExpirationTestStage extends CacheTestStage {
                }
                Object value = valueGenerator.generateValue(null, size, stressor.getRandom());
                try {
-                  return stressor.makeRequest(new Invocations.Put(cache, pair.key, value));
+                  stressor.makeRequest(new Invocations.Put(cache, pair.key, value));
                } catch (RequestException e) {
                   load.scheduledKeys.remove(pair);
                   while (!isTerminated()) {
                      try {
-                        return stressor.makeRequest(new Invocations.Remove(cache, pair.key));
+                        stressor.makeRequest(new Invocations.Remove(cache, pair.key));
+                        return;
                      } catch (RequestException e1) {
                         // exception already logged in Stressor
                      }
                   }
-                  return null;
                }
             }
          }

@@ -1,5 +1,7 @@
 package org.radargun.stages.test;
 
+import org.radargun.Operation;
+
 /**
  * Implementations specify what operations should be executed during the stress test.
  * Each stressor thread uses single instance of this class.
@@ -18,14 +20,20 @@ public abstract class OperationLogic {
    }
 
    /**
+    * Release resources held by this logic.
+    */
+   public void destroy() {}
+
+   /**
     * Execute operation on the stressor using its
     * {@link Stressor#makeRequest(Invocation)} makeRequest} method.
     * This operation accounts to the statistics.
     * Note: logic may actually execute more operations
     *
     * @return The method returns object in order to avoid JIT optimization by the compiler.
+    * @param operation
     */
-   public abstract Object run() throws RequestException;
+   public abstract void run(Operation operation) throws RequestException;
 
    /**
     * Handle started transaction - the logic should call {@link Stressor#wrap(Object)} on all resources

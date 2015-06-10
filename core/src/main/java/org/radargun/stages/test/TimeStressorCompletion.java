@@ -19,21 +19,17 @@ public class TimeStressorCompletion extends AbstractCompletion {
    /**
     * @param duration Duration of the test in nanoseconds.
     */
-   public TimeStressorCompletion(long duration, long requestPeriod) {
-      super(requestPeriod);
+   public TimeStressorCompletion(long duration) {
       this.duration = TimeUnit.MILLISECONDS.toNanos(duration);
    }
 
    @Override
-   public boolean moreToRun(int opNumber) {
-      // Synchronize the start until someone is ready
-      // we don't care about the race condition here
-      long now = TimeService.nanoTime();
-      if (startTime == -1) {
-         startTime = now;
+   public boolean moreToRun() {
+      boolean moreToRun = TimeService.nanoTime() < startTime + duration;
+      if (!moreToRun) {
+         runCompletionHandler();
       }
-      waitForNextRequest(opNumber, now);
-      return now < startTime + duration;
+      return moreToRun;
    }
 
    @Override

@@ -1,43 +1,47 @@
 package org.radargun.stages.test;
 
+import java.util.Random;
 import java.util.concurrent.Phaser;
+
+import org.radargun.Operation;
 
 /**
  * Synchronizes the request executions in order to start all the requests in parallel.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class SynchronousCompletion implements Completion {
-   private final Completion delegate;
+public class SynchronousOperationSelector implements OperationSelector {
+   private final OperationSelector delegate;
    private final Phaser phaser;
 
-   public SynchronousCompletion(Completion delegate, int threads) {
+   public SynchronousOperationSelector(OperationSelector delegate) {
       this.delegate = delegate;
-      this.phaser = new Phaser(threads);
+      this.phaser = new Phaser();
    }
 
    @Override
-   public boolean moreToRun(int opNumber) {
+   public Operation next(Random random) {
       int phase = phaser.arrive();
-      if (phase < 0) return false;
+      if (phase < 0) return null;
       try {
          phase = phaser.awaitAdvanceInterruptibly(phase);
          if (phase < 0) {
-            return false;
+            return null;
          }
       } catch (InterruptedException e) {
          Thread.currentThread().interrupt();
-         return false;
+         return null;
       }
-      boolean more = delegate.moreToRun(opNumber);
-      if (!more) {
+      Operation next = delegate.next(random);
+      if (next == null) {
          phaser.arriveAndDeregister();
       }
-      return more;
+      return next;
    }
 
    @Override
-   public void logProgress(int executedOps) {
-      delegate.logProgress(executedOps);
+   public void start() {
+      phaser.register();
+      delegate.start();
    }
 }
