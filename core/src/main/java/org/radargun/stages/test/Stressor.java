@@ -3,6 +3,7 @@ package org.radargun.stages.test;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stats.Statistics;
@@ -69,31 +70,16 @@ public class Stressor extends Thread {
       while (completion.moreToRun(i)) {
          Object result = null;
          try {
-            if (useTransactions && txRemainingOperations <= 0) {
-               ongoingTx = stage.transactional.getTransaction();
-               logic.transactionStarted();
-            }
-            result = logic.run();
+            Blackhole.consume(logic.run());
          } catch (OperationLogic.RequestException e) {
             // the exception was already logged in makeRequest
          }
          i++;
          completion.logProgress(i);
-         if (i % stage.logPeriod == 0) TestStage.avoidJit(result);
       }
 
       if (txRemainingOperations > 0) {
-         try {
-            long endTxTime = endTransaction();
-            stats.registerRequest(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
-            stats.registerRequest(transactionDuration + endTxTime, Transactional.DURATION);
-         } catch (TransactionException e) {
-            stats.registerError(e.getOperationDuration(), stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
-            stats.registerError(transactionDuration + e.getOperationDuration(), Transactional.DURATION);
-         } finally {
-            clearTransaction();
-         }
-         transactionDuration = 0;
+         endTransactionAndRegisterStats(null);
       }
    }
 
@@ -102,9 +88,15 @@ public class Stressor extends Thread {
    }
 
    public Object makeRequest(Invocation invocation) throws OperationLogic.RequestException {
+      return makeRequest(invocation, true);
+   }
+
+   public Object makeRequest(Invocation invocation, boolean countForTx) throws OperationLogic.RequestException {
       long startTxTime = 0;
       if (useTransactions && txRemainingOperations <= 0) {
          try {
+            ongoingTx = stage.transactional.getTransaction();
+            logic.transactionStarted();
             startTxTime = startTransaction();
             transactionDuration = startTxTime;
             txRemainingOperations = stage.transactionSize;
@@ -123,7 +115,9 @@ public class Stressor extends Thread {
       try {
          result = invocation.invoke();
          operationDuration = TimeService.nanoTime() - start;
-         txRemainingOperations--;
+         if (countForTx) {
+            txRemainingOperations--;
+         }
       } catch (Exception e) {
          operationDuration = TimeService.nanoTime() - start;
          log.warn("Error in request", e);
@@ -133,35 +127,48 @@ public class Stressor extends Thread {
       }
       transactionDuration += operationDuration;
 
-      long endTxTime = 0;
       if (useTransactions && txRemainingOperations <= 0) {
-         try {
-            endTxTime = endTransaction();
-            stats.registerRequest(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
-            stats.registerRequest(transactionDuration + endTxTime, Transactional.DURATION);
-         } catch (TransactionException e) {
-            endTxTime = e.getOperationDuration();
-            stats.registerError(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
-            stats.registerError(transactionDuration + endTxTime, Transactional.DURATION);
-         } finally {
-            clearTransaction();
-         }
+         endTransactionAndRegisterStats(invocation.txOperation());
       }
       if (successful) {
          stats.registerRequest(operationDuration, invocation.operation());
-         if (useTransactions && stage.transactionSize == 1) {
-            stats.registerRequest(startTxTime + operationDuration + endTxTime, invocation.txOperation());
-         }
       } else {
          stats.registerError(operationDuration, invocation.operation());
-         if (useTransactions && stage.transactionSize == 1) {
-            stats.registerError(startTxTime + operationDuration + endTxTime, invocation.txOperation());
-         }
       }
       if (exception != null) {
          throw new OperationLogic.RequestException(exception);
       }
       return result;
+   }
+
+   private void endTransactionAndRegisterStats(Operation singleTxOperation) {
+      long start = TimeService.nanoTime();
+      try {
+         if (stage.commitTransactions) {
+            ongoingTx.commit();
+         } else {
+            ongoingTx.rollback();
+         }
+         long endTxTime = TimeService.nanoTime() - start;
+         transactionDuration += endTxTime;
+         stats.registerRequest(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
+         stats.registerRequest(transactionDuration, Transactional.DURATION);
+         if (singleTxOperation != null) {
+            stats.registerRequest(transactionDuration, singleTxOperation);
+         }
+      } catch (Exception e) {
+         long endTxTime = TimeService.nanoTime() - start;
+         stats.registerError(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
+         stats.registerError(transactionDuration + endTxTime, Transactional.DURATION);
+         if (singleTxOperation != null) {
+            stats.registerError(transactionDuration, singleTxOperation);
+         }
+         if (stage.logTransactionExceptions) {
+            log.error("Failed to end transaction", e);
+         }
+      } finally {
+         clearTransaction();
+      }
    }
 
    public void setUseTransactions(boolean useTransactions) {
@@ -200,22 +207,6 @@ public class Stressor extends Thread {
       } catch (Exception e) {
          long time = TimeService.nanoTime() - start;
          log.error("Failed to start transaction", e);
-         throw new TransactionException(time, e);
-      }
-      return TimeService.nanoTime() - start;
-   }
-
-   private long endTransaction() throws TransactionException {
-      long start = TimeService.nanoTime();
-      try {
-         if (stage.commitTransactions) {
-            ongoingTx.commit();
-         } else {
-            ongoingTx.rollback();
-         }
-      } catch (Exception e) {
-         long time = TimeService.nanoTime() - start;
-         log.error("Failed to end transaction", e);
          throw new TransactionException(time, e);
       }
       return TimeService.nanoTime() - start;

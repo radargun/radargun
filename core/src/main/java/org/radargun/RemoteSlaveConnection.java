@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
@@ -23,6 +24,7 @@ import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
+import org.radargun.utils.TimeService;
 
 /**
  * Connection to slaves in different JVMs
@@ -31,6 +33,7 @@ import org.radargun.reporting.Timeline;
  */
 public class RemoteSlaveConnection {
 
+   private static final long CONNECT_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
    private static Log log = LogFactory.getLog(RemoteSlaveConnection.class);
 
    private static final int UUID_BYTES = 16;
@@ -79,16 +82,21 @@ public class RemoteSlaveConnection {
       discoverySelector = Selector.open();
       serverSocketChannel.register(discoverySelector, SelectionKey.OP_ACCEPT);
       int slaveCount = 0;
+      long deadline = TimeService.currentTimeMillis() + CONNECT_TIMEOUT;
       while (slaveCount < slaves.length) {
+         long timeout = deadline - TimeService.currentTimeMillis();
+         if (timeout <= 0) {
+            throw new IOException((slaves.length - slaveCount) + " slaves haven't connected within timeout!");
+         }
          log.info("Awaiting registration from " + (slaves.length - slaveCount) + " slaves.");
-         slaveCount += connectSlaves();
+         slaveCount += connectSlaves(timeout);
       }
       mcastBuffer = ByteBuffer.allocate(DEFAULT_WRITE_BUFF_CAPACITY);
       log.info("Connection established from " + slaveCount + " slaves.");
    }
 
-   private int connectSlaves() throws IOException {
-      discoverySelector.select();
+   private int connectSlaves(long timeout) throws IOException {
+      discoverySelector.select(timeout);
       Set<SelectionKey> keySet = discoverySelector.selectedKeys();
       Iterator<SelectionKey> it = keySet.iterator();
       int slaveCount = 0;
@@ -223,9 +231,14 @@ public class RemoteSlaveConnection {
             }
          }
       }
+      long deadline = TimeService.currentTimeMillis() + CONNECT_TIMEOUT;
       while (reconnections > 0) {
          log.infof("Waiting for %d reconnecting slaves", reconnections);
-         reconnections -= connectSlaves();
+         long timeout = deadline - TimeService.currentTimeMillis();
+         if (timeout <= 0) {
+            throw new IOException(reconnections + " slaves haven't connected within timeout!");
+         }
+         reconnections -= connectSlaves(timeout);
       }
    }
 

@@ -1,57 +1,33 @@
 package org.radargun.stages.cache.test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
 
 import org.radargun.Operation;
+import org.radargun.utils.Selector;
 
 /**
  * Ratio-based selector of operations
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class OperationSelector {
-   public final int[] ratios;
-   public final int max;
-   public final Operation[] operations;
+public class OperationSelector extends Selector<Operation> {
 
-   public OperationSelector(int[] ratios, int max, Operation[] operations) {
-      this.ratios = ratios;
-      this.max = max;
-      this.operations = operations;
+   public OperationSelector(int max, Operation[] operations, int[] ratios) {
+      super(max, operations, ratios);
    }
 
    public Operation next(Random random) {
-      int x = random.nextInt(max);
-      int index = Arrays.binarySearch(ratios, x);
-      if (index < 0) {
-         index = -index - 1;
-      } else {
-         index = index + 1;
-      }
-      return operations[index];
+      return select(random.nextInt(max));
    }
 
-   public static class Builder {
-      private int max = 0;
-      private ArrayList<Integer> ratios = new ArrayList<>();
-      private ArrayList<Operation> operations = new ArrayList<>();
-
-      public Builder add(Operation op, int ratio) {
-         if (ratio == 0) return this;
-         if (ratio < 0) throw new IllegalArgumentException("Ratio must be >= 0: " + ratio);
-         ratios.add(max + ratio);
-         max += ratio;
-         operations.add(op);
-         return this;
+   public static class Builder extends Selector.Builder<Operation, OperationSelector> {
+      public Builder() {
+         super(Operation.class);
       }
 
-      public OperationSelector build() {
-         if (max == 0) throw new IllegalStateException("No operations/ratios defined");
-         int[] ratios = new int[this.ratios.size()];
-         for (int i = 0; i < ratios.length; ++i) ratios[i] = this.ratios.get(i);
-         return new OperationSelector(ratios, max, operations.toArray(new Operation[operations.size()]));
+      @Override
+      protected OperationSelector newSelector(int[] ratios) {
+         return new OperationSelector(max, options.toArray(new Operation[options.size()]), ratios);
       }
    }
 }

@@ -63,6 +63,9 @@ public abstract class TestStage extends AbstractDistStage {
    @Property(doc = "Number of requests in one transaction. Default is 1.")
    protected int transactionSize = 1;
 
+   @Property(doc = "Whether an error from transaction commit/rollback should be logged as error. Default is true.")
+   protected boolean logTransactionExceptions = true;
+
    @Property(converter = TimeConverter.class, doc = "Benchmark duration. This takes precedence over numRequests. By default switched off.")
    protected long duration = 0;
 
@@ -108,26 +111,28 @@ public abstract class TestStage extends AbstractDistStage {
       if (totalThreads < 0 || numThreadsPerNode < 0) throw new IllegalStateException("Number of threads can't be < 0");
    }
 
-   protected static void avoidJit(Object result) {
-      //this line was added just to make sure JIT doesn't skip call to cacheWrapper.get
-      if (result != null && System.identityHashCode(result) == result.hashCode()) System.out.print("");
-   }
-
    public DistStageAck executeOnSlave() {
       if (!isServiceRunning()) {
          log.info("Not running test on this slave as service is not running.");
          return successfulResponse();
       }
-
+      prepare();
       try {
          long startNanos = TimeService.nanoTime();
          log.info("Starting test " + testName);
          List<Stressor> stressors = execute();
+         destroy();
          log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(TimeService.nanoTime() - startNanos));
          return newStatisticsAck(stressors);
       } catch (Exception e) {
          return errorResponse("Exception while initializing the test", e);
       }
+   }
+
+   protected void prepare() {
+   }
+
+   protected void destroy() {
    }
 
    public StageResult processAckOnMaster(List<DistStageAck> acks) {

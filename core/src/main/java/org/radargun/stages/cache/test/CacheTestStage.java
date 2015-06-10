@@ -7,7 +7,6 @@ import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.stages.test.TestStage;
-import org.radargun.state.SlaveState;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Fuzzy;
@@ -37,10 +36,7 @@ public abstract class CacheTestStage extends TestStage {
    protected ConditionalOperations conditionalOperations;
 
    @Override
-   public void initOnSlave(final SlaveState slaveState) {
-      super.initOnSlave(slaveState);
-      if (!shouldExecute()) return;
-
+   protected void prepare() {
       if (keyGenerator == null) {
          keyGenerator = (KeyGenerator) slaveState.get(KeyGenerator.KEY_GENERATOR);
          if (keyGenerator == null) {
