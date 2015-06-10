@@ -1,8 +1,8 @@
 package org.radargun.config;
 
-import static org.testng.Assert.assertEquals;
-
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertEquals;
 
 /**
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
@@ -78,12 +78,14 @@ public class EvaluatorTest {
       assertEvals("#{ max 2 }", "2");
    }
 
-   public void testCeilFloorAbs() {
+   public void testFunctions() {
       assertEvals("#{ ceil(0.6) }", "1");
+      assertEvals("#{ ceil(double(1) / 2) }", "1");
       assertEvals("#{ floor 42.1 }", "42");
       assertEvals("#{ abs(-123) }", "123");
       assertEvals("#{ 5 * abs(5) }", "25");
       assertEvals("#{ 6 * abs(-6.5) }", "39.0");
+      assertEvals("#{ gcd (6, 21, 27) }", "3");
    }
 
    public void testListGetBasic() {

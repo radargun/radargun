@@ -105,6 +105,11 @@ public class Evaluator {
                } else if (op == Operator.CLOSEPAR) {
                   while ((op = operators.pop()) != Operator.OPENPAR) {
                      op.exec(operands);
+                     if (operators.isEmpty()) throw new IllegalStateException("Cannot find matching '('");
+                  }
+                  while (!operators.isEmpty() && operators.peek().isFunction()) {
+                     op = operators.pop();
+                     op.exec(operands);
                   }
                } else if (op == Operator.MINUS && lastTokenIsOperator) {
                   negativeSign = true;
@@ -350,7 +355,7 @@ public class Evaluator {
       } else if (value.type.canBeDouble()) {
          return new Value((long) Math.ceil(value.getDouble()));
       } else {
-         throw new IllegalArgumentException("abs(" + value + ")");
+         throw new IllegalArgumentException("ceil(" + value + ")");
       }
    }
 
@@ -403,6 +408,37 @@ public class Evaluator {
       return valueList;
    }
 
+   protected static Value toDouble(Value value) {
+      if (value.type.canBeDouble()) return new Value(value.getDouble());
+      throw new IllegalArgumentException(value.toString());
+   }
+
+   private static Value gcd(Value value) {
+      if (value.type != ValueType.LIST) throw new IllegalArgumentException(value.toString());
+      ArrayList<Long> list = new ArrayList<>();
+      for (Value v : value.getList()) {
+         if (!v.type.canBeLong) throw new IllegalArgumentException(v.toString() + " in gcd " + value.toString());
+         list.add(Math.abs(v.getLong()));
+      }
+      if (list.isEmpty()) throw new IllegalStateException();
+      long a = list.get(0);
+      for (int index = 1; index < list.size(); ++index) {
+         long b = Math.abs(list.get(index));
+         if (b > a) {
+            long tmp = a;
+            a = b;
+            b = tmp;
+         }
+         for (; ; ) {
+            if (b == 0) break;
+            long tmp = b;
+            b = a % b;
+            a = tmp;
+         }
+      }
+      return new Value(a);
+   }
+
    private enum ValueType {
       STRING(false, false),
       LONG(true, true),
@@ -448,7 +484,7 @@ public class Evaluator {
 
       private Value(String string) {
          ValueType t = ValueType.STRING;
-         double d = 0;
+         double d = Double.NaN;
          long l = 0;
          Object o = string;
          try {
@@ -470,7 +506,7 @@ public class Evaluator {
 
       public Value(List<Value> values) {
          type = ValueType.LIST;
-         doubleValue = 0;
+         doubleValue = Double.NaN;
          longValue = 0;
          objectValue = values;
       }
@@ -613,7 +649,21 @@ public class Evaluator {
          public Value exec(Value first) {
             return listSize(first);
          }
-      }, null);
+      }, null),
+      DOUBLE("double", 0, false, true, new OneArgFunctor() {
+         @Override
+         public Value exec(Value value) {
+            return toDouble(value);
+         }
+      }, null),
+      // GCD accepts actually *list* of values
+      GREATEST_COMMON_DIVISOR("gcd", 0, false, true, new OneArgFunctor() {
+         @Override
+         public Value exec(Value value) {
+            return gcd(value);
+         }
+      }, null),
+      ;
 
       private static Map<String, Operator> symbolMap = new HashMap<String, Operator>();
       private String symbol;
