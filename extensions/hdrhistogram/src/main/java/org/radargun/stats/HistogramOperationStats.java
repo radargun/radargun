@@ -3,6 +3,7 @@ package org.radargun.stats;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -14,8 +15,8 @@ import org.radargun.config.Property;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.Histogram;
 import org.radargun.stats.representation.MeanAndDev;
-import org.radargun.stats.representation.Percentile;
 import org.radargun.stats.representation.OperationThroughput;
+import org.radargun.stats.representation.Percentile;
 import org.radargun.utils.NanoTimeConverter;
 import org.radargun.utils.Projections;
 
@@ -34,6 +35,7 @@ public final class HistogramOperationStats implements OperationStats {
    private int digits = 2;
 
    private AbstractHistogram histogram;
+   private SoftReference<AbstractHistogram> soft;
    private long errors = 0;
    private Histogram compacted;
 
@@ -42,8 +44,8 @@ public final class HistogramOperationStats implements OperationStats {
 
    @Init
    public void init() {
-      if (this.histogram != null) throw new IllegalStateException("This histogram was already initialized!");
-      this.histogram = new org.HdrHistogram.Histogram(maxValue, digits);
+      if (histogram != null) throw new IllegalStateException("This histogram was already initialized!");
+      histogram = new org.HdrHistogram.Histogram(maxValue, digits);
    }
 
    private HistogramOperationStats(AbstractHistogram histogram) {
@@ -58,11 +60,10 @@ public final class HistogramOperationStats implements OperationStats {
    @Override
    public void merge(OperationStats other) {
       if (other instanceof HistogramOperationStats) {
+         HistogramOperationStats otherStats = (HistogramOperationStats) other;
          histogram = getHistogram();
-         histogram.add(((HistogramOperationStats) other).getHistogram());
-         if (compacted != null) {
-            compact();
-         }
+         histogram.add(otherStats.getHistogram());
+         compact();
       } else {
          throw new IllegalArgumentException(String.valueOf(other));
       }
@@ -148,11 +149,21 @@ public final class HistogramOperationStats implements OperationStats {
 
    @Override
    public boolean isEmpty() {
-      return getHistogram().getTotalCount() == 0;
+      if (compacted != null) {
+         return compacted.counts.length == 0;
+      } else if (histogram != null) {
+         return histogram.getTotalCount() == 0;
+      } else {
+         throw new IllegalArgumentException();
+      }
    }
 
    public void compact() {
-      if (compacted != null) return;
+      if (compacted != null) {
+         // make sure that we always store only the compacted
+         histogram = null;
+         return;
+      }
       if (histogram == null) throw new IllegalStateException("Either compacted or expanded form has to be defined!");
       AbstractHistogram.AllValues values = histogram.allValues();
       ArrayList<Long> ranges = new ArrayList<>();
@@ -164,20 +175,19 @@ public final class HistogramOperationStats implements OperationStats {
          }
       }
       compacted = new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
-      AbstractHistogram temp = histogram;
+      soft = new SoftReference<>(histogram);
       histogram = null;
-      AbstractHistogram revived = getHistogram();
-      if (temp.getTotalCount() != revived.getTotalCount()) throw new IllegalStateException(temp.getTotalCount() + " vs. " + revived.getTotalCount());
-      if (!temp.equals(revived)) {
-         throw new IllegalStateException("different");
-      }
    }
 
    protected AbstractHistogram getHistogram() {
       if (histogram != null) {
          return histogram;
       }
-      AbstractHistogram hist = new org.HdrHistogram.Histogram(maxValue, digits);
+      AbstractHistogram hist;
+      if (soft != null && (hist = soft.get()) != null) {
+         return hist;
+      }
+      hist = new org.HdrHistogram.Histogram(maxValue, digits);
       for (int i = 0; i < compacted.ranges.length; ++i) {
          hist.recordValueWithCount(compacted.ranges[i], compacted.counts[i]);
       }
