@@ -484,12 +484,12 @@
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>
                                  <isset property="zip-links"/>
-                              <ac:then>
-                                 <copy-plugin-links plugin="@{plugin}"/>
-                              </ac:then>
-                              <ac:else>
-                                 <copy-plugin plugin="@{plugin}"/>
-                              </ac:else>
+                                 <ac:then>
+                                    <copy-plugin-links plugin="@{plugin}"/>
+                                 </ac:then>
+                                 <ac:else>
+                                    <copy-plugin plugin="@{plugin}"/>
+                                 </ac:else>
                               </ac:if>
                               <java classname="org.radargun.config.PluginSchemaGenerator" failonerror="true">
                                  <classpath>
@@ -579,24 +579,31 @@
                   </goals>
                   <configuration>
                      <tasks>
-                        <echo message="Building distribution archive" />
                         <ac:if xmlns:ac="antlib:net.sf.antcontrib">
-                           <isset property="zip-links"/>
+                           <not>
+                              <isset property="no-zip" />
+                           </not>
                            <ac:then>
-                              <!-- This cannot be executed on all platforms and the produced zip may be non-portable either -->
-                              <echo message="Building zip file ${distribution.name}.zip"/>
-                              <exec executable="zip" failonerror="true" dir="target/distribution" logError="true" output="/dev/null">
-                                 <arg value="-ry"/>
-                                 <arg value="${distribution.name}.zip"/>
-                                 <arg value="${distribution.name}/"/>
-                              </exec>
+                              <echo message="Building distribution archive" />
+                              <ac:if>
+                                 <isset property="zip-links"/>
+                                 <ac:then>
+                                    <!-- This cannot be executed on all platforms and the produced zip may be non-portable either -->
+                                    <echo message="Building zip file ${distribution.name}.zip"/>
+                                    <exec executable="zip" failonerror="true" dir="target/distribution" logError="true" output="/dev/null">
+                                       <arg value="-ry"/>
+                                       <arg value="${distribution.name}.zip"/>
+                                       <arg value="${distribution.name}/"/>
+                                    </exec>
+                                 </ac:then>
+                                 <ac:else>
+                                    <zip destfile="target/distribution/${distribution.name}.zip" basedir="target/distribution" excludes="**/bin/**,radargun-aggregator-bin/**">
+                                       <zipfileset dir="${distribution.artifact}/bin" filemode="755" prefix="${distribution.name}/bin" />
+                                       <zipfileset dir="${distribution.artifact}/plugins/process/bin" filemode="755" prefix="${distribution.name}/plugins/process/bin"/>
+                                    </zip>
+                                 </ac:else>
+                              </ac:if>
                            </ac:then>
-                           <ac:else>
-                              <zip destfile="target/distribution/${distribution.name}.zip" basedir="target/distribution" excludes="**/bin/**,radargun-aggregator-bin/**">
-                                 <zipfileset dir="${distribution.artifact}/bin" filemode="755" prefix="${distribution.name}/bin" />
-                                 <zipfileset dir="${distribution.artifact}/plugins/process/bin" filemode="755" prefix="${distribution.name}/plugins/process/bin"/>
-                              </zip>
-                           </ac:else>
                         </ac:if>
                      </tasks>
                   </configuration>
