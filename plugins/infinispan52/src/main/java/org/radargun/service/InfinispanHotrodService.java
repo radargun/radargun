@@ -112,4 +112,13 @@ public class InfinispanHotrodService implements Lifecycle, InternalsExposition {
       }
       return values;
    }
+
+   @Override
+   public String getCustomStatistics(String type) {
+      return null;
+   }
+
+   @Override
+   public void resetCustomStatistics(String type) {
+   }
 }

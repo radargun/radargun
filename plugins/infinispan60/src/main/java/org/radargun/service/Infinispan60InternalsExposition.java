@@ -47,6 +47,15 @@ public class Infinispan60InternalsExposition implements InternalsExposition {
       return values;
    }
 
+   @Override
+   public String getCustomStatistics(String type) {
+      return null;
+   }
+
+   @Override
+   public void resetCustomStatistics(String type) {
+   }
+
    private void addValues(ThreadPoolExecutor threadPoolExecutor, final String executorName, Map<String, Number> values) {
       if (threadPoolExecutor == null) return;
       values.put(executorName + " Active", threadPoolExecutor.getActiveCount());
