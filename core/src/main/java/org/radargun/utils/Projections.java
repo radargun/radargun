@@ -151,6 +151,15 @@ public class Projections {
       }, Identity.INSTANCE);
    }
 
+   public static int[] toIntArray(Collection<Integer> collection) {
+      int[] array = new int[collection.size()];
+      int i = 0;
+      for (Integer v : collection) {
+         array[i++] = v;
+      }
+      return array;
+   }
+
    public static long[] toLongArray(Collection<Long> collection) {
       long[] array = new long[collection.size()];
       int i = 0;
