@@ -86,7 +86,7 @@ public class Scenario implements Serializable {
             expanded.put(entry.getKey(), entry.getValue());
          } else if (entry.getValue() instanceof ComplexDefinition) {
             for (ComplexDefinition.Entry subentry : ((ComplexDefinition) entry.getValue()).getAttributes()) {
-               queue.add(new MapEntry<>(entry.getKey() + subentry.name, subentry.definition));
+               queue.add(new MapEntry<>(entry.getKey() + "-" + subentry.name, subentry.definition));
             }
             expanded.put(entry.getKey(), entry.getValue());
          } else throw new IllegalArgumentException("Unknown definition type: " + entry.getValue());
