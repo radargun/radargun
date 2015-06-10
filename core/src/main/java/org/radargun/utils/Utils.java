@@ -560,6 +560,12 @@ public class Utils {
       }
    }
 
+   public static Object getField(Class<?> clazz, Object instance, String fieldName) throws Exception {
+      Field field = clazz.getDeclaredField(fieldName);
+      field.setAccessible(true);
+      return field.get(instance);
+   }
+
    public static <T> T getArg(Object[] args, int arg, Class<T> clazz) {
       if (args == null || args.length <= arg || !clazz.isInstance(args[arg])) throw new IllegalArgumentException(Arrays.toString(args));
       return (T) args[arg];
