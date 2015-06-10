@@ -1,17 +1,21 @@
 package org.radargun.config;
 
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+import org.radargun.utils.MapEntry;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 
 /**
  * Helper for retrieving properties from the class
@@ -19,6 +23,12 @@ import org.radargun.logging.LogFactory;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class PropertyHelper {
+   private static final Comparator<Map.Entry<String, Path>> MAP_ENTRY_KEY_COMPARATOR = new Comparator<Map.Entry<String, Path>>() {
+      @Override
+      public int compare(Map.Entry<String, Path> o1, Map.Entry<String, Path> o2) {
+         return o1.getKey().compareTo(o2.getKey());
+      }
+   };
 
    private PropertyHelper() {
    }
@@ -35,9 +45,14 @@ public class PropertyHelper {
     * @return Map of names of the properties (either dashed or camel cased) to {@link Path paths} in the object graph starting from the given class.
     */
    public static Map<String, Path> getProperties(Class<?> clazz, boolean useDashedName, boolean includeDelegates, boolean includeAliases) {
-      Map<String, Path> properties = new TreeMap<String, Path>();
+      ArrayList<Map.Entry<String, Path>> properties = new ArrayList<>();
       addProperties(clazz, properties, useDashedName, includeDelegates, includeAliases, "", null);
-      return properties;
+      // TODO: when there are two delegates with empty prefix, one of them won't be returned!
+      TreeMap<String, Path> props = new TreeMap<>();
+      for (Map.Entry<String, Path> entry : properties) {
+         props.put(entry.getKey(), entry.getValue());
+      }
+      return props;
    }
 
    /**
@@ -47,9 +62,10 @@ public class PropertyHelper {
     * @return Map of names of the properties (either dashed or camel cased) to {@link Path paths}
     * in the object graph starting from the given class.
     */
-   public static Map<String, Path> getDeclaredProperties(Class<?> clazz, boolean includeDelegates, boolean includeAliases) {
-      Map<String, Path> properties = new TreeMap<String, Path>();
+   public static Collection<Map.Entry<String, Path>> getDeclaredProperties(Class<?> clazz, boolean includeDelegates, boolean includeAliases) {
+      ArrayList<Map.Entry<String, Path>> properties = new ArrayList<>();
       addDeclaredProperties(clazz, properties, false, includeDelegates, includeAliases, "", null);
+      Collections.sort(properties, MAP_ENTRY_KEY_COMPARATOR);
       return properties;
    }
 
@@ -82,13 +98,13 @@ public class PropertyHelper {
       return annotation.name().equals(Property.FIELD_NAME) ? property.getName() : annotation.name();
    }
 
-   private static void addProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, boolean includeDelegates, boolean includeAliases, String prefix, Path path) {
+   private static void addProperties(Class<?> clazz, Collection<Map.Entry<String, Path>> properties, boolean useDashedName, boolean includeDelegates, boolean includeAliases, String prefix, Path path) {
       if (clazz == null) return;
       addDeclaredProperties(clazz, properties, useDashedName, includeDelegates, includeAliases, prefix, path);
       addProperties(clazz.getSuperclass(), properties, useDashedName, includeDelegates, includeAliases, prefix, path);
    }
 
-   private static void addDeclaredProperties(Class<?> clazz, Map<String, Path> properties, boolean useDashedName, boolean includeDelegates, boolean includeAliases, String prefix, Path path) {
+   private static void addDeclaredProperties(Class<?> clazz, Collection<Map.Entry<String, Path>> properties, boolean useDashedName, boolean includeDelegates, boolean includeAliases, String prefix, Path path) {
       for (Field field : clazz.getDeclaredFields()) {
          if (Modifier.isStatic(field.getModifiers())) continue; // property cannot be static
          Property property = field.getAnnotation(Property.class);
@@ -104,14 +120,14 @@ public class PropertyHelper {
                name = XmlHelper.camelCaseToDash(name);
             }
             newPath.setComplete(true);
-            properties.put(name, newPath);
+            properties.add(new MapEntry<>(name, newPath));
             if (includeAliases) {
                String deprecatedName = property.deprecatedName();
                if (!deprecatedName.equals(Property.NO_DEPRECATED_NAME)) {
                   if (useDashedName) {
                      deprecatedName = XmlHelper.camelCaseToDash(deprecatedName);
                   }
-                  properties.put(deprecatedName, newPath);
+                  properties.add(new MapEntry<>(deprecatedName, newPath));
                }
             }
          }
@@ -122,7 +138,7 @@ public class PropertyHelper {
                for (; i > 0; --i) {
                   if (Character.isLetterOrDigit(delegatePrefix.charAt(i - 1))) break;
                }
-               properties.put(delegatePrefix.substring(0, i), newPath);
+               properties.add(new MapEntry<>(delegatePrefix.substring(0, i), newPath));
             }
             // TODO: delegate properties are added according to field type, this does not allow polymorphism
             addProperties(field.getType(), properties, useDashedName,

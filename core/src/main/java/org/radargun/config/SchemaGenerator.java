@@ -90,7 +90,7 @@ public abstract class SchemaGenerator {
       Element typeElement = createComplexType(schema, typeName, superType, true,
               Modifier.isAbstract(clazz.getModifiers()), findDocumentation(clazz));
       Element propertiesSequence = createSequence(typeElement);
-      for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(clazz, true, true).entrySet()) {
+      for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(clazz, true, true)) {
          generateProperty(typeElement, propertiesSequence, property.getKey(), property.getValue(), true);
       }
       return ConfigSchemaGenerator.RG_PREFIX + typeName;
@@ -118,7 +118,7 @@ public abstract class SchemaGenerator {
             throw new IllegalArgumentException("Can't use empty property name this way.");
          } else {
             // we have to put copy all properties directly here
-            for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(path.getTargetType(), true, true).entrySet()) {
+            for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(path.getTargetType(), true, true)) {
                // do not generate attributes as these already have been generated in the parent class
                generateProperty(parentType, parentSequence, property.getKey(), property.getValue(), false);
             }
