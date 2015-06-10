@@ -3,6 +3,7 @@ package org.radargun.utils;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -94,6 +95,15 @@ public class Projections {
             map.put(key, list);
          }
          list.add(v);
+      }
+      return map;
+   }
+
+   public static <K, V, T> Map<K, V> asMap(Collection<T> collection, Func<T, K> keyFunc, Func<T, V> valueFunc) {
+      if (collection.isEmpty()) return Collections.EMPTY_MAP;
+      Map<K, V> map = new HashMap<>();
+      for (T item : collection) {
+         map.put(keyFunc.project(item), valueFunc.project(item));
       }
       return map;
    }

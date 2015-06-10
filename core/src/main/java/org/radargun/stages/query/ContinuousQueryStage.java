@@ -1,14 +1,14 @@
-package org.radargun.stages.cache.test;
+package org.radargun.stages.query;
 
 import org.radargun.DistStageAck;
-import org.radargun.Operation;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
+import org.radargun.config.PropertyDelegate;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
+import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.cache.generators.TimestampKeyGenerator;
-import org.radargun.stages.test.OperationLogic;
-import org.radargun.stages.test.Stressor;
+import org.radargun.stages.tpcc.domain.Order;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.DefaultOperationStats;
 import org.radargun.stats.Statistics;
@@ -30,7 +30,10 @@ import java.util.concurrent.TimeUnit;
  * @author vjuranek
  */
 @Stage(doc = "Benchmark operations performance with enabled/disabled continuous query.")
-public class ContinuousQueryStage extends AbstractQueryStage {
+public class ContinuousQueryStage extends AbstractDistStage {
+
+    @Property(doc = "Name of the test as used for reporting. Default is 'Test'.")
+    protected String testName = "Test";
 
     @Property(doc = "Cache name with which continuous query should registered. Default is null, i.e. default cache.")
     private String cacheName = null;
@@ -40,6 +43,9 @@ public class ContinuousQueryStage extends AbstractQueryStage {
 
     @Property(doc = "Allows to remove continuous query. Default is false.")
     protected boolean remove = false;
+
+    @PropertyDelegate
+    QueryConfiguration query;
 
     @InjectTrait
     private ContinuousQuery continuousQueryTrait;
@@ -87,23 +93,6 @@ public class ContinuousQueryStage extends AbstractQueryStage {
         return StageResult.SUCCESS;
     }
 
-    @Override
-    public OperationLogic getLogic() {
-        return new Logic();
-    }
-
-    protected class Logic extends OperationLogic {
-        @Override
-        public void init(Stressor stressor) {
-            super.init(stressor);
-        }
-
-        @Override
-        public void run(Operation operation) throws RequestException {
-            //no-op
-        }
-    }
-
     protected Report.Test createTest(String testName, String iterationName) {
         if (testName == null || testName.isEmpty()) {
             log.warn("No test name - results are not recorded");
@@ -117,28 +106,28 @@ public class ContinuousQueryStage extends AbstractQueryStage {
     private void registerCQ(SlaveState slaveState) {
         Class<?> clazz;
         try {
-            clazz = slaveState.getClass().getClassLoader().loadClass(queryObjectClass);
+            clazz = slaveState.getClass().getClassLoader().loadClass(query.clazz);
         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Cannot load class " + queryObjectClass, e);
+            throw new IllegalArgumentException("Cannot load class " + query.clazz, e);
         }
 
         Query.Builder builder = queryable.getBuilder(null, clazz);
-        for (Condition condition : conditions) {
+        for (Condition condition : query.conditions) {
             condition.apply(builder);
         }
-        if (orderBy != null) {
-            for (SortElement se : orderBy) {
+        if (query.orderBy != null) {
+            for (OrderBy se : query.orderBy) {
                 builder.orderBy(se.attribute, se.asc ? Query.SortOrder.ASCENDING : Query.SortOrder.DESCENDING);
             }
         }
-        if (projection != null) {
-            builder.projection(projection);
+        if (query.projection != null) {
+            builder.projection(query.projection);
         }
-        if (offset >= 0) {
-            builder.offset(offset);
+        if (query.offset >= 0) {
+            builder.offset(query.offset);
         }
-        if (limit >= 0) {
-            builder.limit(limit);
+        if (query.limit >= 0) {
+            builder.limit(query.limit);
         }
         Query query = builder.build();
         slaveState.put(ContinuousQuery.QUERY, query);

@@ -1,5 +1,6 @@
 package org.radargun.stages.cache.test;
 
+import org.radargun.stages.query.OrderBy;
 import org.radargun.util.ReflectionUtils;
 import org.radargun.utils.PrimitiveValue;
 import org.testng.annotations.Test;
@@ -17,8 +18,8 @@ import static org.testng.Assert.*;
 public class AbstractQueryStageTest {
 
     public void testSortConverterFromString() {
-        AbstractQueryStage.SortConverter sc = new AbstractQueryStage.SortConverter();
-        List<AbstractQueryStage.SortElement> sortElements = sc.convert("name:ASC, surname, address:DESC", List.class);
+        OrderBy.ListConverter sc = new OrderBy.ListConverter();
+        List<OrderBy> sortElements = sc.convert("name:ASC, surname, address:DESC", List.class);
         assertEquals(sortElements.size(), 3);
         assertEquals(sortElements.get(0).attribute, "name");
         assertTrue(sortElements.get(0).asc);
@@ -29,21 +30,21 @@ public class AbstractQueryStageTest {
     }
 
     public void testSortConverterToString() throws Exception {
-        List<AbstractQueryStage.SortElement> sortElements = new ArrayList<AbstractQueryStage.SortElement>();
-        Constructor<AbstractQueryStage.SortElement> seConst = ReflectionUtils.getConstructor(AbstractQueryStage.SortElement.class, String.class, Boolean.TYPE);
+        List<OrderBy> sortElements = new ArrayList<OrderBy>();
+        Constructor<OrderBy> seConst = ReflectionUtils.getConstructor(OrderBy.class, String.class, Boolean.TYPE);
         sortElements.add(seConst.newInstance("name", true));
         sortElements.add(seConst.newInstance("surname", true));
         sortElements.add(seConst.newInstance("address", false));
 
-        AbstractQueryStage.SortConverter sc = new AbstractQueryStage.SortConverter();
+        OrderBy.ListConverter sc = new OrderBy.ListConverter();
         String sortString = sc.convertToString(sortElements);
         assertEquals(sortString, "name:ASC, surname:ASC, address:DESC");
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void testSortConverterBadSyntaxt() {
-        AbstractQueryStage.SortConverter sc = new AbstractQueryStage.SortConverter();
-        @SuppressWarnings("unused") List<AbstractQueryStage.SortElement> sortElements = sc.convert("name:ACS", List.class);
+        OrderBy.ListConverter sc = new OrderBy.ListConverter();
+        @SuppressWarnings("unused") List<OrderBy> sortElements = sc.convert("name:ACS", List.class);
         fail("SortConverter should failed during pasring!");
     }
 
