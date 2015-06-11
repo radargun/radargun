@@ -397,14 +397,10 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
       // interrupt all threads
       log.debug("Stopping stressors");
       if (stressors && stressorThreads != null) {
-         for (int i = 0; i < stressorThreads.length; i++) {
-            stressorThreads[i].requestTerminate();
-         }
+         Stressor.requestTerminate();
       }
       if (checkers && logCheckers != null) {
-         for (int i = 0; i < logCheckers.length; ++i) {
-            logCheckers[i].requestTerminate();
-         }
+         LogChecker.requestTerminate();
       }
       if (keepAlive && keepAliveTask != null) {
          keepAliveTask.cancel(true);

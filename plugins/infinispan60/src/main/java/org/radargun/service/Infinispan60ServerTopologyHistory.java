@@ -90,13 +90,9 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
          } else {
             if (entry.getValue().rehashInProgress) {
                addEvent(hashChanges, entry.getKey(), true, 0, 0);
-            } else {
-               addEvent(hashChanges, entry.getKey(), false, 0, 0);
             }
             if (entry.getValue().topologyChangeInProgress) {
                addEvent(topologyChanges, entry.getKey(), true, 0, 0);
-            } else {
-               addEvent(topologyChanges, entry.getKey(), false, 0, 0);
             }
          }
          cacheChangesOngoing.put(entry.getKey(), entry.getValue());
@@ -149,11 +145,12 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
             Boolean stateTransferInProgress = (Boolean) connection.getAttribute(stateTransferManagerName,
                   JMX_STATE_TRANSFER_IN_PROGRESS_ATTR);
             if (stateTransferInProgress) {
-               log.debug("Rehash in progress for cache: " + rehashCacheNameMap.get(stateTransferManagerName.toString()));
+               log.debug("Rehash in progress on cache: " + rehashCacheNameMap.get(stateTransferManagerName.toString()));
                status.rehashInProgress = true;
                rehashesInProgress++;
             } else {
-               log.debug("No rehash in progress");
+               log.trace("No rehash in progress on cache: "
+                     + rehashCacheNameMap.get(stateTransferManagerName.toString()));
                status.rehashInProgress = false;
             }
             statusMap.put(rehashCacheNameMap.get(stateTransferManagerName.toString()), status);
@@ -188,10 +185,12 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
             status = statusMap.get(topologyChangeCacheNameMap.get(rpcManagerName.toString()));
             String pendingView = (String) connection.getAttribute(rpcManagerName, JMX_PENDING_VIEW_ATTR);
             if (pendingView.equals("null")) {
-               log.debug("No topology change in progress");
+               log.trace("No topology change in progress on cache: "
+                     + topologyChangeCacheNameMap.get(rpcManagerName.toString()));
                status.topologyChangeInProgress = false;
             } else {
-               log.info("Topology change in progress. Pending view = " + pendingView);
+               log.debug("Topology change in progress on cache: "
+                     + topologyChangeCacheNameMap.get(rpcManagerName.toString()) + ". Pending view = " + pendingView);
                status.topologyChangeInProgress = true;
                topologyChangesInProgress++;
             }
