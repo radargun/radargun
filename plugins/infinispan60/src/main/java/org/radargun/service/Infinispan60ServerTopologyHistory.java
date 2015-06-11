@@ -1,12 +1,12 @@
 package org.radargun.service;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
@@ -23,12 +23,7 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
    protected final static String JMX_STATE_TRANSFER_IN_PROGRESS_ATTR = "stateTransferInProgress";
 
    protected final Map<String, CacheStatus> cacheChangesOngoing = new HashMap<>();
-
-   protected Set<ObjectName> stateTransferManagerNames = Collections.emptySet();
-   Map<String, String> rehashCacheNameMap;
-
-   protected Set<ObjectName> rpcManagerNames = Collections.emptySet();
-   Map<String, String> topologyChangeCacheNameMap;
+   protected final Map<String, Map<ObjectName, String>> objectNameToCacheNames = new HashMap<>();
 
    public Infinispan60ServerTopologyHistory(InfinispanServerService service) {
       this.service = service;
@@ -48,11 +43,7 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
          public void afterStop(boolean graceful) {
             reset();
             cacheChangesOngoing.clear();
-            stateTransferManagerNames.clear();
-            rehashCacheNameMap = null;
-            rpcManagerNames.clear();
-            topologyChangeCacheNameMap = null;
-            log.debug("Infinispan60ServerTopologyHistory.afterStop");
+            objectNameToCacheNames.clear();
          }
       });
    }
@@ -90,13 +81,9 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
          } else {
             if (entry.getValue().rehashInProgress) {
                addEvent(hashChanges, entry.getKey(), true, 0, 0);
-            } else {
-               addEvent(hashChanges, entry.getKey(), false, 0, 0);
             }
             if (entry.getValue().topologyChangeInProgress) {
                addEvent(topologyChanges, entry.getKey(), true, 0, 0);
-            } else {
-               addEvent(topologyChanges, entry.getKey(), false, 0, 0);
             }
          }
          cacheChangesOngoing.put(entry.getKey(), entry.getValue());
@@ -127,36 +114,20 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
             return statusMap;
 
          // Check for rehash
-         if (stateTransferManagerNames.isEmpty()) {
-            try {
-               stateTransferManagerNames = connection.queryNames(
-                     new ObjectName(String.format(JMX_CACHE_COMPONENT, service.jmxDomain, JMX_STATE_TRANSFER_MANAGER)),
-                     null);
-               rehashCacheNameMap = new HashMap<>();
-               for (ObjectName stateTransferManagerName : stateTransferManagerNames) {
-                  // Parse out cache name from ObjectName
-                  String fullCacheName = ObjectName.unquote(stateTransferManagerName.getKeyProperty("name"));
-                  String cacheName = fullCacheName.substring(0, fullCacheName.indexOf('('));
-                  rehashCacheNameMap.put(stateTransferManagerName.toString(), cacheName);
-               }
-            } catch (IOException e) {
-               // Server isn't started yet?
-               log.debug("Couldn't query StateTransferManager object names.", e);
-            }
-         }
-         for (ObjectName stateTransferManagerName : stateTransferManagerNames) {
+         Map<String, Object> cacheAttributes = this.retrieveJMXAttributeValues(connection,
+               String.format(JMX_CACHE_COMPONENT, service.jmxDomain, JMX_STATE_TRANSFER_MANAGER),
+               JMX_STATE_TRANSFER_IN_PROGRESS_ATTR);
+         for (Map.Entry<String, Object> entry : cacheAttributes.entrySet()) {
             CacheStatus status = new CacheStatus();
-            Boolean stateTransferInProgress = (Boolean) connection.getAttribute(stateTransferManagerName,
-                  JMX_STATE_TRANSFER_IN_PROGRESS_ATTR);
-            if (stateTransferInProgress) {
-               log.debug("Rehash in progress for cache: " + rehashCacheNameMap.get(stateTransferManagerName.toString()));
+            if ((Boolean) entry.getValue()) {
+               log.debug("Rehash in progress on cache: " + entry.getKey());
                status.rehashInProgress = true;
                rehashesInProgress++;
             } else {
-               log.debug("No rehash in progress");
+               log.trace("No rehash in progress on cache: " + entry.getKey());
                status.rehashInProgress = false;
             }
-            statusMap.put(rehashCacheNameMap.get(stateTransferManagerName.toString()), status);
+            statusMap.put(entry.getKey(), status);
          }
          // Keep track of all cache rehashes
          CacheStatus status = new CacheStatus();
@@ -168,34 +139,20 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
          statusMap.put(ALL_CACHES, status);
 
          // Check for topology changes
-         if (rpcManagerNames.isEmpty()) {
-            try {
-               rpcManagerNames = connection.queryNames(
-                     new ObjectName(String.format(JMX_CACHE_COMPONENT, service.jmxDomain, JMX_RPC_MANAGER)), null);
-               topologyChangeCacheNameMap = new HashMap<>();
-               for (ObjectName rpcManagerName : rpcManagerNames) {
-                  // Parse out cache name from ObjectName
-                  String fullCacheName = ObjectName.unquote(rpcManagerName.getKeyProperty("name"));
-                  String cacheName = fullCacheName.substring(0, fullCacheName.indexOf('('));
-                  topologyChangeCacheNameMap.put(rpcManagerName.toString(), cacheName);
-               }
-            } catch (IOException e) {
-               // Server isn't started yet?
-               log.debug("Couldn't query RpcManager object names.", e);
-            }
-         }
-         for (ObjectName rpcManagerName : rpcManagerNames) {
-            status = statusMap.get(topologyChangeCacheNameMap.get(rpcManagerName.toString()));
-            String pendingView = (String) connection.getAttribute(rpcManagerName, JMX_PENDING_VIEW_ATTR);
-            if (pendingView.equals("null")) {
-               log.debug("No topology change in progress");
+         cacheAttributes = this.retrieveJMXAttributeValues(connection,
+               String.format(JMX_CACHE_COMPONENT, service.jmxDomain, JMX_RPC_MANAGER), JMX_PENDING_VIEW_ATTR);
+         for (Map.Entry<String, Object> entry : cacheAttributes.entrySet()) {
+            status = statusMap.get(entry.getKey());
+            if (((String) entry.getValue()).equals("null")) {
+               log.trace("No topology change in progress on cache: " + entry.getKey());
                status.topologyChangeInProgress = false;
             } else {
-               log.info("Topology change in progress. Pending view = " + pendingView);
+               log.debug("Topology change in progress on cache: " + entry.getKey() + ". Pending view = "
+                     + entry.getValue());
                status.topologyChangeInProgress = true;
                topologyChangesInProgress++;
             }
-            statusMap.put(topologyChangeCacheNameMap.get(rpcManagerName.toString()), status);
+            statusMap.put(entry.getKey(), status);
          }
          // Keep track of all cache topology changes
          status = statusMap.get(ALL_CACHES);
@@ -209,6 +166,51 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
          log.error("Failed to retrieve data from JMX", e);
       }
       return statusMap;
+   }
+
+   /**
+    * Retrieve the specified attribute from the specified manager for every cache defined
+    * 
+    * @param connection
+    *           the connection to the MBeanServer
+    * @param mbeanQueryString
+    *           A query string to return the ObjectName for each MBean associated with a cache
+    * @param attrName
+    *           the name of the attribute
+    * @return a Map where the key is the cache name, and the value is the specified attribute
+    */
+   protected Map<String, Object> retrieveJMXAttributeValues(MBeanServerConnection connection, String mbeanQueryString,
+         String attrName) {
+      Map<String, Object> result = new HashMap<>();
+      if (!objectNameToCacheNames.containsKey(mbeanQueryString)) {
+         try {
+            Set<ObjectName> objectNames = connection.queryNames(new ObjectName(mbeanQueryString), null);
+            HashMap<ObjectName, String> cacheNameMap = new HashMap<>();
+            for (ObjectName objectName : objectNames) {
+               // Parse out cache name from ObjectName
+               String fullCacheName = ObjectName.unquote(objectName.getKeyProperty("name"));
+               String cacheName = fullCacheName.substring(0, fullCacheName.indexOf('('));
+               cacheNameMap.put(objectName, cacheName);
+            }
+            objectNameToCacheNames.put(mbeanQueryString, cacheNameMap);
+         } catch (IOException e) {
+            // Server isn't started yet?
+            log.debug("Couldn't query " + mbeanQueryString + " object names.", e);
+         } catch (MalformedObjectNameException e) {
+            log.debug("ObjectName " + mbeanQueryString + " is malformed", e);
+         }
+      }
+
+      Map<ObjectName, String> obj2CacheName = objectNameToCacheNames.get(mbeanQueryString);
+      for (ObjectName objectName : obj2CacheName.keySet()) {
+         try {
+            result.put(obj2CacheName.get(objectName), connection.getAttribute(objectName, attrName));
+         } catch (Exception e) {
+            log.debug("Failed to retrieve attribute: " + attrName + " for cache " + obj2CacheName.get(objectName), e);
+         }
+      }
+
+      return result;
    }
 
    private static class CacheStatus {
