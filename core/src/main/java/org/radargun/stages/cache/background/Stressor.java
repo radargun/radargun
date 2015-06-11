@@ -24,7 +24,7 @@ class Stressor extends Thread {
    private final long delayBetweenRequests;
    protected final SynchronizedStatistics stats = new SynchronizedStatistics(new DefaultOperationStats());
 
-   private volatile boolean terminate = false;
+   private static volatile boolean terminate = false;
 
    public Stressor(BackgroundOpsManager manager, Logic logic, int id) {
       super(manager.getName() + "Stressor-" + id);
@@ -52,7 +52,7 @@ class Stressor extends Thread {
       }
    }
 
-   public void requestTerminate() {
+   public static void requestTerminate() {
       terminate = true;
    }
 

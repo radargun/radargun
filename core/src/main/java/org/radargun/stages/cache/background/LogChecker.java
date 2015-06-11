@@ -41,6 +41,7 @@ public abstract class LogChecker extends Thread {
          return new SimpleDateFormat("HH:mm:ss,S");
       }
    };
+   protected static volatile boolean terminate = false;
    protected final KeyGenerator keyGenerator;
    protected final int slaveIndex;
    protected final long logCounterUpdatePeriod;
@@ -49,7 +50,6 @@ public abstract class LogChecker extends Thread {
    protected final StressorRecordPool stressorRecordPool;
    protected final BasicOperations.Cache basicCache;
    protected final Debugable.Cache debugableCache;
-   protected volatile boolean terminate = false;
 
    public LogChecker(String name, BackgroundOpsManager manager, StressorRecordPool stressorRecordPool) {
       super(name);
@@ -75,7 +75,7 @@ public abstract class LogChecker extends Thread {
       return String.format(LAST_OPERATION_PREFIX + "%d", slaveAndThreadId);
    }
 
-   public void requestTerminate() {
+   public static void requestTerminate() {
       terminate = true;
    }
 
@@ -96,7 +96,7 @@ public abstract class LogChecker extends Thread {
                continue;
             }
             delayedKeys = 0;
-            if (record.getLastUnsuccessfulCheckTimestamp() > Long.MIN_VALUE) {
+            if (!terminate && record.getLastUnsuccessfulCheckTimestamp() > Long.MIN_VALUE) {
                // the last check was unsuccessful -> grab lastOperation BEFORE the value to check if we've lost that
                Object last = basicCache.get(lastOperationKey(record.getThreadId()));
                if (last != null) {
@@ -104,7 +104,7 @@ public abstract class LogChecker extends Thread {
                   record.addConfirmation(lastOperation.getOperationId(), lastOperation.getTimestamp());
                }
             }
-            if (record.getOperationId() == 0) {
+            if (!terminate && record.getOperationId() == 0) {
                Object last = basicCache.get(checkerKey(slaveIndex, record.getThreadId()));
                if (last != null) {
                   LastOperation lastCheck = (LastOperation) last;
@@ -115,7 +115,7 @@ public abstract class LogChecker extends Thread {
                         record.getThreadId(), record.getOperationId());
                }
             }
-            if (ignoreDeadCheckers) {
+            if (!terminate && ignoreDeadCheckers) {
                Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
                if (ignored != null && record.getOperationId() <= (Long) ignored) {
                   log.debugf("Ignoring operations %d - %d for thread %d", record.getOperationId(), ignored, record.getThreadId());
@@ -135,7 +135,7 @@ public abstract class LogChecker extends Thread {
                if (trace) {
                   log.tracef("Found operation %d for thread %d", record.getOperationId(), record.getThreadId());
                }
-               if (record.getOperationId() % logCounterUpdatePeriod == 0) {
+               if (!terminate && record.getOperationId() % logCounterUpdatePeriod == 0) {
                   basicCache.put(checkerKey(slaveIndex, record.getThreadId()),
                         new LastOperation(record.getOperationId(), Utils.getRandomSeed(record.getRand())));
                }
@@ -150,7 +150,7 @@ public abstract class LogChecker extends Thread {
                if (confirmationTimestamp >= 0
                      && (writeApplyMaxDelay <= 0 || System.currentTimeMillis() > confirmationTimestamp + writeApplyMaxDelay)) {
                   // one more check to see whether some operations should not be ignored
-                  if (ignoreDeadCheckers) {
+                  if (!terminate && ignoreDeadCheckers) {
                      Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
                      if (ignored != null && record.getOperationId() <= (Long) ignored) {
                         log.debugf("Operations %d - %d for thread %d are ignored.", record.getOperationId(), ignored, record.getThreadId());
