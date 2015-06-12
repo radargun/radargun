@@ -40,6 +40,7 @@
       <plugins.process />
       <plugins.spymemcached />
       <reporter.default />
+      <reporter.perfrepo />
       <extension.example/>
       <extension.hdrhistogram />
    </properties>
@@ -100,6 +101,20 @@
          </modules>
          <properties>
             <reporter.default>reporter-default</reporter.default>
+         </properties>
+      </profile>
+      <profile>
+         <id>reporter-perfrepo</id>
+         <activation>
+            <property>
+               <name>!no-reporter-perfrepo</name>
+            </property>
+         </activation>
+         <modules>
+            <module>reporters/reporter-perfrepo</module>
+         </modules>
+         <properties>
+            <reporter.perfrepo>reporter-perfrepo</reporter.perfrepo>
          </properties>
       </profile>
       <!-- Plugins -->
@@ -493,7 +508,7 @@
                            <fileset dir="${distribution.artifact}/lib" includes="*.jar" />
                         </path>
 
-                        <ac:for list="${reporter.default}" param="reporter" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${reporter.default},${reporter.perfrepo}" param="reporter" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging reporter @{reporter}..." />
                               <copy todir="${distribution.artifact}/reporters/@{reporter}">
