@@ -42,6 +42,7 @@ public class BackgroundLoadDataStopStage extends AbstractDistStage {
                   loader.join();
                }
             } catch (InterruptedException e) {
+               loader.interrupt();
                return errorResponse("Exception while interrupting loading thread.", e);
             }
          }

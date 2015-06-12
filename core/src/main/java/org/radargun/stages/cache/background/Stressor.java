@@ -47,6 +47,7 @@ class Stressor extends Thread {
          }
       } catch (InterruptedException e) {
          log.trace("Stressor interrupted.", e);
+         interrupt();
       } finally {
          logic.finish();
       }

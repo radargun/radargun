@@ -80,7 +80,7 @@ public abstract class LogChecker extends Thread {
    @Override
    public void run() {
       int delayedKeys = 0;
-      while (!terminate) {
+      while (!terminate && !isInterrupted()) {
          StressorRecord record = null;
          try {
             if (delayedKeys > stressorRecordPool.getTotalThreads()) {
@@ -167,13 +167,17 @@ public abstract class LogChecker extends Thread {
                }
             }
          } catch (Exception e) {
-            log.error("Cannot check value for key " + keyGenerator.generateKey(record.getKeyId()), e);
+            String errorMessage = record == null ? "Error while performing check, record is null" : "Cannot check value for key " + keyGenerator.generateKey(record.getKeyId());
+            log.error(errorMessage, e);
+            if (e instanceof InterruptedException) {
+               interrupt();
+            }
          } finally {
             if (record == null) {
                try {
                   Thread.sleep(100);
                } catch (InterruptedException e) {
-                  Thread.interrupted();
+                  interrupt();
                }
             } else {
                stressorRecordPool.add(record);

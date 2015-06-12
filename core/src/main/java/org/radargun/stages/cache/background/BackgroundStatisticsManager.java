@@ -91,6 +91,7 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
             sizeThread.join();
          } catch (InterruptedException e) {
             log.error("Interrupted while waiting for stat thread to end.");
+            sizeThread.interrupt();
          }
          sizeThread = null;
       }
@@ -179,6 +180,7 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
             }
          } catch (InterruptedException e) {
             log.trace("SizeThread interrupted.");
+            interrupt();
          }
       }
 
