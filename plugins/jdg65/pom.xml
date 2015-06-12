@@ -142,6 +142,18 @@
            <version>${version.infinispan}</version>
            <optional>true</optional>
        </dependency>
+
+       <dependency>
+           <groupId>org.radargun</groupId>
+           <artifactId>plugin-jcache</artifactId>
+           <version>${project.version}</version>
+       </dependency>
+
+       <dependency>
+           <groupId>org.infinispan</groupId>
+           <artifactId>infinispan-jcache</artifactId>
+           <version>${version.infinispan}</version>
+       </dependency>
    </dependencies>
 
 </project>
