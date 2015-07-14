@@ -33,7 +33,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    // Keys modified during current transaction, should be recorded to timestamps when
    // the transaction is committed
    private final Collection<KeyOperationPair> txModifications = new ArrayList<>(Math.max(0, transactionSize));
-   private final Set<Long> txModificationKeyIds = new HashSet<>(Math.max(0, transactionSize));
+   private final Map<Long, Long> maxPrunedOperationIds = new HashMap<>(2);
 
    PrivateLogLogic(BackgroundOpsManager manager, Range range) {
       super(manager, range);
@@ -51,24 +51,28 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
          if (prevValue == null || !prevValue.contains(prevOperation.operationId)) {
             // non-cleaned old value or stale read, try backup
             backupValue = checkedGetValue(~keyId);
-            // TODO examine other ways to check for stale reads (not ignoring the same keys from a common transaction)
-            // Modifying the same key within a single transaction may cause false stale reads, avoid it by checking txModificationKeyIds
-            if ((backupValue == null || !backupValue.contains(prevOperation.operationId)) && !txModificationKeyIds.contains(keyId)) {
+            boolean txEnabled = manager.getGeneralConfiguration().getTransactionSize() > 0;
+            // Modifying the same key within a single transaction may cause false stale reads, avoid it by checking maxPrunedOperationIds
+            boolean valuePruned = maxPrunedOperationIds.get(keyId) != null && maxPrunedOperationIds.get(keyId) >= prevOperation.operationId;
+            if ((backupValue == null || !backupValue.contains(prevOperation.operationId)) && (!txEnabled || !valuePruned)) {
                // definitely stale read
                log.debugf("Detected stale read, keyId=%s, previousValue=%s, complementValue=%s", keyId, prevValue, backupValue);
                waitForStaleRead(prevOperation.timestamp);
                return false;
-            } else if (!txModificationKeyIds.contains(keyId)) {
+            } else if (!txEnabled || !valuePruned) {
                // pretend that we haven't read it at all
                prevValue = null;
             }
          }
       }
-      // now for modify operations, execute it
-      if (prevValue == null || operation == BasicOperations.PUT) {
+      if (operation == BasicOperations.GET) {
+         // especially GETs are not allowed here, because these would break the deterministic order
+         // - each operationId must be written somewhere
+         throw new UnsupportedOperationException("Only PUT and REMOVE operations are allowed for this logic");
+      } else if (prevValue == null || operation == BasicOperations.PUT) {
          PrivateLogValue nextValue;
          if (prevValue != null) {
-            nextValue = getNextValue(prevValue);
+            nextValue = getNextValue(keyId, prevValue);
          } else {
             // the value may have been removed, look for backup
             if (backupValue == null) {
@@ -77,7 +81,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
             if (backupValue == null) {
                nextValue = new PrivateLogValue(stressor.id, operationId);
             } else {
-               nextValue = getNextValue(backupValue);
+               nextValue = getNextValue(keyId, backupValue);
             }
          }
          if (nextValue == null) {
@@ -88,21 +92,16 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
             delayedRemoveValue(~keyId, backupValue);
          }
       } else if (operation == BasicOperations.REMOVE) {
-         PrivateLogValue nextValue = getNextValue(prevValue);
+         PrivateLogValue nextValue = getNextValue(keyId, prevValue);
          if (nextValue == null) {
             return false;
          }
          checkedPutValue(~keyId, nextValue);
          delayedRemoveValue(keyId, prevValue);
-      } else {
-         // especially GETs are not allowed here, because these would break the deterministic order
-         // - each operationId must be written somewhere
-         throw new UnsupportedOperationException("Only PUT and REMOVE operations are allowed for this logic");
       }
 
       if (transactionSize > 0) {
          txModifications.add(new KeyOperationPair(keyId, operationId));
-         txModificationKeyIds.add(keyId);
       } else {
          long now = System.currentTimeMillis();
          timestamps.put(keyId, new OperationTimestampPair(operationId, now));
@@ -129,7 +128,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    protected void afterRollback() {
       super.afterRollback();
       txModifications.clear();
-      txModificationKeyIds.clear();
+      maxPrunedOperationIds.clear();
    }
 
    @Override
@@ -143,11 +142,11 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
          }
       }
       txModifications.clear();
-      txModificationKeyIds.clear();
+      maxPrunedOperationIds.clear();
       return result;
    }
 
-   private PrivateLogValue getNextValue(PrivateLogValue prevValue) throws InterruptedException, BreakTxRequest {
+   private PrivateLogValue getNextValue(long keyId, PrivateLogValue prevValue) throws InterruptedException, BreakTxRequest {
       if (prevValue.size() >= manager.getLogLogicConfiguration().getValueMaxSize()) {
          int checkedValues;
          // TODO some limit after which the stressor will terminate
@@ -177,6 +176,9 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
                   return null;
                }
             }
+         }
+         if (manager.getGeneralConfiguration().getTransactionSize() > 0) {
+            maxPrunedOperationIds.put(keyId, prevValue.getOperationId(checkedValues - 1));
          }
          return prevValue.shift(checkedValues, operationId);
       } else {
