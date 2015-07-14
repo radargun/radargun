@@ -3,9 +3,7 @@ package org.radargun.stages.cache.background;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.radargun.Operation;
 import org.radargun.stages.helpers.Range;
@@ -59,9 +57,11 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
                log.debugf("Detected stale read, keyId=%s, previousValue=%s, complementValue=%s", keyId, prevValue, backupValue);
                waitForStaleRead(prevOperation.timestamp);
                return false;
-            } else if (!txEnabled || !valuePruned) {
-               // pretend that we haven't read it at all
-               prevValue = null;
+            } else {
+               if (!txEnabled || !valuePruned) {
+                  // pretend that we haven't read it at all
+                  prevValue = null;
+               }
             }
          }
       }
