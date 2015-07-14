@@ -149,6 +149,7 @@ public abstract class LogChecker extends Thread {
                            keyGenerator.generateKey(record.getKeyId()), record.getRequireNotify(), record.getNotifiedOps());
                      failureManager.reportMissingNotification();
                      debugFailure(record);
+                     record.setLastUnsuccessfulCheckTimestamp(System.currentTimeMillis());
                   }
                   if (!contains) {
                      log.errorf("Missing operation %d for thread %d on key %d (%s) %s",
@@ -158,6 +159,7 @@ public abstract class LogChecker extends Thread {
                      log.errorf("Not found in %s", value);
                      failureManager.reportMissingOperation();
                      debugFailure(record);
+                     record.setLastUnsuccessfulCheckTimestamp(System.currentTimeMillis());
                   }
                   record.next();
                } else {
@@ -186,12 +188,12 @@ public abstract class LogChecker extends Thread {
       }
    }
 
-   private boolean checkIgnoreRecord(StressorRecord record) {
+   protected boolean checkIgnoreRecord(StressorRecord record) {
       if (logLogicConfiguration.ignoreDeadCheckers) {
-         Object ignored = basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
-         if (ignored != null && record.getOperationId() <= (Long) ignored) {
+         Long ignored = (Long) basicCache.get(ignoredKey(slaveIndex, record.getThreadId()));
+         if (ignored != null && record.getOperationId() <= ignored) {
             log.tracef("Operations %d - %d for thread %d are ignored", record.getOperationId(), ignored, record.getThreadId());
-            while (record.getOperationId() <= (Long) ignored) {
+            while (record.getOperationId() <= ignored) {
                record.next();
             }
             return true;

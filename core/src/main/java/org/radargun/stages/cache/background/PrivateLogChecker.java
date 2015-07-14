@@ -13,7 +13,7 @@ public class PrivateLogChecker extends LogChecker {
 
    @Override
    protected StressorRecord newRecord(StressorRecord record, long operationId, long seed) {
-      return new StressorRecord( record, operationId, seed);
+      return new StressorRecord(record, operationId, seed);
    }
 
    @Override

@@ -17,7 +17,7 @@ public class PrivateLogValue implements Serializable {
       operationIds = new long[] { operationId };
    }
 
-   private PrivateLogValue(int threadId, long[] operationIds) {
+   public PrivateLogValue(int threadId, long[] operationIds) {
       this.threadId = threadId;
       this.operationIds = operationIds;
    }
@@ -66,10 +66,20 @@ public class PrivateLogValue implements Serializable {
    }
 
    @Override
+   public int hashCode() {
+      int result = threadId;
+      result = 31 * result + (operationIds != null ? Arrays.hashCode(operationIds) : 0);
+      return result;
+   }
+
+   @Override
    public String toString() {
       StringBuilder sb = new StringBuilder("[").append(threadId).append(" #").append(operationIds.length).append(": ");
-      for (long op : operationIds) {
-         sb.append(op).append(", ");
+      for (int i = 0; i < operationIds.length; i++) {
+         sb.append(operationIds[i]);
+         if (i != operationIds.length - 1) {
+            sb.append(", ");
+         }
       }
       return sb.append("]").toString();
    }

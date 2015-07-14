@@ -101,7 +101,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             txFailedAttempts++;
             log.tracef("Transaction rollbacked, number of attempts so far=%d", txFailedAttempts);
             if (manager.getLogLogicConfiguration().getMaxTransactionAttempts() >= 0
-                  && txFailedAttempts >= manager.getLogLogicConfiguration().getMaxTransactionAttempts()) {
+                  && txFailedAttempts > manager.getLogLogicConfiguration().getMaxTransactionAttempts()) {
                log.error("Maximum number of transaction attempts attained, reporting.");
                manager.getFailureManager().reportFailedTransactionAttempt();
             }
@@ -234,6 +234,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
       try {
          int delayedRemoveAttempts = 0;
          while (!stressor.isTerminated()) {
+            boolean delayedRemoveError = false;
             try {
                if (ongoingTx != null) {
                   try {
@@ -257,6 +258,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                      if (manager.getLogLogicConfiguration().getMaxDelayedRemoveAttempts() >= 0) {
                         delayedRemoveAttempts++;
                      }
+                     delayedRemoveError = true;
                      throw e;
                   }
                }
@@ -265,10 +267,13 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                delayedRemoves.clear();
                return true;
             } catch (Exception e) {
-               if (manager.getLogLogicConfiguration().getMaxDelayedRemoveAttempts() >= 0) {
+               // Record exceptions not originating from checkedRemoveValue (e.g. tx.commit)
+               if (!delayedRemoveError && manager.getLogLogicConfiguration().getMaxDelayedRemoveAttempts() >= 0) {
                   delayedRemoveAttempts++;
                }
                log.error("Error while executing delayed removes.", e);
+            } finally {
+               delayedRemoveError = false;
             }
          }
       } finally {
@@ -300,12 +305,12 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    protected abstract boolean checkedRemoveValue(long keyId, ValueType oldValue) throws Exception;
 
-   private void writeStressorLastOperation() {
+   protected void writeStressorLastOperation() {
       try {
          // we have to write down the keySelectorRandom as well in order to be able to continue work if this slave
          // is restarted
          basicCache.put(LogChecker.lastOperationKey(stressor.id),
-               new LastOperation(operationId, Utils.getRandomSeed(keySelectorRandom)));
+                        new LastOperation(operationId, Utils.getRandomSeed(keySelectorRandom)));
       } catch (Exception e) {
          log.errorf(e, "Error while writing last operation %d for stressor %s", operationId, stressor.getStatus());
       }
@@ -344,7 +349,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             } catch (BreakTxRequest request) {
                throw request;
             } catch (Exception e) {
-               log.errorf(e, "Cannot overwrite last checked operation id for slave %d", "stressor %d", i, stressorId);
+               log.errorf(e, "Cannot overwrite ignored operation id for slave %d", "stressor %d", i, stressorId);
                throw new StressorException(e);
             }
          } else {

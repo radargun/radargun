@@ -26,7 +26,7 @@ public class StressorRecord {
    protected final LinkedList<StressorConfirmation> confirmations = new LinkedList<>();
    private long lastUnsuccessfulCheckTimestamp = Long.MIN_VALUE;
    private long lastSuccessfulCheckTimestamp = System.currentTimeMillis();
-   private Set<Long> notifiedOps = new HashSet<Long>();
+   private Set<Long> notifiedOps = new HashSet<>();
    private long requireNotify = Long.MAX_VALUE;
 
    public StressorRecord(int threadId, Range keyRange) {
@@ -42,6 +42,7 @@ public class StressorRecord {
       log.trace("Initializing record random with " + seed);
       this.threadId = record.threadId;
       this.currentOp = operationId;
+      this.keyRange = record.keyRange;
       privateNext();
    }
 
@@ -153,6 +154,8 @@ public class StressorRecord {
             while (iterator.hasPrevious()) {
                StressorConfirmation confirmation = iterator.previous();
                if (confirmation.operationId < operationId) {
+                  // Move index one position to the right, as it was shifted by iterator.previous()
+                  iterator.next();
                   confirmations.add(iterator.nextIndex(), new StressorConfirmation(operationId, timestamp));
                   return;
                } else if (confirmation.operationId == operationId) {
@@ -175,7 +178,9 @@ public class StressorRecord {
     */
    public long getCurrentConfirmationTimestamp() {
       synchronized (confirmations) {
-         for (StressorConfirmation confirmation : confirmations) {
+         ListIterator<StressorConfirmation> iterator = confirmations.listIterator(confirmations.size());
+         while (iterator.hasPrevious()) {
+            StressorConfirmation confirmation = iterator.previous();
             if (confirmation.operationId > currentOp) {
                return confirmation.timestamp;
             }
@@ -184,13 +189,32 @@ public class StressorRecord {
       }
    }
 
-   public class StressorConfirmation {
+   public static class StressorConfirmation {
       public final long operationId;
       public final long timestamp;
 
       public StressorConfirmation(long operationId, long timestamp) {
          this.operationId = operationId;
          this.timestamp = timestamp;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+         if (this == o) return true;
+         if (o == null || getClass() != o.getClass()) return false;
+
+         StressorConfirmation that = (StressorConfirmation) o;
+
+         if (operationId != that.operationId) return false;
+         return timestamp == that.timestamp;
+
+      }
+
+      @Override
+      public int hashCode() {
+         int result = (int) (operationId ^ (operationId >>> 32));
+         result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
+         return result;
       }
 
       @Override
