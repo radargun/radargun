@@ -1,5 +1,6 @@
 package org.radargun.traits;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -34,6 +35,9 @@ public interface TopologyHistory {
     * Topology event is a period of time
     */
    abstract class Event {
+
+      private DateFormat formatter = new SimpleDateFormat("HH:mm:ss,S");
+
       /**
        * @return Date when this event started
        */
@@ -72,7 +76,6 @@ public interface TopologyHistory {
 
       @Override
       public String toString() {
-         SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss,S");
          return String.format("[%s - %s]",
                getStarted() == null ? "not started" : formatter.format(getStarted()),
                getEnded() == null ? "not ended" : formatter.format(getEnded()));
