@@ -1,5 +1,7 @@
 package org.radargun.stats;
 
+import org.radargun.utils.TimeService;
+
 /**
  * Base class holding just the begin-end timestamps.
  *
@@ -11,12 +13,12 @@ public abstract class IntervalStatistics implements Statistics {
 
    @Override
    public void begin() {
-      beginTime = System.currentTimeMillis();
+      beginTime = TimeService.currentTimeMillis();
    }
 
    @Override
    public void end() {
-      endTime = System.currentTimeMillis();
+      endTime = TimeService.currentTimeMillis();
    }
 
    @Override

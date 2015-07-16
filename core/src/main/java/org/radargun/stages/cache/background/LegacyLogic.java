@@ -8,6 +8,7 @@ import org.radargun.stages.helpers.Range;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.Transactional;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -117,15 +118,15 @@ class LegacyLogic extends AbstractLogic {
                ongoingTx = manager.newTransaction();
                basicCache = ongoingTx.wrap(nonTxBasicCache);
                conditionalCache = ongoingTx.wrap(nonTxConditionalCache);
-               transactionStart = System.nanoTime();
+               transactionStart = TimeService.nanoTime();
                ongoingTx.begin();
-               stressor.stats.registerRequest(System.nanoTime() - transactionStart, Transactional.BEGIN);
+               stressor.stats.registerRequest(TimeService.nanoTime() - transactionStart, Transactional.BEGIN);
             } catch (Exception e) {
-               stressor.stats.registerError(System.nanoTime() - transactionStart, Transactional.BEGIN);
+               stressor.stats.registerError(TimeService.nanoTime() - transactionStart, Transactional.BEGIN);
                throw e;
             }
          }
-         startTime = System.nanoTime();
+         startTime = TimeService.nanoTime();
          Object result;
          if (operation == BasicOperations.GET) {
             result = basicCache.get(key);
@@ -141,18 +142,18 @@ class LegacyLogic extends AbstractLogic {
          } else {
             throw new IllegalArgumentException();
          }
-         stressor.stats.registerRequest(System.nanoTime() - startTime, operation);
+         stressor.stats.registerRequest(TimeService.nanoTime() - startTime, operation);
          if (transactionSize > 0) {
             remainingTxOps--;
             if (remainingTxOps == 0) {
-               long commitStart = System.nanoTime();
+               long commitStart = TimeService.nanoTime();
                try {
                   ongoingTx.commit();
-                  long commitEnd = System.nanoTime();
+                  long commitEnd = TimeService.nanoTime();
                   stressor.stats.registerRequest(commitEnd - commitStart, Transactional.COMMIT);
                   stressor.stats.registerRequest(commitEnd - transactionStart, Transactional.DURATION);
                } catch (Exception e) {
-                  long commitEnd = System.nanoTime();
+                  long commitEnd = TimeService.nanoTime();
                   stressor.stats.registerError(commitEnd - commitStart, Transactional.COMMIT);
                   stressor.stats.registerError(commitEnd - transactionStart, Transactional.DURATION);
                   throw e;
@@ -181,7 +182,7 @@ class LegacyLogic extends AbstractLogic {
             }
             remainingTxOps = transactionSize;
          }
-         stressor.stats.registerError(startTime <= 0 ? 0 : System.nanoTime() - startTime, operation);
+         stressor.stats.registerError(startTime <= 0 ? 0 : TimeService.nanoTime() - startTime, operation);
       }
    }
 

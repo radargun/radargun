@@ -13,6 +13,7 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.utils.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
+import org.radargun.utils.TimeService;
 
 /**
  * 
@@ -90,9 +91,9 @@ public class StackTraceWatchdogStage extends AbstractDistStage {
       public void run() {
          while (true) {
             log("Running check");
-            long pre = System.nanoTime();
+            long pre = TimeService.nanoTime();
             Map<Thread, StackTraceElement[]> stacks = Thread.getAllStackTraces();
-            long post = System.nanoTime();
+            long post = TimeService.nanoTime();
             log("Thread.getAllStackTraces() took " + (post - pre) + " nanoseconds");
             for (Thread t : stacks.keySet()) {
                String name = t.getName();

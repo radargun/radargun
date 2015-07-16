@@ -10,6 +10,7 @@ import org.radargun.logging.LogFactory;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Debugable;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -88,7 +89,7 @@ public abstract class LogChecker extends Thread {
             }
             record = stressorRecordPool.take();
             log.trace("Checking record: " + record.getStatus());
-            if (System.currentTimeMillis() < record.getLastUnsuccessfulCheckTimestamp() + UNSUCCESSFUL_CHECK_MIN_DELAY_MS) {
+            if (TimeService.currentTimeMillis() < record.getLastUnsuccessfulCheckTimestamp() + UNSUCCESSFUL_CHECK_MIN_DELAY_MS) {
                log.trace("Last unsuccessful check was performed too recently, delaying");
                delayedKeys++;
                continue;
@@ -131,14 +132,14 @@ public abstract class LogChecker extends Thread {
                }
                record.next();
                record.setLastUnsuccessfulCheckTimestamp(Long.MIN_VALUE);
-               record.setLastSuccessfulCheckTimestamp(System.currentTimeMillis());
+               record.setLastSuccessfulCheckTimestamp(TimeService.currentTimeMillis());
             } else {
                long confirmationTimestamp = record.getCurrentConfirmationTimestamp();
                if (confirmationTimestamp >= 0) {
                   log.debug("Detected stale read, keyId: " + keyGenerator.generateKey(record.getKeyId()));
                }
                if (confirmationTimestamp >= 0
-                     && (logLogicConfiguration.writeApplyMaxDelay <= 0 || System.currentTimeMillis() > confirmationTimestamp + logLogicConfiguration.writeApplyMaxDelay)) {
+                     && (logLogicConfiguration.writeApplyMaxDelay <= 0 || TimeService.currentTimeMillis() > confirmationTimestamp + logLogicConfiguration.writeApplyMaxDelay)) {
                   // Verify whether record should not be ignored
                   if (checkIgnoreRecord(record)) {
                      continue;
@@ -149,7 +150,7 @@ public abstract class LogChecker extends Thread {
                            keyGenerator.generateKey(record.getKeyId()), record.getRequireNotify(), record.getNotifiedOps());
                      failureManager.reportMissingNotification();
                      debugFailure(record);
-                     record.setLastUnsuccessfulCheckTimestamp(System.currentTimeMillis());
+                     record.setLastUnsuccessfulCheckTimestamp(TimeService.currentTimeMillis());
                   }
                   if (!contains) {
                      log.errorf("Missing operation %d for thread %d on key %d (%s) %s",
@@ -159,11 +160,11 @@ public abstract class LogChecker extends Thread {
                      log.errorf("Not found in %s", value);
                      failureManager.reportMissingOperation();
                      debugFailure(record);
-                     record.setLastUnsuccessfulCheckTimestamp(System.currentTimeMillis());
+                     record.setLastUnsuccessfulCheckTimestamp(TimeService.currentTimeMillis());
                   }
                   record.next();
                } else {
-                  long lastUnsuccessfulCheckTimestamp = System.currentTimeMillis();
+                  long lastUnsuccessfulCheckTimestamp = TimeService.currentTimeMillis();
                   log.debugf("Check of record %s unsuccessful, setting timestamp to %d", record.getStatus(), lastUnsuccessfulCheckTimestamp);
                   record.setLastUnsuccessfulCheckTimestamp(lastUnsuccessfulCheckTimestamp);
                }
@@ -224,7 +225,7 @@ public abstract class LogChecker extends Thread {
       public LastOperation(long operationId, long seed) {
          this.operationId = operationId;
          this.seed = seed;
-         this.timestamp = System.currentTimeMillis();
+         this.timestamp = TimeService.currentTimeMillis();
       }
 
       public long getOperationId() {

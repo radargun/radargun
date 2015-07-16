@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.utils.TimeService;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -23,12 +24,12 @@ public abstract class AbstractCompletion implements Completion {
 
    protected void waitForNextRequest(int opNumber, long now) {
       if (startTime < 0) {
-         startTime = System.nanoTime();
+         startTime = TimeService.nanoTime();
       }
       if (requestPeriod > 0) {
          Long rampUp = privateRampUp.get();
          if (rampUp == null) {
-            rampUp = new Random(Thread.currentThread().getId() ^ System.nanoTime()).nextLong() % requestPeriod;
+            rampUp = new Random(Thread.currentThread().getId() ^ TimeService.nanoTime()).nextLong() % requestPeriod;
             privateRampUp.set(rampUp);
          }
          long waitTime = TimeUnit.NANOSECONDS.toMillis(startTime + rampUp + requestPeriod * opNumber - now);

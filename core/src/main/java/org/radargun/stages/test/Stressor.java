@@ -7,6 +7,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.Transactional;
+import org.radargun.utils.TimeService;
 
 /**
  * Each stressor operates according to its {@link OperationLogic logic} - the instance is private to each thread.
@@ -117,14 +118,14 @@ public class Stressor extends Thread {
       Object result = null;
       boolean successful = true;
       Exception exception = null;
-      long start = System.nanoTime();
+      long start = TimeService.nanoTime();
       long operationDuration;
       try {
          result = invocation.invoke();
-         operationDuration = System.nanoTime() - start;
+         operationDuration = TimeService.nanoTime() - start;
          txRemainingOperations--;
       } catch (Exception e) {
-         operationDuration = System.nanoTime() - start;
+         operationDuration = TimeService.nanoTime() - start;
          log.warn("Error in request", e);
          successful = false;
          txRemainingOperations = 0;
@@ -193,19 +194,19 @@ public class Stressor extends Thread {
    }
 
    private long startTransaction() throws TransactionException {
-      long start = System.nanoTime();
+      long start = TimeService.nanoTime();
       try {
          ongoingTx.begin();
       } catch (Exception e) {
-         long time = System.nanoTime() - start;
+         long time = TimeService.nanoTime() - start;
          log.error("Failed to start transaction", e);
          throw new TransactionException(time, e);
       }
-      return System.nanoTime() - start;
+      return TimeService.nanoTime() - start;
    }
 
    private long endTransaction() throws TransactionException {
-      long start = System.nanoTime();
+      long start = TimeService.nanoTime();
       try {
          if (stage.commitTransactions) {
             ongoingTx.commit();
@@ -213,11 +214,11 @@ public class Stressor extends Thread {
             ongoingTx.rollback();
          }
       } catch (Exception e) {
-         long time = System.nanoTime() - start;
+         long time = TimeService.nanoTime() - start;
          log.error("Failed to end transaction", e);
          throw new TransactionException(time, e);
       }
-      return System.nanoTime() - start;
+      return TimeService.nanoTime() - start;
    }
 
    private class TransactionException extends Exception {

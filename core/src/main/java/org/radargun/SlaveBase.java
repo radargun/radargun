@@ -14,6 +14,7 @@ import org.radargun.reporting.Timeline;
 import org.radargun.stages.ScenarioCleanupStage;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.TraitHelper;
+import org.radargun.utils.TimeService;
 
 /**
  * Base class for both standalone slave and slave integrated in master node (local cluster).
@@ -80,18 +81,18 @@ public abstract class SlaveBase {
                response = new DistStageAck(state).error(message, null);
             } else {
                log.info("Starting stage " + (log.isDebugEnabled() ? stage.toString() : stage.getName()));
-               long start = System.currentTimeMillis();
+               long start = TimeService.currentTimeMillis();
                long end;
                try {
                   response = stage.executeOnSlave();
-                  end = System.currentTimeMillis();
+                  end = TimeService.currentTimeMillis();
                   if (response == null) {
                      response = new DistStageAck(state).error("Stage returned null response", null);
                   }
                   log.info("Finished stage " + stage.getName());
                   response.setDuration(end - start);
                } catch (Exception e) {
-                  end = System.currentTimeMillis();
+                  end = TimeService.currentTimeMillis();
                   log.error("Stage execution has failed", e);
                   response = new DistStageAck(state).error("Stage execution has failed", e);
                }

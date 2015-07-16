@@ -7,6 +7,7 @@ import org.radargun.Operation;
 import org.radargun.stages.helpers.Range;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
+import org.radargun.utils.TimeService;
 
 /**
  * This logic operates on {@link SharedLogValue shared log values}
@@ -126,14 +127,14 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
 
    private SharedLogValue checkedGetValue(long keyId) throws Exception {
       Object prevValue;
-      long startTime = System.nanoTime();
+      long startTime = TimeService.nanoTime();
       try {
          prevValue = basicCache.get(keyGenerator.generateKey(keyId));
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, BasicOperations.GET);
+         stressor.stats.registerError(TimeService.nanoTime() - startTime, BasicOperations.GET);
          throw e;
       }
-      long endTime = System.nanoTime();
+      long endTime = TimeService.nanoTime();
       if (prevValue != null && !(prevValue instanceof SharedLogValue)) {
          stressor.stats.registerError(endTime - startTime, BasicOperations.GET);
          log.error("Value is not an instance of SharedLogValue: " + prevValue);
@@ -146,7 +147,7 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
 
    private boolean checkedPutValue(long keyId, SharedLogValue oldValue, SharedLogValue newValue) throws Exception {
       boolean returnValue;
-      long startTime = System.nanoTime();
+      long startTime = TimeService.nanoTime();
       Operation operation = Operation.UNKNOWN;
       try {
          if (oldValue == null) {
@@ -157,24 +158,24 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
             returnValue = conditionalCache.replace(keyGenerator.generateKey(keyId), oldValue, newValue);
          }
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, operation);
+         stressor.stats.registerError(TimeService.nanoTime() - startTime, operation);
          throw e;
       }
-      long endTime = System.nanoTime();
+      long endTime = TimeService.nanoTime();
       stressor.stats.registerRequest(endTime - startTime, operation);
       return returnValue;
    }
 
    @Override
    protected boolean checkedRemoveValue(long keyId, SharedLogValue oldValue) throws Exception {
-      long startTime = System.nanoTime();
+      long startTime = TimeService.nanoTime();
       try {
          boolean returnValue = conditionalCache.remove(keyGenerator.generateKey(keyId), oldValue);
-         long endTime = System.nanoTime();
+         long endTime = TimeService.nanoTime();
          stressor.stats.registerRequest(endTime - startTime, ConditionalOperations.REMOVE);
          return returnValue;
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, ConditionalOperations.REMOVE);
+         stressor.stats.registerError(TimeService.nanoTime() - startTime, ConditionalOperations.REMOVE);
          throw e;
       }
    }

@@ -26,6 +26,7 @@ import org.radargun.traits.Iterable;
 import org.radargun.traits.MapReducer;
 import org.radargun.traits.MapReducer.Task;
 import org.radargun.utils.Projections;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -296,9 +297,9 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       MapReduceAck ack = new MapReduceAck(slaveState);
       try {
          if (collatorFqn != null) {
-            start = System.nanoTime();
+            start = TimeService.nanoTime();
             payloadObject = task.executeWithCollator();
-            durationNanos = System.nanoTime() - start;
+            durationNanos = TimeService.nanoTime() - start;
             stats.registerRequest(durationNanos, MapReducer.MAPREDUCE_COLLATOR);
             log.info("MapReduce task with Collator completed in "
                   + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
@@ -307,9 +308,9 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                log.info("MapReduce result: " + payloadObject.toString());
             }
          } else {
-            start = System.nanoTime();
+            start = TimeService.nanoTime();
             payloadMap = task.execute();
-            durationNanos = System.nanoTime() - start;
+            durationNanos = TimeService.nanoTime() - start;
             stats.registerRequest(durationNanos, MapReducer.MAPREDUCE);
 
             if (payloadMap == null) {

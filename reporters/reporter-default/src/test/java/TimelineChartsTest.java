@@ -4,6 +4,7 @@ import java.util.Arrays;
 import org.radargun.config.Cluster;
 import org.radargun.reporting.Timeline;
 import org.radargun.reporting.html.TimelineDocument;
+import org.radargun.utils.TimeService;
 import org.testng.annotations.Test;
 
 /**
@@ -15,7 +16,7 @@ public class TimelineChartsTest {
 
    @Test
    public void test() {
-      long now = System.currentTimeMillis();
+      long now = TimeService.currentTimeMillis();
       Timeline t0 = new Timeline(0);
       Timeline t1 = new Timeline(1);
       t0.addValue("Category A", new Timeline.Value(now + 1000, 10));

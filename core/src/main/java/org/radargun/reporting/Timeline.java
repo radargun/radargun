@@ -1,5 +1,7 @@
 package org.radargun.reporting;
 
+import org.radargun.utils.TimeService;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -97,7 +99,7 @@ public class Timeline implements Serializable, Comparable<Timeline> {
       }
 
       protected Event() {
-         this(System.currentTimeMillis());
+         this(TimeService.currentTimeMillis());
       }
 
       @Override

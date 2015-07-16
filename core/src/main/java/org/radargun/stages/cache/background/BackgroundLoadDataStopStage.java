@@ -8,6 +8,7 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.utils.TimeConverter;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -31,9 +32,9 @@ public class BackgroundLoadDataStopStage extends AbstractDistStage {
             try {
                if (timeoutDuration > 0) {
                   if (remaining > 0) {
-                     long start = System.currentTimeMillis();
+                     long start = TimeService.currentTimeMillis();
                      loader.join(remaining);
-                     remaining -= System.currentTimeMillis() - start;
+                     remaining -= TimeService.currentTimeMillis() - start;
                   } else {
                      return errorResponse(String.format("Timed out after waiting for loading threads to finish." +
                            " Timeout duration was %s.", Utils.prettyPrintTime(timeoutDuration, TimeUnit.MILLISECONDS)));

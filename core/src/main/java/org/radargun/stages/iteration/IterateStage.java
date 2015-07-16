@@ -24,6 +24,7 @@ import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Iterable;
 import org.radargun.utils.Projections;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -199,7 +200,7 @@ public class IterateStage extends TestStage {
          }
          int nextFailures = 0;
          long elements = 0;
-         long loopStart = System.nanoTime();
+         long loopStart = TimeService.nanoTime();
          Object lastElement = null;
          while (!failed) {
             try {
@@ -235,7 +236,7 @@ public class IterateStage extends TestStage {
             log.error("Failed to close the iterator", e);
             failed = true;
          }
-         stressor.getStats().registerRequest(System.nanoTime() - loopStart, Iterable.FULL_LOOP);
+         stressor.getStats().registerRequest(TimeService.nanoTime() - loopStart, Iterable.FULL_LOOP);
          return lastElement;
       }
    }

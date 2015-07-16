@@ -17,6 +17,7 @@ import org.radargun.stages.tpcc.domain.OrderLine;
 import org.radargun.stages.tpcc.domain.Stock;
 import org.radargun.stages.tpcc.domain.Warehouse;
 import org.radargun.traits.BasicOperations;
+import org.radargun.utils.TimeService;
 
 /**
  * @author Sebastiano Peluso &lt;peluso@gsd.inesc-id.pt, peluso@dis.uniroma1.it&gt;
@@ -343,7 +344,7 @@ public class TpccPopulation {
                                                 TpccTools.aleaChainel(2, 2),
                                                 TpccTools.aleaChainen(4, 4) + TpccTools.CHAINE_5_1,
                                                 TpccTools.aleaChainen(16, 16),
-                                                new Date(System.currentTimeMillis()),
+                                                new Date(TimeService.currentTimeMillis()),
                                                 (TpccTools.aleaNumber(1, 10) == 1) ? "BC" : "GC",
                                                 500000.0, TpccTools.aleaDouble(0., 0.5, 4), -10.0, 10.0, 1, 0, TpccTools.aleaChainec(300, 500));
 
@@ -368,7 +369,7 @@ public class TpccPopulation {
       if (id_customer < 0 || id_wharehouse < 0 || id_district < 0) {
          return;
       } else {
-         History newHistory = new History(id_customer, id_district, id_wharehouse, id_district, id_wharehouse, new Date(System.currentTimeMillis()), 10, TpccTools.aleaChainec(12, 24));
+         History newHistory = new History(id_customer, id_district, id_wharehouse, id_district, id_wharehouse, new Date(TimeService.currentTimeMillis()), 10, TpccTools.aleaChainec(12, 24));
          boolean successful = false;
          while (!successful) {
             try {

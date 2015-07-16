@@ -28,6 +28,7 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -146,7 +147,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
          producers[2] = new Producer(TpccTerminal.ORDER_STATUS, this.orderStatusWeight);
       }
 
-      startTime = System.currentTimeMillis();
+      startTime = TimeService.currentTimeMillis();
       log.info("Executing: " + this.toString());
 
       List<Stressor> stressors;
@@ -394,7 +395,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
          results.put("AVG_PAYMENT_INQUEUE_TIME (usec)", 0);
 
       log.info("Finished generating report. Nr of failed operations on this node is: " + failures +
-            ". Test duration is: " + Utils.getMillisDurationString(System.currentTimeMillis() - startTime));
+            ". Test duration is: " + Utils.getMillisDurationString(TimeService.currentTimeMillis() - startTime));
       return results;
    }
 
@@ -484,7 +485,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
 
          long delta = 0L;
          long end = 0L;
-         long initTime = System.nanoTime();
+         long initTime = TimeService.nanoTime();
 
          long commit_start = 0L;
          long endInQueueTime = 0L;
@@ -499,12 +500,12 @@ public class TpccBenchmarkStage extends AbstractDistStage {
             successful = true;
             transaction = null;
 
-            long start = System.nanoTime();
+            long start = TimeService.nanoTime();
             if (arrivalRate != 0.0) {  //Open system
                try {
                   RequestType request = queue.take();
 
-                  endInQueueTime = System.nanoTime();
+                  endInQueueTime = TimeService.nanoTime();
 
                   if (request.transactionType == TpccTerminal.NEW_ORDER) {
                      numWriteDequeued++;
@@ -533,7 +534,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
 
             Transactional.Transaction tx = transactional.getTransaction();
             BasicOperations.Cache cache = tx.wrap(basicOperations.getCache(null));
-            long startService = System.nanoTime();
+            long startService = TimeService.nanoTime();
             tx.begin();
             try {
                transaction.executeTransaction(cache);
@@ -555,7 +556,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
             try {
                /* In our tests we are interested in the commit time spent for write txs*/
                if (successful && !isReadOnly) {
-                  commit_start = System.nanoTime();
+                  commit_start = TimeService.nanoTime();
                   measureCommitTime = true;
                }
 
@@ -597,7 +598,7 @@ public class TpccBenchmarkStage extends AbstractDistStage {
                }
                successful = false;
             }
-            end = System.nanoTime();
+            end = TimeService.nanoTime();
             if (this.arrivalRate == 0.0) {  //Closed system
                start = startService;
             }
@@ -658,14 +659,14 @@ public class TpccBenchmarkStage extends AbstractDistStage {
          this.transaction_weight = transaction_weight;
          this.transaction_type = transaction_type;
          this.producerRate = ((arrivalRate / 1000.0) * (this.transaction_weight / 100.0)) / slaveState.getClusterSize();
-         this.random = new Random(System.currentTimeMillis());
+         this.random = new Random(TimeService.currentTimeMillis());
       }
 
       public void run() {
          long time;
          while (completedThread.get() != numThreads) {
             try {
-               queue.add(new RequestType(System.nanoTime(), this.transaction_type));
+               queue.add(new RequestType(TimeService.nanoTime(), this.transaction_type));
                countJobs.incrementAndGet();
                time = (long) (exp(this.producerRate));
                Thread.sleep(time);

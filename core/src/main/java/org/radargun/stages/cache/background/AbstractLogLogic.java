@@ -6,6 +6,7 @@ import java.util.Random;
 
 import org.radargun.stages.helpers.Range;
 import org.radargun.traits.BasicOperations;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 import static org.radargun.stages.cache.background.LogChecker.LastOperation;
@@ -115,7 +116,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 
    @Override
    public String getStatus() {
-      long currentTime = System.currentTimeMillis();
+      long currentTime = TimeService.currentTimeMillis();
       return String.format("current[id=%d, key=%s], lastSuccessfulOpTime=%d",
             operationId, keyGenerator.generateKey(keyId), lastSuccessfulOpTimestamp - currentTime)
             + (transactionSize > 0 ?
@@ -142,7 +143,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          } catch (BreakTxRequest request) {
             txBreakRequest = true;
          }
-         lastSuccessfulOpTimestamp = System.currentTimeMillis();
+         lastSuccessfulOpTimestamp = TimeService.currentTimeMillis();
 
          // for non-transactional caches write the stressor last operation anytime (once in a while)
          if (transactionSize <= 0 && operationId % manager.getLogLogicConfiguration().getCounterUpdatePeriod() == 0) {
@@ -155,7 +156,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             if (remainingTxOps <= 0 || txBreakRequest) {
                try {
                   ongoingTx.commit();
-                  lastSuccessfulTxTimestamp = System.currentTimeMillis();
+                  lastSuccessfulTxTimestamp = TimeService.currentTimeMillis();
                   txFailedAttempts = 0;
                } catch (Exception e) {
                   log.debugf("Transaction %s was rolled back, restarting from operation %d", ongoingTx, txStartOperationId);
@@ -263,7 +264,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                   }
                }
                ongoingTx.commit();
-               lastSuccessfulTxTimestamp = System.currentTimeMillis();
+               lastSuccessfulTxTimestamp = TimeService.currentTimeMillis();
                delayedRemoves.clear();
                return true;
             } catch (Exception e) {

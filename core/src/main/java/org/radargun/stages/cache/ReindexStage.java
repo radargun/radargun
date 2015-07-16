@@ -15,6 +15,7 @@ import org.radargun.stats.DefaultStatistics;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Queryable;
+import org.radargun.utils.TimeService;
 
 /**
  * Just runs reindex.
@@ -35,9 +36,9 @@ public class ReindexStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       Statistics stats = new DefaultStatistics(new DefaultOperationStats());
-      long start = System.nanoTime();
+      long start = TimeService.nanoTime();
       queryable.reindex(container);
-      stats.registerRequest(System.nanoTime() - start, Queryable.REINDEX);
+      stats.registerRequest(TimeService.nanoTime() - start, Queryable.REINDEX);
       return new StatisticsAck(slaveState, stats);
    }
 

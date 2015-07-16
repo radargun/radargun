@@ -9,6 +9,7 @@ import org.radargun.utils.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.TopologyHistory;
+import org.radargun.utils.TimeService;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -71,10 +72,10 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
       List<TopologyHistory.Event> history = getEventHistory(topologyHistory);
       if (wait) {
          TopologyHistory.Event setEvent = (TopologyHistory.Event) slaveState.get(type.getKey());
-         long startWaiting = System.currentTimeMillis();
+         long startWaiting = TimeService.currentTimeMillis();
 
          wait_loop:
-         while (timeout <= 0 || System.currentTimeMillis() < startWaiting + timeout) {
+         while (timeout <= 0 || TimeService.currentTimeMillis() < startWaiting + timeout) {
             log.trace("setEvent=" + setEvent + ", history=" + history);
             if (history.size() > 0) {
                if (condition == Condition.END) {
@@ -103,7 +104,7 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
             history = getEventHistory(topologyHistory);
          }
          /* end of wait_loop */
-         if (timeout > 0 && System.currentTimeMillis() > startWaiting + timeout) {
+         if (timeout > 0 && TimeService.currentTimeMillis() > startWaiting + timeout) {
             return errorResponse("Waiting has timed out");
          }
       }

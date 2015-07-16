@@ -15,6 +15,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Killable;
 import org.radargun.traits.Lifecycle;
+import org.radargun.utils.TimeService;
 
 /**
  * Java runtime does not provide API that would allow us to manage
@@ -165,9 +166,9 @@ public class ProcessLifecycle implements Lifecycle, Killable {
 
    protected void stopInternal() {
       try {
-         long startTime = System.currentTimeMillis();
+         long startTime = TimeService.currentTimeMillis();
          for (; ; ) {
-            String command = service.stopTimeout < 0 || System.currentTimeMillis() < startTime + service.stopTimeout ? "stop" : "kill";
+            String command = service.stopTimeout < 0 || TimeService.currentTimeMillis() < startTime + service.stopTimeout ? "stop" : "kill";
             Process process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + command + extension, service.getCommandTag())).start();
             try {
                process.waitFor();

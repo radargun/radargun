@@ -2,6 +2,7 @@ package org.radargun.stages.cache.background;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.utils.TimeService;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -100,7 +101,7 @@ public class FailureManager {
       // Iterate over all stressor records in stressor record pool and check whether last successful check was performed within timeout.
       if (manager.getStressorRecordPool() != null) {
          boolean progress = true;
-         long now = System.currentTimeMillis();
+         long now = TimeService.currentTimeMillis();
          for (StressorRecord record : manager.getStressorRecordPool().getAvailableRecords()) {
             log.debugf("Record: status=%s.", record.getStatus());
             // Especially with elasticity tests a node can be dead for a long time period. Check for progress may need to be skipped as stressors

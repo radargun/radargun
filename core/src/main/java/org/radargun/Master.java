@@ -22,6 +22,7 @@ import org.radargun.reporting.ReporterHelper;
 import org.radargun.reporting.Timeline;
 import org.radargun.stages.control.RepeatStage;
 import org.radargun.state.MasterState;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -66,18 +67,18 @@ public class Master {
             }
          }
 
-         long benchmarkStart = System.currentTimeMillis();
+         long benchmarkStart = TimeService.currentTimeMillis();
          for (Configuration configuration : masterConfig.getConfigurations()) {
             log.info("Started benchmarking configuration '" + configuration.name + "'");
             state.setConfigName(configuration.name);
             connection.sendConfiguration(configuration);
-            long configStart = System.currentTimeMillis();
+            long configStart = TimeService.currentTimeMillis();
             for (Cluster cluster : masterConfig.getClusters()) {
                log.info("Starting scenario on " + cluster);
                connection.sendCluster(cluster);
                state.setCluster(cluster);
                state.setReport(new Report(configuration, cluster));
-               long clusterStart = System.currentTimeMillis();
+               long clusterStart = TimeService.currentTimeMillis();
                int stageCount = masterConfig.getScenario().getStageCount();
                int scenarioDestroyId = stageCount - 2;
                int scenarioCleanupId = stageCount - 1;
@@ -96,7 +97,7 @@ public class Master {
                   // run ScenarioCleanup
                   executeStage(connection, configuration, cluster, scenarioCleanupId);
                }
-               log.info("Finished scenario on " + cluster + " in " + Utils.getMillisDurationString(System.currentTimeMillis() - clusterStart));
+               log.info("Finished scenario on " + cluster + " in " + Utils.getMillisDurationString(TimeService.currentTimeMillis() - clusterStart));
                state.getReport().addTimelines(connection.receiveTimelines(cluster.getSize()));
                reports.add(state.getReport());
                if (exitFlag) {
@@ -104,13 +105,13 @@ public class Master {
                }
             }
             log.info("Finished benchmarking configuration '" + configuration.name + "' in "
-                  + Utils.getMillisDurationString(System.currentTimeMillis() - configStart));
+                  + Utils.getMillisDurationString(TimeService.currentTimeMillis() - configStart));
             if (exitFlag) {
                log.info("Exiting whole benchmark");
                break;
             }
          }
-         log.info("Executed all benchmarks in " + Utils.getMillisDurationString(System.currentTimeMillis() - benchmarkStart) + ", reporting...");
+         log.info("Executed all benchmarks in " + Utils.getMillisDurationString(TimeService.currentTimeMillis() - benchmarkStart) + ", reporting...");
          for (Reporter reporter : reporters) {
             try {
                log.info("Running reporter " + reporter);
@@ -197,10 +198,10 @@ public class Master {
          log.debug("Starting master stage " + stage.getName() + ". Details:" + stage);
       else
          log.info("Starting master stage " + stage.getName() + ".");
-      long start = System.currentTimeMillis(), end = start;
+      long start = TimeService.currentTimeMillis(), end = start;
       try {
          StageResult result = stage.execute();
-         end = System.currentTimeMillis();
+         end = TimeService.currentTimeMillis();
          if (result.isError()) {
             log.error("Execution of master stage " + stage.getName() + " failed.");
          } else {
@@ -208,7 +209,7 @@ public class Master {
          }
          return result;
       } catch (Exception e) {
-         end = System.currentTimeMillis();
+         end = TimeService.currentTimeMillis();
          log.error("Caught exception", e);
          return StageResult.FAIL;
       } finally {

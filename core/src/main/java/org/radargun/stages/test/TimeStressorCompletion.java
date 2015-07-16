@@ -2,6 +2,7 @@ package org.radargun.stages.test;
 
 import java.util.concurrent.TimeUnit;
 
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -27,7 +28,7 @@ public class TimeStressorCompletion extends AbstractCompletion {
    public boolean moreToRun(int opNumber) {
       // Synchronize the start until someone is ready
       // we don't care about the race condition here
-      long now = System.nanoTime();
+      long now = TimeService.nanoTime();
       if (startTime == -1) {
          startTime = now;
       }
@@ -37,7 +38,7 @@ public class TimeStressorCompletion extends AbstractCompletion {
 
    @Override
    public void logProgress(int executedOps) {
-      long now = System.nanoTime();
+      long now = TimeService.nanoTime();
       //make sure this info is not printed more frequently than 20 secs
       if (lastPrint < 0 || (now - lastPrint) < logFrequency) {
          return;

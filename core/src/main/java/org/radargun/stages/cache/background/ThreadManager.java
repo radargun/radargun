@@ -2,6 +2,7 @@ package org.radargun.stages.cache.background;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.utils.TimeService;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -253,7 +254,7 @@ public class ThreadManager {
       }
       for (; ; ) {
          boolean allChecked = true;
-         long now = System.currentTimeMillis();
+         long now = TimeService.currentTimeMillis();
          for (int i = 0; i < totalThreads; ++i) {
             StressorRecord record = allRecords.get(i);
             if (record == null) continue;
@@ -309,7 +310,7 @@ public class ThreadManager {
             log.warnf("Cannot wait for stressor %d as it does not implement LogLogic", stressor.id);
          }
       }
-      long deadline = System.currentTimeMillis() + logLogicConfiguration.getNoProgressTimeout();
+      long deadline = TimeService.currentTimeMillis() + logLogicConfiguration.getNoProgressTimeout();
       while (!confirmed.isEmpty()) {
          for (Iterator<Map.Entry<Stressor, Long>> iterator = confirmed.entrySet().iterator(); iterator.hasNext(); ) {
             Map.Entry<Stressor, Long> entry = iterator.next();
@@ -320,7 +321,7 @@ public class ThreadManager {
                iterator.remove();
             }
          }
-         if (System.currentTimeMillis() >= deadline) {
+         if (TimeService.currentTimeMillis() >= deadline) {
             log.error("No progress in stressors within timeout");
             return false;
          }
@@ -354,7 +355,7 @@ public class ThreadManager {
       @Override
       public void run() {
          try {
-            manager.getBasicCache().put("__keepAlive_" + manager.getSlaveState().getIndexInGroup(), System.currentTimeMillis());
+            manager.getBasicCache().put("__keepAlive_" + manager.getSlaveState().getIndexInGroup(), TimeService.currentTimeMillis());
          } catch (Exception e) {
             log.error("Failed to place keep alive timestamp", e);
          }

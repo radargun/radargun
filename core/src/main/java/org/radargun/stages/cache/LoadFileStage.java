@@ -18,6 +18,7 @@ import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Projections;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -103,17 +104,17 @@ public class LoadFileStage extends AbstractDistStage {
                         + fileChannel.position());
                }
                buffer.rewind();
-               long start = System.nanoTime();
+               long start = TimeService.nanoTime();
                if (stringData) {
                   String cacheData = buffer.asCharBuffer().toString();
-                  start = System.nanoTime();
+                  start = TimeService.nanoTime();
                   cache.put(key, cacheData);
                } else {
                   cache.put(key, buffer.array());
                }
                if (printWriteStatistics) {
                   log.info("Put on slave-" + slaveState.getSlaveIndex() + " took "
-                        + Utils.prettyPrintTime(System.nanoTime() - start, TimeUnit.NANOSECONDS));
+                        + Utils.prettyPrintTime(TimeService.nanoTime() - start, TimeUnit.NANOSECONDS));
                }
                putCount++;
                fileChannel.position(initPos + (valueSize * totalWriters));

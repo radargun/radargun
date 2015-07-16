@@ -10,6 +10,7 @@ import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
 import org.radargun.reporting.IterationData;
 import org.radargun.utils.TimeConverter;
+import org.radargun.utils.TimeService;
 
 /**
  * Keeps a series of {@link Statistics} instances and records the requests according to current timestamp.
@@ -48,7 +49,7 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationD
    }
 
    private Statistics getCurrentBucket() {
-      long currentTime = System.currentTimeMillis();
+      long currentTime = TimeService.currentTimeMillis();
       int bucket = (int)((currentTime - getBegin()) / period);
       while (buckets.size() <= bucket) {
          Statistics bucketStats = prototype.copy();

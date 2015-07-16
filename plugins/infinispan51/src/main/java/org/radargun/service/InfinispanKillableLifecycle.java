@@ -12,6 +12,7 @@ import org.jgroups.protocols.FD_SOCK;
 import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
 import org.radargun.traits.Killable;
+import org.radargun.utils.TimeService;
 
 /**
  * 
@@ -152,7 +153,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
    }
          
    protected List<JChannel> getChannels(JChannel parentChannel) {
-      long deadline = System.currentTimeMillis() + service.channelRetrievalTimeout;
+      long deadline = TimeService.currentTimeMillis() + service.channelRetrievalTimeout;
       List<JChannel> list = new ArrayList<JChannel>();
       if (parentChannel != null) {
          list.add(parentChannel);
@@ -160,7 +161,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
       }
       JGroupsTransport transport;
       while (service.cacheManager == null) {
-         if (System.currentTimeMillis() > deadline) {
+         if (TimeService.currentTimeMillis() > deadline) {
             return list;
          }
          log.trace("Cache Manager is not ready");
@@ -178,7 +179,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
       for (;;) {
          transport = (JGroupsTransport) ((DefaultCacheManager) service.cacheManager).getTransport();
          if (transport != null) break;
-         if (System.currentTimeMillis() > deadline) {
+         if (TimeService.currentTimeMillis() > deadline) {
             return list;
          }
          log.trace("Transport is not ready");
@@ -188,7 +189,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
       for(;;) {
          channel = (JChannel) transport.getChannel();
          if (channel != null && channel.getName() != null && channel.isOpen()) break;
-         if (System.currentTimeMillis() > deadline) {
+         if (TimeService.currentTimeMillis() > deadline) {
             return list;
          }
          log.trace("Channel " + channel + " is not ready");

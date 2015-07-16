@@ -25,6 +25,7 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Projections;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -248,7 +249,7 @@ public class RandomDataStage extends AbstractDistStage {
          Statistics stats = new DefaultStatistics(new DefaultOperationStats());
          stats.begin();
          while (putCount > 0) {
-            String key = Integer.toString(slaveState.getSlaveIndex()) + "-" + putCount + ":" + System.nanoTime();
+            String key = Integer.toString(slaveState.getSlaveIndex()) + "-" + putCount + ":" + TimeService.nanoTime();
 
             long start = -1;
             boolean success = false;
@@ -267,17 +268,17 @@ public class RandomDataStage extends AbstractDistStage {
                         log.info(i + ": Writing string length " + valueSize + " to cache key: " + key);
                      }
 
-                     start = System.nanoTime();
+                     start = TimeService.nanoTime();
                      cache.put(key, cacheData);
                   } else {
                      if (putCount % 5000 == 0) {
                         log.info(i + ": Writing " + valueSize + " bytes to cache key: " + key);
                      }
 
-                     start = System.nanoTime();
+                     start = TimeService.nanoTime();
                      cache.put(key, buffer);
                   }
-                  long durationNanos = System.nanoTime() - start;
+                  long durationNanos = TimeService.nanoTime() - start;
                   stats.registerRequest(durationNanos, BasicOperations.PUT);
                   if (printWriteStatistics) {
                      log.info("Put on slave" + slaveState.getSlaveIndex() + " took "

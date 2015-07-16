@@ -12,6 +12,7 @@ import org.radargun.traits.Clustered;
 import org.radargun.traits.Killable;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.Partitionable;
+import org.radargun.utils.TimeService;
 
 /**
  * Helper class for controlling the lifecycle of a service.
@@ -54,15 +55,15 @@ public class LifecycleHelper {
          for (ServiceListener listener : slaveState.getServiceListeners()) {
             listener.beforeServiceStart();
          }
-         long startingTime = System.currentTimeMillis();
+         long startingTime = TimeService.currentTimeMillis();
          lifecycle.start();
-         long startedTime = System.currentTimeMillis();
+         long startedTime = TimeService.currentTimeMillis();
          slaveState.getTimeline().addEvent(LifecycleHelper.LIFECYCLE, new Timeline.IntervalEvent(startingTime, "Start", startedTime - startingTime));
          if (validate && clustered != null) {
 
             int expectedNumberOfSlaves = expectedSlaves != null ? expectedSlaves : slaveState.getGroupSize();
 
-            long clusterFormationDeadline = System.currentTimeMillis() + clusterFormationTimeout;
+            long clusterFormationDeadline = TimeService.currentTimeMillis() + clusterFormationTimeout;
             for (;;) {
                Collection<Clustered.Member> members = clustered.getMembers();
                if (members == null || members.size() != expectedNumberOfSlaves) {
@@ -73,7 +74,7 @@ public class LifecycleHelper {
                   } catch (InterruptedException ie) {
                      Thread.currentThread().interrupt();
                   }
-                  if (System.currentTimeMillis() > clusterFormationDeadline) {
+                  if (TimeService.currentTimeMillis() > clusterFormationDeadline) {
                      if (members == null) {
                         log.warn("Startup timed out without being able to confirm number of members.");
                         break;
@@ -139,7 +140,7 @@ public class LifecycleHelper {
                } else {
                   log.info("Service is not Killable, stopping instead");
                }
-               stoppingTime = System.currentTimeMillis();
+               stoppingTime = TimeService.currentTimeMillis();
                if (gracefulStopTimeout <= 0) {
                   lifecycle.stop();
                } else {
@@ -163,14 +164,14 @@ public class LifecycleHelper {
                }
             } else {
                log.info("Killing service.");
-               stoppingTime = System.currentTimeMillis();
+               stoppingTime = TimeService.currentTimeMillis();
                if (async) {
                   killable.killAsync();
                } else {
                   killable.kill();
                }
             }
-            long stoppedTime = System.currentTimeMillis();
+            long stoppedTime = TimeService.currentTimeMillis();
             slaveState.getTimeline().addEvent(LIFECYCLE, new Timeline.IntervalEvent(stoppingTime, "Stop", stoppedTime - stoppingTime));
          } finally {
             for (ServiceListener listener : slaveState.getServiceListeners()) {

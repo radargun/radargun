@@ -9,6 +9,7 @@ import javax.management.ObjectName;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.utils.TimeService;
 
 /**
  * 
@@ -134,10 +135,10 @@ public class InfinispanJMXClusterValidator implements JMXClusterValidator {
       InfinispanJMXPoller poller = null;
       try {
          poller = new InfinispanJMXPoller(endpoints, jmxConnectionTimeout);
-         long giveUpTime = System.currentTimeMillis() + timeout;
+         long giveUpTime = TimeService.currentTimeMillis() + timeout;
          ClusterStatus status = poller.checkStatus();
          boolean formed = false;
-         while (!(formed = isClusterFormed(status, endpoints.size())) && System.currentTimeMillis() < giveUpTime) {
+         while (!(formed = isClusterFormed(status, endpoints.size())) && TimeService.currentTimeMillis() < giveUpTime) {
             if (log.isDebugEnabled()) {
                log.debug("Cluster incomplete: " + getDebugStatus(status));
             }

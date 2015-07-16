@@ -16,6 +16,7 @@ import org.radargun.config.Stage;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.Projections;
 import org.radargun.utils.TimeConverter;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -107,13 +108,13 @@ public final class ScenarioCleanupStage extends InternalDistStage {
       long percentage = -1;
       long currentFreeMemory = -1;
       long initialFreeMemory = (Long) slaveState.getPersistent(ScenarioInitStage.INITIAL_FREE_MEMORY);
-      long deadline = System.currentTimeMillis() + memoryReleaseTimeout;
+      long deadline = TimeService.currentTimeMillis() + memoryReleaseTimeout;
       for (;;) {
          System.gc();
          Runtime runtime = Runtime.getRuntime();
          currentFreeMemory = runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory();
          percentage = (currentFreeMemory * 100) / initialFreeMemory;
-         if (percentage > memoryThreshold || System.currentTimeMillis() > deadline) break;
+         if (percentage > memoryThreshold || TimeService.currentTimeMillis() > deadline) break;
          log.infof("Available memory: %d kB (%d%% of initial available memory - %d kB)", currentFreeMemory / 1024, percentage, initialFreeMemory / 1024);
          Utils.sleep(1000);
       }
@@ -145,9 +146,9 @@ public final class ScenarioCleanupStage extends InternalDistStage {
          log.info("Interrupting thread " + getThreadId(thread));
          thread.interrupt();
       }
-      long deadline = System.currentTimeMillis() + stopTimeout/2;
+      long deadline = TimeService.currentTimeMillis() + stopTimeout/2;
       for (Thread thread : threads) {
-         long timeout = deadline - System.currentTimeMillis();
+         long timeout = deadline - TimeService.currentTimeMillis();
          if (timeout > 0) {
             try {
                thread.join(timeout);
@@ -166,7 +167,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
       }
       for (Thread thread : threads) {
          // we can't break anything when doing the cleanup
-         long timeout = deadline - System.currentTimeMillis();
+         long timeout = deadline - TimeService.currentTimeMillis();
          if (timeout > 0) {
             try {
                thread.join(timeout);

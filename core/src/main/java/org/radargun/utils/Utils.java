@@ -163,9 +163,9 @@ public class Utils {
    }
 
    public static void threadDump() {
-      long start = System.nanoTime();
+      long start = TimeService.nanoTime();
       Map<Thread, StackTraceElement[]> stacktraces = Thread.getAllStackTraces();
-      long duration = System.nanoTime() - start;
+      long duration = TimeService.nanoTime() - start;
       log.warn("Thread dump took " + TimeUnit.NANOSECONDS.toMillis(duration) + " ms:");
       for (Entry<Thread, StackTraceElement[]> st : stacktraces.entrySet()) {
          StringBuilder sb = new StringBuilder();
@@ -294,7 +294,7 @@ public class Utils {
                log.warn("Issues whilst creating dir: " + old);
             }
          }
-         String fileName = outputFile.getName() + ".old." + System.currentTimeMillis() + extension;
+         String fileName = outputFile.getName() + ".old." + TimeService.currentTimeMillis() + extension;
          File newFile = new File(old, fileName);
          log.info("A file named: '" + outputFile.getAbsolutePath() + "' already exists. Moving it to '" + newFile + "'");
          if (!outputFile.renameTo(newFile)) {

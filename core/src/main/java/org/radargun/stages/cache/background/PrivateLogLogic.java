@@ -8,6 +8,7 @@ import java.util.Map;
 import org.radargun.Operation;
 import org.radargun.stages.helpers.Range;
 import org.radargun.traits.BasicOperations;
+import org.radargun.utils.TimeService;
 
 /**
  * This logic operates on {@link PrivateLogValue private log values} using only {@link BasicOperations},
@@ -103,7 +104,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       if (transactionSize > 0) {
          txModifications.add(new KeyOperationPair(keyId, operationId));
       } else {
-         long now = System.currentTimeMillis();
+         long now = TimeService.currentTimeMillis();
          timestamps.put(keyId, new OperationTimestampPair(operationId, now));
          log.tracef("Operation %d on %08X finished at %d", operationId, keyId, now);
       }
@@ -113,7 +114,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    private void waitForStaleRead(long lastWriteTimestamp) throws InterruptedException {
       long writeApplyMaxDelay = manager.getLogLogicConfiguration().writeApplyMaxDelay;
       if (writeApplyMaxDelay > 0) {
-         long now = System.currentTimeMillis();
+         long now = TimeService.currentTimeMillis();
          if (lastWriteTimestamp > now - writeApplyMaxDelay){
             log.debugf("Last write of %08X was at %d, waiting 5 seconds to evade stale reads", keyId);
             Thread.sleep(5000);
@@ -135,7 +136,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    protected boolean afterCommit() {
       boolean result = super.afterCommit();
       if (result) {
-         long now = System.currentTimeMillis();
+         long now = TimeService.currentTimeMillis();
          for (KeyOperationPair pair : txModifications) {
             timestamps.put(pair.keyId, new OperationTimestampPair(pair.operationId, now));
             log.tracef("Operation %d on %08X finished at %d", pair.operationId, pair.keyId, now);
@@ -192,14 +193,14 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
          return null;
       }
       Object prevValue;
-      long startTime = System.nanoTime();
+      long startTime = TimeService.nanoTime();
       try {
          prevValue = basicCache.get(keyGenerator.generateKey(keyId));
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, BasicOperations.GET);
+         stressor.stats.registerError(TimeService.nanoTime() - startTime, BasicOperations.GET);
          throw e;
       }
-      long endTime = System.nanoTime();
+      long endTime = TimeService.nanoTime();
       if (prevValue != null && !(prevValue instanceof PrivateLogValue)) {
          stressor.stats.registerError(endTime - startTime, BasicOperations.GET);
          log.error("Value is not an instance of PrivateLogValue: " + prevValue);
@@ -213,15 +214,15 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    @Override
    protected boolean checkedRemoveValue(long keyId, PrivateLogValue expectedValue) throws Exception {
       Object prevValue;
-      long startTime = System.nanoTime();
+      long startTime = TimeService.nanoTime();
       try {
          // Note: with Infinspan, the returned value is sometimes unreliable anyway
          prevValue = basicCache.getAndRemove(keyGenerator.generateKey(keyId));
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, BasicOperations.REMOVE);
+         stressor.stats.registerError(TimeService.nanoTime() - startTime, BasicOperations.REMOVE);
          throw e;
       }
-      long endTime = System.nanoTime();
+      long endTime = TimeService.nanoTime();
       boolean successful = false;
       if (prevValue != null) {
          if (!(prevValue instanceof PrivateLogValue)) {
@@ -258,14 +259,14 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
    }
 
    private void checkedPutValue(long keyId, PrivateLogValue value) throws Exception {
-      long startTime = System.nanoTime();
+      long startTime = TimeService.nanoTime();
       try {
          basicCache.put(keyGenerator.generateKey(keyId), value);
       } catch (Exception e) {
-         stressor.stats.registerError(System.nanoTime() - startTime, BasicOperations.PUT);
+         stressor.stats.registerError(TimeService.nanoTime() - startTime, BasicOperations.PUT);
          throw e;
       }
-      long endTime = System.nanoTime();
+      long endTime = TimeService.nanoTime();
       stressor.stats.registerRequest(endTime - startTime, BasicOperations.PUT);
    }
 

@@ -18,6 +18,7 @@ import org.radargun.config.Destroy;
 import org.radargun.config.Property;
 import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.ProvidesTrait;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -75,7 +76,7 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
       sb.append("[key=").append(ice.getKey()).append(", value=").append(ice.getValue());
       sb.append(", created=").append(ice.getCreated()).append(", isCreated=").append(ice.isCreated());
       sb.append(", lastUsed=").append(ice.getLastUsed()).append(", isChanged=").append(ice.isChanged());
-      sb.append(", expires=").append(ice.getExpiryTime()).append(", isExpired=").append(ice.isExpired(System.currentTimeMillis()));
+      sb.append(", expires=").append(ice.getExpiryTime()).append(", isExpired=").append(ice.isExpired(TimeService.currentTimeMillis()));
       sb.append(", canExpire=").append(ice.canExpire()).append(", isEvicted=").append(ice.isEvicted());
       sb.append(", isRemoved=").append(ice.isRemoved()).append(", isValid=").append(ice.isValid());
       sb.append(", lifespan=").append(ice.getLifespan()).append(", maxIdle=").append(ice.getMaxIdle());

@@ -1,5 +1,7 @@
 package org.radargun.service;
 
+import org.radargun.utils.TimeService;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,11 +65,11 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
       fireBeforeStart();
       startInternal();
 
-      long startTime = System.currentTimeMillis();
+      long startTime = TimeService.currentTimeMillis();
       synchronized (this) {
          while (!serverStarted) {
             try {
-               long waitTime = startTime + service.startTimeout - System.currentTimeMillis();
+               long waitTime = startTime + service.startTimeout - TimeService.currentTimeMillis();
                if (waitTime <= 0) {
                   throw new IllegalStateException("Server did not start within timeout");
                }

@@ -18,6 +18,7 @@ import javax.management.remote.JMXServiceURL;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.utils.TimeService;
 
 /**
  * 
@@ -131,11 +132,11 @@ public abstract class JMXPoller implements NotificationListener {
          };
          tryPoll[i].start();
       }
-      long waitEnd = System.currentTimeMillis() + queryTimeout;
+      long waitEnd = TimeService.currentTimeMillis() + queryTimeout;
       boolean broken = false;
       for (int i = 0; i < tryPoll.length; i++) {
          try {
-            long maxJoinWait = waitEnd - System.currentTimeMillis();
+            long maxJoinWait = waitEnd - TimeService.currentTimeMillis();
             if (maxJoinWait <= 0) {
                broken = true;
                break;

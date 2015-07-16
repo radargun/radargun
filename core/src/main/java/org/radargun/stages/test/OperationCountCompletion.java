@@ -2,6 +2,7 @@ package org.radargun.stages.test;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -25,7 +26,7 @@ public class OperationCountCompletion extends AbstractCompletion {
 
    @Override
    public boolean moreToRun(int opNumber) {
-      waitForNextRequest(opNumber, System.nanoTime());
+      waitForNextRequest(opNumber, TimeService.nanoTime());
       return requestsLeft.getAndDecrement() > 0;
    }
 
@@ -35,7 +36,7 @@ public class OperationCountCompletion extends AbstractCompletion {
       if ((totalExecuted + 1) % logOps != 0) {
          return;
       }
-      long elapsedNanos = System.nanoTime() - startTime;
+      long elapsedNanos = TimeService.nanoTime() - startTime;
       long estimatedTotal = elapsedNanos * numRequests / totalExecuted;
       long estimatedRemaining = estimatedTotal - elapsedNanos;
       log.infof(PROGRESS_STRING, executedOps, Utils.getNanosDurationString(elapsedNanos), Utils.getNanosDurationString(estimatedRemaining) + " (estimated)", Utils.getNanosDurationString(estimatedTotal) + " (estimated)");

@@ -3,13 +3,14 @@ package org.radargun.stages.cache.generators;
 import java.io.Serializable;
 
 import org.radargun.config.DefinitionElement;
+import org.radargun.utils.TimeService;
 
 @DefinitionElement(name = "timestamp", doc = "Creates key with provided long as an actual key and additional timestamp when key was created")
 public class TimestampKeyGenerator implements KeyGenerator {
 
    @Override
    public Object generateKey(long keyIndex) {
-      return new TimestampKey(keyIndex, System.currentTimeMillis());
+      return new TimestampKey(keyIndex, TimeService.currentTimeMillis());
    }
 
    public static class TimestampKey implements Serializable {

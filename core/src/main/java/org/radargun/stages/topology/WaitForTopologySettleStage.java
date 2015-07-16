@@ -10,6 +10,7 @@ import org.radargun.traits.Clustered;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.TopologyHistory;
 import org.radargun.utils.TimeConverter;
+import org.radargun.utils.TimeService;
 
 @Stage(doc = "Waits for a period without any change in membership/topology history.")
 public class WaitForTopologySettleStage extends AbstractDistStage {
@@ -46,9 +47,9 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
       if (!isServiceRunning()) {
          return successfulResponse();
       }
-      long startTime = System.currentTimeMillis();
+      long startTime = TimeService.currentTimeMillis();
       for (;;) {
-         long now = System.currentTimeMillis();
+         long now = TimeService.currentTimeMillis();
          if (now >= startTime + timeout) {
             return errorResponse("The topology has not settled within timeout.");
          }

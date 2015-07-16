@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.radargun.reporting.Timeline;
 import org.radargun.traits.InternalsExposition;
+import org.radargun.utils.TimeService;
 
 /**
  * Retrieves data from {@link org.radargun.traits.InternalsExposition} and places them into timeline
@@ -29,7 +30,7 @@ public class InternalsMonitor implements Monitor {
 
    @Override
    public void run() {
-      long now = System.currentTimeMillis();
+      long now = TimeService.currentTimeMillis();
       for (Map.Entry<String, Number> entry : internalsExposition.getValues().entrySet()) {
          timeline.addValue(entry.getKey(), new Timeline.Value(now, entry.getValue()));
       }

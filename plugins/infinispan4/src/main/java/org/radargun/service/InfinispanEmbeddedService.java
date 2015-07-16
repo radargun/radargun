@@ -28,6 +28,7 @@ import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.ProvidesTrait;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
@@ -198,9 +199,9 @@ public class InfinispanEmbeddedService {
       if (isCacheDistributed(cache)) {
          // should we be blocking until all rehashing, etc. has finished?
          long gracePeriod = MINUTES.toMillis(15);
-         long giveup = System.currentTimeMillis() + gracePeriod;
+         long giveup = TimeService.currentTimeMillis() + gracePeriod;
 
-         while (!isJoinComplete(cache) && System.currentTimeMillis() < giveup)
+         while (!isJoinComplete(cache) && TimeService.currentTimeMillis() < giveup)
             Thread.sleep(200);
          if (!isJoinComplete(cache)) {
             throw new RuntimeException("Caches haven't discovered and joined the cluster even after " + Utils.prettyPrintMillis(gracePeriod));

@@ -22,6 +22,7 @@ import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
 import org.radargun.utils.Fuzzy;
 import org.radargun.utils.TimeConverter;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -128,7 +129,7 @@ public class LoadDataStage extends AbstractDistStage {
       for (int i = 0; i < numThreads; ++i) {
          String cacheName = cacheSelector.getCacheName(threadBase + i);
          boolean useTransactions = this.useTransactions.use(transactional, cacheName, transactionSize);
-         long start = System.nanoTime();
+         long start = TimeService.nanoTime();
          Loader loader = useTransactions ? new TxLoader(i, getLoaderIds(i), start) : new NonTxLoader(i, getLoaderIds(i), start);
          loaders.add(loader);
          loader.start(); // no special synchronization needed
@@ -249,7 +250,7 @@ public class LoadDataStage extends AbstractDistStage {
       protected boolean loadEntry() {
          int size = entrySize.next(random);
          long currentKeyIndex = loaderIds.currentKeyIndex();
-         delayRequest(start, System.nanoTime(), currentKeyIndex);
+         delayRequest(start, TimeService.nanoTime(), currentKeyIndex);
          long keyId = loaderIds.next(size);
          if (keyId < 0) {
             log.info(String.format("Finished %s entries", remove ? "removing" : "loading"));
@@ -318,7 +319,7 @@ public class LoadDataStage extends AbstractDistStage {
          }
          int size = entrySize.next(random);
          long currentKeyIndex = loaderIds.currentKeyIndex();
-         delayRequest(start, System.nanoTime(), currentKeyIndex);
+         delayRequest(start, TimeService.nanoTime(), currentKeyIndex);
          long keyId = loaderIds.next(size);
          if (keyId >= 0) {
             Object key = keyGenerator.generateKey(keyId);

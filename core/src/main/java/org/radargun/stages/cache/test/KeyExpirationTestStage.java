@@ -15,6 +15,7 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.SizeConverter;
 import org.radargun.utils.TimeConverter;
+import org.radargun.utils.TimeService;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -115,7 +116,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
       public Object run() throws RequestException {
          Random random = stressor.getRandom();
          KeyWithRemovalTime pair;
-         long timestamp = System.currentTimeMillis();
+         long timestamp = TimeService.currentTimeMillis();
          if (minRemoveTimestamp <= timestamp) {
             Load load = loadForSize.get(minRemoveSize);
             pair = load.scheduledKeys.pollFirst();

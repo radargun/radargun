@@ -15,6 +15,7 @@ import org.radargun.state.SlaveState;
 import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.OperationThroughput;
+import org.radargun.utils.TimeService;
 
 /**
  * Coordinator for collecting statistics from background stressor threads started by {@link org.radargun.stages.cache.background.BackgroundOpsManager}.
@@ -125,7 +126,7 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
             }
          }
          Timeline timeline = backgroundOpsManager.getSlaveState().getTimeline();
-         long now = System.currentTimeMillis();
+         long now = TimeService.currentTimeMillis();
          long cacheSize = sizeThread.getAndResetSize();
          timeline.addValue(CACHE_SIZE, new Timeline.Value(now, cacheSize));
          if (stats.isEmpty()) {

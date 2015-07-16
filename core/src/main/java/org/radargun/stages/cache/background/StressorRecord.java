@@ -5,6 +5,7 @@ import java.util.*;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.helpers.Range;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -25,7 +26,7 @@ public class StressorRecord {
    protected volatile long currentOp = -1;
    protected final LinkedList<StressorConfirmation> confirmations = new LinkedList<>();
    private long lastUnsuccessfulCheckTimestamp = Long.MIN_VALUE;
-   private long lastSuccessfulCheckTimestamp = System.currentTimeMillis();
+   private long lastSuccessfulCheckTimestamp = TimeService.currentTimeMillis();
    private Set<Long> notifiedOps = new HashSet<>();
    private long requireNotify = Long.MAX_VALUE;
 

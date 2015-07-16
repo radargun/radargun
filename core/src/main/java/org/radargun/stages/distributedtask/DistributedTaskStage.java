@@ -26,6 +26,7 @@ import org.radargun.traits.Clustered;
 import org.radargun.traits.DistributedTaskExecutor;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Projections;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -139,7 +140,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          log.info("--------------------");
          List<T> resultList = new ArrayList<T>();
 
-         long start = System.nanoTime();
+         long start = TimeService.nanoTime();
          List<Future<T>> futureList = task.execute();
          if (futureList == null) {
             ack.error("No future objects returned from executing the distributed task.");
@@ -154,7 +155,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
                }
             }
          }
-         long durationNanos = System.nanoTime() - start;
+         long durationNanos = TimeService.nanoTime() - start;
          stats.registerRequest(durationNanos, DistributedTaskExecutor.EXECUTE);
 
          log.info("Distributed Execution task completed in "

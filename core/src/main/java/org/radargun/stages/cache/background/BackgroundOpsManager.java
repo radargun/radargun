@@ -18,6 +18,7 @@ import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.Debugable;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.Transactional;
+import org.radargun.utils.TimeService;
 
 /**
  * Manages background stressors and log checkers (start/stop/check for errors).
@@ -180,7 +181,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
          // ThreadManager.waitForProgress.
          if (logLogicConfiguration.ignoreDeadCheckers) {
             for (StressorRecord stressorRecord : stressorRecordPool.getAvailableRecords()) {
-               stressorRecord.setLastSuccessfulCheckTimestamp(System.currentTimeMillis());
+               stressorRecord.setLastSuccessfulCheckTimestamp(TimeService.currentTimeMillis());
             }
          }
          return;
@@ -271,7 +272,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
          log.error("Failed to retrieve the keep alive timestamp", e);
          return true;
       }
-      return keepAliveTimestamp != null && keepAliveTimestamp > System.currentTimeMillis() - generalConfiguration.deadSlaveTimeout;
+      return keepAliveTimestamp != null && keepAliveTimestamp > TimeService.currentTimeMillis() - generalConfiguration.deadSlaveTimeout;
    }
 
    public Transactional.Transaction newTransaction() {

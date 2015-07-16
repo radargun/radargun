@@ -15,6 +15,7 @@ import org.radargun.traits.CacheListeners;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Projections;
 import org.radargun.utils.TimeConverter;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 import java.util.Collections;
@@ -160,7 +161,7 @@ public class RegisterListenersStage extends AbstractDistStage {
    
    private long getResponseTime(Object key) {
       if(key instanceof TimestampKey) {
-         return (TimeUnit.NANOSECONDS.convert(System.currentTimeMillis() - ((TimestampKey)key).getTimestamp(), TimeUnit.MILLISECONDS));
+         return (TimeUnit.NANOSECONDS.convert(TimeService.currentTimeMillis() - ((TimestampKey)key).getTimestamp(), TimeUnit.MILLISECONDS));
       }
       return 0; //latency of event arrival is not measured
    }

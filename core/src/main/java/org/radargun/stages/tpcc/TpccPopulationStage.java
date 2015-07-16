@@ -12,6 +12,7 @@ import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Projections;
+import org.radargun.utils.TimeService;
 
 /**
  * This stage shuld be run before the <b>TpccBenchmarkStage</b>. It will perform the population of
@@ -50,14 +51,14 @@ public class TpccPopulationStage extends AbstractDistStage {
          log.info("Not executing any test as the service is not running on this slave ");
          return successfulResponse();
       }
-      long startTime = System.currentTimeMillis();
+      long startTime = TimeService.currentTimeMillis();
       try {
          log.info("Performing Population Operations");
          new TpccPopulation(basicOperations.getCache(null), numWarehouses, slaveState.getSlaveIndex(), slaveState.getClusterSize(), cLastMask, olIdMask, cIdMask);
       } catch (Exception e) {
          log.warn("Received exception during cache population" + e.getMessage());
       }
-      long duration = System.currentTimeMillis() - startTime;
+      long duration = TimeService.currentTimeMillis() - startTime;
       log.info("The population took: " + (duration / 1000) + " seconds.");
       return new DurationAck(slaveState, duration);
    }

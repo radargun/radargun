@@ -23,6 +23,7 @@ import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
 import org.radargun.utils.Projections;
 import org.radargun.utils.TimeConverter;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -119,10 +120,10 @@ public abstract class TestStage extends AbstractDistStage {
       }
 
       try {
-         long startNanos = System.nanoTime();
+         long startNanos = TimeService.nanoTime();
          log.info("Starting test " + testName);
          List<Stressor> stressors = execute();
-         log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(System.nanoTime() - startNanos));
+         log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(TimeService.nanoTime() - startNanos));
          return newStatisticsAck(stressors);
       } catch (Exception e) {
          return errorResponse("Exception while initializing the test", e);
@@ -195,7 +196,7 @@ public abstract class TestStage extends AbstractDistStage {
    }
 
    public List<Stressor> execute() {
-      long startTime = System.currentTimeMillis();
+      long startTime = TimeService.currentTimeMillis();
       int myFirstThread = getFirstThreadOn(slaveState.getSlaveIndex());
       int myNumThreads = getNumThreadsOn(slaveState.getSlaveIndex());
 
@@ -296,7 +297,7 @@ public abstract class TestStage extends AbstractDistStage {
    }
 
    private long getWaitTime(long startTime) {
-      return startTime + timeout - System.currentTimeMillis();
+      return startTime + timeout - TimeService.currentTimeMillis();
    }
 
    public int getTotalThreads() {
