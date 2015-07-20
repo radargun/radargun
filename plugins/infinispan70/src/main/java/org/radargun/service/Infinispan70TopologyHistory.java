@@ -2,12 +2,9 @@ package org.radargun.service;
 
 import org.infinispan.Cache;
 import org.infinispan.notifications.Listener;
-import org.infinispan.notifications.cachelistener.annotation.DataRehashed;
 import org.infinispan.notifications.cachelistener.annotation.PartitionStatusChanged;
-import org.infinispan.notifications.cachelistener.annotation.TopologyChanged;
-import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
 import org.infinispan.notifications.cachelistener.event.PartitionStatusChangedEvent;
-import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
+import org.radargun.traits.TopologyHistory;
 
 /**
  * @author Matej Cimbora
@@ -33,7 +30,8 @@ public class Infinispan70TopologyHistory extends InfinispanTopologyHistory {
       @PartitionStatusChanged
       public void onPartitionStatusChanged(PartitionStatusChangedEvent<?, ?> e) {
          log.debug("Partition status update " + (e.isPre() ? "started" : "finished"));
-         addEvent(cacheStatusChanges, cacheName, e.isPre(), 0, 0);
+         TopologyHistory.Event.EventType type = e.isPre() ? TopologyHistory.Event.EventType.START : TopologyHistory.Event.EventType.END;
+         addEvent(cacheStatusChanges, cacheName, type, 0, 0);
       }
    }
 }

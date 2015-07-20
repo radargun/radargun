@@ -1,6 +1,6 @@
 package org.radargun.stages.topology;
 
-import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.radargun.DistStageAck;
@@ -11,6 +11,9 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.TopologyHistory;
 import org.radargun.traits.TopologyHistory.Event;
+import org.radargun.utils.TimeService;
+
+import static org.radargun.traits.TopologyHistory.HistoryType;
 
 /**
  * Controls which topology events have (not) happened recently
@@ -20,17 +23,11 @@ import org.radargun.traits.TopologyHistory.Event;
 @Stage(doc = "Controls which topology events have (not) happened recently")
 public class CheckTopologyStage extends AbstractDistStage {
 
-   enum Type {
-      HASH_AND_TOPOLOGY,
-      HASH,
-      TOPOLOGY
-   }
-
    @Property(doc = "Name of the cache. Default is the default cache.")
    private String cacheName;
 
-   @Property(doc = "What does this stage control. Default is both DataRehashed and TopologyChanged events.")
-   private Type type = Type.HASH_AND_TOPOLOGY;
+   @Property(doc = "Type of events to check in this stage. Default are TOPOLOGY, REHASH, CACHE_STATUS (see org.radargun.traits.TopologyHistory.HistoryType).")
+   private EnumSet<TopologyHistory.HistoryType> checkEvents = EnumSet.allOf(TopologyHistory.HistoryType.class);
 
    @Property(converter = TimeConverter.class, doc = "The period in milliseconds which is checked. Default is infinite.")
    private long period = Long.MAX_VALUE;
@@ -47,7 +44,7 @@ public class CheckTopologyStage extends AbstractDistStage {
          log.debug("Ignoring this slave");
          return successfulResponse();
       }
-      if (type == Type.HASH_AND_TOPOLOGY || type == Type.TOPOLOGY) {
+      if (checkEvents.contains(HistoryType.TOPOLOGY)) {
          List<Event> history = topologyHistory.getTopologyChangeHistory(cacheName);
          if (!check(history)) {
             return errorResponse("Topology check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1)));
@@ -55,7 +52,7 @@ public class CheckTopologyStage extends AbstractDistStage {
             log.debug("Topology check passed.");
          }
       }
-      if (type == Type.HASH_AND_TOPOLOGY || type == Type.HASH) {
+      if (checkEvents.contains(HistoryType.REHASH)) {
          List<Event> history = topologyHistory.getRehashHistory(cacheName);
          if (!check(history)) {
             return errorResponse("Hash check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1)));
@@ -63,14 +60,22 @@ public class CheckTopologyStage extends AbstractDistStage {
             log.debug("Hash check passed.");
          }
       }
+      if (checkEvents.contains(HistoryType.CACHE_STATUS)) {
+         List<Event> history = topologyHistory.getCacheStatusChangeHistory(cacheName);
+         if (!check(history)) {
+            return errorResponse("Cache status check failed, " + (history.isEmpty() ? "no change in history" : "last change " + history.get(history.size() - 1)));
+         } else {
+            log.debug("Cache status check passed.");
+         }
+      }
       return successfulResponse();
    }
 
    private boolean check(List<Event> history) {
       if (history.isEmpty()) return !changed;
-      long lastChange = history.get(history.size() - 1).getEnded().getTime();
-      long current = new Date().getTime();
-      boolean hasChanged = lastChange + period > current; 
+      long lastChange = history.get(history.size() - 1).getTime().getTime();
+      long current = TimeService.currentTimeMillis();
+      boolean hasChanged = lastChange + period > current;
       return hasChanged == changed;
    }
 }

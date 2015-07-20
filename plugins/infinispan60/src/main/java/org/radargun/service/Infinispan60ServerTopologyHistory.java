@@ -1,5 +1,7 @@
 package org.radargun.service;
 
+import org.radargun.traits.TopologyHistory;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,6 +10,8 @@ import java.util.Set;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+
+import static org.radargun.traits.TopologyHistory.Event.EventType;
 
 public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
    protected final InfinispanServerService service;
@@ -68,32 +72,32 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
       for (Map.Entry<String, CacheStatus> entry : newResult.entrySet()) {
          if (cacheChangesOngoing.containsKey(entry.getKey())) {
             if (entry.getValue().rehashInProgress && !cacheChangesOngoing.get(entry.getKey()).rehashInProgress) {
-               addEvent(hashChanges, entry.getKey(), true, 0, 0);
+               addEvent(hashChanges, entry.getKey(), EventType.START, 0, 0);
             }
             if (!entry.getValue().rehashInProgress && cacheChangesOngoing.get(entry.getKey()).rehashInProgress) {
-               addEvent(hashChanges, entry.getKey(), false, 0, 0);
+               addEvent(hashChanges, entry.getKey(), EventType.END, 0, 0);
             }
             if (entry.getValue().topologyChangeInProgress
                   && !cacheChangesOngoing.get(entry.getKey()).topologyChangeInProgress) {
-               addEvent(topologyChanges, entry.getKey(), true, 0, 0);
+               addEvent(topologyChanges, entry.getKey(), EventType.START, 0, 0);
             }
             if (!entry.getValue().topologyChangeInProgress
                   && cacheChangesOngoing.get(entry.getKey()).topologyChangeInProgress) {
-               addEvent(topologyChanges, entry.getKey(), false, 0, 0);
+               addEvent(topologyChanges, entry.getKey(), EventType.END, 0, 0);
             }
             // No cache availability change event start/end, just register an event with current timestamp
             if (entry.getValue().cacheAvailabilityChanged) {
-               addEvent(cacheStatusChanges, entry.getKey(), false, 0, 0);
+               addEvent(cacheStatusChanges, entry.getKey(), EventType.SINGLE, 0, 0);
             }
          } else {
             if (entry.getValue().rehashInProgress) {
-               addEvent(hashChanges, entry.getKey(), true, 0, 0);
+               addEvent(hashChanges, entry.getKey(), EventType.START, 0, 0);
             }
             if (entry.getValue().topologyChangeInProgress) {
-               addEvent(topologyChanges, entry.getKey(), true, 0, 0);
+               addEvent(topologyChanges, entry.getKey(), EventType.START, 0, 0);
             }
             if (entry.getValue().cacheAvailabilityChanged) {
-               addEvent(cacheStatusChanges, entry.getKey(), false, 0, 0);
+               addEvent(cacheStatusChanges, entry.getKey(), EventType.SINGLE, 0, 0);
             }
          }
          cacheChangesOngoing.put(entry.getKey(), entry.getValue());
@@ -266,7 +270,7 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
       return result;
    }
 
-   private static class CacheStatus {
+   protected static class CacheStatus {
       boolean rehashInProgress;
       boolean topologyChangeInProgress;
 
@@ -275,7 +279,7 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
       CacheAvailability prevCacheAvailability;
    }
 
-   private static enum CacheAvailability {
+   protected static enum CacheAvailability {
       AVAILABLE, DEGRADED_MODE;
    }
 }

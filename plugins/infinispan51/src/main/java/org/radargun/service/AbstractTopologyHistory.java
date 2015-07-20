@@ -57,22 +57,12 @@ public abstract class AbstractTopologyHistory implements TopologyHistory {
       return newList;
    }
 
-   protected synchronized void addEvent(Map<String, List<Event>> map, String cacheName, boolean isPre, int atStart, int atEnd) {
+   protected synchronized void addEvent(Map<String, List<Event>> map, String cacheName, TopologyHistory.Event.EventType type, int atStart, int atEnd) {
       List<Event> list = map.get(cacheName);
       if (list == null) {
          map.put(cacheName, list = new ArrayList<>());
       }
-      if (isPre) {
-         list.add(new Event(false, atStart, atEnd));
-      } else {
-         int size = list.size();
-         if (size == 0 || list.get(size - 1).getEnded() != null) {
-            Event ev = new Event(true, atStart, atEnd);
-            list.add(ev);
-         } else {
-            list.get(size - 1).setEnded();
-         }
-      }
+      list.add(new Event(new Date(), type, atStart, atEnd));
    }
 
    protected synchronized void reset() {
@@ -82,41 +72,26 @@ public abstract class AbstractTopologyHistory implements TopologyHistory {
    }
 
    protected static class Event extends TopologyHistory.Event {
-      private final Date started;
-      private Date ended;
+      private final Date time;
+      private final EventType type;
       private final int atStart;
       private final int atEnd;
 
-      private Event(Date started, Date ended, int atStart, int atEnd) {
-         this.started = started;
-         this.ended = ended;
-         this.atStart = atStart;
-         this.atEnd = atEnd;
-      }
-
-      public Event(boolean finished, int atStart, int atEnd) {
-         if (finished) {
-            this.started = this.ended = new Date();
-         } else {
-            this.started = new Date();
-         }
+      public Event(Date time, EventType type, int atStart, int atEnd) {
+         this.time = time;
+         this.type = type;
          this.atStart = atStart;
          this.atEnd = atEnd;
       }
 
       @Override
-      public Date getStarted() {
-         return started;
-      }
-
-      public void setEnded() {
-         if (ended != null) throw new IllegalStateException();
-         ended = new Date();
+      public Date getTime() {
+         return time;
       }
 
       @Override
-      public Date getEnded() {
-         return ended;
+      public EventType getType() {
+         return type;
       }
 
       @Override
@@ -131,7 +106,7 @@ public abstract class AbstractTopologyHistory implements TopologyHistory {
 
       @Override
       public TopologyHistory.Event copy() {
-         return new InfinispanTopologyHistory.Event(started, ended, atStart, atEnd);
+         return new InfinispanTopologyHistory.Event(time, type, atStart, atEnd);
       }
    }
 }

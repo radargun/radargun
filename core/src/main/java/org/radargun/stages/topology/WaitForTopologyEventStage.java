@@ -11,31 +11,15 @@ import org.radargun.traits.InjectTrait;
 import org.radargun.traits.TopologyHistory;
 import org.radargun.utils.TimeService;
 
+import static org.radargun.traits.TopologyHistory.Event.EventType;
+import static org.radargun.traits.TopologyHistory.HistoryType;
+
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Waits until some event occurs. Note that the initial rehash is not recorded in this manner, " +
       "therefore waiting for that will result in timeout.")
 public class WaitForTopologyEventStage extends AbstractDistStage {
-   public enum Type {
-      REHASH("__last_rehash_event__"),
-      TOPOLOGY_UPDATE("__last_topology_event__");
-
-      private final String key;
-
-      private Type(String key) {
-         this.key = key;
-      }
-
-      public String getKey() {
-         return key;
-      }
-   }
-
-   public enum Condition {
-      START,
-      END
-   }
 
    @Property(doc = "Name of the cache where we detect the events. Default is the default cache.")
    private String cacheName;
@@ -46,11 +30,11 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
    @Property(doc = "Set last state before finishing. Default is true.")
    private boolean set = true;
 
-   @Property(doc = "Type of event we are detecting. Default is REHASH.")
-   private Type type = Type.REHASH;
+   @Property(doc = "Type of event we are detecting. Default is REHASH (see org.radargun.traits.TopologyHistory.HistoryType).")
+   private TopologyHistory.HistoryType type = HistoryType.REHASH;
 
-   @Property(doc = "Condition we are waiting for. Default is END.")
-   private Condition condition = Condition.END;
+   @Property(doc = "Condition we are waiting for. Default is END (see org.radargun.traits.TopologyHistory.Event.EventType).")
+   private EventType condition = EventType.END;
 
    @Property(doc = "How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.", converter = TimeConverter.class)
    private long timeout = 600000;
@@ -71,26 +55,34 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
       }
       List<TopologyHistory.Event> history = getEventHistory(topologyHistory);
       if (wait) {
-         TopologyHistory.Event setEvent = (TopologyHistory.Event) slaveState.get(type.getKey());
+         TopologyHistory.Event setEvent = (TopologyHistory.Event) slaveState.get(String.valueOf(type));
          long startWaiting = TimeService.currentTimeMillis();
 
          wait_loop:
          while (timeout <= 0 || TimeService.currentTimeMillis() < startWaiting + timeout) {
             log.trace("setEvent=" + setEvent + ", history=" + history);
             if (history.size() > 0) {
-               if (condition == Condition.END) {
+               if (condition == EventType.END) {
                   for (int i = history.size() - 1; i >= 0; --i) {
                      TopologyHistory.Event e = history.get(i);
-                     if (setEvent != null && setEvent.getEnded() != null && !e.getStarted().after(setEvent.getStarted())) break;
-                     if (e.getEnded() != null && e.getMembersAtEnd() >= minMembers && e.getMembersAtEnd() <= maxMembers) {
+                     if (setEvent != null && setEvent.getType() == EventType.END && !e.getTime().after(setEvent.getTime())) break;
+                     if (e.getType() == EventType.END && e.getMembersAtEnd() >= minMembers && e.getMembersAtEnd() <= maxMembers) {
                         break wait_loop;
                      }
                   }
-               } else if (condition == Condition.START) {
+               } else if (condition == EventType.START) {
                   for (int i = history.size() - 1; i >= 0; --i) {
                      TopologyHistory.Event e = history.get(i);
-                     if (setEvent != null && !e.getStarted().after(setEvent.getStarted())) break;
-                     if (e.getMembersAtEnd() >= minMembers && e.getMembersAtEnd() <= maxMembers) {
+                     if (setEvent != null && setEvent.getType() == EventType.START && !e.getTime().after(setEvent.getTime())) break;
+                     if (e.getType() == EventType.START && e.getMembersAtEnd() >= minMembers && e.getMembersAtEnd() <= maxMembers) {
+                        break wait_loop;
+                     }
+                  }
+               } else if (condition == EventType.SINGLE) {
+                  for (int i = history.size() - 1; i >= 0; --i) {
+                     TopologyHistory.Event e = history.get(i);
+                     if (setEvent != null && setEvent.getType() == EventType.SINGLE && !e.getTime().after(setEvent.getTime())) break;
+                     if (e.getType() == EventType.SINGLE && e.getMembersAtEnd() >= minMembers && e.getMembersAtEnd() <= maxMembers) {
                         break wait_loop;
                      }
                   }
@@ -109,18 +101,20 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
          }
       }
       if (set) {
-         slaveState.put(type.getKey(), history.isEmpty() ? null : history.get(history.size() - 1));
+         slaveState.put(String.valueOf(type), history.isEmpty() ? null : history.get(history.size() - 1));
       }
       return successfulResponse();
    }
 
    private List<TopologyHistory.Event> getEventHistory(TopologyHistory wrapper) {
       switch (type) {
+         case TOPOLOGY:
+            return wrapper.getTopologyChangeHistory(cacheName);
          case REHASH:
             return wrapper.getRehashHistory(cacheName);
-         case TOPOLOGY_UPDATE:
-            return wrapper.getTopologyChangeHistory(cacheName);
+         case CACHE_STATUS:
+            return wrapper.getCacheStatusChangeHistory(cacheName);
       }
-      throw new IllegalStateException();
+      throw new IllegalStateException("Unexpected event type " + type);
    }
 }

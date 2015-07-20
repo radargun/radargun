@@ -1,5 +1,6 @@
 package org.radargun.stages.topology;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.radargun.DistStageAck;
@@ -11,6 +12,8 @@ import org.radargun.traits.InjectTrait;
 import org.radargun.traits.TopologyHistory;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
+
+import static org.radargun.traits.TopologyHistory.HistoryType;
 
 @Stage(doc = "Waits for a period without any change in membership/topology history.")
 public class WaitForTopologySettleStage extends AbstractDistStage {
@@ -24,14 +27,8 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
    @Property(doc = "Name of the cache where we detect the events. Default is the default cache.")
    private String cacheName;
 
-   @Property(doc = "Wait for cache topology settle. Default is true.")
-   private boolean checkTopology = true;
-
-   @Property(doc = "Wait for data rehashes to settle. Default is true.")
-   private boolean checkDataRehash = true;
-
-   @Property(doc = "Wait for partition status to settle. Default is true.")
-   private boolean checkPartitionStatus = true;
+   @Property(doc = "Type of events to check in this stage. Default are TOPOLOGY, REHASH, CACHE_STATUS (see org.radargun.traits.TopologyHistory.HistoryType).")
+   private EnumSet<TopologyHistory.HistoryType> checkEvents = EnumSet.allOf(TopologyHistory.HistoryType.class);
 
    @Property(doc = "Wait for cluster membership to settle. Default is true (if the Clustered trait is supported).")
    private boolean checkMembership = true;
@@ -55,43 +52,18 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
          }
          boolean settled = true;
 
-         List<TopologyHistory.Event> topologyChangeHistory = history.getTopologyChangeHistory(cacheName);
-         List<TopologyHistory.Event> rehashHistory = history.getRehashHistory(cacheName);
-         List<TopologyHistory.Event> partitionStatusHistory = history.getCacheStatusChangeHistory(cacheName);
-         List<Clustered.Membership> membershipHistory = clustered == null ? null : clustered.getMembershipHistory();
-         if (checkTopology && topologyChangeHistory != null && !topologyChangeHistory.isEmpty()) {
-            TopologyHistory.Event event = topologyChangeHistory.get(topologyChangeHistory.size() - 1);
-            if (event.getEnded() == null) {
-               log.debug("Topology change event has not finished: " + event);
-               settled = false;
-            } else if (now < event.getEnded().getTime() + period) {
-               log.debug("Last topology change event finished too recently: " + event);
-               settled = false;
-            }
+         if (checkEvents.contains(HistoryType.TOPOLOGY)) {
+            settled = settled && checkEventHistory(history.getTopologyChangeHistory(cacheName), "Topology change", now);
          }
-         if (checkDataRehash && rehashHistory != null && !rehashHistory.isEmpty()) {
-            TopologyHistory.Event event = rehashHistory.get(rehashHistory.size() - 1);
-            if (event.getEnded() == null) {
-               log.debug("Rehash event has not finished: " + event);
-               settled = false;
-            } else if (now < event.getEnded().getTime() + period) {
-               log.debug("Last rehash event finished too recently: " + event);
-               settled = false;
-            }
+         if (checkEvents.contains(HistoryType.REHASH)) {
+            settled = settled && checkEventHistory(history.getRehashHistory(cacheName), "Rehash", now);
          }
-         if (checkPartitionStatus && partitionStatusHistory != null && !partitionStatusHistory.isEmpty()) {
-            TopologyHistory.Event event = partitionStatusHistory.get(partitionStatusHistory.size() - 1);
-            if (now < event.getEnded().getTime() + period) {
-               log.debug("Last partition status changed too recently: " + event);
-               settled = false;
-            }
+         if (checkEvents.contains(HistoryType.CACHE_STATUS)) {
+            settled = settled && checkEventHistory(history.getCacheStatusChangeHistory(cacheName), "Cache status change", now);
          }
-         if (checkMembership && membershipHistory != null && !membershipHistory.isEmpty()) {
-            Clustered.Membership membership = membershipHistory.get(membershipHistory.size() - 1);
-            if (now < membership.date.getTime() + period) {
-               log.debug("Last membership changed too recently: " + membership);
-               settled = false;
-            }
+         if (checkMembership) {
+            List<Clustered.Membership> membershipHistory = clustered == null ? null : clustered.getMembershipHistory();
+            settled = settled && checkMembership(membershipHistory, now);
          }
 
          if (settled) {
@@ -104,5 +76,52 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
             }
          }
       }
+   }
+
+   /**
+    * @return Boolean indicating whether Topology/Rehash/Partition status has settled.
+    */
+   private boolean checkEventHistory(List<TopologyHistory.Event> eventList, String eventName, long startDateMillis) {
+      int finished = 0;
+      for (int i = eventList.size() - 1; i >= 0; i--) {
+         TopologyHistory.Event event = eventList.get(i);
+         if (startDateMillis < event.getTime().getTime() + period) {
+            log.debugf("%s event finished too recently: %s", eventName, event);
+            return false;
+         }
+         switch (event.getType()) {
+            case START: {
+               if (finished <= 0) {
+                  log.debugf("%s event has not finished: %s", eventName, event);
+                  return false;
+               } else {
+                  finished--;
+               }
+               break;
+            }
+            case END: {
+               finished++;
+               break;
+            }
+            case SINGLE: {
+               // no op
+            }
+         }
+      }
+      if (finished != 0) {
+         log.warn("Number of START / END events doesn't match");
+      }
+      return true;
+   }
+
+   private boolean checkMembership(List<Clustered.Membership> membershipHistory, long startDateMillis) {
+      if (checkMembership && membershipHistory != null && !membershipHistory.isEmpty()) {
+         Clustered.Membership membership = membershipHistory.get(membershipHistory.size() - 1);
+         if (startDateMillis < membership.date.getTime() + period) {
+            log.debug("Last membership changed too recently: " + membership);
+            return false;
+         }
+      }
+      return true;
    }
 }

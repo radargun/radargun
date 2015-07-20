@@ -8,6 +8,7 @@ import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
 import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
 import org.radargun.traits.TopologyHistory;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -42,7 +43,8 @@ public class InfinispanTopologyHistory extends AbstractTopologyHistory {
          log.debug("Topology change " + (e.isPre() ? "started" : "finished"));
          int atStart = service.membersCount(e.getConsistentHashAtStart());
          int atEnd = service.membersCount(e.getConsistentHashAtEnd());
-         addEvent(topologyChanges, cacheName, e.isPre(), atStart, atEnd);
+         TopologyHistory.Event.EventType type = e.isPre() ? TopologyHistory.Event.EventType.START : TopologyHistory.Event.EventType.END;
+         addEvent(topologyChanges, cacheName, type, atStart, atEnd);
       }
 
       @DataRehashed
@@ -50,7 +52,8 @@ public class InfinispanTopologyHistory extends AbstractTopologyHistory {
          log.debug("Rehash " + (e.isPre() ? "started" : "finished"));
          int atStart = e.getMembersAtStart().size();
          int atEnd = e.getMembersAtEnd().size();
-         addEvent(hashChanges, cacheName, e.isPre(), atStart, atEnd);
+         TopologyHistory.Event.EventType type = e.isPre() ? TopologyHistory.Event.EventType.START : TopologyHistory.Event.EventType.END;
+         addEvent(hashChanges, cacheName, type, atStart, atEnd);
       }
    }
 }

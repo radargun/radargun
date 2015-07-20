@@ -39,14 +39,14 @@ public interface TopologyHistory {
       private DateFormat formatter = new SimpleDateFormat("HH:mm:ss,S");
 
       /**
-       * @return Date when this event started
+       * @return Date when this event occurred
        */
-      public abstract Date getStarted();
+      public abstract Date getTime();
 
       /**
-       * @return Date when this event finished or null if it has not finished yet.
+       * @return Type of this event - START / END / SINGLE
        */
-      public abstract Date getEnded();
+      public abstract EventType getType();
 
       /**
        * @return How many members were part of this when this event started.
@@ -68,17 +68,31 @@ public interface TopologyHistory {
          if (o == null) return false;
          if (!(o instanceof Event)) return false;
          Event e = (Event) o;
-         return ((getStarted() == null && e.getStarted() == null)
-                       || (getStarted() != null && getStarted().equals(e.getStarted())))
-               && ((getEnded() == null && e.getEnded() == null)
-                       || (getEnded() != null && getEnded().equals(e.getEnded())));
+         return ((getTime() == null && e.getTime() == null)
+                       || (getTime() != null && getTime().equals(e.getTime())))
+               && ((getType() == null && e.getType() == null)
+                       || (getType() != null && getType().equals(e.getType())));
       }
 
       @Override
       public String toString() {
-         return String.format("[%s - %s]",
-               getStarted() == null ? "not started" : formatter.format(getStarted()),
-               getEnded() == null ? "not ended" : formatter.format(getEnded()));
+         return String.format("[%s, %s]", getType(), formatter.format(getTime()));
       }
+
+      /**
+       * START - start of the event
+       * END - end of the event
+       * SINGLE - event with no start/end - represents a single point of time
+       */
+      public enum EventType {
+         START, END, SINGLE
+      }
+   }
+
+   /**
+    * Type of history events this class provides.
+    */
+   enum HistoryType {
+      TOPOLOGY, REHASH, CACHE_STATUS
    }
 }

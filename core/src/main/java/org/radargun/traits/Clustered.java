@@ -95,7 +95,7 @@ public interface Clustered {
          return new Membership(new Date(), Collections.unmodifiableCollection(members));
       }
 
-      protected Membership(Date date, Collection<Member> members) {
+      public Membership(Date date, Collection<Member> members) {
          this.date = date;
          this.members = members;
       }

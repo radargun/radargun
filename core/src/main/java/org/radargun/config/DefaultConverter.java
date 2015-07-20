@@ -4,15 +4,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import org.radargun.utils.Tokenizer;
 
@@ -74,6 +66,17 @@ public class DefaultConverter implements Converter<Object> {
             return set;
          }
       });
+      definedMap.put(EnumSet.class, new Parser() {
+         @Override
+         public Object parse(String string, Type[] parameters) {
+            if (parameters.length != 1 && !((Class<?>) parameters[0]).isEnum()) throw new IllegalArgumentException();
+            EnumSet enumSet = EnumSet.noneOf((Class<? extends Enum>) parameters[0]);
+            for (Object o : parseCollection(string, parameters[0])) {
+               enumSet.add(o);
+            }
+            return enumSet;
+         }
+      });
       definedMap.put(List.class, new Parser() {
          @Override
          public Object parse(String string, Type[] parameters) {
@@ -86,7 +89,7 @@ public class DefaultConverter implements Converter<Object> {
        * Superclasses and interfaces may be parsed by parsers for inheriting classes as well.
        *  This approach has some flaws with generics.
        */
-      Map<Class<?>, Parser> completionMap = new HashMap<Class<?>, Parser>(definedMap);
+      Map<Class<?>, Parser> completionMap = new HashMap<>(definedMap);
       for (;;) {
          for (Map.Entry<Class<?>, Parser> entry : definedMap.entrySet()) {
             Class<?> superclazz = entry.getKey().getSuperclass();
@@ -101,7 +104,7 @@ public class DefaultConverter implements Converter<Object> {
          }
          if (definedMap.size() == completionMap.size()) break;
          definedMap = completionMap;
-         completionMap = new HashMap<Class<?>, Parser>(definedMap);
+         completionMap = new HashMap<>(definedMap);
       }
       parserMap = completionMap;
    }
@@ -160,7 +163,7 @@ public class DefaultConverter implements Converter<Object> {
          return parseIntCollection(string, type);
       }
       StringTokenizer tokenizer = new StringTokenizer(string, ",[]", true);
-      List list = new ArrayList<Object>();
+      List list = new ArrayList<>();
       StringBuilder innerCollection = null;
       int bracketLevel = 0;
       while (tokenizer.hasMoreTokens()) {

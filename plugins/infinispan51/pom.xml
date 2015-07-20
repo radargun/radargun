@@ -15,6 +15,7 @@
    <properties>
       <version.infinispan>5.1.8.Final</version.infinispan>
       <version.jbossts>4.16.3.Final</version.jbossts>
+      <maven.test.skip>false</maven.test.skip>
    </properties>
 
    <dependencies>
