@@ -22,6 +22,17 @@
 
    <profiles>
       <profile>
+         <id>jdg65-infinispan-version-default</id>
+         <activation>
+            <property>
+               <name>!jdg65.infinispan.version</name>
+            </property>
+         </activation>
+         <properties>
+            <version.infinispan>6.3.0.Final-redhat-5</version.infinispan>
+         </properties>
+      </profile>
+      <profile>
          <id>demos</id>
          <activation>
             <property>
