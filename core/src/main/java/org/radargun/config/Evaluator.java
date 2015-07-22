@@ -149,8 +149,6 @@ public class Evaluator {
       String strValue = System.getProperty(property);
       if (strValue != null && !strValue.isEmpty()) {
          value = new Value(strValue.trim());
-      } else if (System.getenv().containsKey(property)) {
-         value = new Value(System.getenv(property).trim());
       } else {
          if (property.startsWith("env.")) {
             String env = System.getenv(property.substring(4));
