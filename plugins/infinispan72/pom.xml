@@ -10,18 +10,18 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>plugin-infinispan71</artifactId>
-   <name>Infinispan 7.1.x plugin for RadarGun</name>
+   <artifactId>plugin-infinispan72</artifactId>
+   <name>Infinispan 7.2.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>${infinispan71.infinispan.version}</version.infinispan>
+      <version.infinispan>${infinispan72.infinispan.version}</version.infinispan>
       <version.jbossts>4.16.3.Final</version.jbossts>
    </properties>
 
    <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>plugin-infinispan70</artifactId>
+         <artifactId>plugin-infinispan71</artifactId>
          <version>${project.version}</version>
       </dependency>
 
@@ -103,31 +103,20 @@
          <version>${version.infinispan}</version>
          <optional>true</optional>
       </dependency>
-
-      <dependency>
-         <groupId>org.radargun</groupId>
-         <artifactId>plugin-jcache</artifactId>
-         <version>${project.version}</version>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-jcache</artifactId>
-         <version>${version.infinispan}</version>
-      </dependency>
+ 
 
    </dependencies>
 
    <profiles>
       <profile>
-         <id>infinispan71-infinispan-version-default</id>
+         <id>infinispan72-infinispan-version-default</id>
          <activation>
             <property>
-               <name>!infinispan71.infinispan.version</name>
+               <name>!infinispan72.infinispan.version</name>
             </property>
          </activation>
          <properties>
-            <version.infinispan>7.1.1.Final</version.infinispan>
+            <version.infinispan>7.2.3.Final</version.infinispan>
          </properties>
       </profile>
       <profile>

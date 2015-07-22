@@ -223,10 +223,12 @@
             <module>plugins/infinispan53</module>
             <module>plugins/infinispan60</module>
             <module>plugins/infinispan70</module>
-	    <module>plugins/infinispan71</module>
+            <module>plugins/infinispan71</module>
+            <module>plugins/infinispan72</module>
+            <module>plugins/infinispan80</module>
          </modules>
          <properties>
-            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71</plugins.infinispan>
+            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80</plugins.infinispan>
          </properties>
       </profile>
       <profile>
@@ -257,19 +259,6 @@
             <module>plugins/jdg62</module>
             <module>plugins/jdg63</module>
             <module>plugins/jdg64</module>
-         </modules>
-         <properties>
-            <plugins.jdg>jdg60,jdg61,jdg62,jdg63,jdg64</plugins.jdg>
-         </properties>
-      </profile>
-      <profile>
-         <id>jdg65</id>
-         <activation>
-            <property>
-               <name>jdg65.infinispan.version</name>
-            </property>
-         </activation>
-         <modules>
             <module>plugins/jdg65</module>
          </modules>
          <properties>
