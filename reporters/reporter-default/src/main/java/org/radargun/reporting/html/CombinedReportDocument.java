@@ -24,6 +24,7 @@ public class CombinedReportDocument extends ReportDocument {
    private List<TestAggregations> testAggregations;
    private Set<String> operations = new HashSet<>();
    private List<String> combined;
+   private Set<Integer> clusterSizes = new TreeSet<>();
 
    public CombinedReportDocument(List<TestAggregations> testAggregations, String testName, List<String> combined, String targetDir, Configuration configuration) {
       super(targetDir, testName, Projections.max(Projections.project(testAggregations, new Projections.Func<TestAggregations, Integer>() {
@@ -73,34 +74,62 @@ public class CombinedReportDocument extends ReportDocument {
       return chart;
    }
 
-   public void writeTest() throws IOException {
-      writeTag("h1", "Test " + testName);
-
-      Set<Integer> clusterSizes = new TreeSet<>();
+   public void calculateClusterSizes() {
       for (TestAggregations ta : testAggregations) {
-         for (Map.Entry<String, Map<Report, List<Report.TestResult>>> result : ta.results().entrySet()) {
-            writeTag("h2", result.getKey());
-            writeResult(result.getValue());
-         }
          clusterSizes.addAll(ta.byClusterSize().keySet());
       }
+   }
 
-      for (final String operation : operations) {
-         writeTag("h2", operation);
-
-         if (configuration.separateClusterCharts) {
+   public void createTestCharts() {
+      for (String operation : operations) {
+         if (maxClusters > 1 && configuration.separateClusterCharts) {
             for (Integer clusterSize : clusterSizes) {
-               createAndWriteCharts(operation, clusterSize);
+               try {
+                  createCharts(operation, clusterSize);
+               } catch (IOException e) {
+                  log.error("Exception while creating test charts", e);
+               }
             }
          } else {
-            createAndWriteCharts(operation, 0);
+            try {
+               createCharts(operation, 0);
+            } catch (IOException e) {
+               log.error("Exception while creating test charts", e);
+            }
          }
          int i = 0;
          for (TestAggregations ta : testAggregations) {
-            writeOperation(operation, ta.byReports(), combined.get(i++));
+            createHistogramAndPercentileCharts(operation, ta.byReports(), combined.get(i++));
          }
       }
+      waitForChartsGeneration();
    }
+
+   /**
+    * The following methods are used in Freemarker templates
+    * e.g. method getPercentiles() can be used as getPercentiles() or percentiles in template
+    */
+
+   public String getSingleTestName(int i) {
+      return combined.get(i);
+   }
+
+   public Set<Integer> getClusterSizes() {
+      return clusterSizes;
+   }
+
+   public List<TestAggregations> getTestAggregations() {
+      return testAggregations;
+   }
+
+   public Set<String> getOperations() {
+      return operations;
+   }
+
+   public List<String> getCombined() {
+      return combined;
+   }
+
 }
 
 

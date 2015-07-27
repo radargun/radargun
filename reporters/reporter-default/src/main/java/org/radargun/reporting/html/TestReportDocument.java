@@ -1,13 +1,14 @@
 package org.radargun.reporting.html;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.radargun.reporting.Report;
 import org.radargun.reporting.commons.Aggregation;
 import org.radargun.reporting.commons.TestAggregations;
-
 
 /**
  * Shows results of the tests executed in the benchmark.
@@ -37,30 +38,55 @@ public class TestReportDocument extends ReportDocument {
          subCategory = null;
       }
       ComparisonChart chart = createComparisonChart(testAggregations.iterationsName, rangeAxisLabel);
-      if(!addToChart(chart, subCategory, operation, chartType, reportAggregationMap)){
+      if (!addToChart(chart, subCategory, operation, chartType, reportAggregationMap)) {
          chart = null;
       }
       return chart;
    }
 
-   public void writeTest() throws IOException {
-      writeTag("h1", "Test " + testName);
-
-      for (Map.Entry<String, Map<Report, List<Report.TestResult>>> result : testAggregations.results().entrySet()) {
-         writeTag("h2", result.getKey());
-         writeResult(result.getValue());
-      }
-
+   public void createTestCharts() {
       for (String operation : testAggregations.getAllOperations()) {
-         writeTag("h2", operation);
          if (maxClusters > 1 && configuration.separateClusterCharts) {
             for (Integer clusterSize : testAggregations.byClusterSize().keySet()) {
-               createAndWriteCharts(operation, clusterSize);
+               try {
+                  createCharts(operation, clusterSize);
+               } catch (IOException e) {
+                  log.error("Exception while creating test charts", e);
+               }
             }
          } else {
-            createAndWriteCharts(operation, 0);
+            try {
+               createCharts(operation, 0);
+            } catch (IOException e) {
+               log.error("Exception while creating test charts", e);
+            }
          }
-         writeOperation(operation, testAggregations.byReports(), testName);
+         createHistogramAndPercentileCharts(operation, testAggregations.byReports(), testName);
       }
+      waitForChartsGeneration();
+   }
+
+   /**
+    * The following methods are used in Freemarker templates
+    * e.g. method getPercentiles() can be used as getPercentiles() or percentiles in template
+    */
+
+   // This returns list so that it is compatible with Combined report document
+   public List<TestAggregations> getTestAggregations() {
+      List<TestAggregations> aggregations = new ArrayList<>();
+      aggregations.add(testAggregations);
+      return aggregations;
+   }
+
+   public String getSingleTestName(int i) {
+      return testName;
+   }
+
+   public Set<Integer> getClusterSizes() {
+      return testAggregations.byClusterSize().keySet();
+   }
+
+   public Set<String> getOperations() {
+      return testAggregations.getAllOperations();
    }
 }

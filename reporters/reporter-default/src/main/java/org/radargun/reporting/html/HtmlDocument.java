@@ -10,7 +10,6 @@ import java.io.PrintWriter;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class HtmlDocument {
-   protected PrintWriter writer;
    protected final String directory;
    private final String title;
    private final String fileName;
@@ -29,61 +28,24 @@ public abstract class HtmlDocument {
       this.title = title;
    }
 
-   /**
-    * Open the document file and write common headers.
-    * @throws IOException
-    */
-   public void open() throws IOException {
+   public String getFileName() {
+      return fileName;
+   }
+
+   public String getDirectory() {
+      return directory;
+   }
+
+   public void createReportDirectory() {
       File dir = new File(directory);
-      if (dir.exists() && !dir.isDirectory()) {
-         throw new IllegalArgumentException(dir.getAbsolutePath() + " is not a directory");
-      } else if (!dir.exists()) {
-         dir.mkdirs();
-      }
-      writer = new PrintWriter(directory + File.separator + fileName);
-      write("<HTML><HEAD><TITLE>");
-      write(title);
-      write("</TITLE><STYLE>\n");
-      writeStyle();
-      write("</STYLE>\n<SCRIPT>\n");
-      writeScripts();
-      write("</SCRIPT></HEAD>\n<BODY>");
+      dir.mkdirs();
    }
-
    /**
-    * Write CSS styles.
+    * The following methods are used in Freemarker templates
+    * e.g. method getPercentiles() can be used as getPercentiles() or percentiles in template
     */
-   protected void writeStyle() {
-   }
 
-   /**
-    * Write JavaScript scripts used in the document.
-    */
-   protected void writeScripts() {
-   }
-
-   /**
-    * Write footer and close the file.
-    */
-   public void close() {
-      writer.println("</BODY></HTML>");
-      writer.close();
-   }
-
-   /**
-    * Write open tag, content and closing tag
-    * @param tag
-    * @param content
-    */
-   protected void writeTag(String tag, String content) {
-      writer.write(String.format("<%s>%s</%s>", tag, content, tag));
-   }
-
-   /**
-    * Write arbitrary text.
-    * @param text
-    */
-   public void write(String text) {
-      writer.write(text);
+   public String getTitle() {
+      return title;
    }
 }

@@ -1,7 +1,6 @@
 package org.radargun.reporting.html;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -86,10 +85,29 @@ public class TimelineDocument extends HtmlDocument {
       }
    }
 
-   public void writeTimelines() throws IOException {
-      write("<center><h1>" + title + " Timeline</h1></center>");
+   @Override
+   public String getTitle() {
+      return title;
+   }
 
-      write("<table style=\"float: left\">");
+   public String range(final String valueCategory, final int valueCategoryId) {
+      Double min = minValues.get(valueCategory);
+      if (min == null || min > 0) min = 0d;
+      Double max = maxValues.get(valueCategory);
+      if (max == null || max < 0) max = 0d;
+      minValues.put(valueCategory, min);
+      maxValues.put(valueCategory, max);
+
+      return String.format("timeline_%s_%d_range.png", configName, valueCategoryId);
+   }
+
+   public String getValueChartFile(int valueCategoryId, int slaveIndex) {
+      return String.format("timeline_%s_v%d_%d.png", configName, valueCategoryId, slaveIndex);
+   }
+
+   public void createTestCharts() {
+      createReportDirectory();
+
       final AtomicBoolean firstDomain = new AtomicBoolean(true);
       final String relativeDomainFile = "domain_" + configName + "_relative.png";
       final String absoluteDomainFile = "domain_" + configName + "_absolute.png";
@@ -97,29 +115,17 @@ public class TimelineDocument extends HtmlDocument {
       for (Map.Entry<String, Integer> valueEntry : valueCategories.entrySet()) {
          final String valueCategory = valueEntry.getKey();
          final int valueCategoryId = valueEntry.getValue();
-         write(String.format("<tr><th colspan=\"2\">%s</th></tr>", valueCategory));
 
          /* Range */
-         Double min = minValues.get(valueCategory);
-         if (min == null || min > 0) min = 0d;
-         Double max = maxValues.get(valueCategory);
-         if (max == null || max < 0) max = 0d;
-         minValues.put(valueCategory, min);
-         maxValues.put(valueCategory, max);
-
-         final String rangeFile = String.format("timeline_%s_%d_range.png", configName, valueCategoryId);
-         write(String.format("<tr><td style=\"text-align: right\"><img src=\"%s\"></td>\n", rangeFile));
+         final String rangeFile = range(valueCategory, valueCategoryId);
 
          /* Charts */
-         write(String.format("<td><div style=\"position: relative; width: %d; height: %d\">\n", configuration.width, configuration.height));
          final AtomicBoolean firstRange = new AtomicBoolean(true);
          for (Timeline timeline : timelines) {
             List<Timeline.Value> categoryValues = timeline.getValues(valueCategory);
             final List<Timeline.Value> values = categoryValues != null ? categoryValues : Collections.EMPTY_LIST;
             final int slaveIndex = timeline.slaveIndex;
-            final String valueChartFile = String.format("timeline_%s_v%d_%d.png", configName, valueCategoryId, slaveIndex);
-            write(String.format("<img id=\"layer_%d_%d\" src=\"%s\" style=\"position: absolute; left: 0; top: 0\">\n",
-                  valueCategoryId, slaveIndex, valueChartFile));
+            final String valueChartFile = getValueChartFile(valueCategoryId, slaveIndex);
 
             chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
                @Override
@@ -143,21 +149,8 @@ public class TimelineDocument extends HtmlDocument {
                   return null;
                }
             }));
-
-            for (String eventCategory : timeline.getEventCategories()) {
-               if (timeline.getEvents(eventCategory) == null) continue;
-
-               int eventCategoryId = eventCategories.get(eventCategory);
-               String eventChartFile = String.format("timeline_%s_e%d_%d.png", configName, eventCategoryId, timeline.slaveIndex);
-               write(String.format("<img id=\"layer_%d_%d_%d\" src=\"%s\" style=\"position: absolute; left: 0; top: 0\">\n",
-                     valueCategoryId, eventCategoryId, timeline.slaveIndex, eventChartFile));
-            }
          }
-         write("</div></td></tr>");
-         write("<tr><td>&nbsp;</td><td><img src=\"" + relativeDomainFile + "\"></td></tr>");
-         write("<tr><td>&nbsp;</td><td><img src=\"" + absoluteDomainFile + "\"></td></tr>");
       }
-      write("</table>");
 
       for (Timeline timeline : timelines) {
          final int slaveIndex = timeline.slaveIndex;
@@ -181,6 +174,7 @@ public class TimelineDocument extends HtmlDocument {
          }
       }
       /* wait until all charts are generated */
+
       for (Future f : chartTaskFutures) {
          try {
             f.get();
@@ -188,81 +182,59 @@ public class TimelineDocument extends HtmlDocument {
             log.error("Failed to generate on of the charts: ", e);
          }
       }
-
-      /* Checkboxes */
-      write("<div style=\"float: left;\">\n");
-      for (Map.Entry<String, Integer> eventEntry : eventCategories.entrySet()) {
-         write(String.format("<input id=\"cat_%d\" type=\"checkbox\" checked=\"checked\" onClick=\"", eventEntry.getValue()));
-
-         for (Timeline timeline : timelines) {
-            for (int valuesId : valueCategories.values())  {
-               write(String.format("reset_display('layer_%d_%d_%d', this.checked && is_checked('slave_%d'), 'block');",
-                     valuesId, eventEntry.getValue(), timeline.slaveIndex, timeline.slaveIndex));
-            }
-         }
-         write(String.format("\"><strong>%s</strong><br>\n", eventEntry.getKey()));
-      }
-
-      write("<br><br>");
-      List<Cluster.Group> groups = cluster.getGroups();
-      for (Timeline timeline : timelines) {
-         write(String.format("<span style=\"background-color: #%06X;\">&nbsp;</span>" +
-               "<input type=\"checkbox\" checked=\"checked\" id=\"slave_%d\" onClick=\"",
-               TimelineChart.getColorForIndex(timeline.slaveIndex), timeline.slaveIndex));
-         for (int valuesId : valueCategories.values())  {
-            write(String.format("reset_display('layer_%d_%d', this.checked, 'block');",
-                  valuesId, timeline.slaveIndex));
-            for (int eventsId : eventCategories.values()) {
-               write(String.format("reset_display('layer_%d_%d_%d', this.checked && is_checked('cat_%d'), 'block');",
-                     valuesId, eventsId, timeline.slaveIndex, eventsId));
-            }
-         }
-         if (timeline.slaveIndex >= 0) {
-            write("\"><strong>Slave ");
-            if (groups.size() > 1)  {
-               write(String.format("%d (%s)", timeline.slaveIndex, cluster.getGroup(timeline.slaveIndex).name));
-            } else {
-               write(String.valueOf(timeline.slaveIndex));
-            }
-            write("</strong><br>\n");
-         } else {
-            write("\"><strong>Master</strong><br>\n");
-         }
-      }
-      if (groups.size() > 1) {
-         for (int groupId = 0; groupId < groups.size(); ++groupId) {
-            write(String.format("<span>&nbsp;</span><input type=\"checkbox\" checked=\"checked\" id=\"group_%d\" onClick=\"", groupId));
-            for (int slaveIndex : cluster.getSlaves(groups.get(groupId).name)) {
-               for (int valuesId : valueCategories.values()) {
-                  write(String.format("document.getElementById('slave_%d').checked = this.checked;", slaveIndex));
-                  write(String.format("reset_display('layer_%d_%d', this.checked, 'block');",
-                        valuesId, slaveIndex));
-                  for (int eventsId : eventCategories.values()) {
-                     write(String.format("reset_display('layer_%d_%d_%d', this.checked && is_checked('cat_%d'), 'block');",
-                           valuesId, eventsId, slaveIndex, eventsId));
-                  }
-               }
-            }
-            write("\"><strong>Group " + groups.get(groupId).name + "</strong><br>\n");
-         }
-      }
-      write("</div>");
    }
 
-   @Override
-   protected void writeScripts() {
-      write("function is_checked(id, checked) {\n");
-      write("    var element = document.getElementById(id);\n");
-      write("    return element == null ? false : element.checked\n");
-      write("}\n");
-      write("function reset_display(id, checked, display) {\n");
-      write("    var element = document.getElementById(id);\n");
-      write("    if (element == null) return;\n");
-      write("    if (checked) {\n");
-      write("        element.style.display = display;\n");
-      write("    } else {\n");
-      write("        element.style.display = 'none';\n");
-      write("    }\n}\n");
+   /**
+    * The following methods are used in Freemarker templates
+    * e.g. method getPercentiles() can be used as getPercentiles() or percentiles in template
+    */
+
+   public Configuration getConfiguration() {
+      return configuration;
+   }
+
+   public String getConfigName() {
+      return configName;
+   }
+
+   public Cluster getCluster() {
+      return cluster;
+   }
+
+   public List<Timeline> getTimelines() {
+      return timelines;
+   }
+
+   public Map<String, Double> getMinValues() {
+      return minValues;
+   }
+
+   public Map<String, Double> getMaxValues() {
+      return maxValues;
+   }
+
+   public Map<String, Integer> getValueCategories() {
+      return valueCategories;
+   }
+
+   public Map<String, Integer> getEventCategories() {
+      return eventCategories;
+   }
+
+   public long getStartTimestamp() {
+      return startTimestamp;
+   }
+
+   public long getEndTimestamp() {
+      return endTimestamp;
+   }
+
+   public String generateEventChartFile(int eventCategoryId, int slaveIndex) {
+      return String.format("timeline_%s_e%d_%d.png", configName, eventCategoryId, slaveIndex);
+   }
+
+   public String getCheckboxColor(Timeline timeline) {
+      return String.format("#%06X", TimelineChart.getColorForIndex(timeline.slaveIndex));
    }
 
    public static class Configuration {
@@ -271,5 +243,18 @@ public class TimelineDocument extends HtmlDocument {
 
       @Property(name = "chart.height", doc = "Height of the chart in pixels. Default is 500.")
       private int height = 500;
+
+      /**
+       * The following methods are used in Freemarker templates
+       * e.g. method getPercentiles() can be used as getPercentiles() or percentiles in template
+       */
+
+      public int getWidth() {
+         return width;
+      }
+
+      public int getHeight() {
+         return height;
+      }
    }
 }
