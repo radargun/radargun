@@ -1,0 +1,87 @@
+.highlight {
+    background-color: #FFBBBB;
+}
+
+.gray {
+    background-color: #F0F0F0;
+}
+
+.firstCellStyle {
+    border-left-color: black;
+    border-left-width: 2px;
+    text-align: right;
+}
+
+.rowStyle {
+    text-align: right;
+}
+
+.collapse {
+    visibility: collapse;
+}
+
+.visible {
+    visibility: visible;
+}
+
+.none {
+    display: none;
+}
+
+.listItem {
+    display: list-item;
+}
+
+.graphTable, .graphTable th, .graphTable td {
+    border: none;
+}
+
+.onClick {
+    cursor: pointer;
+}
+
+.center {
+    text-align: center;
+}
+
+.left {
+    text-align: left;
+}
+
+.difference {
+    background-color: #FFBBBB;
+}
+
+.topLeft {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.graphDiv {
+    position: relative;
+}
+
+.floatLeft {
+    float: left;
+}
+
+table {
+    border-spacing: 0;
+    border-collapse: collapse;
+    border: 1px solid gray;
+}
+
+td {
+    border: 1px solid gray;
+    padding: 2px;
+}
+
+th {
+    border: 1px solid gray;
+    padding: 2px;
+
+    border-left-color: black;
+    border-left-width: 2px;
+    text-align: center;
+}

@@ -1,8 +1,10 @@
-import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.radargun.config.Cluster;
 import org.radargun.reporting.Timeline;
+import org.radargun.reporting.html.HtmlReporter;
 import org.radargun.reporting.html.TimelineDocument;
 import org.radargun.utils.TimeService;
 import org.testng.annotations.Test;
@@ -47,13 +49,14 @@ public class TimelineChartsTest {
 
       Cluster cluster = new Cluster();
       cluster.addGroup("default", 2);
-      TimelineDocument doc = new TimelineDocument(new TimelineDocument.Configuration(), "test", "testconfig", "Test Config", Arrays.asList(t0, t1), cluster);
-      try {
-         doc.open();
-         doc.writeTimelines();
-         doc.close();
-      } catch (IOException e) {
-         e.printStackTrace();
-      }
+      TimelineDocument timelineDocument = new TimelineDocument(new TimelineDocument.Configuration(), "test", "testconfig", "Test Config", Arrays.asList(t0, t1), cluster);
+
+      timelineDocument.createReportDirectory();
+      timelineDocument.createTestCharts();
+
+      Map root = new HashMap();
+      root.put("timelineDocument", timelineDocument);
+
+      HtmlReporter.processTemplate(root, timelineDocument.getDirectory(), timelineDocument.getFileName(), "timelineReport.ftl");
    }
 }
