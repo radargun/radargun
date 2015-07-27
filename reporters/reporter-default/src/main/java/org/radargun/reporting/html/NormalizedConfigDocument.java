@@ -1,10 +1,6 @@
 package org.radargun.reporting.html;
 
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 import org.radargun.config.Cluster;
 
@@ -39,53 +35,37 @@ public class NormalizedConfigDocument extends HtmlDocument {
 
    private static String getTitle(String configName, String groupName, Cluster cluster, String config) {
       return String.format("Normalized configuration %s for %s, group %s on %s",
-            config, configName, groupName, cluster);
+              config, configName, groupName, cluster);
    }
 
    public static String getFilename(String configName, String groupName, Cluster cluster, String config) {
       return String.format("normalized_%s_%s_%d_%s.html",
-            configName, groupName, cluster.getClusterIndex(), config);
+              configName, groupName, cluster.getClusterIndex(), config);
    }
 
-   @Override
-   protected void writeStyle() {
-      write("TABLE { border-spacing: 0; border-collapse: collapse; }\n");
-      write("TD { border: 1px solid gray; padding: 2px; }\n");
-      write("TH { border: 1px solid gray; padding: 2px; text-align: left; }\n");
-      write(".difference { background-color: #FFBBBB; }\n");
+   /**
+    * The following methods are used in Freemarker templates
+    * e.g. method getPercentiles() can be used as getPercentiles() or percentiles in template
+    */
+
+   public Map<String, SortedMap<Integer, String>> getProperties() {
+      return properties;
    }
 
-   public void writeProperties() {
-      write("<table><tr><th>&nbsp;</th>");
-      for (Integer slave : slaves) {
-         write("<th style=\"text-align: center\">Slave " + slave + "</th>");
+   public Set<Integer> getSlaves() {
+      return slaves;
+   }
+
+   public boolean checkForDifference(List<String> values) {
+      String firstValue = null;
+
+      for (String value : values) {
+         if (firstValue == null) {
+            firstValue = value;
+         } else if (!firstValue.equals(value)) {
+            return true;
+         }
       }
-      write("</tr>");
-      for (Map.Entry<String, SortedMap<Integer, String>> property : properties.entrySet()) {
-         String firstValue = null;
-         boolean difference = false;
-         for (String value : property.getValue().values()) {
-            if (firstValue == null) {
-               firstValue = value;
-            } else if (!firstValue.equals(value)) {
-               difference = true;
-            }
-         }
-         write("<tr>");
-         if (difference) {
-            write("<th class=\"difference\">" + property.getKey() + "</th>");
-         } else {
-            writeTag("th", property.getKey());
-         }
-         for (String value : property.getValue().values()) {
-            if (difference) {
-               write("<td class=\"difference\">" + value + "</td>");
-            } else {
-               writeTag("td", value);
-            }
-         }
-         write("</tr>\n");
-      }
-      write("</table>");
+      return false;
    }
 }
