@@ -14,7 +14,7 @@ import org.radargun.stages.ScenarioInitStage;
 import org.w3c.dom.Element;
 
 /**
- * Generates XSD file describing RadarGun 2.0 configuration.
+ * Generates XSD file describing RadarGun 2.1 configuration.
  *
  * There are basically two parts: hand-coded stable configuration
  * (such as cluster & configuration definitions), and stage lists

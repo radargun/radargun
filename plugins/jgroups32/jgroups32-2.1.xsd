@@ -1,1 +1,150 @@
-../../target/distribution/RadarGun-2.1.0-SNAPSHOT/schema/jgroups32-2.1.xsd
+<schema xmlns:rg="urn:radargun:plugins:jgroups32:2.1" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:radargun:plugins:jgroups32:2.1" version="1.0" xmlns="http://www.w3.org/2001/XMLSchema">
+   <!--From jgroups-3.2.11.Final.jar-->
+   <complexType name="org-jgroups-receiver-adapter">
+      <sequence maxOccurs="1" minOccurs="1"/>
+   </complexType>
+   <!--From plugin-jgroups30-2.1.0.Final.jar-->
+   <complexType name="org-radargun-service-j-groups-service">
+      <annotation>
+         <documentation>JGroups faking cache operations</documentation>
+      </annotation>
+      <complexContent>
+         <extension base="rg:org-jgroups-receiver-adapter">
+            <sequence maxOccurs="1" minOccurs="1">
+               <element maxOccurs="1" minOccurs="0" name="anycasting" type="rg:boolean">
+                  <annotation>
+                     <documentation>Controls use of anycasting flag in RequestOptions. Default is false.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="bundle" type="rg:boolean">
+                  <annotation>
+                     <documentation>Controls use of the DONT_BUNDLE flag. Default is false.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="config" type="string">
+                  <annotation>
+                     <documentation>Configuration file for JGroups.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="file" type="string">
+                  <annotation>
+                     <documentation>Configuration file for JGroups.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="flow-control" type="rg:boolean">
+                  <annotation>
+                     <documentation>Controls use of the FC flag. Default is false.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="get-first" type="rg:boolean">
+                  <annotation>
+                     <documentation>If true, reads are executed on all owners using ResponseMode GET_FIRST. Otherwise it just randomly picks one node for reading. Default is false.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="num-owners" type="rg:int">
+                  <annotation>
+                     <documentation>Number of nodes where the writes will be replicated.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="oob" type="rg:boolean">
+                  <annotation>
+                     <documentation>Controls use of the OOB flag. Default is false.</documentation>
+                  </annotation>
+               </element>
+               <element maxOccurs="1" minOccurs="0" name="self-requests" type="rg:org-radargun-service-j-groups-service-self-requests">
+                  <annotation>
+                     <documentation>What to do with requests directed on ourselves. Variants are 'execute', 'exclude' and 'noop'. Default is execute.</documentation>
+                  </annotation>
+               </element>
+            </sequence>
+            <attribute name="anycasting" type="rg:boolean">
+               <annotation>
+                  <documentation>Controls use of anycasting flag in RequestOptions. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="bundle" type="rg:boolean">
+               <annotation>
+                  <documentation>Controls use of the DONT_BUNDLE flag. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="config" type="string">
+               <annotation>
+                  <documentation>*DEPRECATED* Configuration file for JGroups.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="file" type="string">
+               <annotation>
+                  <documentation>Configuration file for JGroups.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="flow-control" type="rg:boolean">
+               <annotation>
+                  <documentation>Controls use of the FC flag. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="get-first" type="rg:boolean">
+               <annotation>
+                  <documentation>If true, reads are executed on all owners using ResponseMode GET_FIRST. Otherwise it just randomly picks one node for reading. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="num-owners" type="rg:int">
+               <annotation>
+                  <documentation>Number of nodes where the writes will be replicated.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="oob" type="rg:boolean">
+               <annotation>
+                  <documentation>Controls use of the OOB flag. Default is false.</documentation>
+               </annotation>
+            </attribute>
+            <attribute name="self-requests" type="rg:org-radargun-service-j-groups-service-self-requests">
+               <annotation>
+                  <documentation>What to do with requests directed on ourselves. Variants are 'execute', 'exclude' and 'noop'. Default is execute.</documentation>
+               </annotation>
+            </attribute>
+         </extension>
+      </complexContent>
+   </complexType>
+   <simpleType name="boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="int">
+      <union>
+         <simpleType>
+            <restriction base="integer"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="org-radargun-service-j-groups-service-self-requests">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <enumeration value="execute"/>
+               <enumeration value="exclude"/>
+               <enumeration value="noop"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <element name="default" type="rg:org-radargun-service-j-groups-service"/>
+   <element name="jgroups" type="rg:org-radargun-service-j-groups-service"/>
+</schema>

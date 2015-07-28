@@ -1,5 +1,5 @@
-<!-- RadarGun 2.0 benchmark -->
-<benchmark xmlns="urn:radargun:benchmark:2.0">
+<!-- RadarGun 2.1 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.1">
 
    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
 
@@ -11,13 +11,13 @@
    <configurations>
       <config name="First configuration">
          <setup plugin="infinispan60">
-            <embedded xmlns="urn:radargun:plugins:infinispan60:2.0"
+            <embedded xmlns="urn:radargun:plugins:infinispan60:2.1"
                       file="dist-sync.xml"/>
          </setup>
       </config>
       <config name="Second configuration">
          <setup plugin="infinispan60">
-            <embedded xmlns="urn:radargun:plugins:infinispan60:2.0"
+            <embedded xmlns="urn:radargun:plugins:infinispan60:2.1"
                       file="dist-sync.xml"/>
          </setup>
       </config>
@@ -61,17 +61,17 @@
    <reports>
       <reporter type="html">
          <report>
-            <html xmlns="urn:radargun:reporters:reporter-default:2.0"
+            <html xmlns="urn:radargun:reporters:reporter-default:2.1"
                   target-dir="reports/html-default"/>
          </report>
          <report>
-            <html xmlns="urn:radargun:reporters:reporter-default:2.0"
+            <html xmlns="urn:radargun:reporters:reporter-default:2.1"
                   target-dir="reports/html-separate">
                <test-report separate-cluster-charts="true" />
             </html>
          </report>
          <report>
-            <html xmlns="urn:radargun:reporters:reporter-default:2.0"
+            <html xmlns="urn:radargun:reporters:reporter-default:2.1"
                   target-dir="reports/html-combined">
                <!-- Notice the square brackets, you might create multiple combinations using
                      [testA, testB], [testB, testC]

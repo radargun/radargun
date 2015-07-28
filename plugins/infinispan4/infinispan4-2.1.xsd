@@ -1,1 +1,74 @@
-../../target/distribution/RadarGun-2.1.0-SNAPSHOT/schema/infinispan4-2.1.xsd
+<schema xmlns:rg="urn:radargun:plugins:infinispan4:2.1" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:radargun:plugins:infinispan4:2.1" version="1.0" xmlns="http://www.w3.org/2001/XMLSchema">
+   <!--From plugin-infinispan4-2.1.0.Final.jar-->
+   <complexType name="org-radargun-service-infinispan-embedded-service">
+      <annotation>
+         <documentation>Service hosting Infinispan in embedded (library) mode.</documentation>
+      </annotation>
+      <sequence maxOccurs="1" minOccurs="1">
+         <element maxOccurs="1" minOccurs="0" name="cache" type="string">
+            <annotation>
+               <documentation>Name of the main cache. Default is 'testCache'</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="config" type="string">
+            <annotation>
+               <documentation>File used as a configuration for this service.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="file" type="string">
+            <annotation>
+               <documentation>File used as a configuration for this service.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="keys-per-thread" type="rg:int">
+            <annotation>
+               <documentation>Keys per thread - for EvenConsistentHash.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="threads-per-node" type="rg:int">
+            <annotation>
+               <documentation>Threads per node - for EvenConsistentHash.</documentation>
+            </annotation>
+         </element>
+      </sequence>
+      <attribute name="cache" type="string">
+         <annotation>
+            <documentation>Name of the main cache. Default is 'testCache'</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="config" type="string">
+         <annotation>
+            <documentation>*DEPRECATED* File used as a configuration for this service.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="file" type="string">
+         <annotation>
+            <documentation>File used as a configuration for this service.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="keys-per-thread" type="rg:int">
+         <annotation>
+            <documentation>Keys per thread - for EvenConsistentHash.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="threads-per-node" type="rg:int">
+         <annotation>
+            <documentation>Threads per node - for EvenConsistentHash.</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <simpleType name="int">
+      <union>
+         <simpleType>
+            <restriction base="integer"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <element name="default" type="rg:org-radargun-service-infinispan-embedded-service"/>
+   <element name="embedded" type="rg:org-radargun-service-infinispan-embedded-service"/>
+</schema>

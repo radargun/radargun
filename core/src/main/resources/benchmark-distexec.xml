@@ -1,4 +1,4 @@
-<benchmark xmlns="urn:radargun:benchmark:2.0">
+<benchmark xmlns="urn:radargun:benchmark:2.1">
 
 	<!-- Specifies where should the master open socket -->
 	<master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
@@ -12,7 +12,7 @@
 	<configurations>
 		<config name="Infinispan 7.0 - distributed">
 			<setup plugin="infinispan70">
-            <embedded xmlns="urn:radargun:plugins:infinispan70:2.0" file="dist-sync.xml" />
+            <embedded xmlns="urn:radargun:plugins:infinispan70:2.1" file="dist-sync.xml" />
          </setup>
 		</config>
 	</configurations>

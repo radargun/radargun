@@ -1,1 +1,218 @@
-../../target/distribution/RadarGun-2.1.0-SNAPSHOT/schema/reporter-perfrepo-2.1.xsd
+<schema xmlns:rg="urn:radargun:reporters:reporter-perfrepo:2.1" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:radargun:reporters:reporter-perfrepo:2.1" version="1.0" xmlns="http://www.w3.org/2001/XMLSchema">
+   <!--From reporter-perfrepo-2.1.0.Final.jar-->
+   <complexType name="org-radargun-reporting-perfrepo-perfrepo-reporter">
+      <sequence maxOccurs="1" minOccurs="1">
+         <element maxOccurs="1" minOccurs="0" name="build-params" type="rg:java-util-map-converted-by-org-radargun-utils-key-value-list-converter">
+            <annotation>
+               <documentation>Additional build parameters</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="jenkins-build" type="string">
+            <annotation>
+               <documentation>ID of jenkins build that produced this report (default not &lt;unknown&gt;)</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="jenkins-build-date" type="rg:java-util-date-converted-by-org-radargun-utils-date-converter">
+            <annotation>
+               <documentation>Date of jenkins build that produced this report (default current date)</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="jenkins-build-url" type="string">
+            <annotation>
+               <documentation>URL of jenkins build that produced this report (default &lt;unknown&gt;)</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="metric-name-mapping" type="rg:java-util-list-converted-by-org-radargun-reporting-perfrepo-perfrepo-reporter-metric-name-mapping-converter">
+            <annotation>
+               <documentation>Name mapping between radargun statistics names and perfrepo metric names. Only statistics with defined mapping will be uploaded.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="perf-repo-auth" type="string">
+            <annotation>
+               <documentation>Perfrepo BASIC Authentication string (required)</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="perf-repo-host" type="string">
+            <annotation>
+               <documentation>Perfrepo host (default localhost)</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="perf-repo-port" type="rg:int">
+            <annotation>
+               <documentation>Perfrepo port (default 8080)</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="perf-repo-tag" type="string">
+            <annotation>
+               <documentation>Perfrepo tags, semicolon separated</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="perf-repo-test" type="string">
+            <annotation>
+               <documentation>Perfrepo test uid (required)</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="tests" type="string">
+            <annotation>
+               <documentation>Which tests should this reporter report. Default is all executed tests.</documentation>
+            </annotation>
+         </element>
+      </sequence>
+      <attribute name="build-params" type="rg:java-util-map-converted-by-org-radargun-utils-key-value-list-converter">
+         <annotation>
+            <documentation>Additional build parameters</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="jenkins-build" type="string">
+         <annotation>
+            <documentation>ID of jenkins build that produced this report (default not &lt;unknown&gt;)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="jenkins-build-date" type="rg:java-util-date-converted-by-org-radargun-utils-date-converter">
+         <annotation>
+            <documentation>Date of jenkins build that produced this report (default current date)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="jenkins-build-url" type="string">
+         <annotation>
+            <documentation>URL of jenkins build that produced this report (default &lt;unknown&gt;)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="perf-repo-auth" type="string">
+         <annotation>
+            <documentation>Perfrepo BASIC Authentication string (required)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="perf-repo-host" type="string">
+         <annotation>
+            <documentation>Perfrepo host (default localhost)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="perf-repo-port" type="rg:int">
+         <annotation>
+            <documentation>Perfrepo port (default 8080)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="perf-repo-tag" type="string">
+         <annotation>
+            <documentation>Perfrepo tags, semicolon separated</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="perf-repo-test" type="string">
+         <annotation>
+            <documentation>Perfrepo test uid (required)</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="tests" type="string">
+         <annotation>
+            <documentation>Which tests should this reporter report. Default is all executed tests.</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <simpleType name="java-util-map-converted-by-org-radargun-utils-key-value-list-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[.+:.+;]*.+:.+"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="java-util-date-converted-by-org-radargun-utils-date-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[0-9]+"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <complexType name="org-radargun-reporting-perfrepo-perfrepo-reporter-metric-name-mapping">
+      <annotation>
+         <documentation>Definition of mapping to PerfRepo metric.</documentation>
+      </annotation>
+      <sequence maxOccurs="1" minOccurs="1">
+         <element maxOccurs="1" minOccurs="0" name="compute-mrd" type="rg:boolean">
+            <annotation>
+               <documentation>Compute mean relative deviation of the representation values.</documentation>
+            </annotation>
+         </element>
+      </sequence>
+      <attribute name="compute-mrd" type="rg:boolean">
+         <annotation>
+            <documentation>Compute mean relative deviation of the representation values.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="operation" type="string" use="required">
+         <annotation>
+            <documentation>Operation that should be mapped.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="representation" type="rg:org-radargun-stats-representation-representation-type-converted-by-org-radargun-stats-representation-representation-type-simple-converter" use="required">
+         <annotation>
+            <documentation>Which representation should be retrieved</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="to" type="string" use="required">
+         <annotation>
+            <documentation>Name of the target metric.</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <simpleType name="boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="org-radargun-stats-representation-representation-type-converted-by-org-radargun-stats-representation-representation-type-simple-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="(throughput-gross *)|(percentile +value:[^;]*;)|(response-time-deviation *)|(throughput-net *)|(response-time-max *)|(response-time-mean *)|(requests *)|(errors *)"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <complexType name="java-util-list-converted-by-org-radargun-reporting-perfrepo-perfrepo-reporter-metric-name-mapping-converter">
+      <sequence maxOccurs="1" minOccurs="1">
+         <choice maxOccurs="unbounded" minOccurs="0">
+            <element name="map" type="rg:org-radargun-reporting-perfrepo-perfrepo-reporter-metric-name-mapping"/>
+         </choice>
+      </sequence>
+   </complexType>
+   <simpleType name="int">
+      <union>
+         <simpleType>
+            <restriction base="integer"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <element name="perfrepo" type="rg:org-radargun-reporting-perfrepo-perfrepo-reporter"/>
+</schema>
