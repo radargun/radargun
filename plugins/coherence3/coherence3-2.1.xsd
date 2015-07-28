@@ -1,1 +1,108 @@
-../../target/distribution/RadarGun-2.1.0-SNAPSHOT/schema/coherence3-2.1.xsd
+<schema xmlns:rg="urn:radargun:plugins:coherence3:2.1" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="urn:radargun:plugins:coherence3:2.1" version="1.0" xmlns="http://www.w3.org/2001/XMLSchema">
+   <!--From plugin-coherence3-2.1.0.Final.jar-->
+   <complexType name="org-radargun-service-coherence3service">
+      <annotation>
+         <documentation>Oracle Coherence 3.x CacheWrapper implementation.</documentation>
+      </annotation>
+      <sequence maxOccurs="1" minOccurs="1">
+         <element maxOccurs="1" minOccurs="0" name="cache" type="string">
+            <annotation>
+               <documentation>Name of the default cache. Default is 'testCache'.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="config" type="string">
+            <annotation>
+               <documentation>Configuration file.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="connection-factory" type="string">
+            <annotation>
+               <documentation>Used to lookup the connection factory from InitialContext. By default DefaultConnectionFactory is used.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="file" type="string">
+            <annotation>
+               <documentation>Configuration file.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="indexed-columns" type="rg:java-util-list-converted-by-org-radargun-service-coherence3service-indexed-columns-converter">
+            <annotation>
+               <documentation>Attributes that should be indexed, in form cache:attribute,cache:attribute. By default, nothing is indexed.</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="transactional-service" type="string">
+            <annotation>
+               <documentation>Service used when retrieving the connection. Default is the default service ('TransactionalCache').</documentation>
+            </annotation>
+         </element>
+         <element maxOccurs="1" minOccurs="0" name="use-pof" type="rg:boolean">
+            <annotation>
+               <documentation>Use POF (Portable Object Format) for serialization instead of Java serialization. Default is true.</documentation>
+            </annotation>
+         </element>
+      </sequence>
+      <attribute name="cache" type="string">
+         <annotation>
+            <documentation>Name of the default cache. Default is 'testCache'.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="config" type="string">
+         <annotation>
+            <documentation>*DEPRECATED* Configuration file.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="connection-factory" type="string">
+         <annotation>
+            <documentation>Used to lookup the connection factory from InitialContext. By default DefaultConnectionFactory is used.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="file" type="string">
+         <annotation>
+            <documentation>Configuration file.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="indexed-columns" type="rg:java-util-list-converted-by-org-radargun-service-coherence3service-indexed-columns-converter">
+         <annotation>
+            <documentation>Attributes that should be indexed, in form cache:attribute,cache:attribute. By default, nothing is indexed.</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="transactional-service" type="string">
+         <annotation>
+            <documentation>Service used when retrieving the connection. Default is the default service ('TransactionalCache').</documentation>
+         </annotation>
+      </attribute>
+      <attribute name="use-pof" type="rg:boolean">
+         <annotation>
+            <documentation>Use POF (Portable Object Format) for serialization instead of Java serialization. Default is true.</documentation>
+         </annotation>
+      </attribute>
+   </complexType>
+   <simpleType name="java-util-list-converted-by-org-radargun-service-coherence3service-indexed-columns-converter">
+      <union>
+         <simpleType>
+            <restriction base="string">
+               <pattern value=".*:.*(:ordered)?((,|\n).*:.*(:ordered)?)*"/>
+            </restriction>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <simpleType name="boolean">
+      <union>
+         <simpleType>
+            <restriction base="boolean"/>
+         </simpleType>
+         <simpleType>
+            <restriction base="string">
+               <pattern value="[$#]\{.*\}"/>
+            </restriction>
+         </simpleType>
+      </union>
+   </simpleType>
+   <element name="default" type="rg:org-radargun-service-coherence3service"/>
+   <element name="coherence" type="rg:org-radargun-service-coherence3service"/>
+</schema>

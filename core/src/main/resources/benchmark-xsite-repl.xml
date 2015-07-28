@@ -1,5 +1,5 @@
-<!-- RadarGun 2.0 benchmark -->
-<benchmark xmlns="urn:radargun:benchmark:2.0">
+<!-- RadarGun 2.1 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.1">
 
     <!-- Specifies where should the master open socket  -->
     <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
@@ -20,12 +20,12 @@
     <configurations>
         <config name="Infinispan 7.0 - distributed">
             <setup plugin="infinispan70" group="g1">
-               <embedded xmlns="urn:radargun:plugins:infinispan70:2.0"
+               <embedded xmlns="urn:radargun:plugins:infinispan70:2.1"
                          file="dist-no-tx_site1.xml"
                          cache="testCacheSite1" />
             </setup>
             <setup plugin="infinispan70" group="g2">
-               <embedded xmlns="urn:radargun:plugins:infinispan70:2.0"
+               <embedded xmlns="urn:radargun:plugins:infinispan70:2.1"
                          file="dist-no-tx_site2.xml"
                          cache="testCacheSite2" />
             </setup>

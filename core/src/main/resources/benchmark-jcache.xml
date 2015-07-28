@@ -1,5 +1,5 @@
-<!-- RadarGun 2.0 benchmark -->
-<benchmark xmlns="urn:radargun:benchmark:2.0">
+<!-- RadarGun 2.1 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.1">
 
    <!-- Specifies where should the master open socket  -->
    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>

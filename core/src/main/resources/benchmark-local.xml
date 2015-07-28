@@ -1,5 +1,5 @@
-<!-- RadarGun 2.0 benchmark -->
-<benchmark xmlns="urn:radargun:benchmark:2.0">
+<!-- RadarGun 2.1 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.1">
 
    <!-- The  benchmark will be executed within single JVM -->
    <local/>
@@ -9,12 +9,12 @@
       <config name="Infinispan 5.2 - local">
          <!-- All slaves use the same configuration -->
          <setup plugin="infinispan52">
-            <embedded xmlns="urn:radargun:plugins:infinispan52:2.0" file="local.xml"/>
+            <embedded xmlns="urn:radargun:plugins:infinispan52:2.1" file="local.xml"/>
          </setup>
       </config>
       <config name="Infinispan 6.0 - local">
          <setup plugin="infinispan60">
-            <embedded xmlns="urn:radargun:plugins:infinispan60:2.0" file="local.xml"/>
+            <embedded xmlns="urn:radargun:plugins:infinispan60:2.1" file="local.xml"/>
          </setup>
       </config>
    </configurations>
