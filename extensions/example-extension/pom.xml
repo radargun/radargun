@@ -9,7 +9,5 @@
    </parent>
    <modelVersion>4.0.0</modelVersion>
    <name>Example extension</name>
-   <artifactId>extension-example</artifactId>
-
-
+   <artifactId>radargun-example-extension</artifactId>
 </project>

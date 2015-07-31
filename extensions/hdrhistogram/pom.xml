@@ -10,7 +10,7 @@
    </parent>
    <modelVersion>4.0.0</modelVersion>
    <name>HdrHistogram integration</name>
-   <artifactId>hdrhistogram</artifactId>
+   <artifactId>radargun-hdrhistogram</artifactId>
 
    <dependencies>
       <dependency>

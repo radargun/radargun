@@ -1,4 +1,4 @@
-package org.radargun.jpa;
+package org.radargun.jpa.entities;
 
 import org.radargun.stages.cache.generators.JpaValueGenerator;
 
