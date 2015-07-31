@@ -215,26 +215,23 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
             assertName(ELEMENT_SETUP, setupElement);
             String plugin = getAttribute(setupElement, ATTR_PLUGIN);
             String group = getAttribute(setupElement, ATTR_GROUP, Cluster.DEFAULT_GROUP);
-            Map<String, Definition> propertyDefinitions = null;
-            String service = null;
+            Map<String, Definition> propertyDefinitions = Collections.EMPTY_MAP;
+            Map<String, Definition> vmArgs = Collections.EMPTY_MAP;
+            String service = Configuration.DEFAULT_SERVICE;
             NodeList properties = setupElement.getChildNodes();
             for (int k = 0; k < properties.getLength(); ++k) {
                if (!(properties.item(k) instanceof Element)) continue;
                Element setupChildElement = (Element) properties.item(k);
-               if (setupChildElement.hasAttribute(ATTR_XMLNS)) {
+               if (ELEMENT_VM_ARGS.equals(setupChildElement.getNodeName())) {
+                  vmArgs = parseProperties(setupChildElement, true);
+               } else if (setupChildElement.hasAttribute(ATTR_XMLNS)) {
                   service = setupChildElement.getNodeName();
                   propertyDefinitions = parseProperties(setupChildElement, true);
                } else {
                   throw notExternal(setupChildElement);
                }
             }
-            if (service == null) {
-               service = Configuration.DEFAULT_SERVICE;
-            }
-            if (propertyDefinitions == null) {
-               propertyDefinitions = Collections.EMPTY_MAP;
-            }
-            config.addSetup(group, plugin, service, propertyDefinitions);
+            config.addSetup(group, plugin, service, propertyDefinitions, vmArgs);
          }
          masterConfig.addConfig(config);
       }

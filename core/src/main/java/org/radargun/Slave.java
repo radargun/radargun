@@ -8,7 +8,9 @@ import java.util.UUID;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
+import org.radargun.config.PropertyHelper;
 import org.radargun.config.Scenario;
+import org.radargun.config.VmArgs;
 import org.radargun.reporting.Timeline;
 import org.radargun.utils.ArgsHolder;
 import org.radargun.utils.RestartHelper;
@@ -44,7 +46,9 @@ public class Slave extends SlaveBase {
          } else if (object instanceof RemoteSlaveConnection.Restart) {
             UUID nextUuid = UUID.randomUUID();
             Configuration.Setup setup = configuration.getSetup(cluster.getGroup(slaveIndex).name);
-            RestartHelper.spawnSlave(slaveIndex, nextUuid, setup.plugin);
+            VmArgs vmArgs = new VmArgs();
+            PropertyHelper.setPropertiesFromDefinitions(vmArgs, setup.getVmArgs(), getCurrentExtras(configuration, cluster));
+            RestartHelper.spawnSlave(slaveIndex, nextUuid, setup.plugin, vmArgs);
             connection.sendResponse(null, nextUuid);
             connection.release();
             ShutDownHook.exit(0);

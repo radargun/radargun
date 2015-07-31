@@ -35,4 +35,5 @@ interface ConfigSchema {
    String ELEMENT_SCALE = "scale";
    String ELEMENT_SCENARIO = "scenario";
    String ELEMENT_SETUP = "setup";
+   String ELEMENT_VM_ARGS = "vm-args";
 }

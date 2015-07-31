@@ -153,7 +153,8 @@ public abstract class SchemaGenerator {
          } else {
             type = generateSimpleType(path.getTargetType(), propertyAnnotation.converter());
             if (generateAttributes) {
-               addAttribute(parentType, name, type, propertyDocText, !propertyAnnotation.optional());
+               // property with non-trivial path can be declared in delegated element
+               addAttribute(parentType, name, type, propertyDocText, !propertyAnnotation.optional() && path.isTrivial());
             }
          }
          // do not write elements for simple mandatory properties - these are required as attributes

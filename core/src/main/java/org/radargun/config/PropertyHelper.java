@@ -4,6 +4,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -184,6 +185,30 @@ public class PropertyHelper {
          } else {
             throw new IllegalArgumentException("Couldn't find a property for parameter " + propName + " on class [" + targetClass + "]");
          }
+      }
+   }
+
+   public static void setPropertiesFromDefinitions(Object target, Map<String, Definition> propertyMap, Map<String, String>... extras) {
+      Map<String, String> backups = new HashMap<>();
+      for (Map<String, String> extra : extras) {
+         backupSystemProperties(extra.keySet(), backups);
+      }
+      for (Map<String, String> extra : extras) {
+         setSystemProperties(extra);
+      }
+      PropertyHelper.setPropertiesFromDefinitions(target, propertyMap, false, true);
+      setSystemProperties(backups);
+   }
+
+   private static void setSystemProperties(Map<String, String> properties) {
+      for (Map.Entry<String, String> property : properties.entrySet()) {
+         System.setProperty(property.getKey(), property.getValue() == null ? "" : property.getValue());
+      }
+   }
+
+   private static void backupSystemProperties(Set<String> properties, Map<String, String> backups) {
+      for (String property : properties) {
+         backups.put(property, System.getProperty(property));
       }
    }
 
