@@ -1,5 +1,5 @@
 <!-- This test shows example comparison between three products -->
-<benchmark xmlns="urn:radargun:benchmark:2.1">
+<benchmark xmlns="urn:radargun:benchmark:3.0">
    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
 
    <clusters>
@@ -10,17 +10,17 @@
       <!-- Note that Coherence is not compiled by default -->
       <config name="Coherence 12.x">
          <setup plugin="coherence12">
-            <coherence xmlns="urn:radargun:plugins:coherence12:2.1" file="dist.xml"/>
+            <coherence xmlns="urn:radargun:plugins:coherence12:3.0" file="dist.xml"/>
          </setup>
       </config>
       <config name="Hazelcast 3">
          <setup plugin="hazelcast3">
-            <hazelcast xmlns="urn:radargun:plugins:hazelcast3:2.1" file="dist-sync.xml"/>
+            <hazelcast xmlns="urn:radargun:plugins:hazelcast3:3.0" file="dist-sync.xml"/>
          </setup>
       </config>
       <config name="Infinispan 7.0">
          <setup plugin="infinispan70">
-            <embedded xmlns="urn:radargun:plugins:infinispan70:2.1" file="dist-sync.xml"/>
+            <embedded xmlns="urn:radargun:plugins:infinispan70:3.0" file="dist-sync.xml"/>
          </setup>
       </config>
    </configurations>

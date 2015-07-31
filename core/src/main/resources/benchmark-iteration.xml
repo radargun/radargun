@@ -1,4 +1,4 @@
-<benchmark xmlns="urn:radargun:benchmark:2.1">
+<benchmark xmlns="urn:radargun:benchmark:3.0">
 
    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
 
@@ -9,7 +9,7 @@
    <configurations>
       <config name="Infinispan 7.0 dist">
          <setup plugin="infinispan70">
-            <embedded xmlns="urn:radargun:plugins:infinispan70:2.1" file="dist-sync.xml"/>
+            <embedded xmlns="urn:radargun:plugins:infinispan70:3.0" file="dist-sync.xml"/>
          </setup>
       </config>
    </configurations>
@@ -39,11 +39,11 @@
 
    <reports>
       <reporter type="html">
-         <html xmlns="urn:radargun:reporters:reporter-default:2.1"
+         <html xmlns="urn:radargun:reporters:reporter-default:3.0"
                target-dir="${env.PWD}/results/html" test-report-generate-thread-stats="true"/>
       </reporter>
       <reporter type="csv">
-         <csv xmlns="urn:radargun:reporters:reporter-default:2.1"
+         <csv xmlns="urn:radargun:reporters:reporter-default:3.0"
                target-dir="${env.PWD}/results/csv"/>
       </reporter>
    </reports>
