@@ -51,7 +51,7 @@ public class NumberObjectGenerator implements ValueGenerator {
    @Init
    public void init() {
       try {
-         Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(this.clazz);
+         Class<?> clazz = Class.forName(this.clazz);
          ctor = clazz.getConstructor(int.class, double.class);
          getInt = clazz.getMethod("getInt");
          getDouble = clazz.getMethod("getDouble");

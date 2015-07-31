@@ -25,7 +25,7 @@ public class CustomKeyGenerator implements KeyGenerator {
    @Init
    public void init() {
       try {
-         clazz = Thread.currentThread().getContextClassLoader().loadClass(clazzName);
+         clazz = Class.forName(clazzName);
          ctor = clazz.getConstructor(long.class);
       } catch (Exception e) {
          // trace as this can happen on master node

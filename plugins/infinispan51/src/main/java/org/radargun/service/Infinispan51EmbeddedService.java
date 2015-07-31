@@ -144,7 +144,7 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
    }
 
    protected ConfigurationBuilderHolder createConfiguration(String configFile) throws IOException {
-      return new Parser(Thread.currentThread().getContextClassLoader()).parseFile(configFile);
+      return new Parser(getClass().getClassLoader()).parseFile(configFile);
    }
 
    protected int membersCount(ConsistentHash consistentHash) {

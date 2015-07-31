@@ -33,7 +33,7 @@ public abstract class TextObjectGenerator implements ValueGenerator {
    @Init
    public void initClass() {
       try {
-         Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(this.clazz);
+         Class<?> clazz = Class.forName(this.clazz);
          ctor = clazz.getConstructor(String.class);
          getText = clazz.getMethod("getText");
       } catch (Exception e) {

@@ -122,7 +122,7 @@ public class QueryStage extends TestStage {
          super.init(stressor);
          Class<?> clazz;
          try {
-            clazz = slaveState.getClassLoader().loadClass(queryObjectClass);
+            clazz = Class.forName(queryObjectClass);
          } catch (ClassNotFoundException e) {
             throw new IllegalArgumentException("Cannot load class " + queryObjectClass, e);
          }

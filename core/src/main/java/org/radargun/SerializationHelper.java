@@ -63,6 +63,19 @@ public class SerializationHelper {
    }
 
    /**
+    * Append long to the end of the buffer, possibly reallocating it.
+    *
+    * @param value
+    * @param buffer
+    * @return
+    */
+   public static ByteBuffer appendLong(long value, ByteBuffer buffer) {
+      if (buffer.remaining() < 8) buffer = grow(buffer, MIN_REMAINING);
+      buffer.putLong(value);
+      return buffer;
+   }
+
+   /**
     * Deserialize object from given byte array, starting at startPos and using length bytes.
     *
     * @param serializedData

@@ -20,8 +20,6 @@ import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
- * Distributed stage that will stop the cache wrapper on each slave.
- *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is automatically inserted after the last stage in each scenario. You can alter the properties in &lt;cleanup/&gt element.")
@@ -49,8 +47,15 @@ public final class ScenarioCleanupStage extends InternalDistStage {
    @Property(doc = "Timeout for stopped threads to join. Default is 10 seconds.", converter = TimeConverter.class)
    private long stopTimeout = 10000;
 
+   private Long initialFreeMemory;
+   private Set<Thread> initialThreads;
+
    public DistStageAck executeOnSlave() {
       try {
+         initialFreeMemory = (Long) slaveState.get(ScenarioInitStage.INITIAL_FREE_MEMORY);
+         initialThreads = (Set<Thread>) slaveState.get(ScenarioInitStage.INITIAL_THREADS);
+         slaveState.reset();
+
          int unfinishedThreads = 0;
          if (checkThreads) {
             Set<Thread> unfinished = getUnfinishedThreads();
@@ -84,7 +89,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
 
          Runtime runtime = Runtime.getRuntime();
          long availableMemory = runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory();
-         return new CleanupAck(slaveState, memoryCheckResult, (Long) slaveState.getPersistent(ScenarioInitStage.INITIAL_FREE_MEMORY), availableMemory, unfinishedThreads);
+         return new CleanupAck(slaveState, memoryCheckResult, initialFreeMemory, availableMemory, unfinishedThreads);
       } finally {
          log.info("Memory after cleanup: \n" + Utils.getMemoryInfo());
       }
@@ -92,22 +97,21 @@ public final class ScenarioCleanupStage extends InternalDistStage {
 
    @Override
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      boolean result = true;
       for (CleanupAck ack : Projections.instancesOf(acks, CleanupAck.class)) {
          log.infof("Node %d has changed available memory from %d MB to %d MB and has %d unfinished threads",
                ack.getSlaveIndex(), ack.initialAvailableMemory / 1048576, ack.finalAvailableMemory / 1048576, ack.unfinishedThreads);
          if (ack.isError()) {
             log.warn("Ack contains errors: " + ack);
          }
-         result = result && !ack.isError() && ack.memoryCheckResult && ack.unfinishedThreads == 0;
       }
-      return result ? StageResult.SUCCESS : errorResult();
+      // since we restart the whole slave, it is not necessary to fail the scenario
+      // if the memory was not released properly.
+      return StageResult.SUCCESS;
    }
 
    private boolean checkMemoryReleased() {
       long percentage = -1;
       long currentFreeMemory = -1;
-      long initialFreeMemory = (Long) slaveState.getPersistent(ScenarioInitStage.INITIAL_FREE_MEMORY);
       long deadline = TimeService.currentTimeMillis() + memoryReleaseTimeout;
       for (;;) {
          System.gc();
@@ -184,7 +188,6 @@ public final class ScenarioCleanupStage extends InternalDistStage {
       int activeCount = Thread.enumerate(activeThreads);
       Set<Thread> threads = new HashSet<>(activeCount);
       for (int i = 0; i < activeCount; ++i) threads.add(activeThreads[i]);
-      Set<Thread> initialThreads = (Set<Thread>) slaveState.getPersistent(ScenarioInitStage.INITIAL_THREADS);
       if (initialThreads == null) {
          log.warn("No initial threads!");
          return Collections.EMPTY_SET;

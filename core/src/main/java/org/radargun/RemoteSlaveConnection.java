@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -16,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
@@ -29,16 +29,19 @@ import org.radargun.reporting.Timeline;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class RemoteSlaveConnection implements SlaveConnection {
+public class RemoteSlaveConnection {
 
    private static Log log = LogFactory.getLog(RemoteSlaveConnection.class);
 
+   private static final int UUID_BYTES = 16;
+   private static final int EXPECTED_SIZE_BYTES = 4;
    private static final int DEFAULT_WRITE_BUFF_CAPACITY = 1024;
    private static final int DEFAULT_READ_BUFF_CAPACITY = 1024;
+
    public static final int DEFAULT_PORT = 2103;
 
    private ServerSocketChannel serverSocketChannel;
-   private SocketChannel[] slaves;
+   private SlaveRecord[] slaves;
 
    private ByteBuffer mcastBuffer;
    private Map<SocketChannel, ByteBuffer> writeBufferMap = new HashMap<SocketChannel, ByteBuffer>();
@@ -46,81 +49,106 @@ public class RemoteSlaveConnection implements SlaveConnection {
    private List<Object> responses = new ArrayList<Object>();
    private Selector communicationSelector;
    private Selector discoverySelector;
-   private Map<SocketChannel, Integer> slave2Index = new HashMap<SocketChannel, Integer>();
+   private Map<SocketChannel, Integer> channel2Index = new HashMap<>();
+   private int reconnections = 0;
 
    private String host;
    private int port;
 
+   private static class SlaveRecord {
+      private int index; // slave id, should be equal to index in slaves field
+      private UUID uuid; // key unique for given series of generations of this slave
+      private SocketChannel channel;
+
+      public SlaveRecord(int index, UUID uuid, SocketChannel channel) {
+         this.index = index;
+         this.uuid = uuid;
+         this.channel = channel;
+      }
+   }
+
    public RemoteSlaveConnection(int numSlaves, String host, int port) throws IOException {
       this.host = host;
       this.port = port > 0 && port < 65536 ? port : DEFAULT_PORT;
-      slaves = new SocketChannel[numSlaves];
+      slaves = new SlaveRecord[numSlaves];
       communicationSelector = Selector.open();
       startServerSocket();
    }
 
-   @Override
    public void establish() throws IOException {
       discoverySelector = Selector.open();
       serverSocketChannel.register(discoverySelector, SelectionKey.OP_ACCEPT);
       int slaveCount = 0;
       while (slaveCount < slaves.length) {
          log.info("Awaiting registration from " + (slaves.length - slaveCount) + " slaves.");
-         discoverySelector.select();
-         Set<SelectionKey> keySet = discoverySelector.selectedKeys();
-         Iterator<SelectionKey> it = keySet.iterator();
-         while (it.hasNext()) {
-            SelectionKey selectionKey = it.next();
-            it.remove();
-            if (!selectionKey.isValid()) {
-               continue;
-            }
-            ServerSocketChannel srvSocketChannel = (ServerSocketChannel) selectionKey.channel();
-            SocketChannel socketChannel = srvSocketChannel.accept();
-
-            int slaveIndex = readInt(socketChannel);
-            if (slaveIndex < 0) {
-               for (int i = 0; i < slaves.length; ++i) {
-                  if (slaves[i] == null) {
-                     slaveIndex = i;
-                     break;
-                  }
-               }
-            } else if (slaveIndex >= slaves.length) {
-               throw new IllegalArgumentException("Slave requests invalid slaveIndex "
-                     + slaveIndex + " (expected " + slaves.length + " slaves)");
-
-            } else if (slaves[slaveIndex] != null) {
-               throw new IllegalArgumentException("Slave requests slaveIndex " + slaveIndex
-                     + " but this was already assigned to " + slaves[slaveIndex].getRemoteAddress());
-            }
-            writeInt(socketChannel, slaveIndex);
-            writeInt(socketChannel, slaves.length);
-            slaves[slaveIndex] = socketChannel;
-            slaveCount++;
-            slave2Index.put(socketChannel, slaveIndex);
-            this.readBufferMap.put(socketChannel, ByteBuffer.allocate(DEFAULT_READ_BUFF_CAPACITY));
-            socketChannel.configureBlocking(false);
-            log.trace("Added new slave connection " + slaveIndex + " from: " + socketChannel.socket().getInetAddress());
-         }
+         slaveCount += connectSlaves();
       }
       mcastBuffer = ByteBuffer.allocate(DEFAULT_WRITE_BUFF_CAPACITY);
       log.info("Connection established from " + slaveCount + " slaves.");
    }
 
-   @Override
-   public void sendScenario(Scenario scenario) throws IOException {
-      mcastObject(scenario, slaves.length);
+   private int connectSlaves() throws IOException {
+      discoverySelector.select();
+      Set<SelectionKey> keySet = discoverySelector.selectedKeys();
+      Iterator<SelectionKey> it = keySet.iterator();
+      int slaveCount = 0;
+      while (it.hasNext()) {
+         SelectionKey selectionKey = it.next();
+         it.remove();
+         if (!selectionKey.isValid()) {
+            continue;
+         }
+         ServerSocketChannel srvSocketChannel = (ServerSocketChannel) selectionKey.channel();
+         SocketChannel socketChannel = srvSocketChannel.accept();
+
+         int slaveIndex = readInt(socketChannel);
+         ByteBuffer uuidBytes = readBytes(socketChannel, UUID_BYTES);
+         UUID uuid = new UUID(uuidBytes.getLong(), uuidBytes.getLong());
+
+         if (slaveIndex < 0) {
+            for (int i = 0; i < slaves.length; ++i) {
+               if (slaves[i] == null) {
+                  slaveIndex = i;
+                  break;
+               }
+            }
+         } else if (slaveIndex >= slaves.length) {
+            throw new IllegalArgumentException("Slave requests invalid slaveIndex "
+                  + slaveIndex + " (expected " + slaves.length + " slaves)");
+         } else if (slaves[slaveIndex] == null) {
+            if (uuid.getLeastSignificantBits() != 0 || uuid.getMostSignificantBits() != 0) {
+               throw new IllegalArgumentException("We are expecting 0th generation slave " + slaveIndex + " but it already has UUID set!");
+            }
+            slaves[slaveIndex] = new RemoteSlaveConnection.SlaveRecord(slaveIndex, uuid, socketChannel);
+         } else if (slaves[slaveIndex] != null) {
+            RemoteSlaveConnection.SlaveRecord record = slaves[slaveIndex];
+            if (!uuid.equals(record.uuid)) {
+               throw new IllegalArgumentException(String.format("For slave %d expecting UUID %s but new generation (%s) has UUID %s",
+                     slaveIndex, record.uuid, socketChannel, uuid));
+            }
+            record.channel = socketChannel;
+         }
+         writeInt(socketChannel, slaveIndex);
+         writeInt(socketChannel, slaves.length);
+         slaveCount++;
+         channel2Index.put(socketChannel, slaveIndex);
+         readBufferMap.put(socketChannel, ByteBuffer.allocate(DEFAULT_READ_BUFF_CAPACITY));
+         socketChannel.configureBlocking(false);
+         log.trace("Added new slave connection " + slaveIndex + " from: " + socketChannel.socket().getInetAddress());
+      }
+      return slaveCount;
+   }
+
+   public void sendScenario(Scenario scenario, int clusterSize) throws IOException {
+      mcastObject(scenario, clusterSize);
       flushBuffers(0);
    }
 
-   @Override
    public void sendConfiguration(Configuration configuration) throws IOException {
       mcastObject(configuration, slaves.length);
       flushBuffers(0);
    }
 
-   @Override
    public void sendCluster(Cluster cluster) throws IOException {
       mcastObject(cluster, cluster.getSize());
       flushBuffers(0);
@@ -133,10 +161,12 @@ public class RemoteSlaveConnection implements SlaveConnection {
       mcastBuffer.clear();
    }
 
-   private void mcastBuffer(int numSlaves) throws ClosedChannelException {
+   private void mcastBuffer(int numSlaves) throws IOException {
       for (int i = 0; i < numSlaves; ++i) {
-         writeBufferMap.put(slaves[i], ByteBuffer.wrap(mcastBuffer.array(), 0, mcastBuffer.position()));
-         slaves[i].register(communicationSelector, SelectionKey.OP_WRITE);
+         SocketChannel channel = slaves[i].channel;
+         if (channel == null) throw new IOException("Slave " + i + " disconnected");
+         writeBufferMap.put(channel, ByteBuffer.wrap(mcastBuffer.array(), 0, mcastBuffer.position()));
+         channel.register(communicationSelector, SelectionKey.OP_WRITE);
       }
    }
 
@@ -146,13 +176,6 @@ public class RemoteSlaveConnection implements SlaveConnection {
       mcastBuffer(numSlaves);
    }
 
-   private void mcastInt(int value, int numSlaves) throws ClosedChannelException {
-      clearBuffer();
-      mcastBuffer.putInt(value);
-      mcastBuffer(numSlaves);
-   }
-
-   @Override
    public List<DistStageAck> runStage(int stageId, Map<String, Object> masterData, int numSlaves) throws IOException {
       responses.clear();
       clearBuffer();
@@ -167,7 +190,6 @@ public class RemoteSlaveConnection implements SlaveConnection {
       return list;
    }
 
-   @Override
    public List<Timeline> receiveTimelines(int numSlaves) throws IOException {
       responses.clear();
       mcastObject(new Timeline.Request(), numSlaves);
@@ -190,12 +212,16 @@ public class RemoteSlaveConnection implements SlaveConnection {
                if (key.isWritable()) {
                   sendData(key);
                } else if (key.isReadable()) {
-                  readStageAck(key);
+                  readResponse(key);
                } else {
                   log.warn("Unknown selection on key " + key);
                }
             }
          }
+      }
+      while (reconnections > 0) {
+         log.infof("Waiting for %d reconnecting slaves", reconnections);
+         reconnections -= connectSlaves();
       }
    }
 
@@ -210,24 +236,16 @@ public class RemoteSlaveConnection implements SlaveConnection {
       }
    }
 
-   private void readStageAck(SelectionKey key) throws IOException {
+   private void readResponse(SelectionKey key) throws IOException {
       SocketChannel socketChannel = (SocketChannel) key.channel();
 
       ByteBuffer byteBuffer = readBufferMap.get(socketChannel);
       int value = socketChannel.read(byteBuffer);
 
-      if (value < 0) {
-         Integer slaveIndex = slave2Index.get(socketChannel);
-         log.warn("Slave stopped! Index: " + slaveIndex + ". Remote socket is: " + socketChannel);
-         key.cancel();
-         if (slaveIndex == null || slaves[slaveIndex] != socketChannel) {
-            throw new IllegalStateException("Socket " + socketChannel + " should have been there!");
-         }
-         throw new IOException("Slave stopped");
-      } else if (byteBuffer.position() >= 4) {
+      if (byteBuffer.position() >= EXPECTED_SIZE_BYTES) {
          int expectedSize = byteBuffer.getInt(0);
-         if ((expectedSize + 4) > byteBuffer.capacity()) {
-            ByteBuffer replacer = ByteBuffer.allocate(expectedSize + 4);
+         if ((expectedSize + EXPECTED_SIZE_BYTES + UUID_BYTES) > byteBuffer.capacity()) {
+            ByteBuffer replacer = ByteBuffer.allocate(expectedSize + EXPECTED_SIZE_BYTES + UUID_BYTES);
             replacer.put(byteBuffer.array(), 0, byteBuffer.position());
             readBufferMap.put(socketChannel, replacer);
             if (log.isTraceEnabled())
@@ -237,46 +255,93 @@ public class RemoteSlaveConnection implements SlaveConnection {
          }
          if (log.isTraceEnabled())
             log.trace("Expected size: " + expectedSize + ". byteBuffer.position() == " + byteBuffer.position());
-         if (byteBuffer.position() == expectedSize + 4) {
-            log.trace("Received response from " + socketChannel);
-            Object response = SerializationHelper.deserialize(byteBuffer.array(), 4, expectedSize);
+         if (byteBuffer.position() >= expectedSize + EXPECTED_SIZE_BYTES + UUID_BYTES) {
+            log.trace("Received response from " + socketChannel.getRemoteAddress());
+            Object response = SerializationHelper.deserialize(byteBuffer.array(), EXPECTED_SIZE_BYTES, expectedSize);
+            long uuidMsb = byteBuffer.getLong(EXPECTED_SIZE_BYTES + expectedSize);
+            long uuidLsb = byteBuffer.getLong(EXPECTED_SIZE_BYTES + expectedSize + 8);
+            if (uuidMsb != 0 && uuidLsb != 0) {
+               // we should expect reconnection
+               int index = channel2Index.get(socketChannel);
+               UUID uuid = new UUID(uuidMsb, uuidLsb);
+               log.tracef("Slave %d (%s) is going to restart with UUID %s", index, socketChannel.getRemoteAddress(), uuid);
+               SlaveRecord record = slaves[index];
+               record.uuid = uuid;
+               record.channel.close();
+               record.channel = null;
+               channel2Index.remove(socketChannel);
+               readBufferMap.remove(socketChannel);
+               reconnections++;
+            }
             byteBuffer.clear();
             responses.add(response);
          }
       }
+      if (value < 0) {
+         Integer slaveIndex = channel2Index.get(socketChannel);
+         key.cancel();
+         if (slaveIndex == null) {
+            throw new IllegalStateException("Unknown slave for socket " + socketChannel);
+         }
+         SlaveRecord record = slaves[slaveIndex];
+         if (record.channel == null) {
+            // this channel was closed correctly
+            return;
+         } else if (record.channel != socketChannel) {
+            throw new IllegalStateException("Unexpected socket channel " + socketChannel + "; should be " + record.channel);
+         } else {
+            log.warn("Slave stopped! Index: " + slaveIndex + ". Remote socket is: " + socketChannel);
+            throw new IOException("Slave unexpectedly stopped");
+         }
+      }
    }
 
-   @Override
    public void release() {
-      try {
-         mcastObject(null, slaves.length);
-         flushBuffers(0);
-      } catch (Exception e) {
-         log.warn("Failed to send termination to slaves.", e);
-      }
-      try {
-         discoverySelector.close();
-      } catch (Throwable e) {
-         log.warn("Error closing discovery selector", e);
-      }
-      try {
-         communicationSelector.close();
-      } catch (Throwable e) {
-         log.warn("Error closing comunication selector", e);
-      }
-      for (SocketChannel sc : slaves) {
+      if (mcastBuffer != null) {
          try {
-            sc.socket().close();
+            mcastObject(null, slaves.length);
+            flushBuffers(0);
+         } catch (Exception e) {
+            log.warn("Failed to send termination to slaves.", e);
+         }
+      }
+      if (discoverySelector != null) {
+         try {
+            discoverySelector.close();
          } catch (Throwable e) {
-            log.warn("Error closing channel", e);
+            log.warn("Error closing discovery selector", e);
+         }
+      }
+      if (communicationSelector != null) {
+         try {
+            communicationSelector.close();
+         } catch (Throwable e) {
+            log.warn("Error closing comunication selector", e);
+         }
+      }
+      for (SlaveRecord record : slaves) {
+         if (record != null && record.channel != null) {
+            try {
+               record.channel.close();
+            } catch (Throwable e) {
+               log.warn("Error closing channel", e);
+            }
          }
       }
 
-      try {
-         if (serverSocketChannel != null) serverSocketChannel.socket().close();
-      } catch (Throwable e) {
-         log.warn("Error closing server socket channel", e);
+      if (serverSocketChannel != null) {
+         try {
+            serverSocketChannel.socket().close();
+         } catch (Throwable e) {
+            log.warn("Error closing server socket channel", e);
+         }
       }
+   }
+
+   public void restartSlaves(int numSlaves) throws IOException {
+      responses.clear();
+      mcastObject(new Restart(), numSlaves);
+      flushBuffers(numSlaves);
    }
 
    private void startServerSocket() throws IOException {
@@ -299,7 +364,7 @@ public class RemoteSlaveConnection implements SlaveConnection {
    }
 
    private int readInt(SocketChannel socketChannel) throws IOException {
-      ByteBuffer buffer = ByteBuffer.allocate(4);
+      ByteBuffer buffer = ByteBuffer.allocate(EXPECTED_SIZE_BYTES);
       while (buffer.hasRemaining()) {
          socketChannel.read(buffer);
       }
@@ -307,12 +372,23 @@ public class RemoteSlaveConnection implements SlaveConnection {
       return buffer.getInt();
    }
 
+   private ByteBuffer readBytes(SocketChannel socketChannel, int numBytes) throws IOException {
+      ByteBuffer buffer = ByteBuffer.allocate(numBytes);
+      while (buffer.hasRemaining()) {
+         socketChannel.read(buffer);
+      }
+      buffer.flip();
+      return buffer;
+   }
+
    private void writeInt(SocketChannel socketChannel, int slaveIndex) throws IOException {
-      ByteBuffer buffer = ByteBuffer.allocate(4);
+      ByteBuffer buffer = ByteBuffer.allocate(EXPECTED_SIZE_BYTES);
       buffer.putInt(slaveIndex);
       buffer.flip();
       while (buffer.hasRemaining()) {
          socketChannel.write(buffer);
       }
    }
+
+   public static class Restart implements  Serializable {}
 }

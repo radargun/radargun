@@ -181,10 +181,10 @@ public class IterateStage extends TestStage {
       public void init(Stressor stressor) {
          super.init(stressor);
          if (filterClass != null) {
-            filter = Utils.instantiateAndInit(slaveState.getClassLoader(), filterClass, filterParam);
+            filter = Utils.instantiateAndInit(filterClass, filterParam);
          }
          if (converterClass != null) {
-            converter = Utils.instantiateAndInit(slaveState.getClassLoader(), converterClass, converterParam);
+            converter = Utils.instantiateAndInit(converterClass, converterParam);
          }
       }
 

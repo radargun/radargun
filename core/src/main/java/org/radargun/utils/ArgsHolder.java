@@ -1,10 +1,13 @@
 package org.radargun.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.radargun.RemoteSlaveConnection;
 import org.radargun.ShutDownHook;
@@ -31,13 +34,23 @@ import org.radargun.logging.LogFactory;
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
  */
 public class ArgsHolder {
-
+   protected static final String CONFIG = "--config";
+   protected static final String ADD_REPORTER = "--add-reporter";
+   protected static final String ADD_PLUGIN = "--add-plugin";
+   protected static final String ADD_CONFIG = "--add-config";
    private static Log log = LogFactory.getLog(ArgsHolder.class);
+
+   protected static final String TEMP_CONFIG_DIR = "--temp-config-dir";
+   protected static final String UUID = "--uuid";
+   protected static final String SLAVE_INDEX = "--slaveIndex";
+   protected static final String MASTER = "--master";
 
    private static String configFile;
    private static String masterHost;
    private static int masterPort = RemoteSlaveConnection.DEFAULT_PORT;
    private static int slaveIndex = -1;
+   private static UUID uuid;
+   private static String tempConfigDir = null;
 
    private static Map<String, PluginParam> pluginParams = new HashMap<String, PluginParam>();
    private static List<String> reporterPaths = new ArrayList<String>();
@@ -52,87 +65,112 @@ public class ArgsHolder {
     * @param type type of argument (LAUNCH_MASTER, SLAVE)
     */
    public static void init(String[] args, ArgType type) {
-      ArgsParser.parseArgs(args, type);
-   }
-
-   /**
-    * Parser of input arguments
-    */
-   private static class ArgsParser {
-
-      public static void parseArgs(String[] args, ArgType type) {
-         for (int i = 0; i < args.length; i++) {
-            if (ArgType.SLAVE == type) {
-               if ((args[i].equals("-master") || args[i].equals("--master")) && i < args.length - 1) {
-                  if (args[i].equals("-master")) {
-                     log.warn("Switch -master is deprecated. Use --master instead.");
-                  }
-                  String param = args[i + 1];
+      LinkedList<String> argList = new LinkedList<>(Arrays.asList(args));
+      while (!argList.isEmpty()) {
+         String arg = argList.removeFirst();
+         // change --foo=bar into --foo bar
+         int index = arg.indexOf('=');
+         if (index >= 0) {
+            argList.addFirst(arg.substring(index + 1));
+            arg = arg.substring(0, index);
+         }
+         String param;
+         if (ArgType.SLAVE == type) {
+            switch (arg) {
+               case "-master":
+                  log.warn("Switch -master is deprecated. Use --master instead.");
+               case MASTER:
+                  param = nextArg(arg, argList);
                   if (param.contains(":")) {
                      masterHost = param.substring(0, param.indexOf(":"));
                      try {
                         masterPort = Integer.parseInt(param.substring(param.indexOf(":") + 1));
                      } catch (NumberFormatException nfe) {
-                        log.warn("Unable to parse port part of the master!  Failing!");
+                        log.error("Unable to parse port part of the master! Failing!");
                         ShutDownHook.exit(127);
                      }
                   } else {
                      masterHost = param;
                   }
-               } else if ((args[i].equals("-slaveIndex") || args[i].equals("--slaveIndex")) && i < args.length - 1) {
-                  if (args[i].equals("-slaveIndex")) {
-                     log.warn("Switch -slaveIndex is deprecated. Use --slaveIndex instead.");
-                  }
+                  break;
+               case "-slaveIndex":
+                  log.warn("Switch -slaveIndex is deprecated. Use --slaveIndex instead.");
+               case SLAVE_INDEX:
+                  param = nextArg(arg, argList);
                   try {
-                     slaveIndex = Integer.parseInt(args[i + 1]);
+                     slaveIndex = Integer.parseInt(param);
                   } catch (NumberFormatException nfe) {
-                     log.warn("Unable to parse slaveIndex!  Failing!");
+                     log.errorf("Unable to parse slaveIndex!  Failing!");
                      ShutDownHook.exit(127);
                   }
-               } else {
-                  processCommonArgs(args[i], type);
-               }
-            }
-            if (ArgType.LAUNCH_MASTER == type) {
-               if ((args[i].equals("-config") || args[i].equals("--config")) && i < args.length - 1) {
-                  if (args[i].equals("-config")) {
-                     log.warn("Switch -config is deprecated. Use --config instead.");
+                  break;
+               case UUID:
+                  param = nextArg(arg, argList);
+                  try {
+                     uuid = java.util.UUID.fromString(param);
+                  } catch (IllegalArgumentException nfe) {
+                     log.errorf("Unable to parse UUID %s! Failing!", param);
+                     ShutDownHook.exit(127);
                   }
-                  configFile = args[i + 1];
-               } else if (args[i].matches("--add-reporter=.+")) {
-                  String reporterPath = args[i].split("=")[1];
-                  reporterPaths.add(reporterPath);
-               } else {
-                  processCommonArgs(args[i], type);
-               }
+                  break;
+               case TEMP_CONFIG_DIR:
+                  tempConfigDir = nextArg(arg, argList);
+                  break;
+               default:
+                  processCommonArgs(arg, argList, type);
+            }
+         }
+         if (ArgType.LAUNCH_MASTER == type) {
+            switch (arg) {
+               case "-config":
+                  log.warn("Switch -config is deprecated. Use --config instead.");
+               case CONFIG:
+                  configFile = nextArg(arg, argList);
+                  break;
+               case ADD_REPORTER:
+                  reporterPaths.add(nextArg(arg, argList));
+                  break;
+               default:
+                  processCommonArgs(arg, argList, type);
             }
          }
       }
    }
 
-   private static void processCommonArgs(String arg, ArgType type) {
-      if (arg.matches("--add-plugin=.+")) {
-         String pluginPath = arg.split("=")[1];
-         pluginPath = Utils.sanitizePath(pluginPath);
-         String pluginName = pluginPath.substring(pluginPath.lastIndexOf("/") + 1, pluginPath.length());
-         PluginParam pluginParam = pluginParams.get(pluginName);
-         if (pluginParam == null) {
-            pluginParams.put(pluginName, pluginParam = new PluginParam());
-         }
-         pluginParam.setPath(pluginPath);
-      } else if (arg.matches("--add-config=.+:.+")) {
-         String configArg = arg.split("=")[1];
-         String pluginName = configArg.substring(0, configArg.indexOf(":"));
-         String configPath = configArg.substring(configArg.indexOf(":") + 1, configArg.length());
-         configPath = Utils.sanitizePath(configPath);
-         PluginParam pluginParam = pluginParams.get(pluginName);
-         if (pluginParam == null) {
-            pluginParams.put(pluginName, pluginParam = new PluginParam());
-         }
-         pluginParam.getConfigFiles().add(configPath);
-      } else if (arg.startsWith("-")) {
-         // handle unsupported options
-         printUsageAndExit(type);
+   private static String nextArg(String arg, LinkedList<String> argList) {
+      if (argList.isEmpty()) {
+         log.errorf("%s requires an argument!", arg);
+         ShutDownHook.exit(127);
+      }
+      return argList.removeFirst();
+   }
+
+   private static void processCommonArgs(String arg, LinkedList<String> argList, ArgType type) {
+      String param, pluginName;
+      PluginParam pluginParam;
+      switch (arg) {
+         case ADD_PLUGIN:
+            param = Utils.sanitizePath(nextArg(arg, argList));
+            pluginName = param.substring(param.lastIndexOf("/") + 1, param.length());
+            pluginParam = pluginParams.get(pluginName);
+            if (pluginParam == null) {
+               pluginParams.put(pluginName, pluginParam = new PluginParam());
+            }
+            pluginParam.setPath(param);
+            break;
+         case ADD_CONFIG:
+            param = nextArg(arg, argList);
+            pluginName = param.substring(0, param.indexOf(":"));
+            String configPath = param.substring(param.indexOf(":") + 1, param.length());
+            configPath = Utils.sanitizePath(configPath);
+            pluginParam = pluginParams.get(pluginName);
+            if (pluginParam == null) {
+               pluginParams.put(pluginName, pluginParam = new PluginParam());
+            }
+            pluginParam.getConfigFiles().add(configPath);
+            break;
+         default:
+            printUsageAndExit(type);
       }
    }
 
@@ -151,7 +189,7 @@ public class ArgsHolder {
    }
 
    private static void printSlaveUsageAndExit() {
-      System.out.println("Usage: start_local_slave.sh --master <host>:port");
+      System.out.println("Usage: slave.sh --master <host>:port");
       System.out.println("       --master: The host(and optional port) on which the master resides. If port is missing it defaults to " + RemoteSlaveConnection.DEFAULT_PORT);
       ShutDownHook.exit(127);
    }
@@ -193,11 +231,19 @@ public class ArgsHolder {
       return slaveIndex;
    }
 
+   public static UUID getUuid() {
+      return uuid;
+   }
+
    public static Map<String, PluginParam> getPluginParams() {
       return Collections.unmodifiableMap(pluginParams);
    }
 
    public static List<String> getReporterPaths() {
       return Collections.unmodifiableList(reporterPaths);
+   }
+
+   public static String getTempConfigDir() {
+      return tempConfigDir;
    }
 }

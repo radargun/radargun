@@ -29,7 +29,7 @@ public class PluginSpecificKeyGenerator implements KeyGenerator {
    @Init
    public void init() {
       try {
-         instance = Utils.instantiateAndInit(Thread.currentThread().getContextClassLoader(), clazzName, params);
+         instance = Utils.instantiateAndInit(clazzName, params);
       } catch (Exception e) {
          log.trace("Cannot load plugin-specific generator through " + this, e);
          if (fallback != null) {

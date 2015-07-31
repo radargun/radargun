@@ -129,7 +129,7 @@ public class HazelcastService implements Lifecycle, Clustered {
    }
 
    private InputStream getAsInputStreamFromClassLoader(String filename) {
-      ClassLoader cl = Thread.currentThread().getContextClassLoader();
+      ClassLoader cl = getClass().getClassLoader();
       InputStream is;
       try {
          is = cl == null ? null : cl.getResourceAsStream(filename);

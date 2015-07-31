@@ -63,7 +63,6 @@ public class ConfigSchemaGenerator extends SchemaGenerator implements ConfigSche
       addAttribute(masterComplex, ATTR_PORT, intType, null, false);
 
       Element clustersChoice = createChoice(benchmarkSequence, 0, 1);
-      createComplexElement(clustersChoice, ELEMENT_LOCAL, 0, 1);
       Element clustersComplex = createComplexElement(clustersChoice, ELEMENT_CLUSTERS, 0, 1);
       Element clusterChoice = createChoice(clustersComplex, 1, -1);
       Element baseClusterType = createComplexType(schema, TYPE_CLUSTER_BASE, null, true, false, null);

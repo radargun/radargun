@@ -13,7 +13,6 @@ import org.radargun.config.Cluster;
 public class StateBase {
 
    private Map<String, Object> stateMap = new HashMap<>();
-   private Map<String, Object> persistentMap = new HashMap<>();
    private String configName;
    private Cluster cluster;
    private int clusterSize;
@@ -64,57 +63,6 @@ public class StateBase {
 
    public Object get(String key) {
       return stateMap.get(key);
-   }
-
-   /**
-    * Write an entry to the state that will persist after service destruction
-    * (the value can be reused in next configurations).
-    *
-    * @param key
-    * @param value
-    */
-   public void putPersistent(String key, Object value) {
-      if (hasServiceClassLoader(value)) {
-         throw new IllegalArgumentException("Class " + value.getClass() + " was loaded by "
-               + value.getClass().getClassLoader() + " - this could cause a leak!");
-      }
-      persistentMap.put(key, value);
-   }
-
-   private boolean hasServiceClassLoader(Object value) {
-      if (value == null) {
-         return false;
-      }
-      ClassLoader valueClassLoader = value.getClass().getClassLoader();
-      if (valueClassLoader == null) {
-         return false; // primitive type
-      }
-      ClassLoader currentClassLoader = getClass().getClassLoader();
-      while (currentClassLoader != null) {
-         if (valueClassLoader == currentClassLoader) {
-            return false;
-         }
-         currentClassLoader = currentClassLoader.getParent();
-      }
-      return true;
-   }
-
-   /**
-    * Get an entry that was stored using {@link #putPersistent(String, Object)}.
-    * @param key
-    * @return
-    */
-   public Object getPersistent(String key) {
-      return persistentMap.get(key);
-   }
-
-   /**
-    * Remove an entry that was stored using {@link #putPersistent(String, Object)}.
-    * @param key
-    * @return
-    */
-   public Object removePersistent(String key) {
-      return persistentMap.remove(key);
    }
 
    public String getString(Object key) {

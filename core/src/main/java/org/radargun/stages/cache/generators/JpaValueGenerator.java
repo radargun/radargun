@@ -28,9 +28,8 @@ public class JpaValueGenerator implements ValueGenerator {
    @Init
    public void init() {
       try {
-         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-         entityClazz = (Class<? extends Annotation>) classLoader.loadClass("javax.persistence.Entity");
-         clazz = classLoader.loadClass(clazzName);
+         entityClazz = (Class<? extends Annotation>) Class.forName("javax.persistence.Entity");
+         clazz = Class.forName(clazzName);
          if (!clazz.isAnnotationPresent(entityClazz)) {
             throw new IllegalArgumentException("Class " + clazz.getName() + " is not an entity - no @Entity present");
          }

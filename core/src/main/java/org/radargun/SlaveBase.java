@@ -38,7 +38,7 @@ public abstract class SlaveBase {
       state.setTimeline(new Timeline(state.getSlaveIndex()));
       Map<String, String> extras = getCurrentExtras(configuration, cluster);
       ServiceHelper.setServiceContext(setup.plugin, configuration.name, state.getSlaveIndex());
-      Object service = ServiceHelper.createService(state.getClassLoader(), setup.plugin, setup.service, setup.getProperties(), extras);
+      Object service = ServiceHelper.createService(setup.plugin, setup.service, setup.getProperties(), extras);
       Map<Class<?>, Object> traits = null;
       try {
          log.info("Service is " + service.getClass().getSimpleName() + PropertyHelper.toString(service));
@@ -138,8 +138,9 @@ public abstract class SlaveBase {
 
    protected abstract Map<String, String> getCurrentExtras(Configuration configuration, Cluster cluster);
 
-   // We have to run each service in new thread in order to prevent classloader leaking
-   // through thread locals
+   // In RadarGun 2.0, we had to run each service in new thread in order to prevent
+   // classloader leaking through thread locals. This is not necessary anymore,
+   // but we still do checks in ScenarioCleanupStage
    protected class ScenarioRunner extends Thread {
       protected ScenarioRunner() {
          super("sc-main");

@@ -79,7 +79,7 @@ public class InfinispanDistributedTask<K, V, T> implements DistributedTaskExecut
 
       @Override
       public DistributedTaskExecutor.Builder failoverPolicy(String failoverPolicy) {
-         this.failoverPolicy = Utils.instantiate(classLoader, failoverPolicy);
+         this.failoverPolicy = Utils.instantiate(failoverPolicy);
          return this;
       }
 

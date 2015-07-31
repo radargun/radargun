@@ -47,9 +47,6 @@ public class ScenarioDestroyStage extends InternalDistStage {
          for (ServiceListener listener : slaveState.getServiceListeners()) {
             listener.serviceDestroyed();
          }
-         //reset the class loader to SystemClassLoader
-         Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
-         slaveState.reset();
       }
       return successfulResponse();
    }

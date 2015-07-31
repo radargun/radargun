@@ -39,6 +39,7 @@ public class Master {
    private final ArrayList<Report> reports = new ArrayList<Report>();
    private int returnCode;
    private boolean exitFlag = false;
+   private RemoteSlaveConnection connection;
 
    public Master(MasterConfig masterConfig) {
       this.masterConfig = masterConfig;
@@ -48,16 +49,9 @@ public class Master {
    }
 
    public void run() throws Exception {
-      SlaveConnection connection = null;
       try {
-         if (masterConfig.isLocal()) {
-            connection = new LocalSlaveConnection();
-            masterConfig.addCluster(Cluster.LOCAL);
-         } else {
-            connection = new RemoteSlaveConnection(masterConfig.getMaxClusterSize(), masterConfig.getHost(), masterConfig.getPort());
-         }
+         connection = new RemoteSlaveConnection(masterConfig.getMaxClusterSize(), masterConfig.getHost(), masterConfig.getPort());
          connection.establish();
-         connection.sendScenario(masterConfig.getScenario());
          state.setMaxClusterSize(masterConfig.getMaxClusterSize());
          // let's create reporters now to fail soon in case of misconfiguration
          ArrayList<Reporter> reporters = new ArrayList<>();
@@ -71,11 +65,17 @@ public class Master {
          for (Configuration configuration : masterConfig.getConfigurations()) {
             log.info("Started benchmarking configuration '" + configuration.name + "'");
             state.setConfigName(configuration.name);
-            connection.sendConfiguration(configuration);
             long configStart = TimeService.currentTimeMillis();
             for (Cluster cluster : masterConfig.getClusters()) {
+               int clusterSize = cluster.getSize();
                log.info("Starting scenario on " + cluster);
                connection.sendCluster(cluster);
+               connection.sendConfiguration(configuration);
+               // here we should restart, therefore, we have to send it again
+               connection.restartSlaves(clusterSize);
+               connection.sendCluster(cluster);
+               connection.sendConfiguration(configuration);
+               connection.sendScenario(masterConfig.getScenario(), clusterSize);
                state.setCluster(cluster);
                state.setReport(new Report(configuration, cluster));
                long clusterStart = TimeService.currentTimeMillis();
@@ -87,18 +87,18 @@ public class Master {
                      // ScenarioDestroy and ScenarioCleanup are special ones, executed always
                      int nextStageId = 0;
                      do {
-                        nextStageId = executeStage(connection, configuration, cluster, nextStageId);
+                        nextStageId = executeStage(configuration, cluster, nextStageId);
                      } while (nextStageId >= 0 && nextStageId < scenarioDestroyId);
                      // run ScenarioDestroy
                   } finally {
-                     executeStage(connection, configuration, cluster, scenarioDestroyId);
+                     executeStage(configuration, cluster, scenarioDestroyId);
                   }
                } finally {
                   // run ScenarioCleanup
-                  executeStage(connection, configuration, cluster, scenarioCleanupId);
+                  executeStage(configuration, cluster, scenarioCleanupId);
                }
                log.info("Finished scenario on " + cluster + " in " + Utils.getMillisDurationString(TimeService.currentTimeMillis() - clusterStart));
-               state.getReport().addTimelines(connection.receiveTimelines(cluster.getSize()));
+               state.getReport().addTimelines(connection.receiveTimelines(clusterSize));
                reports.add(state.getReport());
                if (exitFlag) {
                   break;
@@ -134,14 +134,14 @@ public class Master {
       }
    }
 
-   private int executeStage(SlaveConnection connection, Configuration configuration, Cluster cluster, int stageId) {
+   private int executeStage(Configuration configuration, Cluster cluster, int stageId) {
       Stage stage = masterConfig.getScenario().getStage(stageId, state, getCurrentExtras(masterConfig, configuration, cluster), state.getReport());
       InitHelper.init(stage);
       StageResult result;
       if (stage instanceof MasterStage) {
          result = executeMasterStage((MasterStage) stage);
       } else if (stage instanceof DistStage) {
-         result = executeDistStage(connection, stageId, (DistStage) stage);
+         result = executeDistStage(stageId, (DistStage) stage);
       } else {
          log.error("Stage '" + stage.getName() + "' is neither master nor distributed");
          return -1;
@@ -217,7 +217,7 @@ public class Master {
       }
    }
 
-   private StageResult executeDistStage(SlaveConnection connection, int stageId, DistStage stage) {
+   private StageResult executeDistStage(int stageId, DistStage stage) {
       if (log.isDebugEnabled())
          log.debug("Starting distributed stage " + stage.getName() + ". Details:" + stage);
       else

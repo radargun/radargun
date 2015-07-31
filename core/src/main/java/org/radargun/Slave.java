@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
 import org.radargun.config.Scenario;
 import org.radargun.reporting.Timeline;
 import org.radargun.utils.ArgsHolder;
+import org.radargun.utils.RestartHelper;
 
 /**
  * Slave being coordinated by a single {@link Master} object in order to run benchmarks.
@@ -25,6 +27,7 @@ public class Slave extends SlaveBase {
    }
 
    private void run(int slaveIndex) throws Exception {
+      log.debugf("Started with UUID %s", ArgsHolder.getUuid());
       InetAddress address = connection.connectToMaster(slaveIndex);
       // the provided slaveIndex is just a "recommendation"
       state.setSlaveIndex(connection.receiveSlaveIndex());
@@ -38,20 +41,27 @@ public class Slave extends SlaveBase {
          if (object == null) {
             log.info("Master shutdown!");
             break;
+         } else if (object instanceof RemoteSlaveConnection.Restart) {
+            UUID nextUuid = UUID.randomUUID();
+            Configuration.Setup setup = configuration.getSetup(cluster.getGroup(slaveIndex).name);
+            RestartHelper.spawnSlave(slaveIndex, nextUuid, setup.plugin);
+            connection.sendResponse(null, nextUuid);
+            connection.release();
+            ShutDownHook.exit(0);
          } else if (object instanceof Scenario) {
             scenario = (Scenario) object;
-         } else if (object instanceof Configuration) {
-            configuration = (Configuration) object;
-            state.setConfigName(configuration.name);
-         } else if (object instanceof Cluster) {
-            cluster = (Cluster) object;
             ScenarioRunner runner = new ScenarioRunner();
             runner.start();
             runner.join();
             // we got ScenarioCleanup, now run the cleanup
             runCleanup();
+         } else if (object instanceof Configuration) {
+            configuration = (Configuration) object;
+            state.setConfigName(configuration.name);
+         } else if (object instanceof Cluster) {
+            cluster = (Cluster) object;
          } else if (object instanceof Timeline.Request) {
-            connection.sendResponse(state.getTimeline());
+            connection.sendResponse(state.getTimeline(), null);
          }
       }
       ShutDownHook.exit(0);
@@ -59,6 +69,7 @@ public class Slave extends SlaveBase {
 
    public static void main(String[] args) {
       ArgsHolder.init(args, ArgsHolder.ArgType.SLAVE);
+      RestartHelper.init();
       if (ArgsHolder.getMasterHost() == null) {
          ArgsHolder.printUsageAndExit(ArgsHolder.ArgType.SLAVE);
       }
@@ -83,7 +94,7 @@ public class Slave extends SlaveBase {
 
    @Override
    protected void sendResponse(DistStageAck response) throws IOException {
-      connection.sendResponse(response);
+      connection.sendResponse(response, null);
    }
 
    @Override

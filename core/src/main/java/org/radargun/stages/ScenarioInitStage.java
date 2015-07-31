@@ -25,17 +25,15 @@ public final class ScenarioInitStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      Thread.currentThread().setContextClassLoader(slaveState.getClassLoader());
-
       System.gc();
       Runtime runtime = Runtime.getRuntime();
-      slaveState.putPersistent(INITIAL_FREE_MEMORY, runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory());
+      slaveState.put(INITIAL_FREE_MEMORY, runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory());
 
       Thread[] activeThreads = new Thread[Thread.activeCount() * 2];
       int activeThreadCount = Thread.enumerate(activeThreads);
       Set<Thread> threads = new HashSet<>(activeThreadCount);
       for (int i = 0; i < activeThreadCount; ++i) threads.add(activeThreads[i]);
-      slaveState.putPersistent(INITIAL_THREADS, threads);
+      slaveState.put(INITIAL_THREADS, threads);
 
       if (heapDumpDir != null) {
          try {
