@@ -1,5 +1,5 @@
-<!-- RadarGun 2.1 benchmark -->
-<benchmark xmlns="urn:radargun:benchmark:2.1">
+<!-- RadarGun 2.2 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.2">
 
    <!-- Specifies where should the master open socket  -->
    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
@@ -19,7 +19,7 @@
          <setup group="server" plugin="infinispan60">
             <!-- Properties are evaluated on each slave individually, therefore you can
                  e.g. specify different bind address for each server in args -->
-            <server xmlns="urn:radargun:plugins:infinispan60:2.1" file="server.xml">
+            <server xmlns="urn:radargun:plugins:infinispan60:2.2" file="server.xml">
                <!-- Additional arguments passed to ${env.ISPN_HOME}/bin/standalone.sh -->
                <args>-DudpGroup=224.0.0.1</args>
                <!-- Home directory for the Infinispan Server -->
@@ -28,7 +28,7 @@
          </setup>
          <!-- Configuration for the HotRod client -->
          <setup group="client" plugin="infinispan60">
-            <hotrod xmlns="urn:radargun:plugins:infinispan60:2.1">
+            <hotrod xmlns="urn:radargun:plugins:infinispan60:2.2">
                <!-- Clients are not paired with servers automatically - we have to explicitly provide the address -->
                <servers>127.0.0.1:11222</servers>
             </hotrod>
@@ -37,7 +37,7 @@
       <config name="Infinispan 6.0 - Memcached">
          <!-- Configuration for the server group - this is identical to HotRod -->
          <setup group="server" plugin="infinispan60" >
-            <server xmlns="urn:radargun:plugins:infinispan60:2.1" file="server.xml">
+            <server xmlns="urn:radargun:plugins:infinispan60:2.2" file="server.xml">
                <args>-DudpGroup=224.0.0.1</args>
                <home>${env.ISPN_HOME}</home>
             </server>
@@ -45,7 +45,7 @@
          </setup>
          <!-- Configuration for the HotRod client -->
          <setup group="client" plugin="spymemcached">
-            <client xmlns="urn:radargun:plugins:spymemcached:2.1">
+            <client xmlns="urn:radargun:plugins:spymemcached:2.2">
                <!-- Memcached clients can't find other servers automatically - always specify all servers -->
                <servers>127.0.0.1:11211</servers>
             </client>

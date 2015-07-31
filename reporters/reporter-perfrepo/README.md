@@ -12,7 +12,7 @@ Example configuration
     <reports>
         <reporter type="perfrepo">
             <report>
-                <perfrepo xmlns="urn:radargun:reporters:reporter-perfrepo:2.1"
+                <perfrepo xmlns="urn:radargun:reporters:reporter-perfrepo:2.2"
                     perf-repo-host="perfrepo.host.com"
                     perf-repo-port="8080"
                     perf-repo-auth="base64authString"

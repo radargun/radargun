@@ -14,7 +14,7 @@ import org.radargun.stages.ScenarioInitStage;
 import org.w3c.dom.Element;
 
 /**
- * Generates XSD file describing RadarGun 2.1 configuration.
+ * Generates XSD file describing RadarGun 2.2 configuration.
  *
  * There are basically two parts: hand-coded stable configuration
  * (such as cluster & configuration definitions), and stage lists
@@ -28,7 +28,7 @@ import org.w3c.dom.Element;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ConfigSchemaGenerator extends SchemaGenerator implements ConfigSchema {
-   private static final String VERSION = "2.1"; // TODO: read version from plugin
+   private static final String VERSION = "2.2"; // TODO: read version from plugin
    private static final String TYPE_CLUSTER_BASE = "cluster_base";
    private static final String TYPE_CLUSTER = "cluster";
    private static final String TYPE_PROPERTY = "property";

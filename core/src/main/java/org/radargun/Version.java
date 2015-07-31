@@ -1,7 +1,7 @@
 package org.radargun;
 
 public class Version {
-   private static final String version = "2.1.0.Final";
+   private static final String version = "2.2.0-SNAPSHOT";
    public static void main(String[] args) {
       System.out.println("=== RadarGun ===");
       System.out.println("Version: " + version);

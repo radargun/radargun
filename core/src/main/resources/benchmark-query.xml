@@ -1,4 +1,4 @@
-<benchmark xmlns="urn:radargun:benchmark:2.1">
+<benchmark xmlns="urn:radargun:benchmark:2.2">
 
    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
 
@@ -11,7 +11,7 @@
    <configurations>
       <config name="DistTxShared">
          <setup plugin="infinispan60">
-            <default xmlns="urn:radargun:plugins:infinispan60:2.1" file="query.xml" cache="dist_tx_shared"/>
+            <default xmlns="urn:radargun:plugins:infinispan60:2.2" file="query.xml" cache="dist_tx_shared"/>
          </setup>
       </config>
    </configurations>
