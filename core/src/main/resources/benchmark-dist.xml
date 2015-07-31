@@ -18,11 +18,18 @@
       <config name="Infinispan 5.2 - distributed">
          <!-- All slaves use the same configuration -->
          <setup plugin="infinispan52">
+            <!-- You can set JVM arguments for slaves here. -->
+            <vm-args>
+               <memory max="4G" />
+            </vm-args>
             <embedded xmlns="urn:radargun:plugins:infinispan52:3.0" file="dist-sync.xml"/>
          </setup>
       </config>
       <config name="Infinispan 6.0 - distributed">
          <setup plugin="infinispan60">
+            <vm-args>
+               <memory max="4G" />
+            </vm-args>
             <embedded xmlns="urn:radargun:plugins:infinispan60:3.0" file="dist-sync.xml"/>
          </setup>
       </config>

@@ -84,7 +84,10 @@ public class ConfigSchemaGenerator extends SchemaGenerator implements ConfigSche
       Element configurationsComplex = createComplexElement(benchmarkSequence, ELEMENT_CONFIGURATIONS, 1, 1);
       Element configComplex = createComplexElement(createSequence(configurationsComplex), ELEMENT_CONFIG, 1, -1);
       Element setupComplex = createComplexElement(createSequence(configComplex), ELEMENT_SETUP, 1, -1);
-      createAny(createSequence(setupComplex));
+      Element setupSequence = createSequence(setupComplex);
+      String vmArgsType = generateClass(VmArgs.class);
+      createReference(setupSequence, ELEMENT_VM_ARGS, vmArgsType, 0, 1);
+      createAny(setupSequence);
       addAttribute(configComplex, ATTR_NAME, true);
       addAttribute(setupComplex, ATTR_PLUGIN, true);
       addAttribute(setupComplex, ATTR_GROUP, false);

@@ -8,7 +8,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 
 import org.radargun.Stage;
 import org.radargun.reporting.Report;
@@ -63,14 +62,8 @@ public class Scenario implements Serializable {
       } catch (Exception e) {
          throw new RuntimeException("Cannot instantiate " + description.stageClass.getName(), e);
       }
-      Map<String, String> backups = new HashMap<String, String>();
-      Map<String, String> stateVars = state == null ? Collections.EMPTY_MAP : state.asStringMap();
-      backupProperties(localExtras.keySet(), backups);
-      backupProperties(stateVars.keySet(), backups);
-      setProperties(localExtras);
-      setProperties(stateVars);
-      PropertyHelper.setPropertiesFromDefinitions(stage, description.properties, false, true);
-      setProperties(backups);
+      PropertyHelper.setPropertiesFromDefinitions(stage, description.properties,
+            localExtras, state != null ? state.asStringMap() : Collections.EMPTY_MAP);
 
       if (report != null) {
          Report.Stage reportStage = report.addStage(stage.getName());
@@ -100,18 +93,6 @@ public class Scenario implements Serializable {
          Path path = property.getValue();
          Definition definition = expanded.get(propertyName);
          reportStage.addProperty(propertyName, definition, PropertyHelper.getPropertyString(path, stage));
-      }
-   }
-
-   private void setProperties(Map<String, String> properties) {
-      for (Map.Entry<String, String> property : properties.entrySet()) {
-         System.setProperty(property.getKey(), property.getValue() == null ? "" : property.getValue());
-      }
-   }
-
-   private void backupProperties(Set<String> properties, Map<String, String> backups) {
-      for (String property : properties) {
-         backups.put(property, System.getProperty(property));
       }
    }
 

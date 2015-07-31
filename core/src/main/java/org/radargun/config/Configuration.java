@@ -23,13 +23,13 @@ public class Configuration implements Serializable {
       this.name = name;
    }
 
-   public Setup addSetup(String group, String plugin, String service, Map<String, Definition> propertyDefinitions) {
+   public Setup addSetup(String group, String plugin, String service, Map<String, Definition> propertyDefinitions, Map<String, Definition> vmArgs) {
       for (Setup s : setups) {
          if (s.group.equals(group)) {
             throw new IllegalArgumentException("Setup for group '" + group + "' already set!");
          }
       }
-      Setup setup = new Setup(group, plugin, service, propertyDefinitions);
+      Setup setup = new Setup(group, plugin, service, propertyDefinitions, vmArgs);
       setups.add(setup);
       return setup;
    }
@@ -52,12 +52,14 @@ public class Configuration implements Serializable {
       public final String plugin;
       public final String service;
       private final Map<String, Definition> properties;
+      private final Map<String, Definition> vmArgs;
 
-      public Setup(String group, String plugin, String service, Map<String, Definition> properties) {
+      public Setup(String group, String plugin, String service, Map<String, Definition> properties, Map<String, Definition> vmArgs) {
          this.plugin = plugin;
          this.service = service;
          this.group = group;
          this.properties = properties;
+         this.vmArgs = vmArgs;
       }
 
       public Map<String, Definition> getProperties() {
@@ -66,6 +68,10 @@ public class Configuration implements Serializable {
 
       public Configuration getConfiguration() {
          return Configuration.this;
+      }
+
+      public Map<String, Definition> getVmArgs() {
+         return vmArgs;
       }
    }
 }

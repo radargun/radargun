@@ -1,5 +1,6 @@
 package org.radargun.utils;
 
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,11 +35,12 @@ import org.radargun.logging.LogFactory;
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
  */
 public class ArgsHolder {
+   private static Log log = LogFactory.getLog(ArgsHolder.class);
    protected static final String CONFIG = "--config";
    protected static final String ADD_REPORTER = "--add-reporter";
    protected static final String ADD_PLUGIN = "--add-plugin";
    protected static final String ADD_CONFIG = "--add-config";
-   private static Log log = LogFactory.getLog(ArgsHolder.class);
+   protected static final String DEFAULT_VM_ARG = "--default-vm-arg";
 
    protected static final String TEMP_CONFIG_DIR = "--temp-config-dir";
    protected static final String UUID = "--uuid";
@@ -53,9 +55,9 @@ public class ArgsHolder {
    private static UUID uuid;
    private static String tempConfigDir;
    private static String currentPlugin;
-
-   private static Map<String, PluginParam> pluginParams = new HashMap<String, PluginParam>();
-   private static List<String> reporterPaths = new ArrayList<String>();
+   private static List<String> defaultVmArgs = new ArrayList<>();
+   private static Map<String, PluginParam> pluginParams = new HashMap<>();
+   private static List<String> reporterPaths = new ArrayList<>();
 
    private ArgsHolder() {
    }
@@ -121,6 +123,9 @@ public class ArgsHolder {
                case CURRENT_PLUGIN:
                   currentPlugin = nextArg(arg, argList);
                   break;
+               case DEFAULT_VM_ARG:
+                  defaultVmArgs.add(nextArg(arg, argList));
+                  break;
                default:
                   processCommonArgs(arg, argList, type);
             }
@@ -139,6 +144,11 @@ public class ArgsHolder {
                   processCommonArgs(arg, argList, type);
             }
          }
+      }
+      // when no default VM arguments are specified, we take all arguments assigned to VM
+      // as default ones
+      if (defaultVmArgs.isEmpty()) {
+         defaultVmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
       }
    }
 
@@ -258,5 +268,9 @@ public class ArgsHolder {
 
    public static void setCurrentPlugin(String currentPlugin) {
       ArgsHolder.currentPlugin = currentPlugin;
+   }
+
+   public static List<String> getDefaultVmArgs() {
+      return defaultVmArgs;
    }
 }

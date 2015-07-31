@@ -3,7 +3,6 @@ package org.radargun.utils;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.lang.management.ManagementFactory;
 import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +16,7 @@ import java.util.UUID;
 
 import org.radargun.Directories;
 import org.radargun.Slave;
+import org.radargun.config.VmArgs;
 
 /**
  * This utility will start another process after certain lock (args[0]) is released.
@@ -30,8 +30,7 @@ public class RestartHelper {
         }
     }
 
-    public static void spawnSlave(int slaveIndex, UUID nextUuid, String plugin) throws IOException {
-        // TODO: with VM restarts, we can add VM args/ENV vars to the configuration
+    public static void spawnSlave(int slaveIndex, UUID nextUuid, String plugin, VmArgs vmArgs) throws IOException {
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.inheritIO();
         StringBuilder classpathBuilder = new StringBuilder();
@@ -69,10 +68,10 @@ public class RestartHelper {
               .add("-cp").add(Directories.LIB_DIR.toString() + "/*").add(RestartHelper.class.getName())
               .add(createLockedTempFile(slaveIndex));
         command.add(javaExecutable);
-        List<String> inputArguments = ManagementFactory.getRuntimeMXBean().getInputArguments();
-        command.addAll(inputArguments);
+        List<String> defaultVmArgs = ArgsHolder.getDefaultVmArgs();
+        command.addAll(vmArgs.getVmArgs(defaultVmArgs));
         // we have to specify log4j configuration explicitly because plugin can define its default config
-        if (!Projections.any(inputArguments, new Projections.Condition<String>() {
+        if (!Projections.any(defaultVmArgs, new Projections.Condition<String>() {
             @Override
             public boolean accept(String s) {
                 return s.startsWith("-Dlog4j.configuration");
@@ -96,6 +95,9 @@ public class RestartHelper {
                 command.add(ArgsHolder.ADD_CONFIG).add(entry.getKey() + ":" + configFile);
             }
         }
+        for (String vmArg : defaultVmArgs) {
+            command.add(ArgsHolder.DEFAULT_VM_ARG).add(vmArg);
+        }
         processBuilder.command(command.build());
         processBuilder.start();
     }
@@ -116,11 +118,9 @@ public class RestartHelper {
 
     public static void main(String[] args) throws IOException {
         File file = new File(args[0]);
-        System.out.printf("%s: Waiting for lock on file %s%n",
-              new SimpleDateFormat("HH:mm:ss,S").format(new Date()), args[0]);
+        System.out.printf("%s: Waiting for lock on file %s%n", timestamp(), args[0]);
         FileLock lock = new RandomAccessFile(file, "rw").getChannel().lock();
-        System.out.printf("%s: Lock acquired%n",
-              new SimpleDateFormat("HH:mm:ss,S").format(new Date()));
+        System.out.printf("%s: Lock acquired%n", timestamp());
         lock.release();
         file.delete();
 
@@ -131,5 +131,9 @@ public class RestartHelper {
         processBuilder.command(command);
         processBuilder.start();
         System.exit(0);
+    }
+
+    private static String timestamp() {
+        return new SimpleDateFormat("HH:mm:ss,S").format(new Date());
     }
 }
