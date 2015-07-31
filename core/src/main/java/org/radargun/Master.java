@@ -119,6 +119,8 @@ public class Master {
             } catch (Exception e) {
                log.error("Error in reporter " + reporter, e);
                returnCode = 127;
+            } finally {
+               InitHelper.destroy(reporter);
             }
          }
          String reportersMessage = reporters.isEmpty() ? "No reporters have been specified." : "All reporters have been executed, exiting.";
@@ -138,13 +140,17 @@ public class Master {
       Stage stage = masterConfig.getScenario().getStage(stageId, state, getCurrentExtras(masterConfig, configuration, cluster), state.getReport());
       InitHelper.init(stage);
       StageResult result;
-      if (stage instanceof MasterStage) {
-         result = executeMasterStage((MasterStage) stage);
-      } else if (stage instanceof DistStage) {
-         result = executeDistStage(stageId, (DistStage) stage);
-      } else {
-         log.error("Stage '" + stage.getName() + "' is neither master nor distributed");
-         return -1;
+      try {
+         if (stage instanceof MasterStage) {
+            result = executeMasterStage((MasterStage) stage);
+         } else if (stage instanceof DistStage) {
+            result = executeDistStage(stageId, (DistStage) stage);
+         } else {
+            log.error("Stage '" + stage.getName() + "' is neither master nor distributed");
+            return -1;
+         }
+      } finally {
+         InitHelper.destroy(stage);
       }
 
       if (result == StageResult.SUCCESS) {
