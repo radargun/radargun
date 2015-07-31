@@ -1,4 +1,4 @@
-package org.radargun.jpa;
+package org.radargun.jpa.entities;
 
 import javax.persistence.Column;
 import javax.persistence.EmbeddedId;

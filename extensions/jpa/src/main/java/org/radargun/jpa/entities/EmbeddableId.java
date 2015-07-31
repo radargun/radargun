@@ -1,4 +1,4 @@
-package org.radargun.jpa;
+package org.radargun.jpa.entities;
 
 import java.io.Serializable;
 import javax.persistence.Embeddable;

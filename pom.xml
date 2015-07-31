@@ -42,24 +42,25 @@
       <plugins.spymemcached />
       <reporter.default />
       <reporter.perfrepo />
-      <extension.example/>
+      <extension.example-extension/>
       <extension.hdrhistogram />
+      <extension.jpa />
    </properties>
 
    <profiles>
       <!-- Extensions -->
       <profile>
-         <id>extension-example</id>
+         <id>example-extension</id>
          <activation>
             <property>
-               <name>extension-example</name>
+               <name>example-extension</name>
             </property>
          </activation>
          <modules>
-            <module>extensions/extension-example</module>
+            <module>extensions/example-extension</module>
          </modules>
          <properties>
-            <extension.example>extension-example</extension.example>
+            <extension.example-extension>example-extension</extension.example-extension>
          </properties>
       </profile>
       <profile>
@@ -77,7 +78,6 @@
             <extension.hdrhistogram>hdrhistogram</extension.hdrhistogram>
          </properties>
       </profile>
-      <!-- Plugin-specific -->
       <profile>
          <id>jpa</id>
          <activation>
@@ -86,8 +86,11 @@
             </property>
          </activation>
          <modules>
-            <module>specific/jpa</module>
+            <module>extensions/jpa</module>
          </modules>
+         <properties>
+            <extension.jpa>jpa</extension.jpa>
+         </properties>
       </profile>
       <!-- Reporters -->
       <profile>
@@ -358,11 +361,6 @@
                               <include name="**/*" />
                            </fileset>
                         </copy>
-                        <copy todir="${distribution.artifact}/lib">
-                           <fileset dir="specific/jpa/target" erroronmissingdir="false">
-                              <include name="radargun-jpa-*.jar" />
-                           </fileset>
-                        </copy>
                         <copy todir="${distribution.artifact}/bin">
                            <fileset dir="bin">
                               <include name="**/*" />
@@ -398,11 +396,11 @@
                            <mapper type="flatten" />
                         </pathconvert>
 
-                        <ac:for list="${extension.example},${extension.hdrhistogram}" param="extension" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${extension.example-extension},${extension.hdrhistogram},${extension.jpa}" param="extension" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging extension @{extension}..." />
                               <copy todir="${distribution.artifact}/lib">
-                                 <fileset dir="extensions/@{extension}/target/distribution/@{extension}-bin/@{extension}/lib" excludes="${core_jar_list}"/>
+                                 <fileset dir="extensions/@{extension}/target/distribution/radargun-@{extension}-bin/radargun-@{extension}/lib" excludes="${core_jar_list}"/>
                               </copy>
                            </sequential>
                         </ac:for>
