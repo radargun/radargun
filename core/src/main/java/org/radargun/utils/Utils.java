@@ -7,9 +7,6 @@ import java.lang.management.MemoryUsage;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -110,58 +107,6 @@ public class Utils {
       return MEM_FMT.format(memBytes / 1024) + " kb";
    }
 
-   public static URLClassLoader buildPluginSpecificClassLoader(String plugin, ClassLoader parent) {
-      log.trace("Using smart class loading");
-      List<URL> jars = new ArrayList<>();
-      try {
-         ArgsHolder.PluginParam param = ArgsHolder.getPluginParams().get(plugin);
-         if (param != null) {
-            String pluginPath = param.getPath();
-            if (pluginPath != null) {
-               File pluginRoot = new File(pluginPath);
-               jars.add(new File(pluginRoot, "conf").toURI().toURL());
-               addJars(new File(pluginRoot, "lib"), jars);
-            }
-            for (String configFile : param.getConfigFiles()) {
-               File pluginConfFile = new File(configFile);
-               if (pluginConfFile.exists()) {
-                  jars.add(new File(pluginConfFile.getParent()).toURI().toURL());
-               } else {
-                  log.warn("File '" + pluginConfFile + "' does not exist!");
-               }
-            }
-         }
-         File pluginDir = new File(Directories.PLUGINS_DIR, plugin);
-         if (pluginDir.exists() && pluginDir.isDirectory()) {
-            File confDir = new File(pluginDir, "conf");
-            jars.add(confDir.toURI().toURL());
-            // add default lib only if it is not defined explicitly
-            if (param == null || (param != null && param.getPath() == null)) {
-               addJars(new File(pluginDir, "lib"), jars);
-            }
-         }
-         addJars(Directories.SPECIFIC_DIR, jars);
-      } catch (MalformedURLException e) {
-         throw new IllegalArgumentException(e);
-      }
-      return new URLClassLoader(jars.toArray(new URL[jars.size()]), parent);
-   }
-
-   private static void addJars(File libFolder, List<URL> jars) throws MalformedURLException {
-      if (!libFolder.isDirectory()) {
-         log.info("Could not find lib directory: " + libFolder.getAbsolutePath());
-      } else {
-         String[] jarsSrt = libFolder.list(new JarFilenameFilter());
-         for (String file : jarsSrt) {
-            File aJar = new File(libFolder, file);
-            if (!aJar.exists() || !aJar.isFile()) {
-               throw new IllegalStateException();
-            }
-            jars.add(aJar.toURI().toURL());
-         }
-      }
-   }
-
    public static void threadDump() {
       long start = TimeService.nanoTime();
       Map<Thread, StackTraceElement[]> stacktraces = Thread.getAllStackTraces();
@@ -219,6 +164,13 @@ public class Utils {
       } catch (InterruptedException e) {
          log.error("Interrupted when waiting for the executor to finish.");
       }
+   }
+
+   public static void deleteOnExitRecursive(File file) {
+       if (!file.exists()) return;
+       file.deleteOnExit();
+       if (!file.isDirectory()) return;
+       for (File f : file.listFiles()) deleteOnExitRecursive(f);
    }
 
    public static class JarFilenameFilter implements FilenameFilter {
@@ -344,16 +296,16 @@ public class Utils {
       return NF.format(d);
    }
 
-   public static <T> T instantiate(ClassLoader classLoader, String className) {
+   public static <T> T instantiate(String className) {
       try {
-         return (T) classLoader.loadClass(className).newInstance();
+         return (T) Class.forName(className).newInstance();
       } catch (Exception e) {
          throw new IllegalArgumentException(e);
       }
    }
 
-   public static <T> T instantiateAndInit(ClassLoader classLoader, String className, String params) {
-      T instance = instantiate(classLoader, className);
+   public static <T> T instantiateAndInit(String className, String params) {
+      T instance = instantiate(className);
       if (params != null) {
          PropertyHelper.setProperties(instance, parseParams(params), false, false);
       }

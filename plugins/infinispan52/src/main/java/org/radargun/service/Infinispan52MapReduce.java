@@ -37,7 +37,7 @@ public class Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> extends InfinispanMa
       @Override
       public Builder combiner(String combinerFqn, Map<String, String> combinerParameters) {
          try {
-            combiner = Utils.instantiate(classLoader, combinerFqn);
+            combiner = Utils.instantiate(combinerFqn);
             Utils.invokeMethodWithString(combiner, combinerParameters);
          } catch (Exception e) {
             throw (new IllegalArgumentException("Could not instantiate Combiner class: " + combinerFqn, e));

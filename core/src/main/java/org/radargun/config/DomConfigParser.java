@@ -139,14 +139,8 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
    }
 
    private void parseClusters(MasterConfig masterConfig, Element clustersElement) {
-      if (ELEMENT_LOCAL.equals(clustersElement.getNodeName())) {
-         if (masterConfig.getPort() != 0 || masterConfig.getHost() != null) {
-            log.warn("Master element will be ignored for local configuration.");
-         }
-         // no clusters, leave empty
-         return;
-      } else if (!ELEMENT_CLUSTERS.equals(clustersElement.getNodeName())) {
-         throw unexpected(clustersElement.getNodeName(), new String[]{ELEMENT_LOCAL, ELEMENT_CLUSTERS});
+      if (!ELEMENT_CLUSTERS.equals(clustersElement.getNodeName())) {
+         throw unexpected(clustersElement.getNodeName(), new String[]{ELEMENT_CLUSTERS});
       }
       if (masterConfig.getPort() == 0 || masterConfig.getHost() == null) {
          throw new IllegalArgumentException("Master not configured for distributed scenario!");

@@ -60,8 +60,9 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
 
    @Override
    protected ConfigurationBuilderHolder createConfiguration(String configFile) throws FileNotFoundException {
-      InputStream input = FileLookupFactory.newInstance().lookupFileStrict(configFile, Thread.currentThread().getContextClassLoader());
-      return new ParserRegistry(Thread.currentThread().getContextClassLoader()).parse(input);
+      ClassLoader classLoader = getClass().getClassLoader();
+      InputStream input = FileLookupFactory.newInstance().lookupFileStrict(configFile, classLoader);
+      return new ParserRegistry(classLoader).parse(input);
    }
 
    protected ConfigDumpHelper createConfigDumpHelper() {

@@ -125,7 +125,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
 
       stats.begin();
       for (int i = 0; i < numExecutions; i++) {
-         Callable<T> callable = Utils.instantiate(slaveState.getClassLoader(), this.callable);
+         Callable<T> callable = Utils.instantiate(this.callable);
          callable = Utils.invokeMethodWithString(callable, Utils.parseParams(callableParams));
 
          DistributedTaskExecutor.Builder<T> builder = executor.builder(null).callable(callable);

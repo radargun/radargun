@@ -358,8 +358,7 @@
                               <include name="**/*" />
                            </fileset>
                         </copy>
-                        <mkdir dir="${distribution.artifact}/specific" />
-                        <copy todir="${distribution.artifact}/specific">
+                        <copy todir="${distribution.artifact}/lib">
                            <fileset dir="specific/jpa/target" erroronmissingdir="false">
                               <include name="radargun-jpa-*.jar" />
                            </fileset>
@@ -493,7 +492,11 @@
                                  <copy-plugin plugin="@{plugin}"/>
                               </ac:else>
                               </ac:if>
-                              <java classname="org.radargun.config.PluginSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
+                              <java classname="org.radargun.config.PluginSchemaGenerator" failonerror="true">
+                                 <classpath>
+                                    <path refid="core_and_extensions"/>
+                                    <fileset dir="${distribution.artifact}/plugins/@{plugin}/lib" includes="*.jar"/>
+                                 </classpath>
                                  <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
                                  <arg value="${distribution.artifact}/schema" />
                                  <arg value="@{plugin}" />

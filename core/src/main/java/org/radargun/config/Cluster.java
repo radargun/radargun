@@ -16,11 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Cluster implements Serializable, Comparable<Cluster> {
    private final static AtomicInteger indexGenerator = new AtomicInteger(0);
    public final static String DEFAULT_GROUP = "default";
-   public final static Cluster LOCAL = new Cluster();
-
-   static {
-      LOCAL.addGroup(DEFAULT_GROUP, 1);
-   }
 
    private List<Group> groups = new ArrayList<Group>();
    private final int index;

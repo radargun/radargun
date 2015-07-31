@@ -56,7 +56,7 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
       @Override
       public Builder mapper(String mapperFqn, Map<String, String> mapperParameters) {
          try {
-            mapper = Utils.instantiate(classLoader, mapperFqn);
+            mapper = Utils.instantiate(mapperFqn);
             Utils.invokeMethodWithString(mapper, mapperParameters);
          } catch (Exception e) {
             throw new IllegalArgumentException("Could not instantiate Mapper class: " + mapperFqn, e);
@@ -67,7 +67,7 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
       @Override
       public Builder reducer(String reducerFqn, Map<String, String> reducerParameters) {
          try {
-            reducer = Utils.instantiate(classLoader, reducerFqn);
+            reducer = Utils.instantiate(reducerFqn);
             Utils.invokeMethodWithString(reducer, reducerParameters);
          } catch (Exception e) {
             throw new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e);
@@ -83,7 +83,7 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
       @Override
       public Builder collator(String collatorFqn, Map<String, String> collatorParameters) {
          try {
-            collator = Utils.instantiate(classLoader, collatorFqn);
+            collator = Utils.instantiate(collatorFqn);
             Utils.invokeMethodWithString(collator, collatorParameters);
          } catch (Exception e) {
             throw (new IllegalArgumentException("Could not instantiate Collator class: " + collatorFqn, e));

@@ -52,10 +52,6 @@ public class MasterConfig {
       return host;
    }
 
-   public boolean isLocal() {
-      return clusters.size() == 0;
-   }
-
    public List<Cluster> getClusters() {
       return Collections.unmodifiableList(clusters);
    }

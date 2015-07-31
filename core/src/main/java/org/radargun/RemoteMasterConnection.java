@@ -6,9 +6,11 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.UUID;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.utils.ArgsHolder;
 
 /**
  * Abstracts connection to the master node from slave side.
@@ -65,15 +67,20 @@ public class RemoteMasterConnection {
       }
       log.info("Successfully established connection with master at: " + masterHost + ":" + masterPort);
 
-      writeInt(slaveIndex);
-      return socketChannel.socket().getLocalAddress();
-   }
-
-   private void writeInt(int value) throws IOException {
       buffer.clear();
-      buffer.putInt(value);
+      buffer.putInt(slaveIndex);
+      UUID uuid = ArgsHolder.getUuid();
+      if (uuid == null) {
+         buffer.putLong(0);
+         buffer.putLong(0);
+      } else {
+         buffer.putLong(uuid.getMostSignificantBits());
+         buffer.putLong(uuid.getLeastSignificantBits());
+      }
       buffer.flip();
       while (buffer.hasRemaining()) socketChannel.write(buffer);
+
+      return socketChannel.socket().getLocalAddress();
    }
 
    /**
@@ -146,14 +153,27 @@ public class RemoteMasterConnection {
    /**
     * Send any serializable object to the master node.
     * @param response
+    * @param nextUuid UUID of the next generation of slaves, or null if this slave will continue
     * @throws IOException
     */
-   public void sendResponse(Serializable response) throws IOException {
+   public void sendResponse(Serializable response, UUID nextUuid) throws IOException {
       buffer.clear();
       buffer = SerializationHelper.serializeObjectWithLength(response, buffer);
+      if (nextUuid == null) {
+         buffer = SerializationHelper.appendLong(0, buffer);
+         buffer = SerializationHelper.appendLong(0, buffer);
+      } else {
+         buffer = SerializationHelper.appendLong(nextUuid.getMostSignificantBits(), buffer);
+         buffer = SerializationHelper.appendLong(nextUuid.getLeastSignificantBits(), buffer);
+      }
       log.trace("Sending response to the master, response has " + buffer.position() + " bytes.");
       buffer.flip();
       while (buffer.hasRemaining()) socketChannel.write(buffer);
       log.info("Response successfully sent to the master");
+   }
+
+   public void release() throws IOException {
+      socketChannel.close();
+      socketChannel = null;
    }
 }

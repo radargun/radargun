@@ -9,7 +9,6 @@ public class Directories {
    public final static File ROOT_DIR;
    public final static File LIB_DIR;
    public final static File PLUGINS_DIR;
-   public final static File SPECIFIC_DIR;
    public final static File REPORTERS_DIR;
 
    static {
@@ -25,9 +24,6 @@ public class Directories {
       PLUGINS_DIR = new File(ROOT_DIR, "plugins");
       if ((!PLUGINS_DIR.exists() || !PLUGINS_DIR.isDirectory()))
          throw new IllegalStateException("Plugins directory not found: " + PLUGINS_DIR);
-      SPECIFIC_DIR = new File(ROOT_DIR, "specific");
-      if ((!SPECIFIC_DIR.exists() || !SPECIFIC_DIR.isDirectory()))
-         throw new IllegalStateException("Specific directory not found: " + SPECIFIC_DIR);
       REPORTERS_DIR = new File(ROOT_DIR, "reporters");
       if ((!REPORTERS_DIR.exists() || !REPORTERS_DIR.isDirectory()))
          throw new IllegalStateException("Reporters directory not found: " + REPORTERS_DIR);

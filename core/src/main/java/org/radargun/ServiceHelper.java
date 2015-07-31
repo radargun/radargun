@@ -61,7 +61,7 @@ public class ServiceHelper {
     *
     * Don't forget to call {@link #setServiceContext(String, String, int)} before calling this method.
     */
-   public static Object createService(ClassLoader classLoader, String plugin, String service,
+   public static Object createService(String plugin, String service,
                                       Map<String, Definition> properties, Map<String, String> extras) {
       String serviceClassName = Utils.getPluginProperty(plugin, SERVICE_PROPERTY_PREFIX + service);
       if (serviceClassName == null) {
@@ -69,7 +69,7 @@ public class ServiceHelper {
       }
       Class<?> serviceClazz = null;
       try {
-         serviceClazz = classLoader.loadClass(serviceClassName);
+         serviceClazz = Class.forName(serviceClassName);
       } catch (Throwable t) {
          throw new IllegalArgumentException("Cannot load class " + serviceClassName + " from plugin " + plugin, t);
       }
@@ -107,13 +107,12 @@ public class ServiceHelper {
    public static Map<String, Class<?>> loadServices(String plugin) {
       Map<String, Class<?>> services = new HashMap<>();
       java.util.Properties properties = Utils.getPluginProperties(plugin);
-      ClassLoader loader = Utils.buildPluginSpecificClassLoader(plugin, Utils.class.getClassLoader());
       for (String property : properties.stringPropertyNames()) {
          if (!property.startsWith(SERVICE_PROPERTY_PREFIX)) continue;
          String name = property.substring(property.indexOf('.') + 1);
          String clazzName = properties.getProperty(property);
          try {
-            Class<?> clazz = loader.loadClass(clazzName);
+            Class<?> clazz = Class.forName(clazzName);
             services.put(name, clazz);
          } catch (ClassNotFoundException e) {
             log.warn("Failed to load class " + clazzName, e);
