@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.radargun.ShutDownHook;
 import org.radargun.config.DomConfigParser;
+import org.radargun.config.InitHelper;
 import org.radargun.config.MasterConfig;
 import org.radargun.config.Property;
 import org.radargun.config.ReporterConfiguration;
@@ -106,13 +107,18 @@ public class SerializedReporter implements Reporter {
 
       for (ReporterConfiguration rc : config.getReporters()) {
          for (ReporterConfiguration.Report rcr : rc.getReports()) {
+            Reporter reporter = null;
             try {
-               Reporter reporter = ReporterHelper.createReporter(rc.type, rcr.getProperties());
+               reporter = ReporterHelper.createReporter(rc.type, rcr.getProperties());
                if (reporter instanceof SerializedReporter) continue;
                reporter.run(reports);
             } catch (Exception e) {
                System.err.println("Failed to run reporter " + rc.type);
                e.printStackTrace();
+            } finally {
+               if (reporter != null) {
+                  InitHelper.destroy(reporter);
+               }
             }
          }
       }
