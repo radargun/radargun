@@ -13,6 +13,14 @@ public class MultiOperationStats implements OperationStats {
    }
 
    @Override
+   public OperationStats newInstance() {
+      OperationStats[] instances = new OperationStats[impls.length];
+      for (int i = 0; i < impls.length; ++i)
+         instances[i] = impls[i].newInstance();
+      return new MultiOperationStats(instances);
+   }
+
+   @Override
    public OperationStats copy() {
       OperationStats[] copies = new OperationStats[impls.length];
       for (int i = 0; i < impls.length; ++i)

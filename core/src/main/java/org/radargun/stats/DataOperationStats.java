@@ -12,7 +12,7 @@ public class DataOperationStats extends AllRecordingOperationStats {
    protected long totalBytes = 0;
    
    @Override
-   protected AllRecordingOperationStats getInstance() {
+   public DataOperationStats newInstance() {
       return new DataOperationStats();
    }
    

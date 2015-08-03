@@ -16,6 +16,11 @@ import org.radargun.utils.ReflexiveConverters;
  */
 public interface OperationStats extends Serializable {
    /**
+    * @return New instance of the same type & settings
+    */
+   OperationStats newInstance();
+
+   /**
     * @return Deep copy of this instance.
     */
    OperationStats copy();

@@ -23,8 +23,13 @@ public class DefaultOperationStats implements OperationStats {
    private long errors;
 
    @Override
+   public DefaultOperationStats newInstance() {
+      return new DefaultOperationStats();
+   }
+
+   @Override
    public DefaultOperationStats copy() {
-      DefaultOperationStats copy = new DefaultOperationStats();
+      DefaultOperationStats copy = newInstance();
       copy.requests = requests;
       copy.responseTimeMax = responseTimeMax;
       copy.responseTimeSum = responseTimeSum;

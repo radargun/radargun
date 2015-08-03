@@ -17,7 +17,8 @@ import org.radargun.config.Property;
  */
 @DefinitionElement(name = "default", doc = "Statistics with the same implementation of operation statistics.")
 public class DefaultStatistics extends IntervalStatistics {
-   private transient OperationStats[] operationStats = new OperationStats[0];
+   private final static OperationStats[] EMPTY_ARRAY = new OperationStats[0];
+   private transient OperationStats[] operationStats = EMPTY_ARRAY;
    private Map<String, OperationStats> operationStatsMap = new HashMap<String, OperationStats>();
 
    @Property(name = "operationStats", doc = "Operation statistics prototype.", complexConverter = OperationStats.Converter.class)
@@ -43,7 +44,7 @@ public class DefaultStatistics extends IntervalStatistics {
    }
 
    protected OperationStats createOperationStats(int operationId) {
-      return prototype.copy();
+      return prototype.newInstance();
    }
 
    public Statistics newInstance() {
@@ -62,29 +63,29 @@ public class DefaultStatistics extends IntervalStatistics {
 
    @Override
    public void registerRequest(long responseTime, Operation operation) {
-      ensure(operation.id + 1);
+      ensure(operation.id);
       OperationStats stats = operationStats[operation.id];
       stats.registerRequest(responseTime);
    }
 
    @Override
    public void registerError(long responseTime, Operation operation) {
-      ensure(operation.id + 1);
+      ensure(operation.id);
       OperationStats stats = operationStats[operation.id];
       stats.registerError(responseTime);
    }
 
-   private void ensure(int operationCount) {
-      if (operationCount <= operationStats.length) {
-         return;
+   private void ensure(int operationId) {
+      if (operationId >= operationStats.length) {
+         OperationStats[] temp = new OperationStats[operationId + 1];
+         System.arraycopy(operationStats, 0, temp, 0, operationStats.length);
+         operationStats = temp;
       }
-      OperationStats[] temp = new OperationStats[operationCount];
-      System.arraycopy(operationStats, 0, temp, 0, operationStats.length);
-      for (int i = operationStats.length; i < operationCount; ++i) {
-         temp[i] = createOperationStats(i);
-         operationStatsMap.put(Operation.getById(i).name, temp[i]);
+      if (operationStats[operationId] == null) {
+         OperationStats operationStats = createOperationStats(operationId);
+         this.operationStats[operationId] = operationStats;
+         operationStatsMap.put(Operation.getById(operationId).name, operationStats);
       }
-      operationStats = temp;
    }
 
    @Override
@@ -108,18 +109,30 @@ public class DefaultStatistics extends IntervalStatistics {
       DefaultStatistics stats = (DefaultStatistics) otherStats;
       if (operationStats == null) {
          // after deserialization
-         operationStats = new OperationStats[0];
+         operationStats = EMPTY_ARRAY;
       }
       if (stats.operationStats == null) {
          for (Map.Entry<String, OperationStats> entry : stats.operationStatsMap.entrySet()) {
             Operation operation = Operation.getByName(entry.getKey());
-            ensure(operation.id + 1);
-            operationStats[operation.id].merge(entry.getValue());
+            ensure(operation.id);
+            if (operationStats[operation.id] == null) {
+               operationStats[operation.id] = entry.getValue().copy();
+               operationStatsMap.put(entry.getKey(), operationStats[operation.id]);
+            } else {
+               operationStats[operation.id].merge(entry.getValue());
+            }
          }
       } else {
-         ensure(stats.operationStats.length);
+         ensure(Math.max(0, stats.operationStats.length - 1));
          for (int i = 0; i < stats.operationStats.length; ++i) {
-            operationStats[i].merge(stats.operationStats[i]);
+            if (stats.operationStats[i] == null) {
+               continue;
+            } else if (operationStats[i] == null) {
+               operationStats[i] = stats.operationStats[i].copy();
+               operationStatsMap.put(Operation.getById(i).name, operationStats[i]);
+            } else {
+               operationStats[i].merge(stats.operationStats[i]);
+            }
          }
       }
    }
@@ -133,7 +146,12 @@ public class DefaultStatistics extends IntervalStatistics {
    public <T> T[] getRepresentations(Class<T> clazz, Object... args) {
       T[] representations = (T[]) Array.newInstance(clazz, operationStats.length);
       for (int i = 0; i < operationStats.length; ++i) {
-         representations[i] = operationStats[i].getRepresentation(clazz, args);
+         OperationStats operationStats = this.operationStats[i];
+         if (operationStats != null) {
+            representations[i] = operationStats.getRepresentation(clazz, args);
+         } else {
+            representations[i] = prototype.getRepresentation(clazz, args);
+         }
       }
       return representations;
    }

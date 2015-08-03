@@ -48,13 +48,24 @@ public final class HistogramOperationStats implements OperationStats {
       histogram = new org.HdrHistogram.Histogram(maxValue, digits);
    }
 
-   private HistogramOperationStats(AbstractHistogram histogram) {
+   private HistogramOperationStats(AbstractHistogram histogram, long maxValue, int digits) {
       this.histogram = histogram;
+      this.maxValue = maxValue;
+      this.digits = digits;
+   }
+
+   @Override
+   public OperationStats newInstance() {
+      HistogramOperationStats newInstance = new HistogramOperationStats();
+      newInstance.maxValue = maxValue;
+      newInstance.digits = digits;
+      newInstance.init();
+      return newInstance;
    }
 
    @Override
    public OperationStats copy() {
-      return new HistogramOperationStats(getHistogram().copy());
+      return new HistogramOperationStats(getHistogram().copy(), maxValue, digits);
    }
 
    @Override

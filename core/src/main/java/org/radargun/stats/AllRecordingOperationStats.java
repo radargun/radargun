@@ -33,7 +33,8 @@ public class AllRecordingOperationStats implements OperationStats {
     * 
     * @return a new AllRecordingOperationStats instance
     */
-   protected AllRecordingOperationStats getInstance() {
+   @Override
+   public AllRecordingOperationStats newInstance() {
       return new AllRecordingOperationStats();
    }
 
@@ -77,7 +78,7 @@ public class AllRecordingOperationStats implements OperationStats {
 
    @Override
    public OperationStats copy() {
-      AllRecordingOperationStats copy = this.getInstance();
+      AllRecordingOperationStats copy = this.newInstance();
       copy.responseTimes = Arrays.copyOf(responseTimes, responseTimes.length);
       copy.full = full;
       copy.pos = pos;
