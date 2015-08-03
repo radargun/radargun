@@ -31,6 +31,9 @@ public abstract class TestSetupStage extends AbstractDistStage {
    @Property(doc = "Minimum number of threads waiting for next operation during ramp-up. Default is 4.")
    private int rampUpMinWaitingThreads = 4;
 
+   @Property(doc = "Number of threads started at the beginning. Default is 1.")
+   private int minThreads = 1;
+
    @Property(doc = "Maximum number of executing threads. Default is 128.")
    private int maxThreads = 128;
 
@@ -63,12 +66,11 @@ public abstract class TestSetupStage extends AbstractDistStage {
       runningTest.updateSelector(createSelector());
 
       log.info("Starting test " + testName + " ramp-up");
-      if (runningTest.getUsedThreads() == 0) {
-         // this is the first iteration
-         // we need to create minWaitingThreads + 1 threads since this is the lower bound
-         for (int i = 0; i <= rampUpMinWaitingThreads; ++i) {
-            runningTest.addStressor();
-         }
+      int minThreads = Math.max(this.minThreads, rampUpMinWaitingThreads + 1);
+      while (runningTest.getUsedThreads() < minThreads) {
+         // one of the started threads may already create his sibling;
+         // fail silently if we attempt to reach the limit
+         runningTest.addStressor(true);
       }
       int lastThreads = 0;
       long now = TimeService.currentTimeMillis();
@@ -98,7 +100,7 @@ public abstract class TestSetupStage extends AbstractDistStage {
          return errorResponse("Test was terminated during ramp-up");
       } else if (rampUpMaxDuration > 0 && now >= startTime + rampUpMaxDuration) {
          return errorResponse("Ramp-up has not stabilized within timeout");
-      } else if (runningTest.getUsedThreads() >= maxThreads) {
+      } else if (runningTest.isReachedMax()) {
          return errorResponse("Max thread count reached during ramp-up");
       }
       return successfulResponse();

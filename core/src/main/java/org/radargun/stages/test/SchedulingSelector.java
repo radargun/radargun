@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeService;
 
 /**
@@ -17,12 +14,9 @@ import org.radargun.utils.TimeService;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class SchedulingSelector<T> {
-   private final static Log log = LogFactory.getLog(SchedulingSelector.class);
-   private final static boolean trace = log.isTraceEnabled();
    private final int[] invocations;
    private final long[] intervals;
    private final T[] operations;
-   private final int numOperations;
    private final AtomicLongArray lastIntervals;
    private final AtomicIntegerArray todoInvocations;
    private volatile int offset;
@@ -37,9 +31,8 @@ public class SchedulingSelector<T> {
       this.operations = operations;
       this.invocations = invocations;
       this.intervals = intervals;
-      numOperations = operations.length;
-      lastIntervals = new AtomicLongArray(numOperations);
-      todoInvocations = new AtomicIntegerArray(numOperations);
+      lastIntervals = new AtomicLongArray(operations.length);
+      todoInvocations = new AtomicIntegerArray(operations.length);
    }
 
    /**
@@ -50,18 +43,18 @@ public class SchedulingSelector<T> {
       WAIT_LOOP: for (;;) {
          long now = TimeService.currentTimeMillis();
          int myOffset = offset;
-         INVOCATIONS_LOOP: for (int i = 0; i < numOperations; ++i) {
-            int operationIndex = (i + myOffset) % numOperations;
+         INVOCATIONS_LOOP: for (int i = 0; i < operations.length; ++i) {
+            int operationIndex = (i + myOffset) % operations.length;
 
             long myInterval = intervals[operationIndex];
             long currentInterval = now / myInterval;
 
             long lastInterval;
-            boolean set = false;
+            boolean hasSetLastInterval = false;
             do {
                lastInterval = lastIntervals.get(operationIndex);
-            } while (currentInterval > lastInterval && !(set = lastIntervals.compareAndSet(operationIndex, lastInterval, currentInterval)));
-            if (set) {
+            } while (currentInterval > lastInterval && !(hasSetLastInterval = lastIntervals.compareAndSet(operationIndex, lastInterval, currentInterval)));
+            if (hasSetLastInterval) {
                int frequency = invocations[operationIndex];
                // we ignore the requests that should have been executed in previous slots;
                // if the slot is too small
@@ -125,7 +118,8 @@ public class SchedulingSelector<T> {
       public SchedulingSelector build() {
          if (operations.isEmpty()) throw new IllegalStateException("No operations set!");
          return new SchedulingSelector(operations.toArray((T[]) Array.newInstance(clazz, operations.size())),
-               Projections.toIntArray(invocations), Projections.toLongArray(intervals));
+               invocations.stream().mapToInt(i -> i.intValue()).toArray(),
+               intervals.stream().mapToLong(l -> l.longValue()).toArray());
       }
    }
 }

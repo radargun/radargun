@@ -14,6 +14,7 @@ import org.radargun.logging.LogFactory;
 import org.radargun.state.ServiceListenerAdapter;
 import org.radargun.stats.Statistics;
 import org.radargun.utils.TimeService;
+import org.radargun.utils.Utils;
 
 /**
  * State of test (threads, synchronization objects etc..) that is created by {@link TestSetupStage}
@@ -91,9 +92,17 @@ public class RunningTest extends ServiceListenerAdapter {
       steadyState = false;
    }
 
+   public boolean isReachedMax() {
+      return reachedMax;
+   }
+
    public Statistics createStatistics() {
-      statisticsCounter.incrementAndGet();
-      return statisticsPrototype.copy();
+      if (statisticsPrototype == null) {
+         return null;
+      } else {
+         statisticsCounter.incrementAndGet();
+         return statisticsPrototype.newInstance();
+      }
    }
 
    public void recordStatistics(Statistics stats) {
@@ -142,16 +151,30 @@ public class RunningTest extends ServiceListenerAdapter {
             throw new IllegalStateException(e);
          }
       }
+      synchronized (this) {
+         for (Runnable listener : stopListeners) {
+            listener.run();
+         }
+      }
    }
 
-   public void addStressor() {
+   public void addStressor(boolean failSilently) {
       int threadIndex = getNextThreadId(maxThreads);
       if (threadIndex < 0) {
+         if (failSilently) {
+            return;
+         }
+         reachedMax = true;
          log.warnf("Attempt to create more than %d threads!", maxThreads);
+         Utils.threadDump();
          return;
       }
       if (isSteadyState()) {
+         if (failSilently) {
+            return;
+         }
          log.error("Creating new thread during steady-state!");
+         Utils.threadDump();
       }
       // mark non-started thread as waiting
       waitingThreads.incrementAndGet();
@@ -173,7 +196,7 @@ public class RunningTest extends ServiceListenerAdapter {
       int threadIndex;
       do {
          threadIndex = threadCounter.get();
-         if (threadIndex >= maxThreads) {
+         if (threadIndex >= maxThreads) {reachedMax = true;
             return -1;
          }
       } while (!threadCounter.compareAndSet(threadIndex, threadIndex + 1));
@@ -207,6 +230,14 @@ public class RunningTest extends ServiceListenerAdapter {
 
    public void setMinThreadCreationDelay(long minThreadCreationDelay) {
       this.minThreadCreationDelay = minThreadCreationDelay;
+   }
+
+   /**
+    * Add operation executed when the test is stopped.
+    * @param runnable
+    */
+   public synchronized void addStopListener(Runnable runnable) {
+      stopListeners.add(runnable);
    }
 
    /**
@@ -259,11 +290,11 @@ public class RunningTest extends ServiceListenerAdapter {
                      timestamp = lastCreated.get();
                   }
                   if (set) {
-                     addStressor();
                      log.infof("%3d threads waiting", currentWaitingThreads);
                      for (Map.Entry<Conversation, AtomicInteger> entry : actuallyExecuting.entrySet()) {
                         log.infof("%3d threads executing %s", entry.getValue().get(), entry.getKey());
                      }
+                     addStressor(false);
                   }
                }
             }

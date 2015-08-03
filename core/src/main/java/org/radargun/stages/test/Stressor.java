@@ -24,8 +24,7 @@ public class Stressor extends Thread {
    private static Log log = LogFactory.getLog(Stressor.class);
 
    private final RunningTest test;
-   private final Random random = ThreadLocalRandom.current();
-   ;
+   private Random random;
 
    private ConversationSelector selector;
    private Statistics stats;
@@ -45,6 +44,8 @@ public class Stressor extends Thread {
 
    @Override
    public void run() {
+      // we cannot set this in constructor since the constructor is called in sc-main thread!
+      random = ThreadLocalRandom.current();
       try {
          while (!test.isFinished()) {
             // one cycle of this loop should match to a stage.
@@ -63,28 +64,33 @@ public class Stressor extends Thread {
             }
 
             stats = test.createStatistics();
-            stats.begin();
-
-            // and this is the steady state
-            while (test.isSteadyState()) {
-               if (selector == null) {
-                  // this means that the thread was not created during ramp-up state,
-                  // since it did not grab the selector
-                  selector = test.getSelector();
-               }
-               try {
-                  Conversation conversation = selector.next();
-                  conversation.run(this);
-               } catch (InterruptedException e) {
-                  // the test is interrupted
-               } catch (RequestException e) {
-                  // the exception was already logged in makeRequest
-               }
+            if (stats == null) {
+               // cannot create statistics because the test did not started at all
+               break;
             }
-
-            stats.end();
-            test.recordStatistics(stats);
-            stats = null; // let's throw NPE if we try to record now
+            stats.begin();
+            try {
+               // and this is the steady state
+               while (test.isSteadyState()) {
+                  if (selector == null) {
+                     // this means that the thread was not created during ramp-up state,
+                     // since it did not grab the selector
+                     selector = test.getSelector();
+                  }
+                  try {
+                     Conversation conversation = selector.next();
+                     conversation.run(this);
+                  } catch (InterruptedException e) {
+                     // the test is interrupted
+                  } catch (RequestException e) {
+                     // the exception was already logged in makeRequest
+                  }
+               }
+            } finally {
+               stats.end();
+               test.recordStatistics(stats);
+               stats = null;
+            }
          }
       } catch (Exception e) {
          log.error("Unexpected error in stressor!", e);
