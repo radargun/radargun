@@ -51,7 +51,7 @@
                  or if the mean time is 1 ms or more  -->
             <repeat-condition>
                <all>
-                  <throughput on="BasicOperations.Put" over="#{ (5 * ${repeat.counter} + 5) * 200 * 95 / 100 }"/>
+                  <throughput-net on="BasicOperations.Put" over="#{ (5 * ${repeat.counter} + 5) * 200 * 95 / 100 }"/>
                   <mean on="BasicOperations.Put" below="1 ms" />
                </all>
             </repeat-condition>

@@ -46,7 +46,7 @@
                     analyzis-type="MAX" result-type="ITERATION"
                     store-result-to="top.iteration">
          <statistics-type>
-            <throughput />
+            <throughput-net />
          </statistics-type>
       </analyze-test>
 
