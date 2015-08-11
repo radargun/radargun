@@ -19,7 +19,7 @@ public class InitHelper {
       Class<?> clazz = target.getClass();
       while (clazz != null) {
          for (Method m : clazz.getDeclaredMethods()) {
-            if (m.getAnnotation(Init.class) != null) {
+            if (m.isAnnotationPresent(Init.class)) {
                boolean overridden = false;
                for (Method m2 : inits) {
                   if (m2.getName().equals(m.getName())
@@ -28,6 +28,7 @@ public class InitHelper {
                      overridden = true;
                   }
                }
+               m.setAccessible(true);
                if (!overridden) {
                   inits.push(m);
                }
@@ -49,7 +50,8 @@ public class InitHelper {
       Class<?> clazz = target.getClass();
       while (clazz != null) {
          for (Method m : clazz.getDeclaredMethods()) {
-            if (m.getAnnotation(Destroy.class) != null) {
+            if (m.isAnnotationPresent(Destroy.class)) {
+               m.setAccessible(true);
                try {
                   m.invoke(target);
                } catch (Exception e) {
