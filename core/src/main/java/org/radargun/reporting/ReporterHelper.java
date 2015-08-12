@@ -67,8 +67,9 @@ public class ReporterHelper {
             log.warn("No JARs in " + reporterDir);
             return;
          }
-         ClassLoader classLoader = new URLClassLoader(urls.toArray(new URL[urls.size()]), ReporterHelper.class.getClassLoader());
-         stream = classLoader.getResourceAsStream("plugin.properties");
+         // Make sure 'plugin.properties' file is read from current reporter dir (if other reporter jars are present on classpath)
+         ClassLoader reporterSpecificClassloader = new URLClassLoader(urls.toArray(new URL[urls.size()]), ClassLoader.getSystemClassLoader().getParent());
+         stream = reporterSpecificClassloader.getResourceAsStream("plugin.properties");
          if (stream == null) {
             log.warn("No JAR in " + reporterDir + " contains properties file");
             return;
@@ -84,7 +85,8 @@ public class ReporterHelper {
                } else {
                   log.debug("Registering reporter '" + type + "' using " + clazzName);
                   try {
-                     Class<? extends Reporter> reporterClazz = (Class<? extends Reporter>) classLoader.loadClass(clazzName);
+                     ClassLoader reporterHelperClassLoader = new URLClassLoader(urls.toArray(new URL[urls.size()]), ReporterHelper.class.getClassLoader());
+                     Class<? extends Reporter> reporterClazz = (Class<? extends Reporter>) reporterHelperClassLoader.loadClass(clazzName);
                      reporters.put(type, reporterClazz);
                   } catch (ClassNotFoundException e) {
                      log.error("Failed to load reporter class " + clazzName + " for type '" + type + "'");

@@ -1,6 +1,7 @@
 package org.radargun.reporting.serialized;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,7 +24,6 @@ import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
 import org.radargun.reporting.ReporterHelper;
-import org.radargun.utils.Utils;
 
 /**
  * Serializes all data from the report to disc, in order to create reports in the future.
@@ -32,6 +32,7 @@ import org.radargun.utils.Utils;
  */
 public class SerializedReporter implements Reporter {
    private static final Log log = LogFactory.getLog(SerializedReporter.class);
+   private static final String FILE_EXTENSION = ".bin";
 
    @Property(doc = "Directory where the results should be stored. Default is results/serialized.")
    protected String targetDir = "results" + File.separator + "serialized";
@@ -39,13 +40,12 @@ public class SerializedReporter implements Reporter {
    @Override
    public void run(Collection<Report> reports) {
       File dir = new File(targetDir);
-      if (!dir.exists()) {
-         dir.mkdirs();
-      }
+      dir.mkdirs();
       DateFormat formatter = new SimpleDateFormat("yyyyMMdd-HHmmss");
       for (Report report : reports) {
-         String filename = String.format("%s-%s-%s-%s.bin", report.getConfiguration().name,
-                                         report.getCluster().getSize(), report.getCluster().getClusterIndex(), formatter.format(new Date()));
+         String filename = String.format("%s-%s-%s-%s%s", report.getConfiguration().name,
+                                         report.getCluster().getSize(), report.getCluster().getClusterIndex(),
+                                         formatter.format(new Date()), FILE_EXTENSION);
          try (FileOutputStream fileOutputStream = new FileOutputStream(new File(dir, filename));
               ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
             objectOutputStream.writeObject(report);
@@ -76,7 +76,12 @@ public class SerializedReporter implements Reporter {
       }
 
       List<Report> reports = new ArrayList<>();
-      for (File reportFile : new File(targetDir).listFiles()) {
+      for (File reportFile : new File(targetDir).listFiles(new FileFilter() {
+         @Override
+         public boolean accept(File pathname) {
+            return pathname.getName().toLowerCase().endsWith(FILE_EXTENSION) && !pathname.isDirectory();
+         }
+      })) {
          try (FileInputStream fileInputStream = new FileInputStream(reportFile); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             Object obj = objectInputStream.readObject();
             if (obj instanceof Report) {
