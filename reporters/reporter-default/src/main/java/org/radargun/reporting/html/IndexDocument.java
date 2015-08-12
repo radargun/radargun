@@ -36,23 +36,13 @@ public class IndexDocument extends HtmlDocument {
 
    private void writeConfig(Cluster cluster, Configuration.Setup setup, OriginalConfig config) {
       String configFile = String.format("original_%s_%s_%d_%s",
-              setup.getConfiguration().name, setup.group, cluster.getClusterIndex(), config.filename).replace(File.separator, "_");
-      FileOutputStream contentWriter = null;
-      try {
-         contentWriter = new FileOutputStream(directory + File.separator + configFile);
-         try {
-            contentWriter.write(config.content);
-         } catch (IOException e) {
-            log.error("Failed to write " + configFile, e);
-         } finally {
-            try {
-               contentWriter.close();
-            } catch (IOException e) {
-               log.error("Failed to close", e);
-            }
-         }
+            setup.getConfiguration().name, setup.group, cluster.getClusterIndex(), config.filename).replace(File.separator, "_");
+      try (FileOutputStream contentWriter = new FileOutputStream(directory + File.separator + configFile)) {
+         contentWriter.write(config.content);
       } catch (FileNotFoundException e) {
          log.error("Failed to open " + configFile, e);
+      } catch (IOException e) {
+         log.error("Failed to write " + configFile, e);
       }
    }
 

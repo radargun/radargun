@@ -128,14 +128,15 @@ public class Utils {
    }
 
    public static byte[] readAsBytes(InputStream is) throws IOException {
-      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-      int nRead;
-      byte[] data = new byte[16384];
-      while ((nRead = is.read(data, 0, data.length)) != -1) {
-         buffer.write(data, 0, nRead);
+      try (ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+         int nRead;
+         byte[] data = new byte[16384];
+         while ((nRead = is.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+         }
+         buffer.flush();
+         return buffer.toByteArray();
       }
-      buffer.flush();
-      return buffer.toByteArray();
    }
 
    public static String sanitizePath(String pluginPath) {
@@ -469,12 +470,12 @@ public class Utils {
     * Sort and save properties to a file.
     * 
     * @param props Properties
-    * @param f file
+    * @param file file
     * @throws Exception
     */
-   public static void saveSorted(Properties props, File f) throws Exception {
-      FileOutputStream fout = null;
-      try {
+   public static void saveSorted(Properties props, File file) throws Exception {
+
+      try (FileOutputStream fout = new FileOutputStream(file)) {
          Properties sorted = new Properties() {
             @Override
             public Set<Object> keySet() {
@@ -492,13 +493,8 @@ public class Utils {
             }
          };
          sorted.putAll(props);
-         fout = new FileOutputStream(f);
          sorted.storeToXML(fout, null);
          fout.flush();
-      } finally {
-         if (fout != null) {
-            fout.close();
-         }
       }
    }
 
@@ -527,6 +523,9 @@ public class Utils {
    }
 
    public static void close(Closeable... closeables) {
+      if (closeables == null) {
+         return;
+      }
       IOException exception = null;
       for (Closeable closeable : closeables) {
          try {
