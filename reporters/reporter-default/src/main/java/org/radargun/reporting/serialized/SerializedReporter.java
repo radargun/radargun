@@ -46,17 +46,12 @@ public class SerializedReporter implements Reporter {
       DateFormat formatter = new SimpleDateFormat("yyyyMMdd-HHmmss");
       for (Report report : reports) {
          String filename = String.format("%s-%s-%s-%s.bin", report.getConfiguration().name,
-               report.getCluster().getSize(), report.getCluster().getClusterIndex(), formatter.format(new Date()));
-         FileOutputStream fileOutputStream = null;
-         ObjectOutputStream objectOutputStream = null;
-         try {
-            fileOutputStream = new FileOutputStream(new File(dir, filename));
-            objectOutputStream = new ObjectOutputStream(fileOutputStream);
+                                         report.getCluster().getSize(), report.getCluster().getClusterIndex(), formatter.format(new Date()));
+         try (FileOutputStream fileOutputStream = new FileOutputStream(new File(dir, filename));
+              ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
             objectOutputStream.writeObject(report);
          } catch (IOException e) {
             log.error("Failed to write report to " + filename, e);
-         } finally {
-            Utils.close(fileOutputStream, objectOutputStream);
          }
       }
    }
@@ -83,11 +78,7 @@ public class SerializedReporter implements Reporter {
 
       List<Report> reports = new ArrayList<>();
       for (File reportFile : new File(targetDir).listFiles()) {
-         FileInputStream fileInputStream = null;
-         ObjectInputStream objectInputStream = null;
-         try {
-            fileInputStream = new FileInputStream(reportFile);
-            objectInputStream = new ObjectInputStream(fileInputStream);
+         try (FileInputStream fileInputStream = new FileInputStream(reportFile); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
             Object obj = objectInputStream.readObject();
             if (obj instanceof Report) {
                reports.add((Report) obj);
@@ -100,8 +91,6 @@ public class SerializedReporter implements Reporter {
          } catch (ClassNotFoundException e) {
             System.err.println("Failed to load class from " + reportFile);
             e.printStackTrace();
-         } finally {
-            Utils.close(fileInputStream, objectInputStream);
          }
       }
 

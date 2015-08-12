@@ -297,12 +297,8 @@ public class PerfrepoReporter implements Reporter {
          return;
       }
       File file = null;
-      FileOutputStream fos = null;
-      ZipOutputStream zos = null;
-      try {
+      try (FileOutputStream fos = new FileOutputStream(file); ZipOutputStream zos = new ZipOutputStream(fos)) {
          file = File.createTempFile("configs", ".zip");
-         fos = new FileOutputStream(file);
-         zos = new ZipOutputStream(fos);
          if (executionId == null) {
             log.debug("No execution ID, attachment not uploaded");
             return;
@@ -327,7 +323,6 @@ public class PerfrepoReporter implements Reporter {
       } catch (Exception e) {
          log.error("Error while uploading attachment", e);
       } finally {
-         Utils.close(zos, fos);
          if (file != null) {
             if (!file.delete()) {
                file.deleteOnExit();
