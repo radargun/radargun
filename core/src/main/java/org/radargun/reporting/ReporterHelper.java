@@ -53,12 +53,13 @@ public class ReporterHelper {
    }
 
    public static void loadReporters(File reporterDir, Map<String, Class<? extends Reporter>> reporters) {
+      InputStream stream = null;
       try {
          if (!reporterDir.isDirectory()) {
             log.warn(reporterDir + " is not a directory");
             return;
          }
-         List<URL> urls = new ArrayList<URL>();
+         List<URL> urls = new ArrayList<>();
          for (File jar : reporterDir.listFiles(new Utils.JarFilenameFilter())) {
             urls.add(jar.toURI().toURL());
          }
@@ -67,7 +68,7 @@ public class ReporterHelper {
             return;
          }
          ClassLoader classLoader = new URLClassLoader(urls.toArray(new URL[urls.size()]), ReporterHelper.class.getClassLoader());
-         InputStream stream = classLoader.getResourceAsStream("plugin.properties");
+         stream = classLoader.getResourceAsStream("plugin.properties");
          if (stream == null) {
             log.warn("No JAR in " + reporterDir + " contains properties file");
             return;
@@ -95,6 +96,8 @@ public class ReporterHelper {
          throw new RuntimeException(e);
       } catch (IOException e) {
          throw new RuntimeException("Failed to load properties from " + reporterDir, e);
+      } finally {
+         Utils.close(stream);
       }
    }
 

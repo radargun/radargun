@@ -2,6 +2,7 @@ package org.radargun.service;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -93,7 +94,9 @@ public class InfinispanServerService extends JavaProcessService {
          Path target = FileSystems.getDefault().getPath(home, "standalone", "configuration", "radargun-" + ServiceHelper.getSlaveIndex() + ".xml");
 
          if (resource != null) {
-            Files.copy(resource.openStream(), target, StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream is = resource.openStream()) {
+               Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
+            }
          } else if (filesystemFile.toFile().exists()) {
             Files.copy(filesystemFile, target, StandardCopyOption.REPLACE_EXISTING);
          } else {

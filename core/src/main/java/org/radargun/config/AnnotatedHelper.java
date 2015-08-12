@@ -37,8 +37,7 @@ public class AnnotatedHelper {
          getClassesFromJar(String path, Class<TClass> loadedClass, Class<TAnnotation> annotationClass) {
       log.tracef("Looking for @%s %s, loading classes from %s", annotationClass.getSimpleName(), loadedClass.getSimpleName(), path);
       List<Class<? extends TClass>> classes = new ArrayList<Class<? extends TClass>>();
-      try {
-         ZipInputStream inputStream = new ZipInputStream(new FileInputStream(path));
+      try (ZipInputStream inputStream = new ZipInputStream(new FileInputStream(path))) {
          for(;;) {
             ZipEntry entry = inputStream.getNextEntry();
             if (entry == null) break;

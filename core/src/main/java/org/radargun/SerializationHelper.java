@@ -29,10 +29,10 @@ public class SerializationHelper {
     * @throws IOException
     */
    public static ByteBuffer serializeObject(Serializable serializable, ByteBuffer buffer) throws IOException {
-      ByteBufferOutputStream out = new ByteBufferOutputStream(buffer);
-      ObjectOutputStream oos = new ObjectOutputStream(out);
-      oos.writeObject(serializable);
-      return out.getBuffer();
+      try (ByteBufferOutputStream out = new ByteBufferOutputStream(buffer); ObjectOutputStream oos = new ObjectOutputStream(out)) {
+         oos.writeObject(serializable);
+         return out.getBuffer();
+      }
    }
 
    /**
@@ -54,12 +54,12 @@ public class SerializationHelper {
       }
       int sizePosition = buffer.position();
       buffer.position(sizePosition + 4);
-      ByteBufferOutputStream out = new ByteBufferOutputStream(buffer);
-      ObjectOutputStream oos = new ObjectOutputStream(out);
-      oos.writeObject(serializable);
-      buffer = out.getBuffer();
-      buffer.putInt(sizePosition, buffer.position() - sizePosition - 4);
-      return buffer;
+      try (ByteBufferOutputStream out = new ByteBufferOutputStream(buffer); ObjectOutputStream oos = new ObjectOutputStream(out)){
+         oos.writeObject(serializable);
+         buffer = out.getBuffer();
+         buffer.putInt(sizePosition, buffer.position() - sizePosition - 4);
+         return buffer;
+      }
    }
 
    /**
@@ -72,8 +72,7 @@ public class SerializationHelper {
     * @throws IOException
     */
    public static Object deserialize(byte[] serializedData, int startPos, int length) throws IOException {
-      ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(serializedData, startPos, length));
-      try {
+      try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(serializedData, startPos, length))) {
          return ois.readObject();
       } catch (ClassNotFoundException e) {
          throw new IllegalStateException("Unmarshalling exception", e);

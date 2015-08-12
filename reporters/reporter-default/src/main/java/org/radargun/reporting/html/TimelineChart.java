@@ -146,35 +146,28 @@ public class TimelineChart {
    }
 
    public void saveChart(String filename) throws IOException {
-      OutputStream out = new BufferedOutputStream(new FileOutputStream(filename));
-      try {
+      try (OutputStream out = new BufferedOutputStream(new FileOutputStream(filename))) {
          chart.getXYPlot().getRangeAxis().setVisible(false);
          chart.getXYPlot().getDomainAxis().setVisible(false);
          ChartRenderingInfo renderingInfo = new ChartRenderingInfo();
          BufferedImage image = chart.createBufferedImage(width, height, renderingInfo);
          EncoderUtil.writeBufferedImage(image, ImageFormat.PNG, out);
-      } finally {
-         out.close();
       }
    }
 
    public void saveRange(String filename) throws IOException {
-      OutputStream out = new BufferedOutputStream(new FileOutputStream(filename));
-      try {
+      try (OutputStream out = new BufferedOutputStream(new FileOutputStream(filename))) {
          chart.getXYPlot().getRangeAxis().setVisible(true);
          chart.getXYPlot().getDomainAxis().setVisible(false);
          ChartRenderingInfo renderingInfo = new ChartRenderingInfo();
          BufferedImage image = chart.createBufferedImage(width, height, renderingInfo);
          image = image.getSubimage(0, 0, (int) renderingInfo.getPlotInfo().getDataArea().getX(), height);
          EncoderUtil.writeBufferedImage(image, ImageFormat.PNG, out);
-      } finally {
-         out.close();
       }
    }
 
    public void saveRelativeDomain(String filename) throws IOException {
-      OutputStream out = new BufferedOutputStream(new FileOutputStream(filename));
-      try {
+      try (OutputStream out = new BufferedOutputStream(new FileOutputStream(filename))) {
          chart.getXYPlot().getRangeAxis().setVisible(false);
          chart.getXYPlot().getDomainAxis().setVisible(true);
          ChartRenderingInfo renderingInfo = new ChartRenderingInfo();
@@ -182,14 +175,11 @@ public class TimelineChart {
          int maxY = (int) renderingInfo.getPlotInfo().getDataArea().getMaxY();
          image = image.getSubimage(0, maxY + DOMAIN_OFFSET, width, height - maxY - DOMAIN_OFFSET);
          EncoderUtil.writeBufferedImage(image, ImageFormat.PNG, out);
-      } finally {
-         out.close();
       }
    }
 
    public void saveAbsoluteDomain(String filename) throws IOException {
-      OutputStream out = new BufferedOutputStream(new FileOutputStream(filename));
-      try {
+      try (OutputStream out = new BufferedOutputStream(new FileOutputStream(filename))) {
          chart.getXYPlot().getRangeAxis().setVisible(false);
          Font labelFont = chart.getXYPlot().getDomainAxis().getLabelFont();
          chart.getXYPlot().setDomainAxis(new DateAxis("Time"));
@@ -200,8 +190,6 @@ public class TimelineChart {
          int maxY = (int) renderingInfo.getPlotInfo().getDataArea().getMaxY();
          image = image.getSubimage(0, maxY + DOMAIN_OFFSET, width, height - maxY - DOMAIN_OFFSET);
          EncoderUtil.writeBufferedImage(image, ImageFormat.PNG, out);
-      } finally {
-         out.close();
       }
    }
 

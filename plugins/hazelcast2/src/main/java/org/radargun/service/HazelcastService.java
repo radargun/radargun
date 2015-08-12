@@ -1,5 +1,6 @@
 package org.radargun.service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,25 +68,28 @@ public class HazelcastService implements Lifecycle, Clustered {
    @Override
    public void start() {
       log.info("Creating cache with the following configuration: " + config);
-      InputStream configStream = getAsInputStreamFromClassLoader(config);
-      Config cfg = new XmlConfigBuilder(configStream).build();
-      hazelcastInstance = Hazelcast.newHazelcastInstance(cfg);
-      MembershipListener listener = new MembershipListener() {
-         @Override
-         public void memberAdded(MembershipEvent membershipEvent) {
-            updateMembers(membershipEvent.getMembers());
-         }
+      try (InputStream configStream = getAsInputStreamFromClassLoader(config)) {
+         Config cfg = new XmlConfigBuilder(configStream).build();
+         hazelcastInstance = Hazelcast.newHazelcastInstance(cfg);
+         MembershipListener listener = new MembershipListener() {
+            @Override
+            public void memberAdded(MembershipEvent membershipEvent) {
+               updateMembers(membershipEvent.getMembers());
+            }
 
-         @Override
-         public void memberRemoved(MembershipEvent membershipEvent) {
-            updateMembers(membershipEvent.getMembers());
+            @Override
+            public void memberRemoved(MembershipEvent membershipEvent) {
+               updateMembers(membershipEvent.getMembers());
+            }
+         };
+         synchronized (this) {
+            addMembershipListener(listener);
+            updateMembers(hazelcastInstance.getCluster().getMembers());
          }
-      };
-      synchronized (this) {
-         addMembershipListener(listener);
-         updateMembers(hazelcastInstance.getCluster().getMembers());
+         log.info("Hazelcast configuration:" + hazelcastInstance.getConfig().toString());
+      } catch (IOException e) {
+         log.error("Failed to get configuration input stream", e);
       }
-      log.info("Hazelcast configuration:" + hazelcastInstance.getConfig().toString());
    }
 
    protected void addMembershipListener(MembershipListener listener) {

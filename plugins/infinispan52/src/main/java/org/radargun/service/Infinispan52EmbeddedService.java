@@ -1,6 +1,7 @@
 package org.radargun.service;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 
@@ -59,9 +60,10 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
    }
 
    @Override
-   protected ConfigurationBuilderHolder createConfiguration(String configFile) throws FileNotFoundException {
-      InputStream input = FileLookupFactory.newInstance().lookupFileStrict(configFile, Thread.currentThread().getContextClassLoader());
-      return new ParserRegistry(Thread.currentThread().getContextClassLoader()).parse(input);
+   protected ConfigurationBuilderHolder createConfiguration(String configFile) throws IOException {
+      try (InputStream input = FileLookupFactory.newInstance().lookupFileStrict(configFile, Thread.currentThread().getContextClassLoader())) {
+         return new ParserRegistry(Thread.currentThread().getContextClassLoader()).parse(input);
+      }
    }
 
    protected ConfigDumpHelper createConfigDumpHelper() {
