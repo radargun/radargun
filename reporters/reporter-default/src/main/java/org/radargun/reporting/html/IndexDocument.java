@@ -165,24 +165,15 @@ public class IndexDocument extends HtmlDocument {
    private void writeConfig(Cluster cluster, Configuration.Setup setup, OriginalConfig config, boolean writeSlaves) {
       String configFile = String.format("original_%s_%s_%d_%s",
             setup.getConfiguration().name, setup.group, cluster.getClusterIndex(), config.filename).replace(File.separator, "_");
-      FileOutputStream contentWriter = null;
-      boolean written = false;
-      try {
-         contentWriter = new FileOutputStream(directory + File.separator + configFile);
-         try {
-            contentWriter.write(config.content);
-         } catch (IOException e) {
-            log.error("Failed to write " + configFile, e);
-         } finally {
-            try {
-               contentWriter.close();
-               written = true;
-            } catch (IOException e) {
-               log.error("Failed to close", e);
-            }
-         }
+      boolean written = true;
+      try (FileOutputStream contentWriter = new FileOutputStream(directory + File.separator + configFile)) {
+         contentWriter.write(config.content);
       } catch (FileNotFoundException e) {
+         written = false;
          log.error("Failed to open " + configFile, e);
+      } catch (IOException e) {
+         written = false;
+         log.error("Failed to write " + configFile, e);
       }
       if (written) {
          write(String.format("<a href=\"%s\">%s</a>", configFile, config.filename));

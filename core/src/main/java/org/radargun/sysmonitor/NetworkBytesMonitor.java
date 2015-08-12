@@ -46,10 +46,7 @@ public class NetworkBytesMonitor implements Monitor {
    }
 
    public void run() {
-      FileInputStream inputStream;
-      try {
-         inputStream = new FileInputStream("/proc/net/dev");
-         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+      try (FileInputStream inputStream = new FileInputStream("/proc/net/dev"); BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
          try {
             String line = br.readLine();
             while (line != null) {
@@ -69,16 +66,11 @@ public class NetworkBytesMonitor implements Monitor {
             }
          } catch (Exception e) {
             log.error("Exception occurred while reading /proc/net/dev.", e);
-         } finally {
-            try {
-               if (br != null) br.close();
-               if (inputStream != null) inputStream.close();
-            } catch (IOException e) {
-               log.error("Exception occurred while closing /proc/net/dev.", e);
-            }
          }
       } catch (FileNotFoundException e) {
          log.error("File /proc/net/dev was not found!", e);
+      } catch (IOException e) {
+         log.error("Error while getting input stream", e);
       }
    }
 
