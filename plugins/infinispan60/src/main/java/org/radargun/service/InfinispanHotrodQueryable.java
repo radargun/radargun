@@ -1,6 +1,7 @@
 package org.radargun.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
@@ -96,8 +97,8 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
 
          for (String protofile : service.protofiles) {
             byte[] descriptor;
-            try {
-               descriptor = Utils.readAsBytes(getClass().getResourceAsStream(protofile));
+            try (InputStream inputStream = getClass().getResourceAsStream(protofile)) {
+               descriptor = Utils.readAsBytes(inputStream);
             } catch (IOException e) {
                throw new IllegalStateException("Failed to read protofile " + protofile, e);
             }
