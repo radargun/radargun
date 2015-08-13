@@ -64,7 +64,7 @@ public class PerfrepoReporter implements Reporter {
          complexConverter = MetricNameMappingConverter.class)
    private List<MetricNameMapping> metricNameMapping = new ArrayList<MetricNameMapping>();
    @Property(doc = "Additional build parameters", converter = KeyValueListConverter.class)
-   private Map<String, String> buildParams = new HashMap<String, String>();
+   private Map<String, String> buildParams = new HashMap<>();
 
    @Property(doc = "Which tests should this reporter report. Default is all executed tests.")
    private List<String> tests;
@@ -218,6 +218,7 @@ public class PerfrepoReporter implements Reporter {
       for (Configuration.Setup setup : report.getConfiguration().getSetups()) {
          testExecutionBuilder.tag(setup.plugin + "." + setup.service);
       }
+      testExecutionBuilder.tag(report.getConfiguration().name);
       testExecutionBuilder.tag("size" + report.getCluster().getSize());
    }
 
