@@ -62,9 +62,15 @@ public class PerfrepoReporter implements Reporter {
    private Date jenkinsBuildDate = Calendar.getInstance().getTime();
    @Property(doc = "Name mapping between radargun statistics names and perfrepo metric names. Only statistics with defined mapping will be uploaded.",
          complexConverter = MetricNameMappingConverter.class)
-   private List<MetricNameMapping> metricNameMapping = new ArrayList<MetricNameMapping>();
+   private List<MetricNameMapping> metricNameMapping = new ArrayList<>();
    @Property(doc = "Additional build parameters", converter = KeyValueListConverter.class)
    private Map<String, String> buildParams = new HashMap<>();
+   @Property(doc = "Exclude default build parameters from uploaded entity. Parameters specified in 'buildParams' are not excluded. Default is false.")
+   private boolean excludeBuildParams = false;
+   @Property(doc = "Exclude service configurations from uploaded entity. Default is false.")
+   private boolean excludeNormalizedConfigs = false;
+   @Property(doc = "Exclude attachments from uploaded entity. Default is false.")
+   private boolean excludeAttachments = false;
 
    @Property(doc = "Which tests should this reporter report. Default is all executed tests.")
    private List<String> tests;
@@ -191,20 +197,7 @@ public class PerfrepoReporter implements Reporter {
       testExecutionBuilder.parameter("exec.config", report.getConfiguration().name);
       testExecutionBuilder.parameter("exec.jenkins_build_url", jenkinsBuildUrl);
       testExecutionBuilder.parameter("exec.jenkins_build_number", jenkinsBuild);
-      for (Report.TestIteration iteration : test.getIterations()) {
-         for (Report.TestResult result : iteration.getResults().values()) {
-            String resultPrefix = "result." + iteration.id + "." + result.name;
-            testExecutionBuilder.parameter(resultPrefix + ".aggregated", result.aggregatedValue);
-            for (Map.Entry<Integer, Report.SlaveResult> slaveResult : result.slaveResults.entrySet()) {
-               testExecutionBuilder.parameter(resultPrefix + "." + slaveResult.getKey(), slaveResult.getValue().value);
-            }
-         }
-      }
-      if (buildParams != null) {
-         for (Map.Entry<String, String> buildParam : buildParams.entrySet()) {
-            testExecutionBuilder.parameter(buildParam.getKey(), buildParam.getValue());
-         }
-      }
+      addParameters(testExecutionBuilder, test);
       return testExecutionBuilder;
    }
 
@@ -222,6 +215,26 @@ public class PerfrepoReporter implements Reporter {
       testExecutionBuilder.tag("size" + report.getCluster().getSize());
    }
 
+   private void addParameters(TestExecutionBuilder testExecutionBuilder, Report.Test test) {
+      if (excludeBuildParams) {
+         return;
+      }
+      for (Report.TestIteration iteration : test.getIterations()) {
+         for (Report.TestResult result : iteration.getResults().values()) {
+            String resultPrefix = "result." + iteration.id + "." + result.name;
+            testExecutionBuilder.parameter(resultPrefix + ".aggregated", result.aggregatedValue);
+            for (Map.Entry<Integer, Report.SlaveResult> slaveResult : result.slaveResults.entrySet()) {
+               testExecutionBuilder.parameter(resultPrefix + "." + slaveResult.getKey(), slaveResult.getValue().value);
+            }
+         }
+      }
+      if (buildParams != null) {
+         for (Map.Entry<String, String> buildParam : buildParams.entrySet()) {
+            testExecutionBuilder.parameter(buildParam.getKey(), buildParam.getValue());
+         }
+      }
+   }
+
    private Statistics mergeStatistics(List<Statistics> statisticsList) {
       Statistics summary = null;
       for (Statistics statistics : statisticsList) {
@@ -235,6 +248,9 @@ public class PerfrepoReporter implements Reporter {
    }
 
    private void addNormalizedConfigs(Report report, TestExecutionBuilder testExecutionBuilder) {
+      if (excludeNormalizedConfigs) {
+         return;
+      }
       for (Map.Entry<Integer, Map<String, Properties>> normalizedConfig : report.getNormalizedServiceConfigs().entrySet()) {
          for (Map.Entry<String, Properties> configItem : normalizedConfig.getValue().entrySet()) {
             if (configItem.getValue() != null) {
@@ -254,6 +270,9 @@ public class PerfrepoReporter implements Reporter {
    }
 
    private void uploadAttachments(Report report, PerfRepoClient perfRepoClient, Long executionId) {
+      if (excludeAttachments) {
+         return;
+      }
       File file = null;
       FileOutputStream fos = null;
       ZipOutputStream zos = null;
