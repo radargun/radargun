@@ -71,6 +71,8 @@ public class PerfrepoReporter implements Reporter {
    private boolean excludeNormalizedConfigs = false;
    @Property(doc = "Exclude attachments from uploaded entity. Default is false.")
    private boolean excludeAttachments = false;
+   @Property(doc = "Create separate test execution for each test iteration. Default is false.")
+   private boolean separateTestIterations = false;
 
    @Property(doc = "Which tests should this reporter report. Default is all executed tests.")
    private List<String> tests;
@@ -115,24 +117,26 @@ public class PerfrepoReporter implements Reporter {
          } else {
             log.debugf("Reporting test %s", test.name);
          }
-         TestExecutionBuilder testExecutionBuilder = createTestExecutionBuilder(report, test);
+         if (separateTestIterations) {
+            for (Report.TestIteration iteration : test.getIterations()) {
+               TestExecutionBuilder testExecutionBuilder = createTestExecutionBuilder(report, test);
 
-         for (Report.TestIteration iteration : test.getIterations()) {
-            addIteration(testExecutionBuilder, iteration);
-         }
+               addIteration(testExecutionBuilder, iteration);
+               addIterationParameters(testExecutionBuilder, iteration);
+               testExecutionBuilder.tag("iteration_" + iteration.id);
 
-         // set normalized configs
-         addNormalizedConfigs(report, testExecutionBuilder);
-         // create new test execution
-         TestExecution testExecution = testExecutionBuilder.build();
-         try {
-            Long executionId = perfRepoClient.createTestExecution(testExecution);
-            if (executionId != null) {
-               // add attachments
-               uploadAttachments(report, perfRepoClient, executionId);
+               addConfigsAndUpload(testExecutionBuilder, report, test, perfRepoClient);
             }
-         } catch (Exception e) {
-            log.error("Error while creating test execution for test " + test.name, e);
+
+         } else {
+            TestExecutionBuilder testExecutionBuilder = createTestExecutionBuilder(report, test);
+
+            for (Report.TestIteration iteration : test.getIterations()) {
+               addIteration(testExecutionBuilder, iteration);
+               addIterationParameters(testExecutionBuilder, iteration);
+            }
+
+            addConfigsAndUpload(testExecutionBuilder, report, test, perfRepoClient);
          }
       }
    }
@@ -148,17 +152,19 @@ public class PerfrepoReporter implements Reporter {
       }
       for (Map.Entry<Integer, List<Statistics>> slaveStats : iteration.getStatistics()) {
          Statistics statistics = mergeStatistics(slaveStats.getValue());
-         if (aggregatedStatistics == null) {
-            aggregatedStatistics = statistics.copy();
-         } else {
-            aggregatedStatistics.merge(statistics);
-         }
-         for (Map.Entry<MetricNameMapping, List<Double>> entry : mrdMapping.entrySet()) {
-            MetricNameMapping mapping = entry.getKey();
-            long duration = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
-            OperationStats operationStats = statistics.getOperationsStats().get(mapping.operation);
-            double value = mapping.representation.getValue(operationStats, duration);
-            entry.getValue().add(value);
+         if (statistics != null) {
+            if (aggregatedStatistics == null) {
+               aggregatedStatistics = statistics.copy();
+            } else {
+               aggregatedStatistics.merge(statistics);
+            }
+            for (Map.Entry<MetricNameMapping, List<Double>> entry : mrdMapping.entrySet()) {
+               MetricNameMapping mapping = entry.getKey();
+               long duration = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
+               OperationStats operationStats = statistics.getOperationsStats().get(mapping.operation);
+               double value = mapping.representation.getValue(operationStats, duration);
+               entry.getValue().add(value);
+            }
          }
       }
       if (aggregatedStatistics != null) {
@@ -184,6 +190,22 @@ public class PerfrepoReporter implements Reporter {
       }
    }
 
+   private void addConfigsAndUpload(TestExecutionBuilder testExecutionBuilder, Report report, Report.Test test, PerfRepoClient perfRepoClient) {
+      // set normalized configs
+      addNormalizedConfigs(report, testExecutionBuilder);
+      // create new test execution
+      TestExecution testExecution = testExecutionBuilder.build();
+      try {
+         Long executionId = perfRepoClient.createTestExecution(testExecution);
+         if (executionId != null) {
+            // add attachments
+            uploadAttachments(report, perfRepoClient, executionId);
+         }
+      } catch (Exception e) {
+         log.error("Error while creating test execution for test " + test.name, e);
+      }
+   }
+
    private TestExecutionBuilder createTestExecutionBuilder(Report report, Report.Test test) {
       String configName = "JDG RG (" + report.getConfiguration().name + ") " + jenkinsBuild;
 
@@ -194,10 +216,7 @@ public class PerfrepoReporter implements Reporter {
                   .started(jenkinsBuildDate);
       addTags(testExecutionBuilder, report);
       testExecutionBuilder.tag(test.name);
-      testExecutionBuilder.parameter("exec.config", report.getConfiguration().name);
-      testExecutionBuilder.parameter("exec.jenkins_build_url", jenkinsBuildUrl);
-      testExecutionBuilder.parameter("exec.jenkins_build_number", jenkinsBuild);
-      addParameters(testExecutionBuilder, test);
+      addBasicParameters(testExecutionBuilder, report);
       return testExecutionBuilder;
    }
 
@@ -215,22 +234,26 @@ public class PerfrepoReporter implements Reporter {
       testExecutionBuilder.tag("size" + report.getCluster().getSize());
    }
 
-   private void addParameters(TestExecutionBuilder testExecutionBuilder, Report.Test test) {
-      if (excludeBuildParams) {
-         return;
-      }
-      for (Report.TestIteration iteration : test.getIterations()) {
-         for (Report.TestResult result : iteration.getResults().values()) {
-            String resultPrefix = "result." + iteration.id + "." + result.name;
-            testExecutionBuilder.parameter(resultPrefix + ".aggregated", result.aggregatedValue);
-            for (Map.Entry<Integer, Report.SlaveResult> slaveResult : result.slaveResults.entrySet()) {
-               testExecutionBuilder.parameter(resultPrefix + "." + slaveResult.getKey(), slaveResult.getValue().value);
-            }
-         }
-      }
+   private void addBasicParameters(TestExecutionBuilder testExecutionBuilder, Report report) {
+      testExecutionBuilder.parameter("exec.config", report.getConfiguration().name);
+      testExecutionBuilder.parameter("exec.jenkins_build_url", jenkinsBuildUrl);
+      testExecutionBuilder.parameter("exec.jenkins_build_number", jenkinsBuild);
       if (buildParams != null) {
          for (Map.Entry<String, String> buildParam : buildParams.entrySet()) {
             testExecutionBuilder.parameter(buildParam.getKey(), buildParam.getValue());
+         }
+      }
+   }
+
+   private void addIterationParameters(TestExecutionBuilder testExecutionBuilder, Report.TestIteration iteration) {
+      if (excludeBuildParams) {
+         return;
+      }
+      for (Report.TestResult result : iteration.getResults().values()) {
+         String resultPrefix = "result." + iteration.id + "." + result.name;
+         testExecutionBuilder.parameter(resultPrefix + ".aggregated", result.aggregatedValue);
+         for (Map.Entry<Integer, Report.SlaveResult> slaveResult : result.slaveResults.entrySet()) {
+            testExecutionBuilder.parameter(resultPrefix + "." + slaveResult.getKey(), slaveResult.getValue().value);
          }
       }
    }
