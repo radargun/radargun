@@ -48,6 +48,10 @@ public class Master {
       Runtime.getRuntime().addShutdownHook(new ShutDownHook("Master process"));
    }
 
+   public MasterConfig getMasterConfig() {
+      return masterConfig;
+   }
+
    public void run() throws Exception {
       try {
          connection = new RemoteSlaveConnection(masterConfig.getMaxClusterSize(), masterConfig.getHost(), masterConfig.getPort());

@@ -1,0 +1,51 @@
+<!-- RadarGun 3.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+    <!-- Specifies where should the master open socket  -->
+    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+    <!-- List of cluster configurations where the benchmark should run-->
+    <clusters>
+        <!-- Equivalent to <cluster size="2" /><cluster size="3" /> -->
+        <scale from="2" to="3" inc="1" >
+            <!-- No groups defined within the cluster -->
+            <cluster />
+        </scale>
+    </clusters>
+
+    <!-- List of configurations of the services -->
+    <configurations>
+        <config name="Infinispan 5.2 - distributed">
+            <!-- All slaves use the same configuration -->
+            <setup plugin="infinispan52">
+                <!-- You can set JVM arguments for slaves here. -->
+                <vm-args>
+                    <memory max="4G" />
+                </vm-args>
+                <embedded xmlns="urn:radargun:plugins:infinispan52:3.0" file="dist-sync.xml"/>
+            </setup>
+        </config>
+        <config name="Infinispan 6.0 - distributed">
+            <setup plugin="infinispan60">
+                <vm-args>
+                    <memory max="4G" />
+                </vm-args>
+                <embedded xmlns="urn:radargun:plugins:infinispan60:3.0" file="dist-sync.xml"/>
+            </setup>
+        </config>
+    </configurations>
+
+    <!-- Sequence of stages executed on the cluster -->
+    <scenario url="benchmark-test.xml"/>
+
+    <!-- How the statistics are reported -->
+    <reports>
+        <!-- Produce CSV statistics report -->
+        <reporter type="csv" />
+        <!-- Produce HTML statistics report -->
+        <reporter type="html" />
+        <!-- Store Java-serialized version of the results that can be used to re-run the report -->
+        <reporter type="serialized" />
+    </reports>
+
+</benchmark>

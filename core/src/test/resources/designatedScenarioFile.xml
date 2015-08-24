@@ -1,0 +1,35 @@
+<scenario xmlns="urn:radargun-scenario:benchmark:3.0">
+    <!--Start services on all nodes -->
+    <service-start />
+    <!-- Begin monitoring of CPU, memory usage and GC -->
+
+    <jvm-monitor-start />
+
+    <!-- Preload the cache with data -->
+    <load-data num-entries="5000"/>
+    <!-- 5 threads will execute total of 100,000 random requests against the default cache ('testCache')-->
+    <!-- As the test is called 'warmup', performance statistics won't be reported -->
+    <basic-operations-test test-name="warmup" num-requests="100000" num-threads-per-node="5">
+        <key-selector>
+            <concurrent-keys total-entries="5000" />
+        </key-selector>
+    </basic-operations-test>
+
+    <!-- Remove all data from the default cache -->
+    <clear-cache />
+    <!-- Again, preload the cache with data -->
+    <load-data num-entries="10000"/>
+
+    <!-- 10, 20 and 30 threads will execute random request for 1 minute against the default cache ('testCache') -->
+    <repeat from="10" to="30" inc="10">
+        <basic-operations-test test-name="stress-test" amend-test="true"
+                               duration="1m" num-threads-per-node="${repeat.counter}">
+            <key-selector>
+                <concurrent-keys total-entries="10000"/>
+            </key-selector>
+        </basic-operations-test>
+    </repeat>
+
+    <!--&lt;!&ndash; Stop JVM monitoring &ndash;&gt;-->
+    <jvm-monitor-stop />
+</scenario>

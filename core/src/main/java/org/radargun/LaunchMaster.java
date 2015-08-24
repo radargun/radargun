@@ -37,7 +37,7 @@ public class LaunchMaster {
       }
    }
 
-   private static String getConfigOrExit(String[] args) {
+   public static String getConfigOrExit(String[] args) {
       ArgsHolder.init(args, ArgsHolder.ArgType.LAUNCH_MASTER);
       if (ArgsHolder.getConfigFile() == null) {
          ArgsHolder.printUsageAndExit(ArgsHolder.ArgType.LAUNCH_MASTER);
