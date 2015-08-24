@@ -24,6 +24,10 @@ public class Scenario implements Serializable {
    private List<StageDescription> stages = new ArrayList<>();
    private Map<String, Integer> labels = new HashMap<>();
 
+   public List<StageDescription> getStages() {
+      return stages;
+   }
+
    /**
     * @param stageClass
     * @param properties Stage's attributes as written in configuration - evaluation takes place on slave.
@@ -112,7 +116,7 @@ public class Scenario implements Serializable {
       return id == null ? -1 : id;
    }
 
-   private static class StageDescription implements Serializable {
+   public static class StageDescription implements Serializable {
       Class<? extends org.radargun.Stage> stageClass;
       /* Common properties as specified in configuraion */
       Map<String, Definition> properties;
