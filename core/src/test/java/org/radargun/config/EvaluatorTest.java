@@ -86,6 +86,38 @@ public class EvaluatorTest {
       assertEvals("#{ 6 * abs(-6.5) }", "39.0");
    }
 
+   public void testListGetBasic() {
+      assertEvals("#{ (3).get(0) }", "3");
+      assertEvals("#{ (1,2,3).get(1) }", "2");
+      assertEvals("#{ (abc,def,ghi).get(0) }", "abc");
+
+      System.setProperty("org.radargun.testListGet", "ghi");
+      assertEvals("#{ (abc,def,${org.radargun.testListGet}).get(0) }", "abc");
+   }
+
+   public void testListGetComplex() {
+      assertEvals("#{ (3).get(0) + 2 }", "5");
+      assertEvals("#{ (1,2,3).get(1) + 2 * 2}", "6");
+      assertEvals("#{ (1,2,3).get(1) - 2 * 2}", "-2");
+      assertEvals("#{ (abc,def,ghi).get(0),3 }", "abc, 3");
+
+      System.setProperty("org.radargun.testListGetSize", "1, 2, 3, 4");
+      System.setProperty("org.radargun.testListGetSize.counter", "1");
+      System.setProperty("org.radargun.testListGet", "ghi");
+      assertEvals("#{ ${org.radargun.testListGet}.get(0) }", "ghi");
+      assertEvals("#{ (abc,def,${org.radargun.testListGet}).get(0),cde }", "abc, cde");
+      assertEvals("#{${org.radargun.testListGetSize}.get(${org.radargun.testListGetSize.counter})}", "2");
+   }
+
+   public void testListSize() {
+      System.setProperty("org.radargun.testListSize", "1, 2, 3, 4");
+      assertEvals("#{(1,2,3).size}", "3");
+      assertEvals("#{(1).size}", "1");
+      assertEvals("#{(abc,def).size}", "2");
+      assertEvals("#{(abc,def).size}", "2");
+      assertEvals("#{${org.radargun.testListSize}.size}", "4");
+   }
+
    private static void assertEvals(String expression, String expected) {
       assertEquals(Evaluator.parseString(expression), expected);
    }
