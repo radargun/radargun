@@ -1,6 +1,7 @@
 package org.radargun.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,8 +117,8 @@ public class Evaluator {
                      }
                      operators.pop().exec(operands);
                   }
+                  lastTokenIsOperator = true;
                }
-               lastTokenIsOperator = true;
             }
             if (!closed) {
                throw new IllegalArgumentException("Expression is missing closing '}': " + string);
@@ -363,6 +364,45 @@ public class Evaluator {
       }
    }
 
+   private static Value listGet(Value first, Value second) {
+      if (!second.type.canBeLong()) {
+         throw new IllegalArgumentException("Invalid index argument " + second + ", natural number expected");
+      }
+      List<Value> valueList = ValueType.LIST == first.type ? first.getList() : convertToList(first.objectValue);
+      if (valueList.size() > 1) {
+         if (valueList.size() <= second.getLong()) {
+            throw new IllegalArgumentException("Out of bounds index value " + second.getLong() + ", list size " + valueList.size());
+         }
+         return new Value(valueList.get((int) second.getLong()).toString());
+      } else {
+         if (second.getLong() != 0) {
+            throw new IllegalArgumentException("Out of bounds index value " + second.getLong() + ", list size " + 1);
+         }
+         return new Value(first.objectValue.toString());
+      }
+   }
+
+   private static Value listSize(Value first) {
+      if (first.type.canBeLong) {
+         return new Value(1);
+      } else {
+         int length = first.objectValue.toString().split(",").length;
+         if (length == 0) {
+            throw new IllegalArgumentException("Invalid argument " + first + " provided, list value expected");
+         }
+         return new Value(length);
+      }
+   }
+
+   private static List<Value> convertToList(Object value) {
+      String[] strings = value.toString().split(",");
+      List<Value> valueList = new ArrayList<>(strings.length);
+      for (String string : strings) {
+         valueList.add(new Value(string.trim()));
+      }
+      return valueList;
+   }
+
    private enum ValueType {
       STRING(false, false),
       LONG(true, true),
@@ -562,7 +602,18 @@ public class Evaluator {
             return abs(value);
          }
       }, null),
-      ;
+      LIST_GET(".get", 400, false, true, null, new TwoArgFunctor() {
+         @Override
+         public Value exec(Value first, Value second) {
+            return listGet(first, second);
+         }
+      }),
+      LIST_SIZE(".size", 500, false, true, new OneArgFunctor() {
+         @Override
+         public Value exec(Value first) {
+            return listSize(first);
+         }
+      }, null);
 
       private static Map<String, Operator> symbolMap = new HashMap<String, Operator>();
       private String symbol;
