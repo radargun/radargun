@@ -58,15 +58,26 @@ public class SerializedReporter implements Reporter {
 
    public static void main(String args[]) {
       if (args.length < 2) {
-         System.err.println("java " + SerializedReporter.class.getName() + " benchmark.xml /path/to/target-dir [reporter-dir...]");
+         System.err.println("java " + SerializedReporter.class.getName() + " benchmark.xml [--add-result-dir=/path/to/target-dir]+ [--add-reporter-dir=/path/to/reporter-dir]*");
          return;
       }
-      String benchmark = args[0];
-      String targetDir = args[1];
-      for (int i = 2; i < args.length; ++i) {
-         ReporterHelper.registerReporters(args[i]);
+
+      List<Report> reports = new ArrayList<>();
+      for (int i = 1; i < args.length; ++i) {
+         String arg = args[i];
+         if (arg.matches("--add-result-dir=.+")) {
+            addReport(reports, arg.substring(arg.indexOf("=") + 1));
+         } else if (arg.matches("--add-reporter-dir=.+")) {
+            ReporterHelper.registerReporters(arg.substring(arg.indexOf("=") + 1));
+         } else {
+            throw new IllegalArgumentException("Parameter " + arg + " not recognized");
+         }
+      }
+      if (reports.isEmpty()) {
+         throw new IllegalArgumentException("No reports have been initialized. Check whether correct result directory paths were provided");
       }
 
+      String benchmark = args[0];
       MasterConfig config;
       try {
          config = DomConfigParser.getConfigParser().parseConfig(benchmark);
@@ -74,29 +85,6 @@ public class SerializedReporter implements Reporter {
          System.err.println("Failed to parse " + benchmark);
          e.printStackTrace();
          return;
-      }
-
-      List<Report> reports = new ArrayList<>();
-      for (File reportFile : new File(targetDir).listFiles(new FileFilter() {
-         @Override
-         public boolean accept(File pathname) {
-            return pathname.getName().toLowerCase().endsWith(FILE_EXTENSION) && !pathname.isDirectory();
-         }
-      })) {
-         try (FileInputStream fileInputStream = new FileInputStream(reportFile); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
-            Object obj = objectInputStream.readObject();
-            if (obj instanceof Report) {
-               reports.add((Report) obj);
-            } else {
-               System.err.println(obj + " is not a report");
-            }
-         } catch (IOException e) {
-            System.err.println("Failed to read " + reportFile);
-            e.printStackTrace();
-         } catch (ClassNotFoundException e) {
-            System.err.println("Failed to load class from " + reportFile);
-            e.printStackTrace();
-         }
       }
 
       for (ReporterConfiguration rc : config.getReporters()) {
@@ -118,5 +106,29 @@ public class SerializedReporter implements Reporter {
       }
 
       ShutDownHook.exit(0); // the shutdown is controlled
+   }
+
+   private static void addReport(List<Report> reports, String resultDir) {
+      for (File reportFile : new File(resultDir).listFiles(new FileFilter() {
+         @Override
+         public boolean accept(File pathname) {
+            return pathname.getName().toLowerCase().endsWith(FILE_EXTENSION) && !pathname.isDirectory();
+         }
+      })) {
+         try (FileInputStream fileInputStream = new FileInputStream(reportFile); ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream)) {
+            Object obj = objectInputStream.readObject();
+            if (obj instanceof Report) {
+               reports.add((Report) obj);
+            } else {
+               System.err.println(obj + " is not a report");
+            }
+         } catch (IOException e) {
+            System.err.println("Failed to read " + reportFile);
+            e.printStackTrace();
+         } catch (ClassNotFoundException e) {
+            System.err.println("Failed to load class from " + reportFile);
+            e.printStackTrace();
+         }
+      }
    }
 }
