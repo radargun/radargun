@@ -8,3 +8,23 @@ message NumberObject {
    required int32 integerValue = 1;
    required double doubleValue = 2;
 }
+
+message ManyIntegersObject {
+   required int32 int0 = 1;
+   required int32 int1 = 2;
+   required int32 int2 = 3;
+   required int32 int3 = 4;
+   required int32 int4 = 5;
+   required int32 int5 = 6;
+   required int32 int6 = 7;
+   required int32 int7 = 8;
+   required int32 int8 = 9;
+   required int32 int9 = 10;
+}
+
+message ComposedObject {
+   required TextObject textObject = 1;
+   required NumberObject numberObject = 2;
+   repeated TextObject textObjectList = 3;
+   repeated NumberObject numberObjectList = 4;
+}
