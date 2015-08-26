@@ -54,7 +54,7 @@ public class DefaultOutcome {
       @Override
       public double getValue(OperationStats stats, long duration) {
          DefaultOutcome defaultOutcome = stats.getRepresentation(DefaultOutcome.class);
-         if (defaultOutcome == null) throw new IllegalArgumentException("Cannot retrieve number of failed requests from " + stats);
+         if (defaultOutcome == null) throw new IllegalArgumentException("Cannot retrieve response time maximum of requests from " + stats);
          return defaultOutcome.responseTimeMax;
       }
    }

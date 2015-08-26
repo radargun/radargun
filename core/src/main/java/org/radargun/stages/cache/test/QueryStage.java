@@ -57,6 +57,9 @@ public class QueryStage extends TestStage {
    @Property(doc = "Check whether all slaves got the same result, and fail if not. Default is false.")
    private boolean checkSameResult = false;
 
+   @Property(doc = "Check whether a query performed by a thread multiple times returns the same value. Default is true.")
+   private boolean checkSameThreadResult = true;
+
    @InjectTrait
    private Queryable queryable;
 
@@ -151,24 +154,26 @@ public class QueryStage extends TestStage {
          Queryable.Query query = builder.build();
          Queryable.QueryResult queryResult = (Queryable.QueryResult) stressor.makeRequest(new Invocations.Query(query));
 
-         if (previousQueryResult != null) {
-            if (queryResult.size() != previousQueryResult.size()) {
-               throw new IllegalStateException("The query result is different from the previous one. All results should be the same when executing the same query");
-            }
-         } else {
-            log.info("First result has " + queryResult.size() + " entries");
-            if (log.isTraceEnabled()) {
-               for (Object entry : queryResult.values()) {
-                  log.trace(String.valueOf(entry));
+         if (checkSameThreadResult) {
+            if (previousQueryResult != null) {
+               if (queryResult.size() != previousQueryResult.size()) {
+                  throw new IllegalStateException("The query result is different from the previous one. All results should be the same when executing the same query");
+               }
+            } else {
+               log.info("First result has " + queryResult.size() + " entries");
+               if (log.isTraceEnabled()) {
+                  for (Object entry : queryResult.values()) {
+                     log.trace(String.valueOf(entry));
+                  }
+               }
+               if (!expectedSize.compareAndSet(-1, queryResult.size())) {
+                  if (expectedSize.get() != queryResult.size()) {
+                     throw new IllegalStateException("Another thread reported " + expectedSize.get() + " results while we have " + queryResult.size());
+                  }
                }
             }
-            if (!expectedSize.compareAndSet(-1, queryResult.size())) {
-               if (expectedSize.get() != queryResult.size()) {
-                  throw new IllegalStateException("Another thread reported " + expectedSize.get() + " results while we have " + queryResult.size());
-               }
-            }
+            previousQueryResult = queryResult;
          }
-         previousQueryResult = queryResult;
 
          return queryResult;
       }
