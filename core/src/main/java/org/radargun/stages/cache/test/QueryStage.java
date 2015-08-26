@@ -131,24 +131,26 @@ public class QueryStage extends AbstractQueryStage {
          Query query = builder.build();
          Query.QueryResult queryResult = (Query.QueryResult) stressor.makeRequest(new Invocations.Query(query));
 
-         if (previousQueryResult != null) {
-            if (queryResult.size() != previousQueryResult.size()) {
-               throw new IllegalStateException("The query result is different from the previous one. All results should be the same when executing the same query");
-            }
-         } else {
-            log.info("First result has " + queryResult.size() + " entries");
-            if (log.isTraceEnabled()) {
-               for (Object entry : queryResult.values()) {
-                  log.trace(String.valueOf(entry));
+         if (checkSameThreadResult) {
+            if (previousQueryResult != null) {
+               if (queryResult.size() != previousQueryResult.size()) {
+                  throw new IllegalStateException("The query result is different from the previous one. All results should be the same when executing the same query");
+               }
+            } else {
+               log.info("First result has " + queryResult.size() + " entries");
+               if (log.isTraceEnabled()) {
+                  for (Object entry : queryResult.values()) {
+                     log.trace(String.valueOf(entry));
+                  }
+               }
+               if (!expectedSize.compareAndSet(-1, queryResult.size())) {
+                  if (expectedSize.get() != queryResult.size()) {
+                     throw new IllegalStateException("Another thread reported " + expectedSize.get() + " results while we have " + queryResult.size());
+                  }
                }
             }
-            if (!expectedSize.compareAndSet(-1, queryResult.size())) {
-               if (expectedSize.get() != queryResult.size()) {
-                  throw new IllegalStateException("Another thread reported " + expectedSize.get() + " results while we have " + queryResult.size());
-               }
-            }
+            previousQueryResult = queryResult;
          }
-         previousQueryResult = queryResult;
 
          return queryResult;
       }
