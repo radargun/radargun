@@ -3,6 +3,8 @@ package org.radargun.stages.cache.background;
 import java.util.List;
 
 import org.radargun.config.Property;
+import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
+import org.radargun.stages.cache.generators.ValueGenerator;
 
 /**
  * Configuration specific to {@link LegacyLogic}
@@ -34,6 +36,10 @@ public class LegacyLogicConfiguration {
    @Property(doc = "Do not execute the loading, start usual request right away.")
    protected boolean noLoading = false;
 
+   @Property(doc = "Generator of values. Default is byte-array.",
+         complexConverter = ValueGenerator.ComplexConverter.class)
+   protected ValueGenerator valueGenerator = new ByteArrayValueGenerator();
+
    public int getEntrySize() {
       return entrySize;
    }
@@ -64,5 +70,9 @@ public class LegacyLogicConfiguration {
 
    public boolean isPutWithReplace() {
       return putWithReplace;
+   }
+
+   public ValueGenerator getValueGenerator() {
+      return valueGenerator;
    }
 }
