@@ -47,7 +47,7 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
       throw new UnsupportedOperationException();
    }
 
-   void registerProtofilesLocal(SerializationContext context) {
+   protected void registerProtofilesLocal(SerializationContext context) {
       for (String protofile : service.protofiles) {
          try {
             context.registerProtofile(protofile);
@@ -57,7 +57,7 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
       }
    }
 
-   void registerProtofilesRemote() {
+   protected void registerProtofilesRemote() {
       JMXConnector connector = null;
       MBeanServerConnection connection = null;
       for (String host : service.serverHostnames) {
@@ -113,7 +113,7 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
       }
    }
 
-   private void closeConnector(JMXConnector connector) {
+   protected void closeConnector(JMXConnector connector) {
       if (connector != null) {
          try {
             connector.close();
