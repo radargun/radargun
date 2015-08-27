@@ -559,6 +559,10 @@
                            <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
                            <arg value="${distribution.artifact}/schema" />
                         </java>
+                        <java classname="org.radargun.config.ScenarioSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
+                           <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                           <arg value="${distribution.artifact}/schema" />
+                        </java>
                         <copy todir="${distribution.artifact}/schema">
                            <fileset dir="." includes="*.xsd"/>
                         </copy>

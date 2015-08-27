@@ -1,5 +1,14 @@
 package org.radargun.config;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -8,20 +17,6 @@ import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 /**
  * Base class for generators of schemas.
@@ -65,6 +60,8 @@ public abstract class SchemaGenerator {
    protected static final String XS_DOCUMENTATION = "documentation";
    protected static final String XS_NAMESPACE = "namespace";
    protected static final String XS_OTHER_NAMESPACE = "##other";
+   protected static final String XS_INCLUDE = "include";
+   protected static final String XS_SCHEMA_LOCATION = "schemaLocation";
 
    protected Document doc;
    protected Element schema;
@@ -91,7 +88,7 @@ public abstract class SchemaGenerator {
       schema.appendChild(doc.createComment("From " + source));
 
       Element typeElement = createComplexType(schema, typeName, superType, true,
-            Modifier.isAbstract(clazz.getModifiers()), findDocumentation(clazz));
+              Modifier.isAbstract(clazz.getModifiers()), findDocumentation(clazz));
       Element propertiesSequence = createSequence(typeElement);
       for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(clazz, true, true).entrySet()) {
          generateProperty(typeElement, propertiesSequence, property.getKey(), property.getValue(), true);
@@ -252,7 +249,7 @@ public abstract class SchemaGenerator {
             converter = ctor.newInstance();
          } catch (Exception e) {
             System.err.printf("Cannot instantiate converter service %s: %s",
-                  converterClass.getName(), e.getMessage());
+                    converterClass.getName(), e.getMessage());
             return XS_STRING;
          }
          Element propertyPattern = doc.createElementNS(NS_XS, XS_PATTERN);
@@ -440,6 +437,8 @@ public abstract class SchemaGenerator {
       doc.appendChild(schema);
       return schema;
    }
-
+   /**
+    * Generates scheme file
+    */
    protected abstract void generate();
 }

@@ -31,8 +31,8 @@ public class Scenario implements Serializable {
    /**
     * @param stageClass
     * @param properties Stage's attributes as written in configuration - evaluation takes place on slave.
-    * @param labelName Label that should be used together with stage-defined prefix and suffix to uniquely
-    *                  identify this stage in the scenario. Can be null.
+    * @param labelName  Label that should be used together with stage-defined prefix and suffix to uniquely
+    *                   identify this stage in the scenario. Can be null.
     */
    public void addStage(Class<? extends Stage> stageClass, Map<String, Definition> properties, String labelName) {
       org.radargun.config.Stage annotation = stageClass.getAnnotation(org.radargun.config.Stage.class);
@@ -52,10 +52,10 @@ public class Scenario implements Serializable {
    /**
     * Get instance of stage with given ID, using additional properties (evaluable as ${foo}) from localExtras.
     *
-    * @param stageId ID of the executed stage.
-    * @param state Master's or slave's state - used to resolve the properties.
+    * @param stageId     ID of the executed stage.
+    * @param state       Master's or slave's state - used to resolve the properties.
     * @param localExtras Additional properties that could be used for property value resolution.
-    * @param report Report where the stage execution should be recorded.
+    * @param report      Report where the stage execution should be recorded.
     * @return Instance of the stage with properties set (not initialized and not injected with traits yet).
     */
    public org.radargun.Stage getStage(int stageId, StateBase state, Map<String, String> localExtras, Report report) {
@@ -67,7 +67,7 @@ public class Scenario implements Serializable {
          throw new RuntimeException("Cannot instantiate " + description.stageClass.getName(), e);
       }
       PropertyHelper.setPropertiesFromDefinitions(stage, description.properties,
-            localExtras, state != null ? state.asStringMap() : Collections.EMPTY_MAP);
+              localExtras, state != null ? state.asStringMap() : Collections.EMPTY_MAP);
 
       if (report != null) {
          Report.Stage reportStage = report.addStage(stage.getName());
