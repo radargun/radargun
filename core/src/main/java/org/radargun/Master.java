@@ -109,7 +109,7 @@ public class Master {
                }
             }
             log.info("Finished benchmarking configuration '" + configuration.name + "' in "
-                  + Utils.getMillisDurationString(TimeService.currentTimeMillis() - configStart));
+                    + Utils.getMillisDurationString(TimeService.currentTimeMillis() - configStart));
             if (exitFlag) {
                log.info("Exiting whole benchmark");
                break;
@@ -159,7 +159,7 @@ public class Master {
 
       if (result == StageResult.SUCCESS) {
          return stageId + 1;
-      } else if (result == StageResult.FAIL || result == StageResult.EXIT){
+      } else if (result == StageResult.FAIL || result == StageResult.EXIT) {
          returnCode = masterConfig.getConfigurations().indexOf(configuration) + 1;
          if (result == StageResult.EXIT) {
             exitFlag = true;

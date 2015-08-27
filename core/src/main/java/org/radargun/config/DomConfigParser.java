@@ -1,13 +1,5 @@
 package org.radargun.config;
 
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.radargun.Properties;
 import org.radargun.ShutDownHook;
 import org.radargun.logging.Log;
@@ -19,14 +11,16 @@ import org.radargun.stages.ScenarioInitStage;
 import org.radargun.stages.control.RepeatBeginStage;
 import org.radargun.stages.control.RepeatContinueStage;
 import org.radargun.stages.control.RepeatEndStage;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Comment;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
+import org.w3c.dom.*;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
@@ -43,8 +37,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       Document document;
       try {
          document = builder.parse(config);
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
          throw new IllegalStateException(e);
       }
 
@@ -66,14 +59,23 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
       Scenario scenario = new Scenario();
       Map<String, Definition> initProperties = Collections.EMPTY_MAP;
+
       if (ELEMENT_INIT.equals(childNodes.item(index).getNodeName())) {
          initProperties = parseProperties(((Element) childNodes.item(index)), true);
          index = nextElement(childNodes, index + 1);
       }
       scenario.addStage(ScenarioInitStage.class, initProperties, null);
 
-      parseScenario(scenario, (Element) childNodes.item(index));
+      Element scenarioElement;
+      if (((Element) childNodes.item(index)).hasAttribute(ATTR_URL)) {
+         scenarioElement = loadScenario(((Element) childNodes.item(index)).getAttribute(ATTR_URL));
+      } else {
+         scenarioElement = (Element) childNodes.item(index);
+      }
+
+      parseScenario(scenario, scenarioElement);
       masterConfig.setScenario(scenario);
+
       index = nextElement(childNodes, index + 1);
 
       Map<String, Definition> destroyProperties = Collections.EMPTY_MAP;
@@ -100,6 +102,26 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       return masterConfig;
    }
 
+   /**
+    * Parses scenario, which is loaded from file or URL
+    *
+    * @param scenarioUri path or url of the scenario file, or benchmark file which contains scenario
+    * @return parsed scenario element
+    * @throws ParserConfigurationException if DocumentBuilder cannot be created
+    */
+   private Element loadScenario(String scenarioUri) throws ParserConfigurationException {
+      DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+
+      Document document;
+      try {
+         document = builder.parse(scenarioUri);
+      } catch (Exception e) {
+         throw new IllegalStateException("Could not parse imported scenario: " + scenarioUri, e);
+      }
+
+      return (Element) document.getElementsByTagName(ELEMENT_SCENARIO).item(0);
+   }
+
    private int nextElement(NodeList nodeList, int start) {
       for (int i = start; i < nodeList.getLength(); ++i) {
          if (nodeList.item(i) instanceof Element) {
@@ -111,7 +133,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
    private void assertName(String name, Element element) {
       if (!name.equals(element.getNodeName())) {
-         throw new IllegalArgumentException("Found '" + element.getNodeName() + "', expected '"  + name  + "'");
+         throw new IllegalArgumentException("Found '" + element.getNodeName() + "', expected '" + name + "'");
       }
    }
 
@@ -386,7 +408,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
    private void addScenarioItem(Scenario scenario, Element element) {
       if (element.getNodeName().equalsIgnoreCase(ELEMENT_REPEAT)) {
-         wrapStages(scenario, element, new Class[] { RepeatBeginStage.class }, new Class[] {RepeatContinueStage.class, RepeatEndStage.class });
+         wrapStages(scenario, element, new Class[]{RepeatBeginStage.class}, new Class[]{RepeatContinueStage.class, RepeatEndStage.class});
       } else {
          scenario.addStage(StageHelper.getStageClassByDashedName(element.getNodeName()), parseProperties(element, true), null);
       }
