@@ -4,8 +4,11 @@ message TextObject {
    required string text = 1;
 }
 
+/* @Indexed */
 message NumberObject {
+   /* @IndexedField(index = true, store = true) */
    required int32 integerValue = 1;
+   /* @IndexedField(index = true, store = false) */
    required double doubleValue = 2;
 }
 
