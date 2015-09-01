@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2013 Red Hat, Inc. and/or its affiliates.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this library; if not, write to the Free Software
+  ~ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA
+  -->
+
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:infinispan:config:6.0 http://www.infinispan.org/schemas/infinispan-config-6.0.xsd"
+        xmlns="urn:infinispan:config:6.0">
+
+   <global>
+      <transport clusterName="default" distributedSyncTimeout="600000">
+         <properties>
+            <property name="configurationFile" value="${infinispan.jgroups.config:jgroups-udp-custom.xml}"/>
+         </properties>
+      </transport>
+      <globalJmxStatistics allowDuplicateDomains="true" />
+   </global>
+
+   <default/>
+
+   <namedCache name="dist_lucene">
+      <transaction transactionMode="NON_TRANSACTIONAL"/>
+      <clustering mode="DIST">
+         <hash numOwners="2" />
+      </clustering>
+      <locking lockAcquisitionTimeout="3000" concurrencyLevel="1000" />
+
+      <indexing enabled="true" indexLocalOnly="true">
+         <properties>
+            <property name="default.indexmanager" value="org.infinispan.query.indexmanager.InfinispanIndexManager" />
+            <property name="default.exclusive_index_use" value="true" />
+            <property name="default.metadata_cachename" value="lucene_metadata_repl" />
+            <property name="default.data_cachename" value="lucene_data_dist" />
+            <property name="default.locking_cachename" value="lucene_locking_repl" />
+            <property name="lucene_version" value="LUCENE_36" />
+         </properties>
+      </indexing>
+   </namedCache>
+
+   <namedCache name="dist_lucene_repl">
+      <transaction transactionMode="NON_TRANSACTIONAL"/>
+      <clustering mode="DIST">
+         <hash numOwners="2" />
+      </clustering>
+      <locking lockAcquisitionTimeout="3000" concurrencyLevel="1000" />
+
+      <indexing enabled="true" indexLocalOnly="true">
+         <properties>
+            <property name="default.indexmanager" value="org.infinispan.query.indexmanager.InfinispanIndexManager" />
+            <property name="default.exclusive_index_use" value="true" />
+            <property name="default.metadata_cachename" value="lucene_metadata_repl_for_repl" />
+            <property name="default.data_cachename" value="lucene_data_repl" />
+            <property name="default.locking_cachename" value="lucene_locking_repl_for_repl" />
+            <property name="lucene_version" value="LUCENE_36" />
+         </properties>
+      </indexing>
+   </namedCache>
+
+   <namedCache name="dist_lucene_repl_async1">
+      <transaction transactionMode="NON_TRANSACTIONAL"/>
+      <clustering mode="DIST">
+         <hash numOwners="2" />
+      </clustering>
+      <locking lockAcquisitionTimeout="3000" concurrencyLevel="1000" />
+
+      <indexing enabled="true" indexLocalOnly="true">
+         <properties>
+            <property name="default.indexmanager" value="org.infinispan.query.indexmanager.InfinispanIndexManager" />
+            <property name="default.worker.execution" value="async" />
+            <property name="default.worker.thread_pool.size" value="1" />
+            <!--<property name="default.worker.buffer_queue.max" value="1000"/>-->
+
+            <property name="default.max_queue_length" value="10000" />
+            <property name="default.indexwriter.merge_factor" value="30" />
+            <property name="default.index_flush_interval" value="2000" />
+            <property name="default.indexwriter.merge_max_size" value="1024" />
+            <property name="default.indexwriter.ram_buffer_size" value="512" />
+
+            <property name="default.exclusive_index_use" value="true" />
+            <property name="default.metadata_cachename" value="lucene_metadata_repl_for_repl_async1" />
+            <property name="default.data_cachename" value="lucene_data_repl_async1" />
+            <property name="default.locking_cachename" value="lucene_locking_repl_for_repl_async1" />
+            <property name="lucene_version" value="LUCENE_36" />
+         </properties>
+      </indexing>
+   </namedCache>
+
+   <namedCache name="dist_lucene_repl_async8">
+      <transaction transactionMode="NON_TRANSACTIONAL"/>
+      <clustering mode="DIST">
+         <hash numOwners="2" />
+      </clustering>
+      <locking lockAcquisitionTimeout="3000" concurrencyLevel="1000" />
+
+      <indexing enabled="true" indexLocalOnly="true">
+         <properties>
+            <property name="default.indexmanager" value="org.infinispan.query.indexmanager.InfinispanIndexManager" />
+            <property name="default.worker.execution" value="async" />
+            <property name="default.worker.thread_pool.size" value="8" />
+            <property name="default.worker.buffer_queue.max" value="1000"/>
+            <property name="default.exclusive_index_use" value="true" />
+            <property name="default.metadata_cachename" value="lucene_metadata_repl_for_repl_async8" />
+            <property name="default.data_cachename" value="lucene_data_repl_async8" />
+            <property name="default.locking_cachename" value="lucene_locking_repl_for_repl_async8" />
+            <property name="lucene_version" value="LUCENE_36" />
+         </properties>
+      </indexing>
+   </namedCache>
+
+
+   <namedCache name="repl_ram">
+      <transaction transactionMode="NON_TRANSACTIONAL"/>
+      <clustering mode="REPL" />
+      <locking lockAcquisitionTimeout="3000" concurrencyLevel="1000" />
+
+      <indexing enabled="true" indexLocalOnly="false">
+         <properties>
+            <property name="default.directory_provider" value="ram" />
+            <property name="default.indexmanager" value="near-real-time" />
+            <property name="default.exclusive_index_use" value="true" />
+         </properties>
+      </indexing>
+   </namedCache>
+
+   <namedCache name="repl_fs">
+      <transaction transactionMode="NON_TRANSACTIONAL"/>
+      <clustering mode="REPL" />
+      <locking lockAcquisitionTimeout="3000" concurrencyLevel="1000" />
+
+      <indexing enabled="true" indexLocalOnly="false">
+         <properties>
+            <property name="default.directory_provider" value="filesystem" />
+            <property name="default.indexmanager" value="near-real-time" />
+            <property name="default.exclusive_index_use" value="true" />
+            <property name="default.indexBase" value="/tmp/ispn_fs_index/${log4j.file.prefix}"/>
+         </properties>
+      </indexing>
+   </namedCache>
+
+   <namedCache name="local_ram">
+      <transaction transactionMode="NON_TRANSACTIONAL"/>
+      <clustering mode="local" />
+      <locking lockAcquisitionTimeout="3000" concurrencyLevel="1000" />
+
+      <indexing enabled="true">
+         <properties>
+            <property name="default.directory_provider" value="ram" />
+            <property name="default.indexmanager" value="near-real-time" />
+            <property name="default.exclusive_index_use" value="true" />
+         </properties>
+      </indexing>
+   </namedCache>
+
+   <namedCache name="local_fs">
+      <transaction transactionMode="NON_TRANSACTIONAL"/>
+      <clustering mode="local" />
+      <locking lockAcquisitionTimeout="3000" concurrencyLevel="1000" />
+
+      <indexing enabled="true">
+         <properties>
+            <property name="default.directory_provider" value="filesystem" />
+            <property name="default.indexmanager" value="near-real-time" />
+            <property name="default.exclusive_index_use" value="true" />
+            <property name="default.indexBase" value="/tmp/ispn_fs_index/${log4j.file.prefix}"/>
+         </properties>
+      </indexing>
+   </namedCache>
+
+   <namedCache name="lucene_metadata_repl">
+      <clustering mode="REPL" />
+   </namedCache>
+   <namedCache name="lucene_data_dist">
+      <clustering mode="DIST">
+         <hash numOwners="2" />
+      </clustering>
+   </namedCache>
+   <namedCache name="lucene_locking_repl">
+      <clustering mode="REPL" />
+   </namedCache>
+
+   <namedCache name="lucene_metadata_repl_for_repl">
+      <clustering mode="REPL" />
+   </namedCache>
+   <namedCache name="lucene_data_repl">
+      <clustering mode="REPL" />
+   </namedCache>
+   <namedCache name="lucene_locking_repl_for_repl">
+      <clustering mode="REPL" />
+   </namedCache>
+
+   <namedCache name="lucene_metadata_repl_for_repl_async1">
+      <clustering mode="REPL" />
+   </namedCache>
+   <namedCache name="lucene_data_repl_async1">
+      <clustering mode="REPL" />
+   </namedCache>
+   <namedCache name="lucene_locking_repl_for_repl_async1">
+      <clustering mode="REPL" />
+   </namedCache>
+
+   <namedCache name="lucene_metadata_repl_for_repl_async8">
+      <clustering mode="REPL" />
+   </namedCache>
+   <namedCache name="lucene_data_repl_async8">
+      <clustering mode="REPL" />
+   </namedCache>
+   <namedCache name="lucene_locking_repl_for_repl_async8">
+      <clustering mode="REPL" />
+   </namedCache>
+</infinispan>

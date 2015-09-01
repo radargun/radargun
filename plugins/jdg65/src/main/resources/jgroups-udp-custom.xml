@@ -1,0 +1,59 @@
+<!--
+  ~ JBoss, Home of Professional Open Source
+  ~ Copyright 2010 Red Hat Inc. and/or its affiliates and other
+  ~ contributors as indicated by the @author tags. All rights reserved.
+  ~ See the copyright.txt in the distribution for a full listing of
+  ~ individual contributors.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this software; if not, write to the Free
+  ~ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+  -->
+<config xmlns="urn:org:jgroups"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <UDP
+        bind_addr="${jgroups.udp.bind_addr:localhost}"
+        bind_port="${jgroups.udp.bind_port:52000}"
+        mcast_addr="${jgroups.udp.mcast_addr:234.99.54.14}"
+        mcast_port="${jgroups.udp.mcast_port:45688}"
+        ip_ttl="${jgroups.udp.ip_ttl:8}"
+        thread_naming_pattern="pl"
+        enable_diagnostics="false"
+        ucast_send_buf_size="1M"
+        mcast_send_buf_size="1M"
+
+        thread_pool.max_threads="${jgroups.thread_pool.max_threads:200}"
+
+        internal_thread_pool.max_threads="${jgroups.internal_thread_pool.max_threads:20}"
+        internal_thread_pool.queue_enabled="false"
+        internal_thread_pool.rejection_policy="Abort"
+
+        oob_thread_pool.max_threads="${jgroups.oob_thread_pool.max_threads:500}"
+        oob_thread_pool.queue_enabled="false"
+        />
+
+   <PING />
+   <MERGE3 min_interval="10000" max_interval="30000" />
+   <FD_SOCK />
+   <FD_ALL timeout="60000" interval="15000" timeout_check_interval="5000" />
+   <VERIFY_SUSPECT />
+   <pbcast.NAKACK2 use_mcast_xmit="false"/>
+   <UNICAST3 />
+   <pbcast.STABLE />
+   <pbcast.GMS join_timeout="15000" />
+   <!-- !!! Beware: max_credits * min_threshold must be > frag_size !!! -->
+   <UFC max_credits="${jgroups.ufc.max_credits:2M}" min_threshold="0.40" />
+   <MFC max_credits="${jgroups.mfc.max_credits:2M}" min_threshold="0.40" />
+   <FRAG2 />
+</config>

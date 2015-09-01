@@ -3,8 +3,11 @@ package org.radargun.service;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
+import org.hibernate.search.spi.SearchFactoryIntegrator;
 import org.infinispan.AdvancedCache;
 import org.infinispan.Cache;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
@@ -13,9 +16,12 @@ import org.infinispan.container.entries.InternalCacheEntry;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.query.Search;
+import org.infinispan.query.SearchManager;
 import org.infinispan.util.FileLookupFactory;
 import org.radargun.Service;
 import org.radargun.config.Init;
+import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
 
 /**
@@ -26,6 +32,9 @@ import org.radargun.traits.ProvidesTrait;
 public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
 
    protected InfinispanDistributedTask distributedTaskExecutor;
+
+   @Property(doc = "Classes to add to search factory after service has started.")
+   protected List<String> preregisteredQueryClasses;
 
    @Override
    protected Infinispan52Lifecycle createLifecycle() {
@@ -57,6 +66,20 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
    @Init
    public void init() {
        distributedTaskExecutor = new InfinispanDistributedTask(this);
+   }
+
+   @Override
+   protected void startCaches() throws Exception {
+      super.startCaches();
+      if (preregisteredQueryClasses != null) {
+         SearchManager searchManager = Search.getSearchManager(getCache(null));
+         SearchFactoryIntegrator sfi = (SearchFactoryIntegrator) searchManager.getSearchFactory();
+         List<Class> classList = new ArrayList<>(preregisteredQueryClasses.size());
+         for (String clazz : preregisteredQueryClasses) {
+            classList.add(Thread.currentThread().getContextClassLoader().loadClass(clazz));
+         }
+         sfi.addClasses(classList.toArray(new Class[classList.size()]));
+      }
    }
 
    @Override
