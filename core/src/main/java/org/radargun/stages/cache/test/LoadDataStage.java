@@ -1,7 +1,9 @@
 package org.radargun.stages.cache.test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +20,7 @@ import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.stages.test.TransactionMode;
 import org.radargun.traits.BasicOperations;
+import org.radargun.traits.BulkOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
 import org.radargun.utils.Fuzzy;
@@ -86,8 +89,17 @@ public class LoadDataStage extends AbstractDistStage {
          "the benchmark will try to do one put operation every 10 ms. By default the requests are executed at maximum speed.")
    protected long requestPeriod = 0;
 
+   @Property(doc = "Size of batch to be loaded into cache (using putAll). If <= 0, put() operation is used sequentially.")
+   protected int batchSize = 0;
+
+   @Property(doc = "Controls whether batch insertion is performed in asychronous way. Default is false (prefer synchronous operations).")
+   protected boolean useAsyncBatchLoading = false;
+
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected BasicOperations basicOperations;
+
+   @InjectTrait(dependency = InjectTrait.Dependency.OPTIONAL)
+   protected BulkOperations bulkOperations;
 
    @InjectTrait
    protected Transactional transactional;
@@ -130,7 +142,15 @@ public class LoadDataStage extends AbstractDistStage {
          String cacheName = cacheSelector.getCacheName(threadBase + i);
          boolean useTransactions = this.useTransactions.use(transactional, cacheName, transactionSize);
          long start = TimeService.nanoTime();
-         Loader loader = useTransactions ? new TxLoader(i, getLoaderIds(i), start) : new NonTxLoader(i, getLoaderIds(i), start);
+         final Loader loader;
+         if (batchSize > 0) {
+            if (batchSize > 0 && bulkOperations == null) {
+               throw new IllegalArgumentException("Bulk operations have been enabled, but they are not supported by current service");
+            }
+            loader = useTransactions ? new BulkTxLoader(i, getLoaderIds(i), start) : new BulkNonTxLoader(i, getLoaderIds(i), start);
+         } else {
+            loader = useTransactions ? new TxLoader(i, getLoaderIds(i), start) : new NonTxLoader(i, getLoaderIds(i), start);
+         }
          loaders.add(loader);
          loader.start(); // no special synchronization needed
       }
@@ -158,10 +178,11 @@ public class LoadDataStage extends AbstractDistStage {
    }
 
    private interface LoaderIds {
-      /** Return next key ID for key with given size*/
-      long next(int size);
+      /** Return next key ID */
+      long next();
       /** Create a mark we can later return to */
       void mark();
+      /** Resets current index to mark */
       void resetToMark();
       /* Returns index of the key */
       long currentKeyIndex();
@@ -179,7 +200,7 @@ public class LoadDataStage extends AbstractDistStage {
       }
 
       @Override
-      public long next(int size) {
+      public long next() {
          if (current < limit) {
             return current++;
          } else {
@@ -226,7 +247,7 @@ public class LoadDataStage extends AbstractDistStage {
       public void run() {
          try {
             for (; ; ) {
-               if (!loadEntry()) return;
+               if (!loadDataUnit()) return;
             }
          } catch (Throwable t) {
             log.error("Exception in Loader", t);
@@ -234,7 +255,79 @@ public class LoadDataStage extends AbstractDistStage {
          }
       }
 
-      protected abstract boolean loadEntry();
+      protected abstract boolean loadDataUnit();
+   }
+
+   private abstract class CacheTxLoader extends Loader {
+
+      protected Transactional.Transaction tx;
+      protected int txCurrentSize;
+      protected int txAttempts;
+      protected long txValuesSize;
+      protected long txBeginSeed;
+
+      public CacheTxLoader(int index, LoaderIds loaderIds, long start) {
+         super(index, loaderIds, start);
+      }
+
+      protected void beginTx() {
+         if (tx == null) {
+            tx = transactional.getTransaction();
+            wrapCache();
+            txBeginSeed = Utils.getRandomSeed(random);
+            try {
+               tx.begin();
+            } catch (Exception e) {
+               log.error("Begin failed");
+               throw e;
+            }
+            loaderIds.mark();
+         }
+      }
+
+      /**
+       * @return true when there are more keys to commit
+       */
+      protected boolean commitTx(long keyId) {
+         if (txCurrentSize >= transactionSize || keyId < 0) {
+            try {
+               tx.commit();
+               long entryCountToLog = batchSize > 0 ? txCurrentSize * batchSize : txCurrentSize;
+               logLoaded(entryCountToLog, txValuesSize);
+               txAttempts = 0;
+               txCurrentSize = 0;
+               txValuesSize = 0;
+               tx = null;
+               resetCache();
+            } catch (Exception e) {
+               log.error("Failed to commit transaction", e);
+               restartTx();
+               return true;
+            }
+            if (keyId < 0) {
+               log.info(String.format("Finished %s entries", remove ? "removing" : "loading"));
+               return false;
+            }
+         }
+         return true;
+      }
+
+      protected void restartTx() {
+         loaderIds.resetToMark();
+         Utils.setRandomSeed(random, txBeginSeed);
+         txCurrentSize = 0;
+         txValuesSize = 0;
+         resetCache();
+         tx = null;
+         txAttempts++;
+         if (txAttempts >= maxLoadAttempts) {
+            throw new RuntimeException("Failed to commit transaction " + maxLoadAttempts + " times");
+         }
+      }
+
+      protected abstract void wrapCache();
+
+      protected abstract void resetCache();
    }
 
    private class NonTxLoader extends Loader {
@@ -247,11 +340,11 @@ public class LoadDataStage extends AbstractDistStage {
       }
 
       @Override
-      protected boolean loadEntry() {
+      protected boolean loadDataUnit() {
          int size = entrySize.next(random);
          long currentKeyIndex = loaderIds.currentKeyIndex();
          delayRequest(start, TimeService.nanoTime(), currentKeyIndex);
-         long keyId = loaderIds.next(size);
+         long keyId = loaderIds.next();
          if (keyId < 0) {
             log.info(String.format("Finished %s entries", remove ? "removing" : "loading"));
             return false;
@@ -270,7 +363,7 @@ public class LoadDataStage extends AbstractDistStage {
                break;
             } catch (Exception e) {
                log.warnf(e, "Attempt %d/%d to %s cache failed, waiting %d ms before next attempt",
-                     i + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
+                         i + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
                try {
                   Thread.sleep(waitOnError);
                } catch (InterruptedException e1) {
@@ -280,7 +373,7 @@ public class LoadDataStage extends AbstractDistStage {
          }
          if (!success) {
             String message = String.format("Failed to %s entry key=%s, value=%s %d times.",
-                  remove ? "remove" : "insert", key, value, maxLoadAttempts);
+                                           remove ? "remove" : "insert", key, value, maxLoadAttempts);
             throw new RuntimeException(message);
          }
          logLoaded(1, size);
@@ -288,14 +381,70 @@ public class LoadDataStage extends AbstractDistStage {
       }
    }
 
-   private class TxLoader extends Loader {
+   private class BulkNonTxLoader extends Loader {
+      private final BulkOperations.Cache<Object, Object> cache;
+
+      public BulkNonTxLoader(int index, LoaderIds loaderIds, long start) {
+         super(index, loaderIds, start);
+         String cacheName = cacheSelector.getCacheName(threadIndex);
+         cache = bulkOperations.getCache(cacheName, useAsyncBatchLoading);
+      }
+
+      @Override
+      protected boolean loadDataUnit() {
+         Map<Object, Object> entryMap = new HashMap<>(batchSize);
+         long keyId = 0;
+         int totalSize = 0;
+         for (int i = 0; i < batchSize; i++) {
+            int size = entrySize.next(random);
+            totalSize += size;
+            long currentKeyIndex = loaderIds.currentKeyIndex();
+            delayRequest(start, TimeService.nanoTime(), currentKeyIndex);
+            keyId = loaderIds.next();
+            if (keyId < 0) {
+               if (entryMap.isEmpty()) {
+                  log.info(String.format("Finished %s entries", remove ? "removing" : "loading"));
+                  return false;
+               }
+               break;
+            }
+            Object key = keyGenerator.generateKey(keyId);
+            Object value = valueGenerator.generateValue(key, size, random);
+            entryMap.put(key, value);
+         }
+         for (int i = 0; i < maxLoadAttempts; i++) {
+            try {
+               if (remove) {
+                  cache.removeAll(entryMap.keySet());
+               } else {
+                  cache.putAll(entryMap);
+               }
+               if (keyId < 0) {
+                  log.info(String.format("Finished %s entries", remove ? "removing" : "loading"));
+                  return false;
+               }
+               return true;
+            } catch (Exception e) {
+               log.warnf(e, "Attempt %d/%d to %s cache failed, waiting %d ms before next attempt",
+                         i + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
+               try {
+                  Thread.sleep(waitOnError);
+               } catch (InterruptedException e1) {
+                  log.warn("Interrupted when waiting after failed operation", e1);
+               }
+            }
+         }
+         // Reached only when maxLoadAttempts attempts have been attained
+         String message = String.format("Failed to %s batch entries %d times.",
+                                        remove ? "remove" : "insert", maxLoadAttempts);
+         logLoaded(batchSize, totalSize);
+         throw new RuntimeException(message);
+      }
+   }
+
+   private class TxLoader extends CacheTxLoader {
       private final BasicOperations.Cache<Object, Object> nonTxCache;
-      private Transactional.Transaction tx;
       private BasicOperations.Cache cache;
-      private int txCurrentSize;
-      private int txAttempts;
-      private long txValuesSize;
-      private long txBeginSeed;
 
       public TxLoader(int index, LoaderIds loaderIds, long start) {
          super(index, loaderIds, start);
@@ -304,23 +453,12 @@ public class LoadDataStage extends AbstractDistStage {
       }
 
       @Override
-      protected boolean loadEntry() {
-         if (tx == null) {
-            tx = transactional.getTransaction();
-            cache = tx.wrap(nonTxCache);
-            txBeginSeed = Utils.getRandomSeed(random);
-            try {
-               tx.begin();
-            } catch (Exception e) {
-               log.error("Begin failed");
-               throw e;
-            }
-            loaderIds.mark();
-         }
+      protected boolean loadDataUnit() {
+         beginTx();
          int size = entrySize.next(random);
          long currentKeyIndex = loaderIds.currentKeyIndex();
          delayRequest(start, TimeService.nanoTime(), currentKeyIndex);
-         long keyId = loaderIds.next(size);
+         long keyId = loaderIds.next();
          if (keyId >= 0) {
             Object key = keyGenerator.generateKey(keyId);
             Object value = valueGenerator.generateValue(key, size, random);
@@ -334,7 +472,7 @@ public class LoadDataStage extends AbstractDistStage {
                txValuesSize += size;
             } catch (Exception e) {
                log.warnf(e, "Attempt %d/%d to %s cache failed, waiting %d ms before next attempt",
-                     txAttempts + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
+                         txAttempts + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
                try {
                   tx.rollback();
                } catch (Exception re) {
@@ -348,40 +486,96 @@ public class LoadDataStage extends AbstractDistStage {
                }
                return true;
             }
-         }
-         if (txCurrentSize >= transactionSize || keyId < 0) {
-            try {
-               tx.commit();
-               logLoaded(txCurrentSize, txValuesSize);
-               txAttempts = 0;
-               txCurrentSize = 0;
-               txValuesSize = 0;
-               tx = null;
-               cache = null;
-            } catch (Exception e) {
-               log.error("Failed to commit transaction", e);
-               restartTx();
-               return true;
-            }
-            if (keyId < 0) {
+         } else {
+            if (keyId < 0 && txCurrentSize <= 0) {
                log.info(String.format("Finished %s entries", remove ? "removing" : "loading"));
                return false;
             }
          }
-         return true;
+         return commitTx(keyId);
       }
 
-      private void restartTx() {
-         loaderIds.resetToMark();
-         Utils.setRandomSeed(random, txBeginSeed);
-         txCurrentSize = 0;
-         txValuesSize = 0;
+      @Override
+      protected void wrapCache() {
+         cache = tx.wrap(nonTxCache);
+      }
+
+      @Override
+      protected void resetCache() {
          cache = null;
-         tx = null;
-         txAttempts++;
-         if (txAttempts >= maxLoadAttempts) {
-            throw new RuntimeException("Failed to commit transaction " + maxLoadAttempts + " times");
+      }
+   }
+
+   private class BulkTxLoader extends CacheTxLoader {
+      private final BulkOperations.Cache<Object, Object> nonTxCache;
+      private BulkOperations.Cache cache;
+
+      public BulkTxLoader(int index, LoaderIds loaderIds, long start) {
+         super(index, loaderIds, start);
+         String cacheName = cacheSelector.getCacheName(threadIndex);
+         nonTxCache = bulkOperations.getCache(cacheName, useAsyncBatchLoading);
+      }
+
+      @Override
+      protected boolean loadDataUnit() {
+         beginTx();
+         Map<Object, Object> entryMap = new HashMap<>(batchSize);
+         long keyId = 0;
+         long totalSize = 0;
+         for (int i = 0; i < batchSize; i++) {
+            int size = entrySize.next(random);
+            totalSize += size;
+            long currentKeyIndex = loaderIds.currentKeyIndex();
+            delayRequest(start, TimeService.nanoTime(), currentKeyIndex);
+            keyId = loaderIds.next();
+            if (keyId >= 0) {
+               Object key = keyGenerator.generateKey(keyId);
+               Object value = valueGenerator.generateValue(key, size, random);
+               entryMap.put(key, value);
+            } else {
+               if (entryMap.isEmpty()) {
+                  log.info(String.format("Finished %s entries", remove ? "removing" : "loading"));
+                  // Ongoing uncommitted TX?
+                  return txCurrentSize > 0 ? commitTx(keyId) : false;
+               }
+               break;
+            }
          }
+         try {
+            if (remove) {
+               cache.removeAll(entryMap.keySet());
+            } else {
+               cache.putAll(entryMap);
+            }
+            txCurrentSize++;
+            txValuesSize += totalSize;
+         } catch (Exception e) {
+            log.warnf(e, "Attempt %d/%d to %s cache failed, waiting %d ms before next attempt",
+                      txAttempts + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
+            try {
+               tx.rollback();
+            } catch (Exception re) {
+               log.error("Failed to rollback transaction", re);
+            }
+            restartTx();
+            try {
+               Thread.sleep(waitOnError);
+            } catch (InterruptedException e1) {
+               log.warn("Interrupted when waiting after failed operation", e1);
+            }
+            return true;
+         }
+         return commitTx(keyId);
+      }
+
+      @Override
+      protected void wrapCache() {
+         cache = tx.wrap(nonTxCache);
+      }
+
+      @Override
+      protected void resetCache() {
+         cache = null;
       }
    }
 
