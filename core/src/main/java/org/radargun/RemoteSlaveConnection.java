@@ -112,10 +112,14 @@ public class RemoteSlaveConnection {
                   break;
                }
             }
+            if (slaveIndex < 0) {
+               throw new IllegalArgumentException("All slaves are already connected.");
+            }
          } else if (slaveIndex >= slaves.length) {
             throw new IllegalArgumentException("Slave requests invalid slaveIndex "
                   + slaveIndex + " (expected " + slaves.length + " slaves)");
-         } else if (slaves[slaveIndex] == null) {
+         }
+         if (slaves[slaveIndex] == null) {
             if (uuid.getLeastSignificantBits() != 0 || uuid.getMostSignificantBits() != 0) {
                throw new IllegalArgumentException("We are expecting 0th generation slave " + slaveIndex + " but it already has UUID set!");
             }

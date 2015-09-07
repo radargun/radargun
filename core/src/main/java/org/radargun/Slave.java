@@ -48,7 +48,7 @@ public class Slave extends SlaveBase {
             Configuration.Setup setup = configuration.getSetup(cluster.getGroup(slaveIndex).name);
             VmArgs vmArgs = new VmArgs();
             PropertyHelper.setPropertiesFromDefinitions(vmArgs, setup.getVmArgs(), getCurrentExtras(configuration, cluster));
-            RestartHelper.spawnSlave(slaveIndex, nextUuid, setup.plugin, vmArgs);
+            RestartHelper.spawnSlave(state.getSlaveIndex(), nextUuid, setup.plugin, vmArgs);
             connection.sendResponse(null, nextUuid);
             connection.release();
             ShutDownHook.exit(0);
