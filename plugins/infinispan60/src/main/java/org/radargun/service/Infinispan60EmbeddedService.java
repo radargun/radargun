@@ -36,7 +36,7 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
    protected boolean internalsExpositionEnabled = false;
 
    private JGroupsDumper jgroupsDumper;
-   private ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
+   protected ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
 
    @ProvidesTrait
    public InfinispanEmbeddedQueryable createQueryable() {
