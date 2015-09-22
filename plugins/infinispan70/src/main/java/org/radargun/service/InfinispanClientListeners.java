@@ -16,6 +16,8 @@ import org.infinispan.client.hotrod.event.ClientCacheEntryRemovedEvent;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
+import static org.radargun.service.AbstractInfinispanListeners.GenericListener;
+
 /**
  * 
  * Generic Infinispan remote listeners, similar to {@link InfinispanCacheListeners}.
@@ -23,8 +25,7 @@ import org.radargun.logging.LogFactory;
  * @author vjuranek
  * 
  */
-public class InfinispanClientListeners extends
-      AbstractInfinispanListeners<InfinispanClientListeners.GenericClientListener> {
+public class InfinispanClientListeners extends AbstractInfinispanListeners {
 
    protected static final Log log = LogFactory.getLog(InfinispanClientListeners.class);
   
@@ -44,7 +45,8 @@ public class InfinispanClientListeners extends
       GenericClientListener listenerContainer = listeners.putIfAbsent(cacheName, new GenericClientListener());
       if (listenerContainer == null) {
          listenerContainer = listeners.get(cacheName);
-         remoteManager.getCache().addClientListener(listenerContainer);
+         service.getRemoteManager(false).getCache(cacheName).addClientListener(listenerContainer);
+         service.getRemoteManager(true).getCache(cacheName).addClientListener(listenerContainer);
       }
       return listenerContainer;
    }
@@ -84,6 +86,15 @@ public class InfinispanClientListeners extends
    @Override
    public void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync) {
       throw new UnsupportedOperationException("HotRod doesn't support client listeners for expiration");
+   }
+
+   @Override
+   public void removeListener(String cacheName, boolean sync) {
+      GenericClientListener listener = getListenerOrThrow(cacheName, sync);
+      if (listener.isEmpty()) {
+         service.getRemoteManager(false).getCache(cacheName).removeClientListener(listener);
+         service.getRemoteManager(true).getCache(cacheName).removeClientListener(listener);
+      }
    }
 
    @ClientListener

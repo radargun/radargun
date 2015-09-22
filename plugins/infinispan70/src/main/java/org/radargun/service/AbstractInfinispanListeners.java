@@ -6,15 +6,13 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.radargun.traits.CacheListeners;
 
-public abstract class AbstractInfinispanListeners<T extends AbstractInfinispanListeners.GenericListener> implements
-      CacheListeners {
-
-   protected final ConcurrentMap<String, T> syncListeners = new ConcurrentHashMap<String, T>();
-   protected final ConcurrentMap<String, T> asyncListeners = new ConcurrentHashMap<String, T>();
+public abstract class AbstractInfinispanListeners implements CacheListeners {
 
    protected abstract GenericListener getOrCreateListener(String cacheName, boolean sync);
 
    protected abstract GenericListener getListenerOrThrow(String cacheName, boolean sync);
+
+   protected abstract void removeListener(String cacheName, boolean sync);
 
    @Override
    public void addCreatedListener(String cacheName, CreatedListener listener, boolean sync) {
@@ -44,29 +42,34 @@ public abstract class AbstractInfinispanListeners<T extends AbstractInfinispanLi
    @Override
    public void removeCreatedListener(String cacheName, CreatedListener listener, boolean sync) {
       getListenerOrThrow(cacheName, sync).remove(listener);
+      removeListener(cacheName, sync);
    }
 
    @Override
    public void removeUpdatedListener(String cacheName, UpdatedListener listener, boolean sync) {
       getListenerOrThrow(cacheName, sync).remove(listener);
+      removeListener(cacheName, sync);
    }
 
    @Override
    public void removeRemovedListener(String cacheName, RemovedListener listener, boolean sync) {
       getListenerOrThrow(cacheName, sync).remove(listener);
+      removeListener(cacheName, sync);
    }
 
    @Override
    public void removeEvictedListener(String cacheName, EvictedListener listener, boolean sync) {
       getListenerOrThrow(cacheName, sync).remove(listener);
+      removeListener(cacheName, sync);
    }
 
    @Override
    public void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync) {
       getListenerOrThrow(cacheName, sync).remove(listener);
+      removeListener(cacheName, sync);
    }
 
-   protected static class GenericListener {
+   public static class GenericListener {
       CopyOnWriteArraySet<CreatedListener> created = new CopyOnWriteArraySet<CreatedListener>();
       CopyOnWriteArraySet<UpdatedListener> updated = new CopyOnWriteArraySet<UpdatedListener>();
       CopyOnWriteArraySet<RemovedListener> removed = new CopyOnWriteArraySet<RemovedListener>();
@@ -97,9 +100,7 @@ public abstract class AbstractInfinispanListeners<T extends AbstractInfinispanLi
          created.remove(listener);
       }
 
-      public void remove(UpdatedListener listener) {
-         updated.remove(listener);
-      }
+      public void remove(UpdatedListener listener) { updated.remove(listener); }
 
       public void remove(RemovedListener listener) {
          removed.remove(listener);
@@ -112,5 +113,12 @@ public abstract class AbstractInfinispanListeners<T extends AbstractInfinispanLi
       public void remove(ExpiredListener listener) {
          expired.remove(listener);
       }
+
+      public boolean isEmpty() {
+         return created.isEmpty() && updated.isEmpty() &&
+                removed.isEmpty() && evicted.isEmpty() &&
+                expired.isEmpty();
+      }
+
    }
 }

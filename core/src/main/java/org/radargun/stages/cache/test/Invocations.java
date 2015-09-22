@@ -8,6 +8,7 @@ import org.radargun.stages.test.Invocation;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.ConditionalOperations;
+import org.radargun.traits.TemporalOperations;
 import org.radargun.traits.Queryable;
 
 /**
@@ -68,6 +69,70 @@ public class Invocations {
       @Override
       public Operation operation() {
          return BasicOperations.PUT;
+      }
+
+      @Override
+      public Operation txOperation() {
+         return TX;
+      }
+   }
+
+   public static final class PutWithLifespan implements Invocation {
+      private final static Operation TX = TemporalOperations.PUT_WITH_LIFESPAN.derive("TX");
+      private final TemporalOperations.Cache cache;
+      private final Object key;
+      private final Object value;
+      private final long lifespan;
+
+      public PutWithLifespan(TemporalOperations.Cache cache, Object key, Object value, long lifespan) {
+         this.cache = cache;
+         this.key = key;
+         this.value = value;
+         this.lifespan = lifespan;
+      }
+
+      @Override
+      public Object invoke() {
+         cache.put(key, value, lifespan);
+         return null;
+      }
+
+      @Override
+      public Operation operation() {
+         return TemporalOperations.PUT_WITH_LIFESPAN;
+      }
+
+      @Override
+      public Operation txOperation() {
+         return TX;
+      }
+   }
+
+   public static final class PutWithLifespanAndMaxIdle implements Invocation {
+      private final static Operation TX = TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
+      private final TemporalOperations.Cache cache;
+      private final Object key;
+      private final Object value;
+      private final long lifespan;
+      private final long maxIdle;
+
+      public PutWithLifespanAndMaxIdle(TemporalOperations.Cache cache, Object key, Object value, long lifespan, long maxIdle) {
+         this.cache = cache;
+         this.key = key;
+         this.value = value;
+         this.lifespan = lifespan;
+         this.maxIdle = maxIdle;
+      }
+
+      @Override
+      public Object invoke() {
+         cache.put(key, value, lifespan, maxIdle);
+         return null;
+      }
+
+      @Override
+      public Operation operation() {
+         return TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE;
       }
 
       @Override
@@ -156,6 +221,64 @@ public class Invocations {
       }
    }
 
+   public static final class GetAndPutWithLifespan implements Invocation {
+      private final static Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN.derive("TX");
+      private final TemporalOperations.Cache cache;
+      private final Object key;
+      private final Object value;
+      private final long lifespan;
+
+      public GetAndPutWithLifespan(TemporalOperations.Cache cache, Object key, Object value, long lifespan) {
+         this.cache = cache;
+         this.key = key;
+         this.value = value;
+         this.lifespan = lifespan;
+      }
+
+      @Override
+      public Object invoke() {
+         return cache.getAndPut(key, value, lifespan);
+      }
+
+      @Override
+      public Operation operation() { return TemporalOperations.GET_AND_PUT_WITH_LIFESPAN; }
+
+      @Override
+      public Operation txOperation() {
+         return TX;
+      }
+   }
+
+   public static final class GetAndPutWithLifespanAndMaxIdle implements Invocation {
+      private final static Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
+      private final TemporalOperations.Cache cache;
+      private final Object key;
+      private final Object value;
+      private final long lifespan;
+      private final long maxIdle;
+
+      public GetAndPutWithLifespanAndMaxIdle(TemporalOperations.Cache cache, Object key, Object value, long lifespan, long maxIdle) {
+         this.cache = cache;
+         this.key = key;
+         this.value = value;
+         this.lifespan = lifespan;
+         this.maxIdle = maxIdle;
+      }
+
+      @Override
+      public Object invoke() {
+         return cache.getAndPut(key, value, lifespan, maxIdle);
+      }
+
+      @Override
+      public Operation operation() { return TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE; }
+
+      @Override
+      public Operation txOperation() {
+         return TX;
+      }
+   }
+
    public static final class GetAndRemove implements Invocation {
       private final static Operation TX = BasicOperations.GET_AND_REMOVE.derive("TX");
       private final BasicOperations.Cache cache;
@@ -202,6 +325,68 @@ public class Invocations {
       @Override
       public Operation operation() {
          return ConditionalOperations.PUT_IF_ABSENT;
+      }
+
+      @Override
+      public Operation txOperation() {
+         return TX;
+      }
+   }
+
+   public static final class PutIfAbsentWithLifespan implements Invocation {
+      private final static Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN.derive("TX");
+      private final TemporalOperations.Cache cache;
+      private final Object key;
+      private final Object value;
+      private final long lifespan;
+
+      public PutIfAbsentWithLifespan(TemporalOperations.Cache cache, Object key, Object value, long lifespan) {
+         this.cache = cache;
+         this.key = key;
+         this.value = value;
+         this.lifespan = lifespan;
+      }
+
+      @Override
+      public Object invoke() {
+         return cache.putIfAbsent(key, value, lifespan);
+      }
+
+      @Override
+      public Operation operation() {
+         return TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN;
+      }
+
+      @Override
+      public Operation txOperation() {
+         return TX;
+      }
+   }
+
+   public static final class PutIfAbsentWithLifespanAndMaxIdle implements Invocation {
+      private final static Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
+      private final TemporalOperations.Cache cache;
+      private final Object key;
+      private final Object value;
+      private final long lifespan;
+      private final long maxIdle;
+
+      public PutIfAbsentWithLifespanAndMaxIdle(TemporalOperations.Cache cache, Object key, Object value, long lifespan, long maxIdle) {
+         this.cache = cache;
+         this.key = key;
+         this.value = value;
+         this.lifespan = lifespan;
+         this.maxIdle = maxIdle;
+      }
+
+      @Override
+      public Object invoke() {
+         return cache.putIfAbsent(key, value, lifespan, maxIdle);
+      }
+
+      @Override
+      public Operation operation() {
+         return TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE;
       }
 
       @Override
