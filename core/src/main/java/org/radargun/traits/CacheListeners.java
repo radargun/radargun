@@ -50,6 +50,9 @@ public interface CacheListeners {
    void removeEvictedListener(String cacheName, EvictedListener listener, boolean sync);
    void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync);
 
+   void registerWithCache(String cacheName, boolean sync);
+   void unregisterFromCache(String cacheName, boolean sync);
+
    interface CreatedListener<K, V> {
       void created(K key, V value);
    }

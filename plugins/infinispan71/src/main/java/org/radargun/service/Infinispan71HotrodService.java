@@ -13,7 +13,7 @@ import org.radargun.config.PropertyDelegate;
 public class Infinispan71HotrodService extends Infinispan70HotrodService {
 
    @PropertyDelegate(prefix = "nearCaching.")
-   private NearCaching nearCachingConfig = new NearCaching();
+   protected NearCaching nearCachingConfig = new NearCaching();
    
    protected ConfigurationBuilder getDefaultHotRodConfig() {
       ConfigurationBuilder cb = super.getDefaultHotRodConfig();

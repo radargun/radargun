@@ -6,11 +6,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.radargun.traits.CacheListeners;
 
-public abstract class AbstractInfinispanListeners<T extends AbstractInfinispanListeners.GenericListener> implements
-      CacheListeners {
-
-   protected final ConcurrentMap<String, T> syncListeners = new ConcurrentHashMap<String, T>();
-   protected final ConcurrentMap<String, T> asyncListeners = new ConcurrentHashMap<String, T>();
+public abstract class AbstractInfinispanListeners implements CacheListeners {
 
    protected abstract GenericListener getOrCreateListener(String cacheName, boolean sync);
 
@@ -66,7 +62,7 @@ public abstract class AbstractInfinispanListeners<T extends AbstractInfinispanLi
       getListenerOrThrow(cacheName, sync).remove(listener);
    }
 
-   protected static class GenericListener {
+   public static class GenericListener {
       CopyOnWriteArraySet<CreatedListener> created = new CopyOnWriteArraySet<CreatedListener>();
       CopyOnWriteArraySet<UpdatedListener> updated = new CopyOnWriteArraySet<UpdatedListener>();
       CopyOnWriteArraySet<RemovedListener> removed = new CopyOnWriteArraySet<RemovedListener>();

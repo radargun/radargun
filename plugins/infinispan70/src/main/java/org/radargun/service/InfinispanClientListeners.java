@@ -16,6 +16,8 @@ import org.infinispan.client.hotrod.event.ClientCacheEntryRemovedEvent;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
+import static org.radargun.service.AbstractInfinispanListeners.GenericListener;
+
 /**
  * 
  * Generic Infinispan remote listeners, similar to {@link InfinispanCacheListeners}.
@@ -23,8 +25,7 @@ import org.radargun.logging.LogFactory;
  * @author vjuranek
  * 
  */
-public class InfinispanClientListeners extends
-      AbstractInfinispanListeners<InfinispanClientListeners.GenericClientListener> {
+public class InfinispanClientListeners extends AbstractInfinispanListeners {
 
    protected static final Log log = LogFactory.getLog(InfinispanClientListeners.class);
   
@@ -44,7 +45,6 @@ public class InfinispanClientListeners extends
       GenericClientListener listenerContainer = listeners.putIfAbsent(cacheName, new GenericClientListener());
       if (listenerContainer == null) {
          listenerContainer = listeners.get(cacheName);
-         remoteManager.getCache().addClientListener(listenerContainer);
       }
       return listenerContainer;
    }
@@ -84,6 +84,24 @@ public class InfinispanClientListeners extends
    @Override
    public void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync) {
       throw new UnsupportedOperationException("HotRod doesn't support client listeners for expiration");
+   }
+
+   @Override
+   public void registerWithCache(String cacheName, boolean sync) {
+      if (cacheName == null)
+         cacheName = service.getRemoteManager(false).getCache().getName();
+      //register the listener with both cache managers because different operations use
+      //different CMs, see HotRodOperations class for details
+      service.getRemoteManager(false).getCache(cacheName).addClientListener(getOrCreateListener(cacheName, sync));
+      service.getRemoteManager(true).getCache(cacheName).addClientListener(getOrCreateListener(cacheName, sync));
+   }
+
+   @Override
+   public void unregisterFromCache(String cacheName, boolean sync) {
+      if (cacheName == null)
+         cacheName = service.getRemoteManager(false).getCache().getName();
+      service.getRemoteManager(false).getCache(cacheName).removeClientListener(getListenerOrThrow(cacheName, sync));
+      service.getRemoteManager(true).getCache(cacheName).removeClientListener(getListenerOrThrow(cacheName, sync));
    }
 
    @ClientListener
