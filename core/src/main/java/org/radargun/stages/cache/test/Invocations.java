@@ -415,9 +415,9 @@ public class Invocations {
 
    public static final class Query implements Invocation {
       protected static final Operation TX = Queryable.QUERY.derive("TX");
-      private final Queryable.Query query;
+      private final org.radargun.traits.Query query;
 
-      public Query(Queryable.Query query) {
+      public Query(org.radargun.traits.Query query) {
          this.query = query;
       }
 
