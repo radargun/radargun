@@ -1,0 +1,359 @@
+<benchmark xmlns="urn:radargun:benchmark:2.1">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+
+   <clusters>
+      <cluster size="4" />
+   </clusters>
+
+   <configurations>
+      <!--<config name="JDG 6.5 dist">-->
+         <!--<setup plugin="jdg65">-->
+            <!--<embedded xmlns="urn:radargun:plugins:jdg65:2.0"-->
+                      <!--file="query-batch-indexed.xml"-->
+                      <!--cache="dist_lucene_repl" />-->
+         <!--</setup>-->
+      <!--</config>-->
+      <config name="${dist.config.name:JDG_6.6_dist}">
+         <setup plugin="${plugin.name:jdg66}">
+            <embedded xmlns="urn:radargun:plugins:jdg66:2.0"
+                      file="query-no-tx-indexed.xml"
+                      cache="dist_lucene_repl"
+                      preregistered-query-classes="org.radargun.query.NumberObject,org.radargun.query.TextObject,org.radargun.query.ComposedObject"/>
+         </setup>
+      </config>
+      <!--<config name="JDG 6.5 repl">-->
+         <!--<setup plugin="jdg65">-->
+            <!--<embedded xmlns="urn:radargun:plugins:jdg65:2.0"-->
+                      <!--file="query-batch-indexed.xml"-->
+                      <!--cache="repl_ram" />-->
+         <!--</setup>-->
+      <!--</config>-->
+      <config name="${repl.config.name:JDG_6.6_repl}">
+         <setup plugin="${plugin.name:jdg66}">
+            <embedded xmlns="urn:radargun:plugins:jdg66:2.0"
+                      file="query-no-tx-indexed.xml"
+                      cache="repl_ram"
+                      preregistered-query-classes="org.radargun.query.NumberObject,org.radargun.query.TextObject,org.radargun.query.ComposedObject"/>
+         </setup>
+      </config>
+   </configurations>
+
+   <scenario>
+      <jvm-monitor-start />
+      <service-start/>
+
+      <define var="entry.count" value="${entry.count:100000}"/>
+      <define var="warmup.duration" value="${warmup.duration:5m}" />
+      <define var="test.duration" value="${test.duration:3m}" />
+
+      <load-data num-entries="#{${entry.count} / 2}" entry-size="0" seed="12345"
+                 transaction-size="${tx.size:500}" use-transactions="${tx.type:NEVER}">
+         <value-generator>
+            <composed>
+               <class>org.radargun.query.ComposedObject</class>
+               <text-class>org.radargun.query.TextObject</text-class>
+               <number-class>org.radargun.query.NumberObject</number-class>
+               <nested-collection-size>1</nested-collection-size>
+               <number-object-generator>
+                  <number-object int-min="0" int-max="123455"/>
+               </number-object-generator>
+               <single-word-generator>
+                  <single-word file="${animals.file:/test-data/animals.txt}" />
+               </single-word-generator>
+            </composed>
+         </value-generator>
+      </load-data>
+
+      <load-data num-entries="#{${entry.count} / 2 - 10}" key-id-offset="#{${entry.count} / 2 + 10}" entry-size="0" seed="12345"
+                 transaction-size="${tx.size:500}" use-transactions="${tx.type:NEVER}">
+         <value-generator>
+            <composed>
+               <class>org.radargun.query.ComposedObject</class>
+               <text-class>org.radargun.query.TextObject</text-class>
+               <number-class>org.radargun.query.NumberObject</number-class>
+               <nested-collection-size>1</nested-collection-size>
+               <number-object-generator>
+                  <number-object int-min="123466" int-max="999999" />
+               </number-object-generator>
+               <single-word-generator>
+                  <single-word file="${animals.file:/test-data/animals.txt}" />
+               </single-word-generator>
+            </composed>
+         </value-generator>
+      </load-data>
+
+      <load-data num-entries="1" key-id-offset="#{${entry.count} / 2}" entry-size="0" seed="12345"
+                 transaction-size="${tx.size:500}" use-transactions="${tx.type:NEVER}">
+         <value-generator>
+            <composed>
+               <class>org.radargun.query.ComposedObject</class>
+               <text-class>org.radargun.query.TextObject</text-class>
+               <number-class>org.radargun.query.NumberObject</number-class>
+               <nested-collection-size>1</nested-collection-size>
+               <number-object-generator>
+                  <number-object int-min="123456" int-max="123456" />
+               </number-object-generator>
+               <single-word-generator>
+                  <single-word words="Wildfly" />
+               </single-word-generator>
+            </composed>
+         </value-generator>
+      </load-data>
+
+      <repeat from="1" to="9">
+         <load-data seed="12345" key-id-offset="#{${entry.count} / 2 + ${repeat.counter}}" num-entries="1"
+                    num-threads="1" entry-size="0" transaction-size="${tx.size:500}" use-transactions="${tx.type:NEVER}"
+                    max-load-attempts="50">
+            <value-generator>
+               <composed>
+                  <class>org.radargun.query.ComposedObject</class>
+                  <text-class>org.radargun.query.TextObject</text-class>
+                  <number-class>org.radargun.query.NumberObject</number-class>
+                  <nested-collection-size>1</nested-collection-size>
+                  <number-object-generator>
+                     <number-object int-min="#{123456 + ${repeat.counter}}" int-max="#{123456 + ${repeat.counter}}" />
+                  </number-object-generator>
+                  <single-word-generator>
+                     <single-word file="${animals.file:/test-data/animals.txt}" />
+                  </single-word-generator>
+               </composed>
+            </value-generator>
+         </load-data>
+      </repeat>
+
+      <sleep time="${sleep.time:10s}"/>
+
+      <query test-name="warmup"
+             duration="${warmup.duration}"
+             num-threads-per-node="10"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <lt path="numberObject.doubleValue" value="double 0.00001" />
+            <le path="numberObject.doubleValue" value="double 0.00001" />
+            <lt path="numberObject.integerValue" value="int 1" />
+            <le path="numberObject.integerValue" value="int 2" />
+            <eq path="numberObject.doubleValue" value="double 0" />
+            <lt path="numberObjectList.doubleValue" value="double 0.00001" />
+            <le path="numberObjectList.doubleValue" value="double 0.00001" />
+            <lt path="numberObjectList.integerValue" value="int 1" />
+            <le path="numberObjectList.integerValue" value="int 2" />
+            <eq path="numberObjectList.doubleValue" value="double 0" />
+            <any>
+               <eq path="numberObject.integerValue" value="1000000" />
+               <gt path="numberObject.integerValue" value="999999" />
+               <gt path="numberObject.doubleValue" value="double 0.99999" />
+               <eq path="numberObjectList.integerValue" value="1000000" />
+               <gt path="numberObjectList.integerValue" value="999999" />
+               <gt path="numberObjectList.doubleValue" value="double 0.99999" />
+            </any>
+         </conditions>
+      </query>
+
+      <query test-name="warmup"
+             duration="${warmup.duration}"
+             num-threads-per-node="10"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+            >
+         <conditions>
+            <eq path="textObject.text" value="string Wildfly" />
+            <like path="textObject.text" value="Wildfly" />
+            <like path="textObject.text" value="W%d_l%" />
+            <eq path="textObjectList.text" value="string Wildfly" />
+            <like path="textObjectList.text" value="Wildfly" />
+            <like path="textObjectList.text" value="W%d_l%" />
+         </conditions>
+      </query>
+
+      <query test-name="int-single-eq"
+             duration="${test.duration}"
+             num-threads-per-node="10"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <eq path="numberObject.integerValue" value="int 123456"/>
+         </conditions>
+      </query>
+
+      <query test-name="int-between"
+             duration="${test.duration}"
+             num-threads-per-node="10"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <between path="numberObject.integerValue" lower-bound="int 123456" upper-bound="123465" />
+         </conditions>
+      </query>
+
+      <query test-name="int-range"
+             duration="${test.duration}"
+             num-threads-per-node="10"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <ge path="numberObject.integerValue" value="int 123456"/>
+            <le path="numberObject.integerValue" value="int 123465"/>
+         </conditions>
+      </query>
+
+      <query test-name="int-composed-single-eq"
+             duration="${test.duration}"
+             num-threads-per-node="10"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <eq path="numberObjectList.integerValue" value="int 123456"/>
+         </conditions>
+      </query>
+
+      <query test-name="int-composed-between"
+             duration="${test.duration}"
+             num-threads-per-node="10"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <between path="numberObjectList.integerValue" lower-bound="int 123456" upper-bound="123465" />
+         </conditions>
+      </query>
+
+      <query test-name="int-composed-range"
+             duration="${test.duration}"
+             num-threads-per-node="10"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <ge path="numberObjectList.integerValue" value="int 123456"/>
+            <le path="numberObjectList.integerValue" value="int 123465"/>
+         </conditions>
+      </query>
+
+      <query test-name="string-exact"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <eq path="textObject.text" value="string Wildfly" />
+         </conditions>
+      </query>
+
+      <query test-name="string-no-match"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <eq path="textObject.text" value="string NonExistent" />
+         </conditions>
+      </query>
+
+      <query test-name="string-like-exact"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <like path="textObject.text" value="Wildfly" />
+         </conditions>
+      </query>
+
+      <query test-name="string-like-regexp"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <like path="textObject.text" value="W%d_l%" />
+         </conditions>
+      </query>
+
+      <query test-name="string-composed-exact"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <eq path="textObjectList.text" value="string Wildfly" />
+         </conditions>
+      </query>
+
+      <query test-name="string-composed-no-match"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <eq path="textObjectList.text" value="string NonExistent" />
+         </conditions>
+      </query>
+
+      <query test-name="string-composed-like-exact"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <like path="textObjectList.text" value="Wildfly" />
+         </conditions>
+      </query>
+
+      <query test-name="string-composed-like-regexp"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.ComposedObject"
+             use-transactions="${tx.type:NEVER}"
+             >
+         <conditions>
+            <like path="textObjectList.text" value="W%d_l%" />
+         </conditions>
+      </query>
+   </scenario>
+
+   <reports>
+      <reporter type="html">
+         <html xmlns="urn:radargun:reporters:reporter-default:2.0"
+               target-dir="${env.PWD}/results/html">
+         </html>
+      </reporter>
+      <reporter type="csv">
+         <csv xmlns="urn:radargun:reporters:reporter-default:2.0"
+              target-dir="${env.PWD}/results/csv"/>
+      </reporter>
+      <reporter type="serialized">
+         <serialized xmlns="urn:radargun:reporters:reporter-default:2.0"
+                     target-dir="${env.PWD}/results/serialized" />
+      </reporter>
+      <reporter type="perfrepo">
+         <perfrepo xmlns="urn:radargun:reporters:reporter-perfrepo:2.1">
+            <perf-repo-host>${perfrepo.host:perfrepo.mw.lab.eng.bos.redhat.com}</perf-repo-host>
+            <perf-repo-port>${perfrepo.port:8080}</perf-repo-port>
+            <perf-repo-auth>${perfrepo.auth:bWNpbWJvcmE6amRn}</perf-repo-auth>
+            <perf-repo-test>${perfrepo.test:jdg_rg_query_test}</perf-repo-test>
+            <perf-repo-tag>${perfrepo.tag:lib;composed}</perf-repo-tag>
+            <exclude-attachments>true</exclude-attachments>
+            <exclude-build-params>true</exclude-build-params>
+            <exclude-normalized-configs>true</exclude-normalized-configs>
+            <separate-test-iterations>true</separate-test-iterations>
+            <metric-name-mapping>
+               <map operation="Queryable.Query" representation="throughput-net" to="jdg_rg_query_throughput"/>
+            </metric-name-mapping>
+         </perfrepo>
+      </reporter>
+   </reports>
+
+</benchmark>

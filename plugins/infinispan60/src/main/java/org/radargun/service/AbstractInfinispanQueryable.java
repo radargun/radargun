@@ -16,9 +16,9 @@ import org.radargun.traits.Queryable;
 public abstract class AbstractInfinispanQueryable implements Queryable {
 
    protected static class QueryBuilderImpl implements QueryBuilder {
-      private final QueryFactory factory;
-      private final org.infinispan.query.dsl.QueryBuilder builder;
-      private FilterConditionContext context;
+      protected final QueryFactory factory;
+      protected final org.infinispan.query.dsl.QueryBuilder builder;
+      protected FilterConditionContext context;
 
       public QueryBuilderImpl(QueryFactory factory, Class<?> clazz) {
          this.factory = factory;
@@ -30,14 +30,14 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
          this.builder = null;
       }
 
-      private FilterConditionEndContext getEndContext(String attribute) {
+      protected FilterConditionEndContext getEndContext(Attribute attribute) {
          FilterConditionEndContext endContext;
          if (context != null) {
-            endContext = context.and().having(attribute);
+            endContext = context.and().having(attribute.attribute);
          } else if (builder != null) {
-            endContext = builder.having(attribute);
+            endContext = builder.having(attribute.attribute);
          } else {
-            endContext = factory.having(attribute);
+            endContext = factory.having(attribute.attribute);
          }
          return endContext;
       }
@@ -48,55 +48,55 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       }
 
       @Override
-      public QueryBuilder eq(String attribute, Object value) {
+      public QueryBuilder eq(Attribute attribute, Object value) {
          context = getEndContext(attribute).eq(value);
          return this;
       }
 
       @Override
-      public QueryBuilder lt(String attribute, Object value) {
+      public QueryBuilder lt(Attribute attribute, Object value) {
          context = getEndContext(attribute).lt(value);
          return this;
       }
 
       @Override
-      public QueryBuilder le(String attribute, Object value) {
+      public QueryBuilder le(Attribute attribute, Object value) {
          context = getEndContext(attribute).lte(value);
          return this;
       }
 
       @Override
-      public QueryBuilder gt(String attribute, Object value) {
+      public QueryBuilder gt(Attribute attribute, Object value) {
          context = getEndContext(attribute).gt(value);
          return this;
       }
 
       @Override
-      public QueryBuilder ge(String attribute, Object value) {
+      public QueryBuilder ge(Attribute attribute, Object value) {
          context = getEndContext(attribute).gte(value);
          return this;
       }
 
       @Override
-      public QueryBuilder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
+      public QueryBuilder between(Attribute attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
          context = getEndContext(attribute).between(lowerBound, upperBound).includeLower(lowerInclusive).includeUpper(upperInclusive);
          return this;
       }
 
       @Override
-      public QueryBuilder isNull(String attribute) {
+      public QueryBuilder isNull(Attribute attribute) {
          context = getEndContext(attribute).isNull();
          return this;
       }
 
       @Override
-      public QueryBuilder like(String attribute, String pattern) {
+      public QueryBuilder like(Attribute attribute, String pattern) {
          context = getEndContext(attribute).like(pattern);
          return this;
       }
 
       @Override
-      public QueryBuilder contains(String attribute, Object value) {
+      public QueryBuilder contains(Attribute attribute, Object value) {
          context = getEndContext(attribute).contains(value);
          return this;
       }
@@ -141,18 +141,27 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       }
 
       @Override
-      public QueryBuilder orderBy(String attribute, SortOrder order) {
+      public QueryBuilder orderBy(Attribute attribute, SortOrder order) {
          if (builder == null) throw new IllegalArgumentException("You have to call orderBy() on root query builder!");
-         builder.orderBy(attribute, order == SortOrder.ASCENDING ?
+         builder.orderBy(attribute.attribute, order == SortOrder.ASCENDING ?
                org.infinispan.query.dsl.SortOrder.ASC : org.infinispan.query.dsl.SortOrder.DESC);
          return this;
       }
 
       @Override
-      public QueryBuilder projection(String... attributes) {
+      public QueryBuilder projection(Attribute... attributes) {
          if (builder == null) throw new IllegalArgumentException("You have to call projection() on root query builder!");
-         builder.setProjection(attributes);
+         String[] stringAttributes = new String[attributes.length];
+         for (int i = 0; i < attributes.length; i++) {
+            stringAttributes[i] = attributes[i].attribute;
+         }
+         builder.setProjection(stringAttributes);
          return this;
+      }
+
+      @Override
+      public QueryBuilder groupBy(String... attributes) {
+         throw new RuntimeException("Grouping is not implemented in this version of infinispan.");
       }
 
       @Override
@@ -172,7 +181,7 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       @Override
       public Query build() {
          if (builder == null) throw new IllegalArgumentException("You have to call build() on root query builder!");
-         return new QueryImpl(context.toBuilder().build());
+         return new QueryImpl(builder.build());
       }
    }
 

@@ -1,0 +1,467 @@
+<benchmark xmlns="urn:radargun:benchmark:2.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+
+   <clusters>
+      <!--<cluster size="2" />-->
+      <cluster size="4" />
+      <!--<cluster size="8" />-->
+   </clusters>
+
+   <configurations>
+      <!--<config name="Hazelcast dist">-->
+         <!--<setup plugin="hazelcast3">-->
+            <!--<hazelcast xmlns="urn:radargun:plugins:hazelcast3:2.0"-->
+                       <!--file="dist-sync-object-format.xml">-->
+               <!--<indices>-->
+                  <!--<index path="text" />-->
+               <!--</indices>-->
+            <!--</hazelcast>-->
+         <!--</setup>-->
+      <!--</config>-->
+
+      <!--<config name="Infinispan 7.0 dist">-->
+         <!--<setup plugin="infinispan70">-->
+            <!--<embedded xmlns="urn:radargun:plugins:infinispan70:2.0"-->
+                      <!--file="query-batch-indexed.xml"-->
+                      <!--cache="dist_lucene_repl" />-->
+         <!--</setup>-->
+      <!--</config>-->
+      <!--<config name="Infinispan 7.0 repl">-->
+         <!--<setup plugin="infinispan70">-->
+            <!--<embedded xmlns="urn:radargun:plugins:infinispan70:2.0"-->
+                      <!--file="query-batch-indexed.xml"-->
+                      <!--cache="repl_ram" />-->
+         <!--</setup>-->
+      <!--</config>-->
+      <!--<config name="Infinispan 7.0 local">-->
+         <!--<setup plugin="infinispan70" file="query-no-tx-indexless.xml">-->
+            <!--<property name="cache">local_indexless</property>-->
+         <!--</setup>-->
+      <!--</config>-->
+
+      <!--<config name="JDG 6.3 dist">-->
+         <!--<setup plugin="jdg63">-->
+            <!--<embedded xmlns="urn:radargun:plugins:jdg63:2.0"-->
+                      <!--file="query-batch-indexed.xml"-->
+                      <!--cache="dist_lucene_repl" />-->
+         <!--</setup>-->
+      <!--</config>-->
+      <!--<config name="JDG 6.3 repl">-->
+         <!--<setup plugin="jdg63">-->
+            <!--<embedded xmlns="urn:radargun:plugins:jdg63:2.0"-->
+                      <!--file="query-batch-indexed.xml"-->
+                      <!--cache="repl_ram" />-->
+         <!--</setup>-->
+      <!--</config>-->
+      <!--<config name="JDG 6.3 local">-->
+         <!--<setup plugin="jdg63" file="query-no-tx-indexless.xml">-->
+            <!--<property name="cache">local_indexless</property>-->
+         <!--</setup>-->
+      <!--</config>-->
+
+      <!--<config name="Coherence 12 dist POF">-->
+         <!--<setup plugin="coherence12">-->
+            <!--<coherence xmlns="urn:radargun:plugins:coherence12:2.0"-->
+                       <!--file="dist.xml" />-->
+         <!--</setup>-->
+      <!--</config>-->
+      <!--<config name="Coherence 12 repl POF">-->
+         <!--<setup plugin="coherence12">-->
+            <!--<coherence xmlns="urn:radargun:plugins:coherence12:2.0"-->
+                       <!--file="repl.xml" />-->
+         <!--</setup>-->
+      <!--</config>-->
+      <!--<config name="Coherence 12 local">-->
+         <!--<setup plugin="coherence12" file="local.xml" />-->
+      <!--</config>-->
+      <!--<config name="JDG 6.5 dist">-->
+         <!--<setup plugin="jdg65">-->
+            <!--<embedded xmlns="urn:radargun:plugins:jdg65:2.0"-->
+                      <!--file="query-batch-indexed.xml"-->
+                      <!--cache="dist_lucene_repl" />-->
+         <!--</setup>-->
+      <!--</config>-->
+      <config name="${dist.config.name:JDG_6.6_dist}">
+         <setup plugin="${plugin.name:infinispan80}">
+            <embedded xmlns="urn:radargun:plugins:jdg66:2.0"
+                      file="query-no-tx-indexed.xml"
+                      cache="dist_lucene_repl" />
+         </setup>
+      </config>
+      <!--<config name="JDG 6.5 repl">-->
+         <!--<setup plugin="jdg65">-->
+            <!--<embedded xmlns="urn:radargun:plugins:jdg65:2.0"-->
+                      <!--file="query-batch-indexed.xml"-->
+                      <!--cache="repl_ram" />-->
+         <!--</setup>-->
+      <!--</config>-->
+      <config name="${repl.config.name:JDG_6.6_repl}">
+         <setup plugin="${plugin.name:infinispan80}">
+            <embedded xmlns="urn:radargun:plugins:jdg66:2.0"
+                      file="query-no-tx-indexed.xml"
+                      cache="repl_ram" />
+         </setup>
+      </config>
+   </configurations>
+
+   <scenario>
+      <jvm-monitor-start />
+      <service-start/>
+
+      <define var="singleword.entries" value="${singleword.entries:100000}" />
+      <define var="haystack.entries" value="${haystack.entries:10000}" />
+      <define var="warmup.duration" value="${warmup.duration:5m}" />
+      <define var="test.duration" value="${test.duration:1m}" />
+      <define var="animals.file" value="${env.PWD}/etc/radargun/query/animals.txt" />
+      <!--<define var="warmup.duration" value="10s" />-->
+      <!--<define var="test.duration" value="10s" />-->
+      <!--<define var="animals.file" value="/home/rvansa/workspace/etc/radargun/query/animals.txt" />-->
+
+      <!-- Preload the cache deterministically -->
+      <load-data seed="12345" num-entries="${singleword.entries}" num-threads="10" entry-size="0"
+                 transaction-size="${tx.size:0}" max-load-attempts="50" use-transactions="${tx.type:NEVER}">
+         <value-generator>
+            <single-word file="${animals.file}" />
+         </value-generator>
+      </load-data>
+
+      <!-- Override key 500000 the word Wildfly; this is not in animals.txt -->
+      <load-data num-entries="1" num-threads="1" entry-size="0" key-id-offset="#{${singleword.entries} / 2}"
+                 max-load-attempts="50" use-transactions="${tx.type:NEVER}">
+         <value-generator>
+            <single-word words="Wildfly" />
+         </value-generator>
+      </load-data>
+      <sleep time="${sleep.time:10s}"/>
+      <check-cache-data entry-size="0" num-entries="${singleword.entries}" />
+
+      <!-- Warmup -->
+      <query test-name="warmup"
+             num-threads-per-node="40"
+             duration="${warmup.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <any>
+               <eq path="text" value="string Wildfly" />
+               <like path="text" value="%W_l%y"/>
+               <all>
+                  <like path="text" value="Wild%" />
+                  <like path="text" value="%fly" />
+               </all>
+            </any>
+         </conditions>
+      </query>
+
+
+      <!-- Logic does only queries - we don't have to specify any generator -->
+      <query test-name="exact"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <eq path="text" value="string Wildfly" />
+         </conditions>
+      </query>
+
+      <query test-name="no-match"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <eq path="text" value="string NonExistent" />
+         </conditions>
+      </query>
+
+      <query test-name="like-exact"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="Wildfly" />
+         </conditions>
+      </query>
+
+      <query test-name="like-regexp"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="W%d_l%" />
+         </conditions>
+      </query>
+
+      <!--<repeat from="1" to="${repeat.to:10}">-->
+      <clear-cache/>
+      <load-data seed="12345" num-entries="${haystack.entries}" num-threads="10"
+                 entry-size="10"
+                 transaction-size="${tx.size:0}" use-transactions="${tx.type:NEVER}" max-load-attempts="50">
+         <value-generator>
+            <word-in-haystack file="${animals.file}"/>
+         </value-generator>
+      </load-data>
+      <load-data seed="12345" num-entries="1" num-threads="1" entry-size="10"
+                 key-id-offset="#{${haystack.entries} / 2}" use-transactions="${tx.type:NEVER}" max-load-attempts="50">
+         <value-generator>
+            <word-in-haystack words="Wildfly"/>
+         </value-generator>
+      </load-data>
+      <sleep time="${sleep.time:10s}"/>
+
+      <query test-name="like-haystack-contains" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wildfly%"/>
+         </conditions>
+      </query>
+
+      <!-- like-haystack-starts and like-haystack-ends probably won't return any results as there's
+           very low probability that the haystack generator would put them on beginning/end -->
+      <query test-name="like-haystack-starts" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="Wildfly%"/>
+         </conditions>
+      </query>
+
+      <query test-name="like-haystack-ends" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wildfly"/>
+         </conditions>
+      </query>
+
+      <query test-name="like-haystack-regexp" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wi_d%ly%"/>
+         </conditions>
+      </query>
+
+      <!--<repeat from="1" to="${repeat.to:10}">-->
+      <clear-cache/>
+      <load-data seed="12345" num-entries="${haystack.entries}" num-threads="10"
+                 entry-size="80"
+                 transaction-size="${tx.size:0}" use-transactions="${tx.type:NEVER}" max-load-attempts="50">
+         <value-generator>
+            <word-in-haystack file="${animals.file}"/>
+         </value-generator>
+      </load-data>
+      <load-data seed="12345" num-entries="1" num-threads="1" entry-size="80"
+                 key-id-offset="#{${haystack.entries} / 2}" use-transactions="${tx.type:NEVER}" max-load-attempts="50">
+         <value-generator>
+            <word-in-haystack words="Wildfly"/>
+         </value-generator>
+      </load-data>
+      <sleep time="${sleep.time:10s}"/>
+
+      <query test-name="like-haystack-contains" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wildfly%"/>
+         </conditions>
+      </query>
+
+      <!-- like-haystack-starts and like-haystack-ends probably won't return any results as there's
+           very low probability that the haystack generator would put them on beginning/end -->
+      <query test-name="like-haystack-starts" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="Wildfly%"/>
+         </conditions>
+      </query>
+
+      <query test-name="like-haystack-ends" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wildfly"/>
+         </conditions>
+      </query>
+
+      <query test-name="like-haystack-regexp" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wi_d%ly%"/>
+         </conditions>
+      </query>
+
+
+      <clear-cache />
+      <load-data seed="12345" num-entries="${haystack.entries}" num-threads="10" entry-size="640"
+                 transaction-size="${tx.size:0}" use-transactions="${tx.type:NEVER}" max-load-attempts="50">
+         <value-generator>
+            <word-in-haystack file="${animals.file}" />
+         </value-generator>
+      </load-data>
+      <load-data seed="12345" num-entries="1" num-threads="1" entry-size="640"
+                 key-id-offset="#{${haystack.entries} / 2}" use-transactions="${tx.type:NEVER}" max-load-attempts="50">
+         <value-generator>
+            <word-in-haystack words="Wildfly"/>
+         </value-generator>
+      </load-data>
+      <sleep time="${sleep.time:10s}"/>
+
+      <query test-name="like-haystack-contains" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wildfly%" />
+         </conditions>
+      </query>
+
+      <!-- like-haystack-starts and like-haystack-ends probably won't return any results as there's
+           very low probability that the haystack generator would put them on beginning/end -->
+      <query test-name="like-haystack-starts" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="Wildfly%" />
+         </conditions>
+      </query>
+
+      <query test-name="like-haystack-ends" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wildfly" />
+         </conditions>
+      </query>
+
+      <query test-name="like-haystack-regexp" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wi_d%ly%" />
+         </conditions>
+      </query>
+
+      <clear-cache />
+      <load-data seed="12345" num-entries="${haystack.entries}" num-threads="10" entry-size="5120"
+                 transaction-size="${tx.size:0}" use-transactions="${tx.type:NEVER}" max-load-attempts="50">
+         <value-generator>
+            <word-in-haystack file="${animals.file}" />
+         </value-generator>
+      </load-data>
+      <load-data seed="12345" num-entries="1" num-threads="1" entry-size="5120"
+                 key-id-offset="#{${haystack.entries} / 2}" use-transactions="${tx.type:NEVER}" max-load-attempts="50">
+         <value-generator>
+            <word-in-haystack words="Wildfly"/>
+         </value-generator>
+      </load-data>
+      <sleep time="${sleep.time:10s}"/>
+
+      <query test-name="like-haystack-contains" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wildfly%" />
+         </conditions>
+      </query>
+
+      <!-- like-haystack-starts and like-haystack-ends probably won't return any results as there's
+           very low probability that the haystack generator would put them on beginning/end -->
+      <query test-name="like-haystack-starts" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="Wildfly%" />
+         </conditions>
+      </query>
+
+      <query test-name="like-haystack-ends" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wildfly" />
+         </conditions>
+      </query>
+
+      <query test-name="like-haystack-regexp" amend-test="true"
+             num-threads-per-node="10"
+             duration="${test.duration}"
+             query-object-class="org.radargun.query.TextObject"
+             use-transactions="${tx.type:NEVER}">
+         <conditions>
+            <like path="text" value="%Wi_d%ly%" />
+         </conditions>
+      </query>
+      <!--</repeat>-->
+   </scenario>
+
+   <cleanup heap-dump-dir="/home_local/tmp"/>
+
+   <reports>
+      <reporter type="html">
+         <html xmlns="urn:radargun:reporters:reporter-default:2.0"
+               target-dir="${env.PWD}/results/html" />
+      </reporter>
+      <reporter type="csv">
+         <csv xmlns="urn:radargun:reporters:reporter-default:2.0"
+               target-dir="${env.PWD}/results/csv" />
+      </reporter>
+      <reporter type="serialized">
+         <serialized xmlns="urn:radargun:reporters:reporter-default:2.0"
+               target-dir="${env.PWD}/results/serialized" />
+      </reporter>
+      <reporter type="perfrepo">
+         <perfrepo xmlns="urn:radargun:reporters:reporter-perfrepo:2.1">
+            <perf-repo-host>${perfrepo.host:perfrepo.mw.lab.eng.bos.redhat.com}</perf-repo-host>
+            <perf-repo-port>${perfrepo.port:8080}</perf-repo-port>
+            <perf-repo-auth>${perfrepo.auth:bWNpbWJvcmE6amRn}</perf-repo-auth>
+            <perf-repo-test>${perfrepo.test:jdg_rg_query_test}</perf-repo-test>
+            <perf-repo-tag>${perfrepo.tag:lib;text}</perf-repo-tag>
+            <exclude-attachments>true</exclude-attachments>
+            <exclude-build-params>true</exclude-build-params>
+            <exclude-normalized-configs>true</exclude-normalized-configs>
+            <separate-test-iterations>true</separate-test-iterations>
+            <metric-name-mapping>
+               <map operation="Queryable.Query" representation="throughput-net" to="jdg_rg_query_throughput"/>
+            </metric-name-mapping>
+         </perfrepo>
+      </reporter>
+   </reports>
+
+</benchmark>
