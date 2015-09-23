@@ -27,30 +27,73 @@ public interface Queryable {
 
    /**
     * The instance should be reusable, but not thread-safe.
+    * Conditions defined after groupBy call are meant to be part of the HAVING clause.
     */
    interface QueryBuilder {
       QueryBuilder subquery();
-      QueryBuilder eq(String attribute, Object value);
-      QueryBuilder lt(String attribute, Object value);
-      QueryBuilder le(String attribute, Object value);
-      QueryBuilder gt(String attribute, Object value);
-      QueryBuilder ge(String attribute, Object value);
-      QueryBuilder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive);
-      QueryBuilder isNull(String attribute);
-      QueryBuilder like(String attribute, String pattern);
-      QueryBuilder contains(String attribute, Object value);
+      QueryBuilder eq(Attribute attribute, Object value);
+      QueryBuilder lt(Attribute attribute, Object value);
+      QueryBuilder le(Attribute attribute, Object value);
+      QueryBuilder gt(Attribute attribute, Object value);
+      QueryBuilder ge(Attribute attribute, Object value);
+      QueryBuilder between(Attribute Attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive);
+      QueryBuilder isNull(Attribute attribute);
+      QueryBuilder like(Attribute attribute, String pattern);
+      QueryBuilder contains(Attribute attribute, Object value);
       QueryBuilder not(QueryBuilder subquery);
       QueryBuilder any(QueryBuilder... subqueries);
-      QueryBuilder orderBy(String attribute, SortOrder order);
-      QueryBuilder projection(String... attribute);
+      QueryBuilder orderBy(Attribute attribute, SortOrder order);
+      QueryBuilder projection(Attribute... attribute);
+      QueryBuilder groupBy(String[] attribute);
       QueryBuilder offset(long offset);
       QueryBuilder limit(long limit);
       Query build();
    }
 
+   class Attribute {
+      public String attribute;
+      public AggregationFunction function;
+
+      public Attribute(String attribute) {
+         this(attribute, AggregationFunction.NONE);
+      }
+
+      public Attribute(String attribute, AggregationFunction function) {
+         this.attribute = attribute;
+         this.function = function;
+      }
+   }
+
    enum SortOrder {
       ASCENDING,
       DESCENDING
+   }
+
+   enum AggregationFunction {
+      NONE,
+      COUNT,
+      SUM,
+      AVG,
+      MIN,
+      MAX;
+
+      public static AggregationFunction parseFunction(String string) {
+         AggregationFunction result;
+         if (string.equalsIgnoreCase("COUNT")) {
+            result = Queryable.AggregationFunction.COUNT;
+         } else if (string.equalsIgnoreCase("AVG")) {
+            result = Queryable.AggregationFunction.AVG;
+         } else if (string.equalsIgnoreCase("SUM")) {
+            result = Queryable.AggregationFunction.SUM;
+         } else if (string.equalsIgnoreCase("MIN")) {
+            result = Queryable.AggregationFunction.MIN;
+         } else if (string.equalsIgnoreCase("MAX")) {
+            result = Queryable.AggregationFunction.MAX;
+         } else {
+            throw new IllegalArgumentException("Aggregation function not recognized: " + string);
+         }
+         return result;
+      }
    }
 
    /**

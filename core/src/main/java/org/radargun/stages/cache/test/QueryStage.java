@@ -30,6 +30,10 @@ import org.radargun.utils.ReflexiveConverters;
 /**
  * Executes Queries using Infinispan-Query API against the cache.
  *
+ * The conditions field are the standard conditions that you would expect in a WHERE clause.
+ * Having refers to the conditions which follow the GROUP BY clause, and can make use
+ * of aggregations.
+ *
  * @author Anna Manukyan
  */
 @Stage(doc = "Stage which executes a Query using Infinispan-query API against all keys in the cache.")
@@ -40,13 +44,21 @@ public class QueryStage extends TestStage {
    @Property(optional = false, doc = "Conditions used in the query", complexConverter = ConditionConverter.class)
    private List<Condition> conditions;
 
-   @Property(doc = "Use projection instead of returning full object. Default is without projection.")
-   private String[] projection;
+   @Property(doc = "Having conditions used in the query", complexConverter = ConditionConverter.class)
+   private List<Condition> having;
+
+   @Property(doc = "Use projection with or without aggregation instead of returning full object, in form " +
+         "[count|sum|avg|min|max](attribute1),attribute2, etc. Default is without projection.",
+         converter = ProjectionConverter.class)
+   private List<Queryable.Attribute> projection;
 
    @Property(doc = "Use sorting order, in form [attribute[:(ASC|DESC)]][,attribute[:(ASC|DESC)]]*. " +
          "Without specifying ASC or DESC the sort order defaults to ASC. Default is unordereded.",
          converter = SortConverter.class)
    private List<SortElement> orderBy;
+
+   @Property(doc = "Use grouping, in form [attribute][,attribute]*. Default is without grouping.")
+   private String[] groupBy;
 
    @Property(doc = "Offset in the results. Default is none.")
    private long offset = -1;
@@ -132,11 +144,19 @@ public class QueryStage extends TestStage {
          }
          if (orderBy != null) {
             for (SortElement se : orderBy) {
-               builder.orderBy(se.attribute, se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
+               builder.orderBy(new Queryable.Attribute(se.attribute), se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
             }
          }
          if (projection != null) {
-            builder.projection(projection);
+            builder.projection(projection.toArray(new Queryable.Attribute[projection.size()]));
+         }
+         if (groupBy != null) {
+            builder.groupBy(groupBy);
+            if (having != null) {
+               for (Condition condition : having) {
+                  condition.apply(builder);
+               }
+            }
          }
          if (offset >= 0) {
             builder.offset(offset);
@@ -183,8 +203,8 @@ public class QueryStage extends TestStage {
    }
 
    private static abstract class PathCondition extends Condition {
-      @Property(doc = "Target path (field on the queried object or path through embedded objects)", optional = false)
-      public String path;
+      @Property(doc = "Target path (field on the queried object or path through embedded objects)", optional = false, converter = AttributeConverter.class)
+      public Queryable.Attribute path;
    }
 
    @DefinitionElement(name = "eq", doc = "Target is equal to value")
@@ -319,7 +339,7 @@ public class QueryStage extends TestStage {
       }
    }
 
-   @DefinitionElement(name = "all", doc = "All inner conditions are false", resolveType = DefinitionElement.ResolveType.PASS_BY_DEFINITION)
+   @DefinitionElement(name = "all", doc = "All inner conditions are true", resolveType = DefinitionElement.ResolveType.PASS_BY_DEFINITION)
    private static class All extends Condition {
       @Property(name = "", doc = "Inner conditions", complexConverter = ConditionConverter.class)
       public final List<Condition> subs = new ArrayList<Condition>();
@@ -386,6 +406,78 @@ public class QueryStage extends TestStage {
       @Override
       public String allowedPattern(Type type) {
          return "[0-9a-zA-Z_]*(:ASC|:DESC)?(,\\s*[0-9a-zA-Z_]*(:ASC|:DESC)?)*";
+      }
+   }
+
+   private static class ProjectionConverter implements Converter<List<Queryable.Attribute>> {
+      @Override
+      public List<Queryable.Attribute> convert(String string, Type type) {
+         String[] parts = string.split(",", 0);
+         ArrayList<Queryable.Attribute> result = new ArrayList<>(parts.length);
+         for (String part : parts) {
+            int leftBrace = part.indexOf('(');
+            int rightBrace = part.indexOf(')');
+            if (leftBrace < 0) {
+               result.add(new Queryable.Attribute(part.trim()));
+            } else {
+               String fnc = part.substring(0, leftBrace).trim();
+               Queryable.AggregationFunction function = Queryable.AggregationFunction.parseFunction(fnc);
+               result.add(new Queryable.Attribute(part.substring(leftBrace + 1, rightBrace).trim(), function));
+            }
+         }
+         return result;
+      }
+
+      @Override
+      public String convertToString(List<Queryable.Attribute> value) {
+         if (value == null) return "<no projections>";
+         StringBuilder sb = new StringBuilder();
+         for (Queryable.Attribute a : value) {
+            if (a.function != Queryable.AggregationFunction.NONE) {
+               sb.append(a.function).append('(').append(a.attribute).append("), ");
+            } else {
+               sb.append(a.attribute).append(", ");
+            }
+
+         }
+         return sb.toString();
+      }
+
+      @Override
+      public String allowedPattern(Type type) {
+         // (AGG_FUNCTION(ATR) | ATR)? (,\\s* AGG_FUNCTION(ATR) | ATR)*
+         return "(((COUNT|SUM|AVG|MIN|MAX)\\([0-9a-zA-Z_]*\\))|[0-9a-zA-Z_]*)?(,\\s*(((COUNT|SUM|AVG|MIN|MAX)\\([0-9a-zA-Z_]*\\))|[0-9a-zA-Z_]*))*";
+      }
+   }
+
+   private static class AttributeConverter implements Converter<Queryable.Attribute> {
+      @Override
+      public Queryable.Attribute convert(String string, Type type) {
+         int leftBrace = string.indexOf('(');
+         int rightBrace = string.indexOf(')');
+         if (leftBrace < 0) {
+            return new Queryable.Attribute(string.trim());
+         } else {
+            String fnc = string.substring(0, leftBrace).trim();
+            Queryable.AggregationFunction function = Queryable.AggregationFunction.parseFunction(fnc);
+            return new Queryable.Attribute(string.substring(leftBrace + 1, rightBrace).trim(), function);
+         }
+      }
+
+      @Override
+      public String convertToString(Queryable.Attribute value) {
+         if (value == null) return "<no attribute>";
+         if (value.function != Queryable.AggregationFunction.NONE) {
+            return value.function + "(" + value.attribute + ")";
+         } else {
+            return value.attribute;
+         }
+      }
+
+      @Override
+      public String allowedPattern(Type type) {
+         // (AGG_FUNCTION(ATR) | ATR)
+         return "(((COUNT|SUM|AVG|MIN|MAX)\\([0-9a-zA-Z_]*\\))|[0-9a-zA-Z_]*)";
       }
    }
 }
