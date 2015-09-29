@@ -44,7 +44,7 @@ public class ServiceStartStage extends AbstractServiceStartStage {
    @Property(doc = "The number of slaves that should be up after all slaves are started. Applicable only with "
          + "validateCluster=true. Default is all slaves in the cluster where this stage will be executed (in the "
          + "same site in case of multi-site configuration).")
-   private Integer expectNumSlaves = -1;
+   private Integer expectNumSlaves = null;
 
    @Property(doc = "Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.")
    private Set<Integer> reachable = null;
@@ -73,11 +73,6 @@ public class ServiceStartStage extends AbstractServiceStartStage {
 
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
             + ". This slave's index is: " + slaveState.getSlaveIndex());
-      
-      // If no value of expectNumSlaves is supplied, then use the slaves where the stage is executing as a default
-      if (expectNumSlaves == -1) {
-         expectNumSlaves = getExecutingSlaves().size();
-      }
       
       try {
          LifecycleHelper.start(slaveState, validateCluster, expectNumSlaves, clusterFormationTimeout, reachable);
