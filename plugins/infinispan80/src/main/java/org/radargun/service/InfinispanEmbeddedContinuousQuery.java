@@ -8,11 +8,11 @@ import org.radargun.traits.Queryable;
 
 public class InfinispanEmbeddedContinuousQuery implements ContinuousQuery {
 
-    protected final Infinispan70EmbeddedService service;
+    protected final InfinispanEmbeddedService service;
     private org.infinispan.query.continuous.ContinuousQuery<Object, Object> cq;
     private IspnContinuousQueryListener ispnCqListener;
 
-    public InfinispanEmbeddedContinuousQuery(Infinispan70EmbeddedService service) {
+    public InfinispanEmbeddedContinuousQuery(InfinispanEmbeddedService service) {
         this.service = service;
     }
 
