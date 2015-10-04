@@ -18,6 +18,11 @@ public class Infinispan80EmbeddedService extends Infinispan70EmbeddedService {
       return new InfinispanEmbeddedContinuousQuery(this);
    }
 
+   @ProvidesTrait
+   public Infinispan80Streamable createStreamable() {
+      return new Infinispan80Streamable(this);
+   }
+
    @Destroy
    public void destroy() {
       Utils.shutdownAndWait(scheduledExecutor);

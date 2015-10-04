@@ -505,9 +505,10 @@ public class RandomDataStage extends AbstractDistStage {
          if (!shareWords) {
             totalWordCount = maxWordCount * slaveState.getClusterSize();
          }
-         log.info(totalWordCount + " words were generated with a maximum length of " + maxWordLength + " characters");
+         log.info("Up to " + totalWordCount + " words were generated with a maximum length of " + maxWordLength + " characters");
       }
       if (!clusterWordCount.isEmpty()) {
+         log.info(clusterWordCount.size() + "words were actually generated");
          log.info("--------------------");
          log.info("Cluster wide word count:");
          for (String key : clusterWordCount.keySet()) {
