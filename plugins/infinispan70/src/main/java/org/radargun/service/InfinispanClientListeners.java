@@ -45,6 +45,8 @@ public class InfinispanClientListeners extends AbstractInfinispanListeners {
       GenericClientListener listenerContainer = listeners.putIfAbsent(cacheName, new GenericClientListener());
       if (listenerContainer == null) {
          listenerContainer = listeners.get(cacheName);
+         service.getRemoteManager(false).getCache(cacheName).addClientListener(listenerContainer);
+         service.getRemoteManager(true).getCache(cacheName).addClientListener(listenerContainer);
       }
       return listenerContainer;
    }
@@ -87,21 +89,12 @@ public class InfinispanClientListeners extends AbstractInfinispanListeners {
    }
 
    @Override
-   public void registerWithCache(String cacheName, boolean sync) {
-      if (cacheName == null)
-         cacheName = service.getRemoteManager(false).getCache().getName();
-      //register the listener with both cache managers because different operations use
-      //different CMs, see HotRodOperations class for details
-      service.getRemoteManager(false).getCache(cacheName).addClientListener(getOrCreateListener(cacheName, sync));
-      service.getRemoteManager(true).getCache(cacheName).addClientListener(getOrCreateListener(cacheName, sync));
-   }
-
-   @Override
-   public void unregisterFromCache(String cacheName, boolean sync) {
-      if (cacheName == null)
-         cacheName = service.getRemoteManager(false).getCache().getName();
-      service.getRemoteManager(false).getCache(cacheName).removeClientListener(getListenerOrThrow(cacheName, sync));
-      service.getRemoteManager(true).getCache(cacheName).removeClientListener(getListenerOrThrow(cacheName, sync));
+   public void removeListener(String cacheName, boolean sync) {
+      GenericClientListener listener = getListenerOrThrow(cacheName, sync);
+      if (listener.isEmpty()) {
+         service.getRemoteManager(false).getCache(cacheName).removeClientListener(listener);
+         service.getRemoteManager(true).getCache(cacheName).removeClientListener(listener);
+      }
    }
 
    @ClientListener

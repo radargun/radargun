@@ -30,6 +30,8 @@ public class Infinispan80ClientListeners extends InfinispanClientListeners {
       if (listenerContainer == null) {
          listenerContainer = new GenericInfinispan80ClientListener();
          listeners.put(cacheName, listenerContainer);
+         service.getRemoteManager(false).getCache(cacheName).addClientListener(listenerContainer);
+         service.getRemoteManager(true).getCache(cacheName).addClientListener(listenerContainer);
       }
       return listenerContainer;
    }
@@ -59,6 +61,7 @@ public class Infinispan80ClientListeners extends InfinispanClientListeners {
    @Override
    public void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync) {
       getListenerOrThrow(cacheName, sync).remove(listener);
+      removeListener(cacheName, sync);
    }
 
 }

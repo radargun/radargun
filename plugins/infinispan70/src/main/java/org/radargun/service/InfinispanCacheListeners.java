@@ -61,6 +61,7 @@ public class InfinispanCacheListeners extends
             generic = new AsyncCacheListener();
             asyncListeners.put(cacheName, generic);
          }
+         service.getCache(cacheName).getAdvancedCache().addListener(generic);
       }
       return generic;
    }
@@ -97,13 +98,10 @@ public class InfinispanCacheListeners extends
    }
 
    @Override
-   public void registerWithCache(String cacheName, boolean sync) {
-      service.getCache(cacheName).getAdvancedCache().addListener(getOrCreateListener(cacheName, sync));
-   }
-
-   @Override
-   public void unregisterFromCache(String cacheName, boolean sync) {
-      service.getCache(cacheName).getAdvancedCache().removeListener(getListenerOrThrow(cacheName, sync));
+   public void removeListener(String cacheName, boolean sync) {
+      GenericCacheListener listener = getListenerOrThrow(cacheName, sync);
+      if (listener.isEmpty())
+         service.getCache(cacheName).getAdvancedCache().removeListener(listener);
    }
 
    protected static abstract class GenericCacheListener extends AbstractInfinispanListeners.GenericListener {

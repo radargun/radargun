@@ -12,6 +12,8 @@ public abstract class AbstractInfinispanListeners implements CacheListeners {
 
    protected abstract GenericListener getListenerOrThrow(String cacheName, boolean sync);
 
+   protected abstract void removeListener(String cacheName, boolean sync);
+
    @Override
    public void addCreatedListener(String cacheName, CreatedListener listener, boolean sync) {
       getOrCreateListener(cacheName, sync).add(listener);
@@ -40,26 +42,31 @@ public abstract class AbstractInfinispanListeners implements CacheListeners {
    @Override
    public void removeCreatedListener(String cacheName, CreatedListener listener, boolean sync) {
       getListenerOrThrow(cacheName, sync).remove(listener);
+      removeListener(cacheName, sync);
    }
 
    @Override
    public void removeUpdatedListener(String cacheName, UpdatedListener listener, boolean sync) {
       getListenerOrThrow(cacheName, sync).remove(listener);
+      removeListener(cacheName, sync);
    }
 
    @Override
    public void removeRemovedListener(String cacheName, RemovedListener listener, boolean sync) {
       getListenerOrThrow(cacheName, sync).remove(listener);
+      removeListener(cacheName, sync);
    }
 
    @Override
    public void removeEvictedListener(String cacheName, EvictedListener listener, boolean sync) {
       getListenerOrThrow(cacheName, sync).remove(listener);
+      removeListener(cacheName, sync);
    }
 
    @Override
    public void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync) {
       getListenerOrThrow(cacheName, sync).remove(listener);
+      removeListener(cacheName, sync);
    }
 
    public static class GenericListener {
@@ -93,9 +100,7 @@ public abstract class AbstractInfinispanListeners implements CacheListeners {
          created.remove(listener);
       }
 
-      public void remove(UpdatedListener listener) {
-         updated.remove(listener);
-      }
+      public void remove(UpdatedListener listener) { updated.remove(listener); }
 
       public void remove(RemovedListener listener) {
          removed.remove(listener);
@@ -108,5 +113,12 @@ public abstract class AbstractInfinispanListeners implements CacheListeners {
       public void remove(ExpiredListener listener) {
          expired.remove(listener);
       }
+
+      public boolean isEmpty() {
+         return created.isEmpty() && updated.isEmpty() &&
+                removed.isEmpty() && evicted.isEmpty() &&
+                expired.isEmpty();
+      }
+
    }
 }

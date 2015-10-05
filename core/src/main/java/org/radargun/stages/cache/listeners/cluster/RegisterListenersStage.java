@@ -187,7 +187,6 @@ public class RegisterListenersStage extends AbstractDistStage {
       if (expiredListener != null && isSupported(Type.EXPIRED)) {
          listenersTrait.addExpiredListener(null, expiredListener, sync);
       }
-      listenersTrait.registerWithCache(null, sync);
    }
 
    public void unregisterListeners() {
@@ -211,7 +210,6 @@ public class RegisterListenersStage extends AbstractDistStage {
       if (expiredListener != null && isSupported(Type.EXPIRED)) {
          listenersTrait.removeExpiredListener(null, expiredListener, sync);
       }
-      listenersTrait.unregisterFromCache(null, sync);
    }
 
    private boolean isSupported(Type type) {
