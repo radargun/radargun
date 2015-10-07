@@ -143,6 +143,10 @@ public class Utils {
       return new Scanner(is, "UTF-8").useDelimiter("\\A").next();
    }
 
+   public static String readAsString(InputStream is) throws IOException {
+      return new Scanner(is, "UTF-8").useDelimiter("\\A").next();
+   }
+
    public static String sanitizePath(String pluginPath) {
       if (pluginPath.startsWith("~/")) {
          pluginPath = System.getProperty("user.home") + File.separator + pluginPath.substring(2);
