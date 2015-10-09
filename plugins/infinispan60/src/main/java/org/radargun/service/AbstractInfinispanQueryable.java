@@ -6,6 +6,7 @@ import java.util.List;
 import org.infinispan.query.dsl.FilterConditionContext;
 import org.infinispan.query.dsl.FilterConditionEndContext;
 import org.infinispan.query.dsl.QueryFactory;
+import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 
 /**
@@ -183,13 +184,17 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
          this.query = query;
       }
 
+      public org.infinispan.query.dsl.Query getDelegatingQuery() {
+         return query;
+      }
+
       @Override
       public QueryResult execute() {
          return new QueryResultImpl(query.list());
       }
    }
 
-   protected static class QueryResultImpl implements QueryResult {
+   protected static class QueryResultImpl implements Query.QueryResult {
       private final List<Object> list;
 
       public QueryResultImpl(List<Object> list) {
