@@ -14,13 +14,24 @@
    <name>JDG 6.6.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>6.4.0-redhat-SNAPSHOT</version.infinispan>
-      <version.infinispan.public>7.2.4.Final</version.infinispan.public>
-      <version.jbossts>4.17.15.Final-redhat-5</version.jbossts>
+      <version.infinispan>${jdg66.infinispan.version}</version.infinispan>
+      <version.infinispan.public>8.0.1.Final</version.infinispan.public>
+      <version.jbossts>4.17.29.Final-redhat-1</version.jbossts>
       <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
    </properties>
 
    <profiles>
+      <profile>
+         <id>jdg66-infinispan-version-default</id>
+         <activation>
+            <property>
+               <name>!jdg66.infinispan.version</name>
+            </property>
+         </activation>
+         <properties>
+            <version.infinispan>6.4.0.Final-redhat-1</version.infinispan>
+         </properties>
+      </profile>
       <profile>
          <id>demos</id>
          <activation>
