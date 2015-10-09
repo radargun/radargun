@@ -53,18 +53,4 @@ public interface Queryable {
       DESCENDING
    }
 
-   /**
-    * Non-reusable and non-thread-safe query object.
-    */
-   interface Query {
-      QueryResult execute();
-   }
-
-   /**
-    * Data retrieved by the query
-    */
-   interface QueryResult {
-      int size();
-      Collection values();
-   }
 }

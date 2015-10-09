@@ -17,6 +17,7 @@ import com.hazelcast.query.Predicate;
 import com.hazelcast.query.Predicates;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.OptimizedMap;
 import org.radargun.utils.Projections;
@@ -205,7 +206,7 @@ public class HazelcastQueryable implements Queryable {
       }
    }
 
-   private class HazelcastQueryResult implements QueryResult {
+   private class HazelcastQueryResult implements Query.QueryResult {
       private final Collection values;
 
       public HazelcastQueryResult(Collection values, int offset, String[] projection) {
