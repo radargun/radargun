@@ -127,12 +127,22 @@ public class ContinuousQueryStage extends AbstractQueryStage {
         }
         if (orderBy != null) {
             for (SortElement se : orderBy) {
-                builder.orderBy(se.attribute, se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
+                builder.orderBy(new Queryable.SelectExpression(se.attribute), se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
             }
         }
-        if (projection != null) {
-            builder.projection(projection);
-        }
+       if (projection != null) {
+          Queryable.SelectExpression[] projections = new Queryable.SelectExpression[projection.length];
+          for (int i = 0; i < projection.length; i++) {
+             projections[i] = new Queryable.SelectExpression(projection[i]);
+          }
+          builder.projection(projections);
+       } else if (aggregatedProjection != null && !aggregatedProjection.isEmpty()) {
+          Queryable.SelectExpression[] projections = new Queryable.SelectExpression[aggregatedProjection.size()];
+          for (int i = 0; i < aggregatedProjection.size(); i++) {
+             projections[i] = aggregatedProjection.get(i).toSelectExpression();
+          }
+          builder.projection(projections);
+       }
         if (offset >= 0) {
             builder.offset(offset);
         }

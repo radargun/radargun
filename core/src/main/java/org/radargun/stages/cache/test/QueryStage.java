@@ -1,32 +1,20 @@
 package org.radargun.stages.cache.test;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
-import org.radargun.config.Converter;
-import org.radargun.config.DefinitionElement;
-import org.radargun.config.Property;
-import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.test.OperationLogic;
 import org.radargun.stages.test.Stressor;
-import org.radargun.stages.test.TestStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
-import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
-import org.radargun.utils.NumberConverter;
-import org.radargun.utils.ObjectConverter;
 import org.radargun.utils.Projections;
-import org.radargun.utils.ReflexiveConverters;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Executes Queries using Infinispan-Query API against the cache.
@@ -106,11 +94,29 @@ public class QueryStage extends AbstractQueryStage {
          }
          if (orderBy != null) {
             for (SortElement se : orderBy) {
-               builder.orderBy(se.attribute, se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
+               builder.orderBy(new Queryable.SelectExpression(se.attribute), se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
             }
          }
          if (projection != null) {
-            builder.projection(projection);
+            Queryable.SelectExpression[] projections = new Queryable.SelectExpression[projection.length];
+            for (int i = 0; i < projection.length; i++) {
+               projections[i] = new Queryable.SelectExpression(projection[i]);
+            }
+            builder.projection(projections);
+         } else if (aggregatedProjection != null && !aggregatedProjection.isEmpty()) {
+            Queryable.SelectExpression[] projections = new Queryable.SelectExpression[aggregatedProjection.size()];
+            for (int i = 0; i < aggregatedProjection.size(); i++) {
+               projections[i] = aggregatedProjection.get(i).toSelectExpression();
+            }
+            builder.projection(projections);
+         }
+         if (groupBy != null) {
+            builder.groupBy(groupBy);
+            if (having != null) {
+               for (Condition condition : having) {
+                  condition.apply(builder);
+               }
+            }
          }
          if (offset >= 0) {
             builder.offset(offset);
