@@ -12,11 +12,15 @@
    <artifactId>plugin-hazelcast3</artifactId>
    <name>Hazelcast 3.x plugin for RadarGun</name>
 
+   <properties>
+      <version.hazelcast>3.5.3</version.hazelcast>
+   </properties>
+
    <dependencies>
       <dependency>
          <groupId>com.hazelcast</groupId>
          <artifactId>hazelcast</artifactId>
-         <version>3.4.2</version>
+         <version>${version.hazelcast}</version>
       </dependency>
       <dependency>
          <groupId>org.radargun</groupId>
