@@ -3,6 +3,7 @@ package org.radargun.service;
 import java.util.Collections;
 import java.util.List;
 
+import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.MembershipListener;
 import org.radargun.Service;
@@ -36,6 +37,11 @@ public class Hazelcast3Service extends HazelcastService {
    @ProvidesTrait
    public HazelcastQueryable createQueryable() {
       return new HazelcastQueryable(this);
+   }
+
+   @ProvidesTrait
+   public HazelcastContinuousQuery createContinuousQuery() {
+      return new HazelcastContinuousQuery(this);
    }
 
    @Override
