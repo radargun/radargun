@@ -182,31 +182,11 @@ public class HazelcastQueryable implements Queryable {
             if (limit < 0) finalPredicate = new PagingPredicate(predicate, comparator, Integer.MAX_VALUE);
             else finalPredicate = new PagingPredicate(predicate, comparator, limit);
          }
-         return new HazelcastQuery(map, finalPredicate, offset, projection);
+         return new HazelcastQuery(HazelcastQueryable.this, map, finalPredicate, offset, projection);
       }
    }
 
-   private class HazelcastQuery implements Query {
-      private final IMap map;
-      private final Predicate predicate;
-      private final int offset;
-      private final String[] projection;
-
-      public HazelcastQuery(IMap map, Predicate predicate, int offset, String[] projection) {
-         this.map = map;
-         this.predicate = predicate;
-         this.offset = offset;
-         this.projection = projection;
-      }
-
-      @Override
-      public QueryResult execute() {
-         if (predicate == null) return new HazelcastQueryResult(map.values(), offset, projection);
-         else return new HazelcastQueryResult(map.values(predicate), offset, projection);
-      }
-   }
-
-   private class HazelcastQueryResult implements Query.QueryResult {
+   public static class HazelcastQueryResult implements Query.QueryResult {
       private final Collection values;
 
       public HazelcastQueryResult(Collection values, int offset, String[] projection) {
