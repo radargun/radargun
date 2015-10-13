@@ -163,7 +163,7 @@ public class ContinuousQueryStage extends AbstractQueryStage {
     public void unregisterCQ(SlaveState slaveState) {
         ContinuousQuery.ContinuousQueryListener cqListener = (ContinuousQuery.ContinuousQueryListener) slaveState.get(ContinuousQuery.LISTENER);
         if (cqListener != null) {
-            continuousQueryTrait.removeContinuousQuery(cqListener);
+            continuousQueryTrait.removeContinuousQuery(cacheName, cqListener);
         }
     }
 

@@ -25,7 +25,7 @@ public class InfinispanEmbeddedContinuousQuery implements ContinuousQuery {
     }
 
     @Override
-    public void removeContinuousQuery(ContinuousQueryListener cqListener) {
+    public void removeContinuousQuery(String cacheName, ContinuousQueryListener cqListener) {
         if (cq != null && ispnCqListener != null) {
             cq.removeContinuousQueryListener(ispnCqListener);
         }
