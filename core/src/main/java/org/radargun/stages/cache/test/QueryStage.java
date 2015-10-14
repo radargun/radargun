@@ -89,8 +89,10 @@ public class QueryStage extends AbstractQueryStage {
             throw new IllegalArgumentException("Cannot load class " + queryObjectClass, e);
          }
          builder = queryable.getBuilder(null, clazz);
-         for (Condition condition : conditions) {
-            condition.apply(builder);
+         if (conditions != null) {
+            for (Condition condition : conditions) {
+               condition.apply(builder);
+            }
          }
          if (orderBy != null) {
             for (SortElement se : orderBy) {
