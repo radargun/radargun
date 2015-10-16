@@ -76,6 +76,9 @@ public class LegacyStressor extends Thread {
 
    private void runInternal() {
       try {
+         // the operation selector needs to be started before any #next() call
+         operationSelector.start();
+
          while (!stage.isTerminated()) {
             boolean started = stage.isStarted();
             if (started) {
@@ -95,10 +98,9 @@ public class LegacyStressor extends Thread {
             }
          }
 
-         operationSelector.start();
          completion.start();
          int i = 0;
-         for (; ; ) {
+         while (!stage.isTerminated()) {
             Operation operation = operationSelector.next(random);
             if (!completion.moreToRun()) break;
             try {

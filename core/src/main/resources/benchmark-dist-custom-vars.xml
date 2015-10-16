@@ -44,13 +44,13 @@
 
       <!-- Preload the cache with data -->
       <load-data num-entries="5000"/>
-      <!-- 5 threads will execute total of 100,000 random requests against the default cache ('testCache')-->
+      <!-- 5 threads will execute random requests against the default cache ('testCache') for 1 minute-->
       <!-- As the test is called 'warmup', performance statistics won't be reported -->
-      <basic-operations-test test-name="warmup" num-requests="100000" num-threads-per-node="5">
+      <basic-operations-legacy-test test-name="warmup" duration="1m" num-threads-per-node="5">
          <key-selector>
             <concurrent-keys total-entries="5000" />
          </key-selector>
-      </basic-operations-test>
+      </basic-operations-legacy-test>
 
       <!-- Remove all data from the default cache -->
       <clear-cache />
@@ -63,7 +63,7 @@
       <define value="1000, 2000, 10000" var="entries"/>
 
       <repeat from="0" to="#{${threads}.size - 1}" inc="1">
-         <basic-operations-test test-name="stress-test" amend-test="true"
+         <basic-operations-legacy-test test-name="stress-test" amend-test="true"
                                 duration="1m" num-threads-per-node="#{${threads}.get(${repeat.counter})}">
             <key-selector>
                <concurrent-keys total-entries="#{${entries}.get(${repeat.counter})}"/>
@@ -76,7 +76,7 @@
                   </operation-stats>
                </default>
             </statistics>
-         </basic-operations-test>
+         </basic-operations-legacy-test>
       </repeat>
 
       <!-- Stop JVM monitoring -->

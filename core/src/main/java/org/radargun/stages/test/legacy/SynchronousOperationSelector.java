@@ -32,11 +32,7 @@ public class SynchronousOperationSelector implements OperationSelector {
          Thread.currentThread().interrupt();
          return null;
       }
-      Operation next = delegate.next(random);
-      if (next == null) {
-         phaser.arriveAndDeregister();
-      }
-      return next;
+      return delegate.next(random);
    }
 
    @Override

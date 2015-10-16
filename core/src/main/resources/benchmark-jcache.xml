@@ -31,20 +31,20 @@
       <jvm-monitor-start />
 
       <load-data num-entries="5000"/>
-      <basic-operations-test test-name="warmup" num-requests="100000" total-threads="10">
+      <basic-operations-legacy-test test-name="warmup" duration="1m" total-threads="10">
          <key-selector>
             <concurrent-keys total-entries="5000" />
          </key-selector>
-      </basic-operations-test>
+      </basic-operations-legacy-test>
 
       <load-data num-entries="10000"/>
 
-      <basic-operations-test test-name="stress-test"
+      <basic-operations-legacy-test test-name="stress-test"
                              duration="1m" total-threads="10">
          <key-selector>
             <concurrent-keys total-entries="10000"/>
          </key-selector>
-      </basic-operations-test>
+      </basic-operations-legacy-test>
    </scenario>
 
    <!-- How the statistics are reported -->
