@@ -21,6 +21,7 @@ import org.radargun.reporting.Reporter;
 import org.radargun.reporting.ReporterHelper;
 import org.radargun.reporting.Timeline;
 import org.radargun.stages.control.RepeatStage;
+import org.radargun.state.MasterListener;
 import org.radargun.state.MasterState;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
@@ -69,6 +70,9 @@ public class Master {
          for (Configuration configuration : masterConfig.getConfigurations()) {
             log.info("Started benchmarking configuration '" + configuration.name + "'");
             state.setConfigName(configuration.name);
+            for (MasterListener listener : state.getListeners()) {
+               listener.beforeConfiguration();
+            }
             long configStart = TimeService.currentTimeMillis();
             for (Cluster cluster : masterConfig.getClusters()) {
                int clusterSize = cluster.getSize();
@@ -82,6 +86,9 @@ public class Master {
                connection.sendScenario(masterConfig.getScenario(), clusterSize);
                state.setCluster(cluster);
                state.setReport(new Report(configuration, cluster));
+               for (MasterListener listener : state.getListeners()) {
+                  listener.beforeCluster();
+               }
                long clusterStart = TimeService.currentTimeMillis();
                int stageCount = masterConfig.getScenario().getStageCount();
                int scenarioDestroyId = stageCount - 2;
@@ -102,6 +109,9 @@ public class Master {
                   executeStage(configuration, cluster, scenarioCleanupId);
                }
                log.info("Finished scenario on " + cluster + " in " + Utils.getMillisDurationString(TimeService.currentTimeMillis() - clusterStart));
+               for (MasterListener listener : state.getListeners()) {
+                  listener.afterCluster();
+               }
                state.getReport().addTimelines(connection.receiveTimelines(clusterSize));
                reports.add(state.getReport());
                if (exitFlag) {
@@ -110,6 +120,9 @@ public class Master {
             }
             log.info("Finished benchmarking configuration '" + configuration.name + "' in "
                     + Utils.getMillisDurationString(TimeService.currentTimeMillis() - configStart));
+            for (MasterListener listener : state.getListeners()) {
+               listener.afterConfiguration();
+            }
             if (exitFlag) {
                log.info("Exiting whole benchmark");
                break;

@@ -7,6 +7,7 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Label;
 import org.radargun.config.Stage;
+import org.radargun.state.MasterListener;
 import org.radargun.state.StateBase;
 
 /**
@@ -24,6 +25,13 @@ public class RepeatBeginStage extends RepeatStage {
 
    @Override
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      masterState.addListener(new MasterListener.Adapter(){
+         @Override
+         public void afterCluster() {
+            masterState.remove(getCounterName());
+            masterState.removeListener(this);
+         }
+      });
       int value = updateState(masterState);
       if (inc == 0) {
          log.error("Invalid increment value: " + inc);
