@@ -92,8 +92,8 @@ public class InfinispanClientListeners extends AbstractInfinispanListeners {
    public void removeListener(String cacheName, boolean sync) {
       GenericClientListener listener = getListenerOrThrow(cacheName, sync);
       if (listener.isEmpty()) {
-         service.getRemoteManager(false).getCache(cacheName).removeClientListener(listener);
-         service.getRemoteManager(true).getCache(cacheName).removeClientListener(listener);
+         service.getRemoteManager(false).getCache(cacheName == null ? "" : cacheName).removeClientListener(listener);
+         service.getRemoteManager(true).getCache(cacheName == null ? "" : cacheName).removeClientListener(listener);
       }
    }
 
