@@ -42,21 +42,7 @@
       <!-- Begin monitoring of CPU, memory usage and GC -->
       <jvm-monitor-start />
 
-      <!-- Preload the cache with data -->
-      <load-data num-entries="5000"/>
-      <!-- Warmup is here in order to make JVM compile & optimize the code-->
-      <!-- As the test is called 'warmup', performance statistics won't be reported -->
-      <basic-operations-test-setup test-name="warmup"
-                                   num-entries="5000">
-         <!-- The test will execute a cache.get() request every 2 ms and put request every 8 ms -->
-         <get interval="2" invocations="1"/>
-         <put interval="10" invocations="1"/>
-      </basic-operations-test-setup>
-      <test test-name="warmup" duration="1m" />
-
-      <!-- Remove all data from the default cache -->
-      <clear-cache />
-      <!-- Again, preload the cache with data -->
+      <!--Preload the cache with data -->
       <load-data num-entries="10000"/>
 
       <!-- We will scale the load up here, from 1000 gets/s to 3000 gets/s and from 250 puts/s to 750 puts/s -->
