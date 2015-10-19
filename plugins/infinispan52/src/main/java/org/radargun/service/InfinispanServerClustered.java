@@ -68,11 +68,14 @@ public class InfinispanServerClustered implements Clustered {
             if (lastMembers != null && lastMembers.equals(membersString)) {
                return membershipHistory.get(membershipHistory.size() - 1).members;
             }
+            String[] nodes;
             if (!membersString.startsWith("[") || !membersString.endsWith("]")) {
-               throw new IllegalArgumentException("Unexpected members string format: " + membersString);
+               nodes = new String[] { membersString };
+            } else {
+               nodes = membersString.substring(1, membersString.length() - 1).split(",", 0);
             }
             lastMembers = membersString;
-            String[] nodes = membersString.substring(1, membersString.length() - 1).split(",", 0);
+
             ArrayList<Member> members = new ArrayList<>();
             for (int i = 0; i < nodes.length; ++i) {
                members.add(new Member(nodes[i].trim(), nodes[i].equals(nodeAddress), i == 0));

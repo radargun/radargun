@@ -14,12 +14,12 @@
 
    <!-- List of configurations of the services -->
    <configurations>
-      <config name="Infinispan 6.0 - HotRod">
+      <config name="Infinispan 8.0 - HotRod">
          <!-- Configuration for the server group -->
-         <setup group="server" plugin="infinispan60">
+         <setup group="server" plugin="infinispan80">
             <!-- Properties are evaluated on each slave individually, therefore you can
                  e.g. specify different bind address for each server in args -->
-            <server xmlns="urn:radargun:plugins:infinispan60:3.0" file="server.xml">
+            <server xmlns="urn:radargun:plugins:infinispan80:3.0" file="server.xml" jmx-domain="jboss.datagrid-infinispan">
                <!-- Additional arguments passed to ${env.ISPN_HOME}/bin/standalone.sh -->
                <args>-DudpGroup=224.0.0.1</args>
                <!-- Home directory for the Infinispan Server -->
@@ -28,16 +28,16 @@
          </setup>
          <!-- Configuration for the HotRod client -->
          <setup group="client" plugin="infinispan60">
-            <hotrod xmlns="urn:radargun:plugins:infinispan60:3.0">
+            <hotrod xmlns="urn:radargun:plugins:infinispan80:3.0">
                <!-- Clients are not paired with servers automatically - we have to explicitly provide the address -->
                <servers>127.0.0.1:11222</servers>
             </hotrod>
          </setup>
       </config>
-      <config name="Infinispan 6.0 - Memcached">
+      <config name="Infinispan 8.0 - Memcached">
          <!-- Configuration for the server group - this is identical to HotRod -->
-         <setup group="server" plugin="infinispan60" >
-            <server xmlns="urn:radargun:plugins:infinispan60:3.0" file="server.xml">
+         <setup group="server" plugin="infinispan80" >
+            <server xmlns="urn:radargun:plugins:infinispan80:3.0" file="server.xml" jmx-domain="jboss.datagrid-infinispan">
                <args>-DudpGroup=224.0.0.1</args>
                <home>${env.ISPN_HOME}</home>
             </server>

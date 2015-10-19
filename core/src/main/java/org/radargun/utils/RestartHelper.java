@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import org.radargun.Directories;
 import org.radargun.Slave;
+import org.radargun.config.Evaluator;
 import org.radargun.config.VmArgs;
 
 /**
@@ -34,8 +35,6 @@ public class RestartHelper {
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.inheritIO();
         StringBuilder classpathBuilder = new StringBuilder();
-        // TODO: add this through plugin configuration
-        classpathBuilder.append(Paths.get(System.getProperty("java.home"), "lib", "tools.jar").toString());
         // plugin-specific stuff should be prepended
         ArgsHolder.PluginParam pluginParam = ArgsHolder.getPluginParams().get(plugin);
         Path tempConfigDir = null;
@@ -59,6 +58,9 @@ public class RestartHelper {
         if (pluginDir.exists() && pluginDir.isDirectory()) {
             addConfAndLib(classpathBuilder, pluginDir);
         }
+        // if plugin requires something specific on classpath, retrieve that
+        String extraClassPath = Utils.getPluginProperty(plugin, "classpath");
+        classpathBuilder.append(File.pathSeparatorChar).append(Evaluator.parseString(extraClassPath));
         addConfAndLib(classpathBuilder, Directories.ROOT_DIR);
 
         ListBuilder<String> command = new ListBuilder<>(new ArrayList<String>());
@@ -109,7 +111,10 @@ public class RestartHelper {
     }
 
     private static void addConfAndLib(StringBuilder classpathBuilder, File parentDir) {
-        classpathBuilder.append(File.pathSeparatorChar).append(parentDir).append(File.separatorChar).append("conf/");
+        if (classpathBuilder.length() > 0) {
+            classpathBuilder.append(File.pathSeparatorChar);
+        }
+        classpathBuilder.append(parentDir).append(File.separatorChar).append("conf/");
         for (File f : new File(parentDir, "lib").listFiles()) {
             classpathBuilder.append(File.pathSeparatorChar);
             classpathBuilder.append(f.getAbsolutePath());

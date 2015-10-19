@@ -50,8 +50,6 @@ add_fwk_to_classpath() {
     add_to_classpath $i
   done
   add_to_classpath ${RADARGUN_HOME}/conf
-  # this is needed for JavaProcessService
-  add_to_classpath ${JAVA_HOME}/lib/tools.jar
 }
 
 set_env() {

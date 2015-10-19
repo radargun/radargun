@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Optional;
+
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
@@ -31,6 +33,25 @@ public class JavaProcessService extends ProcessService {
 
    @ProvidesTrait
    public JmxConnectionProvider createConnectionProvider() {
+      try {
+         Class.forName("com.sun.tools.attach.AttachNotSupportedException");
+      } catch (ClassNotFoundException e) {
+         log.warn("Cannot load JDK classes from JAVA_HOME/lib/tools.jar. Please make sure that tools.jar is on the classpath.");
+         String classPath = System.getProperty("java.class.path");
+         if (classPath.contains("tools.jar")) {
+            Optional<String> tools = Arrays.asList(classPath.split(File.pathSeparator)).stream().filter(s -> s.contains("tools.jar")).findFirst();
+            if (tools.isPresent()) {
+               if (new File(tools.get()).exists()) {
+                  log.warnf("Classpath contains tools.jar (%s), that file exists but the classes are not there.", tools.get());
+               } else {
+                  log.warnf("Classpath contains tools.jar (%s) but the file does not exist", tools.get());
+               }
+            } else {
+               log.warn("Classpath is " + classPath);
+            }
+         }
+         return null;
+      }
       if (!jmxConnectionEnabled) {
          return null;
       }
