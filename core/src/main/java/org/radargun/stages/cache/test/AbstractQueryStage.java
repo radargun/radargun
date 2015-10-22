@@ -22,7 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * The conditions field are the standard conditions that you would expect in a WHERE clause.
  * Having refers to the conditions which follow the GROUP BY clause, and can make use
- * of aggregations
+ * of aggregations. Projection and orderBy have both alternative versions
+ * (projectionAggregated, orderByAggregatedColumns) which can use aggregations, too.
  */
 public abstract class AbstractQueryStage extends TestStage {
 
@@ -40,12 +41,16 @@ public abstract class AbstractQueryStage extends TestStage {
 
     @Property(doc = "Projection, possibly with aggregations.",
             complexConverter = ProjectionConverter.class)
-    protected List<SelectExpressionElement>  aggregatedProjection;
+    protected List<SelectExpressionElement>  projectionAggregated;
 
     @Property(doc = "Use sorting order, in form [attribute[:(ASC|DESC)]][,attribute[:(ASC|DESC)]]*. " +
             "Without specifying ASC or DESC the sort order defaults to ASC. Default is unordereded.",
             converter = SortConverter.class)
     protected List<SortElement> orderBy;
+
+    @Property(doc = "Sorting, possibly by aggregated columns.",
+          complexConverter = AggregatedSortConverter.class)
+    protected List<OrderedSelectExpressionElement> orderByAggregatedColumns;
 
     @Property(doc = "Use grouping, in form [attribute][,attribute]*. Default is without grouping.")
     protected String[] groupBy;
@@ -63,6 +68,59 @@ public abstract class AbstractQueryStage extends TestStage {
     protected Queryable queryable;
 
     protected AtomicInteger expectedSize = new AtomicInteger(-1);
+
+    public Queryable.QueryBuilder constructBuilder() {
+        Class<?> clazz;
+        try {
+            clazz = slaveState.getClassLoader().loadClass(queryObjectClass);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException("Cannot load class " + queryObjectClass, e);
+        }
+        Queryable.QueryBuilder builder = queryable.getBuilder(null, clazz);
+        if (conditions != null) {
+            for (Condition condition : conditions) {
+                condition.apply(builder);
+            }
+        }
+        if (orderBy != null) {
+            for (SortElement se : orderBy) {
+                builder.orderBy(new Queryable.SelectExpression(se.attribute), se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
+            }
+        } else if (orderByAggregatedColumns != null) {
+            for (OrderedSelectExpressionElement orderByAggregatedColumn : orderByAggregatedColumns) {
+                builder.orderBy(orderByAggregatedColumn.toSelectExpression(), orderByAggregatedColumn.toSelectExpression().asc ?
+                      Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
+            }
+        }
+        if (projection != null) {
+            Queryable.SelectExpression[] projections = new Queryable.SelectExpression[projection.length];
+            for (int i = 0; i < projection.length; i++) {
+                projections[i] = new Queryable.SelectExpression(projection[i]);
+            }
+            builder.projection(projections);
+        } else if (projectionAggregated != null) {
+            Queryable.SelectExpression[] projections = new Queryable.SelectExpression[projectionAggregated.size()];
+            for (int i = 0; i < projectionAggregated.size(); i++) {
+                projections[i] = projectionAggregated.get(i).toSelectExpression();
+            }
+            builder.projection(projections);
+        }
+        if (groupBy != null) {
+            builder.groupBy(groupBy);
+            if (having != null) {
+                for (Condition condition : having) {
+                    condition.apply(builder);
+                }
+            }
+        }
+        if (offset >= 0) {
+            builder.offset(offset);
+        }
+        if (limit >= 0) {
+            builder.limit(limit);
+        }
+        return builder;
+    }
 
     public abstract OperationLogic getLogic();
 
@@ -89,6 +147,9 @@ public abstract class AbstractQueryStage extends TestStage {
             }
             if (aggregatedPath != null) {
                 resolvedPath = aggregatedPath.toSelectExpression();
+            }
+            if (path != null && aggregatedPath != null) {
+                throw new IllegalStateException("Condition can only have a single target path!");
             }
             if (resolvedPath == null) {
                 throw new IllegalStateException("You need to specify a target path for the condition!");
@@ -279,8 +340,7 @@ public abstract class AbstractQueryStage extends TestStage {
     protected static class Count extends SelectExpressionElement {
         @Override
         public Queryable.SelectExpression toSelectExpression() {
-            return new Queryable.SelectExpression(path, Queryable.AggregationFunction.COUNT
-            );
+            return new Queryable.SelectExpression(path, Queryable.AggregationFunction.COUNT);
         }
     }
 
@@ -316,7 +376,63 @@ public abstract class AbstractQueryStage extends TestStage {
         }
     }
 
+    protected static abstract class OrderedSelectExpressionElement extends SelectExpressionElement {
+        @Property(doc = "Whether the column should be ordered in ascending order. Default is true, and false means descending.")
+        protected boolean asc = true;
+
+        public abstract Queryable.SelectExpression toSelectExpression();
+    }
+
+    @DefinitionElement(name = "attribute", doc = "Simple attribute projection, with no aggregation function.")
+    protected static class OrderedAttribute extends OrderedSelectExpressionElement {
+        @Override
+        public Queryable.SelectExpression toSelectExpression() {
+            return new Queryable.SelectExpression(path, Queryable.AggregationFunction.NONE, asc);
+        }
+    }
+
+    @DefinitionElement(name = "count", doc = "Count aggregation.")
+    protected static class OrderedCount extends OrderedSelectExpressionElement {
+        @Override
+        public Queryable.SelectExpression toSelectExpression() {
+            return new Queryable.SelectExpression(path, Queryable.AggregationFunction.COUNT, asc);
+        }
+    }
+
+    @DefinitionElement(name = "sum", doc = "Sum aggregation.")
+    protected static class OrderedSum extends OrderedSelectExpressionElement {
+        @Override
+        public Queryable.SelectExpression toSelectExpression() {
+            return new Queryable.SelectExpression(path, Queryable.AggregationFunction.SUM, asc);
+        }
+    }
+
+    @DefinitionElement(name = "avg", doc = "Average aggregation.")
+    protected static class OrderedAvg extends OrderedSelectExpressionElement {
+        @Override
+        public Queryable.SelectExpression toSelectExpression() {
+            return new Queryable.SelectExpression(path, Queryable.AggregationFunction.AVG, asc);
+        }
+    }
+
+    @DefinitionElement(name = "min", doc = "Minimum aggregation.")
+    protected static class OrderedMin extends OrderedSelectExpressionElement {
+        @Override
+        public Queryable.SelectExpression toSelectExpression() {
+            return new Queryable.SelectExpression(path, Queryable.AggregationFunction.MIN, asc);
+        }
+    }
+
+    @DefinitionElement(name = "max", doc = "Max aggregation.")
+    protected static class OrderedMax extends OrderedSelectExpressionElement {
+        @Override
+        public Queryable.SelectExpression toSelectExpression() {
+            return new Queryable.SelectExpression(path, Queryable.AggregationFunction.MAX, asc);
+        }
+    }
+
     protected static Class<? extends SelectExpressionElement>[]  SELECT_EXPRESSIONS = new Class[] {Attribute.class, Count.class, Sum.class, Avg.class, Min.class, Max.class};
+    protected static Class<? extends OrderedSelectExpressionElement>[]  ORDERED_SELECT_EXPRESSIONS = new Class[] {OrderedAttribute.class, OrderedCount.class, OrderedSum.class, OrderedAvg.class, OrderedMin.class, OrderedMax.class};
 
     protected static class ProjectionConverter extends ReflexiveConverters.ListConverter {
         public ProjectionConverter() {
@@ -327,6 +443,12 @@ public abstract class AbstractQueryStage extends TestStage {
     protected static class SelectExpressionConverter extends ReflexiveConverters.ObjectConverter {
         public SelectExpressionConverter() {
             super(SELECT_EXPRESSIONS);
+        }
+    }
+
+    protected static class AggregatedSortConverter extends ReflexiveConverters.ListConverter {
+        public AggregatedSortConverter() {
+            super(ORDERED_SELECT_EXPRESSIONS);
         }
     }
 

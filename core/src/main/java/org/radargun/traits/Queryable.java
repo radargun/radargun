@@ -50,17 +50,26 @@ public interface Queryable {
       Query build();
    }
 
+   /**
+    * Used to represent aggregated attributes and also order by expressions
+    */
    class SelectExpression {
       public String attribute;
       public AggregationFunction function;
+      public boolean asc;
 
       public SelectExpression(String attribute) {
-         this(attribute, AggregationFunction.NONE);
+         this(attribute, AggregationFunction.NONE, true);
       }
 
       public SelectExpression(String attribute, AggregationFunction function) {
+         this(attribute, function, true);
+      }
+
+      public SelectExpression(String attribute, AggregationFunction function, boolean asc) {
          this.attribute = attribute;
          this.function = function;
+         this.asc = asc;
       }
    }
 

@@ -83,49 +83,7 @@ public class QueryStage extends AbstractQueryStage {
       public void init(Stressor stressor) {
          super.init(stressor);
          Class<?> clazz;
-         try {
-            clazz = slaveState.getClassLoader().loadClass(queryObjectClass);
-         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Cannot load class " + queryObjectClass, e);
-         }
-         builder = queryable.getBuilder(null, clazz);
-         if (conditions != null) {
-            for (Condition condition : conditions) {
-               condition.apply(builder);
-            }
-         }
-         if (orderBy != null) {
-            for (SortElement se : orderBy) {
-               builder.orderBy(new Queryable.SelectExpression(se.attribute), se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
-            }
-         }
-         if (projection != null) {
-            Queryable.SelectExpression[] projections = new Queryable.SelectExpression[projection.length];
-            for (int i = 0; i < projection.length; i++) {
-               projections[i] = new Queryable.SelectExpression(projection[i]);
-            }
-            builder.projection(projections);
-         } else if (aggregatedProjection != null && !aggregatedProjection.isEmpty()) {
-            Queryable.SelectExpression[] projections = new Queryable.SelectExpression[aggregatedProjection.size()];
-            for (int i = 0; i < aggregatedProjection.size(); i++) {
-               projections[i] = aggregatedProjection.get(i).toSelectExpression();
-            }
-            builder.projection(projections);
-         }
-         if (groupBy != null) {
-            builder.groupBy(groupBy);
-            if (having != null) {
-               for (Condition condition : having) {
-                  condition.apply(builder);
-               }
-            }
-         }
-         if (offset >= 0) {
-            builder.offset(offset);
-         }
-         if (limit >= 0) {
-            builder.limit(limit);
-         }
+         builder = constructBuilder();
       }
 
       @Override

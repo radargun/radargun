@@ -114,41 +114,12 @@ public class ContinuousQueryStage extends AbstractQueryStage {
     }
 
     private void registerCQ(SlaveState slaveState) {
-        Class<?> clazz;
-        try {
-            clazz = slaveState.getClassLoader().loadClass(queryObjectClass);
-        } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Cannot load class " + queryObjectClass, e);
+        if ((projectionAggregated != null && !projectionAggregated.isEmpty()) ||
+              (groupBy != null && groupBy.length != 0) ||
+              (orderByAggregatedColumns != null && !orderByAggregatedColumns.isEmpty())) {
+            throw new IllegalStateException("Aggregations are not supported in continuous queries!");
         }
-
-        Queryable.QueryBuilder builder = queryable.getBuilder(null, clazz);
-        for (Condition condition : conditions) {
-            condition.apply(builder);
-        }
-        if (orderBy != null) {
-            for (SortElement se : orderBy) {
-                builder.orderBy(new Queryable.SelectExpression(se.attribute), se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
-            }
-        }
-       if (projection != null) {
-          Queryable.SelectExpression[] projections = new Queryable.SelectExpression[projection.length];
-          for (int i = 0; i < projection.length; i++) {
-             projections[i] = new Queryable.SelectExpression(projection[i]);
-          }
-          builder.projection(projections);
-       } else if (aggregatedProjection != null && !aggregatedProjection.isEmpty()) {
-          Queryable.SelectExpression[] projections = new Queryable.SelectExpression[aggregatedProjection.size()];
-          for (int i = 0; i < aggregatedProjection.size(); i++) {
-             projections[i] = aggregatedProjection.get(i).toSelectExpression();
-          }
-          builder.projection(projections);
-       }
-        if (offset >= 0) {
-            builder.offset(offset);
-        }
-        if (limit >= 0) {
-            builder.limit(limit);
-        }
+        Queryable.QueryBuilder builder = constructBuilder();
         Query query = builder.build();
         slaveState.put(ContinuousQuery.QUERY, query);
 

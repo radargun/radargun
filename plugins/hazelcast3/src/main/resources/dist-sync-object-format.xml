@@ -22,6 +22,11 @@
         </join>
     </network>
 
+    <executor-service>
+        <pool-size>64</pool-size>
+        <queue-capacity>0</queue-capacity>
+    </executor-service>
+
     <executor-service name="mapreduce::hz::hz::aggregation-map-default">
         <pool-size>16</pool-size>
         <queue-capacity>0</queue-capacity>
