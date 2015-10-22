@@ -42,7 +42,7 @@ public interface Queryable {
       QueryBuilder contains(SelectExpression selectExpression, Object value);
       QueryBuilder not(QueryBuilder subquery);
       QueryBuilder any(QueryBuilder... subqueries);
-      QueryBuilder orderBy(SelectExpression selectExpression, SortOrder order);
+      QueryBuilder orderBy(SelectExpression selectExpression);
       QueryBuilder projection(SelectExpression... selectExpressions);
       QueryBuilder groupBy(String[] attribute);
       QueryBuilder offset(long offset);
@@ -66,6 +66,10 @@ public interface Queryable {
          this(attribute, function, true);
       }
 
+      public SelectExpression(String attribute, boolean asc) {
+         this(attribute, AggregationFunction.NONE, asc);
+      }
+
       public SelectExpression(String attribute, AggregationFunction function, boolean asc) {
          this.attribute = attribute;
          this.function = function;
@@ -80,11 +84,6 @@ public interface Queryable {
       AVG,
       MIN,
       MAX;
-   }
-
-   enum SortOrder {
-      ASCENDING,
-      DESCENDING
    }
 
 }

@@ -84,12 +84,11 @@ public abstract class AbstractQueryStage extends TestStage {
         }
         if (orderBy != null) {
             for (SortElement se : orderBy) {
-                builder.orderBy(new Queryable.SelectExpression(se.attribute), se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
+                builder.orderBy(new Queryable.SelectExpression(se.attribute, se.asc));
             }
         } else if (orderByAggregatedColumns != null) {
             for (OrderedSelectExpressionElement orderByAggregatedColumn : orderByAggregatedColumns) {
-                builder.orderBy(orderByAggregatedColumn.toSelectExpression(), orderByAggregatedColumn.toSelectExpression().asc ?
-                      Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
+                builder.orderBy(orderByAggregatedColumn.toSelectExpression());
             }
         }
         if (projection != null) {

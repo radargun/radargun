@@ -142,10 +142,10 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       }
 
       @Override
-      public QueryBuilder orderBy(SelectExpression selectExpression, SortOrder order) {
+      public QueryBuilder orderBy(SelectExpression selectExpression) {
          if (builder == null) throw new IllegalArgumentException("You have to call orderBy() on root query builder!");
          if (selectExpression.function != AggregationFunction.NONE) throw new IllegalArgumentException("This version of infinispan doesn't support aggregations!");
-         builder.orderBy(selectExpression.attribute, order == SortOrder.ASCENDING ?
+         builder.orderBy(selectExpression.attribute, selectExpression.asc ?
                org.infinispan.query.dsl.SortOrder.ASC : org.infinispan.query.dsl.SortOrder.DESC);
          return this;
       }

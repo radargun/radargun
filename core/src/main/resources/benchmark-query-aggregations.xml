@@ -24,7 +24,7 @@
                  num-threads="10" entry-size="0"
                  transaction-size="${tx.size:500}" use-transactions="${tx.type:NEVER}" max-load-attempts="50">
          <value-generator>
-            <number-object int-min="0" int-max="10000" double-min="0" double-max="20"/>
+            <number-object int-min="0" int-max="20" double-min="0" double-max="10000"/>
          </value-generator>
       </load-data>
 
@@ -32,25 +32,25 @@
            GROUP BY doubleValue HAVING sum(integerValue)>50000 ORDER BY sum(integerValue) -->
       <query test-name="globalSum"
              duration="30s"
-             group-by="doubleValue"
+             group-by="integerValue"
              num-threads-per-node="10"
              query-object-class="org.radargun.query.NumberObject">
          <projection-aggregated>
-            <sum path="integerValue"/>
+            <sum path="doubleValue"/>
          </projection-aggregated>
          <conditions>
-            <lt path="integerValue" value="50000"/>
-            <lt path="doubleValue" value="10"/>
+            <lt path="doubleValue" value="50000"/>
+            <lt path="integerValue" value="10"/>
          </conditions>
          <having>
             <gt value="50000">
                <aggregated-path>
-                  <sum path="integerValue"/>
+                  <sum path="doubleValue"/>
                </aggregated-path>
             </gt>
          </having>
          <order-by-aggregated-columns>
-            <sum path="integerValue"/>
+            <sum path="doubleValue"/>
          </order-by-aggregated-columns>
       </query>
    </scenario>

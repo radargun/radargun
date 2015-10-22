@@ -159,8 +159,8 @@ public class HazelcastQueryable implements Queryable {
       }
 
       @Override
-      public QueryBuilder orderBy(SelectExpression selectExpression, SortOrder order) {
-         if (order == SortOrder.DESCENDING) {
+      public QueryBuilder orderBy(SelectExpression selectExpression) {
+         if (!selectExpression.asc) {
             comparator = new InverseComparator(selectExpression.attribute);
          } else {
             comparator = new RegularComparator(selectExpression.attribute);
