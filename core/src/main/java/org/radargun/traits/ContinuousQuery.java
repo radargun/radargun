@@ -13,7 +13,7 @@ public interface ContinuousQuery {
 
     void createContinuousQuery(String cacheName, Query query, ContinuousQueryListener cqListener);
 
-    void removeContinuousQuery(String cacheName, ContinuousQueryListener cqListener);
+    void removeContinuousQuery(String cacheName, Object cqListener);
 
     interface ContinuousQueryListener<K, V> {
         void onEntryJoined(K key, V value);

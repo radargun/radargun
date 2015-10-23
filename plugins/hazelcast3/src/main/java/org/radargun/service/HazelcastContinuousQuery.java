@@ -25,7 +25,7 @@ public class HazelcastContinuousQuery implements ContinuousQuery {
     }
 
     @Override
-    public void removeContinuousQuery(String mapName, ContinuousQueryListener cqListener) {
+    public void removeContinuousQuery(String mapName, Object cqListener) {
         if (hazelcastCQListenerId != null) {
             getMap(mapName).removeEntryListener(hazelcastCQListenerId);
         }
