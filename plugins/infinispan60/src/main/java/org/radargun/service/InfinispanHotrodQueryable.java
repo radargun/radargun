@@ -86,35 +86,39 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
       }
 
       try {
-         ObjectName objName = null;
-         try {
-            objName = new ObjectName(service.jmxDomain + ":type=RemoteQuery,name="
-                  + ObjectName.quote(service.clusterName)
-                  + ",component=" + ProtobufMetadataManager.OBJECT_NAME);
-         } catch (MalformedObjectNameException e) {
-            throw new IllegalStateException("Failed to register protofiles", e);
-         }
-
-         for (String protofile : service.protofiles) {
-            byte[] descriptor;
-            try (InputStream inputStream = getClass().getResourceAsStream(protofile)) {
-               descriptor = Utils.readAsBytes(inputStream);
-            } catch (IOException e) {
-               throw new IllegalStateException("Failed to read protofile " + protofile, e);
-            }
-            try {
-               connection.invoke(objName, "registerProtofile", new Object[]{descriptor}, new String[]{byte[].class.getName()});
-               log.info("Protofile " + protofile + " registered.");
-            } catch (Exception e) {
-               throw new IllegalStateException("Failed to register protofile " + protofile, e);
-            }
-         }
+         doJmxRegistration(connection);
       } finally {
          closeConnector(connector);
       }
    }
 
-   protected void closeConnector(JMXConnector connector) {
+   protected void doJmxRegistration(MBeanServerConnection connection) {
+      ObjectName objName = null;
+      try {
+         objName = new ObjectName(service.jmxDomain + ":type=RemoteQuery,name="
+                 + ObjectName.quote(service.clusterName)
+                 + ",component=" + ProtobufMetadataManager.OBJECT_NAME);
+      } catch (MalformedObjectNameException e) {
+         throw new IllegalStateException("Failed to register protofiles", e);
+      }
+
+      for (String protofile : service.protofiles) {
+         byte[] descriptor;
+         try (InputStream inputStream = getClass().getResourceAsStream(protofile)) {
+            descriptor = Utils.readAsBytes(inputStream);
+         } catch (IOException e) {
+            throw new IllegalStateException("Failed to read protofile " + protofile, e);
+         }
+         try {
+            connection.invoke(objName, "registerProtofile", new Object[]{descriptor}, new String[]{byte[].class.getName()});
+            log.info("Protofile " + protofile + " registered.");
+         } catch (Exception e) {
+            throw new IllegalStateException("Failed to register protofile " + protofile, e);
+         }
+      }
+   }
+
+   private void closeConnector(JMXConnector connector) {
       if (connector != null) {
          try {
             connector.close();

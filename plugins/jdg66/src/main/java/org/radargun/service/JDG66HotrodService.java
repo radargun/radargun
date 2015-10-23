@@ -1,29 +1,14 @@
 package org.radargun.service;
 
-import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.protostream.SerializationContext;
-import org.infinispan.query.remote.ProtobufMetadataManager;
 import org.radargun.Service;
-import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
-import org.radargun.utils.Utils;
-
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
- * @author Martin Gencur &lt;mgencur@redhat.com&gt;
+ * @author Vojtech Juranek &lt;vjuranek@redhat.com&gt;
  */
-@Service(doc = Infinispan60HotrodService.SERVICE_DESCRIPTION)
-public class Infinispan80HotrodService extends Infinispan71HotrodService {
-
-    @ProvidesTrait
-    public Infinispan80ClientListeners createListeners() {
-        return new Infinispan80ClientListeners(this);
-    }
+@Service(doc = JDG66HotrodService.SERVICE_DESCRIPTION)
+public class JDG66HotrodService extends Infinispan60HotrodService {
 
     @ProvidesTrait
     public InfinispanHotrodContinuousQuery createContinuousQuery() {
@@ -45,5 +30,4 @@ public class Infinispan80HotrodService extends Infinispan71HotrodService {
             }
         }
     }
-
 }

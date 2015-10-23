@@ -89,19 +89,19 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
          builder.addServer().host(host).port(port);
       }
       if (enableQuery) {
-         queryable = (InfinispanHotrodQueryable) getQueryable();
+         queryable = createQueryable();
          ProtoStreamMarshaller marshaller = new ProtoStreamMarshaller();
          builder.marshaller(marshaller);
          SerializationContext context = marshaller.getSerializationContext();
          queryable.registerProtofilesLocal(context);
          // remote registration has to be delayed until we have running servers
+         // register marshallers
          registerMarshallers(context);
       }
       return builder;
    }
 
-   @ProvidesTrait
-   public Queryable getQueryable() {
+   protected InfinispanHotrodQueryable createQueryable() {
       return new InfinispanHotrodQueryable(this);
    }
 
@@ -114,6 +114,12 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
          }
       }
    }
+
+   @ProvidesTrait
+   public Queryable getQueryable() {
+      return new InfinispanHotrodQueryable(this);
+   }
+
 
    @ProvidesTrait
    public Infinispan60HotRodCacheInfo creeateCacheInfo() {
