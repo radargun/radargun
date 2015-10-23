@@ -5,7 +5,9 @@ import org.radargun.traits.ContinuousQuery;
 import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 
-
+/**
+ * @author Vojtech Juranek &lt;vjuranek@redhat.com&gt;
+ */
 public class InfinispanEmbeddedContinuousQuery implements ContinuousQuery {
 
     protected final InfinispanEmbeddedService service;
@@ -25,7 +27,7 @@ public class InfinispanEmbeddedContinuousQuery implements ContinuousQuery {
     }
 
     @Override
-    public void removeContinuousQuery(String cacheName, ContinuousQueryListener cqListener) {
+    public void removeContinuousQuery(String cacheName, Object cqListener) {
         if (cq != null && ispnCqListener != null) {
             cq.removeContinuousQueryListener(ispnCqListener);
         }
