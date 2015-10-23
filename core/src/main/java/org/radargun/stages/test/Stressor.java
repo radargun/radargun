@@ -30,11 +30,14 @@ public class Stressor extends Thread {
    private Statistics stats;
 
    private long transactionDuration = 0;
-   private boolean logTransactionExceptions = true;
+   private boolean logRequestExceptions;
+   private boolean logTransactionExceptions;
 
-   public Stressor(int threadIndex, RunningTest test, boolean logTransactionExceptions) {
+
+   public Stressor(int threadIndex, RunningTest test, boolean logRequestExceptions, boolean logTransactionExceptions) {
       super("Stressor-" + threadIndex);
       this.test = test;
+      this.logRequestExceptions = logRequestExceptions;
       this.logTransactionExceptions = logTransactionExceptions;
    }
 
@@ -120,7 +123,9 @@ public class Stressor extends Thread {
          Blackhole.consume(result);
       } catch (Exception e) {
          operationDuration = TimeService.nanoTime() - start;
-         log.warn("Error in request", e);
+         if (logRequestExceptions) {
+            log.warn("Error in request", e);
+         }
          successful = false;
          exception = e;
       }

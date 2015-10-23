@@ -178,7 +178,7 @@ public class RunningTest extends ServiceListenerAdapter {
       }
       // mark non-started thread as waiting
       waitingThreads.incrementAndGet();
-      Stressor stressor = new Stressor(threadIndex, this, logTransactionExceptions);
+      Stressor stressor = new Stressor(threadIndex, this, true, logTransactionExceptions);
       synchronized (this) {
          if (!finished) {
             stressors.add(stressor);

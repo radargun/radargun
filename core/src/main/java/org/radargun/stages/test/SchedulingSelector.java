@@ -33,6 +33,9 @@ public class SchedulingSelector<T> {
       this.intervals = intervals;
       lastIntervals = new AtomicLongArray(operations.length);
       todoInvocations = new AtomicIntegerArray(operations.length);
+      for (int i = 0; i < operations.length; ++i) {
+         lastIntervals.set(i, Long.MIN_VALUE);
+      }
    }
 
    /**
@@ -115,7 +118,7 @@ public class SchedulingSelector<T> {
          return this;
       }
 
-      public SchedulingSelector build() {
+      public SchedulingSelector<T> build() {
          if (operations.isEmpty()) throw new IllegalStateException("No operations set!");
          return new SchedulingSelector(operations.toArray((T[]) Array.newInstance(clazz, operations.size())),
                invocations.stream().mapToInt(i -> i.intValue()).toArray(),
