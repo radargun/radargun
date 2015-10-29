@@ -120,7 +120,6 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
       return new InfinispanHotrodQueryable(this);
    }
 
-
    @ProvidesTrait
    public Infinispan60HotRodCacheInfo creeateCacheInfo() {
       return new Infinispan60HotRodCacheInfo(this);
