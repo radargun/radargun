@@ -1,5 +1,6 @@
 package org.radargun.util;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
@@ -26,5 +27,11 @@ public final class ReflectionUtils {
       modifiersField.setAccessible(true);
       modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
       field.set(invoker, value);
+   }
+
+   public static <T> Constructor<T> getConstructor(Class clazz, Class<?>... parameterTypes) throws NoSuchMethodException {
+      Constructor<T> constructor = clazz.getDeclaredConstructor(parameterTypes);
+      constructor.setAccessible(true);
+      return constructor;
    }
 }
