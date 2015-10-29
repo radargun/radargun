@@ -1,32 +1,20 @@
 package org.radargun.stages.cache.test;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
-import org.radargun.config.Converter;
-import org.radargun.config.DefinitionElement;
-import org.radargun.config.Property;
-import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.test.OperationLogic;
 import org.radargun.stages.test.Stressor;
-import org.radargun.stages.test.TestStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
-import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
-import org.radargun.utils.NumberConverter;
-import org.radargun.utils.ObjectConverter;
 import org.radargun.utils.Projections;
-import org.radargun.utils.ReflexiveConverters;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Executes Queries using Infinispan-Query API against the cache.
@@ -95,29 +83,7 @@ public class QueryStage extends AbstractQueryStage {
       public void init(Stressor stressor) {
          super.init(stressor);
          Class<?> clazz;
-         try {
-            clazz = slaveState.getClassLoader().loadClass(queryObjectClass);
-         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Cannot load class " + queryObjectClass, e);
-         }
-         builder = queryable.getBuilder(null, clazz);
-         for (Condition condition : conditions) {
-            condition.apply(builder);
-         }
-         if (orderBy != null) {
-            for (SortElement se : orderBy) {
-               builder.orderBy(se.attribute, se.asc ? Queryable.SortOrder.ASCENDING : Queryable.SortOrder.DESCENDING);
-            }
-         }
-         if (projection != null) {
-            builder.projection(projection);
-         }
-         if (offset >= 0) {
-            builder.offset(offset);
-         }
-         if (limit >= 0) {
-            builder.limit(limit);
-         }
+         builder = constructBuilder();
       }
 
       @Override

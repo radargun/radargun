@@ -27,30 +27,63 @@ public interface Queryable {
 
    /**
     * The instance should be reusable, but not thread-safe.
+    * Conditions defined after groupBy call are meant to be part of the HAVING clause.
     */
    interface QueryBuilder {
       QueryBuilder subquery();
-      QueryBuilder eq(String attribute, Object value);
-      QueryBuilder lt(String attribute, Object value);
-      QueryBuilder le(String attribute, Object value);
-      QueryBuilder gt(String attribute, Object value);
-      QueryBuilder ge(String attribute, Object value);
-      QueryBuilder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive);
-      QueryBuilder isNull(String attribute);
-      QueryBuilder like(String attribute, String pattern);
-      QueryBuilder contains(String attribute, Object value);
+      QueryBuilder eq(SelectExpression selectExpression, Object value);
+      QueryBuilder lt(SelectExpression selectExpression, Object value);
+      QueryBuilder le(SelectExpression selectExpression, Object value);
+      QueryBuilder gt(SelectExpression selectExpression, Object value);
+      QueryBuilder ge(SelectExpression selectExpression, Object value);
+      QueryBuilder between(SelectExpression selectExpression, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive);
+      QueryBuilder isNull(SelectExpression selectExpression);
+      QueryBuilder like(SelectExpression selectExpression, String pattern);
+      QueryBuilder contains(SelectExpression selectExpression, Object value);
       QueryBuilder not(QueryBuilder subquery);
       QueryBuilder any(QueryBuilder... subqueries);
-      QueryBuilder orderBy(String attribute, SortOrder order);
-      QueryBuilder projection(String... attribute);
+      QueryBuilder orderBy(SelectExpression selectExpression);
+      QueryBuilder projection(SelectExpression... selectExpressions);
+      QueryBuilder groupBy(String[] attribute);
       QueryBuilder offset(long offset);
       QueryBuilder limit(long limit);
       Query build();
    }
 
-   enum SortOrder {
-      ASCENDING,
-      DESCENDING
+   /**
+    * Used to represent aggregated attributes and also order by expressions
+    */
+   class SelectExpression {
+      public String attribute;
+      public AggregationFunction function;
+      public boolean asc;
+
+      public SelectExpression(String attribute) {
+         this(attribute, AggregationFunction.NONE, true);
+      }
+
+      public SelectExpression(String attribute, AggregationFunction function) {
+         this(attribute, function, true);
+      }
+
+      public SelectExpression(String attribute, boolean asc) {
+         this(attribute, AggregationFunction.NONE, asc);
+      }
+
+      public SelectExpression(String attribute, AggregationFunction function, boolean asc) {
+         this.attribute = attribute;
+         this.function = function;
+         this.asc = asc;
+      }
+   }
+
+   enum AggregationFunction {
+      NONE,
+      COUNT,
+      SUM,
+      AVG,
+      MIN,
+      MAX;
    }
 
 }

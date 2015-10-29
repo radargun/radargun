@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:infinispan:config:8.0 http://www.infinispan.org/schemas/infinispan-config-8.0.xsd"
+        xmlns="urn:infinispan:config:8.0">
+
+    <cache-container name="default" default-cache="default">
+        <transport lock-timeout="60000" cluster="default"/>
+        <jmx duplicate-domains="true">
+            <property name="enabled">true</property>
+        </jmx>
+        <local-cache  name="default"/>
+
+        <distributed-cache name="dist_indexless" owners="2">
+            <transaction mode="NON_XA"/>
+        </distributed-cache>
+    </cache-container>
+
+</infinispan>
