@@ -1,3 +1,5 @@
+<!-- RadarGun 2.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.1">
 <!-- RadarGun 3.0 benchmark -->
 <benchmark xmlns="urn:radargun:benchmark:3.0">
 
@@ -29,32 +31,32 @@
       <!-- Preload the cache with data -->
       <load-data num-entries="5000"/>
 
-      <basic-operations-test test-name="warmup" duration="10s" num-threads-per-node="10">
+      <basic-operations-legacy-test test-name="warmup" duration="10s" num-threads-per-node="10">
          <key-selector>
             <colliding-keys num-entries="5000" />
          </key-selector>
-      </basic-operations-test>
+      </basic-operations-legacy-test>
 
-      <basic-operations-test test-name="concurrent" duration="10s" num-threads-per-node="10">
+      <basic-operations-legacy-test test-name="concurrent" duration="10s" num-threads-per-node="10">
          <key-selector>
             <concurrent-keys total-entries="5000" />
          </key-selector>
-      </basic-operations-test>
+      </basic-operations-legacy-test>
 
-      <basic-operations-test test-name="colliding" duration="10s" num-threads-per-node="10">
+      <basic-operations-legacy-test test-name="colliding" duration="10s" num-threads-per-node="10">
          <key-selector>
             <colliding-keys num-entries="5000" />
          </key-selector>
-      </basic-operations-test>
+      </basic-operations-legacy-test>
 
       <repeat from="1" to="10">
-         <basic-operations-test test-name="iterating" amend-test="true"
+         <basic-operations-legacy-test test-name="iterating" amend-test="true"
                                 iteration-property="num-threads-per-node"
                                 duration="5s" num-threads-per-node="#{2 ^ ${repeat.counter}}">
             <key-selector>
                <colliding-keys num-entries="5000"/>
             </key-selector>
-         </basic-operations-test>
+         </basic-operations-legacy-test>
       </repeat>
    </scenario>
 

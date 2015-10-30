@@ -30,14 +30,14 @@
 
       <!-- Generate statistics for 10, 20, 30 .. 100 threads -->
       <repeat times="10">
-         <basic-operations-test test-name="increase-thread-count" amend-test="true"
+         <basic-operations-legacy-test test-name="increase-thread-count" amend-test="true"
                                 duration="10s"
                                 total-threads="#{ 10 * ${repeat.counter} + 10 }"
                                 iteration-property="total-threads">
             <key-selector>
                <colliding-keys num-entries="10000"/>
             </key-selector>
-         </basic-operations-test>
+         </basic-operations-legacy-test>
       </repeat>
 
       <!-- Find which iteration had maximum TX throughput -->
@@ -51,7 +51,7 @@
       </analyze-test>
 
       <!-- Run a longer test to get reliable results -->
-      <basic-operations-test test-name="on-max-throughput"
+      <basic-operations-legacy-test test-name="on-max-throughput"
                              duration="1m" total-threads="#{ 10 * ${top.iteration} + 10 }">
          <statistics>
             <default>
@@ -64,7 +64,7 @@
          <key-selector>
             <colliding-keys num-entries="10000"/>
          </key-selector>
-      </basic-operations-test>
+      </basic-operations-legacy-test>
 
       <!-- Put the number of threads as a result to the test
            so we can easily see the number of threads used for the test -->

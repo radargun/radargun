@@ -1,12 +1,14 @@
-package org.radargun.stages.cache.test;
+package org.radargun.stages.cache.test.legacy;
 
 import org.radargun.Operation;
-import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.stages.cache.test.CacheInvocations;
 import org.radargun.stages.test.Invocation;
-import org.radargun.stages.test.OperationLogic;
-import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.legacy.LegacyStressor;
+import org.radargun.stages.test.legacy.OperationLogic;
+import org.radargun.stages.test.legacy.OperationSelector;
+import org.radargun.stages.test.legacy.RatioOperationSelector;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.TemporalOperations;
@@ -20,7 +22,7 @@ import java.util.Random;
  *
  */
 @Stage(doc = "Test using TemporalOperations")
-public class TemporalOperationsTestStage extends CacheOperationsTestStage {
+public class TemporalOperationsLegacyTestStage extends CacheOperationsLegacyTestStage {
 
    @Property(doc = "Lifespan to be used for all temporal operations. Default is 1000 ms.")
    protected int lifespan = 1000;
@@ -55,11 +57,9 @@ public class TemporalOperationsTestStage extends CacheOperationsTestStage {
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected TemporalOperations temporalOperations;
 
-   protected OperationSelector operationSelector;
-
-   @Init
-   public void init() {
-      operationSelector = new OperationSelector.Builder()
+   @Override
+   protected OperationSelector createOperationSelector() {
+      return new RatioOperationSelector.Builder()
             .add(BasicOperations.GET, getRatio)
             .add(TemporalOperations.PUT_WITH_LIFESPAN, putWithLifespanRatio)
             .add(TemporalOperations.GET_AND_PUT_WITH_LIFESPAN, getAndPutWithLifespanRatio)
@@ -81,7 +81,7 @@ public class TemporalOperationsTestStage extends CacheOperationsTestStage {
       protected KeySelector keySelector;
 
       @Override
-      public void init(Stressor stressor) {
+      public void init(LegacyStressor stressor) {
          super.init(stressor);
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
          this.nonTxTemporalCache = temporalOperations.getCache(cacheName);
@@ -107,29 +107,27 @@ public class TemporalOperationsTestStage extends CacheOperationsTestStage {
       }
 
       @Override
-      public Object run() throws RequestException {
+      public void run(Operation operation) throws RequestException {
          Object key = keyGenerator.generateKey(keySelector.next());
          Random random = stressor.getRandom();
-         Operation operation = operationSelector.next(random);
 
          Invocation invocation;
          if (operation == BasicOperations.GET) {
-            invocation = new Invocations.Get(basicCache, key);
-            return stressor.makeRequest(invocation);
+            invocation = new CacheInvocations.Get(basicCache, key);
          } else if (operation == TemporalOperations.PUT_WITH_LIFESPAN) {
-            invocation = new Invocations.PutWithLifespan(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan);
+            invocation = new CacheInvocations.PutWithLifespan(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan);
          } else if (operation == TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE) {
-            invocation = new Invocations.PutWithLifespanAndMaxIdle(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan, maxIdle);
+            invocation = new CacheInvocations.PutWithLifespanAndMaxIdle(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan, maxIdle);
          } else if (operation == TemporalOperations.GET_AND_PUT_WITH_LIFESPAN) {
-            invocation = new Invocations.GetAndPutWithLifespan(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan);
+            invocation = new CacheInvocations.GetAndPutWithLifespan(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan);
          } else if (operation == TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE) {
-            invocation = new Invocations.GetAndPutWithLifespanAndMaxIdle(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan, maxIdle);
+            invocation = new CacheInvocations.GetAndPutWithLifespanAndMaxIdle(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan, maxIdle);
          } else if (operation == TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN) {
-            invocation = new Invocations.PutIfAbsentWithLifespan(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan);
+            invocation = new CacheInvocations.PutIfAbsentWithLifespan(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan);
          } else if (operation == TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE) {
-            invocation = new Invocations.PutIfAbsentWithLifespanAndMaxIdle(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan, maxIdle);
+            invocation = new CacheInvocations.PutIfAbsentWithLifespanAndMaxIdle(temporalCache, key, valueGenerator.generateValue(key, entrySize.next(random), random), lifespan, maxIdle);
          } else throw new IllegalArgumentException(operation.name);
-         return stressor.makeRequest(invocation);
+         stressor.makeRequest(invocation);
       }
    }
 }

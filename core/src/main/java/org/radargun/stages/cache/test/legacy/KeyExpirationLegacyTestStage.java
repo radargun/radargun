@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test;
+package org.radargun.stages.cache.test.legacy;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,10 +8,11 @@ import java.util.TreeSet;
 import org.radargun.Operation;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.test.OperationLogic;
-import org.radargun.stages.test.OperationSelector;
-import org.radargun.stages.test.RatioOperationSelector;
-import org.radargun.stages.test.Stressor;
+import org.radargun.stages.cache.test.CacheInvocations;
+import org.radargun.stages.test.legacy.OperationSelector;
+import org.radargun.stages.test.legacy.RatioOperationSelector;
+import org.radargun.stages.test.legacy.LegacyStressor;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.SizeConverter;
@@ -22,7 +23,7 @@ import org.radargun.utils.TimeService;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "During execution, keys expire (entries are removed from the cache) and new keys are used.")
-public class KeyExpirationTestStage extends CacheTestStage {
+public class KeyExpirationLegacyTestStage extends CacheLegacyTestStage {
 
    @Property(doc = "Maximum number of entries stored in the cache by one stressor thread at one moment.")
    protected long numEntriesPerThread = 0;
@@ -74,7 +75,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
       private BasicOperations.Cache cache;
 
       @Override
-      public void init(Stressor stressor) {
+      public void init(LegacyStressor stressor) {
          super.init(stressor);
          nextKeyIndex = stressor.getGlobalThreadIndex();
          double averageSize = 0;
@@ -124,7 +125,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
             pair = load.scheduledKeys.pollFirst();
             Boolean value;
             try {
-               value = (Boolean) stressor.makeRequest(new Invocations.Remove(cache, pair.key));
+               value = (Boolean) stressor.makeRequest(new CacheInvocations.Remove(cache, pair.key));
             } catch (RequestException e) {
                load.scheduledKeys.add(pair);
                return;
@@ -146,7 +147,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
                   return;
                }
                pair = getRandomPair(load.scheduledKeys, timestamp, random);
-               Object value = stressor.makeRequest(new Invocations.Get(cache, pair.key));
+               Object value = stressor.makeRequest(new CacheInvocations.Get(cache, pair.key));
                if (value == null) {
                   if (expectLostKeys) {
                      load.scheduledKeys.remove(pair);
@@ -177,12 +178,12 @@ public class KeyExpirationTestStage extends CacheTestStage {
                }
                Object value = valueGenerator.generateValue(null, size, stressor.getRandom());
                try {
-                  stressor.makeRequest(new Invocations.Put(cache, pair.key, value));
+                  stressor.makeRequest(new CacheInvocations.Put(cache, pair.key, value));
                } catch (RequestException e) {
                   load.scheduledKeys.remove(pair);
                   while (!isTerminated()) {
                      try {
-                        stressor.makeRequest(new Invocations.Remove(cache, pair.key));
+                        stressor.makeRequest(new CacheInvocations.Remove(cache, pair.key));
                         return;
                      } catch (RequestException e1) {
                         // exception already logged in Stressor

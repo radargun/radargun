@@ -1,15 +1,16 @@
 package org.radargun.stages.query;
 
+import java.util.concurrent.atomic.AtomicIntegerArray;
+
 import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.stages.cache.test.Invocations;
-import org.radargun.stages.test.OperationLogic;
-import org.radargun.stages.test.Stressor;
 import org.radargun.traits.Query;
+import org.radargun.stages.cache.test.CacheInvocations;
+import org.radargun.stages.test.legacy.LegacyStressor;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.traits.Queryable;
-
-import java.util.concurrent.atomic.AtomicIntegerArray;
+import org.radargun.utils.TimeService;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -45,7 +46,7 @@ public class QueryLogic extends OperationLogic {
    }
 
    @Override
-   public void init(Stressor stressor) {
+   public void init(LegacyStressor stressor) {
       super.init(stressor);
       stressor.setUseTransactions(true);
    }
@@ -56,9 +57,9 @@ public class QueryLogic extends OperationLogic {
       Query query = queryBase.builders[randomQueryNumber].build();
       Query.Result queryResult;
       context = queryable.createContext(null);
-      long start = System.nanoTime();
-      queryResult = (Query.Result) stressor.makeRequest(new Invocations.Query(query, context));
-      long end = System.nanoTime();
+      long start = TimeService.nanoTime();
+      queryResult = stressor.makeRequest(new CacheInvocations.Query(query, context));
+      long end = TimeService.nanoTime();
       log.infof("Invoked query %d (%dth) in %d us", randomQueryNumber, queryInvocations.incrementAndGet(randomQueryNumber), (end - start) / 1000);
 
       int size = queryResult.size();

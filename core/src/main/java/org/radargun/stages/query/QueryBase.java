@@ -1,5 +1,13 @@
 package org.radargun.stages.query;
 
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -8,13 +16,6 @@ import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.MinMax;
-
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Logic for creating the query builders and retrieving query results.

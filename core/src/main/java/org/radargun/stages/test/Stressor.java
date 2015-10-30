@@ -11,130 +11,96 @@ import org.radargun.traits.Transactional;
 import org.radargun.utils.TimeService;
 
 /**
- * Each stressor operates according to its {@link OperationLogic logic} - the instance is private to each thread.
- * After finishing the {@linkplain OperationLogic#init(Stressor) init phase}, all stressors synchronously
- * execute logic's {@link OperationLogic#run(org.radargun.Operation) run} method until
- * the {@link Completion#moreToRun()} returns false.
+ * Thread that generates the load in {@link TestStage}, created in {@link TestSetupStage}
+ * and kept in {@link RunningTest}. The thread can either execute in ramp-up state (without
+ * any statistics recorded) or in steady-state, where statistics are recorded.
+ * During execution, the thread queries {@link ConversationSelector} for the next
+ * {@link Conversation} and then executes it's {@link Conversation#run(Stressor)} method
+ * which in turn calls {@link #makeRequest(Invocation)} with certain {@link Invocation}.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Stressor extends Thread {
    private static Log log = LogFactory.getLog(Stressor.class);
 
-   private final TestStage stage;
-   private final int threadIndex;
-   private final int globalThreadIndex;
-   private final OperationLogic logic;
-   private final Random random;
-   private final OperationSelector operationSelector;
-   private final Completion completion;
+   private final RunningTest test;
+   private final Random random = ThreadLocalRandom.current();
+   ;
 
-   private boolean useTransactions;
-   private int txRemainingOperations = 0;
-   private long transactionDuration = 0;
-   private Transactional.Transaction ongoingTx;
+   private ConversationSelector selector;
    private Statistics stats;
-   private boolean started = false;
 
-   public Stressor(TestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex) {
+   private long transactionDuration = 0;
+   private boolean logTransactionExceptions = true;
+
+   public Stressor(int threadIndex, RunningTest test, boolean logTransactionExceptions) {
       super("Stressor-" + threadIndex);
-      this.stage = stage;
-      this.threadIndex = threadIndex;
-      this.globalThreadIndex = globalThreadIndex;
-      this.logic = logic;
-      this.random = ThreadLocalRandom.current();
-      this.completion = stage.getCompletion();
-      this.operationSelector = stage.getOperationSelector();
+      this.test = test;
+      this.logTransactionExceptions = logTransactionExceptions;
    }
 
    private boolean recording() {
-      return started && !stage.isFinished();
+      return stats != null;
    }
 
    @Override
    public void run() {
       try {
-         logic.init(this);
-         stats = stage.createStatistics();
+         while (!test.isFinished()) {
+            // one cycle of this loop should match to a stage.
 
-         runInternal();
+            // this is the ramp-up state
+            while (!test.isFinished() && !test.isSteadyState()) {
+               selector = test.getSelector();
+               try {
+                  Conversation conversation = selector.next();
+                  conversation.run(this);
+               } catch (InterruptedException e) {
+                  // just react on test state
+               } catch (RequestException e) {
+                  // the exception was already logged in makeRequest
+               }
+            }
 
+            stats = test.createStatistics();
+            stats.begin();
+
+            // and this is the steady state
+            while (test.isSteadyState()) {
+               if (selector == null) {
+                  // this means that the thread was not created during ramp-up state,
+                  // since it did not grab the selector
+                  selector = test.getSelector();
+               }
+               try {
+                  Conversation conversation = selector.next();
+                  conversation.run(this);
+               } catch (InterruptedException e) {
+                  // the test is interrupted
+               } catch (RequestException e) {
+                  // the exception was already logged in makeRequest
+               }
+            }
+
+            stats.end();
+            test.recordStatistics(stats);
+            stats = null; // let's throw NPE if we try to record now
+         }
       } catch (Exception e) {
          log.error("Unexpected error in stressor!", e);
-         stage.setTerminated();
-      } finally {
-         if (stats != null) {
-            stats.end();
-         }
-         logic.destroy();
+         test.setTerminated();
       }
    }
 
-   private void runInternal() {
-      while (!stage.isTerminated()) {
-         boolean started = stage.isStarted();
-         if (started) {
-            txRemainingOperations = 0;
-            if (ongoingTx != null) {
-               endTransactionAndRegisterStats(null);
-            }
-            stats.begin();
-            this.started = started;
-            break;
-         }
-         Operation operation = operationSelector.next(random);
-         try {
-            logic.run(operation);
-         } catch (OperationLogic.RequestException e) {
-            // the exception was already logged in makeRequest
-         }
-      }
-
-      operationSelector.start();
-      completion.start();
-      int i = 0;
-      for (;;) {
-         Operation operation = operationSelector.next(random);
-         if (!completion.moreToRun()) break;
-         try {
-            logic.run(operation);
-         } catch (OperationLogic.RequestException e) {
-            // the exception was already logged in makeRequest
-         }
-         i++;
-         completion.logProgress(i);
-      }
-
-      if (txRemainingOperations > 0) {
-         endTransactionAndRegisterStats(null);
-      }
-   }
-
-   public <T> T wrap(T resource) {
-      return ongoingTx.wrap(resource);
-   }
-
-   public Object makeRequest(Invocation invocation) throws OperationLogic.RequestException {
-      return makeRequest(invocation, true);
-   }
-
-   public Object makeRequest(Invocation invocation, boolean countForTx) throws OperationLogic.RequestException {
-      long startTxTime = 0;
-      if (useTransactions && txRemainingOperations <= 0) {
-         try {
-            ongoingTx = stage.transactional.getTransaction();
-            logic.transactionStarted();
-            startTxTime = startTransaction();
-            transactionDuration = startTxTime;
-            txRemainingOperations = stage.transactionSize;
-            if (recording()) stats.registerRequest(startTxTime, Transactional.BEGIN);
-         } catch (TransactionException e) {
-            if (recording()) stats.registerError(e.getOperationDuration(), Transactional.BEGIN);
-            throw new OperationLogic.RequestException(e);
-         }
-      }
-
-      Object result = null;
+   /**
+    * Main method called from conversation in order to execute an operation with registered duration.
+    *
+    * @param invocation
+    * @param <T>
+    * @return
+    */
+   public <T> T makeRequest(Invocation<T> invocation) {
+      T result = null;
       boolean successful = true;
       Exception exception = null;
       long start = TimeService.nanoTime();
@@ -146,21 +112,14 @@ public class Stressor extends Thread {
          // however, we can't be 100% sure about reordering without
          // volatile writes/reads here
          Blackhole.consume(result);
-         if (countForTx) {
-            txRemainingOperations--;
-         }
       } catch (Exception e) {
          operationDuration = TimeService.nanoTime() - start;
          log.warn("Error in request", e);
          successful = false;
-         txRemainingOperations = 0;
          exception = e;
       }
       transactionDuration += operationDuration;
 
-      if (useTransactions && txRemainingOperations <= 0) {
-         endTransactionAndRegisterStats(stage.isSingleTxType() ? invocation.txOperation() : null);
-      }
       if (recording()) {
          if (successful) {
             stats.registerRequest(operationDuration, invocation.operation());
@@ -169,100 +128,75 @@ public class Stressor extends Thread {
          }
       }
       if (exception != null) {
-         throw new OperationLogic.RequestException(exception);
+         throw new RequestException(exception);
       }
       return result;
    }
 
-   private void endTransactionAndRegisterStats(Operation singleTxOperation) {
+   public void startTransaction(Transactional.Transaction transaction) {
       long start = TimeService.nanoTime();
       try {
-         if (stage.commitTransactions) {
-            ongoingTx.commit();
+         transaction.begin();
+         long time = TimeService.nanoTime() - start;
+         transactionDuration = time;
+         if (recording()) stats.registerRequest(time, Transactional.BEGIN);
+      } catch (Exception e) {
+         long time = TimeService.nanoTime() - start;
+         log.error("Failed to start transaction", e);
+         if (recording()) stats.registerError(time, Transactional.BEGIN);
+         throw e;
+      }
+   }
+
+   public void commitTransaction(Transactional.Transaction transaction, Operation txOperation) {
+      endTransaction(transaction, true, txOperation);
+   }
+
+   public void rollbackTransaction(Transactional.Transaction transaction, Operation txOperation) {
+      endTransaction(transaction, false, txOperation);
+   }
+
+   private void endTransaction(Transactional.Transaction transaction, boolean commit, Operation txOperation) {
+      long start = TimeService.nanoTime();
+      try {
+         if (commit) {
+            transaction.commit();
          } else {
-            ongoingTx.rollback();
+            transaction.rollback();
          }
          long endTxTime = TimeService.nanoTime() - start;
          transactionDuration += endTxTime;
          if (recording()) {
-            stats.registerRequest(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
+            stats.registerRequest(endTxTime, commit ? Transactional.COMMIT : Transactional.ROLLBACK);
             stats.registerRequest(transactionDuration, Transactional.DURATION);
-            if (singleTxOperation != null) {
-               stats.registerRequest(transactionDuration, singleTxOperation);
+            if (txOperation != null) {
+               stats.registerRequest(transactionDuration, txOperation);
             }
          }
       } catch (Exception e) {
          long endTxTime = TimeService.nanoTime() - start;
          if (recording()) {
-            stats.registerError(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
+            stats.registerError(endTxTime, commit ? Transactional.COMMIT : Transactional.ROLLBACK);
             stats.registerError(transactionDuration + endTxTime, Transactional.DURATION);
-            if (singleTxOperation != null) {
-               stats.registerError(transactionDuration, singleTxOperation);
+            if (txOperation != null) {
+               stats.registerError(transactionDuration, txOperation);
             }
          }
-         if (stage.logTransactionExceptions) {
+         if (logTransactionExceptions) {
             log.error("Failed to end transaction", e);
          }
-      } finally {
-         clearTransaction();
       }
-   }
-
-   public void setUseTransactions(boolean useTransactions) {
-      this.useTransactions = useTransactions;
-   }
-
-   private void clearTransaction() {
-      ongoingTx = null;
-      logic.transactionEnded();
-   }
-
-   public int getThreadIndex() {
-      return threadIndex;
-   }
-
-   public int getGlobalThreadIndex() {
-      return globalThreadIndex;
-   }
-
-   public Statistics getStats() {
-      return stats;
-   }
-
-   public OperationLogic getLogic() {
-      return logic;
    }
 
    public Random getRandom() {
       return random;
    }
 
-   public boolean isUseTransactions() {
-      return useTransactions;
-   }
-
-   private long startTransaction() throws TransactionException {
-      long start = TimeService.nanoTime();
-      try {
-         ongoingTx.begin();
-      } catch (Exception e) {
-         long time = TimeService.nanoTime() - start;
-         log.error("Failed to start transaction", e);
-         throw new TransactionException(time, e);
-      }
-      return TimeService.nanoTime() - start;
-   }
-
-   private class TransactionException extends Exception {
-      private final long operationDuration;
-
-      public TransactionException(long duration, Exception cause) {
+   // this is a runtime exception since we don't want to declare in in Conversation#run(), because it's only thrown
+   // from makeRequest
+   private static class RequestException extends RuntimeException {
+      public RequestException(Throwable cause) {
          super(cause);
-         this.operationDuration = duration;
-      }
-
-      public long getOperationDuration() {
-         return operationDuration;
       }
    }
 }

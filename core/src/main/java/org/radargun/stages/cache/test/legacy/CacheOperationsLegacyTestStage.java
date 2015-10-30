@@ -1,21 +1,21 @@
-package org.radargun.stages.cache.test;
+package org.radargun.stages.cache.test.legacy;
 
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.legacy.LegacyStressor;
 import org.radargun.utils.ReflexiveConverters;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Common ancestor for all xOperationsTestStages")
-public abstract class CacheOperationsTestStage extends CacheTestStage {
+public abstract class CacheOperationsLegacyTestStage extends CacheLegacyTestStage {
    @Property(name = "keySelector", doc = "Selects which key IDs are used in the test.", optional = false,
          complexConverter = KeySelectorFactoryConverter.class)
    protected KeySelectorFactory keySelectorFactory;
 
-   protected KeySelector getKeySelector(Stressor stressor) {
-      return keySelectorFactory.newInstance(CacheOperationsTestStage.this,
+   protected KeySelector getKeySelector(LegacyStressor stressor) {
+      return keySelectorFactory.newInstance(CacheOperationsLegacyTestStage.this,
             stressor.getRandom(), stressor.getGlobalThreadIndex(), stressor.getThreadIndex());
    }
 

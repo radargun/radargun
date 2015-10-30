@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test;
+package org.radargun.stages.cache.test.legacy;
 
 import java.util.Random;
 
@@ -29,7 +29,7 @@ public class CollidingKeysSelector implements KeySelector {
       private long numEntries = 0;
 
       @Override
-      public KeySelector newInstance(CacheOperationsTestStage stage, Random random, int globalThreadId, int threadId) {
+      public KeySelector newInstance(CacheOperationsLegacyTestStage stage, Random random, int globalThreadId, int threadId) {
          return new CollidingKeysSelector(random, numEntries);
       }
 

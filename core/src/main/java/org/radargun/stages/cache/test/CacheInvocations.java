@@ -18,22 +18,21 @@ import org.radargun.traits.Queryable;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Invocations {
-   public static final class Get implements Invocation {
-      private final static Operation GET_NULL = BasicOperations.GET.derive("Null");
-      private final static Operation GET_TX = BasicOperations.GET.derive("TX");
-      private final static Operation GET_NULL_TX = BasicOperations.GET.derive("TX");
-      private final BasicOperations.Cache cache;
-      private final Object key;
-      private Object value;
+public class CacheInvocations {
+   public static final class Get<K, V> implements Invocation<V> {
+      public final static Operation GET_NULL = BasicOperations.GET.derive("Null");
+      public final static Operation TX = BasicOperations.GET.derive("TX");
+      private final BasicOperations.Cache<K, V> cache;
+      private final K key;
+      private V value;
 
-      public Get(BasicOperations.Cache cache, Object key) {
+      public Get(BasicOperations.Cache cache, K key) {
          this.cache = cache;
          this.key = key;
       }
 
       @Override
-      public Object invoke() {
+      public V invoke() {
          return value = cache.get(key);
       }
 
@@ -44,24 +43,24 @@ public class Invocations {
 
       @Override
       public Operation txOperation() {
-         return value == null ? GET_NULL_TX : GET_TX;
+         return TX;
       }
    }
 
-   public static final class Put implements Invocation {
-      private final static Operation TX = BasicOperations.PUT.derive("TX");
-      private final BasicOperations.Cache cache;
-      private final Object key;
-      private final Object value;
+   public static final class Put<K, V> implements Invocation<Void> {
+      public final static Operation TX = BasicOperations.PUT.derive("TX");
+      private final BasicOperations.Cache<K, V> cache;
+      private final K key;
+      private final V value;
 
-      public Put(BasicOperations.Cache cache, Object key, Object value) {
+      public Put(BasicOperations.Cache<K, V> cache, K key, V value) {
          this.cache = cache;
          this.key = key;
          this.value = value;
       }
 
       @Override
-      public Object invoke() {
+      public Void invoke() {
          cache.put(key, value);
          return null;
       }
@@ -77,14 +76,14 @@ public class Invocations {
       }
    }
 
-   public static final class PutWithLifespan implements Invocation {
+   public static final class PutWithLifespan<K, V> implements Invocation<V> {
       private final static Operation TX = TemporalOperations.PUT_WITH_LIFESPAN.derive("TX");
-      private final TemporalOperations.Cache cache;
-      private final Object key;
-      private final Object value;
+      private final TemporalOperations.Cache<K, V> cache;
+      private final K key;
+      private final V value;
       private final long lifespan;
 
-      public PutWithLifespan(TemporalOperations.Cache cache, Object key, Object value, long lifespan) {
+      public PutWithLifespan(TemporalOperations.Cache<K, V> cache, K key, V value, long lifespan) {
          this.cache = cache;
          this.key = key;
          this.value = value;
@@ -92,7 +91,7 @@ public class Invocations {
       }
 
       @Override
-      public Object invoke() {
+      public V invoke() {
          cache.put(key, value, lifespan);
          return null;
       }
@@ -108,15 +107,15 @@ public class Invocations {
       }
    }
 
-   public static final class PutWithLifespanAndMaxIdle implements Invocation {
+   public static final class PutWithLifespanAndMaxIdle<K, V> implements Invocation<Void> {
       private final static Operation TX = TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
-      private final TemporalOperations.Cache cache;
-      private final Object key;
-      private final Object value;
+      private final TemporalOperations.Cache<K, V> cache;
+      private final K key;
+      private final V value;
       private final long lifespan;
       private final long maxIdle;
 
-      public PutWithLifespanAndMaxIdle(TemporalOperations.Cache cache, Object key, Object value, long lifespan, long maxIdle) {
+      public PutWithLifespanAndMaxIdle(TemporalOperations.Cache<K, V> cache, K key, V value, long lifespan, long maxIdle) {
          this.cache = cache;
          this.key = key;
          this.value = value;
@@ -125,7 +124,7 @@ public class Invocations {
       }
 
       @Override
-      public Object invoke() {
+      public Void invoke() {
          cache.put(key, value, lifespan, maxIdle);
          return null;
       }
@@ -141,18 +140,18 @@ public class Invocations {
       }
    }
 
-   public static final class Remove implements Invocation {
-      private final static Operation TX = BasicOperations.REMOVE.derive("TX");
-      private final BasicOperations.Cache cache;
-      private final Object key;
+   public static final class Remove<K, V> implements Invocation<Boolean> {
+      public final static Operation TX = BasicOperations.REMOVE.derive("TX");
+      private final BasicOperations.Cache<K, V> cache;
+      private final K key;
 
-      public Remove(BasicOperations.Cache cache, Object key) {
+      public Remove(BasicOperations.Cache cache, K key) {
          this.cache = cache;
          this.key = key;
       }
 
       @Override
-      public Object invoke() {
+      public Boolean invoke() {
          return cache.remove(key);
       }
 
@@ -167,18 +166,18 @@ public class Invocations {
       }
    }
 
-   public static final class ContainsKey implements Invocation {
-      private final static Operation TX = BasicOperations.CONTAINS_KEY.derive("TX");
-      private final BasicOperations.Cache cache;
-      private final Object key;
+   public static final class ContainsKey<K> implements Invocation<Boolean> {
+      public final static Operation TX = BasicOperations.CONTAINS_KEY.derive("TX");
+      private final BasicOperations.Cache<K, ?> cache;
+      private final K key;
 
-      public ContainsKey(BasicOperations.Cache cache, Object key) {
+      public ContainsKey(BasicOperations.Cache<K, ?> cache, K key) {
          this.cache = cache;
          this.key = key;
       }
 
       @Override
-      public Object invoke() {
+      public Boolean invoke() {
          return cache.containsKey(key);
       }
 
@@ -193,20 +192,20 @@ public class Invocations {
       }
    }
 
-   public static final class GetAndPut implements Invocation {
-      private final static Operation TX = BasicOperations.GET_AND_PUT.derive("TX");
-      private final BasicOperations.Cache cache;
-      private final Object key;
-      private final Object value;
+   public static final class GetAndPut<K, V> implements Invocation<V> {
+      public final static Operation TX = BasicOperations.GET_AND_PUT.derive("TX");
+      private final BasicOperations.Cache<K, V> cache;
+      private final K key;
+      private final V value;
 
-      public GetAndPut(BasicOperations.Cache cache, Object key, Object value) {
+      public GetAndPut(BasicOperations.Cache<K, V> cache, K key, V value) {
          this.cache = cache;
          this.key = key;
          this.value = value;
       }
 
       @Override
-      public Object invoke() {
+      public V invoke() {
          return cache.getAndPut(key, value);
       }
 
@@ -221,14 +220,14 @@ public class Invocations {
       }
    }
 
-   public static final class GetAndPutWithLifespan implements Invocation {
+   public static final class GetAndPutWithLifespan<K, V> implements Invocation<V> {
       private final static Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN.derive("TX");
-      private final TemporalOperations.Cache cache;
-      private final Object key;
-      private final Object value;
+      private final TemporalOperations.Cache<K, V> cache;
+      private final K key;
+      private final V value;
       private final long lifespan;
 
-      public GetAndPutWithLifespan(TemporalOperations.Cache cache, Object key, Object value, long lifespan) {
+      public GetAndPutWithLifespan(TemporalOperations.Cache<K, V> cache, K key, V value, long lifespan) {
          this.cache = cache;
          this.key = key;
          this.value = value;
@@ -236,7 +235,7 @@ public class Invocations {
       }
 
       @Override
-      public Object invoke() {
+      public V invoke() {
          return cache.getAndPut(key, value, lifespan);
       }
 
@@ -249,15 +248,15 @@ public class Invocations {
       }
    }
 
-   public static final class GetAndPutWithLifespanAndMaxIdle implements Invocation {
+   public static final class GetAndPutWithLifespanAndMaxIdle<K, V> implements Invocation<V> {
       private final static Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
-      private final TemporalOperations.Cache cache;
-      private final Object key;
-      private final Object value;
+      private final TemporalOperations.Cache<K, V> cache;
+      private final K key;
+      private final V value;
       private final long lifespan;
       private final long maxIdle;
 
-      public GetAndPutWithLifespanAndMaxIdle(TemporalOperations.Cache cache, Object key, Object value, long lifespan, long maxIdle) {
+      public GetAndPutWithLifespanAndMaxIdle(TemporalOperations.Cache<K, V> cache, K key, V value, long lifespan, long maxIdle) {
          this.cache = cache;
          this.key = key;
          this.value = value;
@@ -266,7 +265,7 @@ public class Invocations {
       }
 
       @Override
-      public Object invoke() {
+      public V invoke() {
          return cache.getAndPut(key, value, lifespan, maxIdle);
       }
 
@@ -279,18 +278,18 @@ public class Invocations {
       }
    }
 
-   public static final class GetAndRemove implements Invocation {
-      private final static Operation TX = BasicOperations.GET_AND_REMOVE.derive("TX");
-      private final BasicOperations.Cache cache;
-      private final Object key;
+   public static final class GetAndRemove<K, V> implements Invocation<V> {
+      public final static Operation TX = BasicOperations.GET_AND_REMOVE.derive("TX");
+      private final BasicOperations.Cache<K, V> cache;
+      private final K key;
 
-      public GetAndRemove(BasicOperations.Cache cache, Object key) {
+      public GetAndRemove(BasicOperations.Cache<K, V> cache, K key) {
          this.cache = cache;
          this.key = key;
       }
 
       @Override
-      public Object invoke() {
+      public V invoke() {
          return cache.getAndRemove(key);
       }
 
@@ -305,20 +304,20 @@ public class Invocations {
       }
    }
 
-   public static final class PutIfAbsent implements Invocation {
+   public static final class PutIfAbsent<K, V> implements Invocation<Boolean> {
       private final static Operation TX = ConditionalOperations.PUT_IF_ABSENT.derive("TX");
-      private final ConditionalOperations.Cache cache;
-      private final Object key;
-      private final Object value;
+      private final ConditionalOperations.Cache<K, V> cache;
+      private final K key;
+      private final V value;
 
-      public PutIfAbsent(ConditionalOperations.Cache cache, Object key, Object value) {
+      public PutIfAbsent(ConditionalOperations.Cache<K, V> cache, K key, V value) {
          this.cache = cache;
          this.key = key;
          this.value = value;
       }
 
       @Override
-      public Object invoke() {
+      public Boolean invoke() {
          return cache.putIfAbsent(key, value);
       }
 
@@ -333,14 +332,14 @@ public class Invocations {
       }
    }
 
-   public static final class PutIfAbsentWithLifespan implements Invocation {
+   public static final class PutIfAbsentWithLifespan<K, V> implements Invocation<Boolean> {
       private final static Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN.derive("TX");
-      private final TemporalOperations.Cache cache;
-      private final Object key;
-      private final Object value;
+      private final TemporalOperations.Cache<K, V> cache;
+      private final K key;
+      private final V value;
       private final long lifespan;
 
-      public PutIfAbsentWithLifespan(TemporalOperations.Cache cache, Object key, Object value, long lifespan) {
+      public PutIfAbsentWithLifespan(TemporalOperations.Cache<K, V> cache, K key, V value, long lifespan) {
          this.cache = cache;
          this.key = key;
          this.value = value;
@@ -348,7 +347,7 @@ public class Invocations {
       }
 
       @Override
-      public Object invoke() {
+      public Boolean invoke() {
          return cache.putIfAbsent(key, value, lifespan);
       }
 
@@ -363,15 +362,15 @@ public class Invocations {
       }
    }
 
-   public static final class PutIfAbsentWithLifespanAndMaxIdle implements Invocation {
+   public static final class PutIfAbsentWithLifespanAndMaxIdle<K, V> implements Invocation<Boolean> {
       private final static Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
-      private final TemporalOperations.Cache cache;
-      private final Object key;
-      private final Object value;
+      private final TemporalOperations.Cache<K, V> cache;
+      private final K key;
+      private final V value;
       private final long lifespan;
       private final long maxIdle;
 
-      public PutIfAbsentWithLifespanAndMaxIdle(TemporalOperations.Cache cache, Object key, Object value, long lifespan, long maxIdle) {
+      public PutIfAbsentWithLifespanAndMaxIdle(TemporalOperations.Cache<K, V> cache, K key, V value, long lifespan, long maxIdle) {
          this.cache = cache;
          this.key = key;
          this.value = value;
@@ -380,7 +379,7 @@ public class Invocations {
       }
 
       @Override
-      public Object invoke() {
+      public Boolean invoke() {
          return cache.putIfAbsent(key, value, lifespan, maxIdle);
       }
 
@@ -395,20 +394,20 @@ public class Invocations {
       }
    }
 
-   public static final class RemoveConditionally implements Invocation {
+   public static final class RemoveConditionally<K, V> implements Invocation<Boolean> {
       private final static Operation TX = ConditionalOperations.REMOVE.derive("TX");
-      private final ConditionalOperations.Cache cache;
-      private final Object key;
-      private final Object value;
+      private final ConditionalOperations.Cache<K, V> cache;
+      private final K key;
+      private final V value;
 
-      public RemoveConditionally(ConditionalOperations.Cache cache, Object key, Object value) {
+      public RemoveConditionally(ConditionalOperations.Cache<K, V> cache, K key, V value) {
          this.cache = cache;
          this.key = key;
          this.value = value;
       }
 
       @Override
-      public Object invoke() {
+      public Boolean invoke() {
          return cache.remove(key, value);
       }
 
@@ -423,14 +422,14 @@ public class Invocations {
       }
    }
 
-   public static final class Replace implements Invocation {
+   public static final class Replace<K, V> implements Invocation<Boolean> {
       private final static Operation TX = ConditionalOperations.REPLACE.derive("TX");
-      private final ConditionalOperations.Cache cache;
-      private final Object key;
-      private final Object oldValue;
-      private final Object newValue;
+      private final ConditionalOperations.Cache<K, V> cache;
+      private final K key;
+      private final V oldValue;
+      private final V newValue;
 
-      public Replace(ConditionalOperations.Cache cache, Object key, Object oldValue, Object newValue) {
+      public Replace(ConditionalOperations.Cache<K, V> cache, K key, V oldValue, V newValue) {
          this.cache = cache;
          this.key = key;
          this.oldValue = oldValue;
@@ -438,7 +437,7 @@ public class Invocations {
       }
 
       @Override
-      public Object invoke() {
+      public Boolean invoke() {
          return cache.replace(key, oldValue, newValue);
       }
 
@@ -453,20 +452,20 @@ public class Invocations {
       }
    }
 
-   public static final class ReplaceAny implements Invocation {
+   public static final class ReplaceAny<K, V> implements Invocation<Boolean> {
       private final static Operation TX = ConditionalOperations.REPLACE_ANY.derive("TX");
-      private final ConditionalOperations.Cache cache;
-      private final Object key;
-      private final Object newValue;
+      private final ConditionalOperations.Cache<K, V> cache;
+      private final K key;
+      private final V newValue;
 
-      public ReplaceAny(ConditionalOperations.Cache cache, Object key, Object newValue) {
+      public ReplaceAny(ConditionalOperations.Cache<K, V> cache, K key, V newValue) {
          this.cache = cache;
          this.key = key;
          this.newValue = newValue;
       }
 
       @Override
-      public Object invoke() {
+      public Boolean invoke() {
          return cache.replace(key, newValue);
       }
 
@@ -481,20 +480,20 @@ public class Invocations {
       }
    }
 
-   public static final class GetAndReplace implements Invocation {
+   public static final class GetAndReplace<K, V> implements Invocation<V> {
       private final static Operation TX = ConditionalOperations.GET_AND_REPLACE.derive("TX");
-      private final ConditionalOperations.Cache cache;
-      private final Object key;
-      private final Object newValue;
+      private final ConditionalOperations.Cache<K, V> cache;
+      private final K key;
+      private final V newValue;
 
-      public GetAndReplace(ConditionalOperations.Cache cache, Object key, Object newValue) {
+      public GetAndReplace(ConditionalOperations.Cache<K, V> cache, K key, V newValue) {
          this.cache = cache;
          this.key = key;
          this.newValue = newValue;
       }
 
       @Override
-      public Object invoke() {
+      public V invoke() {
          return cache.getAndReplace(key, newValue);
       }
 
@@ -509,21 +508,21 @@ public class Invocations {
       }
    }
 
-   public static final class GetAll implements Invocation {
+   public static final class GetAll<K, V> implements Invocation<Map<K, V>> {
       private final static Operation NATIVE_TX = BulkOperations.GET_ALL_NATIVE.derive("TX");
       private final static Operation ASYNC_TX = BulkOperations.GET_ALL_ASYNC.derive("TX");
-      private final BulkOperations.Cache cache;
-      private final Set keys;
+      private final BulkOperations.Cache<K, V> cache;
+      private final Set<K> keys;
       private final boolean async;
 
-      public GetAll(BulkOperations.Cache cache, boolean async, Set keys) {
+      public GetAll(BulkOperations.Cache<K, V> cache, boolean async, Set<K> keys) {
          this.cache = cache;
          this.async = async;
          this.keys = keys;
       }
 
       @Override
-      public Object invoke() {
+      public Map<K, V> invoke() {
          return cache.getAll(keys);
       }
 
@@ -538,21 +537,21 @@ public class Invocations {
       }
    }
 
-   public static final class PutAll implements Invocation {
+   public static final class PutAll<K, V> implements Invocation<Void> {
       private final static Operation NATIVE_TX = BulkOperations.PUT_ALL_NATIVE.derive("TX");
       private final static Operation ASYNC_TX = BulkOperations.PUT_ALL_ASYNC.derive("TX");
-      private final BulkOperations.Cache cache;
-      private final Map entries;
+      private final BulkOperations.Cache<K, V> cache;
+      private final Map<K, V> entries;
       private final boolean async;
 
-      public PutAll(BulkOperations.Cache cache, boolean async, Map entries) {
+      public PutAll(BulkOperations.Cache<K, V> cache, boolean async, Map<K, V> entries) {
          this.cache = cache;
          this.async = async;
          this.entries = entries;
       }
 
       @Override
-      public Object invoke() {
+      public Void invoke() {
          cache.putAll(entries);
          return null;
       }
@@ -568,21 +567,21 @@ public class Invocations {
       }
    }
 
-   public static final class RemoveAll implements Invocation {
+   public static final class RemoveAll<K, V> implements Invocation<Void> {
       private final static Operation NATIVE_TX = BulkOperations.REMOVE_ALL_NATIVE.derive("TX");
       private final static Operation ASYNC_TX = BulkOperations.REMOVE_ALL_ASYNC.derive("TX");
-      private final BulkOperations.Cache cache;
-      private final Set keys;
+      private final BulkOperations.Cache<K, V> cache;
+      private final Set<K> keys;
       private final boolean async;
 
-      public RemoveAll(BulkOperations.Cache cache, boolean async, Set keys) {
+      public RemoveAll(BulkOperations.Cache<K, V> cache, boolean async, Set<K> keys) {
          this.cache = cache;
          this.async = async;
          this.keys = keys;
       }
 
       @Override
-      public Object invoke() {
+      public Void invoke() {
          cache.removeAll(keys);
          return null;
       }
@@ -598,7 +597,7 @@ public class Invocations {
       }
    }
 
-   public static final class Query implements Invocation {
+   public static final class Query implements Invocation<org.radargun.traits.Query.Result> {
       protected static final Operation TX = Queryable.QUERY.derive("TX");
       private final org.radargun.traits.Query query;
       private final org.radargun.traits.Query.Context context;
@@ -609,7 +608,7 @@ public class Invocations {
       }
 
       @Override
-      public Object invoke() {
+      public org.radargun.traits.Query.Result invoke() {
          return query.execute(context);
       }
 

@@ -80,9 +80,15 @@ public abstract class LoadStage extends AbstractDistStage {
       return successfulResponse();
    }
 
+   /**
+    * To be overridden in inheritors.
+    */
    protected void prepare() {
    }
 
+   /**
+    * To be overridden in inheritors.
+    */
    protected void destroy() {
    }
 

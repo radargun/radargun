@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test;
+package org.radargun.stages.cache.test.legacy;
 
 import java.util.Random;
 
@@ -42,7 +42,7 @@ public class ConcurrentKeysSelector implements KeySelector {
       }
 
       @Override
-      public KeySelector newInstance(CacheOperationsTestStage stage, Random random, int globalThreadId, int threadId) {
+      public KeySelector newInstance(CacheOperationsLegacyTestStage stage, Random random, int globalThreadId, int threadId) {
          int totalThreads = stage.getTotalThreads();
          if (numEntriesPerThread > 0) {
             return new ConcurrentKeysSelector(random, numEntriesPerThread * globalThreadId, numEntriesPerThread);

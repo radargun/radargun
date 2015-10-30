@@ -1,4 +1,4 @@
-package org.radargun.stages.test;
+package org.radargun.stages.test.legacy;
 
 import java.util.Random;
 import java.util.concurrent.Phaser;

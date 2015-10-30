@@ -34,11 +34,11 @@
          <conditions>
             <!-- The conditions are ANDed -->
             <any>
-               <eq path="text" value="Tiger" />
+               <eq path="text" value="string Tiger" />
                <like path="text" value="%Sea%" />
             </any>
             <not>
-               <eq path="text" value="Seahorse"/>
+               <eq path="text" value="string Seahorse"/>
             </not>
          </conditions>
       </query>

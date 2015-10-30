@@ -47,8 +47,8 @@ public class StateBase {
       this.maxClusterSize = maxClusterSize;
    }
 
-   public void remove(Object key) {
-      stateMap.remove(key);
+   public Object remove(Object key) {
+      return stateMap.remove(key);
    }
 
    /**

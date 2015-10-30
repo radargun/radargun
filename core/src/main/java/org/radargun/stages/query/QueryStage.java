@@ -1,13 +1,16 @@
 package org.radargun.stages.query;
 
+import java.util.List;
+import java.util.Map;
+
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.PropertyDelegate;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
-import org.radargun.stages.test.OperationLogic;
-import org.radargun.stages.test.Stressor;
-import org.radargun.stages.test.TestStage;
+import org.radargun.stages.test.legacy.LegacyStressor;
+import org.radargun.stages.test.legacy.LegacyTestStage;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
@@ -15,15 +18,12 @@ import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.Projections;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * This stage was refactored out to {@link org.radargun.stages.query} package in order
  * to make that code reusable with different threading models.
  */
 @Stage(doc = "Stage which executes a query.")
-public class QueryStage extends TestStage {
+public class QueryStage extends LegacyTestStage {
    @PropertyDelegate
    protected QueryConfiguration query = new QueryConfiguration();
 
@@ -47,7 +47,7 @@ public class QueryStage extends TestStage {
    }
 
    @Override
-   protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
+   protected DistStageAck newStatisticsAck(List<LegacyStressor> stressors) {
       QueryBase.Data data = base.createQueryData(internalsExposition);
       return new QueryAck(slaveState, gatherResults(stressors, new StatisticsResultRetriever()), data);
    }

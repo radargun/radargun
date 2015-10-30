@@ -27,38 +27,44 @@
 
       <!-- Preload the cache with data -->
       <load-data num-entries="5000"/>
-      <!-- 5 threads will execute total of 100,000 random requests against the default cache ('testCache')-->
+
       <!-- As the test is called 'warmup', performance statistics won't be reported -->
-      <basic-operations-test test-name="warmup" num-requests="100000" total-threads="10">
-         <key-selector>
-            <concurrent-keys total-entries="5000" />
-         </key-selector>
-      </basic-operations-test>
+      <basic-operations-test-setup test-name="warmup"
+                                   ramp-up-min-steady-period="1m"
+                                   num-entries="5000">
+         <!-- The test will execute a cache.get() request every 2 ms and put request every 8 ms -->
+         <get interval="2" invocations="1"/>
+         <put interval="10" invocations="1"/>
+      </basic-operations-test-setup>
+      <test test-name="warmup" duration="1m" />
 
       <!-- Remove all data from the default cache -->
       <clear-cache />
       <!-- Again, preload the cache with data -->
       <load-data num-entries="10000"/>
 
-      <!-- The loop will increase number of threads but at most 10 times -->
-      <repeat times="10">
-         <!-- Each threads should execute 1000 requests/s; 200 writes and 800 reads -->
-         <basic-operations-test test-name="stress-test" amend-test="true"
-                                duration="10s"
-                                total-threads="#{ 5 * ${repeat.counter} + 5 }"
-                                request-period="1">
+      <!-- We will scale the load up here, from 1000 gets/s to 3000 gets/s and from 250 puts/s to 750 puts/s -->
+      <repeat from="1" to="3">
+         <!-- In this stage we'll set goals for test execution -->
+         <basic-operations-test-setup test-name="stress-test"
+                                      ramp-up-min-steady-period="1m"
+                                      num-entries="10000">
+            <get interval="2" invocations="${repeat.counter}"/>
+            <put interval="10" invocations="${repeat.counter}"/>
+         </basic-operations-test-setup>
+         <!-- Here we run the test according to previous setting, in so-called steady state.
+              We set finish="false" because the test will continue in next loop. -->
+         <test test-name="stress-test" amend-test="true" finish="false"
+               duration="1m">
             <!-- Terminate the test when we can't achieve 95% of expected throughput,
                  or if the mean time is 1 ms or more  -->
             <repeat-condition>
                <all>
-                  <throughput-net on="BasicOperations.Put" over="#{ (5 * ${repeat.counter} + 5) * 200 * 95 / 100 }"/>
+                  <throughput-net on="BasicOperations.Put" over="#{ ${repeat.counter} * 100 * 95 / 100 }"/>
                   <mean on="BasicOperations.Put" below="1 ms" />
                </all>
             </repeat-condition>
-            <key-selector>
-               <concurrent-keys total-entries="10000"/>
-            </key-selector>
-         </basic-operations-test>
+         </test>
       </repeat>
 
       <!-- Stop JVM monitoring -->

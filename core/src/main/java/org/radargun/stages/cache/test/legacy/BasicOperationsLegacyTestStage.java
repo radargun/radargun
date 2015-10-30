@@ -1,15 +1,16 @@
-package org.radargun.stages.cache.test;
+package org.radargun.stages.cache.test.legacy;
 
 import java.util.Random;
 
 import org.radargun.Operation;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.stages.cache.test.CacheInvocations;
 import org.radargun.stages.test.Invocation;
-import org.radargun.stages.test.OperationLogic;
-import org.radargun.stages.test.OperationSelector;
-import org.radargun.stages.test.RatioOperationSelector;
-import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.legacy.OperationSelector;
+import org.radargun.stages.test.legacy.RatioOperationSelector;
+import org.radargun.stages.test.legacy.LegacyStressor;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 
@@ -17,7 +18,7 @@ import org.radargun.traits.InjectTrait;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Test using BasicOperations")
-public class BasicOperationsTestStage extends CacheOperationsTestStage {
+public class BasicOperationsLegacyTestStage extends CacheOperationsLegacyTestStage {
    @Property(doc = "Ratio of GET requests. Default is 4.")
    protected int getRatio = 4;
 
@@ -62,7 +63,7 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
       protected KeySelector keySelector;
 
       @Override
-      public void init(Stressor stressor) {
+      public void init(LegacyStressor stressor) {
          super.init(stressor);
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
          this.nonTxCache = basicOperations.getCache(cacheName);
@@ -90,17 +91,17 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
 
          Invocation invocation;
          if (operation == BasicOperations.GET) {
-            invocation = new Invocations.Get(cache, key);
+            invocation = new CacheInvocations.Get(cache, key);
          } else if (operation == BasicOperations.PUT) {
-            invocation = new Invocations.Put(cache, key, valueGenerator.generateValue(key, entrySize.next(random), random));
+            invocation = new CacheInvocations.Put(cache, key, valueGenerator.generateValue(key, entrySize.next(random), random));
          } else if (operation == BasicOperations.REMOVE) {
-            invocation = new Invocations.Remove(cache, key);
+            invocation = new CacheInvocations.Remove(cache, key);
          } else if (operation == BasicOperations.CONTAINS_KEY) {
-            invocation = new Invocations.ContainsKey(cache, key);
+            invocation = new CacheInvocations.ContainsKey(cache, key);
          } else if (operation == BasicOperations.GET_AND_PUT) {
-            invocation = new Invocations.GetAndPut(cache, key, valueGenerator.generateValue(key, entrySize.next(random), random));
+            invocation = new CacheInvocations.GetAndPut(cache, key, valueGenerator.generateValue(key, entrySize.next(random), random));
          } else if (operation == BasicOperations.GET_AND_REMOVE) {
-            invocation = new Invocations.GetAndRemove(cache, key);
+            invocation = new CacheInvocations.GetAndRemove(cache, key);
          } else throw new IllegalArgumentException(operation.name);
          stressor.makeRequest(invocation);
       }

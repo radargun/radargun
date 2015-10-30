@@ -1,4 +1,4 @@
-package org.radargun.stages.test;
+package org.radargun.stages.test.legacy;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;

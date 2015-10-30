@@ -25,11 +25,10 @@
          </value-generator>
       </load-data>
 
-      <!-- Iterate 1000x through the cache, retrieving objects that have value 42 -->
       <!-- NumberObjectFilter is plugin-specific class, therefore, this cannot be part of schema
            unless the class would be implemented using reflection as NumberObjectGenerator -->
       <iterate test-name="iteration"
-               num-requests="1000"
+               duration="2m"
                num-threads-per-node="10"
                synchronous-requests="true"
                fail-on-not-total-size="false"

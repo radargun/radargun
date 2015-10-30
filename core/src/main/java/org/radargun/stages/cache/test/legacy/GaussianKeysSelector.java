@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test;
+package org.radargun.stages.cache.test.legacy;
 
 import java.util.Random;
 
@@ -44,7 +44,7 @@ public class GaussianKeysSelector implements KeySelector {
         private long standardDeviation = -1;
 
         @Override
-        public KeySelector newInstance(CacheOperationsTestStage stage, Random random, int globalThreadId, int threadId) {
+        public KeySelector newInstance(CacheOperationsLegacyTestStage stage, Random random, int globalThreadId, int threadId) {
             if (mean == -1) {
                 mean = numEntries / 2;
             }

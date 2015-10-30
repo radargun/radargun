@@ -1,4 +1,4 @@
-package org.radargun.stages.test;
+package org.radargun.stages.test.legacy;
 
 /**
  * Limits the duration of test.

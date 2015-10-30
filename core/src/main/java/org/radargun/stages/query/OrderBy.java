@@ -48,7 +48,7 @@ public class OrderBy {
          for (OrderBy e : value) {
             sb.append(e.attribute).append(':').append(e.asc ? "ASC" : "DESC").append(", ");
          }
-         return sb.toString();
+         return sb.substring(0, sb.length() - 2);
       }
 
       @Override

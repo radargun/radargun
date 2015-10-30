@@ -1,14 +1,15 @@
-package org.radargun.stages.cache.test;
+package org.radargun.stages.cache.test.legacy;
 
 import java.util.Random;
 
 import org.radargun.Operation;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.test.OperationLogic;
-import org.radargun.stages.test.OperationSelector;
-import org.radargun.stages.test.RatioOperationSelector;
-import org.radargun.stages.test.Stressor;
+import org.radargun.stages.cache.test.CacheInvocations;
+import org.radargun.stages.test.legacy.OperationSelector;
+import org.radargun.stages.test.legacy.RatioOperationSelector;
+import org.radargun.stages.test.legacy.LegacyStressor;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;
@@ -18,7 +19,7 @@ import org.radargun.traits.InjectTrait;
  */
 @Stage(doc = "Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio" +
       "- this operation is executed anytime the selected key does not have value.")
-public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
+public class ConditionalOperationsLegacyTestStage extends CacheOperationsLegacyTestStage {
 
    @Property(doc = "Ratio of REMOVE requests. Default is 1.")
    protected int removeRatio = 1;
@@ -77,7 +78,7 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
       protected KeySelector keySelector;
 
       @Override
-      public void init(Stressor stressor) {
+      public void init(LegacyStressor stressor) {
          super.init(stressor);
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
          nonTxBasicCache = basicOperations.getCache(cacheName);
@@ -109,42 +110,42 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
          Object newValue = valueGenerator.generateValue(key, entrySize.next(random), random);
          boolean shouldMatch = matchSelector.shouldMatch();
 
-         Object oldValue = stressor.makeRequest(new Invocations.Get(basicCache, key));
+         Object oldValue = stressor.makeRequest(new CacheInvocations.Get(basicCache, key));
 
          if (oldValue == null) {
             Object prevValue;
             if (shouldMatch) {
-               prevValue = stressor.makeRequest(new Invocations.PutIfAbsent(conditionalCache, key, newValue));
+               prevValue = stressor.makeRequest(new CacheInvocations.PutIfAbsent(conditionalCache, key, newValue));
                matchSelector.record(prevValue == null);
             } else {
-               prevValue = stressor.makeRequest(new Invocations.GetAndReplace(conditionalCache, key, newValue));
+               prevValue = stressor.makeRequest(new CacheInvocations.GetAndReplace(conditionalCache, key, newValue));
                matchSelector.record(prevValue != null);
             }
          } else if (operation == ConditionalOperations.REMOVE) {
-            Boolean removed = (Boolean) stressor.makeRequest(new Invocations.RemoveConditionally(conditionalCache, key,
+            Boolean removed = (Boolean) stressor.makeRequest(new CacheInvocations.RemoveConditionally(conditionalCache, key,
                   shouldMatch ? oldValue : newValue));
             matchSelector.record(removed);
          } else if (operation == ConditionalOperations.REPLACE) {
             Object wrongValue = valueGenerator.generateValue(key, entrySize.next(random), random);
-            Boolean replaced = (Boolean) stressor.makeRequest(new Invocations.Replace(conditionalCache, key,
+            Boolean replaced = (Boolean) stressor.makeRequest(new CacheInvocations.Replace(conditionalCache, key,
                   shouldMatch ? oldValue : wrongValue, newValue));
             matchSelector.record(replaced);
          } else if (operation == ConditionalOperations.REPLACE_ANY) {
             Object prevValue;
             if (shouldMatch) {
-               prevValue = stressor.makeRequest(new Invocations.ReplaceAny(conditionalCache, key, newValue));
+               prevValue = stressor.makeRequest(new CacheInvocations.ReplaceAny(conditionalCache, key, newValue));
                matchSelector.record((Boolean) prevValue);
             } else {
-               prevValue = stressor.makeRequest(new Invocations.PutIfAbsent(conditionalCache, key, newValue));
+               prevValue = stressor.makeRequest(new CacheInvocations.PutIfAbsent(conditionalCache, key, newValue));
                matchSelector.record(prevValue == null);
             }
          } else if (operation == ConditionalOperations.GET_AND_REPLACE) {
             Object prevValue;
             if (shouldMatch) {
-               prevValue = stressor.makeRequest(new Invocations.GetAndReplace(conditionalCache, key, newValue));
+               prevValue = stressor.makeRequest(new CacheInvocations.GetAndReplace(conditionalCache, key, newValue));
                matchSelector.record(oldValue.equals(prevValue));
             } else {
-               prevValue = stressor.makeRequest(new Invocations.PutIfAbsent(conditionalCache, key, newValue));
+               prevValue = stressor.makeRequest(new CacheInvocations.PutIfAbsent(conditionalCache, key, newValue));
                matchSelector.record(prevValue == null);
             }
          } else throw new IllegalStateException("Unable to execute operation: " + operation.name);

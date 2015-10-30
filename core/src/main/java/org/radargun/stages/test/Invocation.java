@@ -1,18 +1,19 @@
 package org.radargun.stages.test;
 
 import org.radargun.Operation;
+import org.radargun.stages.test.legacy.LegacyStressor;
 
 /**
- * Represent an operation that the {@link org.radargun.stages.test.Stressor}
+ * Represent an operation that the {@link LegacyStressor}
  * should execute and record its duration.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public interface Invocation {
+public interface Invocation<T> {
    /**
     * Invoke the operation.
     */
-   Object invoke();
+   T invoke();
 
    /**
     * Operation that was executed.
@@ -23,6 +24,8 @@ public interface Invocation {
    /**
     * Operation variant if this was executed within transaction.
     * @return
+    * @deprecated only applicable for {@link LegacyStressor}
     */
+   @Deprecated
    Operation txOperation();
 }

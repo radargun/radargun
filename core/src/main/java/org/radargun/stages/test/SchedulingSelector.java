@@ -1,44 +1,44 @@
 package org.radargun.stages.test;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLongArray;
 
-import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.utils.Projections;
+import org.radargun.utils.TimeService;
 
 /**
  * Based on provided frequency, returns matching invocation from {@link #next()} or blocks the thread calling it.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class SchedulingOperationSelector implements OperationSelector {
-   private final static Log log = LogFactory.getLog(SchedulingOperationSelector.class);
+public class SchedulingSelector<T> {
+   private final static Log log = LogFactory.getLog(SchedulingSelector.class);
    private final static boolean trace = log.isTraceEnabled();
-   private final int[] frequencies;
-   private final int[] intervals;
-   private final Operation[] operations;
+   private final int[] invocations;
+   private final long[] intervals;
+   private final T[] operations;
    private final int numOperations;
-   private final AtomicLongArray lastSlots;
+   private final AtomicLongArray lastIntervals;
    private final AtomicIntegerArray todoInvocations;
    private volatile int offset;
 
    /**
     * @param operations Returned invocations
-    * @param frequencies Number of operations per slot
+    * @param invocations Number of operations per interval
     * @param intervals Size of slot, in milliseconds
     */
-   public SchedulingOperationSelector(Operation[] operations, int[] frequencies, int[] intervals) {
-      if (operations.length != frequencies.length) throw new IllegalArgumentException();
+   public SchedulingSelector(T[] operations, int[] invocations, long[] intervals) {
+      if (operations.length != invocations.length) throw new IllegalArgumentException();
       this.operations = operations;
-      this.frequencies = frequencies;
+      this.invocations = invocations;
       this.intervals = intervals;
       numOperations = operations.length;
-      lastSlots = new AtomicLongArray(numOperations);
+      lastIntervals = new AtomicLongArray(numOperations);
       todoInvocations = new AtomicIntegerArray(numOperations);
    }
 
@@ -46,23 +46,23 @@ public class SchedulingOperationSelector implements OperationSelector {
     * @return
     * @throws InterruptedException
     */
-   public Operation next() throws InterruptedException {
+   public T next() throws InterruptedException {
       WAIT_LOOP: for (;;) {
-         long now = System.currentTimeMillis();
+         long now = TimeService.currentTimeMillis();
          int myOffset = offset;
          INVOCATIONS_LOOP: for (int i = 0; i < numOperations; ++i) {
             int operationIndex = (i + myOffset) % numOperations;
 
-            int myInterval = intervals[operationIndex];
+            long myInterval = intervals[operationIndex];
             long currentInterval = now / myInterval;
 
             long lastInterval;
             boolean set = false;
             do {
-               lastInterval = lastSlots.get(operationIndex);
-            } while (currentInterval > lastInterval && !(set = lastSlots.compareAndSet(operationIndex, lastInterval, currentInterval)));
+               lastInterval = lastIntervals.get(operationIndex);
+            } while (currentInterval > lastInterval && !(set = lastIntervals.compareAndSet(operationIndex, lastInterval, currentInterval)));
             if (set) {
-               int frequency = frequencies[operationIndex];
+               int frequency = invocations[operationIndex];
                // we ignore the requests that should have been executed in previous slots;
                // if the slot is too small
                // -1 for immediatelly executed request
@@ -96,45 +96,36 @@ public class SchedulingOperationSelector implements OperationSelector {
       }
    }
 
-   @Override
-   public void start() {
-   }
+   public static class Builder<T> {
+      private final Class<T> clazz;
+      private List<T> operations = new ArrayList<>();
+      private List<Integer> invocations = new ArrayList<>();
+      private List<Long> intervals = new ArrayList<>();
 
-   @Override
-   public Operation next(Random ignored) {
-      try {
-         return next();
-      } catch (InterruptedException e) {
-         Thread.currentThread().interrupt();
-         return null;
+      public Builder(Class<T> clazz) {
+         this.clazz = clazz;
       }
-   }
 
-   public static class Builder {
-      private List<Operation> operations = new ArrayList<>();
-      private List<Integer> frequencies = new ArrayList<>();
-      private List<Integer> slotSizes = new ArrayList<>();
-
-      public Builder add(Operation operation, int frequency, int slotSize) {
+      public Builder<T> add(T operation, int invocations, long interval) {
          if (operation == null) {
             throw new IllegalArgumentException();
          }
-         if (frequency <= 0) {
+         if (invocations <= 0) {
             return this;
          }
-         if (slotSize <= 0) {
-            throw new IllegalArgumentException(operation.name + ": slotSize " + String.valueOf(slotSize));
+         if (interval <= 0) {
+            throw new IllegalArgumentException(operation + ": interval " + String.valueOf(interval));
          }
          operations.add(operation);
-         frequencies.add(frequency);
-         slotSizes.add(slotSize);
+         this.invocations.add(invocations);
+         intervals.add(interval);
          return this;
       }
 
-      public SchedulingOperationSelector build() {
+      public SchedulingSelector build() {
          if (operations.isEmpty()) throw new IllegalStateException("No operations set!");
-         return new SchedulingOperationSelector(operations.toArray(new Operation[operations.size()]),
-               Projections.toIntArray(frequencies), Projections.toIntArray(slotSizes));
+         return new SchedulingSelector(operations.toArray((T[]) Array.newInstance(clazz, operations.size())),
+               Projections.toIntArray(invocations), Projections.toLongArray(intervals));
       }
    }
 }

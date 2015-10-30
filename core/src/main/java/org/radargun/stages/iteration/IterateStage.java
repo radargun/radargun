@@ -14,9 +14,9 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.test.Invocation;
-import org.radargun.stages.test.OperationLogic;
-import org.radargun.stages.test.Stressor;
-import org.radargun.stages.test.TestStage;
+import org.radargun.stages.test.legacy.LegacyStressor;
+import org.radargun.stages.test.legacy.LegacyTestStage;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.CacheInformation;
@@ -30,7 +30,7 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Iterates through all entries.")
-public class IterateStage extends TestStage {
+public class IterateStage extends LegacyTestStage {
    @Property(doc = "Full class name of the filter used to iterate through entries. Default is none (accept all).")
    protected String filterClass;
 
@@ -71,7 +71,7 @@ public class IterateStage extends TestStage {
    }
 
    @Override
-   protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
+   protected DistStageAck newStatisticsAck(List<LegacyStressor> stressors) {
       List<List<IterationResult>> results = gatherResults(stressors, new IterationResultRetriever());
       if (results.size() != 1) {
          throw new IllegalArgumentException("Expected single iteration: " + results);
@@ -102,7 +102,7 @@ public class IterateStage extends TestStage {
       }
       for (IterationAck ack : Projections.instancesOf(acks, IterationAck.class)) {
          if (test != null) {
-            test.addStatistics(testIteration, ack.getSlaveIndex(), Projections.project(ack.results, new Projections.Func<IterationResult, Statistics>() {
+            test.addStatistics(getTestIteration(), ack.getSlaveIndex(), Projections.project(ack.results, new Projections.Func<IterationResult, Statistics>() {
                @Override
                public Statistics project(IterationResult result) {
                   return result.stats;
@@ -155,7 +155,7 @@ public class IterateStage extends TestStage {
                slaveMinElements != slaveMaxElements));
       }
       if (test != null) {
-         test.addResult(testIteration, new Report.TestResult("Elements", slaveResults,
+         test.addResult(getTestIteration(), new Report.TestResult("Elements", slaveResults,
                range(totalMinElements, totalMaxElements), totalMinElements != totalMaxElements));
       }
       return result;
@@ -178,7 +178,7 @@ public class IterateStage extends TestStage {
       private long maxElements = -1;
 
       @Override
-      public void init(Stressor stressor) {
+      public void init(LegacyStressor stressor) {
          super.init(stressor);
          if (filterClass != null) {
             filter = Utils.instantiateAndInit(filterClass, filterParam);
@@ -344,7 +344,7 @@ public class IterateStage extends TestStage {
 
    private class IterationResultRetriever implements ResultRetriever<IterationResult> {
       @Override
-      public IterationResult getResult(Stressor stressor) {
+      public IterationResult getResult(LegacyStressor stressor) {
          Logic logic = (Logic) stressor.getLogic();
          return new IterationResult(stressor.getStats(), logic.minElements, logic.maxElements, logic.failed);
       }

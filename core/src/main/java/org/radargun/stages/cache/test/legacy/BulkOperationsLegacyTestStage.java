@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test;
+package org.radargun.stages.cache.test.legacy;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,11 +9,12 @@ import java.util.Set;
 import org.radargun.Operation;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.stages.cache.test.CacheInvocations;
 import org.radargun.stages.test.Invocation;
-import org.radargun.stages.test.OperationLogic;
-import org.radargun.stages.test.OperationSelector;
-import org.radargun.stages.test.RatioOperationSelector;
-import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.legacy.OperationSelector;
+import org.radargun.stages.test.legacy.RatioOperationSelector;
+import org.radargun.stages.test.legacy.LegacyStressor;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.InjectTrait;
 
@@ -21,7 +22,7 @@ import org.radargun.traits.InjectTrait;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Executes operations from BulkOperations trait.")
-public class BulkOperationsTestStage extends CacheOperationsTestStage {
+public class BulkOperationsLegacyTestStage extends CacheOperationsLegacyTestStage {
    @Property(doc = "Number of keys inserted/retrieved within one operation. Applicable only when the cache wrapper" +
          " supports bulk operations. Default is 10.")
    protected int bulkSize = 10;
@@ -72,7 +73,7 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
       private KeySelector keySelector;
 
       @Override
-      public void init(Stressor stressor) {
+      public void init(LegacyStressor stressor) {
          super.init(stressor);
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
          this.nonTxNativeCache = bulkOperations.getCache(cacheName, false);
@@ -111,9 +112,9 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
                }
             }
             if (operation == BulkOperations.PUT_ALL_NATIVE) {
-               invocation = new Invocations.PutAll(nativeCache, false, map);
+               invocation = new CacheInvocations.PutAll(nativeCache, false, map);
             } else {
-               invocation = new Invocations.PutAll(asyncCache, true, map);
+               invocation = new CacheInvocations.PutAll(asyncCache, true, map);
             }
          } else {
             Set<Object> set = new HashSet<>(bulkSize);
@@ -126,15 +127,15 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
             }
             if (operation == BulkOperations.GET_ALL_NATIVE || operation == BulkOperations.GET_ALL_ASYNC) {
                if (operation == BulkOperations.GET_ALL_NATIVE) {
-                  invocation = new Invocations.GetAll(nativeCache, false, set);
+                  invocation = new CacheInvocations.GetAll(nativeCache, false, set);
                } else {
-                  invocation = new Invocations.GetAll(asyncCache, true, set);
+                  invocation = new CacheInvocations.GetAll(asyncCache, true, set);
                }
             } else {
                if (operation == BulkOperations.REMOVE_ALL_NATIVE) {
-                  invocation = new Invocations.RemoveAll(nativeCache, false, set);
+                  invocation = new CacheInvocations.RemoveAll(nativeCache, false, set);
                } else {
-                  invocation = new Invocations.RemoveAll(asyncCache,true, set);
+                  invocation = new CacheInvocations.RemoveAll(asyncCache,true, set);
                }
             }
          }

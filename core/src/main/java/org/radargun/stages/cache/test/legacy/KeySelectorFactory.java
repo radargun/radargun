@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test;
+package org.radargun.stages.cache.test.legacy;
 
 import java.util.Random;
 
@@ -10,5 +10,5 @@ import java.util.Random;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface KeySelectorFactory {
-   KeySelector newInstance(CacheOperationsTestStage stage, Random random, int globalThreadId, int threadId);
+   KeySelector newInstance(CacheOperationsLegacyTestStage stage, Random random, int globalThreadId, int threadId);
 }

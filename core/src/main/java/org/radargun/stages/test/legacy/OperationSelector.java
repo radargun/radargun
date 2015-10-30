@@ -1,4 +1,4 @@
-package org.radargun.stages.test;
+package org.radargun.stages.test.legacy;
 
 import java.util.Random;
 
@@ -9,7 +9,7 @@ import org.radargun.Operation;
  */
 public interface OperationSelector {
    /**
-    * This method should be invoked by every {@link Stressor} before the recorded phase
+    * This method should be invoked by every {@link LegacyStressor} before the recorded phase
     */
    void start();
 
