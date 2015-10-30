@@ -50,9 +50,9 @@ public class Hazelcast3Transactional implements Transactional {
          } else if (resource instanceof Hazelcast3Operations.Cache) {
             String cacheName = ((Hazelcast3Operations.Cache) resource).map.getName();
             return (T) new Hazelcast3Operations.Cache(transactionContext.getMap(cacheName));
-         } else if (resource instanceof HazelcastQueryable.HazelcastQueryContext) {
-            String cacheName = ((HazelcastQueryable.HazelcastQueryContext) resource).map.getName();
-            return (T) new HazelcastQueryable.HazelcastQueryContext(transactionContext.getMap(cacheName));
+         } else if (resource instanceof HazelcastQuery.Context) {
+            String cacheName = ((HazelcastQuery.Context) resource).map.getName();
+            return (T) new HazelcastQuery.Context(transactionContext.getMap(cacheName));
          } else {
             throw new IllegalArgumentException(String.valueOf(resource));
          }
