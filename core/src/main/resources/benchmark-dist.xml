@@ -56,7 +56,7 @@
          <!-- Here we run the test according to previous setting, in so-called steady state.
               We set finish="false" because the test will continue in next loop. -->
          <test test-name="stress-test" amend-test="true" finish="false"
-               duration="1m" />
+               duration="${test.duration:1m}" />
       </repeat>
       <!-- Finally, we'll terminate the test -->
       <finish-test test-name="stress-test" />

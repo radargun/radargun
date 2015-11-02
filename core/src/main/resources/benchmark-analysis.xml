@@ -29,9 +29,9 @@
       <cache-load num-entries="10000"/>
 
       <!-- Generate statistics for 10, 20, 30 .. 100 threads -->
-      <repeat times="10">
+      <repeat times="${repeat.times:10}">
          <basic-operations-legacy-test test-name="increase-thread-count" amend-test="true"
-                                duration="10s"
+                                duration="${test.short.duration:10s}"
                                 total-threads="#{ 10 * ${repeat.counter} + 10 }"
                                 iteration-property="total-threads">
             <key-selector>
@@ -52,7 +52,7 @@
 
       <!-- Run a longer test to get reliable results -->
       <basic-operations-legacy-test test-name="on-max-throughput"
-                             duration="1m" total-threads="#{ 10 * ${top.iteration} + 10 }">
+                             duration="${test.long.duration:1m}" total-threads="#{ 10 * ${top.iteration} + 10 }">
          <statistics>
             <default>
                <operation-stats>

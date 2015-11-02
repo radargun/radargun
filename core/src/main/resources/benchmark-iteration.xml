@@ -28,7 +28,7 @@
       <!-- NumberObjectFilter is plugin-specific class, therefore, this cannot be part of schema
            unless the class would be implemented using reflection as NumberObjectGenerator -->
       <iterate test-name="iteration"
-               duration="2m"
+               duration="${test.duration:2m}"
                num-threads-per-node="10"
                synchronous-requests="true"
                fail-on-not-total-size="false"

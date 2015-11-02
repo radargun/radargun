@@ -30,13 +30,13 @@
 
       <!-- As the test is called 'warmup', performance statistics won't be reported -->
       <basic-operations-test-setup test-name="warmup"
-                                   ramp-up-min-steady-period="1m"
+                                   ramp-up-min-steady-period="${warmup.duration:1m}"
                                    num-entries="5000">
          <!-- The test will execute a cache.get() request every 2 ms and put request every 8 ms -->
          <get interval="2" invocations="1"/>
          <put interval="10" invocations="1"/>
       </basic-operations-test-setup>
-      <test test-name="warmup" duration="1m" />
+      <test test-name="warmup" duration="${warmup.duration:1m}" />
 
       <!-- Remove all data from the default cache -->
       <cache-clear />
@@ -47,7 +47,7 @@
       <repeat from="1" to="3">
          <!-- In this stage we'll set goals for test execution -->
          <basic-operations-test-setup test-name="stress-test"
-                                      ramp-up-min-steady-period="1m"
+                                      ramp-up-min-steady-period="${test.duration:1m}"
                                       num-entries="10000">
             <get interval="2" invocations="${repeat.counter}"/>
             <put interval="10" invocations="${repeat.counter}"/>
@@ -55,7 +55,7 @@
          <!-- Here we run the test according to previous setting, in so-called steady state.
               We set finish="false" because the test will continue in next loop. -->
          <test test-name="stress-test" amend-test="true" finish="false"
-               duration="1m">
+               duration="${test.duration:1m}">
             <!-- Terminate the test when we can't achieve 95% of expected throughput,
                  or if the mean time is 1 ms or more  -->
             <repeat-condition>

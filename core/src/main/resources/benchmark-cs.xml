@@ -63,14 +63,14 @@
       <cache-load groups="client" num-entries="10000"/>
 
       <!-- Warmup executed only on the slave 1 = client -->
-      <basic-operations-legacy-test groups="client" test-name="warmup" num-threads-per-node="10" duration="60s">
+      <basic-operations-legacy-test groups="client" test-name="warmup" duration="${warmup.duration:60s}" num-threads-per-node="10">
          <key-selector>
             <concurrent-keys num-entries-per-thread="100" />
          </key-selector>
       </basic-operations-legacy-test>
 
       <!-- Stress test executed only on the slave 1 = client -->
-      <basic-operations-legacy-test slaves="1" duration="60s" num-threads-per-node="10">
+      <basic-operations-legacy-test slaves="1" duration="${test.duration:60s}" num-threads-per-node="10">
          <key-selector>
             <concurrent-keys num-entries-per-thread="1000" />
          </key-selector>

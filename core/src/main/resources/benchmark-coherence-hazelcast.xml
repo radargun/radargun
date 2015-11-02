@@ -34,14 +34,14 @@
          <get interval="2" invocations="1"/>
          <put interval="10" invocations="1"/>
       </basic-operations-test-setup>
-      <test test-name="warmup" duration="1m"/>
+      <test test-name="warmup" duration="${warmup.duration:1m}"/>
 
       <cache-load num-entries="10000"/>
       <basic-operations-test-setup test-name="stress-test" num-entries="10000">
          <get interval="1" invocations="2"/>
          <put interval="5" invocations="2"/>
       </basic-operations-test-setup>
-      <test test-name="stress-test" duration="1m"/>
+      <test test-name="stress-test" duration="${test.duration:1m}"/>
    </scenario>
    <!-- Ignore leaked threads as Coherence leaks quite often -->
    <cleanup check-threads="false" />

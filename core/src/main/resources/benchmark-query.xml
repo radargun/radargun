@@ -28,7 +28,7 @@
 
       <!-- Logic does only queries - we don't have to specify any generator -->
       <query test-name="querying"
-             duration="10s"
+             duration="${test.duration:10s}"
              num-threads-per-node="10"
              query-object-class="org.radargun.query.TextObject">
          <conditions>
