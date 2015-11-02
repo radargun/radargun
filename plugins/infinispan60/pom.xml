@@ -15,6 +15,7 @@
    <properties>
       <version.infinispan>6.0.1.Final</version.infinispan>
       <version.jbossts>4.16.3.Final</version.jbossts>
+      <version.wildfly.cli>2.0.0.Final</version.wildfly.cli>
       <maven.test.skip>false</maven.test.skip>
    </properties>
 
@@ -95,6 +96,19 @@
          <artifactId>infinispan-cachestore-leveldb</artifactId>
          <version>${version.infinispan}</version>
          <optional>true</optional>
+      </dependency>
+
+      <dependency>
+         <groupId>org.wildfly.core</groupId>
+         <artifactId>wildfly-cli</artifactId>
+         <classifier>client</classifier>
+         <version>${version.wildfly.cli}</version>
+         <exclusions>
+            <exclusion>
+               <artifactId>*</artifactId>
+               <groupId>*</groupId>
+            </exclusion>
+         </exclusions>
       </dependency>
 
    </dependencies>
