@@ -28,6 +28,7 @@ public abstract class SchemaGenerator {
    protected static final String XS_ELEMENT = "element";
    protected static final String XS_COMPLEX_TYPE = "complexType";
    protected static final String XS_NAME = "name";
+   protected static final String XS_PREFIX ="xs:";
    protected static final String RG_PREFIX = "rg:";
 
    protected static final String XS_ANY = "any";

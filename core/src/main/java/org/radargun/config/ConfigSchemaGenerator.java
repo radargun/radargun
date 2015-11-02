@@ -109,7 +109,7 @@ public class ConfigSchemaGenerator extends SchemaGenerator implements ConfigSche
     * @return modified element
     */
    protected Element addInclude(Element element, String location) {
-      Element schema = doc.createElementNS(NS_XS, RG_PREFIX + XS_INCLUDE);
+      Element schema = doc.createElementNS(NS_XS, XS_PREFIX + XS_INCLUDE);
       schema.setAttribute(XS_SCHEMA_LOCATION, location);
       element.appendChild(schema);
       return schema;
