@@ -26,7 +26,7 @@ master_pid() {
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT] [-d [host:]port] [-status] [-stop]'
+  wrappedecho '  $ master.sh [-c CONFIG] [-s SLAVE_COUNT] [-d [host:]port] [-J "-Dopt1 -Dopt2"] [-status] [-stop]'
   wrappedecho ""
   wrappedecho "   -c              Path to the framework configuration XML file. Optional - if not supplied benchmark will load ./conf/benchmark-dist.xml"
   wrappedecho ""
@@ -39,6 +39,8 @@ help_and_exit() {
   wrappedecho "   -m              MASTER host[:port]. An optional override to override the host/port defaults that the master listens on."
   wrappedecho ""
   wrappedecho "   -d              Debug master on given port."
+  wrappedecho ""
+  wrappedecho "   -J              Add custom Java options."
   wrappedecho ""
   wrappedecho "   -status         Prints infromation on master's status: running or not."
   wrappedecho ""

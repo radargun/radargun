@@ -18,7 +18,6 @@ DEBUG=""
 SLAVE_COUNT=0
 TAILF=false
 WAITF=false
-EXTRA_JAVA_OPTS=""
 PLUGIN_PATHS=""
 PLUGIN_CONFIGS=""
 REPORTER_PATHS=""
@@ -46,7 +45,7 @@ help_and_exit() {
   wrappedecho ""
   wrappedecho "   -d              Open debugging port on each node."
   wrappedecho ""
-  wrappedecho "   -J              Add Java option to both master and slaves."
+  wrappedecho "   -J              Add Java options to both master and slaves."
   wrappedecho ""
   wrappedecho "   --add-plugin    Path to custom plugin directory. Can be specified multiple times."
   wrappedecho ""
@@ -113,7 +112,7 @@ do
       shift
       ;;
     "-J")
-      EXTRA_JAVA_OPTS="$EXTRA_JAVA_OPTS -J $2"
+      EXTRA_JAVA_OPTS="${EXTRA_JAVA_OPTS} ${2}"
       shift
       ;;
     "--wait")
@@ -151,7 +150,7 @@ fi
 if [ ! -z $OUT_DIR ]; then
    OUT_CMD="-o $OUT_DIR/master.log"
 fi
-${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD} ${OUT_CMD} ${EXTRA_JAVA_OPTS} ${REPORTER_PATHS} -w &
+${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD} ${OUT_CMD} -J "${EXTRA_JAVA_OPTS}" ${REPORTER_PATHS} -w &
 MASTER_SH_PID=$!
 #### Sleep for a few seconds so master can open its port
 
@@ -160,7 +159,7 @@ MASTER_SH_PID=$!
 INDEX=0
 for slave in $SLAVES; do
   CMD="source ~/.bash_profile ; cd $WORKING_DIR"
-  CMD="$CMD ; ${RADARGUN_HOME}/bin/slave.sh -m ${MASTER} -n $slave -i $INDEX $EXTRA_JAVA_OPTS ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
+  CMD="$CMD ; ${RADARGUN_HOME}/bin/slave.sh -m ${MASTER} -n $slave -i $INDEX -J \"$EXTRA_JAVA_OPTS\" ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
   if [ ! -z $DEBUG ]; then
      CMD="$CMD -d $slave:$DEBUG"
   fi
