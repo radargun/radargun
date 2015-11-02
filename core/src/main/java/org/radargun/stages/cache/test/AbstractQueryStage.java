@@ -42,9 +42,6 @@ public abstract class AbstractQueryStage extends TestStage {
     @Property(doc = "Maximum number of the results. Default is none.")
     protected long limit = -1;
 
-    @Property(doc = "Check whether all slaves got the same result, and fail if not. Default is false.")
-    protected boolean checkSameResult = false;
-
     @InjectTrait
     protected Queryable queryable;
 
@@ -258,7 +255,7 @@ public abstract class AbstractQueryStage extends TestStage {
             for (SortElement e : value) {
                 sb.append(e.attribute).append(':').append(e.asc ? "ASC" : "DESC").append(", ");
             }
-            return sb.toString();
+            return sb.toString().substring(0, sb.length() - 2);
         }
 
         @Override
