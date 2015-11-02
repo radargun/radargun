@@ -40,7 +40,7 @@ MASTER=${MASTER_HOST}:${MASTER_PORT}
 
 help_and_exit() {
   echo "Usage: "
-  echo '  $ slave.sh [-m host:port] [-p log4j_file_prefix] [-i slaveIndex] [-d [host:]port]'
+  echo '  $ slave.sh [-m host:port] [-p log4j_file_prefix] [-i slaveIndex] [-d [host:]port] [-J "-Dopt1 -Dopt2"]'
   echo ""
   echo "   -m              Master host and port. Optional, defaults to ${MASTER}. (this value is taken from ./conf/benchmark-dist.xml)."
   echo ""
@@ -49,6 +49,8 @@ help_and_exit() {
   echo "   -i              Index of this slave. Optional."
   echo ""
   echo "   -d              Debug address. Optional."
+  echo ""
+  echo "   -J              Add custom Java options."
   echo ""
   echo "   -t              After starting the slave it will run 'tail -f' on the slave node's log file."
   echo ""

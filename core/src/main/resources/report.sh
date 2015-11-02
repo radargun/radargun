@@ -15,13 +15,15 @@ REPORTER_PATHS=""
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ report.sh -c CONFIG -s SERIALIZED_DIR [--add-reporter reporter ...]'
+  wrappedecho '  $ report.sh -c CONFIG -s SERIALIZED_DIR [-d [host:]port] [-J "-Dopt1 -Dopt2"] [--add-reporter reporter ...]'
   wrappedecho ""
   wrappedecho "   -c              Configuration file (benchmark.xml) - only the reporters section will be used."
   wrappedecho ""
   wrappedecho "   -s              Directory with the serialized data."
   wrappedecho ""
   wrappedecho "   -d              Debug master on given port."
+  wrappedecho ""
+  wrappedecho "   -J              Add custom Java options."
   wrappedecho ""
   wrappedecho "   --add-reporter  Path to custom reporter directory. Can be specified multiple times."
   wrappedecho ""
