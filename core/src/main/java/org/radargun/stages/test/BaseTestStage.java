@@ -2,6 +2,7 @@ package org.radargun.stages.test;
 
 import java.util.Map;
 
+import org.radargun.config.Init;
 import org.radargun.config.Path;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
@@ -24,8 +25,8 @@ public abstract class BaseTestStage extends AbstractDistStage {
          "results are amended to existing test (as iterations). Default is false.")
    protected boolean amendTest = false;
 
-   @Property(converter = TimeConverter.class, doc = "Benchmark duration. This takes precedence over numRequests. By default switched off.")
-   protected long duration = 0;
+   @Property(converter = TimeConverter.class, doc = "Benchmark duration.", optional = false)
+   protected long duration;
 
    @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'default' statistics " +
          "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
@@ -42,6 +43,13 @@ public abstract class BaseTestStage extends AbstractDistStage {
    protected boolean mergeThreadStats = false;
 
    protected int testIteration; // first iteration we should use for setting the statistics
+
+   @Init
+   public void check() {
+      if (duration <= 0) {
+         throw new IllegalArgumentException("Test duration must be positive.");
+      }
+   }
 
    protected Report.Test getTest(boolean allowExisting) {
       if (testName == null || testName.isEmpty()) {
