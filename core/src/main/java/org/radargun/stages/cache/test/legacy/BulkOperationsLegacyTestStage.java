@@ -78,7 +78,10 @@ public class BulkOperationsLegacyTestStage extends CacheOperationsLegacyTestStag
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
          this.nonTxNativeCache = bulkOperations.getCache(cacheName, false);
          this.nonTxAsyncCache = bulkOperations.getCache(cacheName, true);
-         if (!useTransactions(cacheName)) {
+         if (useTransactions(cacheName)) {
+            nativeCache = new Delegates.BulkOperationsCache();
+            asyncCache = new Delegates.BulkOperationsCache();
+         } else {
             nativeCache = nonTxNativeCache;
             asyncCache = nonTxAsyncCache;
          }
@@ -88,13 +91,14 @@ public class BulkOperationsLegacyTestStage extends CacheOperationsLegacyTestStag
 
       @Override
       public void transactionStarted() {
-         nativeCache = stressor.wrap(nonTxNativeCache);
-         asyncCache = stressor.wrap(nonTxAsyncCache);
+         ((Delegates.BulkOperationsCache) nativeCache).setDelegate(stressor.wrap(nonTxNativeCache));
+         ((Delegates.BulkOperationsCache) asyncCache).setDelegate(stressor.wrap(nonTxAsyncCache));
       }
 
       @Override
       public void transactionEnded() {
-         nativeCache = asyncCache = null;
+         ((Delegates.BulkOperationsCache) nativeCache).setDelegate(null);
+         ((Delegates.BulkOperationsCache) asyncCache).setDelegate(null);
       }
 
       @Override

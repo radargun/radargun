@@ -67,7 +67,9 @@ public class BasicOperationsLegacyTestStage extends CacheOperationsLegacyTestSta
          super.init(stressor);
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
          this.nonTxCache = basicOperations.getCache(cacheName);
-         if (!useTransactions(cacheName)) {
+         if (useTransactions(cacheName)) {
+            cache = new Delegates.BasicOperationsCache<>();
+         } else {
             cache = nonTxCache;
          }
          stressor.setUseTransactions(useTransactions(cacheName));
@@ -76,12 +78,12 @@ public class BasicOperationsLegacyTestStage extends CacheOperationsLegacyTestSta
 
       @Override
       public void transactionStarted() {
-         cache = stressor.wrap(nonTxCache);
+         ((Delegates.BasicOperationsCache) cache).setDelegate(stressor.wrap(nonTxCache));
       }
 
       @Override
       public void transactionEnded() {
-         cache = null;
+         ((Delegates.BasicOperationsCache) cache).setDelegate(null);
       }
 
       @Override

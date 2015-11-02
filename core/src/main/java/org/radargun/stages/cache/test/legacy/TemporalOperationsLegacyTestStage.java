@@ -86,7 +86,10 @@ public class TemporalOperationsLegacyTestStage extends CacheOperationsLegacyTest
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
          this.nonTxTemporalCache = temporalOperations.getCache(cacheName);
          this.nonTxBasicCache = basicOperations.getCache(cacheName);
-         if (!useTransactions(cacheName)) {
+         if (useTransactions(cacheName)) {
+            temporalCache = new Delegates.TemporalOperationsCache();
+            basicCache = new Delegates.BasicOperationsCache();
+         } else {
             temporalCache = nonTxTemporalCache;
             basicCache = nonTxBasicCache;
          }
@@ -96,14 +99,14 @@ public class TemporalOperationsLegacyTestStage extends CacheOperationsLegacyTest
 
       @Override
       public void transactionStarted() {
-         basicCache = stressor.wrap(nonTxBasicCache);
-         temporalCache = stressor.wrap(nonTxTemporalCache);
+         ((Delegates.BasicOperationsCache) basicCache).setDelegate(stressor.wrap(nonTxBasicCache));
+         ((Delegates.TemporalOperationsCache) temporalCache).setDelegate(stressor.wrap(nonTxTemporalCache));
       }
 
       @Override
       public void transactionEnded() {
-         basicCache = null;
-         temporalCache = null;
+         ((Delegates.BasicOperationsCache) basicCache).setDelegate(null);
+         ((Delegates.TemporalOperationsCache) temporalCache).setDelegate(null);
       }
 
       @Override

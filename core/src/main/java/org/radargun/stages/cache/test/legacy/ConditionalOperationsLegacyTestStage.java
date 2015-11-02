@@ -83,7 +83,10 @@ public class ConditionalOperationsLegacyTestStage extends CacheOperationsLegacyT
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
          nonTxBasicCache = basicOperations.getCache(cacheName);
          nonTxConditionalCache = conditionalOperations.getCache(cacheName);
-         if (!useTransactions(cacheName)) {
+         if (useTransactions(cacheName)) {
+            basicCache = new Delegates.BasicOperationsCache();
+            conditionalCache = new Delegates.ConditionalOperationsCache();
+         } else {
             basicCache = nonTxBasicCache;
             conditionalCache = nonTxConditionalCache;
          }
@@ -93,14 +96,14 @@ public class ConditionalOperationsLegacyTestStage extends CacheOperationsLegacyT
 
       @Override
       public void transactionStarted() {
-         basicCache = stressor.wrap(nonTxBasicCache);
-         conditionalCache = stressor.wrap(nonTxConditionalCache);
+         ((Delegates.BasicOperationsCache) basicCache).setDelegate(stressor.wrap(nonTxBasicCache));
+         ((Delegates.ConditionalOperationsCache) conditionalCache).setDelegate(stressor.wrap(nonTxConditionalCache));
       }
 
       @Override
       public void transactionEnded() {
-         basicCache = null;
-         conditionalCache = null;
+         ((Delegates.BasicOperationsCache) basicCache).setDelegate(null);
+         ((Delegates.ConditionalOperationsCache) conditionalCache).setDelegate(null);
       }
 
       @Override
