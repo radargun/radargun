@@ -38,7 +38,7 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
    // TODO: use complexConverter when this will be implemented for setup.properties
    @Property(doc = "Classes that should be registered as marshalled. By default, none.",
          converter = RegisteredClassConverter.class)
-   private List<RegisteredClass> classes;
+   protected List<RegisteredClass> classes;
 
    @Property(doc = "Paths to the .protobin files. Defaul is query/values.protobin")
    protected String[] protofiles = new String[] { "/query/values.protobin" };
@@ -120,7 +120,6 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
       return new InfinispanHotrodQueryable(this);
    }
 
-
    @ProvidesTrait
    public Infinispan60HotRodCacheInfo creeateCacheInfo() {
       return new Infinispan60HotRodCacheInfo(this);
@@ -137,7 +136,7 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
 
    // TODO: this is prepared for ReflexiveListConverter
    @DefinitionElement(name = "class", doc = "Class that should be registered for protostream.")
-   private static class RegisteredClass<T> {
+   protected static class RegisteredClass<T> {
       @Property(name = "", doc = "Full name of the class that should be registered.", optional = false, converter = ClassLoadConverter.class)
       public Class<T> clazz;
 

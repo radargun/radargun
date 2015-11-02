@@ -36,6 +36,12 @@ import org.radargun.utils.ReflexiveConverters;
 @Stage(doc = "Stage which executes a Query using Infinispan-query API against all keys in the cache.")
 public class QueryStage extends AbstractQueryStage {
 
+   @Property(doc = "Check whether all slaves got the same result, and fail if not. Default is false.")
+   protected boolean checkSameResult = false;
+
+   @Property(doc = "Check whether a query performed by a thread multiple times returns the same value. Default is true.")
+   protected boolean checkSameThreadResult = true;
+
    @Override
    protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
       return new QueryAck(slaveState, gatherResults(stressors, new StatisticsResultRetriever()), expectedSize.get());
