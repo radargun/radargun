@@ -13,12 +13,15 @@ RUN_ALL=true
 RUN_FAILED=false
 RUN_SKIPPED=false
 
+FAST_OPTS=""
+
 function help_and_exit() {
    echo "Usage: tests.sh [OPTIONS...] SLAVES..."
    echo "Options:"
    echo "    -f      Run failed tests."
    echo "    -s      Run skipped tests."
    echo "    -h      Show this help."
+   echo "    --fast  Run tests in fast mode (short duration)."
    exit 0
 }
 
@@ -33,6 +36,9 @@ do
     "-s")
       RUN_ALL=false
       RUN_SKIPPED=true
+      ;;
+    "--fast")
+      FAST_OPTS="-J \"-Dtest.duration=5s -Dtest.long.duration=5s -Dtest.short.duration=3s -Dwarmup.duration=3s -Drepeat.times=3\""
       ;;
     "-h")
       help_and_exit
@@ -72,6 +78,9 @@ fi
 SUCCESSFUL=0
 SKIPPED=0
 FAILED=0
+if [ -n "$FAST_OPTS" ]; then
+   echo "INFO: running tests in fast mode"
+fi
 for CONFIG_FILE in $TEST_LIST; do
    TEST_NAME=`echo $CONFIG_FILE | sed 's/^.*benchmark-\([^.]*\).xml/\1/'`
    MAX_CLUSTER_SIZE=`$CMD_PREFIX $CONFIG_FILE getMaxClusterSize | tail -n 1`
@@ -102,13 +111,13 @@ for CONFIG_FILE in $TEST_LIST; do
       let "SKIPPED+=1"
       echo $CONFIG_FILE > skipped.tests
    else
-      mkdir -p $TEST_NAME
-      rm $TEST_NAME/* 2> /dev/null
+      mkdir -p results/$TEST_NAME
+      rm results/$TEST_NAME/* 2> /dev/null
 
       TEST_SLAVES=`echo $SLAVES | tr -s '[:space:]' '\n' | head -n $MAX_CLUSTER_SIZE | tr '\n' ' '`
 
       echo "INFO: running test $TEST_NAME with $MAX_CLUSTER_SIZE slaves: $TEST_SLAVES"
-      if $RADARGUN_HOME/bin/dist.sh --wait -c $CONFIG_FILE -o $TEST_NAME $TEST_SLAVES > /dev/null; then
+      if eval "$RADARGUN_HOME/bin/dist.sh --wait -c $CONFIG_FILE $FAST_OPTS -o results/$TEST_NAME $TEST_SLAVES" > /dev/null; then
          echo "INFO: test $TEST_NAME succeeded"
          let "SUCCESSFUL+=1"
       else

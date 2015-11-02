@@ -40,7 +40,7 @@
       <cache-load num-entries="10000"/>
 
       <basic-operations-legacy-test test-name="stress-test"
-                             duration="1m" total-threads="10">
+                             duration="${test.duration:1m}" total-threads="10">
          <key-selector>
             <concurrent-keys total-entries="10000"/>
          </key-selector>
