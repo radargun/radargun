@@ -56,10 +56,11 @@
    <!-- Sequence of stages executed on the cluster -->
    <scenario>
       <jvm-monitor-start />
-      <!-- Start services on all nodes -->
-      <service-start />
+      <!-- First start server, then client and let it connect to server -->
+      <service-start groups="server"/>
+      <service-start groups="client"/>
 
-      <load-data groups="client" num-entries="10000"/>
+      <cache-load groups="client" num-entries="10000"/>
 
       <!-- Warmup executed only on the slave 1 = client -->
       <basic-operations-legacy-test groups="client" test-name="warmup" num-threads-per-node="10">

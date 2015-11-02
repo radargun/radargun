@@ -19,8 +19,8 @@ import org.radargun.utils.Utils;
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-@Stage(doc = "Removes all data from the cache")
-public class ClearCacheStage extends AbstractDistStage {
+@Stage(doc = "Removes all data from the cache", deprecatedName = "clear-cache")
+public class CacheClearStage extends AbstractDistStage {
 
    @Property(doc = "Execute local variant of clear on each slave. Default is null - local clear is performed, only if it is provided by the service." +
          " True enforces local clear - if given service does not provide the feature, exception is thrown.")

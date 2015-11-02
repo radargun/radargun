@@ -29,14 +29,14 @@
       <service-start />
       <jvm-monitor-start />
 
-      <load-data num-entries="5000"/>
+      <cache-load num-entries="5000"/>
       <basic-operations-test-setup test-name="warmup" num-entries="5000">
          <get interval="2" invocations="1"/>
          <put interval="10" invocations="1"/>
       </basic-operations-test-setup>
       <test test-name="warmup" duration="1m"/>
 
-      <load-data num-entries="10000"/>
+      <cache-load num-entries="10000"/>
       <basic-operations-test-setup test-name="stress-test" num-entries="10000">
          <get interval="1" invocations="2"/>
          <put interval="5" invocations="2"/>

@@ -20,11 +20,11 @@
       <service-start />
 
       <!-- Loading the data -->
-      <load-data num-entries="5000" entry-size="0" seed="12345">
+      <cache-load num-entries="5000" entry-size="0" seed="12345">
          <value-generator>
             <single-word file="${org.radargun.query.dictionary:/test-data/animals.txt}" />
          </value-generator>
-      </load-data>
+      </cache-load>
 
       <!-- Logic does only queries - we don't have to specify any generator -->
       <query test-name="querying"

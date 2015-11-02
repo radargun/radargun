@@ -19,11 +19,11 @@
       <service-start/>
 
       <!-- Preload the cache with 10000 entries with values 0 - 99 -->
-      <load-data num-entries="10000" num-threads="10" entry-size="0" seed="12345">
+      <cache-load num-entries="10000" num-threads="10" entry-size="0" seed="12345">
          <value-generator>
             <number-object int-min="0" int-max="99" />
          </value-generator>
-      </load-data>
+      </cache-load>
 
       <!-- NumberObjectFilter is plugin-specific class, therefore, this cannot be part of schema
            unless the class would be implemented using reflection as NumberObjectGenerator -->

@@ -35,25 +35,26 @@
     <!-- Sequence of stages executed on the cluster -->
     <scenario>
 
-        <service-start />
+        <service-start groups="g1"/>
+        <service-start groups="g2"/>
 
-        <load-data num-entries="1000" groups="g1" key-id-offset="0">
+        <cache-load num-entries="1000" groups="g1" key-id-offset="0">
             <cache-selector>
                 <use-cache cache="testCacheSite1"/>
             </cache-selector>
             <value-generator>
                <cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
             </value-generator>
-        </load-data>
+        </cache-load>
 
-        <load-data num-entries="1000" groups="g2" key-id-offset="0">
+        <cache-load num-entries="1000" groups="g2" key-id-offset="0">
             <cache-selector>
                 <use-cache cache="testCacheSite2"/>
             </cache-selector>
             <value-generator>
                 <cache-aware-text cache-name="testCacheSite2" suffix="SITE2_ORIGINAL" />
             </value-generator>
-        </load-data>
+        </cache-load>
 
         <sleep time="90s"/>
 

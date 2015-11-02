@@ -26,7 +26,7 @@
       <!-- We should do warmup here, and generally run the tests for longer time -->
 
       <!-- Preload the cache with data -->
-      <load-data num-entries="10000"/>
+      <cache-load num-entries="10000"/>
 
       <!-- Generate statistics for 10, 20, 30 .. 100 threads -->
       <repeat times="10">

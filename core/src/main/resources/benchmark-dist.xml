@@ -43,7 +43,7 @@
       <jvm-monitor-start />
 
       <!--Preload the cache with data -->
-      <load-data num-entries="10000"/>
+      <cache-load num-entries="10000"/>
 
       <!-- We will scale the load up here, from 1000 gets/s to 3000 gets/s and from 250 puts/s to 750 puts/s -->
       <repeat from="1" to="3">

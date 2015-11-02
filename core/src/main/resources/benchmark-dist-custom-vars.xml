@@ -43,7 +43,7 @@
       <jvm-monitor-start />
 
       <!-- Preload the cache with data -->
-      <load-data num-entries="5000"/>
+      <cache-load num-entries="5000"/>
       <!-- 5 threads will execute random requests against the default cache ('testCache') for 1 minute-->
       <!-- As the test is called 'warmup', performance statistics won't be reported -->
       <basic-operations-legacy-test test-name="warmup" duration="1m" num-threads-per-node="5">
@@ -53,9 +53,9 @@
       </basic-operations-legacy-test>
 
       <!-- Remove all data from the default cache -->
-      <clear-cache />
+      <cache-clear />
       <!-- Again, preload the cache with data -->
-      <load-data num-entries="10000"/>
+      <cache-load num-entries="10000"/>
 
       <!-- 5, 10 and 50 threads will execute random request for 1 minute against the default cache ('testCache') on different
          set of keys (1k, 2k, 10k entries) -->

@@ -15,7 +15,7 @@ import org.radargun.utils.Utils;
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
  */
 @Stage(doc = "Stops data loading process started by BackgroundLoadDataStartStage.")
-public class BackgroundLoadDataStopStage extends AbstractDistStage {
+public class BackgroundCacheLoadStopStage extends AbstractDistStage {
 
    private static final String BACKGROUND_LOADERS = "BackgroundLoaders";
 

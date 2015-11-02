@@ -26,7 +26,7 @@
       <jvm-monitor-start />
 
       <!-- Preload the cache with data -->
-      <load-data num-entries="5000"/>
+      <cache-load num-entries="5000"/>
 
       <!-- As the test is called 'warmup', performance statistics won't be reported -->
       <basic-operations-test-setup test-name="warmup"
@@ -39,9 +39,9 @@
       <test test-name="warmup" duration="1m" />
 
       <!-- Remove all data from the default cache -->
-      <clear-cache />
+      <cache-clear />
       <!-- Again, preload the cache with data -->
-      <load-data num-entries="10000"/>
+      <cache-load num-entries="10000"/>
 
       <!-- We will scale the load up here, from 1000 gets/s to 3000 gets/s and from 250 puts/s to 750 puts/s -->
       <repeat from="1" to="3">

@@ -27,7 +27,7 @@
       <service-start />
 
       <!-- Preload the cache with data -->
-      <load-data num-entries="5000"/>
+      <cache-load num-entries="5000"/>
 
       <basic-operations-legacy-test test-name="warmup" duration="10s" num-threads-per-node="10">
          <key-selector>

@@ -177,7 +177,7 @@ public abstract class AbstractConfigurationTest extends PowerMockTestCase {
 
       assertTrue(basicOperationTestProperties.containsKey("test-name"));
       assertTrue(basicOperationTestProperties.containsKey("num-threads-per-node"));
-      assertTrue(basicOperationTestProperties.containsKey("num-requests"));
+      assertTrue(basicOperationTestProperties.containsKey("duration"));
       assertTrue(basicOperationTestProperties.containsKey("key-selector"));
 
       for (Scenario.StageDescription stage : stages) {
