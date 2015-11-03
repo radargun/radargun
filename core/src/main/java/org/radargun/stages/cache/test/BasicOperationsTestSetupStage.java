@@ -5,6 +5,7 @@ import java.util.Random;
 import org.radargun.Operation;
 import org.radargun.config.PropertyDelegate;
 import org.radargun.config.Stage;
+import org.radargun.stages.test.AbstractConversation;
 import org.radargun.stages.test.Conversation;
 import org.radargun.stages.test.SchedulingSelector;
 import org.radargun.stages.test.Stressor;
@@ -102,7 +103,7 @@ public class BasicOperationsTestSetupStage extends CacheTestSetupStage {
       }
    }
 
-   private class Get implements Conversation {
+   private class Get extends AbstractConversation {
       @Override
       public void run(Stressor stressor) throws InterruptedException {
          stressor.makeRequest(new CacheInvocations.Get(cache, getRandomKey(stressor.getRandom())));
@@ -120,7 +121,7 @@ public class BasicOperationsTestSetupStage extends CacheTestSetupStage {
       }
    }
 
-   private class ContainsKey implements Conversation {
+   private class ContainsKey extends AbstractConversation {
       @Override
       public void run(Stressor stressor) throws InterruptedException {
          stressor.makeRequest(new CacheInvocations.ContainsKey(cache, getRandomKey(stressor.getRandom())));
@@ -138,7 +139,7 @@ public class BasicOperationsTestSetupStage extends CacheTestSetupStage {
       }
    }
 
-   private class Put implements Conversation {
+   private class Put extends AbstractConversation {
       @Override
       public void run(Stressor stressor) throws InterruptedException {
          Random random = stressor.getRandom();
@@ -159,7 +160,7 @@ public class BasicOperationsTestSetupStage extends CacheTestSetupStage {
       }
    }
 
-   private class GetAndPut implements Conversation {
+   private class GetAndPut extends AbstractConversation {
       @Override
       public void run(Stressor stressor) throws InterruptedException {
          Random random = stressor.getRandom();
@@ -180,7 +181,7 @@ public class BasicOperationsTestSetupStage extends CacheTestSetupStage {
       }
    }
 
-   private class Remove implements Conversation {
+   private class Remove extends AbstractConversation {
       @Override
       public void run(Stressor stressor) throws InterruptedException {
          stressor.makeRequest(new CacheInvocations.Remove(cache, getRandomKey(stressor.getRandom())));
@@ -198,7 +199,7 @@ public class BasicOperationsTestSetupStage extends CacheTestSetupStage {
       }
    }
 
-   private class GetAndRemove implements Conversation {
+   private class GetAndRemove extends AbstractConversation {
       @Override
       public void run(Stressor stressor) throws InterruptedException {
          stressor.makeRequest(new CacheInvocations.GetAndRemove(cache, getRandomKey(stressor.getRandom())));

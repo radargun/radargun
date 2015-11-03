@@ -18,4 +18,5 @@ public interface Conversation {
     * @throws InterruptedException
     */
    void run(Stressor stressor) throws InterruptedException;
+
 }

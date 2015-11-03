@@ -8,6 +8,7 @@ import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
+import org.radargun.stages.test.AbstractConversation;
 import org.radargun.stages.test.Conversation;
 import org.radargun.stages.test.Stressor;
 import org.radargun.stages.test.TestSetupStage;
@@ -70,7 +71,7 @@ public abstract class CacheTestSetupStage extends TestSetupStage {
       return keyGenerator.generateKey((random.nextLong() & Long.MAX_VALUE) % numEntries);
    }
 
-   protected static abstract class BaseTxConversation<CacheType> implements Conversation {
+   protected static abstract class BaseTxConversation<CacheType> extends AbstractConversation {
       private final Operation txOperation;
       private final TxInvocationSetting invocationSetting;
 

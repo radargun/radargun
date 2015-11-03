@@ -10,6 +10,7 @@ import org.radargun.Operation;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyDelegate;
 import org.radargun.config.Stage;
+import org.radargun.stages.test.AbstractConversation;
 import org.radargun.stages.test.Conversation;
 import org.radargun.stages.test.SchedulingSelector;
 import org.radargun.stages.test.Stressor;
@@ -120,7 +121,7 @@ public class BulkOperationsTestSetupStage extends CacheTestSetupStage {
       return set;
    }
 
-   private abstract class NonTxConversation implements Conversation {
+   private abstract class NonTxConversation extends AbstractConversation {
       protected final boolean async;
       protected final BulkOperations.Cache cache;
 
