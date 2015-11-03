@@ -128,4 +128,15 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
          }
       }
    }
+
+   @Override
+   public Query.Context createContext(String containerName) {
+      return new RemoteQueryContext();
+   }
+
+   protected static class RemoteQueryContext implements Query.Context {
+      @Override
+      public void close() {
+      }
+   }
 }

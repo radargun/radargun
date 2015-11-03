@@ -15,17 +15,6 @@ import java.util.List;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class AbstractInfinispanQueryable implements Queryable {
-   @Override
-   public Query.Context createContext(String containerName) {
-      return new QueryContextImpl();
-   }
-
-   protected static class QueryContextImpl implements Query.Context {
-      @Override
-      public void close() {
-      }
-   }
-
    protected static class QueryBuilderImpl implements Query.Builder {
       private final QueryFactory factory;
       private final org.infinispan.query.dsl.QueryBuilder builder;

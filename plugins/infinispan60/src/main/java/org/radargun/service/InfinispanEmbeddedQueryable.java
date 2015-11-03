@@ -1,5 +1,7 @@
 package org.radargun.service;
 
+import org.infinispan.AdvancedCache;
+import org.infinispan.Cache;
 import org.infinispan.query.Search;
 import org.infinispan.query.SearchManager;
 import org.infinispan.query.dsl.QueryFactory;
@@ -25,8 +27,30 @@ public class InfinispanEmbeddedQueryable extends AbstractInfinispanQueryable {
    }
 
    @Override
+   public Query.Context createContext(String containerName) {
+      return new EmbeddedQueryContext(service.getCache(containerName).getAdvancedCache());
+   }
+
+   @Override
    public void reindex(String containerName) {
       SearchManager searchManager = Search.getSearchManager(service.getCache(containerName));
       searchManager.getMassIndexer().start();
+   }
+
+   private class EmbeddedQueryContext implements Query.Context, AdvancedCacheHolder {
+      private final AdvancedCache cache;
+
+      public EmbeddedQueryContext(AdvancedCache cache) {
+         this.cache = cache;
+      }
+
+      @Override
+      public AdvancedCache getAdvancedCache() {
+         return cache;
+      }
+
+      @Override
+      public void close() {
+      }
    }
 }
