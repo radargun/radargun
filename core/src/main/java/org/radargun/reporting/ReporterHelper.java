@@ -43,9 +43,6 @@ public class ReporterHelper {
       for (String path : ArgsHolder.getReporterPaths()) {
          loadReporters(new File(path), reporters);
       }
-      if (reporters.size() == 0) {
-         throw new IllegalStateException("No reporters found!");
-      }
    }
 
    public static void registerReporters(String reporterDir) {

@@ -30,6 +30,7 @@
       <distribution.name>RadarGun-${project.version}</distribution.name>
       <distribution.artifact>target/distribution/${distribution.name}</distribution.artifact>
       <plugins.chm/>
+      <plugins.jcache/>
       <plugins.ehcache/>
       <plugins.hazelcast/>
       <plugins.jbosscache/>
@@ -311,6 +312,9 @@
          <modules>
             <module>plugins/jcache</module>
          </modules>
+         <properties>
+            <plugins.jcache>jcache</plugins.jcache>
+         </properties>
       </profile>
    </profiles>
 
@@ -467,7 +471,8 @@
                         </path>
 
                         <echo message="Packaging plugins: " />
-                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <!-- Note: JCache needs to be here for schema generation, although it can't be used on its own -->
+                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>
@@ -544,11 +549,15 @@
                         <path id="core_and_extensions">
                            <fileset dir="${distribution.artifact}/lib" includes="*.jar" />
                         </path>
-                        <java classname="org.radargun.config.ConfigSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
+                        <java classname="org.radargun.config.BenchmarkSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
                            <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
                            <arg value="${distribution.artifact}/schema" />
                         </java>
                         <java classname="org.radargun.config.ScenarioSchemaGenerator" failonerror="true" classpathref="core_and_extensions">
+                           <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                           <arg value="${distribution.artifact}/schema" />
+                        </java>
+                        <java classname="org.radargun.config.StagesSchemaGenerator" failonerror="true" classpathref="core_and_extensions" fork="true">
                            <sysproperty key="log4j.configuration" value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
                            <arg value="${distribution.artifact}/schema" />
                         </java>

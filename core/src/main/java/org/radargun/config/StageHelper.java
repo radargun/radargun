@@ -1,16 +1,9 @@
 package org.radargun.config;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import org.radargun.Directories;
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.radargun.utils.Utils;
+
+import java.io.File;
+import java.util.*;
 
 /**
  * Instantiates stages based on annotations
@@ -18,68 +11,44 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class StageHelper {
-
-   private static Log log = LogFactory.getLog(StageHelper.class);
-   private static Map<String, Class<? extends org.radargun.Stage>> stagesDashed;
+   private static Map<String, SortedMap<String, Class<? extends org.radargun.Stage>>> stagesByNamespace = new HashMap<>();
+   protected static final String NAMESPACE_ROOT = "urn:radargun:stages:";
 
    static {
-      stagesDashed = new HashMap<>();
-      for (File jar : Directories.LIB_DIR.listFiles(new Utils.JarFilenameFilter())) {
-         stagesDashed.putAll(getStagesFromJar(jar.getPath(), true));
-      }
-   }
-
-   public static Map<String, Class<? extends org.radargun.Stage>> getStages() {
-      return Collections.unmodifiableMap(stagesDashed);
-   }
-
-   public static Map<String, Class<? extends org.radargun.Stage>> getStagesFromJar(String path, boolean dashNames) {
-      List<Class<? extends org.radargun.Stage>> list = AnnotatedHelper.getClassesFromJar(path, org.radargun.Stage.class, Stage.class, null);
-      Map<String, Class<? extends org.radargun.Stage>> stages = new TreeMap<String, Class<? extends org.radargun.Stage>>();
-      for (Class<? extends org.radargun.Stage> clazz : list) {
+      ClasspathScanner.scanClasspath(org.radargun.Stage.class, Stage.class, null, clazz -> {
          Stage annotation = clazz.getAnnotation(Stage.class);
-         String name;
-         if (!annotation.name().equals(Stage.CLASS_NAME_WITHOUT_STAGE)) {
-            name = annotation.name();
-         } else {
-            if (!clazz.getSimpleName().endsWith("Stage")) {
-               log.warn(clazz.getName() + " does not keep the conventional name *Stage");
-               continue;
-            }
-            name = clazz.getSimpleName().substring(0, clazz.getSimpleName().length() - 5);
-         }
-         if (dashNames) {
-            name = XmlHelper.camelCaseToDash(name);
-         }
-         stages.put(name, clazz);
+         addStage(XmlHelper.camelCaseToDash(getStageName(clazz, annotation)), clazz);
          if (!annotation.deprecatedName().equals(Stage.NO_DEPRECATED_NAME)) {
-            stages.put(annotation.deprecatedName(), clazz);
+            addStage(annotation.deprecatedName(), clazz);
          }
-      }
-      return stages;
+      });
    }
 
-   public static Class<? extends org.radargun.Stage> getStageClassByDashedName(String stageName) {
-      Class<? extends org.radargun.Stage> clazz = stagesDashed.get(stageName);
+   private static void addStage(String stageName, Class<? extends org.radargun.Stage> stageClazz) {
+      NamespaceHelper.Coords coords = NamespaceHelper.suggestCoordinates(NAMESPACE_ROOT, stageClazz, "radargun-");
+      File[] codepaths = coords.explicit ? null : new File[] { new File(Utils.getCodePath(stageClazz)) };
+      NamespaceHelper.registerNamespace(coords.namespace, codepaths, coords.jarMajorMinor);
+      SortedMap<String, Class<? extends org.radargun.Stage>> stages = stagesByNamespace.get(coords.namespace);
+      if (stages == null) {
+         stagesByNamespace.put(coords.namespace, stages = new TreeMap<>());
+      }
+      stages.put(stageName, stageClazz);
+   }
+
+   public static Map<String, Map<String, Class<? extends org.radargun.Stage>>> getStages() {
+      return Collections.unmodifiableMap(stagesByNamespace);
+   }
+
+   public static Class<? extends org.radargun.Stage> getStageClassByDashedName(String namespace, String stageName) {
+      SortedMap<String, Class<? extends org.radargun.Stage>> stages = stagesByNamespace.get(namespace);
+      if (stages == null) {
+         throw new IllegalArgumentException("Namespace '" + namespace + "' not found. Available namespaces: " + stagesByNamespace.keySet());
+      }
+      Class<? extends org.radargun.Stage> clazz = stages.get(stageName);
       if (clazz != null) {
          return clazz;
-      }
-      log.warn("Stage " + stageName + " not registered, trying to find according to class name.");
-      if (stageName.indexOf('.') < 0) {
-         stageName = "org.radargun.stages." + stageName + "Stage";
       } else {
-         stageName = XmlHelper.dashToCamelCase(stageName, true) + "Stage";
-      }
-      try {
-         return (Class<? extends org.radargun.Stage>) Class.forName(stageName);
-      } catch (ClassNotFoundException e) {
-         String s = "Could not find stage class " + stageName;
-         log.error(s);
-         throw new RuntimeException(s, e);
-      } catch (ClassCastException e) {
-         String s = "Class " + stageName + " is not a stage!";
-         log.error(s);
-         throw new RuntimeException(s, e);
+         throw new IllegalArgumentException("Could not find stage '" + stageName + "' in namespace '" + namespace + "'");
       }
    }
 
@@ -96,11 +65,24 @@ public class StageHelper {
 
    public static String getStageName(Class<? extends org.radargun.Stage> clazz) {
       if (clazz == null) throw new IllegalArgumentException("Class cannot be null");
-      Stage stageAnnotation = (Stage)clazz.getAnnotation(Stage.class);
-      if (stageAnnotation == null) throw new IllegalArgumentException(clazz + " is not properly annotated.");
-      if (!stageAnnotation.name().equals(Stage.CLASS_NAME_WITHOUT_STAGE)) return stageAnnotation.name();
-      String name = clazz.getSimpleName();
-      if (!name.endsWith("Stage")) throw new IllegalArgumentException(clazz.getCanonicalName());
-      return name.substring(0, name.length() - 5);
+      Stage annotation = clazz.getAnnotation(Stage.class);
+      if (annotation == null) {
+         throw new IllegalArgumentException(clazz + " is not properly annotated.");
+      }
+      return getStageName(clazz, annotation);
    }
+
+   protected static String getStageName(Class<? extends org.radargun.Stage> clazz, Stage annotation) {
+      String name;
+      if (!annotation.name().equals(Stage.CLASS_NAME_WITHOUT_STAGE)) {
+         name = annotation.name();
+      } else {
+         if (!clazz.getSimpleName().endsWith("Stage")) {
+            throw new IllegalArgumentException(clazz.getName() + " does not keep the conventional name *Stage");
+         }
+         name = clazz.getSimpleName().substring(0, clazz.getSimpleName().length() - 5);
+      }
+      return name;
+   }
+
 }

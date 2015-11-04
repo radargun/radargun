@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.radargun.Version;
 import org.radargun.reporting.Reporter;
 import org.radargun.reporting.ReporterHelper;
 
@@ -13,11 +14,12 @@ import org.radargun.reporting.ReporterHelper;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ReporterSchemaGenerator extends SchemaGenerator {
-   private static final String VERSION = "3.0"; // TODO: version reporters as plugin property
+   protected static final String NAMESPACE_ROOT = "urn:radargun:reporters:";
    protected final String reporterModule;
    protected final Map<String, Class<? extends Reporter>> reporters;
 
    public ReporterSchemaGenerator(String reporterModule, Map<String, Class<? extends Reporter>> reporters) {
+      super(NAMESPACE_ROOT, String.format(NAMESPACE_ROOT + "%s:%s", reporterModule, Version.SCHEMA_VERSION), "reporter-");
       this.reporterModule = reporterModule;
       this.reporters = reporters;
    }
@@ -29,7 +31,7 @@ public class ReporterSchemaGenerator extends SchemaGenerator {
 
    @Override
    protected void generate() {
-      createSchemaElement(String.format("radargun:reporters:%s:%s", reporterModule, VERSION));
+      createSchemaElement(namespace);
       for (Map.Entry<String, Class<? extends Reporter>> reporter : reporters.entrySet()) {
          String type = generateClass(reporter.getValue());
          createReference(schema, reporter.getKey(), type);
@@ -47,6 +49,6 @@ public class ReporterSchemaGenerator extends SchemaGenerator {
       Map<String, Class<? extends Reporter>> reporters = new HashMap<>();
       ReporterHelper.loadReporters(new File(reporterDirectory), reporters);
       ReporterSchemaGenerator generator = new ReporterSchemaGenerator(reporterName, reporters);
-      generator.generate(schemaDirectory, String.format("%s-%s.xsd", reporterName, VERSION));
+      generator.generate(schemaDirectory, String.format("%s-%s.xsd", reporterName, Version.SCHEMA_VERSION));
    }
 }

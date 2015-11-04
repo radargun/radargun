@@ -1,7 +1,9 @@
 package org.radargun.config;
 
+import org.radargun.utils.Utils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -14,9 +16,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Base class for generators of schemas.
@@ -24,12 +25,12 @@ import java.util.Set;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class SchemaGenerator {
+
    protected static final String NS_XS = "http://www.w3.org/2001/XMLSchema";
    protected static final String XS_ELEMENT = "element";
    protected static final String XS_COMPLEX_TYPE = "complexType";
    protected static final String XS_NAME = "name";
-   protected static final String XS_PREFIX ="xs:";
-   protected static final String RG_PREFIX = "rg:";
+   protected static final String THIS_PREFIX = "this:";
 
    protected static final String XS_ANY = "any";
    protected static final String XS_RESTRICTION = "restriction";
@@ -61,49 +62,78 @@ public abstract class SchemaGenerator {
    protected static final String XS_DOCUMENTATION = "documentation";
    protected static final String XS_NAMESPACE = "namespace";
    protected static final String XS_OTHER_NAMESPACE = "##other";
+   protected static final String XS_ANY_NAMESPACE = "##any";
    protected static final String XS_INCLUDE = "include";
+   protected static final String XS_IMPORT = "import";
    protected static final String XS_SCHEMA_LOCATION = "schemaLocation";
+
+   protected final String namespaceRoot;
+   protected final String namespace;
+   protected final String omitPrefix;
+   private final Map<String, String> importedNamespaces = new HashMap<>();
+   private int nsCounter = 0;
 
    protected Document doc;
    protected Element schema;
 
    protected String intType;
-   protected Set<String> generatedTypes = new HashSet<>();
+   protected Map<String, String> generatedTypes = new HashMap<>();
+
+   public SchemaGenerator(String namespaceRoot, String namespace, String omitPrefix) {
+      this.namespaceRoot = namespaceRoot;
+      this.namespace = namespace;
+      this.omitPrefix = omitPrefix;
+   }
+
+   /**
+    * For reusing the generator within another document
+    * @param doc
+    * @param schema
+    */
+   void setDocSchema(Document doc, Element schema) {
+      this.doc = doc;
+      this.schema = schema;
+   }
 
    protected String generateClass(Class<?> clazz) {
       String typeName = class2xmlId(clazz);
-      if (generatedTypes.contains(typeName)) {
-         return ConfigSchemaGenerator.RG_PREFIX + typeName;
+      String fullName = generatedTypes.get(typeName);
+      if (fullName != null) {
+         return fullName;
       }
-      generatedTypes.add(typeName);
-
       String superType = null;
       if (clazz.getSuperclass() != Object.class) {
          superType = generateClass(clazz.getSuperclass());
       }
+      NamespaceHelper.Coords coords = NamespaceHelper.getCoords(namespaceRoot, clazz,  omitPrefix);
+      if (coords == null || coords.namespace.equals(this.namespace)) {
+         String source = Utils.getCodePath(clazz);
+         if (source == null) source = "unknown source";
+         int lastSlash = source.lastIndexOf('/');
+         if (lastSlash > 0) source = source.substring(lastSlash + 1);
+         schema.appendChild(doc.createComment("From " + source));
 
-      String source = clazz.getProtectionDomain().getCodeSource().getLocation().getPath();
-      if (source == null) source = "unknown source";
-      int lastSlash = source.lastIndexOf('/');
-      if (lastSlash > 0) source = source.substring(lastSlash + 1);
-      schema.appendChild(doc.createComment("From " + source));
-
-      Element typeElement = createComplexType(schema, typeName, superType, true,
-              Modifier.isAbstract(clazz.getModifiers()), findDocumentation(clazz));
-      Element propertiesSequence = createSequence(typeElement);
-      for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(clazz, true, true)) {
-         generateProperty(typeElement, propertiesSequence, property.getKey(), property.getValue(), true);
+         Element typeElement = createComplexType(typeName, superType, true,
+               Modifier.isAbstract(clazz.getModifiers()), findDocumentation(clazz));
+         Element propertiesSequence = createSequence(typeElement);
+         for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(clazz, true, true)) {
+            generateProperty(typeElement, propertiesSequence, property.getKey(), property.getValue(), true);
+         }
+         fullName = BenchmarkSchemaGenerator.THIS_PREFIX + typeName;
+      } else {
+         fullName = requireImport(coords.namespace) + typeName;
       }
-      return ConfigSchemaGenerator.RG_PREFIX + typeName;
+      generatedTypes.put(typeName, fullName);
+      return fullName;
    }
 
    protected Element createAny(Element parent) {
-      return createAny(parent, 0, 1);
+      return createAny(parent, 0, 1, XS_OTHER_NAMESPACE);
    }
 
-   protected Element createAny(Element parent, int minOccurs, int maxOccurs) {
+   protected Element createAny(Element parent, int minOccurs, int maxOccurs, String namespace) {
       Element any = doc.createElementNS(NS_XS, XS_ANY);
-      any.setAttribute(XS_NAMESPACE, XS_OTHER_NAMESPACE);
+      any.setAttribute(XS_NAMESPACE, namespace);
       any.setAttribute(XS_MIN_OCCURS, String.valueOf(minOccurs));
       any.setAttribute(XS_MAX_OCCURS, maxOccurs(maxOccurs));
       parent.appendChild(any);
@@ -171,10 +201,11 @@ public abstract class SchemaGenerator {
 
    private String generateComplexType(Class<?> type, Class<? extends ComplexConverter<?>> complexConverterClass) {
       String typeName = class2xmlId(type) + "-converted-by-" + class2xmlId(complexConverterClass);
-      if (generatedTypes.contains(typeName)) {
-         return ConfigSchemaGenerator.RG_PREFIX + typeName;
+      String fullName = generatedTypes.get(typeName);
+      if (fullName != null) {
+         return fullName;
       }
-      generatedTypes.add(typeName);
+      generatedTypes.put(typeName, THIS_PREFIX + typeName);
 
       Element typeElement = doc.createElementNS(NS_XS, XS_COMPLEX_TYPE);
       typeElement.setAttribute(XS_NAME, typeName);
@@ -193,33 +224,38 @@ public abstract class SchemaGenerator {
             DefinitionElement de = inner.getAnnotation(DefinitionElement.class);
             if (de == null) throw new IllegalArgumentException(inner.getName());
             String subtypeName = class2xmlId(inner);
-            createReference(choice, de.name(), ConfigSchemaGenerator.RG_PREFIX + subtypeName);
-            if (!generatedTypes.contains(subtypeName)) {
-               generatedTypes.add(subtypeName);
-               Map<String, Path> subtypeProperties = PropertyHelper.getProperties(inner, true, false, true);
-               String extended = null;
-               Path valueProperty = subtypeProperties.get("");
-               if (valueProperty != null && valueProperty.getTargetAnnotation().complexConverter() != ComplexConverter.Dummy.class) {
-                  // if we have complex value property, let's inherit from the value converter
-                  extended = generateComplexType(valueProperty.getTargetType(), valueProperty.getTargetAnnotation().complexConverter());
-                  subtypeProperties.remove("");
-               }
-               Element subtypeType = createComplexType(schema, subtypeName, extended, true, false, de.doc());
-               Element subtypeSequence = createSequence(subtypeType);
-               for (Map.Entry<String, Path> property : subtypeProperties.entrySet()) {
-                  if (property.getKey().isEmpty()) {
-                     throw new IllegalArgumentException("Empty property in class " + inner.getName());
+            NamespaceHelper.Coords deCoords = NamespaceHelper.getCoords(namespaceRoot, inner, omitPrefix);
+            if (deCoords == null || deCoords.namespace.equals(this.namespace)) {
+               if (!generatedTypes.containsKey(subtypeName)) {
+                  generatedTypes.put(subtypeName, THIS_PREFIX + subtypeName);
+                  Map<String, Path> subtypeProperties = PropertyHelper.getProperties(inner, true, false, true);
+                  String extended = null;
+                  Path valueProperty = subtypeProperties.get("");
+                  if (valueProperty != null && valueProperty.getTargetAnnotation().complexConverter() != ComplexConverter.Dummy.class) {
+                     // if we have complex value property, let's inherit from the value converter
+                     extended = generateComplexType(valueProperty.getTargetType(), valueProperty.getTargetAnnotation().complexConverter());
+                     subtypeProperties.remove("");
                   }
-                  generateProperty(subtypeType, subtypeSequence, property.getKey(), property.getValue(), true);
+                  Element subtypeType = createComplexType(subtypeName, extended, true, false, de.doc());
+                  Element subtypeSequence = createSequence(subtypeType);
+                  for (Map.Entry<String, Path> property : subtypeProperties.entrySet()) {
+                     if (property.getKey().isEmpty()) {
+                        throw new IllegalArgumentException("Empty property in class " + inner.getName());
+                     }
+                     generateProperty(subtypeType, subtypeSequence, property.getKey(), property.getValue(), true);
+                  }
                }
+               createReference(choice, de.name(), THIS_PREFIX + subtypeName);
+            } else {
+               createComplexElement(choice, de.name(), 1, 1, requireImport(deCoords.namespace) + subtypeName, de.doc());
             }
          }
       } else {
-         createAny(createSequence(typeElement), 1, -1);
+         createAny(createSequence(typeElement), 1, -1, XS_OTHER_NAMESPACE);
       }
 
       schema.appendChild(typeElement);
-      return ConfigSchemaGenerator.RG_PREFIX + typeName;
+      return BenchmarkSchemaGenerator.THIS_PREFIX + typeName;
    }
 
    protected String generateSimpleType(Class<?> type,
@@ -228,8 +264,9 @@ public abstract class SchemaGenerator {
       if (!DefaultConverter.class.equals(converterClass)) {
          typeName += "-converted-by-" + class2xmlId(converterClass);
       }
-      if (generatedTypes.contains(typeName)) {
-         return ConfigSchemaGenerator.RG_PREFIX + typeName;
+      String fullName = generatedTypes.get(typeName);
+      if (fullName != null) {
+         return fullName;
       }
 
       Element typeElement = doc.createElementNS(NS_XS, XS_SIMPLE_TYPE);
@@ -291,6 +328,7 @@ public abstract class SchemaGenerator {
          }
       } else {
          // all the elements are just dropped
+         generatedTypes.put(typeName, XS_STRING);
          return XS_STRING;
       }
 
@@ -303,9 +341,9 @@ public abstract class SchemaGenerator {
       expressionRestriction.appendChild(expressionPattern);
       expressionPattern.setAttribute(XS_VALUE, "[$#]\\{.*\\}");
 
-      generatedTypes.add(typeName);
+      generatedTypes.put(typeName, BenchmarkSchemaGenerator.THIS_PREFIX + typeName);
       schema.appendChild(typeElement);
-      return ConfigSchemaGenerator.RG_PREFIX + typeName;
+      return BenchmarkSchemaGenerator.THIS_PREFIX + typeName;
    }
 
    private String maxOccurs(int maxOccurs) {
@@ -328,23 +366,34 @@ public abstract class SchemaGenerator {
       return choice;
    }
 
-   protected Element createComplexElement(Element parentSequence, String name, int minOccurs, int maxOccurs) {
-      Element element = doc.createElementNS(NS_XS, XS_ELEMENT);
+   protected Element createComplexElement(Element parentSequence, String name, int minOccurs, int maxOccurs, String doc) {
+      Element element = this.doc.createElementNS(NS_XS, XS_ELEMENT);
       element.setAttribute(XS_NAME, name);
       if (minOccurs >= 0) element.setAttribute(XS_MIN_OCCURS, String.valueOf(minOccurs));
       element.setAttribute(XS_MAX_OCCURS, maxOccurs(maxOccurs));
+      addDocumentation(element, doc);
       parentSequence.appendChild(element);
-      Element complex = doc.createElementNS(NS_XS, XS_COMPLEX_TYPE);
+      Element complex = this.doc.createElementNS(NS_XS, XS_COMPLEX_TYPE);
       element.appendChild(complex);
       return complex;
    }
 
-   protected Element createComplexType(Element parentSequence, String name, String extended, boolean useComplexContent, boolean isAbstract, String documentation) {
+   protected Element createComplexElement(Element parentSequence, String name, int minOccurs, int maxOccurs, String extended, String doc) {
+      Element complexType = createComplexElement(parentSequence, name, minOccurs, maxOccurs, doc);
+      Element content = this.doc.createElementNS(NS_XS, XS_COMPLEX_CONTENT);
+      complexType.appendChild(content);
+      Element extension = this.doc.createElementNS(NS_XS, XS_EXTENSION);
+      extension.setAttribute(XS_BASE, extended);
+      content.appendChild(extension);
+      return complexType;
+   }
+
+   protected Element createComplexType(String name, String extended, boolean useComplexContent, boolean isAbstract, String documentation) {
       Element typeElement = doc.createElementNS(NS_XS, XS_COMPLEX_TYPE);
       if (isAbstract) typeElement.setAttribute(XS_ABSTRACT, "true");
       typeElement.setAttribute(XS_NAME, name);
       addDocumentation(typeElement, documentation);
-      parentSequence.appendChild(typeElement);
+      schema.appendChild(typeElement);
       if (extended == null) {
          return typeElement;
       } else {
@@ -357,11 +406,11 @@ public abstract class SchemaGenerator {
       }
    }
 
-   protected Element createReference(Element parent, String name, String type) {
+   protected Element createReference(Node parent, String name, String type) {
       return createReference(parent, name, type, -1, -1);
    }
 
-   protected Element createReference(Element parent, String name, String type, int minOccurs, int maxOccurs) {
+   protected Element createReference(Node parent, String name, String type, int minOccurs, int maxOccurs) {
       Element reference = doc.createElementNS(NS_XS, XS_ELEMENT);
       reference.setAttribute(XS_NAME, name);
       reference.setAttribute(XS_TYPE, type);
@@ -433,8 +482,8 @@ public abstract class SchemaGenerator {
       schema.setAttribute("attributeFormDefault", "unqualified");
       schema.setAttribute("elementFormDefault", "qualified");
       schema.setAttribute("version", "1.0");
-      schema.setAttribute("targetNamespace", "urn:" + namespace);
-      schema.setAttribute("xmlns:rg", "urn:" + namespace);
+      schema.setAttribute("targetNamespace", namespace);
+      schema.setAttribute("xmlns:this", namespace);
       doc.appendChild(schema);
       return schema;
    }
@@ -442,4 +491,51 @@ public abstract class SchemaGenerator {
     * Generates scheme file
     */
    protected abstract void generate();
+
+   /**
+    * Adds include tag to the parent
+    *
+    * @param parent  to which include is added
+    * @param location of include file e.g. scenario.xsd
+    * @return modified parent
+    */
+   protected Element addInclude(Element parent, String location) {
+      Element include = doc.createElementNS(NS_XS, XS_INCLUDE);
+      include.setAttribute(XS_SCHEMA_LOCATION, location);
+      parent.appendChild(include);
+      return include;
+   }
+
+   protected Element addImport(String namespace, String location, String shortNs) {
+      Element imported = doc.createElementNS(NS_XS, XS_IMPORT);
+      imported.setAttribute(XS_NAMESPACE, namespace);
+      imported.setAttribute(XS_SCHEMA_LOCATION, location);
+
+      Node firstChild = schema.getFirstChild();
+      if (firstChild == null) {
+         schema.appendChild(imported);
+      } else {
+         schema.insertBefore(imported, firstChild);
+      }
+      schema.setAttribute("xmlns:" + shortNs, namespace);
+      return imported;
+   }
+
+   protected String requireImport(String namespace) {
+      String shortNs = importedNamespaces.get(namespace);
+      if (shortNs != null) return shortNs;
+      String jarMajorMinor = NamespaceHelper.getJarMajorMinor(namespace);
+      if (jarMajorMinor == null) {
+         throw new IllegalStateException("Unknown jar for " + namespace);
+      }
+      shortNs = jarMajorMinor.replaceAll("[^a-zA-Z]", "");
+      if (shortNs.startsWith("radargun")) {
+         shortNs = shortNs.substring(8);
+      }
+      shortNs = String.format("%s%02d", shortNs, nsCounter++);
+      addImport(namespace, jarMajorMinor + ".xsd", shortNs);
+      String shortNsWithColon = shortNs + ':';
+      importedNamespaces.put(namespace, shortNsWithColon);
+      return shortNsWithColon;
+   }
 }

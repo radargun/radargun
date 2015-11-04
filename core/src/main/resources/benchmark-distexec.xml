@@ -18,7 +18,7 @@
 	</configurations>
 
 	<!-- Sequence of stages executed on the cluster -->
-	<scenario>
+	<rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
 		<!-- Start services on all nodes -->
 		<service-start />
 
@@ -39,7 +39,7 @@
 
 		<!-- Stop services on all nodes -->
 		<service-stop />
-	</scenario>
+	</rg:scenario>
 
 	<!-- How the statistics are reported -->
 	<reports>

@@ -19,7 +19,7 @@
       </config>
    </configurations>
 
-   <scenario>
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
       <service-start />
       <jvm-monitor-start />
 
@@ -74,7 +74,7 @@
 
       <!-- Stop JVM monitoring -->
       <jvm-monitor-stop />
-   </scenario>
+   </rg:scenario>
 
    <!-- How the statistics are reported -->
    <reports>

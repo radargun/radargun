@@ -54,7 +54,7 @@
    </configurations>
 
    <!-- Sequence of stages executed on the cluster -->
-   <scenario>
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
       <jvm-monitor-start />
       <!-- First start server, then client and let it connect to server -->
       <service-start groups="server"/>
@@ -78,7 +78,7 @@
 
       <!-- Stop services on all nodes: in cleanup this would happen anyway -->
       <service-stop />
-   </scenario>
+   </rg:scenario>
 
    <!-- How the statistics are reported -->
    <reports>

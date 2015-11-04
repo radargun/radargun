@@ -36,9 +36,9 @@
    </configurations>
 
    <!-- Sequence of stages executed on the cluster -->
-   <scenario>
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
        <!--Start services on all nodes -->
-      <service-start />
+      <service-start/>
       <!-- Begin monitoring of CPU, memory usage and GC -->
 
       <jvm-monitor-start />
@@ -59,18 +59,18 @@
       <cache-load num-entries="10000"/>
 
       <!-- 10, 20 and 30 threads will execute random request for 1 minute against the default cache ('testCache') -->
-      <repeat from="10" to="30" inc="10">
+      <rg:repeat from="10" to="30" inc="10">
          <basic-operations-legacy-test test-name="stress-test" amend-test="true"
                                 duration="1m" num-threads-per-node="${repeat.counter}">
             <key-selector>
                <concurrent-keys total-entries="10000"/>
             </key-selector>
          </basic-operations-legacy-test>
-      </repeat>
+      </rg:repeat>
 
       <!--&lt;!&ndash; Stop JVM monitoring &ndash;&gt;-->
       <jvm-monitor-stop />
-   </scenario>
+   </rg:scenario>
 
    <!-- How the statistics are reported -->
    <reports>

@@ -16,7 +16,7 @@
       </config>
    </configurations>
 
-   <scenario>
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
       <service-start />
 
       <!-- Loading the data -->
@@ -42,7 +42,7 @@
             </not>
          </conditions>
       </query>
-   </scenario>
+   </rg:scenario>
 
    <reports>
       <reporter type="html"/>

@@ -1,10 +1,8 @@
 package org.radargun.utils;
 
-import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.radargun.Directories;
 import org.radargun.config.*;
 
 /**
@@ -43,23 +40,14 @@ public class ReflexiveConverters {
       }
 
       protected <T> Base(Class<T> implementedClass) {
-         addFromDir(Directories.LIB_DIR, implementedClass);
-         if (ArgsHolder.getCurrentPlugin() != null) {
-            addFromDir(Paths.get(Directories.PLUGINS_DIR.toString(), ArgsHolder.getCurrentPlugin(), "lib").toFile(), implementedClass);
-         }
-      }
-
-      private <T> void addFromDir(File dir, Class<T> implementedClass) {
-         for (File file : dir.listFiles(new Utils.JarFilenameFilter())) {
-            for (Class<? extends T> clazz : AnnotatedHelper.getClassesFromJar(file.getPath(), implementedClass, DefinitionElement.class, "org.radargun.")) {
-               DefinitionElement de = clazz.getAnnotation(DefinitionElement.class);
-               if (this.classes.containsKey(de.name())) {
-                  throw new IllegalArgumentException("Trying to register " + clazz.getName() + " as '" + de.name()
-                        + "' but this is already used by " + this.classes.get(de.name()));
-               }
-               classes.put(de.name(), clazz);
+         ClasspathScanner.scanClasspath(implementedClass, DefinitionElement.class, "org.radargun.", clazz -> {
+            DefinitionElement de = clazz.getAnnotation(DefinitionElement.class);
+            if (this.classes.containsKey(de.name())) {
+               throw new IllegalArgumentException("Trying to register " + clazz.getName() + " as '" + de.name()
+                     + "' but this is already used by " + this.classes.get(de.name()));
             }
-         }
+            classes.put(de.name(), clazz);
+         });
       }
 
       protected Object instantiate(String name, Definition definition) {

@@ -30,23 +30,21 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
    private static final String ATTR_XMLNS = "xmlns";
 
    public MasterConfig parseConfig(String config) throws Exception {
-      //the content in the new file is too dynamic, let's just use DOM for now
-
-      DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-
       Document document;
       try {
-         document = builder.parse(config);
+         document = createDocumentBuilder().parse(config);
       } catch (Exception e) {
          throw new IllegalStateException(e);
       }
 
-      Element root = (Element) document.getElementsByTagName(ELEMENT_BENCHMARK).item(0);
+      Element root = document.getDocumentElement();
+      assertName(ELEMENT_BENCHMARK, root);
+
       NodeList childNodes = root.getChildNodes();
       int index = 0;
       index = nextElement(childNodes, index);
       MasterConfig masterConfig;
-      if (ELEMENT_MASTER.equals(childNodes.item(index).getNodeName())) {
+      if (ELEMENT_MASTER.equals(childNodes.item(index).getLocalName())) {
          masterConfig = parseMaster((Element) childNodes.item(index));
          index = nextElement(childNodes, index + 1);
       } else {
@@ -60,7 +58,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       Scenario scenario = new Scenario();
       Map<String, Definition> initProperties = Collections.EMPTY_MAP;
 
-      if (ELEMENT_INIT.equals(childNodes.item(index).getNodeName())) {
+      if (ELEMENT_INIT.equals(childNodes.item(index).getLocalName())) {
          initProperties = parseProperties(((Element) childNodes.item(index)), true);
          index = nextElement(childNodes, index + 1);
       }
@@ -80,7 +78,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
       Map<String, Definition> destroyProperties = Collections.EMPTY_MAP;
       Node elementDestroy = childNodes.item(index);
-      if (elementDestroy != null && ELEMENT_DESTROY.equals(childNodes.item(index).getNodeName())) {
+      if (elementDestroy != null && ELEMENT_DESTROY.equals(childNodes.item(index).getLocalName())) {
          destroyProperties = parseProperties((Element) childNodes.item(index), true);
          index = nextElement(childNodes, index + 1);
       }
@@ -88,18 +86,24 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
       Map<String, Definition> cleanupProperties = Collections.EMPTY_MAP;
       Node elementCleanup = childNodes.item(index);
-      if (elementCleanup != null && ELEMENT_CLEANUP.equals(childNodes.item(index).getNodeName())) {
+      if (elementCleanup != null && ELEMENT_CLEANUP.equals(childNodes.item(index).getLocalName())) {
          cleanupProperties = parseProperties((Element) childNodes.item(index), true);
          index = nextElement(childNodes, index + 1);
       }
       scenario.addStage(ScenarioCleanupStage.class, cleanupProperties, null);
 
       Element reportElement = (Element) childNodes.item(index);
-      if (reportElement != null && ELEMENT_REPORTS.equals(reportElement.getNodeName())) {
+      if (reportElement != null && ELEMENT_REPORTS.equals(reportElement.getLocalName())) {
          parseReporting(masterConfig, reportElement);
       }
 
       return masterConfig;
+   }
+
+   protected DocumentBuilder createDocumentBuilder() throws ParserConfigurationException {
+      DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+      documentBuilderFactory.setNamespaceAware(true);
+      return documentBuilderFactory.newDocumentBuilder();
    }
 
    /**
@@ -110,16 +114,29 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
     * @throws ParserConfigurationException if DocumentBuilder cannot be created
     */
    private Element loadScenario(String scenarioUri) throws ParserConfigurationException {
-      DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-
       Document document;
       try {
-         document = builder.parse(scenarioUri);
+         document = createDocumentBuilder().parse(scenarioUri);
       } catch (Exception e) {
          throw new IllegalStateException("Could not parse imported scenario: " + scenarioUri, e);
       }
 
-      return (Element) document.getElementsByTagName(ELEMENT_SCENARIO).item(0);
+      Element root = document.getDocumentElement();
+      if (ScenarioSchemaGenerator.NAMESPACE.equals(root.getNamespaceURI()) && ELEMENT_SCENARIO.equals(root.getLocalName())) {
+         return root;
+      } else if (BenchmarkSchemaGenerator.NAMESPACE.equals(root.getNamespaceURI()) && ELEMENT_BENCHMARK.equals(root.getLocalName())) {
+         NodeList scenarios = document.getElementsByTagNameNS("*", ELEMENT_SCENARIO);
+         if (scenarios.getLength() <= 0) {
+            throw new IllegalArgumentException("Did not found any scenarios in " + scenarioUri);
+         } else if (scenarios.getLength() > 1) {
+            throw new IllegalArgumentException("Found multiple scenarios in " + scenarioUri);
+         } else {
+            return (Element) scenarios.item(0);
+         }
+      } else {
+         throw new IllegalStateException(String.format("Unexpected root element in %s: namespace=%s, local-name=%s",
+               scenarioUri, root.getNamespaceURI(), root.getLocalName()));
+      }
    }
 
    private int nextElement(NodeList nodeList, int start) {
@@ -132,8 +149,8 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
    }
 
    private void assertName(String name, Element element) {
-      if (!name.equals(element.getNodeName())) {
-         throw new IllegalArgumentException("Found '" + element.getNodeName() + "', expected '" + name + "'");
+      if (!name.equals(element.getLocalName())) {
+         throw new IllegalArgumentException("Found '" + element.getLocalName() + "', expected '" + name + "'");
       }
    }
 
@@ -161,8 +178,8 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
    }
 
    private void parseClusters(MasterConfig masterConfig, Element clustersElement) {
-      if (!ELEMENT_CLUSTERS.equals(clustersElement.getNodeName())) {
-         throw unexpected(clustersElement.getNodeName(), new String[]{ELEMENT_CLUSTERS});
+      if (!ELEMENT_CLUSTERS.equals(clustersElement.getLocalName())) {
+         throw unexpected(clustersElement.getLocalName(), new String[]{ELEMENT_CLUSTERS});
       }
       if (masterConfig.getPort() == 0 || masterConfig.getHost() == null) {
          throw new IllegalArgumentException("Master not configured for distributed scenario!");
@@ -172,11 +189,11 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       for (int i = 0; i < clusters.getLength(); ++i) {
          if (!(clusters.item(i) instanceof Element)) continue;
          Element childElement = (Element) clusters.item(i);
-         if (ELEMENT_CLUSTER.equals(childElement.getNodeName())) {
+         if (ELEMENT_CLUSTER.equals(childElement.getLocalName())) {
             int size = Integer.parseInt(getAttribute(childElement, ATTR_SIZE, "0"));
             System.setProperty(Properties.PROPERTY_CLUSTER_SIZE, String.valueOf(size));
             addCluster(masterConfig, childElement, size);
-         } else if (ELEMENT_SCALE.equals(childElement.getNodeName())) {
+         } else if (ELEMENT_SCALE.equals(childElement.getLocalName())) {
             int initSize = Integer.parseInt(getAttribute(childElement, ATTR_FROM));
             int maxSize = Integer.parseInt(getAttribute(childElement, ATTR_TO));
             int increment = Integer.parseInt(getAttribute(childElement, ATTR_INC, "1"));
@@ -192,7 +209,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                }
             }
          } else {
-            throw unexpected(childElement.getNodeName(), new String[]{ELEMENT_CLUSTER, ELEMENT_SCALE});
+            throw unexpected(childElement.getLocalName(), new String[]{ELEMENT_CLUSTER, ELEMENT_SCALE});
          }
          System.setProperty(Properties.PROPERTY_CLUSTER_SIZE, "");
       }
@@ -244,10 +261,10 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
             for (int k = 0; k < properties.getLength(); ++k) {
                if (!(properties.item(k) instanceof Element)) continue;
                Element setupChildElement = (Element) properties.item(k);
-               if (ELEMENT_VM_ARGS.equals(setupChildElement.getNodeName())) {
+               if (ELEMENT_VM_ARGS.equals(setupChildElement.getLocalName())) {
                   vmArgs = parseProperties(setupChildElement, true);
                } else if (setupChildElement.hasAttribute(ATTR_XMLNS)) {
-                  service = setupChildElement.getNodeName();
+                  service = setupChildElement.getLocalName();
                   propertyDefinitions = parseProperties(setupChildElement, true);
                } else {
                   throw notExternal(setupChildElement);
@@ -260,7 +277,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
    }
 
    private IllegalArgumentException notExternal(Element element) {
-      return new IllegalArgumentException("Element " + element.getNodeName() + " does not refer to any external schema.");
+      return new IllegalArgumentException("Element " + element.getLocalName() + " does not refer to any external schema.");
    }
 
    private void parseScenario(Scenario scenario, Element scenarioElement) {
@@ -290,7 +307,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          Node n = children.item(childIndex);
          if (n instanceof Element) {
             Element childElement = (Element) n;
-            properties.put(childElement.getNodeName(), toDefinition(childElement));
+            properties.put(childElement.getLocalName(), toDefinition(childElement));
          } else if (n instanceof Text) {
             String text = ((Text) n).getWholeText().trim();
             if (!text.isEmpty()) {
@@ -323,7 +340,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       for (int i = 0; i < children.getLength(); ++i) {
          Node n = children.item(i);
          if (n instanceof Element) {
-            definition.add(n.getNodeName(), toDefinition((Element) n));
+            definition.add(n.getLocalName(), toDefinition((Element) n));
          } else if (n instanceof Text) {
             String text = ((Text) n).getWholeText().trim();
             if (!text.isEmpty()) {
@@ -356,7 +373,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          for (int j = 0; j < reportElements.getLength(); ++j) {
             if (!(reportElements.item(j) instanceof Element)) continue;
             Element element = (Element) reportElements.item(j);
-            if (ELEMENT_REPORT.equals(element.getNodeName())) {
+            if (ELEMENT_REPORT.equals(element.getLocalName())) {
                ReporterConfiguration.Report report = reporter.addReport();
                NodeList reportChildren = element.getChildNodes();
                for (int k = 0; k < reportChildren.getLength(); ++k) {
@@ -388,12 +405,12 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
    private Map<String, Definition> parseReportProperties(String type, Element element, String[] expectedElements) {
       if (!element.hasAttribute(ATTR_XMLNS)) {
          throw notExternal(element);
-      } else if (!type.equals(element.getNodeName())) {
-         throw new IllegalArgumentException("Expecting reporter type " + type + " but " + element.getNodeName() + " was used.");
-      } else if (ReporterHelper.isRegistered(element.getNodeName())) {
+      } else if (!type.equals(element.getLocalName())) {
+         throw new IllegalArgumentException("Expecting reporter type " + type + " but " + element.getLocalName() + " was used.");
+      } else if (ReporterHelper.isRegistered(element.getLocalName())) {
          return parseProperties(element, true);
       } else {
-         throw unexpected(element.getNodeName(), expectedElements);
+         throw unexpected(element.getLocalName(), expectedElements);
       }
    }
 
@@ -407,10 +424,10 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
    }
 
    private void addScenarioItem(Scenario scenario, Element element) {
-      if (element.getNodeName().equalsIgnoreCase(ELEMENT_REPEAT)) {
+      if (element.getLocalName().equalsIgnoreCase(ELEMENT_REPEAT)) {
          wrapStages(scenario, element, new Class[]{RepeatBeginStage.class}, new Class[]{RepeatContinueStage.class, RepeatEndStage.class});
       } else {
-         scenario.addStage(StageHelper.getStageClassByDashedName(element.getNodeName()), parseProperties(element, true), null);
+         scenario.addStage(StageHelper.getStageClassByDashedName(element.getNamespaceURI(), element.getLocalName()), parseProperties(element, true), null);
       }
    }
 

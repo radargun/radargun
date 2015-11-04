@@ -1,5 +1,7 @@
 package org.radargun;
 
+import org.radargun.utils.Utils;
+
 import java.io.File;
 
 /**
@@ -12,7 +14,7 @@ public class Directories {
    public final static File REPORTERS_DIR;
 
    static {
-      String path = Directories.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+      String path = Utils.getCodePath(Directories.class);
       File coreJar = new File(path.indexOf('!') < 0 ? path : path.substring(0, path.lastIndexOf('!')));
       if (!coreJar.exists()) throw new IllegalStateException("Core JAR not found: " + coreJar);
       LIB_DIR = coreJar.getParentFile();
