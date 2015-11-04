@@ -36,7 +36,7 @@
    </configurations>
 
    <!-- Sequence of stages executed on the cluster -->
-   <scenario>
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
       <!-- Start services on all nodes -->
       <service-start />
       <!-- Begin monitoring of CPU, memory usage and GC -->
@@ -62,12 +62,9 @@
       <define value="5, 10, 50" var="threads"/>
       <define value="1000, 2000, 10000" var="entries"/>
 
-      <repeat from="0" to="#{${threads}.size - 1}" inc="1">
+      <rg:repeat from="0" to="#{${threads}.size - 1}" inc="1">
          <basic-operations-legacy-test test-name="stress-test" amend-test="true"
                                 duration="${test.duration:1m}" num-threads-per-node="#{${threads}.get(${repeat.counter})}">
-            <key-selector>
-               <concurrent-keys total-entries="#{${entries}.get(${repeat.counter})}"/>
-            </key-selector>
             <statistics>
                <default>
                   <operation-stats>
@@ -76,12 +73,15 @@
                   </operation-stats>
                </default>
             </statistics>
+            <key-selector>
+               <concurrent-keys total-entries="#{${entries}.get(${repeat.counter})}"/>
+            </key-selector>
          </basic-operations-legacy-test>
-      </repeat>
+      </rg:repeat>
 
       <!-- Stop JVM monitoring -->
       <jvm-monitor-stop />
-   </scenario>
+   </rg:scenario>
 
    <!-- How the statistics are reported -->
    <reports>

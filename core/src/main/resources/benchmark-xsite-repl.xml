@@ -33,7 +33,7 @@
     </configurations>
 
     <!-- Sequence of stages executed on the cluster -->
-    <scenario>
+    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
 
         <service-start groups="g1"/>
         <service-start groups="g2"/>
@@ -79,7 +79,7 @@
                 <cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
             </backup-value-generator>
         </xs-repl-check>
-    </scenario>
+    </rg:scenario>
 
     <!-- No reports required for this scenario -->
 

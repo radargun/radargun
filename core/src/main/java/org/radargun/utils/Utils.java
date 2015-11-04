@@ -178,6 +178,10 @@ public class Utils {
        for (File f : file.listFiles()) deleteOnExitRecursive(f);
    }
 
+   public static String getCodePath(Class<?> clazz) {
+      return clazz.getProtectionDomain().getCodeSource().getLocation().getPath();
+   }
+
    public static class JarFilenameFilter implements FilenameFilter {
       public boolean accept(File dir, String name) {
          String fileName = name.toUpperCase(Locale.ENGLISH);

@@ -25,7 +25,7 @@
       </config>
    </configurations>
 
-   <scenario>
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
       <service-start />
       <jvm-monitor-start />
 
@@ -42,7 +42,7 @@
          <put interval="5" invocations="2"/>
       </basic-operations-test-setup>
       <test test-name="stress-test" duration="${test.duration:1m}"/>
-   </scenario>
+   </rg:scenario>
    <!-- Ignore leaked threads as Coherence leaks quite often -->
    <cleanup check-threads="false" />
 

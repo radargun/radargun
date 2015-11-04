@@ -1,7 +1,7 @@
 package org.radargun.config;
 
 /**
- * Constants shared between *ConfigParser and ConfigSchemaGenerator
+ * Constants shared between {@link DomConfigParser} and {@link SchemaGenerator}
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -37,5 +37,6 @@ interface ConfigSchema {
    String ELEMENT_SCENARIO = "scenario";
    String ELEMENT_SETUP = "setup";
    String ELEMENT_VM_ARGS = "vm-args";
-   String ELEMENT_SCENARIO_COMPLEX = "scenarioComplex";
+   String TYPE_SCENARIO = "scenario";
+   String TYPE_STAGES = "stages";
 }

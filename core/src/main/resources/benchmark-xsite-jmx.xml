@@ -33,7 +33,7 @@
     </configurations>
 
     <!-- Sequence of stages executed on the cluster -->
-    <scenario>
+    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
         <service-start groups="g1"/>
 
         <!-- JMX method invocations with one string parameter specified. Return value check is performed. -->
@@ -154,7 +154,7 @@
             </expected-total-result>
         </jmx-invocation>
 
-    </scenario>
+    </rg:scenario>
 
     <!-- No reports required for this scenario -->
 

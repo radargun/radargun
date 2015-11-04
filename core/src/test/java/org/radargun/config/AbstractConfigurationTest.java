@@ -1,21 +1,19 @@
 package org.radargun.config;
 
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
 import org.powermock.modules.testng.PowerMockTestCase;
+import org.radargun.Directories;
 import org.radargun.LaunchMaster;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.reporting.ReporterHelper;
 import org.radargun.stages.control.RepeatBeginStage;
 import org.radargun.stages.control.RepeatContinueStage;
 import org.radargun.stages.control.RepeatEndStage;
-import org.radargun.stages.lifecycle.ServiceStartStage;
+import org.radargun.utils.Utils;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -23,11 +21,10 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
+import java.net.URL;
+import java.nio.file.*;
 import java.util.*;
 
-import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
 
 /**
@@ -37,8 +34,8 @@ import static org.testng.Assert.*;
  */
 @Test
 @PowerMockIgnore({"javax.management.*"})
-@PrepareForTest(StageHelper.class)
-@SuppressStaticInitializationFor({"org.radargun.config.StageHelper", "org.radargun.reporting.ReporterHelper"})
+@PrepareForTest(Utils.class)
+@SuppressStaticInitializationFor({"org.radargun.Directories"})
 public abstract class AbstractConfigurationTest extends PowerMockTestCase {
    protected static Log log = LogFactory.getLog(AbstractConfigurationTest.class);
    protected MasterConfig masterConfig;
@@ -55,25 +52,30 @@ public abstract class AbstractConfigurationTest extends PowerMockTestCase {
    @BeforeClass
    public void setUpClass() throws Exception {
 
-      PowerMockito.field(ReporterHelper.class, "reporters").set(ReporterHelper.class, mock(HashMap.class));
+      String cwd = System.getProperty("user.dir");
+      String radargunCoreFile = Paths.get(cwd, "target", "radargun-core-3.0.0-SNAPSHOT.jar").toString();
+      PowerMockito.mockStatic(Utils.class, Mockito.CALLS_REAL_METHODS);
+      PowerMockito.doReturn(radargunCoreFile).when(Utils.class, "getCodePath", Mockito.any(Class.class));
+      PowerMockito.field(Directories.class, "REPORTERS_DIR").set(null, tempDir("reporters"));
+      PowerMockito.field(Directories.class, "PLUGINS_DIR").set(null, tempDir("plugins"));
+      PowerMockito.field(Directories.class, "LIB_DIR").set(null, new File(cwd, "target"));
 
-      DomConfigParser configParser = Mockito.mock(DomConfigParser.class, CALLS_REAL_METHODS);
-      PowerMockito.mockStatic(StageHelper.class);
-      PowerMockito.when(StageHelper.getStageClassByDashedName(anyString())).thenAnswer(new Answer<Class<ServiceStartStage>>() {
-         @Override
-         public Class<ServiceStartStage> answer(InvocationOnMock invocationOnMock) throws Throwable {
-            return ServiceStartStage.class;
-         }
-      });
+      DomConfigParser configParser = new DomConfigParser();//Mockito.mock(DomConfigParser.class, CALLS_REAL_METHODS);
       resources.add(getBenchmark());
       copyResources();
       String[] masterArgs = {"--config", getBenchmark()};
       String config = LaunchMaster.getConfigOrExit(masterArgs);
 
       log.info("Configuration file is: " + config);
-      log.info("Current directory is " + System.getProperty("user.dir"));
+      log.info("Current directory is " + cwd);
 
       masterConfig = configParser.parseConfig(config);
+   }
+
+   private File tempDir(String prefix) throws IOException {
+      File reportersDir = Files.createTempDirectory(prefix).toFile();
+      reportersDir.deleteOnExit();
+      return reportersDir;
    }
 
    /**
@@ -230,6 +232,7 @@ public abstract class AbstractConfigurationTest extends PowerMockTestCase {
          try (InputStream source = classLoader.getResourceAsStream(file)) {
             File destination = new File(System.getProperty("user.dir") + File.separator + file);
             Files.copy(source, destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            destination.deleteOnExit();
          } catch (Exception e) {
             log.error("Exception while copying resources", e);
          }

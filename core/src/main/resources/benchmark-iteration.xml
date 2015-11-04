@@ -14,7 +14,7 @@
       </config>
    </configurations>
 
-   <scenario>
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
       <jvm-monitor-start />
       <service-start/>
 
@@ -34,7 +34,7 @@
                fail-on-not-total-size="false"
                filter-class="org.radargun.filters.NumberObjectFilter"
                filter-param="integerValue:42" />
-   </scenario>
+   </rg:scenario>
 
    <reports>
       <reporter type="html">

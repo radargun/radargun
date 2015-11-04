@@ -13,20 +13,20 @@
    <configurations>
       <config name="JCache (Infinispan 7.1.x) - local">
          <setup plugin="infinispan71">
-            <jcache xmlns="urn:radargun:plugins:jcache:3.0"
+            <jcache xmlns="urn:radargun:plugins:infinispan71:3.0"
                      cache-name="testCache" />
          </setup>
       </config>
       <config name="JCache (Hazelcast 3.4.x) - local">
          <setup plugin="hazelcast3">
-            <jcache xmlns="urn:radargun:plugins:jcache:3.0"
+            <jcache xmlns="urn:radargun:plugins:hazelcast3:3.0"
                     cache-name="testCache" />
          </setup>
       </config>
    </configurations>
 
    <!-- Sequence of stages executed on the cluster -->
-   <scenario>
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
       <service-start />
       <jvm-monitor-start />
 
@@ -45,7 +45,7 @@
             <concurrent-keys total-entries="10000"/>
          </key-selector>
       </basic-operations-legacy-test>
-   </scenario>
+   </rg:scenario>
 
    <!-- How the statistics are reported -->
    <reports>
