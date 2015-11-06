@@ -19,12 +19,11 @@ import java.util.EnumSet;
 import java.util.List;
 
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.*;
 import static org.radargun.traits.TopologyHistory.HistoryType;
 import static org.radargun.util.ReflectionUtils.setClassProperty;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 /**
  * @author Matej Cimbora
@@ -103,9 +102,9 @@ public class CheckTopologyStageTest extends PowerMockTestCase {
 
       Log log = mock(Log.class);
       setClassProperty(AbstractDistStage.class, stage, "log", log);
-      setClassProperty(CheckTopologyStage.class, stage, "checkEvents", checkEvents);
-      setClassProperty(CheckTopologyStage.class, stage, "period", checkPeriod);
-      setClassProperty(CheckTopologyStage.class, stage, "changed", changed);
+      stage.checkEvents = checkEvents;
+      stage.period = checkPeriod;
+      stage.changed = changed;
       return stage;
    }
 }

@@ -11,7 +11,7 @@ public class OrderBy {
    public final String attribute;
    public final boolean asc;
 
-   OrderBy(String attribute, boolean asc) {
+   public OrderBy(String attribute, boolean asc) {
       this.attribute = attribute;
       this.asc = asc;
    }

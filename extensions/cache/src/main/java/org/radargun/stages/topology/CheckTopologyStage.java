@@ -24,16 +24,16 @@ import static org.radargun.traits.TopologyHistory.HistoryType;
 public class CheckTopologyStage extends AbstractDistStage {
 
    @Property(doc = "Name of the cache. Default is the default cache.")
-   private String cacheName;
+   public String cacheName;
 
    @Property(doc = "Type of events to check in this stage. Default are TOPOLOGY, REHASH, CACHE_STATUS (see org.radargun.traits.TopologyHistory.HistoryType).")
-   private EnumSet<TopologyHistory.HistoryType> checkEvents = EnumSet.allOf(TopologyHistory.HistoryType.class);
+   public EnumSet<TopologyHistory.HistoryType> checkEvents = EnumSet.allOf(TopologyHistory.HistoryType.class);
 
    @Property(converter = TimeConverter.class, doc = "The period in milliseconds which is checked. Default is infinite.")
-   private long period = Long.MAX_VALUE;
+   public long period = Long.MAX_VALUE;
 
    @Property(doc = "The check controls if this event has happened (true) or not happened (false). Defaults to true.")
-   private boolean changed = true;
+   public boolean changed = true;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private TopologyHistory topologyHistory;

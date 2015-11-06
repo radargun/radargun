@@ -19,19 +19,19 @@ import static org.radargun.traits.TopologyHistory.HistoryType;
 public class WaitForTopologySettleStage extends AbstractDistStage {
 
    @Property(doc = "How long period without any change are we looking for. Default is 10 seconds.", converter = TimeConverter.class)
-   private long period = 10000;
+   public long period = 10000;
 
    @Property(doc = "How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.", converter = TimeConverter.class)
-   private long timeout = 600000;
+   public long timeout = 600000;
 
    @Property(doc = "Name of the cache where we detect the events. Default is the default cache.")
-   private String cacheName;
+   public String cacheName;
 
    @Property(doc = "Type of events to check in this stage. Default are TOPOLOGY, REHASH, CACHE_STATUS (see org.radargun.traits.TopologyHistory.HistoryType).")
-   private EnumSet<TopologyHistory.HistoryType> checkEvents = EnumSet.allOf(TopologyHistory.HistoryType.class);
+   public EnumSet<TopologyHistory.HistoryType> checkEvents = EnumSet.allOf(TopologyHistory.HistoryType.class);
 
    @Property(doc = "Wait for cluster membership to settle. Default is true (if the Clustered trait is supported).")
-   private boolean checkMembership = true;
+   public boolean checkMembership = true;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private TopologyHistory history;

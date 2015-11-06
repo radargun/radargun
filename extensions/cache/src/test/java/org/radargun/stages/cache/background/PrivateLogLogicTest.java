@@ -6,8 +6,9 @@ import org.radargun.stages.helpers.Range;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Transactional;
+import org.radargun.util.CacheTestUtils;
+import org.radargun.util.CacheTraitRepository;
 import org.radargun.util.ReflectionUtils;
-import org.radargun.util.TestUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -16,7 +17,8 @@ import java.util.Map;
 import java.util.Random;
 
 import static org.mockito.Mockito.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 
 /**
  * @author Matej Cimbora
@@ -25,7 +27,7 @@ import static org.testng.Assert.*;
 public class PrivateLogLogicTest {
 
    public void testMixedOperations() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
       PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
@@ -105,7 +107,7 @@ public class PrivateLogLogicTest {
    }
 
    public void testMixedOperationsNonTx() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       PrivateLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
       Map<Long, PrivateLogLogic.OperationTimestampPair> timestamps = ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "timestamps", Map.class);
 
@@ -167,7 +169,7 @@ public class PrivateLogLogicTest {
    }
 
    public void testRemoveOperationsFirst() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
       PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
@@ -213,7 +215,7 @@ public class PrivateLogLogicTest {
 
    @Test(expectedExceptions = UnsupportedOperationException.class)
    public void testGetFails() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       PrivateLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       // operationId 0, GET
@@ -225,7 +227,7 @@ public class PrivateLogLogicTest {
     * Primary doesn't contain the operation, backup null
     */
    public void testStaleReadDetected1() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
       PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
@@ -246,7 +248,7 @@ public class PrivateLogLogicTest {
     * Neither primary contains the operation, nor backup
     */
    public void testStaleReadDetected2() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
       PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
@@ -267,7 +269,7 @@ public class PrivateLogLogicTest {
     * Primary null, backup doesn't contain the operation
     */
    public void testStaleReadDetected3() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
       PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
@@ -288,7 +290,7 @@ public class PrivateLogLogicTest {
     * Both primary and backup null
     */
    public void testStaleReadDetected4() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
       PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
@@ -308,7 +310,7 @@ public class PrivateLogLogicTest {
     * Using logLogicConfiguration.writeApplyMaxDelay avoids stale reads
     */
    public void testStaleReadDetected5() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
       LogLogicConfiguration llc = new LogLogicConfiguration();
@@ -333,7 +335,7 @@ public class PrivateLogLogicTest {
     * leading to stale reads if PrivateLogLogic.txModificationKeyIds are not used. Primary key test.
     */
    public void testStaleReadDetected6() throws Exception {
-      BasicOperations.Cache txCache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache txCache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
       LogLogicConfiguration llc = new LogLogicConfiguration();
@@ -361,7 +363,7 @@ public class PrivateLogLogicTest {
     * leading to stale reads if PrivateLogLogic.txModificationKeyIds are not used. Backup key test.
     */
    public void testStaleReadDetected7() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
       LogLogicConfiguration llc = new LogLogicConfiguration();
@@ -389,7 +391,7 @@ public class PrivateLogLogicTest {
       }
       llc.enabled = true;
       SlaveState slaveState = new SlaveState();
-      slaveState.put(KeyGenerator.KEY_GENERATOR, new TestUtils.SimpleStringKeyGenerator());
+      slaveState.put(KeyGenerator.KEY_GENERATOR, new CacheTestUtils.SimpleStringKeyGenerator());
       BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(slaveState, "test");
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "generalConfiguration", gc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "legacyLogicConfiguration", lc);

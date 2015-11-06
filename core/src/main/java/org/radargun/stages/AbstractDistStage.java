@@ -33,16 +33,16 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
 
    @Property(doc = "Specifies on which slaves this stage should actively run. " +
       "The result set is intersection of specified slaves, groups and roles. Default is all slaves.")
-   protected Set<Integer> slaves;
+   public Set<Integer> slaves;
 
    @Property(doc = "Specifies in which groups this stage should actively run. " +
       "The result set is intersection of specified slaves, groups and roles. Default is all groups.")
-   protected Set<String> groups;
+   public Set<String> groups;
 
    @Property(doc = "Specifies on which slaves this stage should actively run, by their roles. " +
       "The result set is intersection of specified slaves, groups and roles. " +
       "Supported roles are " + RoleHelper.SUPPORTED_ROLES + ". Default is all roles.")
-   protected Set<RoleHelper.Role> roles;
+   public Set<RoleHelper.Role> roles;
 
    @InjectTrait
    protected Lifecycle lifecycle;

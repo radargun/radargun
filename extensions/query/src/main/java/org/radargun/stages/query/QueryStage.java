@@ -8,6 +8,7 @@ import org.radargun.StageResult;
 import org.radargun.config.PropertyDelegate;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
+import org.radargun.stages.test.TransactionMode;
 import org.radargun.stages.test.legacy.LegacyStressor;
 import org.radargun.stages.test.legacy.LegacyTestStage;
 import org.radargun.stages.test.legacy.OperationLogic;
@@ -25,10 +26,10 @@ import org.radargun.utils.Projections;
 @Stage(doc = "Stage which executes a query.")
 public class QueryStage extends LegacyTestStage {
    @PropertyDelegate
-   protected QueryConfiguration query = new QueryConfiguration();
+   public QueryConfiguration query = new QueryConfiguration();
 
    @PropertyDelegate
-   protected QueryBase base = new QueryBase();
+   public QueryBase base = new QueryBase();
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private Queryable queryable;
@@ -38,7 +39,8 @@ public class QueryStage extends LegacyTestStage {
 
    @Override
    public OperationLogic getLogic() {
-      return new QueryLogic(base, queryable);
+      boolean useTxs = useTransactions == TransactionMode.ALWAYS ? true : useTransactions == TransactionMode.NEVER ? false : transactional != null;
+      return new QueryLogic(base, queryable, useTxs);
    }
 
    @Override

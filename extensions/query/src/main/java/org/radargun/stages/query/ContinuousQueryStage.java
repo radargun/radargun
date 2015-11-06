@@ -36,23 +36,22 @@ public class ContinuousQueryStage extends AbstractDistStage {
    private static final String CQ_TEST_NAME = "ContinuousQueryTest";
 
    @Property(doc = "Name of the test as used for reporting. Default is 'Test'.")
-   protected String testName = "Test";
+   public String testName = "Test";
 
    @Property(doc = "Cache name with which continuous query should registered. Default is null, i.e. default cache.")
-   private String cacheName = null;
+   public String cacheName = null;
 
    @Property(doc = "If multiple queries are used, specifies, if statistics should be merged in one or each CQ should keep its own statistics. Default it false.")
-   private boolean mergeCq = false;
+   public boolean mergeCq = false;
 
    @Property(doc = "Allows to reset statistics at the begining of the stage. Default is false.")
-   private boolean resetStats = false;
+   public boolean resetStats = false;
 
    @Property(doc = "Allows to remove continuous query. Default is false.")
-   protected boolean remove = false;
+   public boolean remove = false;
 
    @PropertyDelegate
-   QueryConfiguration query = new QueryConfiguration();
-   ;
+   public QueryConfiguration query = new QueryConfiguration();
 
    @InjectTrait
    private ContinuousQuery continuousQueryTrait;

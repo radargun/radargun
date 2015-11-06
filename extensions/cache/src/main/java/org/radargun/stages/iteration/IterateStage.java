@@ -32,31 +32,31 @@ import org.radargun.utils.Utils;
 @Stage(doc = "Iterates through all entries.")
 public class IterateStage extends LegacyTestStage {
    @Property(doc = "Full class name of the filter used to iterate through entries. Default is none (accept all).")
-   protected String filterClass;
+   public String filterClass;
 
    @Property(doc = "Parameters for the filter (used to resolve its properties). No defaults.")
-   protected String filterParam;
+   public String filterParam;
 
    @Property(doc = "Full class name of the converter. Default is no converter (Map.Entry<K, V> is returned).")
-   protected String converterClass;
+   public String converterClass;
 
    @Property(doc = "Parameter for the converter (used to resolve its properties). No defaults.")
-   protected String converterParam;
+   public String converterParam;
 
    @Property(doc = "Name of the container (e.g. cache, DB table etc.) that should be iterated. Default is the default container.")
-   protected String containerName;
+   public String containerName;
 
    @Property(doc = "Number of next() calls that are allowed to fail until we break the loop. Default is 100.")
-   protected int maxNextFailures = 100;
+   public int maxNextFailures = 100;
 
    @Property(doc = "Fail the stage if some of the stressors has failed. Default is true.")
-   protected boolean failOnFailedIteration = true;
+   public boolean failOnFailedIteration = true;
 
    @Property(doc = "Fail when the number of elements iterated is not same. Default is true.")
-   protected boolean failOnUnevenElements = true;
+   public boolean failOnUnevenElements = true;
 
    @Property(doc = "Fail when the number of elements is different than total size. Default is true if filter is not defined and false otherwise.")
-   protected Boolean failOnNotTotalSize;
+   public Boolean failOnNotTotalSize;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected Iterable iterable;

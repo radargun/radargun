@@ -23,7 +23,7 @@ import org.radargun.utils.TimeService;
 public class TestStage extends BaseTestStage {
 
    @Property(doc = "Set to false for multi-iteration tests, and after last iteration execute finish-test stage. Default is false.")
-   private boolean finish = true;
+   public boolean finish = true;
 
    protected RunningTest runningTest;
 

@@ -41,80 +41,80 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    public static final String MAPREDUCE_RESULT_KEY = "mapreduceResult";
 
    @Property(doc = "Name of the cache where map-reduce task should be" + "executed. Default is the default cache.")
-   private String cacheName;
+   public String cacheName;
 
    @Property(optional = false, doc = "Fully qualified class name of the " + "mapper implementation to execute.")
-   private String mapperFqn;
+   public String mapperFqn;
 
    @Property(optional = true, doc = "A String in the form of "
       + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
       + " invoking a method on the Mapper Object. The method"
       + " must be public and take a String parameter. The default is null.")
-   private String mapperParams = null;
+   public String mapperParams = null;
 
    @Property(optional = false, doc = "Fully qualified class name of the "
       + "org.infinispan.distexec.mapreduce.Reducer implementation to execute.")
-   private String reducerFqn;
+   public String reducerFqn;
 
    @Property(optional = true, doc = "A String in the form of "
       + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
       + " invoking a method on the Reducer Object. The method"
       + " must be public and take a String parameter. The default is null.")
-   private String reducerParams = null;
+   public String reducerParams = null;
 
    @Property(optional = true, doc = "Fully qualified class name of the "
       + "org.infinispan.distexec.mapreduce.Reducer implementation to use as a combiner.")
-   private String combinerFqn;
+   public String combinerFqn;
 
    @Property(optional = true, doc = "A String in the form of "
       + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
       + " invoking a method on the Reducer Object used as a combiner. The method"
       + " must be public and take a String parameter. The default is null.")
-   private String combinerParams = null;
+   public String combinerParams = null;
 
    @Property(optional = true, doc = "Fully qualified class name of the "
       + "org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.")
-   private String collatorFqn = null;
+   public String collatorFqn = null;
 
    @Property(optional = true, doc = "A String in the form of "
       + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
       + " invoking a method on the Collator Object. The method"
       + " must be public and take a String parameter. The default is null.")
-   private String collatorParams = null;
+   public String collatorParams = null;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
       + "Reduce phase of the MapReduceTask is distributed. The default is true.")
-   private boolean distributeReducePhase = true;
+   public boolean distributeReducePhase = true;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
       + "intermediate results of the MapReduceTask are shared. The default is true.")
-   private boolean useIntermediateSharedCache = true;
+   public boolean useIntermediateSharedCache = true;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
       + "final results of the MapReduceTask are stored in the cache. "
       + "The collated object will be stored at key MAPREDUCE_RESULT_KEY. "
       + "The result map will be stored in a cache named MAPREDUCE_RESULT_KEY. The default is false.")
-   private boolean storeResultInCache = false;
+   public boolean storeResultInCache = false;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
       + "final results of the MapReduceTask are written to the log of the "
       + "first slave node. The default is false.")
-   private boolean printResult = false;
+   public boolean printResult = false;
 
    @Property(doc = "A timeout value for the remote communication that happens "
       + "during a Map/Reduce task. The default is zero which means to wait forever.")
-   private long timeout = 0;
+   public long timeout = 0;
 
    @Property(doc = "The java.util.concurrent.TimeUnit to use with the timeout "
       + "property. The default is TimeUnit.MILLISECONDS.")
-   private TimeUnit unit = TimeUnit.MILLISECONDS;
+   public TimeUnit unit = TimeUnit.MILLISECONDS;
 
    @Property(doc = "The number of times to execute the Map/Reduce task. The default is 10.")
-   private int numExecutions = 10;
+   public int numExecutions = 10;
 
    @Property(doc = "The name of the key in the MasterState object that returns the total number of "
       + "bytes processed by the Map/Reduce task. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
-   private String totalBytesKey = RandomDataStage.RANDOMDATA_TOTALBYTES_KEY;
+   public String totalBytesKey = RandomDataStage.RANDOMDATA_TOTALBYTES_KEY;
 
    private Map<KOut, VOut> payloadMap = null;
    private R payloadObject = null;

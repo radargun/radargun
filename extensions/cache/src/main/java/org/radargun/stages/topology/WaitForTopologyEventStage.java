@@ -22,28 +22,28 @@ import static org.radargun.traits.TopologyHistory.HistoryType;
 public class WaitForTopologyEventStage extends AbstractDistStage {
 
    @Property(doc = "Name of the cache where we detect the events. Default is the default cache.")
-   private String cacheName;
+   public String cacheName;
 
    @Property(doc = "Wait for the event to happen. Default is true.")
-   private boolean wait = true;
+   public boolean wait = true;
 
    @Property(doc = "Set last state before finishing. Default is true.")
-   private boolean set = true;
+   public boolean set = true;
 
    @Property(doc = "Type of event we are detecting. Default is REHASH (see org.radargun.traits.TopologyHistory.HistoryType).")
-   private TopologyHistory.HistoryType type = HistoryType.REHASH;
+   public TopologyHistory.HistoryType type = HistoryType.REHASH;
 
    @Property(doc = "Condition we are waiting for. Default is END (see org.radargun.traits.TopologyHistory.Event.EventType).")
-   private EventType condition = EventType.END;
+   public EventType condition = EventType.END;
 
    @Property(doc = "How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.", converter = TimeConverter.class)
-   private long timeout = 600000;
+   public long timeout = 600000;
 
    @Property(doc = "The minimum number of slaves that participated in this event. Default is 0.")
-   private int minMembers = 0;
+   public int minMembers = 0;
 
    @Property(doc = "The maximum number of slaves that participated in this event. Default is indefinite.")
-   private int maxMembers = Integer.MAX_VALUE;
+   public int maxMembers = Integer.MAX_VALUE;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private TopologyHistory topologyHistory;

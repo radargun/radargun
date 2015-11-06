@@ -18,14 +18,16 @@ public class QueryLogic extends OperationLogic {
    protected final QueryBase queryBase;
    protected final Log log = LogFactory.getLog(getClass());
    protected final Queryable queryable;
+   protected final boolean useTransactions;
    protected Query.Result previousQueryResult = null;
    protected Query.Context context;
 
    AtomicIntegerArray queryInvocations;
 
-   public QueryLogic(QueryBase queryBase, Queryable queryable) {
+   public QueryLogic(QueryBase queryBase, Queryable queryable, boolean useTransactions) {
       this.queryBase = queryBase;
       this.queryable = queryable;
+      this.useTransactions = useTransactions;
       queryInvocations = new AtomicIntegerArray(queryBase.getNumQueries());
    }
 
@@ -47,7 +49,7 @@ public class QueryLogic extends OperationLogic {
    @Override
    public void init(LegacyStressor stressor) {
       super.init(stressor);
-      stressor.setUseTransactions(true);
+      stressor.setUseTransactions(useTransactions);
    }
 
    @Override
@@ -59,7 +61,7 @@ public class QueryLogic extends OperationLogic {
       long start = TimeService.nanoTime();
       queryResult = stressor.makeRequest(new Invocations.Query(query, context));
       long end = TimeService.nanoTime();
-      log.infof("Invoked query %d (%dth) in %d us", randomQueryNumber, queryInvocations.incrementAndGet(randomQueryNumber), (end - start) / 1000);
+      log.tracef("Invoked query %d (%dth) in %d us", randomQueryNumber, queryInvocations.incrementAndGet(randomQueryNumber), (end - start) / 1000);
 
       int size = queryResult.size();
       if (previousQueryResult != null) {
