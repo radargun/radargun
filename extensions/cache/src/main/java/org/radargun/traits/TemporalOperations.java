@@ -2,9 +2,6 @@ package org.radargun.traits;
 
 import org.radargun.Operation;
 
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 /**
  * @author mgencur
  */

@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 import static org.radargun.traits.TopologyHistory.Event.EventType;
 import static org.radargun.util.ReflectionUtils.getClassProperty;
 import static org.radargun.util.ReflectionUtils.setClassProperty;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertFalse;
 
 /**
  * @author Matej Cimbora
@@ -180,11 +180,11 @@ public class WaitForTopologyEventStageTest extends PowerMockTestCase {
 
       Log log = mock(Log.class);
       setClassProperty(AbstractDistStage.class, stage, "log", log);
-      setClassProperty(WaitForTopologyEventStage.class, stage, "type", checkType);
-      setClassProperty(WaitForTopologyEventStage.class, stage, "condition", condition);
-      setClassProperty(WaitForTopologyEventStage.class, stage, "set", set);
-      setClassProperty(WaitForTopologyEventStage.class, stage, "wait", wait);
-      setClassProperty(WaitForTopologyEventStage.class, stage, "timeout", timeout);
+      stage.type = checkType;
+      stage.condition = condition;
+      stage.set = set;
+      stage.wait = wait;
+      stage.timeout = timeout;
       return stage;
    }
 }

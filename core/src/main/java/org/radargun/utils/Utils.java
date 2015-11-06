@@ -587,7 +587,11 @@ public class Utils {
          }
          field.set(instance, value);
       } catch (Exception e) {
-         log.error("Failed to set " + clazz.getName() + "." + fieldName + " to value", e);
+         if (e instanceof NoSuchFieldException && clazz.getSuperclass() != null) {
+            setField(clazz.getSuperclass(), fieldName, instance, value);
+         } else {
+            log.error("Failed to set " + clazz.getName() + "." + fieldName + " to value", e);
+         }
       }
    }
 

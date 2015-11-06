@@ -56,44 +56,44 @@ public class RandomDataStage extends AbstractDistStage {
 
    @Property(doc = "The seed to use for the java.util.Random object. "
          + "The default is the return value of Calendar.getInstance().getWeekYear().")
-   private long randomSeed = Calendar.getInstance().getWeekYear();
+   public long randomSeed = Calendar.getInstance().getWeekYear();
 
    @Property(doc = "The size of the values to put into the cache. The default size is 1MB (1024 * 1024).")
-   private int valueSize = 1024 * 1024;
+   public int valueSize = 1024 * 1024;
 
    @Property(doc = "The number of values of valueSize to write to the cache. "
          + "Either valueCount or ramPercentageDataSize should be specified, but not both.")
-   private long valueCount = -1;
+   public long valueCount = -1;
 
    @Property(doc = "A double that represents the percentage of the total Java heap "
          + "used to determine the amount of data to put into the cache. "
          + "Either valueCount or ramPercentageDataSize should be specified, but not both.")
-   private double ramPercentage = -1;
+   public double ramPercentage = -1;
 
    @Property(doc = "The name of the bucket where keys are written. The default is null.")
-   private String bucket = null;
+   public String bucket = null;
 
    @Property(doc = "If true, then String objects with printable characters are written to the cache."
          + "The default is false")
-   private boolean stringData = false;
+   public boolean stringData = false;
 
    @Property(doc = "If true, then the time for each put operation is written to the logs. The default is false.")
-   private boolean printWriteStatistics = false;
+   public boolean printWriteStatistics = false;
 
    @Property(doc = "If true, then the random word generator selects a word from a pre-defined list. "
          + "The default is false.")
-   private boolean limitWordCount = false;
+   public boolean limitWordCount = false;
 
    @Property(doc = "The maximum number of words to generate in the pre-defined list of words used with limitWordCount."
          + "The default is 100.")
-   private int maxWordCount = 100;
+   public int maxWordCount = 100;
 
    @Property(doc = "The maximum number of characters allowed in a word. The default is 20.")
-   private int maxWordLength = 20;
+   public int maxWordLength = 20;
 
    @Property(doc = "If false, then each node in the cluster generates a list of maxWordCount words. "
          + "If true, then each node in the cluster shares the same list of words. The default is false.")
-   private boolean shareWords = false;
+   public boolean shareWords = false;
 
    /*
     * From http://infinispan.blogspot.com/2013/01/infinispan-memory-overhead.html and
@@ -101,19 +101,19 @@ public class RandomDataStage extends AbstractDistStage {
     */
    @Property(doc = "The bytes used over the size of the key and value when "
          + "putting to the cache. By default the stage retrieves the value from cache wrapper automatically.")
-   private int valueByteOverhead = -1;
+   public int valueByteOverhead = -1;
 
    @Property(doc = "The number of bytes to write to the cache when the valueByteOverhead, "
          + "stringData, and valueSize are taken into account. The code assumes this is an "
          + "even multiple of valueSize plus valueByteOverhead. If stringData is true, then "
          + "the code assumes this is an even multiple of (2 * valueSize) plus valueByteOverhead.")
-   private long targetMemoryUse = -1;
+   public long targetMemoryUse = -1;
 
    @Property(doc = "The number of times to retry a put if it fails. Default is 10.")
-   private int putRetryCount = 10;
+   public int putRetryCount = 10;
 
    @Property(doc = "The maximum number of seconds to sleep before retrying a failed put command. The default is 5.")
-   private int maxSleepInterval = 5;
+   public int maxSleepInterval = 5;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private BasicOperations basicOperations;

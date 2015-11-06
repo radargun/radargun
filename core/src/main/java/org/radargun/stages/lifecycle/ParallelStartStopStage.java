@@ -20,26 +20,26 @@ import org.radargun.stages.helpers.RoleHelper;
 public class ParallelStartStopStage extends AbstractServiceStartStage {
 
    @Property(doc = "Set of slaves which should be stopped in this stage. Default is empty.")
-   private Collection<Integer> stop = new ArrayList<Integer>();
+   public Collection<Integer> stop = new ArrayList<Integer>();
 
    @Property(converter = TimeConverter.class, doc = "Delay before the slaves are stopped. Default is 0.")
-   private long stopDelay = 0;
+   public long stopDelay = 0;
 
    @Property(doc = "If set to false, the node crash should be simulated. By default node should be shutdown gracefully.")
-   private boolean graceful = true;
+   public boolean graceful = true;
 
    @Property(doc = "Set of slaves which should be started in this stage. Default is empty.")
-   private Collection<Integer> start = new ArrayList<Integer>();
+   public Collection<Integer> start = new ArrayList<Integer>();
 
    @Property(doc = "Set of roles which should be stopped in this stage. Default is empty.")
-   private Set<RoleHelper.Role> stopRoles = new HashSet<>();
+   public Set<RoleHelper.Role> stopRoles = new HashSet<>();
 
    @Property(converter = TimeConverter.class, doc = "Delay before the slaves are started. Default is 0.")
-   private long startDelay = 0;
+   public long startDelay = 0;
 
    @Property(doc = "Applicable only for cache wrappers with Partitionable feature. Set of slaves that should be " +
          "reachable from the new node. Default is all slaves.")
-   private Set<Integer> reachable = null;
+   public Set<Integer> reachable = null;
 
    @Override
    public DistStageAck executeOnSlave() {

@@ -3,8 +3,8 @@ package org.radargun.stages.cache.background;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
+import org.radargun.utils.TimeConverter;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;

@@ -194,22 +194,27 @@ public class RegisterListenersStage extends AbstractDistStage {
       if (createdListener != null && isSupported(Type.CREATED)) {
          listenersTrait.removeCreatedListener(null, createdListener, sync);
       }
+      slaveState.remove(CREATED.name);
       EvictedListener evictedListener = (EvictedListener) slaveState.get(EVICTED.name);
       if (evictedListener != null && isSupported(Type.EVICTED)) {
          listenersTrait.removeEvictedListener(null, evictedListener, sync);
       }
+      slaveState.remove(EVICTED.name);
       RemovedListener removedListener = (RemovedListener) slaveState.get(REMOVED.name);
       if (removedListener != null && isSupported(Type.REMOVED)) {
          listenersTrait.removeRemovedListener(null, removedListener, sync);
       }
+      slaveState.remove(REMOVED.name);
       UpdatedListener updatedListener = (UpdatedListener) slaveState.get(UPDATED.name);
       if (updatedListener != null && isSupported(Type.UPDATED)) {
          listenersTrait.removeUpdatedListener(null, updatedListener, sync);
       }
+      slaveState.remove(UPDATED.name);
       ExpiredListener expiredListener = (ExpiredListener) slaveState.get(EXPIRED.name);
       if (expiredListener != null && isSupported(Type.EXPIRED)) {
          listenersTrait.removeExpiredListener(null, expiredListener, sync);
       }
+      slaveState.remove(EXPIRED.name);
    }
 
    private boolean isSupported(Type type) {

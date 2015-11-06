@@ -11,16 +11,16 @@ import org.radargun.stages.AbstractDistStage;
 @Stage(doc = "Stage that checks the progress in background stressors and fails if something went wrong.")
 public class BackgroundStressorsCheckStage extends AbstractDistStage {
    @Property(doc = "Name of the background operations. By default, all instances are checked.")
-   protected String name = null;
+   public String name = null;
 
    @Property(doc = "Stops stressors and waits until all confirmed operations are checked. Default is false.")
-   private boolean waitUntilChecked = false;
+   public boolean waitUntilChecked = false;
 
    @Property(doc = "Resume stressors after we have stopped them in order to let checkers check everything. Default is false.")
-   private boolean resumeAfterChecked = false;
+   public boolean resumeAfterChecked = false;
 
    @Property(doc = "Waits until all stressors record new progress, or timeout (no-progress-timeout) elapses. Default is false.")
-   private boolean waitForProgress = false;
+   public boolean waitForProgress = false;
 
    @Override
    public DistStageAck executeOnSlave() {

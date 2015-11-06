@@ -3,7 +3,7 @@ package org.radargun.stages.cache.background;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;

@@ -19,10 +19,10 @@ import java.util.EnumSet;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
-import static org.radargun.traits.TopologyHistory.HistoryType;
 import static org.radargun.traits.TopologyHistory.Event.EventType;
-import static org.radargun.util.ReflectionUtils.*;
-import static org.testng.Assert.*;
+import static org.radargun.traits.TopologyHistory.HistoryType;
+import static org.radargun.util.ReflectionUtils.setClassProperty;
+import static org.testng.Assert.assertFalse;
 
 /**
  * @author Matej Cimbora
@@ -50,7 +50,7 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
    @Test(timeOut = 10_000)
    public void testExecuteOnSlaveMembershipChanges() throws NoSuchFieldException, IllegalAccessException {
       WaitForTopologySettleStage stage = initStage(EnumSet.noneOf(HistoryType.class), true);
-      setClassProperty(WaitForTopologySettleStage.class, stage, "period", 10l);
+      stage.period = 10l;
       Clustered clustered = mock(Clustered.class);
       setClassProperty(WaitForTopologySettleStage.class, stage, "clustered", clustered);
 
@@ -74,7 +74,7 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
 
    private void testExecuteOnSlaveTopologyChanges(EnumSet<TopologyHistory.HistoryType> checkEvents) throws Exception {
       WaitForTopologySettleStage stage = initStage(checkEvents, false);
-      setClassProperty(WaitForTopologySettleStage.class, stage, "period", 0l);
+      stage.period = 0l;
       TopologyHistory topologyHistory = mock(TopologyHistory.class);
       setClassProperty(WaitForTopologySettleStage.class, stage, "history", topologyHistory);
 
@@ -168,7 +168,7 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
 
    public void testExecuteOnSlaveSingleEvents() throws NoSuchFieldException, IllegalAccessException {
       WaitForTopologySettleStage stage = initStage(EnumSet.of(HistoryType.CACHE_STATUS), false);
-      setClassProperty(WaitForTopologySettleStage.class, stage, "period", 10l);
+      stage.period = 10l;
       TopologyHistory topologyHistory = mock(TopologyHistory.class);
       setClassProperty(WaitForTopologySettleStage.class, stage, "history", topologyHistory);
 
@@ -208,8 +208,8 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
       Log log = mock(Log.class);
       setClassProperty(WaitForTopologySettleStage.class, stage, "history", topologyHistory);
       setClassProperty(AbstractDistStage.class, stage, "log", log);
-      setClassProperty(WaitForTopologySettleStage.class, stage, "checkEvents", checkEvents);
-      setClassProperty(WaitForTopologySettleStage.class, stage, "checkMembership", checkMembership);
+      stage.checkEvents = checkEvents;
+      stage.checkMembership = checkMembership;
       return stage;
    }
 }

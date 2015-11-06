@@ -34,35 +34,35 @@ public abstract class LegacyTestStage extends BaseTestStage {
    public static final String NAMESPACE = "urn:radargun:stages:legacy:" + Version.SCHEMA_VERSION;
 
    @Property(doc = "The number of threads executing on each node. You have to set either this or 'total-threads'. No default.")
-   protected int numThreadsPerNode = 0;
+   public int numThreadsPerNode = 0;
 
    @Property(doc = "Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.")
-   protected int totalThreads = 0;
+   public int totalThreads = 0;
 
    @Property(doc = "Specifies if the requests should be explicitly wrapped in transactions. " +
          "Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if " +
          "the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.")
-   protected TransactionMode useTransactions = TransactionMode.IF_TRANSACTIONAL;
+   public TransactionMode useTransactions = TransactionMode.IF_TRANSACTIONAL;
 
    @Property(doc = "Specifies whether the transactions should be committed (true) or rolled back (false). " +
          "Default is true")
-   protected boolean commitTransactions = true;
+   public boolean commitTransactions = true;
 
    @Property(doc = "Number of requests in one transaction. Default is 1.")
-   protected int transactionSize = 1;
+   public int transactionSize = 1;
 
    @Property(doc = "Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, " +
          "there is still the random ramp-up delay. Default is false.")
-   protected boolean synchronousRequests = false;
+   public boolean synchronousRequests = false;
 
    @Property(doc = "Max duration of the test. Default is infinite.", converter = TimeConverter.class)
-   protected long timeout = 0;
+   public long timeout = 0;
 
    @Property(doc = "Delay to let all threads start executing operations. Default is 0.", converter = TimeConverter.class)
-   protected long rampUp = 0;
+   public long rampUp = 0;
 
    @Property(doc = "Whether an error from transaction commit/rollback should be logged as error. Default is true.")
-   protected boolean logTransactionExceptions = true;
+   public boolean logTransactionExceptions = true;
 
    @InjectTrait
    protected Transactional transactional;
