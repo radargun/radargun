@@ -23,7 +23,7 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
-   protected static final String REMOTING_JMX_SERVICE_URL_TEMPLATE = "service:jmx:remoting-jmx://%s:%d";
+   private static final String REMOTING_JMX_SERVICE_URL_TEMPLATE = "service:jmx:remoting-jmx://%s:%d";
    protected static final Log log = LogFactory.getLog(InfinispanHotrodQueryable.class);
 
    protected final Infinispan60HotrodService service;
@@ -31,7 +31,7 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
    public InfinispanHotrodQueryable(Infinispan60HotrodService service) {
       this.service = service;
    }
-
+   
    @Override
    public Query.Builder getBuilder(String cacheName, Class<?> clazz) {
       if (cacheName == null) {
@@ -65,7 +65,7 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
       for (String host : service.serverHostnames) {
          JMXServiceURL serviceURL;
          try {
-            serviceURL = new JMXServiceURL(String.format(REMOTING_JMX_SERVICE_URL_TEMPLATE, host, service.jmxPort));
+            serviceURL = new JMXServiceURL(String.format(getRemotingJmxUrlTemplate(), host, service.jmxPort));
          } catch (MalformedURLException e) {
             log.error("Failed to form JMX URL", e);
             continue;
@@ -91,6 +91,10 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
       } finally {
          closeConnector(connector);
       }
+   }
+   
+   protected String getRemotingJmxUrlTemplate() {
+      return REMOTING_JMX_SERVICE_URL_TEMPLATE;
    }
 
    protected void doJmxRegistration(MBeanServerConnection connection) {

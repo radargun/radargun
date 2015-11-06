@@ -18,6 +18,7 @@ import java.util.Scanner;
  * @author Vojtech Juranek &lt;vjuranek@redhat.com&gt;
  */
 public class Infinispan80HotrodQueryable extends InfinispanHotrodQueryable {
+    private static final String REMOTING_JMX_SERVICE_URL_TEMPLATE = "service:jmx:remote+http://%s:%d";
 
     public Infinispan80HotrodQueryable(Infinispan60HotrodService service) {
         super(service);
@@ -30,6 +31,11 @@ public class Infinispan80HotrodQueryable extends InfinispanHotrodQueryable {
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to read protofiles " + Arrays.toString(service.protofiles), e);
         }
+    }
+    
+    @Override
+    protected String getRemotingJmxUrlTemplate() {
+       return REMOTING_JMX_SERVICE_URL_TEMPLATE;
     }
 
     @Override
