@@ -87,12 +87,12 @@
             <strong>Master</strong><br>
          </#if>
       </#list>
-      <#if (groups?size > 1) >
-         <#list 0..groups as groupID>
+      <#if (groups?has_content) >
+         <#list 0..(groups?size -1) as groupID>
             <span>&nbsp;</span>
             <input type="checkbox" checked="checked" id="group_${groupID}"
-               onclick="${resetDisplayGroup(groupID, groups)}">
-             <strong>Group ${groups.get(groupId).name} </strong><br>
+               onclick="${resetDisplayGroup(groups, groupID)}">
+             <strong>Group ${groups?api.get(groupID).name} </strong><br>
          </#list>
       </#if>
    </div>
