@@ -1,22 +1,7 @@
 package org.radargun.service;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-
-import org.jgroups.Address;
-import org.jgroups.JChannel;
-import org.jgroups.Message;
-import org.jgroups.ReceiverAdapter;
-import org.jgroups.View;
-import org.jgroups.blocks.MethodCall;
-import org.jgroups.blocks.MethodLookup;
-import org.jgroups.blocks.RequestOptions;
-import org.jgroups.blocks.ResponseMode;
-import org.jgroups.blocks.RpcDispatcher;
+import org.jgroups.*;
+import org.jgroups.blocks.*;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 import org.jgroups.util.RspList;
@@ -27,6 +12,13 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.ProvidesTrait;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 
 /**
@@ -77,7 +69,7 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
    @Property(doc = "If true, reads are executed on all owners using ResponseMode GET_FIRST. Otherwise it just randomly picks one node for reading. Default is false.")
    private boolean getFirst;
    @Property(doc = "Controls use of the OOB flag. Default is false.")
-   private boolean oob;
+   private boolean oob=true;
    @Property(doc = "Controls use of anycasting flag in RequestOptions. Default is false.")
    private boolean anycasting;
 
@@ -87,6 +79,9 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
    private boolean excludeSelfRequests;
    private boolean noopSelfRequests;
    private volatile Object lastValue = null;
+
+
+   private RequestOptions getOptions, putOptions;
 
    static {
       try {
@@ -120,6 +115,23 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
    public void start() {
       excludeSelfRequests = selfRequests == SelfRequests.exclude;
       noopSelfRequests = selfRequests == SelfRequests.noop;
+
+      this.getOptions = new RequestOptions(getFirst ? ResponseMode.GET_FIRST : ResponseMode.GET_ALL, 20000, anycasting, null);
+      if (oob)
+         getOptions.setFlags(Message.Flag.OOB);
+      if (!bundle)
+         getOptions.setFlags(Message.Flag.DONT_BUNDLE);
+      if (!flowControl)
+         getOptions.setFlags(Message.Flag.NO_FC);
+
+      this.putOptions = new RequestOptions(ResponseMode.GET_ALL, 20000, true, null); // uses anycasting
+      if (oob)
+         putOptions.setFlags(Message.Flag.OOB);
+      if (!bundle)
+         putOptions.setFlags(Message.Flag.DONT_BUNDLE);
+      if (!flowControl)
+         putOptions.setFlags(Message.Flag.NO_FC);
+
 
       log.debug("numOwners=" + numOwners + ", selfRequests=" + selfRequests + ", config=" + configFile);
 
@@ -158,7 +170,7 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
 
    @Override
    public boolean isRunning() {
-      return ch.isConnected();
+      return ch != null && ch.isConnected();
    }
 
    public Object getFromRemote(Object key) {
@@ -188,19 +200,6 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
    }
 
    private Object read(MethodCall methodCall) {
-      RequestOptions getOptions = new RequestOptions(getFirst ? ResponseMode.GET_FIRST : ResponseMode.GET_ALL, 20000, false, null);
-
-      if (oob) {
-         getOptions.setFlags(Message.Flag.OOB);
-      }
-      if (!bundle) {
-         getOptions.setFlags(Message.Flag.DONT_BUNDLE);
-      }
-      if (!flowControl) {
-         getOptions.setFlags(Message.Flag.NO_FC);
-      }
-      getOptions.setAnycasting(anycasting);
-
       try {
          if (getFirst) {
             List<Address> targets = pickReadTargets();
@@ -225,17 +224,6 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
    }
 
    public Object write(MethodCall methodCall) {
-      RequestOptions putOptions = new RequestOptions(ResponseMode.GET_ALL, 20000, true, null); // uses anycasting
-
-      if (oob) {
-         putOptions.setFlags(Message.Flag.OOB);
-      }
-      if (!bundle) {
-         putOptions.setFlags(Message.Flag.DONT_BUNDLE);
-      }
-      if (!flowControl) {
-         putOptions.setFlags(Message.Flag.NO_FC);
-      }
 
       Collection<Address> targets = pickWriteTargets();
       try {
@@ -247,32 +235,32 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
 
    @Override
    public Object get(Object key) {
-      return read(new MethodCall(GET, new Object[]{key}));
+      return read(new MethodCall(GET, key));
    }
 
    @Override
    public boolean containsKey(Object key) {
-      return (Boolean) read(new MethodCall(CONTAINS_KEY, new Object[]{key}));
+      return (Boolean) read(new MethodCall(CONTAINS_KEY, key));
    }
 
    @Override
    public void put(Object key, Object value) {
-      write(new MethodCall(PUT, new Object[]{key, value}));
+      write(new MethodCall(PUT, key, value));
    }
 
    @Override
    public Object getAndPut(Object key, Object value) {
-      return write(new MethodCall(GET_AND_PUT, new Object[]{key, value}));
+      return write(new MethodCall(GET_AND_PUT, key, value));
    }
 
    @Override
    public boolean remove(Object key) {
-      return (Boolean) write(new MethodCall(REMOVE, new Object[] { key }));
+      return (Boolean) write(new MethodCall(REMOVE, key));
    }
 
    @Override
    public Object getAndRemove(Object key) {
-      return write(new MethodCall(GET_AND_REMOVE, new Object[] { key }));
+      return write(new MethodCall(GET_AND_REMOVE, key));
    }
 
    public void clear() {
