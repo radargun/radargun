@@ -3,10 +3,12 @@ package org.radargun.stages.cache.test.legacy;
 import java.util.Random;
 
 import org.radargun.Operation;
+import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.cache.test.CacheInvocations;
 import org.radargun.stages.test.Invocation;
+import org.radargun.stages.test.legacy.LegacyTestStage;
 import org.radargun.stages.test.legacy.OperationSelector;
 import org.radargun.stages.test.legacy.RatioOperationSelector;
 import org.radargun.stages.test.legacy.LegacyStressor;
@@ -17,8 +19,9 @@ import org.radargun.traits.InjectTrait;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "Test using BasicOperations")
-public class BasicOperationsLegacyTestStage extends CacheOperationsLegacyTestStage {
+public class BasicOperationsTestStage extends CacheOperationsTestStage {
    @Property(doc = "Ratio of GET requests. Default is 4.")
    protected int getRatio = 4;
 

@@ -36,7 +36,7 @@
    </configurations>
 
    <!-- Sequence of stages executed on the cluster -->
-   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0" xmlns:l="urn:radargun:stages:legacy:3.0">
        <!--Start services on all nodes -->
       <service-start/>
       <!-- Begin monitoring of CPU, memory usage and GC -->
@@ -47,11 +47,11 @@
       <cache-load num-entries="5000"/>
       <!-- 5 threads will execute total of 100,000 random requests against the default cache ('testCache')-->
       <!-- As the test is called 'warmup', performance statistics won't be reported -->
-      <basic-operations-legacy-test test-name="warmup" duration="1m" num-threads-per-node="5">
-         <key-selector>
-            <concurrent-keys total-entries="5000" />
-         </key-selector>
-      </basic-operations-legacy-test>
+      <l:basic-operations-test test-name="warmup" duration="1m" num-threads-per-node="5">
+         <l:key-selector>
+            <l:concurrent-keys total-entries="5000" />
+         </l:key-selector>
+      </l:basic-operations-test>
 
       <!-- Remove all data from the default cache -->
       <cache-clear />
@@ -60,12 +60,12 @@
 
       <!-- 10, 20 and 30 threads will execute random request for 1 minute against the default cache ('testCache') -->
       <rg:repeat from="10" to="30" inc="10">
-         <basic-operations-legacy-test test-name="stress-test" amend-test="true"
+         <l:basic-operations-test test-name="stress-test" amend-test="true"
                                 duration="1m" num-threads-per-node="${repeat.counter}">
-            <key-selector>
-               <concurrent-keys total-entries="10000"/>
-            </key-selector>
-         </basic-operations-legacy-test>
+            <l:key-selector>
+               <l:concurrent-keys total-entries="10000"/>
+            </l:key-selector>
+         </l:basic-operations-test>
       </rg:repeat>
 
       <!--&lt;!&ndash; Stop JVM monitoring &ndash;&gt;-->

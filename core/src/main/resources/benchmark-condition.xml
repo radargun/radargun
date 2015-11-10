@@ -44,7 +44,7 @@
       <cache-load num-entries="10000"/>
 
       <!-- We will scale the load up here, from 1000 gets/s to 3000 gets/s and from 250 puts/s to 750 puts/s -->
-      <repeat from="1" to="3">
+      <rg:repeat from="1" to="3">
          <!-- In this stage we'll set goals for test execution -->
          <basic-operations-test-setup test-name="stress-test"
                                       ramp-up-min-steady-period="${test.duration:1m}"
@@ -65,7 +65,7 @@
                </all>
             </repeat-condition>
          </test>
-      </repeat>
+      </rg:repeat>
 
       <!-- Stop JVM monitoring -->
       <jvm-monitor-stop />
