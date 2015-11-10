@@ -41,7 +41,6 @@
                <args>-DudpGroup=224.0.0.1</args>
                <home>${env.ISPN_HOME}</home>
             </server>
-
          </setup>
          <!-- Configuration for the HotRod client -->
          <setup group="client" plugin="spymemcached">
@@ -53,8 +52,9 @@
       </config>
    </configurations>
 
+   <init/>
    <!-- Sequence of stages executed on the cluster -->
-   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0" xmlns:l="urn:radargun:stages:legacy:3.0">
       <jvm-monitor-start />
       <!-- First start server, then client and let it connect to server -->
       <service-start groups="server"/>
@@ -63,18 +63,19 @@
       <cache-load groups="client" num-entries="10000"/>
 
       <!-- Warmup executed only on the slave 1 = client -->
-      <basic-operations-legacy-test groups="client" test-name="warmup" duration="${warmup.duration:60s}" num-threads-per-node="10">
-         <key-selector>
-            <concurrent-keys num-entries-per-thread="100" />
-         </key-selector>
-      </basic-operations-legacy-test>
+
+      <l:basic-operations-test groups="client" test-name="warmup" num-threads-per-node="10" duration="${warmup.duration:60s}">
+         <l:key-selector>
+            <l:concurrent-keys num-entries-per-thread="100" />
+         </l:key-selector>
+      </l:basic-operations-test>
 
       <!-- Stress test executed only on the slave 1 = client -->
-      <basic-operations-legacy-test slaves="1" duration="${test.duration:60s}" num-threads-per-node="10">
-         <key-selector>
-            <concurrent-keys num-entries-per-thread="1000" />
-         </key-selector>
-      </basic-operations-legacy-test>
+      <l:basic-operations-test slaves="1" duration="${test.duration:60s}" num-threads-per-node="10">
+         <l:key-selector>
+            <l:concurrent-keys num-entries-per-thread="1000" />
+         </l:key-selector>
+      </l:basic-operations-test>
 
       <!-- Stop services on all nodes: in cleanup this would happen anyway -->
       <service-stop />

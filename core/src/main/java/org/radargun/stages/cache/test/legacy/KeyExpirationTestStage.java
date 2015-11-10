@@ -6,9 +6,11 @@ import java.util.Random;
 import java.util.TreeSet;
 
 import org.radargun.Operation;
+import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.cache.test.CacheInvocations;
+import org.radargun.stages.test.legacy.LegacyTestStage;
 import org.radargun.stages.test.legacy.OperationSelector;
 import org.radargun.stages.test.legacy.RatioOperationSelector;
 import org.radargun.stages.test.legacy.LegacyStressor;
@@ -22,8 +24,9 @@ import org.radargun.utils.TimeService;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "During execution, keys expire (entries are removed from the cache) and new keys are used.")
-public class KeyExpirationLegacyTestStage extends CacheLegacyTestStage {
+public class KeyExpirationTestStage extends CacheTestStage {
 
    @Property(doc = "Maximum number of entries stored in the cache by one stressor thread at one moment.")
    protected long numEntriesPerThread = 0;

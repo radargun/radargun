@@ -3,8 +3,10 @@ package org.radargun.stages.cache.test.legacy;
 import java.util.Random;
 
 import org.radargun.config.DefinitionElement;
+import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
+import org.radargun.stages.test.legacy.LegacyTestStage;
 
 /**
  * @author Jakub Markos &lt;jmarkos@redhat.com&gt;
@@ -31,6 +33,7 @@ public class GaussianKeysSelector implements KeySelector {
         return result;
     }
 
+    @Namespace(LegacyTestStage.NAMESPACE)
     @DefinitionElement(name = "gaussian-keys", doc = "In the test fixed set of entries is used and this is shared among all stressor threads. Additionally, the keys" +
             "are selected using a normal (gaussian) distribution.")
     public static class Factory implements KeySelectorFactory {
@@ -44,7 +47,7 @@ public class GaussianKeysSelector implements KeySelector {
         private long standardDeviation = -1;
 
         @Override
-        public KeySelector newInstance(CacheOperationsLegacyTestStage stage, Random random, int globalThreadId, int threadId) {
+        public KeySelector newInstance(CacheOperationsTestStage stage, Random random, int globalThreadId, int threadId) {
             if (mean == -1) {
                 mean = numEntries / 2;
             }

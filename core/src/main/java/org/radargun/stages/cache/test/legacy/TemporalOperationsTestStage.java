@@ -1,11 +1,13 @@
 package org.radargun.stages.cache.test.legacy;
 
 import org.radargun.Operation;
+import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.cache.test.CacheInvocations;
 import org.radargun.stages.test.Invocation;
 import org.radargun.stages.test.legacy.LegacyStressor;
+import org.radargun.stages.test.legacy.LegacyTestStage;
 import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.stages.test.legacy.OperationSelector;
 import org.radargun.stages.test.legacy.RatioOperationSelector;
@@ -21,8 +23,9 @@ import java.util.Random;
  * This stage allows for testing operations that have lifespan or maxIdle attributes set.
  *
  */
+@Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "Test using TemporalOperations")
-public class TemporalOperationsLegacyTestStage extends CacheOperationsLegacyTestStage {
+public class TemporalOperationsTestStage extends CacheOperationsTestStage {
 
    @Property(doc = "Lifespan to be used for all temporal operations. Default is 1000 ms.")
    protected int lifespan = 1000;

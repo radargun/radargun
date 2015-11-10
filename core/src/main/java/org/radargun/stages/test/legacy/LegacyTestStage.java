@@ -7,7 +7,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
+import org.radargun.Version;
 import org.radargun.config.Init;
+import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.IterationData;
@@ -26,8 +28,10 @@ import org.radargun.utils.Utils;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "Base for test spawning several threads and benchmark of operations executed in those.")
 public abstract class LegacyTestStage extends BaseTestStage {
+   public static final String NAMESPACE = "urn:radargun:stages:legacy:" + Version.SCHEMA_VERSION;
 
    @Property(doc = "The number of threads executing on each node. You have to set either this or 'total-threads'. No default.")
    protected int numThreadsPerNode = 0;

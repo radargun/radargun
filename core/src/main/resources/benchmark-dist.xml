@@ -46,7 +46,7 @@
       <cache-load num-entries="10000"/>
 
       <!-- We will scale the load up here, from 1000 gets/s to 3000 gets/s and from 250 puts/s to 750 puts/s -->
-      <repeat from="1" to="3">
+      <rg:repeat from="1" to="3">
          <!-- In this stage we'll set goals for test execution -->
          <basic-operations-test-setup test-name="stress-test"
                                       num-entries="10000">
@@ -57,7 +57,7 @@
               We set finish="false" because the test will continue in next loop. -->
          <test test-name="stress-test" amend-test="true" finish="false"
                duration="${test.duration:1m}" />
-      </repeat>
+      </rg:repeat>
       <!-- Finally, we'll terminate the test -->
       <finish-test test-name="stress-test" />
 

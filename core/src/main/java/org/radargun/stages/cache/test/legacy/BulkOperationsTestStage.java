@@ -7,10 +7,12 @@ import java.util.Random;
 import java.util.Set;
 
 import org.radargun.Operation;
+import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.cache.test.CacheInvocations;
 import org.radargun.stages.test.Invocation;
+import org.radargun.stages.test.legacy.LegacyTestStage;
 import org.radargun.stages.test.legacy.OperationSelector;
 import org.radargun.stages.test.legacy.RatioOperationSelector;
 import org.radargun.stages.test.legacy.LegacyStressor;
@@ -21,8 +23,9 @@ import org.radargun.traits.InjectTrait;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
+@Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "Executes operations from BulkOperations trait.")
-public class BulkOperationsLegacyTestStage extends CacheOperationsLegacyTestStage {
+public class BulkOperationsTestStage extends CacheOperationsTestStage {
    @Property(doc = "Number of keys inserted/retrieved within one operation. Applicable only when the cache wrapper" +
          " supports bulk operations. Default is 10.")
    protected int bulkSize = 10;
