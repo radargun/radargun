@@ -35,7 +35,6 @@
       <plugins.jbosscache/>
       <plugins.jgroups/>
       <plugins.infinispan/>
-      <plugins.jdk18/>
       <plugins.jdg/>
       <plugins.coherence/>
       <plugins.process />
@@ -229,24 +228,11 @@
             <module>plugins/infinispan70</module>
             <module>plugins/infinispan71</module>
             <module>plugins/infinispan72</module>
-         </modules>
-         <properties>
-            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72</plugins.infinispan>
-         </properties>
-      </profile>
-      <profile>
-         <id>jdk18</id>
-         <activation>
-            <jdk>1.8</jdk>
-            <property>
-               <name>!no-jdk18</name>
-            </property>
-         </activation>
-         <modules>
             <module>plugins/infinispan80</module>
+            <module>plugins/infinispan81</module>
          </modules>
          <properties>
-            <plugins.jdk18>infinispan80</plugins.jdk18>
+            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81</plugins.infinispan>
          </properties>
       </profile>
       <profile>
@@ -479,7 +465,7 @@
                         </path>
 
                         <echo message="Packaging plugins: " />
-                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdk18},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>
