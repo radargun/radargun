@@ -53,11 +53,11 @@ public class StagesSchemaGenerator extends SchemaGenerator {
       org.radargun.config.Stage stageAnnotation = (org.radargun.config.Stage) stage.getAnnotation(org.radargun.config.Stage.class);
       if (stageAnnotation == null) return; // not a proper stage
 
-      String stageType = generateClass(stage);
+      XmlType stageType = generateClass(stage);
       if (parent != null && !Modifier.isAbstract(stage.getModifiers()) && !stageAnnotation.internal()) {
-         createReference(parent, XmlHelper.camelCaseToDash(StageHelper.getStageName(stage)), stageType);
+         createReference(parent, XmlHelper.camelCaseToDash(StageHelper.getStageName(stage)), stageType.toString());
          if (!stageAnnotation.deprecatedName().equals(org.radargun.config.Stage.NO_DEPRECATED_NAME)) {
-            createReference(parent, XmlHelper.camelCaseToDash(stageAnnotation.deprecatedName()), stageType);
+            createReference(parent, XmlHelper.camelCaseToDash(stageAnnotation.deprecatedName()), stageType.toString());
          }
       }
       generatedStages.add(stage);
@@ -72,17 +72,11 @@ public class StagesSchemaGenerator extends SchemaGenerator {
       // We have to ensure that all definition elements are defined in given namespace in case these would
       // be referenced from another namespace
       Map<String, List<Class<?>>> definitions = new HashMap<>();
-      ClasspathScanner.scanClasspath(Object.class, DefinitionElement.class, "org.radargun", clazz -> {
-         NamespaceHelper.Coords coords = NamespaceHelper.suggestCoordinates(StageHelper.NAMESPACE_ROOT, clazz, "radargun-");
-         File[] codepaths = coords.explicit ? null : new File[] { new File(Utils.getCodePath(clazz)) };
-         NamespaceHelper.registerNamespace(coords.namespace, codepaths, coords.jarMajorMinor);
-         List<Class<?>> byNamespace = definitions.get(coords.namespace);
-         if (byNamespace == null) {
-            definitions.put(coords.namespace, byNamespace = new ArrayList<>());
-         }
-         byNamespace.add(clazz);
-      });
+      ClasspathScanner.scanClasspath(Object.class, DefinitionElement.class, "org.radargun",
+            clazz -> indexClass(definitions, clazz));
       Set<String> allNamespaces = new HashSet<>(definitions.keySet());
+      ClasspathScanner.scanClasspath(Object.class, EnsureInSchema.class, "org.radargun",
+            clazz -> indexClass(definitions, clazz));
       allNamespaces.addAll(StageHelper.getStages().keySet());
       for (String namespace : allNamespaces) {
          Map<String, Class<? extends org.radargun.Stage>> stages = StageHelper.getStages().get(namespace);
@@ -95,6 +89,17 @@ public class StagesSchemaGenerator extends SchemaGenerator {
          }
          new StagesSchemaGenerator(namespace, stages.values(), extraClasses).generate(args[0], NamespaceHelper.getJarMajorMinor(namespace) + ".xsd");
       }
+   }
+
+   protected static void indexClass(Map<String, List<Class<?>>> definitions, Class<?> clazz) {
+      NamespaceHelper.Coords coords = NamespaceHelper.suggestCoordinates(StageHelper.NAMESPACE_ROOT, clazz, "radargun-");
+      File[] codepaths = coords.explicit ? null : new File[] { new File(Utils.getCodePath(clazz)) };
+      NamespaceHelper.registerNamespace(coords.namespace, codepaths, coords.jarMajorMinor);
+      List<Class<?>> byNamespace = definitions.get(coords.namespace);
+      if (byNamespace == null) {
+         definitions.put(coords.namespace, byNamespace = new ArrayList<>());
+      }
+      byNamespace.add(clazz);
    }
 
 }

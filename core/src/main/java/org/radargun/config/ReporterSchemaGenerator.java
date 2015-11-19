@@ -33,8 +33,8 @@ public class ReporterSchemaGenerator extends SchemaGenerator {
    protected void generate() {
       createSchemaElement(namespace);
       for (Map.Entry<String, Class<? extends Reporter>> reporter : reporters.entrySet()) {
-         String type = generateClass(reporter.getValue());
-         createReference(schema, reporter.getKey(), type);
+         XmlType type = generateClass(reporter.getValue());
+         createReference(schema, reporter.getKey(), type.toString());
       }
    }
 
