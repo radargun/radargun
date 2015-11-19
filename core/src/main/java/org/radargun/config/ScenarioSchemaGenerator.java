@@ -30,10 +30,7 @@ public class ScenarioSchemaGenerator extends SchemaGenerator implements ConfigSc
    protected void generate() {
       createSchemaElement(NAMESPACE);
 
-      Element scenarioElement = doc.createElementNS(NS_XS, XS_ELEMENT);
-      scenarioElement.setAttribute(XS_NAME, ELEMENT_SCENARIO);
-      scenarioElement.setAttribute(XS_TYPE, THIS_PREFIX + TYPE_STAGES);
-      schema.appendChild(scenarioElement);
+      createComplexElement(schema, ELEMENT_SCENARIO, null, null, THIS_PREFIX + TYPE_STAGES, null);
 
       intType = generateSimpleType(int.class, DefaultConverter.class);
 
@@ -46,10 +43,10 @@ public class ScenarioSchemaGenerator extends SchemaGenerator implements ConfigSc
       Element stagesChoice = createChoice(createSequence(stagesType), 1, -1);
 
       Element repeatType = createComplexType(TYPE_REPEAT, THIS_PREFIX + TYPE_STAGES, true, false, null);
-      addAttribute(repeatType, ATTR_TIMES, intType, null, false);
-      addAttribute(repeatType, ATTR_FROM, intType, null, false);
-      addAttribute(repeatType, ATTR_TO, intType, null, false);
-      addAttribute(repeatType, ATTR_INC, intType, null, false);
+      addAttribute(repeatType, ATTR_TIMES, intType.toString(), null, false);
+      addAttribute(repeatType, ATTR_FROM, intType.toString(), null, false);
+      addAttribute(repeatType, ATTR_TO, intType.toString(), null, false);
+      addAttribute(repeatType, ATTR_INC, intType.toString(), null, false);
       addAttribute(repeatType, ATTR_NAME, false);
       createReference(stagesChoice, ELEMENT_REPEAT, THIS_PREFIX + TYPE_REPEAT);
 

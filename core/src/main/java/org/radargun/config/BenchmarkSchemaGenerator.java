@@ -55,7 +55,7 @@ public class BenchmarkSchemaGenerator extends SchemaGenerator implements ConfigS
 
       Element masterComplex = createComplexElement(benchmarkSequence, ELEMENT_MASTER, 0, 1, null);
       addAttribute(masterComplex, ATTR_BIND_ADDRESS, false);
-      addAttribute(masterComplex, ATTR_PORT, intType, null, false);
+      addAttribute(masterComplex, ATTR_PORT, intType.toString(), null, false);
 
       Element clustersChoice = createChoice(benchmarkSequence, 0, 1);
       Element clustersComplex = createComplexElement(clustersChoice, ELEMENT_CLUSTERS, 0, 1, null);
@@ -67,11 +67,11 @@ public class BenchmarkSchemaGenerator extends SchemaGenerator implements ConfigS
       createReference(clusterChoice, ELEMENT_CLUSTER, THIS_PREFIX + TYPE_CLUSTER);
       createReference(createSequence(scaleElement), ELEMENT_CLUSTER, THIS_PREFIX + TYPE_CLUSTER_BASE);
       addAttribute(groupComplex, ATTR_NAME, true);
-      addAttribute(groupComplex, ATTR_SIZE, intType, null, true);
-      addAttribute(sizedClusterType, ATTR_SIZE, intType, null, false);
-      addAttribute(scaleElement, ATTR_FROM, intType, null, true);
-      addAttribute(scaleElement, ATTR_TO, intType, null, true);
-      addAttribute(scaleElement, ATTR_INC, intType, null, false);
+      addAttribute(groupComplex, ATTR_SIZE, intType.toString(), null, true);
+      addAttribute(sizedClusterType, ATTR_SIZE, intType.toString(), null, false);
+      addAttribute(scaleElement, ATTR_FROM, intType.toString(), null, true);
+      addAttribute(scaleElement, ATTR_TO, intType.toString(), null, true);
+      addAttribute(scaleElement, ATTR_INC, intType.toString(), null, false);
 
       Element propertyType = createComplexType(TYPE_PROPERTY, "string", false, false, null);
       addAttribute(propertyType, ATTR_NAME, true);
@@ -80,8 +80,8 @@ public class BenchmarkSchemaGenerator extends SchemaGenerator implements ConfigS
       Element configComplex = createComplexElement(createSequence(configurationsComplex), ELEMENT_CONFIG, 1, -1, null);
       Element setupComplex = createComplexElement(createSequence(configComplex), ELEMENT_SETUP, 1, -1, null);
       Element setupSequence = createSequence(setupComplex);
-      String vmArgsType = generateClass(VmArgs.class);
-      createReference(setupSequence, ELEMENT_VM_ARGS, vmArgsType, 0, 1);
+      XmlType vmArgsType = generateClass(VmArgs.class);
+      createReference(setupSequence, ELEMENT_VM_ARGS, vmArgsType.toString(), 0, 1);
       createAny(setupSequence);
       addAttribute(configComplex, ATTR_NAME, true);
       addAttribute(setupComplex, ATTR_PLUGIN, true);

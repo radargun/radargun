@@ -36,8 +36,8 @@ public class PluginSchemaGenerator extends SchemaGenerator {
    protected void generate() {
       createSchemaElement(namespace);
       for (Map.Entry<String, Class<?>> reporter : services.entrySet()) {
-         String type = generateClass(reporter.getValue());
-         createReference(schema, reporter.getKey(), type);
+         XmlType type = generateClass(reporter.getValue());
+         createReference(schema, reporter.getKey(), type.toString());
       }
    }
 

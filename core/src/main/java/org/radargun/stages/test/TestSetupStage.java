@@ -3,6 +3,7 @@ package org.radargun.stages.test;
 import java.util.Random;
 
 import org.radargun.DistStageAck;
+import org.radargun.config.EnsureInSchema;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
@@ -111,6 +112,7 @@ public abstract class TestSetupStage extends AbstractDistStage {
    protected void prepare() {
    }
 
+   @EnsureInSchema
    public static class InvocationSetting {
       @Property(doc = "Number of invocations of given operation per interval (see property interval), on each node. Default is 0.")
       public int invocations = 0;
@@ -120,6 +122,7 @@ public abstract class TestSetupStage extends AbstractDistStage {
       public long interval = 1;
    }
 
+   @EnsureInSchema
    public static class TxInvocationSetting extends InvocationSetting {
       @Property(doc = "Number of operations in single transaction. Default is 1.")
       public int transactionSize = 1;
