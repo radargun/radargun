@@ -54,13 +54,16 @@
 
    <init/>
    <!-- Sequence of stages executed on the cluster -->
-   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0" xmlns:l="urn:radargun:stages:legacy:3.0">
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0"
+                xmlns:l="urn:radargun:stages:legacy:3.0">
       <jvm-monitor-start />
       <!-- First start server, then client and let it connect to server -->
       <service-start groups="server"/>
       <service-start groups="client"/>
 
-      <cache-load groups="client" num-entries="10000"/>
+      <cache:load groups="client" num-entries="10000"/>
 
       <!-- Warmup executed only on the slave 1 = client -->
 

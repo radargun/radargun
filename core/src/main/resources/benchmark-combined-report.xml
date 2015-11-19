@@ -25,11 +25,12 @@
 
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0"
                 xmlns:l="urn:radargun:stages:legacy:3.0">
       <service-start />
 
       <!-- Preload the cache with data -->
-      <cache-load num-entries="5000"/>
+      <cache:load num-entries="5000"/>
 
       <l:basic-operations-test test-name="warmup" duration="${warmup.duration:10s}" num-threads-per-node="10">
          <l:key-selector>

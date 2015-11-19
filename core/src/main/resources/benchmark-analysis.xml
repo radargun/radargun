@@ -21,6 +21,7 @@
 
    <rg:scenario xmlns="urn:radargun:stages:core:3.0"
                 xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0"
                 xmlns:l="urn:radargun:stages:legacy:3.0">
       <service-start />
       <jvm-monitor-start />
@@ -28,7 +29,7 @@
       <!-- We should do warmup here, and generally run the tests for longer time -->
 
       <!-- Preload the cache with data -->
-      <cache-load num-entries="10000"/>
+      <cache:load num-entries="10000"/>
       <!-- Generate statistics for 10, 20, 30 .. 100 threads -->
       <rg:repeat times="${repeat.times:10}">
          <l:basic-operations-test test-name="increase-thread-count" amend-test="true"

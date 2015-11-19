@@ -13,7 +13,11 @@
    <name>JGroups 3.0.x plugin for RadarGun</name>
 
    <dependencies>
-
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-cache</artifactId>
+         <version>${project.version}</version>
+      </dependency>
       <dependency>
          <groupId>org.jgroups</groupId>
          <artifactId>jgroups</artifactId>

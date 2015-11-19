@@ -38,6 +38,7 @@
    <!-- Sequence of stages executed on the cluster -->
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0"
                 xmlns:l="urn:radargun:stages:legacy:3.0">
       <!-- Start services on all nodes -->
       <service-start />
@@ -45,7 +46,7 @@
       <jvm-monitor-start />
 
       <!-- Preload the cache with data -->
-      <cache-load num-entries="5000"/>
+      <cache:load num-entries="5000"/>
       <!-- 5 threads will execute random requests against the default cache ('testCache') for 1 minute-->
       <!-- As the test is called 'warmup', performance statistics won't be reported -->
       <l:basic-operations-test test-name="warmup" duration="${warmup.duration:1m}" num-threads-per-node="5">
@@ -55,9 +56,9 @@
       </l:basic-operations-test>
 
       <!-- Remove all data from the default cache -->
-      <cache-clear />
+      <cache:clear />
       <!-- Again, preload the cache with data -->
-      <cache-load num-entries="10000"/>
+      <cache:load num-entries="10000"/>
 
       <!-- 5, 10 and 50 threads will execute random request for 1 minute against the default cache ('testCache') on different
          set of keys (1k, 2k, 10k entries) -->

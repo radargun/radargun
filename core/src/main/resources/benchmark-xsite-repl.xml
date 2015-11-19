@@ -33,52 +33,54 @@
     </configurations>
 
     <!-- Sequence of stages executed on the cluster -->
-    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
+    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                 xmlns="urn:radargun:stages:core:3.0"
+                 xmlns:cache="urn:radargun:stages:cache:3.0">
 
         <service-start groups="g1"/>
         <service-start groups="g2"/>
 
-        <cache-load num-entries="1000" groups="g1" key-id-offset="0">
-            <cache-selector>
-                <use-cache cache="testCacheSite1"/>
-            </cache-selector>
-            <value-generator>
-               <cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
-            </value-generator>
-        </cache-load>
+        <cache:load num-entries="1000" groups="g1" key-id-offset="0">
+            <cache:cache-selector>
+                <cache:use-cache cache="testCacheSite1"/>
+            </cache:cache-selector>
+            <cache:value-generator>
+               <cache:cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
+            </cache:value-generator>
+        </cache:load>
 
-        <cache-load num-entries="1000" groups="g2" key-id-offset="0">
-            <cache-selector>
-                <use-cache cache="testCacheSite2"/>
-            </cache-selector>
-            <value-generator>
-                <cache-aware-text cache-name="testCacheSite2" suffix="SITE2_ORIGINAL" />
-            </value-generator>
-        </cache-load>
+        <cache:load num-entries="1000" groups="g2" key-id-offset="0">
+            <cache:cache-selector>
+                <cache:use-cache cache="testCacheSite2"/>
+            </cache:cache-selector>
+            <cache:value-generator>
+                <cache:cache-aware-text cache-name="testCacheSite2" suffix="SITE2_ORIGINAL" />
+            </cache:value-generator>
+        </cache:load>
 
         <sleep time="90s"/>
 
-        <xs-repl-check entry-size="-1" num-entries="1000" first-entry-offset="0" groups="g1"
+        <cache:xs-repl-check entry-size="-1" num-entries="1000" first-entry-offset="0" groups="g1"
                        backup-caches="testCacheSite2_backup"
                        ignore-sum="true">
-            <value-generator>
-                <cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
-            </value-generator>
-            <backup-value-generator>
-                <cache-aware-text cache-name="testCacheSite2" suffix="SITE2_ORIGINAL" />
-            </backup-value-generator>
-        </xs-repl-check>
+            <cache:value-generator>
+                <cache:cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
+            </cache:value-generator>
+            <cache:backup-value-generator>
+                <cache:cache-aware-text cache-name="testCacheSite2" suffix="SITE2_ORIGINAL" />
+            </cache:backup-value-generator>
+        </cache:xs-repl-check>
 
-        <xs-repl-check entry-size="-1" num-entries="1000" first-entry-offset="0" groups="g2"
+        <cache:xs-repl-check entry-size="-1" num-entries="1000" first-entry-offset="0" groups="g2"
                        backup-caches="testCacheSite1_backup"
                        ignore-sum="true">
-            <value-generator>
-                <cache-aware-text cache-name="testCacheSite2" suffix="SITE2_ORIGINAL" />
-            </value-generator>
-            <backup-value-generator>
-                <cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
-            </backup-value-generator>
-        </xs-repl-check>
+            <cache:value-generator>
+                <cache:cache-aware-text cache-name="testCacheSite2" suffix="SITE2_ORIGINAL" />
+            </cache:value-generator>
+            <cache:backup-value-generator>
+                <cache:cache-aware-text cache-name="testCacheSite1" suffix="SITE1_ORIGINAL" />
+            </cache:backup-value-generator>
+        </cache:xs-repl-check>
     </rg:scenario>
 
     <!-- No reports required for this scenario -->

@@ -20,6 +20,11 @@
          <version>3.6.6.Final</version>
       </dependency>
 
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-cache</artifactId>
+         <version>${project.version}</version>
+      </dependency>
 
    </dependencies>
 </project>

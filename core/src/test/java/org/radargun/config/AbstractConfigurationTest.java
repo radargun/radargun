@@ -171,16 +171,14 @@ public abstract class AbstractConfigurationTest extends PowerMockTestCase {
     */
    public void testScenario() {
       Scenario scenario = masterConfig.getScenario();
-      assertEquals(scenario.getStageCount(), 14);
+      assertEquals(scenario.getStageCount(), 10);
       List<Scenario.StageDescription> stages = scenario.getStages();
 
       Map<String, Definition> basicOperationTestProperties = stages.get(4).properties;
-      assertEquals(basicOperationTestProperties.size(), 4);
+      assertEquals(basicOperationTestProperties.size(), 2);
 
-      assertTrue(basicOperationTestProperties.containsKey("test-name"));
-      assertTrue(basicOperationTestProperties.containsKey("num-threads-per-node"));
-      assertTrue(basicOperationTestProperties.containsKey("duration"));
-      assertTrue(basicOperationTestProperties.containsKey("key-selector"));
+      assertTrue(basicOperationTestProperties.containsKey("var"));
+      assertTrue(basicOperationTestProperties.containsKey("value"));
 
       for (Scenario.StageDescription stage : stages) {
          Map<String, Definition> properties = stage.properties;
