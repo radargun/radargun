@@ -1,11 +1,14 @@
 package org.radargun;
 
+import org.radargun.logging.LogFactory;
+import org.radargun.state.SlaveState;
+
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
-
-import org.radargun.logging.LogFactory;
-import org.radargun.state.SlaveState;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Asck that is sent from each slave to the master containing the result of the slave's processing for a stage.
@@ -47,6 +50,8 @@ public class DistStageAck implements Serializable {
 
    public void setRemoteException(Throwable remoteException) {
       StringBuilder sb = new StringBuilder();
+      Set<Throwable> causes = new HashSet();
+
       while (remoteException != null) {
          sb.append(remoteException.toString());
          StackTraceElement[] stackTraceElements = remoteException.getStackTrace();
@@ -54,9 +59,16 @@ public class DistStageAck implements Serializable {
             for (StackTraceElement ste : stackTraceElements) {
                sb.append("\n\t at ").append(ste.toString());
             }
+            sb.append("\nsuppressed: ");
+            sb.append(Arrays.toString(remoteException.getSuppressed()));
+
             if (remoteException.getCause() != null) {
                sb.append("\ncaused by: ");
                remoteException = remoteException.getCause();
+               // break if causes already contains exception to stop infinite loop
+               if (!causes.add(remoteException)) {
+                  break;
+               }
             } else {
                break;
             }
