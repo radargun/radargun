@@ -12,6 +12,12 @@
    <artifactId>plugin-chm</artifactId>
    <name>Concurrent HashMap plugin for Radargun</name>
 
-   <dependencies />
+   <dependencies>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-cache</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+   </dependencies>
 
 </project>

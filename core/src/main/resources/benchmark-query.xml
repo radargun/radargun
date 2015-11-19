@@ -16,18 +16,21 @@
       </config>
    </configurations>
 
-   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0"
+                xmlns="urn:radargun:stages:core:3.0">
       <service-start />
 
       <!-- Loading the data -->
-      <cache-load num-entries="5000" entry-size="0" seed="12345">
-         <value-generator>
-            <single-word file="${org.radargun.query.dictionary:/test-data/animals.txt}" />
-         </value-generator>
-      </cache-load>
+      <cache:load num-entries="5000" entry-size="0" seed="12345">
+         <cache:value-generator>
+            <cache:single-word file="${org.radargun.query.dictionary:/test-data/animals.txt}" />
+         </cache:value-generator>
+      </cache:load>
 
       <!-- Logic does only queries - we don't have to specify any generator -->
-      <query test-name="querying"
+      <query xmlns="urn:radargun:stages:query:3.0"
+             test-name="querying"
              duration="${test.duration:10s}"
              num-threads-per-node="10"
              query-object-class="org.radargun.query.TextObject">

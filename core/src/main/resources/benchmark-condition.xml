@@ -19,39 +19,41 @@
    </configurations>
 
    <!-- Sequence of stages executed on the cluster -->
-   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0">
       <!-- Start services on all nodes -->
       <service-start />
       <!-- Begin monitoring of CPU, memory usage and GC -->
       <jvm-monitor-start />
 
       <!-- Preload the cache with data -->
-      <cache-load num-entries="5000"/>
+      <cache:load num-entries="5000"/>
 
       <!-- As the test is called 'warmup', performance statistics won't be reported -->
-      <basic-operations-test-setup test-name="warmup"
+      <cache:basic-operations-test-setup test-name="warmup"
                                    ramp-up-min-steady-period="${warmup.duration:1m}"
                                    num-entries="5000">
          <!-- The test will execute a cache.get() request every 2 ms and put request every 8 ms -->
-         <get interval="2" invocations="1"/>
-         <put interval="10" invocations="1"/>
-      </basic-operations-test-setup>
+         <cache:get interval="2" invocations="1"/>
+         <cache:put interval="10" invocations="1"/>
+      </cache:basic-operations-test-setup>
       <test test-name="warmup" duration="${warmup.duration:1m}" />
 
       <!-- Remove all data from the default cache -->
-      <cache-clear />
+      <cache:clear />
       <!-- Again, preload the cache with data -->
-      <cache-load num-entries="10000"/>
+      <cache:load num-entries="10000"/>
 
       <!-- We will scale the load up here, from 1000 gets/s to 3000 gets/s and from 250 puts/s to 750 puts/s -->
       <rg:repeat from="1" to="3">
          <!-- In this stage we'll set goals for test execution -->
-         <basic-operations-test-setup test-name="stress-test"
+         <cache:basic-operations-test-setup test-name="stress-test"
                                       ramp-up-min-steady-period="${test.duration:1m}"
                                       num-entries="10000">
-            <get interval="2" invocations="${repeat.counter}"/>
-            <put interval="10" invocations="${repeat.counter}"/>
-         </basic-operations-test-setup>
+            <cache:get interval="2" invocations="${repeat.counter}"/>
+            <cache:put interval="10" invocations="${repeat.counter}"/>
+         </cache:basic-operations-test-setup>
          <!-- Here we run the test according to previous setting, in so-called steady state.
               We set finish="false" because the test will continue in next loop. -->
          <test test-name="stress-test" amend-test="true" finish="false"

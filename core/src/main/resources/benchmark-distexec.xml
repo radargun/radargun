@@ -18,12 +18,14 @@
 	</configurations>
 
 	<!-- Sequence of stages executed on the cluster -->
-	<rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
+	<rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+				 xmlns="urn:radargun:stages:core:3.0"
+				 xmlns:cache="urn:radargun:stages:cache:3.0">
 		<!-- Start services on all nodes -->
 		<service-start />
 
 		<!-- Fill the cache with 100 randomly generated words consuming 1% of the JVM heap -->
-		<random-data 
+		<cache:random-data
 			value-size="1024" 
 			ram-percentage="0.01"
             random-seed = "13"
@@ -33,7 +35,7 @@
 			max-word-count="100" />
 
 		<!-- Execute a distributed executor that searches the cache values for a string -->
-		<distributed-task 
+		<cache:distributed-task
 			callable="org.infinispan.demo.distexec.CacheValueRegEx"
 			callable-params="setPattern: tJêÇvJrTÇëälJú" />
 

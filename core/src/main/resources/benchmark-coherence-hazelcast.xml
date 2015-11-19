@@ -25,22 +25,24 @@
       </config>
    </configurations>
 
-   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0">
       <service-start />
       <jvm-monitor-start />
 
-      <cache-load num-entries="5000"/>
-      <basic-operations-test-setup test-name="warmup" num-entries="5000">
-         <get interval="2" invocations="1"/>
-         <put interval="10" invocations="1"/>
-      </basic-operations-test-setup>
+      <cache:load num-entries="5000"/>
+      <cache:basic-operations-test-setup test-name="warmup" num-entries="5000">
+         <cache:get interval="2" invocations="1"/>
+         <cache:put interval="10" invocations="1"/>
+      </cache:basic-operations-test-setup>
       <test test-name="warmup" duration="${warmup.duration:1m}"/>
 
-      <cache-load num-entries="10000"/>
-      <basic-operations-test-setup test-name="stress-test" num-entries="10000">
-         <get interval="1" invocations="2"/>
-         <put interval="5" invocations="2"/>
-      </basic-operations-test-setup>
+      <cache:load num-entries="10000"/>
+      <cache:basic-operations-test-setup test-name="stress-test" num-entries="10000">
+         <cache:get interval="1" invocations="2"/>
+         <cache:put interval="5" invocations="2"/>
+      </cache:basic-operations-test-setup>
       <test test-name="stress-test" duration="${test.duration:1m}"/>
    </rg:scenario>
    <!-- Ignore leaked threads as Coherence leaks quite often -->

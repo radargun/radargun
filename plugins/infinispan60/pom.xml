@@ -22,6 +22,11 @@
    <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
+         <artifactId>radargun-query</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
          <artifactId>plugin-infinispan53</artifactId>
          <version>${project.version}</version>
       </dependency>

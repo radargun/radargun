@@ -6,7 +6,7 @@
    <artifactId>radargun-parent</artifactId>
    <version>3.0.0-SNAPSHOT</version>
 
-   <name>RadarGun - Parent POM</name>
+   <name>RadarGun Parent POM</name>
    <description>The parent POM for RadarGun</description>
    <packaging>pom</packaging>
    <url>http://github.com/radargun/radargun</url>

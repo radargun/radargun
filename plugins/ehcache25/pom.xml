@@ -14,6 +14,11 @@
 
    <dependencies>
       <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-cache</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
          <groupId>net.sf.ehcache</groupId>
          <artifactId>ehcache-core</artifactId>
          <version>2.5.6</version>

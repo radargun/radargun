@@ -18,12 +18,14 @@
     </configurations>
 
     <!-- Sequence of stages executed on the cluster -->
-    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
+    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                 xmlns:cache="urn:radargun:stages:cache:3.0"
+                 xmlns="urn:radargun:stages:core:3.0">
         <!-- Start services on all nodes -->
         <service-start />
 
         <!-- Fill the cache with 100 randomly generated words consuming 1% of the JVM heap -->
-        <random-data
+        <cache:random-data
                 value-size="${value_size:1024}"
                 ram-percentage="${ram_percentage:0.01}"
                 random-seed="13"
@@ -33,11 +35,10 @@
                 max-word-count="${max_word_count:100}"/>
 
         <!-- Execute a Map/Reduce task that counts the words the number of time a word appears in the cache values  -->
-        <map-reduce
+        <cache:map-reduce
                 mapper-fqn="org.infinispan.demo.mapreduce.WordCountMapperEmitPerValue"
                 reducer-fqn="org.infinispan.demo.mapreduce.WordCountReducer"
                 combiner-fqn="org.infinispan.demo.mapreduce.WordCountReducer"
-
                 print-result="${print_results:true}"
                 distribute-reduce-phase="true"
                 use-intermediate-shared-cache="true"

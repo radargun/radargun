@@ -14,20 +14,22 @@
       </config>
    </configurations>
 
-   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0">
       <jvm-monitor-start />
       <service-start/>
 
       <!-- Preload the cache with 10000 entries with values 0 - 99 -->
-      <cache-load num-entries="10000" num-threads="10" entry-size="0" seed="12345">
-         <value-generator>
-            <number-object int-min="0" int-max="99" />
-         </value-generator>
-      </cache-load>
+      <cache:load num-entries="10000" num-threads="10" entry-size="0" seed="12345">
+         <cache:value-generator>
+            <cache:number-object int-min="0" int-max="99" />
+         </cache:value-generator>
+      </cache:load>
 
       <!-- NumberObjectFilter is plugin-specific class, therefore, this cannot be part of schema
            unless the class would be implemented using reflection as NumberObjectGenerator -->
-      <iterate test-name="iteration"
+      <cache:iterate test-name="iteration"
                duration="${test.duration:2m}"
                num-threads-per-node="10"
                synchronous-requests="true"

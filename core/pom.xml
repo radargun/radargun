@@ -9,7 +9,7 @@
    </parent>
 
    <artifactId>radargun-core</artifactId>
-   <name>RadarGun core</name>
+   <name>RadarGun Core</name>
    <packaging>jar</packaging>
 
    <properties>

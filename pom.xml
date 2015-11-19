@@ -42,13 +42,45 @@
       <plugins.spymemcached />
       <reporter.default />
       <reporter.perfrepo />
-      <extension.example-extension/>
+      <extension.cache />
+      <extension.query />
+      <extension.example-extension />
       <extension.hdrhistogram />
       <extension.jpa />
    </properties>
 
    <profiles>
       <!-- Extensions -->
+      <profile>
+         <id>cache</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+            <property>
+               <name>!no-cache</name>
+            </property>
+         </activation>
+         <modules>
+            <module>extensions/cache</module>
+         </modules>
+         <properties>
+            <extension.cache>cache</extension.cache>
+         </properties>
+      </profile>
+      <profile>
+         <id>query</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+            <property>
+               <name>!no-query</name>
+            </property>
+         </activation>
+         <modules>
+            <module>extensions/query</module>
+         </modules>
+         <properties>
+            <extension.query>query</extension.query>
+         </properties>
+      </profile>
       <profile>
          <id>example-extension</id>
          <activation>
@@ -389,7 +421,7 @@
                            <mapper type="flatten" />
                         </pathconvert>
 
-                        <ac:for list="${extension.example-extension},${extension.hdrhistogram},${extension.jpa}" param="extension" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${extension.cache},${extension.query},${extension.example-extension},${extension.hdrhistogram},${extension.jpa}" param="extension" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging extension @{extension}..." />
                               <copy todir="${distribution.artifact}/lib">
