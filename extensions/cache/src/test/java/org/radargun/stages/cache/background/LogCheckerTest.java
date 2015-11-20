@@ -1,10 +1,10 @@
 package org.radargun.stages.cache.background;
 
 import org.radargun.logging.Log;
-import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.helpers.Range;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
+import org.radargun.util.ReflectionUtils;
 import org.radargun.util.TestUtils;
 import org.testng.annotations.Test;
 
@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
-import static org.radargun.util.ReflectionUtils.*;
 import static org.testng.Assert.*;
 
 /**

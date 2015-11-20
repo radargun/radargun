@@ -6,6 +6,7 @@ import org.radargun.stages.helpers.Range;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Transactional;
+import org.radargun.util.ReflectionUtils;
 import org.radargun.util.TestUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -15,7 +16,6 @@ import java.util.Map;
 import java.util.Random;
 
 import static org.mockito.Mockito.*;
-import static org.radargun.util.ReflectionUtils.*;
 import static org.testng.Assert.*;
 
 /**

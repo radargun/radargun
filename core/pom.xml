@@ -15,7 +15,6 @@
    <properties>
       <version.log4j>1.2.16</version.log4j>
       <version.log4j2>2.3</version.log4j2>
-      <maven.test.skip>false</maven.test.skip>
    </properties>
 
    <dependencies>
