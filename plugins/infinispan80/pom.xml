@@ -116,7 +116,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>8.0.1.Final</version.infinispan>
+            <version.infinispan>8.1.0.Beta1</version.infinispan>
          </properties>
       </profile>
       <profile>
