@@ -265,8 +265,4 @@
       </snapshotRepository>
    </distributionManagement>
 
-   <properties>
-      <!-- By default don't run unit tests for the fwk! -->
-      <maven.test.skip>true</maven.test.skip>
-   </properties>
 </project>

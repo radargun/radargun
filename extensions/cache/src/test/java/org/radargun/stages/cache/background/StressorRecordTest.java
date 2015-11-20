@@ -1,12 +1,12 @@
 package org.radargun.stages.cache.background;
 
 import org.radargun.stages.helpers.Range;
+import org.radargun.util.ReflectionUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.List;
 
-import static org.radargun.util.ReflectionUtils.*;
 import static org.testng.Assert.*;
 
 /**
