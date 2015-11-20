@@ -3,7 +3,6 @@ package org.radargun.service;
 import org.infinispan.Cache;
 import org.radargun.traits.ContinuousQuery;
 import org.radargun.traits.Query;
-import org.radargun.traits.Queryable;
 
 /**
  * @author Vojtech Juranek &lt;vjuranek@redhat.com&gt;
@@ -37,7 +36,7 @@ public class InfinispanEmbeddedContinuousQuery implements ContinuousQuery {
         return service.getCache(cacheName);
     }
 
-    public static class IspnContinuousQueryListener implements org.infinispan.query.continuous.ContinuousQueryResultListener {
+    public static class IspnContinuousQueryListener implements org.infinispan.query.continuous.ContinuousQueryListener {
 
         private final ContinuousQueryListener cqListener;
 
