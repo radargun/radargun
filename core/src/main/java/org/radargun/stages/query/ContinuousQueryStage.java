@@ -45,7 +45,7 @@ public class ContinuousQueryStage extends AbstractDistStage {
     protected boolean remove = false;
 
     @PropertyDelegate
-    QueryConfiguration query;
+    QueryConfiguration query = new QueryConfiguration();;
 
     @InjectTrait
     private ContinuousQuery continuousQueryTrait;
