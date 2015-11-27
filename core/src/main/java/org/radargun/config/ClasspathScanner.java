@@ -20,14 +20,17 @@ import org.radargun.logging.LogFactory;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class ClasspathScanner {
-
-   private static Log log = LogFactory.getLog(ClasspathScanner.class);
-   private static final PrintStream NULL_PRINT_STREAM = new PrintStream(new OutputStream() {
+public final class ClasspathScanner {
+   private static final Log log = LogFactory.getLog(ClasspathScanner.class);
+   private static final String CLASS_SUFFIX = ".class";
+   private static final String JAR_SUFFIX = ".jar";
+      private static final PrintStream NULL_PRINT_STREAM = new PrintStream(new OutputStream() {
       @Override
       public void write(int b) throws IOException {}
    });
    private static final PrintStream ERR_PRINT_STREAM = System.err;
+
+   private ClasspathScanner() {}
 
    public static <TClass, TAnnotation extends Annotation> void scanClasspath(
          Class<TClass> superClass, Class<TAnnotation> annotationClass, String requirePackage, Consumer<Class<? extends TClass>> consumer) {
@@ -39,9 +42,9 @@ public class ClasspathScanner {
          if (resourceFile.isFile()) {
             scanFile(resource, 0, superClass, annotationClass, requirePackage, consumer);
          } else if (resourceFile.isDirectory()) {
-            int prefixLength = resource.toString().length() + 1;
+            int prefixLength = resource.length() + 1;
             try {
-               Files.find(resourceFile.toPath(), Integer.MAX_VALUE, (path, attrs) -> attrs.isRegularFile() && (path.toString().endsWith(".class") || path.toString().endsWith(".jar"))).forEach(file -> {
+               Files.find(resourceFile.toPath(), Integer.MAX_VALUE, (path, attrs) -> attrs.isRegularFile() && (path.toString().endsWith(CLASS_SUFFIX) || path.toString().endsWith(JAR_SUFFIX))).forEach(file -> {
                   scanFile(file.toString(), prefixLength, superClass, annotationClass, requirePackage, consumer);
                });
             } catch (IOException e) {
@@ -55,8 +58,8 @@ public class ClasspathScanner {
          Class<TClass> superClass, Class<TAnnotation> annotationClass, String requirePackage, Consumer<Class<? extends TClass>> consumer) {
       if (resource.endsWith(".jar")) {
          scanJar(resource, superClass, annotationClass, requirePackage, consumer);
-      } else if (resource.endsWith(".class")) {
-         String className = resource.substring(prefixLength, resource.length() - 6).replaceAll("/", ".");
+      } else if (resource.endsWith(CLASS_SUFFIX)) {
+         String className = resource.substring(prefixLength, resource.length() - CLASS_SUFFIX.length()).replaceAll("/", ".");
          scanClass(className, superClass, annotationClass, requirePackage, consumer);
       }
    }
@@ -68,8 +71,8 @@ public class ClasspathScanner {
          for(;;) {
             ZipEntry entry = inputStream.getNextEntry();
             if (entry == null) break;
-            if (!entry.getName().endsWith(".class")) continue;
-            String className = entry.getName().replace('/', '.').substring(0, entry.getName().length() - 6);
+            if (!entry.getName().endsWith(CLASS_SUFFIX)) continue;
+            String className = entry.getName().replace('/', '.').substring(0, entry.getName().length() - CLASS_SUFFIX.length());
             scanClass(className, superClass, annotationClass, requirePackage, consumer);
          }
       } catch (FileNotFoundException e) {
@@ -87,9 +90,14 @@ public class ClasspathScanner {
          System.setErr(NULL_PRINT_STREAM); // suppress any error output
          clazz = Class.forName(className);
          System.setErr(ERR_PRINT_STREAM);
-      } catch (Throwable t) {
-         /* There are other problems during class loading that could lead to Errors -> ignore them */
-         log.trace("Cannot load class " + className);
+      } catch (ClassNotFoundException e) {
+         log.trace("Cannot load class " + className, e);
+         return;
+      } catch (NoClassDefFoundError e) {
+         log.trace("Cannot load class " + className, e);
+         return;
+      } catch (LinkageError e) {
+         log.trace("Cannot load class " + className, e);
          return;
       }
       TAnnotation annotation = clazz.getAnnotation(annotationClass);
