@@ -42,6 +42,12 @@
       </dependency>
 
       <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-cache</artifactId>
+         <version>${project.version}</version>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
          <groupId>org.jboss.jbossts</groupId>
          <artifactId>jbossjta</artifactId>
          <version>${version.jbossts}</version>

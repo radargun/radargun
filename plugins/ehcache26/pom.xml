@@ -17,12 +17,12 @@
          <groupId>org.radargun</groupId>
          <artifactId>plugin-ehcache25</artifactId>
          <version>${project.version}</version>
-         <exclusions>
-            <exclusion>
-               <groupId>net.sf.ehcache</groupId>
-               <artifactId>ehcache-core</artifactId>
-            </exclusion>
-         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-cache</artifactId>
+         <version>${project.version}</version>
+         <scope>provided</scope>
       </dependency>
       <dependency>
          <groupId>net.sf.ehcache</groupId>
