@@ -21,8 +21,15 @@
    <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
+         <artifactId>radargun-cache</artifactId>
+         <version>${project.version}</version>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
          <artifactId>radargun-query</artifactId>
          <version>${project.version}</version>
+         <scope>provided</scope>
       </dependency>
       <dependency>
          <groupId>org.radargun</groupId>
@@ -107,6 +114,7 @@
          <artifactId>wildfly-cli</artifactId>
          <classifier>client</classifier>
          <version>${version.wildfly.cli}</version>
+         <optional>true</optional>
          <exclusions>
             <exclusion>
                <artifactId>*</artifactId>

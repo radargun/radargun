@@ -17,11 +17,13 @@
          <groupId>org.radargun</groupId>
          <artifactId>radargun-cache</artifactId>
          <version>${project.version}</version>
+         <scope>provided</scope>
       </dependency>
       <dependency>
          <groupId>com.hazelcast</groupId>
          <artifactId>hazelcast</artifactId>
          <version>2.6</version>
+         <optional>true</optional>
       </dependency>
    </dependencies>
 

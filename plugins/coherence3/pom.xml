@@ -19,11 +19,13 @@
          <groupId>org.radargun</groupId>
          <artifactId>radargun-cache</artifactId>
          <version>${project.version}</version>
+         <scope>provided</scope>
       </dependency>
       <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>radargun-query</artifactId>
          <version>${project.version}</version>
+         <scope>provided</scope>
       </dependency>
       <dependency>
          <groupId>com.oracle.coherence</groupId>

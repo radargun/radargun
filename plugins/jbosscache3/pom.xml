@@ -15,14 +15,14 @@
    <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
+         <artifactId>radargun-cache</artifactId>
+         <version>${project.version}</version>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
          <artifactId>plugin-jbosscache2</artifactId>
          <version>${project.version}</version>
-         <exclusions>
-            <exclusion>
-               <groupId>org.jboss.cache</groupId>
-               <artifactId>jbosscache-core</artifactId>
-            </exclusion>
-         </exclusions>
       </dependency>
       <dependency>
          <groupId>org.jboss.cache</groupId>
