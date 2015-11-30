@@ -60,36 +60,36 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
     protected volatile Address       localAddr;
     protected volatile int           myRank; // rank of current member in view
     protected volatile List<Address> members = Collections.emptyList();
-    protected List<Membership>       membershipHistory =new ArrayList<>();
+    protected List<Membership>       membershipHistory = new ArrayList<>();
 
     @Property(doc = "Number of nodes where the writes will be replicated.")
     protected int                    numOwners = 2;
 
     @Property(doc = "Controls use of the DONT_BUNDLE flag. Default is true.")
-    protected boolean                bundle=true;
+    protected boolean                bundle = true;
 
     @Property(doc = "Controls use of the FC flag. Default is true.")
-    protected boolean                flowControl=true;
+    protected boolean                flowControl = true;
 
     @Property(doc = "Controls use of the OOB flag. Default is true.")
-    protected boolean                oob=true;
+    protected boolean                oob = true;
 
     @Property(doc = "Controls use of anycasting flag in RequestOptions. Default is true.")
-    protected boolean                anycasting=true;
+    protected boolean                anycasting = true;
 
     @Property(name = "file", doc = "Configuration file for JGroups.", deprecatedName = "config")
     protected String                 configFile;
 
-    @Property(name="primary-replicates-puts", doc="When enabled, a put is sent to the primary which (synchronously) " +
+    @Property(doc="When enabled, a put is sent to the primary which (synchronously) " +
       "replicates it to the backup(s). Otherwise the put is sent to all owners and the call return on the first reply." +
       " Default is true (Infinispan 7.x behavior). Setting this to false will reduce the cost of 4x latency to 2x (faster)")
-    protected boolean                primary_replicates_puts=true;
+    protected boolean                primaryReplicatesPuts = true;
 
     protected String                 name;
 
     protected volatile Object        lastValue=new byte[1000];
     protected RequestOptions         getOptions, putOptions, putOptionsWithFilter;
-    protected final AtomicInteger    local_reads=new AtomicInteger(0); // number of local reads (no RPCs)
+    protected final AtomicInteger    localReads=new AtomicInteger(0); // number of local reads (no RPCs)
 
     static {
         try {
@@ -109,14 +109,24 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
     }
 
     public JGroups36Service(String configFile, String name) {
-        this.configFile=configFile;
-        this.name=name;
+        this.configFile = configFile;
+        this.name = name;
     }
 
-    public JGroups36Service configFile(String file) {this.configFile=file; return this;}
-    public JGroups36Service name(String name)       {this.name=name; return this;}
-    public JGroups36Service numOwners(int num)      {this.numOwners=num; return this;}
+    public JGroups36Service configFile(String file) {
+        this.configFile = file;
+        return this;
+    }
 
+    public JGroups36Service name(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public JGroups36Service numOwners(int num) {
+        this.numOwners = num;
+        return this;
+    }
 
     @ProvidesTrait
     public JGroups36Service getSelf() {
@@ -136,22 +146,28 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
     @Override
     public void start() {
         this.getOptions = new RequestOptions(ResponseMode.GET_FIRST, 20000, anycasting, null);
-        if (oob)
+        if (oob) {
             getOptions.setFlags(Message.Flag.OOB);
-        if (!bundle)
+        }
+        if (!bundle) {
             getOptions.setFlags(Message.Flag.DONT_BUNDLE);
-        if (!flowControl)
+        }
+        if (!flowControl) {
             getOptions.setFlags(Message.Flag.NO_FC);
+        }
 
         this.putOptions = new RequestOptions(ResponseMode.GET_FIRST, 20000, true, null); // uses anycasting
-        if (oob)
+        if (oob) {
             putOptions.setFlags(Message.Flag.OOB);
-        if (!bundle)
+        }
+        if (!bundle) {
             putOptions.setFlags(Message.Flag.DONT_BUNDLE);
-        if (!flowControl)
+        }
+        if (!flowControl) {
             putOptions.setFlags(Message.Flag.NO_FC);
+        }
 
-        putOptionsWithFilter=new RequestOptions(putOptions).setRspFilter(new FirstNonNullResponse());
+        putOptionsWithFilter = new RequestOptions(putOptions).setRspFilter(new FirstNonNullResponse());
 
         log.debugf("numOwners=%d, config=%s, getOptions=%s, putOptions=%s\n",
                    numOwners, configFile, getOptions, putOptions);
@@ -168,7 +184,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
             throw new RuntimeException(e);
         }
         localAddr = ch.getAddress();
-        myRank=Util.getRank(ch.getView(), localAddr)-1;
+        myRank = Util.getRank(ch.getView(), localAddr) - 1;
     }
 
     @Override
@@ -185,7 +201,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
     }
 
     public Object getFromRemote(Object key) {
-        assert key !=null;
+        assert key != null;
         return lastValue;
     }
 
@@ -196,8 +212,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
 
     public void putFromRemote(Object key, Object value) {
         if(key != null) {
-            lastValue=value;
-            // System.out.printf("%s: put(%s, %s)\n", localAddr, key, value);
+            lastValue = value;
         }
     }
 
@@ -205,23 +220,21 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
      * Applies a put() and forwards it to targets
      * @param key
      * @param val
-     * @param exclude_rank The rank to be excluded from the backups (the originator of the put)
+     * @param excludeRank The rank to be excluded from the backups (the originator of the put)
      */
-    public void putFromRemote(Object key, Object val, int exclude_rank) {
+    public void putFromRemote(Object key, Object val, int excludeRank) {
         putFromRemote(key, val);
 
         // forward to backup owners
-        // System.out.printf("%s: computing backups with primary_rank=%d\n", localAddr, exclude_rank);
-        if(exclude_rank == -1)
+        if(excludeRank == -1)
             return;
-        List<Address> backup_owners=pickBackups(myRank, exclude_rank);
-        // System.out.printf("%s: forwarding to %s\n", localAddr, backup_owners);
-        if(backup_owners == null || backup_owners.isEmpty())
+        List<Address> backupOwners=pickBackups(myRank, excludeRank);
+        if(backupOwners == null || backupOwners.isEmpty())
             return;
-        if(backup_owners.size() == 1)
-            invoke(backup_owners.get(0), new MethodCall(PUT, key, val), putOptions);
+        if(backupOwners.size() == 1)
+            invoke(backupOwners.get(0), new MethodCall(PUT, key, val), putOptions);
         else
-            invoke(backup_owners, new MethodCall(PUT, key, val), putOptions);
+            invoke(backupOwners, new MethodCall(PUT, key, val), putOptions);
     }
 
     public Object getAndPutFromRemote(Object key, Object value) {
@@ -244,7 +257,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
     protected Object read(MethodCall methodCall) {
         List<Address> targets = pickReadTargets();
         if (targets == null) { // self was element of the picked members -> local read, no RPC
-            local_reads.incrementAndGet();
+            localReads.incrementAndGet();
             return lastValue;
         }
         return invoke(targets, methodCall, getOptions).getFirst();
@@ -267,16 +280,16 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
 
     @Override
     public void put(Object key, Object value) {
-        if(this.primary_replicates_puts) {
-            List<Address> owners=pickTargets(false, false);
-            Address primary=owners.remove(0);
+        if(this.primaryReplicatesPuts) {
+            List<Address> owners = pickTargets(false, false);
+            Address primary = owners.remove(0);
             owners.remove(localAddr); // backups shouldn't forward back to us - we already applied the put
 
-            int exclude_rank=owners.isEmpty()? -1 : myRank;
+            int excludeRank = owners.isEmpty()? -1 : myRank;
             if(primary.equals(localAddr))
-                putFromRemote(key, value, exclude_rank);
+                putFromRemote(key, value, excludeRank);
             else
-                invoke(primary, new MethodCall(PUT_AND_FORWARD, key, value, exclude_rank), putOptions);
+                invoke(primary, new MethodCall(PUT_AND_FORWARD, key, value, excludeRank), putOptions);
         }
         else
             write(new MethodCall(PUT, key, value));
@@ -303,7 +316,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
 
     public void viewAccepted(View newView) {
         this.members = newView.getMembers();
-        this.myRank=Util.getRank(newView,localAddr)-1;
+        this.myRank = Util.getRank(newView,localAddr)-1;
         ArrayList<Member> mbrs = new ArrayList<>(newView.getMembers().size());
         boolean coord = true;
         for (Address address : newView.getMembers()) {
@@ -317,7 +330,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
 
     @Override
     public boolean isCoordinator() {
-        View view=ch.getView();
+        View view = ch.getView();
         return view == null || view.getMembers() == null || view.getMembers().isEmpty()
           || ch.getAddress().equals(view.getMembers().get(0));
     }
@@ -373,10 +386,10 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
 
     /**
      * Picks numOwners targets in range [i .. i+numOwners-1] where i is a random index
-     * @return A list of members (primary plus backup(s)), or null if return_null_on_self_inclusion is true
+     * @return A list of members (primary plus backup(s)), or null if returnNullOnSelfInclusion is true
      * and self is in the list
      */
-    protected List<Address> pickTargets(boolean return_null_on_self_inclusion, boolean skip_self) {
+    protected List<Address> pickTargets(boolean returnNullOnSelfInclusion, boolean skipSelf) {
         List<Address> mbrs = this.members;
         int size = mbrs.size();
         int startIndex = ThreadLocalRandom.current().nextInt(size);
@@ -386,12 +399,12 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
         for (int i = 0; i < numTargets; i++) {
             int index=(startIndex + i) % size;
             if(index == myRank) {
-                if(return_null_on_self_inclusion)
+                if(returnNullOnSelfInclusion)
                     return null;
-                if(skip_self)
+                if(skipSelf)
                     continue;
             }
-            Address target=mbrs.get(index);
+            Address target = mbrs.get(index);
             targets.add(target); // we cannot have dupes because numTargets cannot be > size (due to the min() above)
         }
         return targets;
@@ -399,22 +412,22 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
 
     /**
      * Picks backup owners, based on a starting index
-     * @param primary_rank The rank of the primary in the current view. Start with (primary_rank+1) % size
-     * @param exclude_rank Exclude primary if true
+     * @param primaryRank The rank of the primary in the current view. Start with (primaryRank+1) % size
+     * @param excludeRank Exclude primary if true
      * @return
      */
-    protected List<Address> pickBackups(int primary_rank, int exclude_rank) {
+    protected List<Address> pickBackups(int primaryRank, int excludeRank) {
         List<Address> mbrs = this.members;
         int size = mbrs.size();
-        int startIndex = primary_rank +1;
+        int startIndex = primaryRank +1;
         int numTargets = Math.min(numOwners-1, size);
 
         List<Address> targets =new ArrayList<>(numTargets);
         for (int i = 0; i < numTargets; i++) {
-            int index=(startIndex + i) % size;
-            if(index == exclude_rank)
+            int index = (startIndex + i) % size;
+            if(index == excludeRank)
                 continue;
-            Address target=mbrs.get(index);
+            Address target = mbrs.get(index);
             targets.add(target); // we cannot have dupes because numTargets cannot be > size (due to the min() above)
         }
         return targets;
@@ -477,18 +490,18 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
 
     /** Terminates after the first non-null response */
     protected static class FirstNonNullResponse implements RspFilter {
-        protected boolean received_non_null_rsp;
+        protected boolean receivedNonNullRsp;
 
         public boolean isAcceptable(Object response, Address sender) {
             if(response != null) {
-                received_non_null_rsp=true;
+                receivedNonNullRsp = true;
                 return true;
             }
             return false;
         }
 
         public boolean needMoreResponses() {
-            return !received_non_null_rsp;
+            return !receivedNonNullRsp;
         }
     }
 }
