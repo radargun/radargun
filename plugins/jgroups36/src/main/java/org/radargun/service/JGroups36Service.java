@@ -60,22 +60,22 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
     protected volatile Address       localAddr;
     protected volatile int           myRank; // rank of current member in view
     protected volatile List<Address> members = Collections.emptyList();
-    protected List<Membership>       membershipHistory =new ArrayList<>();
+    protected List<Membership>       membershipHistory = new ArrayList<>();
 
     @Property(doc = "Number of nodes where the writes will be replicated.")
     protected int                    numOwners = 2;
 
     @Property(doc = "Controls use of the DONT_BUNDLE flag. Default is true.")
-    protected boolean                bundle=true;
+    protected boolean                bundle = true;
 
     @Property(doc = "Controls use of the FC flag. Default is true.")
-    protected boolean                flowControl=true;
+    protected boolean                flowControl = true;
 
     @Property(doc = "Controls use of the OOB flag. Default is true.")
-    protected boolean                oob=true;
+    protected boolean                oob = true;
 
     @Property(doc = "Controls use of anycasting flag in RequestOptions. Default is true.")
-    protected boolean                anycasting=true;
+    protected boolean                anycasting = true;
 
     @Property(name = "file", doc = "Configuration file for JGroups.", deprecatedName = "config")
     protected String                 configFile;
@@ -83,13 +83,13 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
     @Property(name="primary-replicates-puts", doc="When enabled, a put is sent to the primary which (synchronously) " +
       "replicates it to the backup(s). Otherwise the put is sent to all owners and the call return on the first reply." +
       " Default is true (Infinispan 7.x behavior). Setting this to false will reduce the cost of 4x latency to 2x (faster)")
-    protected boolean                primary_replicates_puts=true;
+    protected boolean                primaryReplicatesPuts=true;
 
     protected String                 name;
 
     protected volatile Object        lastValue=new byte[1000];
     protected RequestOptions         getOptions, putOptions, putOptionsWithFilter;
-    protected final AtomicInteger    local_reads=new AtomicInteger(0); // number of local reads (no RPCs)
+    protected final AtomicInteger    localReads=new AtomicInteger(0); // number of local reads (no RPCs)
 
     static {
         try {
@@ -168,7 +168,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
             throw new RuntimeException(e);
         }
         localAddr = ch.getAddress();
-        myRank=Util.getRank(ch.getView(), localAddr)-1;
+        myRank = Util.getRank(ch.getView(), localAddr)-1;
     }
 
     @Override
@@ -197,7 +197,6 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
     public void putFromRemote(Object key, Object value) {
         if(key != null) {
             lastValue=value;
-            // System.out.printf("%s: put(%s, %s)\n", localAddr, key, value);
         }
     }
 
@@ -244,7 +243,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
     protected Object read(MethodCall methodCall) {
         List<Address> targets = pickReadTargets();
         if (targets == null) { // self was element of the picked members -> local read, no RPC
-            local_reads.incrementAndGet();
+            localReads.incrementAndGet();
             return lastValue;
         }
         return invoke(targets, methodCall, getOptions).getFirst();
@@ -267,7 +266,7 @@ public class JGroups36Service extends ReceiverAdapter implements Lifecycle, Clus
 
     @Override
     public void put(Object key, Object value) {
-        if(this.primary_replicates_puts) {
+        if(this.primaryReplicatesPuts) {
             List<Address> owners=pickTargets(false, false);
             Address primary=owners.remove(0);
             owners.remove(localAddr); // backups shouldn't forward back to us - we already applied the put
