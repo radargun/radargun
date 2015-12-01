@@ -7,7 +7,7 @@ public interface ContinuousQuery {
 
     public static final String TRAIT = ContinuousQuery.class.getSimpleName();
     public static final String QUERY = TRAIT + ".Query";
-    public static final String LISTENER = TRAIT + ".ContinuousQueryListener";
+    public static final String LISTENERS = TRAIT + ".ContinuousQueryListeners";
     public final Operation ENTRY_JOINED = Operation.register(TRAIT + ".EntryJoined");
     public final Operation ENTRY_LEFT = Operation.register(TRAIT + ".EntryLeft");
 
