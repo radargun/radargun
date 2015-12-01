@@ -32,164 +32,168 @@ import org.radargun.utils.TimeService;
  */
 @Stage(doc = "Benchmark operations performance with enabled/disabled continuous query.")
 public class ContinuousQueryStage extends AbstractDistStage {
-   
-    private static final String CQ_TEST_NAME = "ContinuousQueryTest";
 
-    @Property(doc = "Name of the test as used for reporting. Default is 'Test'.")
-    protected String testName = "Test";
+   private static final String CQ_TEST_NAME = "ContinuousQueryTest";
 
-    @Property(doc = "Cache name with which continuous query should registered. Default is null, i.e. default cache.")
-    private String cacheName = null;
+   @Property(doc = "Name of the test as used for reporting. Default is 'Test'.")
+   protected String testName = "Test";
 
-    @Property(doc = "If multiple queries are used, specifies, if statistics should be merged in one or each CQ should keep its own statistics. Default it false.")
-    private boolean mergeCq = false;
-    
-    @Property(doc = "Allows to reset statistics at the begining of the stage. Default is false.")
-    private boolean resetStats = false;
+   @Property(doc = "Cache name with which continuous query should registered. Default is null, i.e. default cache.")
+   private String cacheName = null;
 
-    @Property(doc = "Allows to remove continuous query. Default is false.")
-    protected boolean remove = false;
+   @Property(doc = "If multiple queries are used, specifies, if statistics should be merged in one or each CQ should keep its own statistics. Default it false.")
+   private boolean mergeCq = false;
 
-    @PropertyDelegate
-    QueryConfiguration query = new QueryConfiguration();;
+   @Property(doc = "Allows to reset statistics at the begining of the stage. Default is false.")
+   private boolean resetStats = false;
 
-    @InjectTrait
-    private ContinuousQuery continuousQueryTrait;
+   @Property(doc = "Allows to remove continuous query. Default is false.")
+   protected boolean remove = false;
 
-    @InjectTrait
-    private Queryable queryable;
+   @PropertyDelegate
+   QueryConfiguration query = new QueryConfiguration();;
 
-    private Map<String, SynchronizedStatistics> statistics;
+   @InjectTrait
+   private ContinuousQuery continuousQueryTrait;
 
-    @Override
-    public DistStageAck executeOnSlave() {
-        String statsKey = mergeCq ? CQ_TEST_NAME + ".Stats" : testName + ".Stats";
-          
-        statistics = (Map<String, SynchronizedStatistics>) slaveState.get(statsKey);
-        if (statistics == null) {
-           statistics  = new HashMap<String, SynchronizedStatistics>();
-           slaveState.put(statsKey, statistics);
-        }
-        if (!statistics.containsKey(statsKey)) {
-            statistics.put(statsKey, new SynchronizedStatistics(new DefaultOperationStats()));
-        } else if (resetStats) {
-            statistics.get(statsKey).reset();
-        }
+   @InjectTrait
+   private Queryable queryable;
 
-        if (!remove) {
-            registerCQ(slaveState);
-        } else {
-            unregisterCQ(slaveState);
-        }
+   private Map<String, SynchronizedStatistics> statistics;
 
-        return new ContinuousQueryAck(slaveState, statistics.get(statsKey).snapshot(true));
-    }
+   @Override
+   public DistStageAck executeOnSlave() {
+      String statsKey = mergeCq ? CQ_TEST_NAME + ".Stats" : testName + ".Stats";
 
-    @Override
-    public StageResult processAckOnMaster(List<DistStageAck> acks) {
-        StageResult result = super.processAckOnMaster(acks);
-        if (result.isError()) return result;
+      statistics = (Map<String, SynchronizedStatistics>) slaveState.get(statsKey);
+      if (statistics == null) {
+         statistics = new HashMap<String, SynchronizedStatistics>();
+         slaveState.put(statsKey, statistics);
+      }
+      if (!statistics.containsKey(statsKey)) {
+         statistics.put(statsKey, new SynchronizedStatistics(new DefaultOperationStats()));
+      } else if (resetStats) {
+         statistics.get(statsKey).reset();
+      }
 
-        String testKey = mergeCq ? CQ_TEST_NAME : testName;
-        Report.Test test = createTest(testKey, null);
-        if (test != null) {
-            int testIteration = (mergeCq || remove) ? 0 : test.getIterations().size(); // when merging or removing CQ, don't consider iterations
+      if (!remove) {
+         registerCQ(slaveState);
+      } else {
+         unregisterCQ(slaveState);
+      }
 
-            for (ContinuousQueryAck ack : Projections.instancesOf(acks, ContinuousQueryAck.class)) {
-                if (ack.stats != null)
-                    test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
-            }
-        }
-        return StageResult.SUCCESS;
-    }
+      return new ContinuousQueryAck(slaveState, statistics.get(statsKey).snapshot(true));
+   }
 
-    protected Report.Test createTest(String testKey, String iterationName) {
-        if (testKey == null || testKey.isEmpty()) {
-            log.warn("No test name - results are not recorded");
-            return null;
-        } else {
-            Report report = masterState.getReport();
-            return report.createTest(testKey, iterationName, true);
-        }
-    }
+   @Override
+   public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      StageResult result = super.processAckOnMaster(acks);
+      if (result.isError())
+         return result;
 
-    private void registerCQ(SlaveState slaveState) {
-        Class<?> clazz;
-        try {
-            clazz = slaveState.getClass().getClassLoader().loadClass(query.clazz);
-        } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException("Cannot load class " + query.clazz, e);
-        }
+      String testKey = mergeCq ? CQ_TEST_NAME : testName;
+      Report.Test test = createTest(testKey, null);
+      if (test != null) {
+         int testIteration = (mergeCq || remove) ? 0 : test.getIterations().size(); // when merging or removing CQ, don't consider iterations
 
-        Query.Builder builder = queryable.getBuilder(null, clazz);
-        for (Condition condition : query.conditions) {
-            condition.apply(builder);
-        }
-        if (query.orderBy != null) {
-            for (OrderBy se : query.orderBy) {
-                builder.orderBy(se.attribute, se.asc ? Query.SortOrder.ASCENDING : Query.SortOrder.DESCENDING);
-            }
-        }
-        if (query.projection != null) {
-            builder.projection(query.projection);
-        }
-        if (query.offset >= 0) {
-            builder.offset(query.offset);
-        }
-        if (query.limit >= 0) {
-            builder.limit(query.limit);
-        }
-        Query query = builder.build();
-        slaveState.put(ContinuousQuery.QUERY, query);
+         for (ContinuousQueryAck ack : Projections.instancesOf(acks, ContinuousQueryAck.class)) {
+            if (ack.stats != null)
+               test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
+         }
+      }
+      return StageResult.SUCCESS;
+   }
 
-        ContinuousQuery.ContinuousQueryListener cqListener = new ContinuousQuery.ContinuousQueryListener() {
-            private final String statsKey = mergeCq ? CQ_TEST_NAME + ".Stats" : testName + ".Stats";
-           
-            @Override
-            public void onEntryJoined(Object key, Object value) {
-                statistics.get(statsKey).registerRequest(getResponseTime(key), ContinuousQuery.ENTRY_JOINED);
-                log.trace("Entry joined " + key + " -> " + value);
-            }
+   protected Report.Test createTest(String testKey, String iterationName) {
+      if (testKey == null || testKey.isEmpty()) {
+         log.warn("No test name - results are not recorded");
+         return null;
+      } else {
+         Report report = masterState.getReport();
+         return report.createTest(testKey, iterationName, true);
+      }
+   }
 
-            @Override
-            public void onEntryLeft(Object key) {
-                statistics.get(statsKey).registerRequest(getResponseTime(key), ContinuousQuery.ENTRY_LEFT);
-                log.trace("Entry left " + key);
-            }
-        };
-        
-        Map<String, ContinuousQuery.ContinuousQueryListener> listeners = (Map<String, ContinuousQuery.ContinuousQueryListener>)slaveState.get(ContinuousQuery.LISTENERS);
-        if (listeners == null) {
-           listeners = new HashMap<>();
-           slaveState.put(ContinuousQuery.LISTENERS, listeners);
-        }
-        listeners.put(testName, cqListener);
+   private void registerCQ(SlaveState slaveState) {
+      Class<?> clazz;
+      try {
+         clazz = slaveState.getClass().getClassLoader().loadClass(query.clazz);
+      } catch (ClassNotFoundException e) {
+         throw new IllegalArgumentException("Cannot load class " + query.clazz, e);
+      }
 
-        continuousQueryTrait.createContinuousQuery(cacheName, query, cqListener);
-    }
+      Query.Builder builder = queryable.getBuilder(null, clazz);
+      for (Condition condition : query.conditions) {
+         condition.apply(builder);
+      }
+      if (query.orderBy != null) {
+         for (OrderBy se : query.orderBy) {
+            builder.orderBy(se.attribute, se.asc ? Query.SortOrder.ASCENDING : Query.SortOrder.DESCENDING);
+         }
+      }
+      if (query.projection != null) {
+         builder.projection(query.projection);
+      }
+      if (query.offset >= 0) {
+         builder.offset(query.offset);
+      }
+      if (query.limit >= 0) {
+         builder.limit(query.limit);
+      }
+      Query query = builder.build();
+      slaveState.put(ContinuousQuery.QUERY, query);
 
-    public void unregisterCQ(SlaveState slaveState) {
-        Map<String, ContinuousQuery.ContinuousQueryListener> listeners = (Map<String, ContinuousQuery.ContinuousQueryListener>) slaveState.get(ContinuousQuery.LISTENERS);
-        if (listeners != null && listeners.containsKey(testName)) {
-            ContinuousQuery.ContinuousQueryListener cqListener = listeners.get(testName);
-            listeners.remove(testName);
-            continuousQueryTrait.removeContinuousQuery(cacheName, cqListener);
-        }
-    }
+      ContinuousQuery.ContinuousQueryListener cqListener = new ContinuousQuery.ContinuousQueryListener() {
+         private final String statsKey = mergeCq ? CQ_TEST_NAME + ".Stats" : testName + ".Stats";
 
-    private long getResponseTime(Object key) {
-        if (key instanceof TimestampKeyGenerator.TimestampKey) {
-            return (TimeUnit.MILLISECONDS.toNanos(TimeService.currentTimeMillis() - ((TimestampKeyGenerator.TimestampKey) key).getTimestamp()));
-        }
-        return 0; //latency of event arrival is not measured
-    }
+         @Override
+         public void onEntryJoined(Object key, Object value) {
+            statistics.get(statsKey).registerRequest(getResponseTime(key), ContinuousQuery.ENTRY_JOINED);
+            log.trace("Entry joined " + key + " -> " + value);
+         }
 
-    private static class ContinuousQueryAck extends DistStageAck {
-        public final Statistics stats;
+         @Override
+         public void onEntryLeft(Object key) {
+            statistics.get(statsKey).registerRequest(getResponseTime(key), ContinuousQuery.ENTRY_LEFT);
+            log.trace("Entry left " + key);
+         }
+      };
 
-        public ContinuousQueryAck(SlaveState slaveState, Statistics stats) {
-            super(slaveState);
-            this.stats = stats;
-        }
-    }
+      Map<String, ContinuousQuery.ContinuousQueryListener> listeners = (Map<String, ContinuousQuery.ContinuousQueryListener>) slaveState
+            .get(ContinuousQuery.LISTENERS);
+      if (listeners == null) {
+         listeners = new HashMap<>();
+         slaveState.put(ContinuousQuery.LISTENERS, listeners);
+      }
+      listeners.put(testName, cqListener);
+
+      continuousQueryTrait.createContinuousQuery(cacheName, query, cqListener);
+   }
+
+   public void unregisterCQ(SlaveState slaveState) {
+      Map<String, ContinuousQuery.ContinuousQueryListener> listeners = (Map<String, ContinuousQuery.ContinuousQueryListener>) slaveState
+            .get(ContinuousQuery.LISTENERS);
+      if (listeners != null && listeners.containsKey(testName)) {
+         ContinuousQuery.ContinuousQueryListener cqListener = listeners.get(testName);
+         listeners.remove(testName);
+         continuousQueryTrait.removeContinuousQuery(cacheName, cqListener);
+      }
+   }
+
+   private long getResponseTime(Object key) {
+      if (key instanceof TimestampKeyGenerator.TimestampKey) {
+         return (TimeUnit.MILLISECONDS
+               .toNanos(TimeService.currentTimeMillis() - ((TimestampKeyGenerator.TimestampKey) key).getTimestamp()));
+      }
+      return 0; //latency of event arrival is not measured
+   }
+
+   private static class ContinuousQueryAck extends DistStageAck {
+      public final Statistics stats;
+
+      public ContinuousQueryAck(SlaveState slaveState, Statistics stats) {
+         super(slaveState);
+         this.stats = stats;
+      }
+   }
 }
