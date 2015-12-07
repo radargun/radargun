@@ -82,6 +82,7 @@
                    limit-word-count="true"
                    share-words="true"
                    max-word-count="100"
+                   batch-size="100"
       />
 
       <!-- Execute a Map/Reduce task that counts the words the number of time a word appears in the cache values  -->
