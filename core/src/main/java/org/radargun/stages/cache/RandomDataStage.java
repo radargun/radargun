@@ -22,6 +22,7 @@ import org.radargun.stats.DefaultOperationStats;
 import org.radargun.stats.DefaultStatistics;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.BasicOperations;
+import org.radargun.traits.BulkOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Projections;
@@ -115,8 +116,17 @@ public class RandomDataStage extends AbstractDistStage {
    @Property(doc = "The maximum number of seconds to sleep before retrying a failed put command. The default is 5.")
    private int maxSleepInterval = 5;
 
+   @Property(doc = "Size of batch to be loaded into cache (using putAll). If <= 0, put() operation is used sequentially. Default is 0.")
+   protected int batchSize = 0;
+
+   @Property(doc = "Controls whether batch insertion is performed in asychronous way. Default is false (prefer synchronous operations).")
+   protected boolean useAsyncBatchLoading = false;
+
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private BasicOperations basicOperations;
+
+   @InjectTrait(dependency = InjectTrait.Dependency.OPTIONAL)
+   protected BulkOperations bulkOperations;
 
    @InjectTrait
    private CacheInformation cacheInformation;
@@ -153,7 +163,9 @@ public class RandomDataStage extends AbstractDistStage {
             words[i - 1][j] = new String(generateRandomUniqueWord(i, false)).intern();
          }
       }
-      log.trace("Slave" + slaveState.getSlaveIndex() + " words array = " + Arrays.deepToString(words));
+      if (log.isTraceEnabled()) {
+         log.tracef("Slave %d words array = %s", slaveState.getSlaveIndex(), Arrays.deepToString(words));
+      }
    }
 
    @Override
@@ -180,10 +192,6 @@ public class RandomDataStage extends AbstractDistStage {
          return errorResponse("Either valueCount or ramPercentageDataSize should be specified, but not both");
       }
 
-      if (ramPercentage > 1) {
-         return errorResponse("The percentage of RAM can not be greater than one.");
-      }
-
       if (shareWords && !limitWordCount) {
          return errorResponse("The shareWords property can only be true when limitWordCount is also true.");
       }
@@ -194,6 +202,10 @@ public class RandomDataStage extends AbstractDistStage {
 
       if (valueByteOverhead == -1 && cacheInformation == null) {
          return errorResponse("The valueByteOverhead property must be supplied for this cache.");
+      }
+
+      if (batchSize > 0 && bulkOperations == null) {
+         return errorResponse("Batch loading was enabled, however service doesn't provide " + BulkOperations.class + " implementation");
       }
 
       /*
@@ -242,58 +254,93 @@ public class RandomDataStage extends AbstractDistStage {
       }
 
       long putCount = nodePutCount;
+      boolean useBatchLoading = batchSize > 0;
       long bytesWritten = 0;
-      BasicOperations.Cache<String, Object> cache = basicOperations.getCache(bucket);
+      int numOperationsToPerform = 0;
+
+      BulkOperations.Cache<String, Object> bulkOperationsCache = null;
+      BasicOperations.Cache<String, Object> basicOperationsCache = null;
+
+      if (useBatchLoading) {
+         bulkOperationsCache = bulkOperations.getCache(bucket, useAsyncBatchLoading);
+         numOperationsToPerform = batchSize;
+      } else {
+         basicOperationsCache = basicOperations.getCache(bucket);
+         numOperationsToPerform = 1;
+      }
+
       try {
          byte[] buffer = new byte[valueSize];
          Statistics stats = new DefaultStatistics(new DefaultOperationStats());
          stats.begin();
+         int counter = 0;
+         Map map = new HashMap(numOperationsToPerform);
          while (putCount > 0) {
             String key = Integer.toString(slaveState.getSlaveIndex()) + "-" + putCount + ":" + TimeService.nanoTime();
 
             long start = -1;
-            boolean success = false;
+
             String cacheData = null;
 
             if (stringData) {
                cacheData = generateRandomStringData(valueSize);
+               if (useBatchLoading) {
+                  map.put(key, cacheData);
+               }
             } else {
                random.nextBytes(buffer);
-            }
-
-            for (int i = 0; i < putRetryCount; ++i) {
-               try {
-                  if (stringData) {
-                     if (putCount % 5000 == 0) {
-                        log.info(i + ": Writing string length " + valueSize + " to cache key: " + key);
-                     }
-
-                     start = TimeService.nanoTime();
-                     cache.put(key, cacheData);
-                  } else {
-                     if (putCount % 5000 == 0) {
-                        log.info(i + ": Writing " + valueSize + " bytes to cache key: " + key);
-                     }
-
-                     start = TimeService.nanoTime();
-                     cache.put(key, buffer);
-                  }
-                  long durationNanos = TimeService.nanoTime() - start;
-                  stats.registerRequest(durationNanos, BasicOperations.PUT);
-                  if (printWriteStatistics) {
-                     log.info("Put on slave" + slaveState.getSlaveIndex() + " took "
-                           + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
-                  }
-                  success = true;
-                  break;
-               } catch (Exception e) {
-                  // If the put fails, sleep to see if staggering the put will succeed
-                  Thread.sleep(maxSleepInterval * 1000);
+               if (useBatchLoading) {
+                  map.put(key, buffer);
                }
             }
-            if (!success) {
-               return errorResponse("Failed to insert entry into cache",
-                     new RuntimeException(String.format("Failed to insert entry %d times.", putRetryCount)));
+
+            // putCount == 1 -> last iteration
+            if (counter == numOperationsToPerform - 1 || putCount == 1) {
+               boolean success = false;
+               for (int i = 0; i < putRetryCount; ++i) {
+                  try {
+                     if (stringData) {
+                        if (putCount % 5000 == 0) {
+                           log.info(i + ": Writing string length " + valueSize + " to cache key: " + key);
+                        }
+
+                        start = TimeService.nanoTime();
+                        if (batchSize > 0) {
+                           bulkOperationsCache.putAll(map);
+                        } else {
+                           basicOperationsCache.put(key, cacheData);
+                        }
+                     } else {
+                        if (putCount % 5000 == 0) {
+                           log.info(i + ": Writing " + valueSize + " bytes to cache key: " + key);
+                        }
+
+                        start = TimeService.nanoTime();
+                        if (batchSize > 0) {
+                           bulkOperationsCache.putAll(map);
+                        } else {
+                           basicOperationsCache.put(key, buffer);
+                        }
+                     }
+                     long durationNanos = TimeService.nanoTime() - start;
+                     stats.registerRequest(durationNanos, BasicOperations.PUT);
+                     if (printWriteStatistics) {
+                        log.info("Put on slave" + slaveState.getSlaveIndex() + " took "
+                                       + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+                     }
+                     success = true;
+                     counter = 0;
+                     map.clear();
+                     break;
+                  } catch (Exception e) {
+                     // If the put fails, sleep to see if staggering the put will succeed
+                     Thread.sleep(maxSleepInterval * 1000);
+                  }
+               }
+               if (!success) {
+                  return errorResponse("Failed to insert entry into cache",
+                                       new RuntimeException(String.format("Failed to insert entry %d times.", putRetryCount)));
+               }
             }
 
             if (stringData) {
@@ -303,20 +350,21 @@ public class RandomDataStage extends AbstractDistStage {
             }
 
             putCount--;
+            counter++;
          }
          stats.end();
          System.gc();
          log.info("Memory - free: " + Utils.kbString(runtime.freeMemory()) + " - max: "
-               + Utils.kbString(runtime.maxMemory()) + "- total: " + Utils.kbString(runtime.totalMemory()));
+                        + Utils.kbString(runtime.maxMemory()) + "- total: " + Utils.kbString(runtime.totalMemory()));
          log.debug("nodePutCount = " + nodePutCount + "; bytesWritten = " + bytesWritten + "; targetMemoryUse = "
-               + targetMemoryUse + "; countOfWordsInData = " + countOfWordsInData);
+                         + targetMemoryUse + "; countOfWordsInData = " + countOfWordsInData);
          return new DataInsertAck(slaveState, nodePutCount, cacheInformation.getCache(null).getLocallyStoredSize(),
-               bytesWritten, targetMemoryUse, countOfWordsInData, wordCount, stats);
+                                  bytesWritten, targetMemoryUse, countOfWordsInData, wordCount, stats);
       } catch (Exception e) {
          return errorResponse("An exception occurred", e);
       } finally {
          // Log the word counts for this node
-         if (stringData && !wordCount.isEmpty()) {
+         if (stringData && !wordCount.isEmpty() && log.isDebugEnabled()) {
             log.debug("Word counts for node" + slaveState.getSlaveIndex());
             log.debug("--------------------");
             for (Map.Entry<String, Integer> entry : wordCount.entrySet()) {
@@ -507,11 +555,11 @@ public class RandomDataStage extends AbstractDistStage {
          }
          log.info(totalWordCount + " words were generated with a maximum length of " + maxWordLength + " characters");
       }
-      if (!clusterWordCount.isEmpty()) {
-         log.info("--------------------");
-         log.info("Cluster wide word count:");
+      if (!clusterWordCount.isEmpty() && log.isDebugEnabled()) {
+         log.debug("--------------------");
+         log.debug("Cluster wide word count:");
          for (String key : clusterWordCount.keySet()) {
-            log.info("word: " + key + "; count: " + clusterWordCount.get(key));
+            log.debug("word: " + key + "; count: " + clusterWordCount.get(key));
          }
          //TODO Will this take too much memory?
          //         masterState.put(RANDOMDATA_CLUSTER_WORDCOUNT_KEY, clusterWordCount);
