@@ -140,7 +140,7 @@ public class Cluster implements Serializable, Comparable<Cluster> {
          }
          index += g.size;
       }
-      throw new IllegalArgumentException("Group " + group + " was not defined");
+      return Collections.EMPTY_SET;
    }
 
    public class Group implements Serializable {

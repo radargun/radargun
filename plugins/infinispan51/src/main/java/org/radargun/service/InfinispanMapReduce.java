@@ -24,7 +24,6 @@ public class InfinispanMapReduce<KIn, VIn, KOut, VOut, R> implements MapReducer<
 
    protected class Builder implements MapReducer.Builder<KOut, VOut, R> {
       protected final Cache<KIn, VIn> cache;
-      protected ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
       protected Collator<KOut, VOut, R> collator = null;
       protected Mapper<KIn, VIn, KOut, VOut> mapper = null;
       protected Reducer<KOut, VOut> reducer = null;

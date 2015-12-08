@@ -222,15 +222,17 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
       }
 
       @Override
-      public String convertToString(List<RegisteredClass> value) {
+      public String convertToString(List<RegisteredClass> values) {
          StringBuilder sb = new StringBuilder();
          boolean first = true;
-         for (RegisteredClass rc : value) {
-            if (!first) sb.append(", ");
-            first = false;
-            sb.append(rc.clazz.getName());
-            if (rc.marshaller != null) {
-               sb.append(':').append(rc.marshaller.getName());
+         if (values != null) {
+            for (RegisteredClass rc : values) {
+               if (!first) sb.append(", ");
+               first = false;
+               sb.append(rc.clazz.getName());
+               if (rc.marshaller != null) {
+                  sb.append(':').append(rc.marshaller.getName());
+               }
             }
          }
          return sb.toString();
