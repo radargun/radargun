@@ -116,7 +116,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>7.2.3.Final</version.infinispan>
+            <version.infinispan>7.2.5.Final</version.infinispan>
          </properties>
       </profile>
       <profile>

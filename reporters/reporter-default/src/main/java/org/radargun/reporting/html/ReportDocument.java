@@ -154,7 +154,9 @@ public abstract class ReportDocument extends HtmlDocument {
                write(String.format("<tr id=\"e%d\" style=\"visibility: collapse;\"><th colspan=\"2\" style=\"text-align: right\">node%d</th>", elementCounter++, node));
                for (Report.TestResult result : entry.getValue()) {
                   Report.SlaveResult sr = result.slaveResults.get(node);
-                  writeResult(sr.value, false, sr.suspicious);
+                  if (sr != null) {
+                     writeResult(sr.value, false, sr.suspicious);
+                  }
                }
                write("</tr>\n");
             }

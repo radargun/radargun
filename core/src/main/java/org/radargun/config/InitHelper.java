@@ -11,8 +11,10 @@ import java.util.LinkedList;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class InitHelper {
+public final class InitHelper {
    private static final Log log = LogFactory.getLog(InitHelper.class);
+
+   private InitHelper() {}
 
    public static void init(Object target) {
       processAnnotatedMethods(target, Init.class, false);

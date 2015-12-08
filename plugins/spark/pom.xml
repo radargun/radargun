@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+               <source>1.8</source>
+               <target>1.8</target>
+            </configuration>
+         </plugin>
+      </plugins>
+   </build>
+
+   <parent>
+      <groupId>org.radargun</groupId>
+      <artifactId>radargun-plugin-parent</artifactId>
+      <version>2.2.0-SNAPSHOT</version>
+      <relativePath>../pom.xml</relativePath>
+   </parent>
+
+   <artifactId>plugin-spark</artifactId>
+   <name>Spark plugin for RadarGun</name>
+
+   <properties>
+      <version.spark>${spark.version}</version.spark>
+   </properties>
+
+   <profiles>
+      <profile>
+         <id>spark-version-default</id>
+         <activation>
+            <property>
+               <name>!spark.version</name>
+            </property>
+         </activation>
+         <properties>
+            <version.spark>1.5.1</version.spark>
+         </properties>
+      </profile>
+      <profile>
+         <id>spark2_10</id>
+         <activation>
+            <property>
+               <name>!spark2_11</name>
+            </property>
+         </activation>
+         <dependencies>
+            <dependency>
+               <groupId>org.apache.spark</groupId>
+               <artifactId>spark-core_2.10</artifactId>
+               <version>${version.spark}</version>
+            </dependency>
+            <dependency>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-spark_2.10</artifactId>
+               <version>0.2</version>
+            </dependency>
+         </dependencies>
+      </profile>
+      <profile>
+         <id>spark2_11</id>
+         <activation>
+            <property>
+               <name>spark2_11</name>
+            </property>
+         </activation>
+         <dependencies>
+            <dependency>
+               <groupId>org.apache.spark</groupId>
+               <artifactId>spark-core_2.11</artifactId>
+               <version>${version.spark}</version>
+            </dependency>
+            <dependency>
+               <groupId>org.infinispan</groupId>
+               <artifactId>infinispan-spark_2.11</artifactId>
+               <version>0.2</version>
+            </dependency>
+         </dependencies>
+      </profile>
+   </profiles>
+
+   <dependencies>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>plugin-process</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+   </dependencies>
+</project>
