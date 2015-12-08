@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
+import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
@@ -112,6 +113,10 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    @Property(doc = "The number of times to execute the Map/Reduce task. The default is 10.")
    private int numExecutions = 10;
 
+   @Property(doc = "Compare results of previous executions on entry-by-entry basis. WARNING: This can be lengthy operation " +
+         "on data sets with many distinct keys. On false, only result sizes are checked. The default is true.")
+   private boolean deepComparePreviousExecutions = true;
+
    @Property(doc = "The name of the key in the MasterState object that returns the total number of "
          + "bytes processed by the Map/Reduce task. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
    private String totalBytesKey = RandomDataStage.RANDOMDATA_TOTALBYTES_KEY;
@@ -122,19 +127,30 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private MapReducer<KOut, VOut, R> mapReducer;
 
-   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   @InjectTrait(dependency = InjectTrait.Dependency.OPTIONAL)
    private Clustered clustered;
 
-   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   @InjectTrait
    private CacheInformation cacheInformation;
 
-   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
+   @InjectTrait
    private BasicOperations basicOperations;
 
    @InjectTrait(dependency = InjectTrait.Dependency.OPTIONAL)
    private Iterable iterable;
 
    private boolean supportsResultCacheName = false;
+
+   @Init
+   public void validate() {
+      // check on slaves only
+      if (slaveState != null) {
+         if (storeResultInCache && (basicOperations == null || cacheInformation == null)) {
+            throw new IllegalStateException("'storeResultInCache' can only be used with service which provides " +
+                                                  BasicOperations.class + " and " + CacheInformation.class + " implementation");
+         }
+      }
+   }
 
    @Override
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
@@ -182,63 +198,59 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          return errorResponse("Both the mapper and reducer class must be specified.", null);
       }
 
-      if (slaveState.getSlaveIndex() == 0) {
-         DistStageAck result = null;
-         Map<KOut, VOut> prevPayloadMap = null;
-         R prevPayloadObject = null;
+      DistStageAck result = null;
+      Map<KOut, VOut> prevPayloadMap = null;
+      R prevPayloadObject = null;
 
-         Statistics stats = new DefaultStatistics(new DataOperationStats());
-         Task<KOut, VOut, R> mrTask = configureMapReduceTask();
+      Statistics stats = new DefaultStatistics(new DataOperationStats());
+      Task<KOut, VOut, R> mrTask = configureMapReduceTask();
 
-         stats.begin();
-         for (int i = 0; i < numExecutions; i++) {
-            prevPayloadMap = payloadMap;
-            prevPayloadObject = payloadObject;
+      stats.begin();
+      for (int i = 0; i < numExecutions; i++) {
+         prevPayloadMap = payloadMap;
+         prevPayloadObject = payloadObject;
 
-            result = executeMapReduceTask(mrTask, stats, supportsResultCacheName);
+         result = executeMapReduceTask(mrTask, stats, supportsResultCacheName);
 
-            if (prevPayloadMap != null) {
-               if (prevPayloadMap.keySet().equals(payloadMap.keySet())
-                     && prevPayloadMap.entrySet().equals(payloadMap.entrySet())) {
-                  log.info(i + ": Got the same results for two Map/Reduce runs");
-               } else {
-                  log.error(i + ": Did not get the same results for two Map/Reduce runs");
-                  break;
-               }
-            }
-
-            if (prevPayloadObject != null) {
-               if (prevPayloadObject.equals(payloadObject)) {
-                  log.info(i + ": Got the same results for two Map/Reduce runs with collator");
-               } else {
-                  log.error(i + ": Did not get the same results for two Map/Reduce runs with collator");
-                  break;
-               }
-            }
-            if (result.isError() && exitOnFailure) {
+         if (prevPayloadMap != null) {
+            boolean resultsEqual = deepComparePreviousExecutions ? prevPayloadMap.equals(payloadMap) : prevPayloadMap.size() == payloadMap.size();
+            if (resultsEqual) {
+               log.info(i + ": Got the same results for two Map/Reduce runs");
+            } else {
+               log.error(i + ": Did not get the same results for two Map/Reduce runs");
                break;
             }
          }
-         stats.end();
 
-         if (storeResultInCache) {
-            try {
-               if (collatorFqn == null) {
-                  if (!supportsResultCacheName) {
-                     basicOperations.getCache(cacheName).put(MAPREDUCE_RESULT_KEY, payloadMap);
-                  }
-               } else {
-                  basicOperations.getCache(cacheName).put(MAPREDUCE_RESULT_KEY, payloadObject);
-               }
-            } catch (Exception e) {
-               log.error("Failed to put result object into cache", e);
+         if (prevPayloadObject != null) {
+            if (prevPayloadObject.equals(payloadObject)) {
+               log.info(i + ": Got the same results for two Map/Reduce runs with collator");
+            } else {
+               log.error(i + ": Did not get the same results for two Map/Reduce runs with collator");
+               break;
             }
          }
-
-         return result;
-      } else {
-         return new MapReduceAck(slaveState);
+         if (result.isError() && exitOnFailure) {
+            break;
+         }
       }
+      stats.end();
+
+      if (storeResultInCache) {
+         try {
+            if (collatorFqn == null) {
+               if (!supportsResultCacheName) {
+                  basicOperations.getCache(cacheName).put(MAPREDUCE_RESULT_KEY, payloadMap);
+               }
+            } else {
+               basicOperations.getCache(cacheName).put(MAPREDUCE_RESULT_KEY, payloadObject);
+            }
+         } catch (Exception e) {
+            log.error("Failed to put result object into cache", e);
+         }
+      }
+
+      return result;
    }
 
    private Task<KOut, VOut, R> configureMapReduceTask() {
@@ -357,8 +369,10 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          ack.error("executeMapReduceTask() threw an exception", e);
          log.error("executeMapReduceTask() returned an exception", e);
       }
-      log.infof("%d nodes were used. %d entries on this node", clustered.getMembers().size(), cacheInformation
-            .getCache(cacheName).getLocallyStoredSize());
+      if (clustered != null && cacheInformation != null) {
+         log.infof("%d nodes were used. %d entries on this node", clustered.getMembers().size(), cacheInformation
+               .getCache(cacheName).getLocallyStoredSize());
+      }
       log.info("--------------------");
 
       return ack;

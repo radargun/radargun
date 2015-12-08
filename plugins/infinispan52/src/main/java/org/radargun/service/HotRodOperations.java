@@ -2,12 +2,18 @@ package org.radargun.service;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.VersionedValue;
+import org.infinispan.util.concurrent.NotifyingFuture;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.BasicOperations;
+import org.radargun.traits.BulkOperations;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.TemporalOperations;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -16,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class HotRodOperations implements BasicOperations, ConditionalOperations, TemporalOperations {
+public class HotRodOperations implements BasicOperations, BulkOperations, ConditionalOperations, TemporalOperations {
    protected final static Log log = LogFactory.getLog(HotRodOperations.class);
    protected final static boolean trace = log.isTraceEnabled();
    protected final InfinispanHotrodService service;
@@ -34,6 +40,18 @@ public class HotRodOperations implements BasicOperations, ConditionalOperations,
          return new HotRodCache<>((RemoteCache<K,V>) service.managerNoReturn.getCache(false), (RemoteCache<K,V>) service.managerForceReturn.getCache(true));
       } else {
          return new HotRodCache<>((RemoteCache<K,V>) service.managerNoReturn.getCache(cacheName, false), (RemoteCache<K,V>) service.managerForceReturn.getCache(cacheName, true));
+      }
+   }
+
+   @Override
+   public <K, V> BulkOperations.Cache<K, V> getCache(String cacheName, boolean preferAsync) {
+      if (cacheName == null) {
+         cacheName = service.cacheName;
+      }
+      if (cacheName == null) {
+         return new HotRodBulkOperationsCache<>((RemoteCache<K,V>) service.managerNoReturn.getCache(false), (RemoteCache<K,V>) service.managerForceReturn.getCache(true), preferAsync);
+      } else {
+         return new HotRodBulkOperationsCache<>((RemoteCache<K,V>) service.managerNoReturn.getCache(cacheName, false), (RemoteCache<K,V>) service.managerForceReturn.getCache(cacheName, true), preferAsync);
       }
    }
 
@@ -180,6 +198,76 @@ public class HotRodOperations implements BasicOperations, ConditionalOperations,
       public boolean putIfAbsent(K key, V value, long lifespan, long maxIdleTime) {
          if (trace) log.tracef("PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE cache=%s key=%s value=%s lifespan=%s maxIdle=%s", forceReturn.getName(), key, value, lifespan, maxIdleTime);
          return forceReturn.putIfAbsent(key, value, lifespan, TimeUnit.MILLISECONDS, maxIdleTime, TimeUnit.MILLISECONDS) == null;
+      }
+
+   }
+
+   protected class HotRodBulkOperationsCache<K, V> extends HotRodCache<K, V> implements BulkOperations.Cache<K, V> {
+
+      protected final boolean preferAsync;
+
+      public HotRodBulkOperationsCache(RemoteCache<K, V> noReturn, RemoteCache<K, V> forceReturn, boolean preferAsync) {
+         super(noReturn, forceReturn);
+         this.preferAsync = preferAsync;
+      }
+
+      @Override
+      public Map<K, V> getAll(Set<K> keys) {
+         if (trace) log.tracef("GET_ALL cache=%s keys=%s", forceReturn.getName(), keys);
+         Map<K, V> result = new HashMap<>(keys.size());
+         if (preferAsync) {
+            Map<K, Future<V>> futureMap = new HashMap<>(keys.size());
+            for (K key : keys) {
+               futureMap.put(key, forceReturn.getAsync(key));
+            }
+            for (Map.Entry<K, Future<V>> entry : futureMap.entrySet()) {
+               try {
+                  V value = entry.getValue().get();
+                  if (value != null) {
+                     result.put(entry.getKey(), value);
+                  }
+               } catch (Exception e) {
+                  throw new RuntimeException(e);
+               }
+            }
+         } else {
+            for (K key : keys) {
+               result.put(key, forceReturn.get(key));
+            }
+         }
+         return result;
+      }
+
+      @Override
+      public void putAll(Map<K, V> entries) {
+         if (trace) log.tracef("PUT_ALL cache=%s keys=%s", noReturn.getName(), entries);
+         if (preferAsync) {
+            noReturn.putAllAsync(entries);
+         } else {
+            noReturn.putAll(entries);
+         }
+      }
+
+      @Override
+      public void removeAll(Set<K> keys) {
+         if (trace) log.tracef("REMOVE_ALL cache=%s keys=%s", forceReturn.getName(), keys);
+         if (preferAsync) {
+            Map<K, Future<V>> futureMap = new HashMap<>(keys.size());
+            for (K key : keys) {
+               futureMap.put(key, forceReturn.removeAsync(key));
+            }
+            for (Map.Entry<K, Future<V>> entry : futureMap.entrySet()) {
+               try {
+                  entry.getValue().get();
+               } catch (Exception e) {
+                  throw new RuntimeException(e);
+               }
+            }
+         } else {
+            for (K key : keys) {
+               noReturn.remove(key);
+            }
+         }
       }
    }
 }

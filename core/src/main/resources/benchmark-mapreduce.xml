@@ -34,6 +34,7 @@
          
       <!-- Execute a Map/Reduce task that counts the words the number of time a word appears in the cache values  -->
       <map-reduce
+         slaves="0"
          mapper-fqn="org.infinispan.demo.mapreduce.WordCountMapperEmitPerValue"
          reducer-fqn="org.infinispan.demo.mapreduce.WordCountReducer"
          combiner-fqn="org.infinispan.demo.mapreduce.WordCountReducer"

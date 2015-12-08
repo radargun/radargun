@@ -22,6 +22,7 @@ import javax.management.MBeanServer;
 import com.sun.management.HotSpotDiagnosticMXBean;
 import org.radargun.Directories;
 import org.radargun.config.InitHelper;
+import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -475,6 +476,32 @@ public class Utils {
          } catch (Exception e) {
             log.error("Error invoking method named " + entry.getKey() + " with value " + entry.getValue(), e);
             return null;
+         }
+      }
+      return object;
+   }
+
+   /**
+    *
+    * Invoke a public method with a String argument on an Object
+    *
+    * @param object
+    *           the Object where the method is invoked
+    * @param properties
+    *           a Collection of key-value pairs where the public method name is the key, and the String parameter is the value
+    * @return the modified Object, or <code>null</code> if the field can't be changed
+    */
+   public static <T> T invokeMethodWithProperties(T object, Collection<KeyValueProperty> properties) {
+      Class<?> clazz = object.getClass();
+      if (properties != null) {
+         for (KeyValueProperty property : properties) {
+            try {
+               Method method = clazz.getDeclaredMethod(property.getKey(), String.class);
+               method.invoke(object, property.getValue());
+            } catch (Exception e) {
+               log.error("Error invoking method named " + property.getKey() + " with value " + property.getValue(), e);
+               return null;
+            }
          }
       }
       return object;

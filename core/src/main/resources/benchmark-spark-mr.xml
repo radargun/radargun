@@ -1,0 +1,103 @@
+<!-- RadarGun 2.2 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.2">
+
+   <!-- Specifies where should the master open socket -->
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <!-- List of cluster configurations where the benchmark should run -->
+   <clusters>
+      <cluster size="5">
+         <group name="master" size="1" />
+         <group name="worker" size="1" />
+         <group name="driver" size="1" />
+         <group name="ispn-server" size="1" />
+         <group name="ispn-client" size="1" />
+      </cluster>
+   </clusters>
+
+   <!-- List of configurations of the services -->
+   <configurations>
+      <config name="Spark">
+         <!-- Configuration for the Spark master group -->
+         <setup group="master" plugin="spark">
+            <master xmlns="urn:radargun:plugins:spark:2.2" home="${env.SPARK_HOME}">
+            </master>
+         </setup>
+         <!-- Configuration for the Spark worker group -->
+         <setup group="worker" plugin="spark">
+            <worker xmlns="urn:radargun:plugins:spark:2.2" home="${env.SPARK_HOME}">
+               <host>localhost.localdomain</host>
+               <port>7077</port>
+            </worker>
+         </setup>
+         <!-- Configuration for the Spark driver group -->
+         <setup group="driver" plugin="spark">
+            <driver xmlns="urn:radargun:plugins:spark:2.2">
+               <host>localhost.localdomain</host>
+               <port>7077</port>
+               <source-class>org.radargun.service.demo.ispn.WordCountSource</source-class>
+               <source-properties>
+                  <property key="setHotrodServer" value="${hotrodServer:127.0.0.1}" />
+                  <property key="setHotrodPort" value="${hotrodPort:11322}" />
+               </source-properties>
+               <properties>
+                  <property key="spark.serializer" value="org.apache.spark.serializer.KryoSerializer"/>
+               </properties>
+            </driver>
+         </setup>
+         <!-- Configuration for the ISPN server group-->
+         <setup group="ispn-server" plugin="infinispan80">
+            <server xmlns="urn:radargun:plugins:infinispan80:2.2" file="server.xml" jmx-domain="jboss.datagrid-infinispan" cache-manager-name="clustered">
+               <!-- Avoid port collisions with Spark nodes -->
+               <args>-Djboss.socket.binding.port-offset=100</args>
+               <home>${env.ISPN_HOME}</home>
+            </server>
+         </setup>
+         <!-- Configuration for the ISPN client group -->
+         <setup group="ispn-client" plugin="infinispan80">
+            <hotrod xmlns="urn:radargun:plugins:infinispan80:2.2">
+               <servers>127.0.0.1:11322</servers>
+            </hotrod>
+         </setup>
+      </config>
+   </configurations>
+
+   <!-- Sequence of stages executed on the cluster -->
+   <scenario>
+      <service-start groups="master"/>
+      <service-start groups="worker"/>
+      <service-start groups="driver"/>
+      <service-start groups="ispn-server"/>
+      <service-start groups="ispn-client"/>
+
+      <!-- Fill the cache with 100 randomly generated words consuming 1% of the JVM heap -->
+      <random-data groups="ispn-client"
+                   value-size="1024"
+                   ram-percentage="0.01"
+                   random-seed="13"
+                   string-data="true"
+                   limit-word-count="true"
+                   share-words="true"
+                   max-word-count="100"
+                   batch-size="100"/>
+
+      <!-- Execute a Map/Reduce task that counts the words the number of time a word appears in the cache values  -->
+      <map-reduce groups="driver"
+                  mapper-fqn="org.radargun.service.demo.ispn.WordCountMapper"
+                  reducer-fqn="org.radargun.service.demo.ispn.WordCountReducer"
+                  print-result="true"
+      />
+
+      <!-- Stop services on all nodes -->
+      <service-stop/>
+   </scenario>
+
+   <!-- How the statistics are reported -->
+   <reports>
+      <!-- Produce CSV statistics report -->
+      <reporter type="csv" />
+      <!-- Produce HTML statistics report -->
+      <reporter type="html" />
+   </reports>
+
+</benchmark>

@@ -39,6 +39,7 @@
       <plugins.jdg/>
       <plugins.coherence/>
       <plugins.process />
+      <plugins.spark />
       <plugins.spymemcached />
       <reporter.default />
       <reporter.perfrepo />
@@ -241,9 +242,10 @@
          </activation>
          <modules>
             <module>plugins/infinispan80</module>
+            <module>plugins/spark</module>
          </modules>
          <properties>
-            <plugins.jdk18>infinispan80</plugins.jdk18>
+            <plugins.jdk18>infinispan80,spark</plugins.jdk18>
          </properties>
       </profile>
       <profile>
@@ -328,7 +330,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
-            <version>1.7</version>
+            <version>1.8</version>
             <executions>
                <execution>
                   <id>prepare_distribution</id>

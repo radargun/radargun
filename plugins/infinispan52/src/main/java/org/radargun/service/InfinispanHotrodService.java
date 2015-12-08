@@ -112,4 +112,16 @@ public class InfinispanHotrodService implements Lifecycle, InternalsExposition {
       }
       return values;
    }
+
+   public String getCacheName() {
+      return cacheName;
+   }
+
+   public RemoteCacheManager getManagerNoReturn() {
+      return managerNoReturn;
+   }
+
+   public RemoteCacheManager getManagerForceReturn() {
+      return managerForceReturn;
+   }
 }
