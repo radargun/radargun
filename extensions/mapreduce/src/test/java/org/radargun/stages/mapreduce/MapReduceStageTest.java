@@ -8,8 +8,8 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Lifecycle;
-import org.radargun.util.CacheStageRunner;
 import org.radargun.util.CacheTraitRepository;
+import org.radargun.util.MapReduceStageRunner;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -20,7 +20,7 @@ import org.testng.annotations.Test;
 public class MapReduceStageTest {
 
    public void smokeTest() throws Exception {
-      CacheStageRunner stageRunner = new CacheStageRunner(1);
+      MapReduceStageRunner stageRunner = new MapReduceStageRunner(1);
 
       Lifecycle lifecycle = stageRunner.getTraitImpl(Lifecycle.class);
       lifecycle.start();
@@ -45,7 +45,7 @@ public class MapReduceStageTest {
    }
 
    public void smokeTestWithoutCollator() throws Exception {
-      CacheStageRunner stageRunner = new CacheStageRunner(1);
+      MapReduceStageRunner stageRunner = new MapReduceStageRunner(1);
 
       Lifecycle lifecycle = stageRunner.getTraitImpl(Lifecycle.class);
       lifecycle.start();

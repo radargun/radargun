@@ -8,8 +8,8 @@
    </parent>
    <modelVersion>4.0.0</modelVersion>
 
-   <artifactId>radargun-cache</artifactId>
-   <name>Radargun Cache support</name>
+   <artifactId>radargun-mapreduce</artifactId>
+   <name>Radargun Map-reduce support</name>
    <packaging>jar</packaging>
 
    <dependencies>
@@ -17,25 +17,26 @@
          <groupId>org.radargun</groupId>
          <artifactId>radargun-core</artifactId>
          <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-core</artifactId>
+         <version>${project.version}</version>
+         <type>test-jar</type>
+         <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-cache</artifactId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-cache</artifactId>
+         <version>${project.version}</version>
          <type>test-jar</type>
          <scope>test</scope>
       </dependency>
    </dependencies>
-
-   <build>
-      <plugins>
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-            <executions>
-               <execution>
-                  <goals>
-                     <goal>test-jar</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin>
-      </plugins>
-   </build>
 
 </project>
