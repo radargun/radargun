@@ -243,10 +243,11 @@
          </activation>
          <modules>
             <module>plugins/infinispan80</module>
+            <module>plugins/infinispan81</module>
             <module>plugins/spark</module>
          </modules>
          <properties>
-            <plugins.jdk18>infinispan80,spark</plugins.jdk18>
+            <plugins.jdk18>infinispan80,infinispan81,spark</plugins.jdk18>
          </properties>
       </profile>
       <profile>
