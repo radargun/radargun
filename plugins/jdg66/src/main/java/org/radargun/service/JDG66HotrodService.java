@@ -8,17 +8,17 @@ import org.radargun.traits.ProvidesTrait;
  * @author Vojtech Juranek &lt;vjuranek@redhat.com&gt;
  */
 @Service(doc = JDG66HotrodService.SERVICE_DESCRIPTION)
-public class JDG66HotrodService extends Infinispan60HotrodService {
+public class JDG66HotrodService extends Infinispan71HotrodService {
 
-   @ProvidesTrait
-   public InfinispanHotrodContinuousQuery createContinuousQuery() {
-      return new InfinispanHotrodContinuousQuery(this);
-   }
+    @ProvidesTrait
+    public JDGHotrodContinuousQuery createContinuousQuery() {
+        return new JDGHotrodContinuousQuery(this);
+    }
 
-   @Override
-   protected Infinispan80HotrodQueryable createQueryable() {
-      return new Infinispan80HotrodQueryable(this);
-   }
+    @Override
+    protected JDG66HotrodQueryable createQueryable() {
+        return new JDG66HotrodQueryable(this);
+    }
 
    @Override
    protected void registerMarshallers(SerializationContext context) {
