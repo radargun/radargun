@@ -24,7 +24,7 @@
    xmlns="urn:infinispan:config:8.0">
 
    <jgroups>
-      <stack-file name="jgroupsStack" path="${infinispan.jgroups.config:jgroups-udp.xml}"/>
+      <stack-file name="jgroupsStack" path="${infinispan.jgroups.config:default-configs/default-jgroups-udp.xml}"/>
    </jgroups>
 
    <cache-container name="default" default-cache="default">
