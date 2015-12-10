@@ -16,9 +16,9 @@ import org.radargun.utils.Utils;
 /**
  * @author Vojtech Juranek &lt;vjuranek@redhat.com&gt;
  */
-public class Infinispan80HotrodQueryable extends InfinispanHotrodQueryable {
+public class JDG66HotrodQueryable extends InfinispanHotrodQueryable {
 
-    public Infinispan80HotrodQueryable(Infinispan60HotrodService service) {
+    public JDG66HotrodQueryable(Infinispan60HotrodService service) {
         super(service);
     }
 
