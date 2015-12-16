@@ -192,9 +192,11 @@
             <module>plugins/jgroups32</module>
             <module>plugins/jgroups33</module>
             <module>plugins/jgroups34</module>
+            <module>plugins/jgroups35</module>
+            <module>plugins/jgroups36</module>
          </modules>
          <properties>
-            <plugins.jgroups>jgroups30,jgroups32,jgroups33,jgroups34</plugins.jgroups>
+            <plugins.jgroups>jgroups30,jgroups32,jgroups33,jgroups34,jgroups35,jgroups36</plugins.jgroups>
          </properties>
       </profile>
       <profile>
