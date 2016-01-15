@@ -91,7 +91,7 @@ public class PrivateLogLogicTest {
 
       // No test errors are expected
       assertNull(getFailureManager(logic).getError(true));
-      Assert.assertEquals(ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "txModifications", Collection.class).size(), 7);
+      assertEquals(ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "txModifications", Collection.class).size(), 7);
 
       doNothing().when(logic).startTransaction();
       logic.ongoingTx = mock(Transactional.Transaction.class);
@@ -198,7 +198,7 @@ public class PrivateLogLogicTest {
 
       // No test errors are expected
       assertNull(getFailureManager(logic).getError(true));
-      Assert.assertEquals(ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "txModifications", Collection.class).size(), 3);
+      assertEquals(ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "txModifications", Collection.class).size(), 3);
 
       doNothing().when(logic).startTransaction();
       logic.ongoingTx = mock(Transactional.Transaction.class);
@@ -208,7 +208,7 @@ public class PrivateLogLogicTest {
       Map<Long, PrivateLogLogic.OperationTimestampPair> timestamps = ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "timestamps", Map.class);
       assertEquals(timestamps.size(), 1);
       assertEquals(timestamps.get(0l).operationId, 2);
-      Assert.assertEquals(ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "txModifications", Collection.class).size(), 0);
+      assertEquals(ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "txModifications", Collection.class).size(), 0);
    }
 
    @Test(expectedExceptions = UnsupportedOperationException.class)
