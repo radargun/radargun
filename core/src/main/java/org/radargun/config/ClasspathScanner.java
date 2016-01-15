@@ -24,7 +24,7 @@ public final class ClasspathScanner {
    private static final Log log = LogFactory.getLog(ClasspathScanner.class);
    private static final String CLASS_SUFFIX = ".class";
    private static final String JAR_SUFFIX = ".jar";
-      private static final PrintStream NULL_PRINT_STREAM = new PrintStream(new OutputStream() {
+   private static final PrintStream NULL_PRINT_STREAM = new PrintStream(new OutputStream() {
       @Override
       public void write(int b) throws IOException {}
    });
