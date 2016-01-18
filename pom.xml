@@ -427,6 +427,9 @@
                               <copy todir="${distribution.artifact}/lib">
                                  <fileset dir="extensions/@{extension}/target/distribution/radargun-@{extension}-bin/radargun-@{extension}/lib" excludes="${core_jar_list}"/>
                               </copy>
+                              <copy todir="${distribution.artifact}/conf">
+                                 <fileset dir="extensions/@{extension}/target/distribution/radargun-@{extension}-bin/radargun-@{extension}/conf"/>
+                              </copy>
                            </sequential>
                         </ac:for>
                      </target>
