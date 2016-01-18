@@ -18,12 +18,14 @@
     </configurations>
 
     <!-- Sequence of stages executed on the cluster -->
-    <scenario>
+    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                 xmlns="urn:radargun:stages:core:3.0"
+                 xmlns:cache="urn:radargun:stages:cache:3.0">
         <!-- Start services on all nodes -->
         <service-start/>
 
         <!-- Fill the cache with 100 randomly generated words consuming 1% of the JVM heap -->
-        <random-data
+        <cache:random-data
                 value-size="${value_size:1024}"
                 ram-percentage="${ram_percentage:0.01}"
                 random-seed="13"
@@ -34,18 +36,18 @@
         />
 
         <!-- Execute a Stream task. -->
-        <stream
+        <cache:stream
                 cache-name="testCache"
                 stream-operation-class="org.radargun.stages.stream.WordCount"
                 print-result="${print_results:true}"
                 num-executions="${num_executions:5}"
                 parallel-stream="${parallel_stream:true}"
                 slaves="0">
-        </stream>
+        </cache:stream>
 
         <!-- Stop services on all nodes -->
         <service-stop/>
-    </scenario>
+    </rg:scenario>
 
     <!-- How the statistics are reported -->
     <reports>
