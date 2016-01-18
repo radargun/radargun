@@ -41,6 +41,9 @@ public abstract class TestSetupStage extends AbstractDistStage {
    @Property(doc = "Minimum delay between creating another thread. Default is 20 ms.", converter = TimeConverter.class)
    private long minThreadCreationDelay = 20;
 
+   @Property(doc = "Whether an error from invocation should be logged as error. Default is true.")
+   protected boolean logRequestExceptions = true;
+
    @Property(doc = "Whether an error from transaction commit/rollback should be logged as error. Default is true.")
    protected boolean logTransactionExceptions = true;
 
@@ -63,7 +66,7 @@ public abstract class TestSetupStage extends AbstractDistStage {
       runningTest.setMinThreadCreationDelay(minThreadCreationDelay);
       runningTest.setMinWaitingThreads(rampUpMinWaitingThreads);
       runningTest.setMaxThreads(maxThreads);
-      runningTest.setLogTransactionExceptions(logTransactionExceptions);
+      runningTest.setLogExceptions(logRequestExceptions, logTransactionExceptions);
       runningTest.updateSelector(createSelector());
 
       log.info("Starting test " + testName + " ramp-up");
