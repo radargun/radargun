@@ -184,6 +184,24 @@ public class Utils {
       return clazz.getProtectionDomain().getCodeSource().getLocation().getPath();
    }
 
+   /**
+    * Note that this relies on unspecified JVM behaviour
+    * @return Process ID or 0 if this cannot be found
+    */
+   public static int getProcessID() {
+      String processName = ManagementFactory.getRuntimeMXBean().getName();
+      int atIndex = processName.indexOf('@');
+      if (atIndex >= 0) {
+         processName = processName.substring(0, atIndex);
+      }
+      try {
+         return Integer.parseInt(processName);
+      } catch (NumberFormatException e) {
+         log.warn("Could not get ID of current process", e);
+      }
+      return 0;
+   }
+
    public static class JarFilenameFilter implements FilenameFilter {
       public boolean accept(File dir, String name) {
          String fileName = name.toUpperCase(Locale.ENGLISH);
