@@ -127,6 +127,7 @@
          <groupId>org.infinispan</groupId>
          <artifactId>infinispan-jcache</artifactId>
          <version>${version.infinispan}</version>
+         <optional>true</optional>
       </dependency>
 
    </dependencies>
