@@ -18,18 +18,13 @@
          <groupId>org.jgroups</groupId>
          <artifactId>jgroups</artifactId>
          <version>3.3.4.Final</version>
+         <optional>true</optional>
       </dependency>
 
       <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>plugin-jgroups30</artifactId>
          <version>${project.version}</version>
-         <exclusions>
-            <exclusion>
-               <groupId>org.jgroups</groupId>
-               <artifactId>jgroups</artifactId>
-            </exclusion>
-         </exclusions>
       </dependency>
 
    </dependencies>
