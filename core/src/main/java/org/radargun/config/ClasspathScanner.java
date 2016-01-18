@@ -99,6 +99,10 @@ public final class ClasspathScanner {
       } catch (LinkageError e) {
          log.trace("Cannot load class " + className, e);
          return;
+      } catch (Throwable e) {
+         // static ctor can throw non-wrapped error
+         log.trace("Cannot load class " + className, e);
+         return;
       }
       TAnnotation annotation = clazz.getAnnotation(annotationClass);
       if (annotation != null) {
