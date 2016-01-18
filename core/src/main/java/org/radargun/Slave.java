@@ -16,6 +16,7 @@ import org.radargun.config.VmArgs;
 import org.radargun.reporting.Timeline;
 import org.radargun.utils.ArgsHolder;
 import org.radargun.utils.RestartHelper;
+import org.radargun.utils.Utils;
 
 /**
  * Slave being coordinated by a single {@link Master} object in order to run benchmarks.
@@ -121,6 +122,7 @@ public class Slave extends SlaveBase {
       for (Cluster.Group g : cluster.getGroups()) {
          extras.put(Properties.PROPERTY_GROUP_PREFIX + g.name + Properties.PROPERTY_SIZE_SUFFIX, String.valueOf(group.size));
       }
+      extras.put(Properties.PROPERTY_PROCESS_ID, String.valueOf(Utils.getProcessID()));
       return extras;
    }
 }

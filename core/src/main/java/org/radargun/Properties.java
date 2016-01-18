@@ -17,4 +17,5 @@ public interface Properties {
    String PROPERTY_SIZE_SUFFIX = ".size";
    String PROPERTY_PLUGIN_NAME = "plugin.name";
    String PROPERTY_CONFIG_NAME = "config.name";
+   String PROPERTY_PROCESS_ID = "process.id";
 }
