@@ -59,6 +59,7 @@ public class RunningTest extends ServiceListenerAdapter {
    private Statistics statisticsPrototype;
    private int minWaitingThreads;
    private int maxThreads;
+   private boolean logRequestExceptions;
    private boolean logTransactionExceptions;
    private long minThreadCreationDelay;
 
@@ -178,7 +179,7 @@ public class RunningTest extends ServiceListenerAdapter {
       }
       // mark non-started thread as waiting
       waitingThreads.incrementAndGet();
-      Stressor stressor = new Stressor(threadIndex, this, true, logTransactionExceptions);
+      Stressor stressor = new Stressor(threadIndex, this, logRequestExceptions, logTransactionExceptions);
       synchronized (this) {
          if (!finished) {
             stressors.add(stressor);
@@ -225,8 +226,9 @@ public class RunningTest extends ServiceListenerAdapter {
       this.maxThreads = maxThreads;
    }
 
-   public void setLogTransactionExceptions(boolean logTransactionExceptions) {
-      this.logTransactionExceptions = logTransactionExceptions;
+   public void setLogExceptions(boolean request, boolean transaction) {
+      this.logRequestExceptions = request;
+      this.logTransactionExceptions = transaction;
    }
 
    public void setMinThreadCreationDelay(long minThreadCreationDelay) {
