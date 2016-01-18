@@ -54,6 +54,9 @@ public class ArgsConverter implements Converter<List<String>> {
 
    @Override
    public String convertToString(List<String> value) {
+      if (value == null) {
+         return "<none>";
+      }
       StringBuilder sb = new StringBuilder();
       for (String arg : value) {
          sb.append(arg).append(' ');

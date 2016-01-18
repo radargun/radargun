@@ -205,13 +205,14 @@ public class Master {
       extras.put(Properties.PROPERTY_CLUSTER_SIZE, String.valueOf(cluster.getSize()));
       extras.put(Properties.PROPERTY_CLUSTER_MAX_SIZE, String.valueOf(masterConfig.getMaxClusterSize()));
       // we have to define these properties because distributed stages are resolved on master as well
-      extras.put(Properties.PROPERTY_PLUGIN_NAME, "");
-      extras.put(Properties.PROPERTY_GROUP_NAME, "");
-      extras.put(Properties.PROPERTY_GROUP_SIZE, "");
+      extras.put(Properties.PROPERTY_PLUGIN_NAME, "__no-plugin");
+      extras.put(Properties.PROPERTY_GROUP_NAME, "__master");
+      extras.put(Properties.PROPERTY_GROUP_SIZE, "0");
       for (Cluster.Group group : cluster.getGroups()) {
          extras.put(Properties.PROPERTY_GROUP_PREFIX + group.name + Properties.PROPERTY_SIZE_SUFFIX, String.valueOf(group.size));
       }
-      extras.put(Properties.PROPERTY_SLAVE_INDEX, "");
+      extras.put(Properties.PROPERTY_SLAVE_INDEX, "-1");
+      extras.put(Properties.PROPERTY_PROCESS_ID, String.valueOf(Utils.getProcessID()));
       return extras;
    }
 
