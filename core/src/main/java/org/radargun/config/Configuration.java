@@ -23,13 +23,13 @@ public class Configuration implements Serializable {
       this.name = name;
    }
 
-   public Setup addSetup(String group, String plugin, String service, Map<String, Definition> propertyDefinitions, Map<String, Definition> vmArgs) {
+   public Setup addSetup(String group, String plugin, String service, Map<String, Definition> propertyDefinitions, Map<String, Definition> vmArgs, Map<String, Definition> envs) {
       for (Setup s : setups) {
          if (s.group.equals(group)) {
             throw new IllegalArgumentException("Setup for group '" + group + "' already set!");
          }
       }
-      Setup setup = new Setup(group, plugin, service, propertyDefinitions, vmArgs);
+      Setup setup = new Setup(group, plugin, service, propertyDefinitions, vmArgs, envs);
       setups.add(setup);
       return setup;
    }
@@ -53,13 +53,15 @@ public class Configuration implements Serializable {
       public final String service;
       private final Map<String, Definition> properties;
       private final Map<String, Definition> vmArgs;
+      private final Map<String, Definition> envs;
 
-      public Setup(String group, String plugin, String service, Map<String, Definition> properties, Map<String, Definition> vmArgs) {
+      public Setup(String group, String plugin, String service, Map<String, Definition> properties, Map<String, Definition> vmArgs, Map<String, Definition> envs) {
          this.plugin = plugin;
          this.service = service;
          this.group = group;
          this.properties = properties;
          this.vmArgs = vmArgs;
+         this.envs = envs;
       }
 
       public Map<String, Definition> getProperties() {
@@ -72,6 +74,10 @@ public class Configuration implements Serializable {
 
       public Map<String, Definition> getVmArgs() {
          return vmArgs;
+      }
+
+      public Map<String, Definition> getEnvironment() {
+         return envs;
       }
    }
 }
