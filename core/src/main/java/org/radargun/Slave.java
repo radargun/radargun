@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
+import org.radargun.config.Definition;
+import org.radargun.config.Evaluator;
 import org.radargun.config.PropertyHelper;
 import org.radargun.config.Scenario;
 import org.radargun.config.VmArgs;
@@ -48,7 +50,11 @@ public class Slave extends SlaveBase {
             Configuration.Setup setup = configuration.getSetup(cluster.getGroup(slaveIndex).name);
             VmArgs vmArgs = new VmArgs();
             PropertyHelper.setPropertiesFromDefinitions(vmArgs, setup.getVmArgs(), getCurrentExtras(configuration, cluster));
-            RestartHelper.spawnSlave(state.getSlaveIndex(), nextUuid, setup.plugin, vmArgs);
+            HashMap<String, String> envs = new HashMap<>();
+            for (Map.Entry<String, Definition> entry : setup.getEnvironment().entrySet()) {
+               envs.put(entry.getKey(), Evaluator.parseString(entry.getValue().toString()));
+            }
+            RestartHelper.spawnSlave(state.getSlaveIndex(), nextUuid, setup.plugin, vmArgs, envs);
             connection.sendResponse(null, nextUuid);
             connection.release();
             ShutDownHook.exit(0);

@@ -18,6 +18,7 @@ interface ConfigSchema {
    String ATTR_TIMES = "times";
    String ATTR_TYPE = "type";
    String ATTR_URL = "url";
+   String ATTR_VALUE = "value";
 
    String ELEMENT_BENCHMARK = "benchmark";
    String ELEMENT_CLEANUP = "cleanup";
@@ -26,6 +27,7 @@ interface ConfigSchema {
    String ELEMENT_CONFIG = "config";
    String ELEMENT_CONFIGURATIONS = "configurations";
    String ELEMENT_DESTROY = "destroy";
+   String ELEMENT_ENVIRONMENT = "environment";
    String ELEMENT_GROUP = "group";
    String ELEMENT_INIT = "init";
    String ELEMENT_MASTER = "master";
@@ -37,6 +39,7 @@ interface ConfigSchema {
    String ELEMENT_SCENARIO = "scenario";
    String ELEMENT_SETUP = "setup";
    String ELEMENT_VM_ARGS = "vm-args";
+   String ELEMENT_VAR = "var";
    String TYPE_SCENARIO = "scenario";
    String TYPE_STAGES = "stages";
 }

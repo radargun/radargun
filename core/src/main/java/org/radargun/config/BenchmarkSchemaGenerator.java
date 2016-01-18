@@ -80,6 +80,12 @@ public class BenchmarkSchemaGenerator extends SchemaGenerator implements ConfigS
       Element configComplex = createComplexElement(createSequence(configurationsComplex), ELEMENT_CONFIG, 1, -1, null);
       Element setupComplex = createComplexElement(createSequence(configComplex), ELEMENT_SETUP, 1, -1, null);
       Element setupSequence = createSequence(setupComplex);
+      Element env = createComplexElement(setupSequence, ELEMENT_ENVIRONMENT, 0, 1, "Environment variables.");
+      Element envSequence = createSequence(env);
+      Element var = createComplexElement(envSequence, ELEMENT_VAR, 1, 1, "Environment variable definition.");
+      addAttribute(var, ATTR_NAME, true);
+      addAttribute(var, ATTR_VALUE, true);
+
       XmlType vmArgsType = generateClass(VmArgs.class);
       createReference(setupSequence, ELEMENT_VM_ARGS, vmArgsType.toString(), 0, 1);
       createAny(setupSequence);

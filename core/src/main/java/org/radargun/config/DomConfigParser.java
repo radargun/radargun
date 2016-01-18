@@ -256,6 +256,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
             String group = getAttribute(setupElement, ATTR_GROUP, Cluster.DEFAULT_GROUP);
             Map<String, Definition> propertyDefinitions = Collections.EMPTY_MAP;
             Map<String, Definition> vmArgs = Collections.EMPTY_MAP;
+            Map<String, Definition> envs = Collections.EMPTY_MAP;
             String service = Configuration.DEFAULT_SERVICE;
             NodeList properties = setupElement.getChildNodes();
             for (int k = 0; k < properties.getLength(); ++k) {
@@ -263,6 +264,8 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                Element setupChildElement = (Element) properties.item(k);
                if (ELEMENT_VM_ARGS.equals(setupChildElement.getLocalName())) {
                   vmArgs = parseProperties(setupChildElement, true);
+               } else if (ELEMENT_ENVIRONMENT.equals(setupChildElement.getLocalName())) {
+                  envs = parseEnvs(setupChildElement);
                } else if (setupChildElement.hasAttribute(ATTR_XMLNS)) {
                   service = setupChildElement.getLocalName();
                   propertyDefinitions = parseProperties(setupChildElement, true);
@@ -270,7 +273,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                   throw notExternal(setupChildElement);
                }
             }
-            config.addSetup(group, plugin, service, propertyDefinitions, vmArgs);
+            config.addSetup(group, plugin, service, propertyDefinitions, vmArgs, envs);
          }
          masterConfig.addConfig(config);
       }
@@ -308,6 +311,36 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          if (n instanceof Element) {
             Element childElement = (Element) n;
             properties.put(childElement.getLocalName(), toDefinition(childElement));
+         } else if (n instanceof Text) {
+            String text = ((Text) n).getWholeText().trim();
+            if (!text.isEmpty()) {
+               throw new IllegalArgumentException("Non parsed text: " + text);
+            }
+         } else if (n instanceof Comment) {
+            continue;
+         } else {
+            throw new IllegalArgumentException("Unexpected content: " + n);
+         }
+      }
+      return properties;
+   }
+
+   private Map<String, Definition> parseEnvs(Element element) {
+      Map<String, Definition> properties = new HashMap<String, Definition>();
+      NodeList children = element.getChildNodes();
+      for (int childIndex = 0; childIndex < children.getLength(); ++childIndex) {
+         Node n = children.item(childIndex);
+         if (n instanceof Element) {
+            Element childElement = (Element) n;
+            if (ELEMENT_VAR.equals(childElement.getLocalName())) {
+               String name = childElement.getAttribute(ATTR_NAME);
+               if (name.trim().isEmpty()) {
+                  throw new IllegalArgumentException("Environment variable must have name defined!");
+               }
+               properties.put(name, new SimpleDefinition(childElement.getAttribute(ATTR_VALUE), SimpleDefinition.Source.ATTRIBUTE));
+            } else {
+               throw new IllegalArgumentException("Unexpected element " + childElement);
+            }
          } else if (n instanceof Text) {
             String text = ((Text) n).getWholeText().trim();
             if (!text.isEmpty()) {

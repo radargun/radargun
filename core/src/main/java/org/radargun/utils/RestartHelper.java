@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -34,7 +35,7 @@ public final class RestartHelper {
       }
    }
 
-   public static void spawnSlave(int slaveIndex, UUID nextUuid, String plugin, VmArgs vmArgs) throws IOException {
+   public static void spawnSlave(int slaveIndex, UUID nextUuid, String plugin, VmArgs vmArgs, HashMap<String, String> envs) throws IOException {
       ProcessBuilder processBuilder = new ProcessBuilder();
       processBuilder.inheritIO();
       StringBuilder classpathBuilder = new StringBuilder();
@@ -76,13 +77,11 @@ public final class RestartHelper {
       List<String> defaultVmArgs = ArgsHolder.getDefaultVmArgs();
       command.addAll(vmArgs.getVmArgs(defaultVmArgs));
       // we have to specify log4j configuration explicitly because plugin can define its default config
-      if (!Projections.any(defaultVmArgs, new Projections.Condition<String>() {
-         @Override
-         public boolean accept(String s) {
-            return s.startsWith("-Dlog4j.configuration");
-         }
-      })) {
+      if (!defaultVmArgs.stream().anyMatch(s -> s.startsWith("-Dlog4j.configuration"))) {
          command.add("-Dlog4j.configuration=file://" + Directories.ROOT_DIR + "/conf/log4j.xml");
+      }
+      if (!defaultVmArgs.stream().anyMatch(s -> s.startsWith("-Dlog4j.configurationFile"))) {
+         command.add("-Dlog4j.configurationFile=file://" + Directories.ROOT_DIR + "/conf/log4j2.xml");
       }
       command.add("-cp").add(classpathBuilder.toString());
       command.add(Slave.class.getName());
@@ -95,8 +94,11 @@ public final class RestartHelper {
       }
       // we have to repeat the args for future generations
       for (Map.Entry<String, ArgsHolder.PluginParam> entry : ArgsHolder.getPluginParams().entrySet()) {
-         command.add(ArgsHolder.ADD_PLUGIN).add(entry.getValue().getPath());
-         for (String configFile : entry.getValue().getConfigFiles()) {
+         ArgsHolder.PluginParam pp = entry.getValue();
+         if (pp.getPath() != null) {
+            command.add(ArgsHolder.ADD_PLUGIN).add(pp.getPath());
+         }
+         for (String configFile : pp.getConfigFiles()) {
             command.add(ArgsHolder.ADD_CONFIG).add(entry.getKey() + ":" + configFile);
          }
       }
@@ -104,6 +106,7 @@ public final class RestartHelper {
          command.add(ArgsHolder.DEFAULT_VM_ARG).add(vmArg);
       }
       processBuilder.command(command.build());
+      processBuilder.environment().putAll(envs);
       processBuilder.start();
    }
 
