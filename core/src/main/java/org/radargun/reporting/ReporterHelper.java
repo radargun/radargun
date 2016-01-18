@@ -2,8 +2,6 @@ package org.radargun.reporting;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -50,28 +48,24 @@ public class ReporterHelper {
    }
 
    public static void loadReporters(File reporterDir, Map<String, Class<? extends Reporter>> reporters) {
-      InputStream stream = null;
       try {
          if (!reporterDir.isDirectory()) {
             log.warn(reporterDir + " is not a directory");
             return;
          }
          List<URL> urls = new ArrayList<>();
+         Properties properties = null;
          for (File jar : reporterDir.listFiles(new Utils.JarFilenameFilter())) {
             urls.add(jar.toURI().toURL());
+            if (properties == null) {
+               properties = Utils.getJarProperties(jar);
+            }
          }
          if (urls.isEmpty()) {
             log.warn("No JARs in " + reporterDir);
             return;
          }
          ClassLoader classLoader = new URLClassLoader(urls.toArray(new URL[urls.size()]), ReporterHelper.class.getClassLoader());
-         stream = classLoader.getResourceAsStream("plugin.properties");
-         if (stream == null) {
-            log.warn("No JAR in " + reporterDir + " contains properties file");
-            return;
-         }
-         Properties properties = new Properties();
-         properties.load(stream);
          for (String propertyName : properties.stringPropertyNames()) {
             if (propertyName.startsWith(REPORTER_PREFIX)) {
                String type = propertyName.substring(REPORTER_PREFIX.length());
@@ -89,12 +83,8 @@ public class ReporterHelper {
                }
             }
          }
-      } catch (MalformedURLException e) {
-         throw new RuntimeException(e);
       } catch (IOException e) {
          throw new RuntimeException("Failed to load properties from " + reporterDir, e);
-      } finally {
-         Utils.close(stream);
       }
    }
 
