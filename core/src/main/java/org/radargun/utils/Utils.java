@@ -14,6 +14,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
 import javax.management.MBeanServer;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
@@ -216,6 +219,19 @@ public class Utils {
          log.error(String.format("Exception while loading plugin specific properties file %s.", PROPERTIES_FILE), e);
       }
       return properties;
+   }
+
+   public static Properties getJarProperties(File file) throws IOException {
+      JarFile jarFile = new JarFile(file);
+      JarEntry entry = jarFile.getJarEntry(PROPERTIES_FILE);
+      if (entry == null) {
+         return null;
+      }
+      try (InputStream stream = jarFile.getInputStream(entry)) {
+         Properties properties = new Properties();
+         loadProperties(properties, stream);
+         return properties;
+      }
    }
 
    public static Properties loadProperties(Properties properties, File file) throws IOException {
