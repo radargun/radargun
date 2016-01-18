@@ -116,7 +116,13 @@
          <version>${version.infinispan}</version>
          <optional>true</optional>
       </dependency>
- 
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-jcache</artifactId>
+         <version>${version.infinispan}</version>
+         <optional>true</optional>
+      </dependency>
 
    </dependencies>
 
@@ -129,7 +135,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>8.1.0.Beta1</version.infinispan>
+            <version.infinispan>8.1.0.Final</version.infinispan>
          </properties>
       </profile>
       <profile>
