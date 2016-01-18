@@ -1,5 +1,6 @@
 package org.radargun.config;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -70,6 +71,15 @@ public class Path {
 
    public boolean isComplete() {
       return complete;
+   }
+
+   public <T extends Annotation> boolean isAnnotationPresent(Class<T> annotationClass) {
+      for (Field f : fields) {
+         if (f.isAnnotationPresent(annotationClass)) {
+            return true;
+         }
+      }
+      return false;
    }
 
    @Override
