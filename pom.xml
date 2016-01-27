@@ -411,7 +411,7 @@
                      <goal>run</goal>
                   </goals>
                   <configuration>
-                     <target>
+                     <target xmlns:ac="antlib:net.sf.antcontrib">
                         <echo message="Packaging extensions: " />
 
                         <fileset id="core_jars" dir="core/target/distribution/radargun-core-bin/radargun-core/lib">
@@ -421,15 +421,29 @@
                            <mapper type="flatten" />
                         </pathconvert>
 
-                        <ac:for list="${extension.cache},${extension.query},${extension.example-extension},${extension.hdrhistogram},${extension.jpa}" param="extension" xmlns:ac="antlib:net.sf.antcontrib">
+                        <macrodef name="package-extension">
+                           <attribute name="extension"/>
+                           <attribute name="build-dir"/>
                            <sequential>
                               <echo message="Packaging extension @{extension}..." />
                               <copy todir="${distribution.artifact}/lib">
-                                 <fileset dir="extensions/@{extension}/target/distribution/radargun-@{extension}-bin/radargun-@{extension}/lib" excludes="${core_jar_list}"/>
+                                 <fileset dir="@{build-dir}/lib" excludes="${core_jar_list}"/>
                               </copy>
-                              <copy todir="${distribution.artifact}/conf">
-                                 <fileset dir="extensions/@{extension}/target/distribution/radargun-@{extension}-bin/radargun-@{extension}/conf"/>
-                              </copy>
+                              <!-- Configuration directory is optional. If the plugin does not contain src/main/resources/ this dir is not created -->
+                              <ac:if>
+                                 <available file="@{build-dir}/conf" type="dir"/>
+                                 <ac:then>
+                                    <copy todir="${distribution.artifact}/conf">
+                                       <fileset dir="@{build-dir}/conf"/>
+                                    </copy>
+                                 </ac:then>
+                              </ac:if>
+                           </sequential>
+                        </macrodef>
+
+                        <ac:for list="${extension.cache},${extension.query},${extension.example-extension},${extension.hdrhistogram},${extension.jpa}" param="extension">
+                           <sequential>
+                              <package-extension extension="@{extension}" build-dir="extensions/@{extension}/target/distribution/radargun-@{extension}-bin/radargun-@{extension}"/>
                            </sequential>
                         </ac:for>
                      </target>

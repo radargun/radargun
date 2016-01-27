@@ -23,6 +23,9 @@
          <includes>
             <include>*.jar</include>
          </includes>
+         <excludes>
+            <exclude>*-tests.jar</exclude>
+         </excludes>
          <fileMode>0644</fileMode>
          <directoryMode>0755</directoryMode>
       </fileSet>
