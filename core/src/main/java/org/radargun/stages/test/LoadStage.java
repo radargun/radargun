@@ -122,7 +122,7 @@ public abstract class LoadStage extends AbstractDistStage {
       public void run() {
          try {
             for (; ; ) {
-               if (!loadEntry()) return;
+               if (!loadDataUnit()) return;
             }
          } catch (Throwable t) {
             log.error("Exception in Loader", t);
@@ -130,6 +130,6 @@ public abstract class LoadStage extends AbstractDistStage {
          }
       }
 
-      protected abstract boolean loadEntry();
+      protected abstract boolean loadDataUnit();
    }
 }
