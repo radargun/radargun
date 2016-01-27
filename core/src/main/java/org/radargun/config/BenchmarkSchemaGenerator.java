@@ -99,7 +99,7 @@ public class BenchmarkSchemaGenerator extends SchemaGenerator implements ConfigS
       ScenarioSchemaGenerator scenarioSchemaGenerator = new ScenarioSchemaGenerator();
       scenarioSchemaGenerator.setDocSchema(doc, schema);
       scenarioSchemaGenerator.intType = intType;
-      scenarioSchemaGenerator.generateStagesType();
+      scenarioSchemaGenerator.generateStagesType(0);
       Element scenarioType = createComplexType(TYPE_SCENARIO, THIS_PREFIX + TYPE_STAGES, true, false, null);
       addAttribute(scenarioType, ATTR_URL, false);
       createReference(benchmarkSequence, ELEMENT_SCENARIO, THIS_PREFIX + TYPE_SCENARIO);

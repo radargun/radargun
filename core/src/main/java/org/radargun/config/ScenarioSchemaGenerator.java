@@ -34,13 +34,13 @@ public class ScenarioSchemaGenerator extends SchemaGenerator implements ConfigSc
 
       intType = generateSimpleType(int.class, DefaultConverter.class);
 
-      generateStagesType();
+      generateStagesType(1);
    }
 
-   void generateStagesType() {
+   void generateStagesType(int minStages) {
 
       Element stagesType = createComplexType(TYPE_STAGES, null, true, true, null);
-      Element stagesChoice = createChoice(createSequence(stagesType), 1, -1);
+      Element stagesChoice = createChoice(createSequence(stagesType), minStages, -1);
 
       Element repeatType = createComplexType(TYPE_REPEAT, THIS_PREFIX + TYPE_STAGES, true, false, null);
       addAttribute(repeatType, ATTR_TIMES, intType.toString(), null, false);
