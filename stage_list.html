@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="RadarGun : The RadarGun benchmarking framework for data grids and distributed caches">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>RadarGun</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/radargun/radargun">View on GitHub</a>
+
+          <h1 id="project_title"><a href="index.html">RadarGun</a></h1>
+          <h2 id="project_tagline">Benchmarking framework for data grids and distributed caches</h2>
+
+          <section id="navigation">
+            <nav>
+              <ul>
+                <li>Getting started
+                  <ul>
+                    <li><a href="five_minute_tutorial.html">Five minute tutorial</a></li>
+                    <li><a href="building_binaries.html">Building binaries</a></li>
+                    <li><a href="using_the_scripts.html">Using scripts</a></li>
+                    <li><a href="writing_custom_plugins.html">Writing custom plugins</a></li>
+                  </ul>
+                </li>
+                <li>Architecture
+                  <ul>
+                    <li><a href="design_documentation.html">Design documentation</a></li>
+                    <li><a href="benchmark_configuration.html">Benchmark configuration</a></li>
+                    <li><a href="stage_list.html">Stage list</a></li>
+                    <li><a href="trait_list.html">Trait list</a></li>
+                    <li><a href="namespaces.html">Namespaces</a></li>
+                  </ul>
+                </li>
+                <li>Measuring performance
+                  <ul>
+                    <li><a href="stress_test.html">Stress test</a></li>
+                    <li><a href="measuring_performance_rg2.html">Understanding results in RG 2</a></li>
+                    <li><a href="measuring_performance_rg3.html">Understanding results in RG 3</a></li>
+                  </ul>
+                </li>
+                <li>Other docs
+                  <ul>
+                    <li><a href="failover_tests.html">Failover tests</a></li>
+                    <li><a href="benchmarking_jta_performance.html">Benchmarking JTA performance</a></li>
+                    <li><a href="coherence_plugin_setup.html">Coherence plugin setup</a></li>
+                  </ul>
+                </li>
+                <li>Download
+                  <ul>
+                    <li><a href="download.html">Download</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </nav>
+          </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>Stage list</h2>
+        <p>This document is related to RadarGun 2.1.x and contains list of all stages including their properties. XSD schema file containing information about stages can be found under <code>$RADARGUN_HOME/schema/radargun-2.1.xsd</code>.</p>
+
+        <hr>
+
+        <h3>
+          <a id="user-content-add-result" class="anchor" href="#add-result" aria-hidden="true"></a>add-result</h3>
+
+        <p>Adds custom result to given test</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>iteration [optional]: Which iteration should the result go to. Default is 0.</li>
+          <li>result-name [mandatory]: Name of the result.</li>
+          <li>test-name [mandatory]: Name of the test.</li>
+          <li>value [mandatory]: Value used as aggregation value in the test.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-analyze-test" class="anchor" href="#analyze-test" aria-hidden="true"></a>analyze-test</h3>
+
+        <p>Analyzes results of already executed test.</p>
+
+        <ul>
+          <li>analyzis-type [mandatory]: How do we process the data. We can search for maximum, minimum or average.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>iteration-selection [optional]: Which iterations should be included in the analysis. By default we iterate over all iterations.</li>
+          <li>operation [mandatory]: Operation that should be analyzed (e.g. BasicOperations.Get).</li>
+          <li>result-type [optional]: What should be results of this analysis. Default is VALUE.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>statistics-type [mandatory]: What value do we we retrieve from the statistics.</li>
+          <li>store-result-to [mandatory]: Name of the target property where the result should be stored.</li>
+          <li>test-name [mandatory]: Name of the test whose result should be analyzed.</li>
+          <li>thread-grouping [optional]: How should the thread statistics be aggregated. By default all statistics are merged.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-background-load-data-start" class="anchor" href="#background-load-data-start" aria-hidden="true"></a>background-load-data-start</h3>
+
+        <p>Allows to load data into a cache in the background, while other stages may take place. To force process termination, use BackgroundLoadDataStopStage.</p>
+
+        <ul>
+          <li>batch-size [optional]: Size of batch to be loaded into cache (using putAll). If &lt;= 0, put() operation is used sequentially.</li>
+          <li>cache-selector [optional]: Selects which caches will be loaded. Default is the default cache.</li>
+          <li>entry-size [optional]: Size of the value in bytes. Default is 1000.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>key-generator [optional]: Generator of keys (transforms key ID into key object). Default is 'string'.</li>
+          <li>key-id-offset [optional]: Initial key ID used for numbering the keys. Default is 0.</li>
+          <li>load-all-keys [optional]: This option forces local loading of all keys on all slaves in this group (not only numEntries/numNodes). Default is false.</li>
+          <li>log-period [optional]: Number of loaded entries after which a log entry should be written. Default is 10000.</li>
+          <li>max-load-attempts [optional]: During loading phase, if the insert fails, try it again. This is the maximum number of attempts. Default is 10.</li>
+          <li>num-entries [optional]: Total number of key-value entries that should be loaded into cache. Default is 100.</li>
+          <li>num-threads [optional]: The number of threads that should load the entries on one slave. Default is 10.</li>
+          <li>remove [optional]: If set to true, the entries are removed instead of being inserted. Default is false.</li>
+          <li>request-period [optional]: Target period of put operations - e.g. when this is set to 10 msthe benchmark will try to do one put operation every 10 ms. By default the requests are executed at maximum speed.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>seed [optional]: Seed used for initialization of random generators - with same seed (and other arguments), the stage guarantees same entries added to the cache. By default the seed is not set.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>transaction-size [optional]: Numbers of entries loaded in one transaction. Default is to not use transactions.</li>
+          <li>use-async-batch-loading [optional]: Controls whether batch insertion is performed in asychronous way. Default is false (prefer synchronous operations).</li>
+          <li>use-transactions [optional]: Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize &gt; 0. Default is IF_TRANSACTIONAL.</li>
+          <li>value-generator [optional]: Generator of values. Default is byte-array.</li>
+          <li>wait-on-error [optional]: When an attempt to load an entry fails, wait this period to reduce the chances of failing again. Default is one second.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-background-load-data-stop" class="anchor" href="#background-load-data-stop" aria-hidden="true"></a>background-load-data-stop</h3>
+
+        <p>Stops data loading process started by BackgroundLoadDataStartStage.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>timeout-duration [optional]: Maximum time to wait for loading threads to finish. By default, wait until the threads finish their job.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-background-statistics-start" class="anchor" href="#background-statistics-start" aria-hidden="true"></a>background-statistics-start</h3>
+
+        <p>Starts collection of statistics from background threads and cache size.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>name [optional]: Name of the background operations. Default is 'Default'.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>stats-iteration-duration [optional]: Delay between statistics snapshots. Default is 5 seconds.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-background-statistics-stop" class="anchor" href="#background-statistics-stop" aria-hidden="true"></a>background-statistics-stop</h3>
+
+        <p>Stop Statistics and return collected statistics to master.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>name [optional]: Name of the background operations. Default is 'Default'.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>test-name [optional]: Name of the test used for reports. Default is 'BackgroundStats'.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-background-stressors-check" class="anchor" href="#background-stressors-check" aria-hidden="true"></a>background-stressors-check</h3>
+
+        <p>Stage that checks the progress in background stressors and fails if something went wrong.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>name [optional]: Name of the background operations. By default, all instances are checked.</li>
+          <li>resume-after-checked [optional]: Resume stressors after we have stopped them in order to let checkers check everything. Default is false.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>wait-for-progress [optional]: Waits until all stressors record new progress, or timeout (no-progress-timeout) elapses. Default is false.</li>
+          <li>wait-until-checked [optional]: Stops stressors and waits until all confirmed operations are checked. Default is false.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-background-stressors-start" class="anchor" href="#background-stressors-start" aria-hidden="true"></a>background-stressors-start</h3>
+
+        <p>Starts background stressor threads.</p>
+
+        <ul>
+          <li>cache-name [optional]: Cache used for the background operations. Default is null (default).</li>
+          <li>dead-slave-timeout [optional]: Period after which a slave is considered to be dead. Default is 90 s.</li>
+          <li>delay-between-requests [optional]: Time between consecutive requests of one stressor thread. Default is 0.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>gets [optional]: Ratio of GET requests. Default is 2.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>key-id-offset [optional]: First key ID used for key generation. Default is 0.</li>
+          <li>legacy-entry-size [optional]: Size of value used in the entry. Default is 1024 bytes.</li>
+          <li>legacy-load-data-for-dead-slaves [optional]: List of slaves whose data should be loaded by other threads because these slaves are not alive. Default is empty.</li>
+          <li>legacy-load-data-on-slaves [optional]: List of slaves where the data should be loaded (others immediately start executing requests). Default is all live slaves).</li>
+          <li>legacy-load-only [optional]: If set to true, the stressor does not execute any requests after loading the data. Default is false.</li>
+          <li>legacy-load-with-put-if-absent [optional]: Use conditional putIfAbsent instead of simple put for loading the keys. Default is false.</li>
+          <li>legacy-no-loading [optional]: Do not execute the loading, start usual request right away.</li>
+          <li>legacy-put-with-replace [optional]: Use replace operations instead of puts during the test. Default is false.</li>
+          <li>legacy-wait-until-loaded [optional]: Specifies whether the stage should wait until the entries are loaded by stressor threads. Default is true.</li>
+          <li>log-logic-check-delayed-remove-expected-value [optional]: Check whether the value that is being removed matches the expected value. In failure scenarios, this may cause incorrect test failures. Default is true.</li>
+          <li>log-logic-check-notifications [optional]: Check that listeners have been fired for each operation on each node (at least once). Default is false.</li>
+          <li>log-logic-checking-threads [optional]: Number of threads on each node that are checking whether all operations from stressor threads have been logged. Default is 10.</li>
+          <li>log-logic-counter-update-period [optional]: Number of operations after which will the stressor or checker update in-cache operation counter. Default is 50.</li>
+          <li>log-logic-debug-failures [optional]: Debug a key if a missing operation or notification is detected. Service needs to provide an implementation of Debuggable iterface.</li>
+          <li>log-logic-enabled [optional]: Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.</li>
+          <li>log-logic-ignore-dead-checkers [optional]: When the log value is full, the stressor needs to wait until all checkers confirm that the records have been checked before discarding oldest records. With ignoreDeadCheckers=true the stressor does not wait for checkers on dead nodes. Default is false.</li>
+          <li>log-logic-max-delayed-remove-attempts [optional]: Maximum number of attempts to perform delayed removes when using transactions (as removes are performed in a separate TX,which can fail independently of TX performing PUT operations). If the value is negative, number of attempts is unlimited. Default is -1.</li>
+          <li>log-logic-max-transaction-attempts [optional]: Maximum number of attempts to perform transaction. If the value is negative, number of attempts is unlimited. Default is -1.</li>
+          <li>log-logic-no-progress-timeout [optional]: Maximum time for which are the log value checkers allowed to show no new checked values, when waiting for checks to complete or stressors to confirm new progress. Default is 10 minutes.</li>
+          <li>log-logic-value-max-size [optional]: Maximum number of records in one entry before the older ones have to be truncated. Default is 100.</li>
+          <li>log-logic-write-apply-max-delay [optional]: Maximum allowed delay to detect operation confirmed by stressor. Default is no delay.</li>
+          <li>name [optional]: Name of the background operations. Default is 'Default'.</li>
+          <li>num-entries [optional]: Number of entries (key-value pairs) inserted into the cache. Default is 1024. Needs to be greater than or equal to the product of 'numThreads' and group size.</li>
+          <li>num-threads [optional]: Number of stressor threads. Default is 10.</li>
+          <li>puts [optional]: Ratio of PUT requests. Default is 1.</li>
+          <li>removes [optional]: Ratio of REMOVE requests. Default is 0.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>shared-keys [optional]: By default each thread accesses only its private set of keys. This allows all threads all values. Atomic operations are required for this functionality. Default is false.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>transaction-size [optional]: Number of requests wrapped into single transaction. By default transactions are not used (explicitly).</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-background-stressors-stop" class="anchor" href="#background-stressors-stop" aria-hidden="true"></a>background-stressors-stop</h3>
+
+        <p>Stop BackgroundStressors.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>name [optional]: Name of the background operations. Default is 'Default'.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-basic-operations-test" class="anchor" href="#basic-operations-test" aria-hidden="true"></a>basic-operations-test</h3>
+
+        <p>Test using BasicOperations</p>
+
+        <ul>
+          <li>amend-test [optional]: By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</li>
+          <li>cache-selector [optional]: Selects which caches will be used in the test. By default the selector is retrieved from slave state.</li>
+          <li>commit-transactions [optional]: Specifies whether the transactions should be committed (true) or rolled back (false). Default is true</li>
+          <li>contains-ratio [optional]: Ratio of CONTAINS requests. Default is 0.</li>
+          <li>duration [optional]: Benchmark duration. This takes precedence over numRequests. By default switched off.</li>
+          <li>entry-size [optional]: Size of the value in bytes. Default is 1000.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>get-and-put-ratio [optional]: Ratio of GET_AND_PUT requests. Default is 0.</li>
+          <li>get-and-remove-ratio [optional]: Ratio of GET_AND_REMOVE requests. Default is 0.</li>
+          <li>get-ratio [optional]: Ratio of GET requests. Default is 4.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>iteration-property [optional]: Property, which value will be used to identify individual iterations (e.g. num-threads).</li>
+          <li>key-generator [optional]: Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.</li>
+          <li>key-selector [mandatory]: Selects which key IDs are used in the test.</li>
+          <li>log-period [optional]: Number of operations after which a log entry should be written. Default is 10000.</li>
+          <li>merge-thread-stats [optional]: Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.</li>
+          <li>num-requests [optional]: Total number of request to be made against this session: reads + writes. If duration is specified this value is ignored. Default is 50000.</li>
+          <li>num-threads-per-node [optional]: The number of threads executing on each node. You have to set either this or 'total-threads'. No default.</li>
+          <li>put-ratio [optional]: Ratio of PUT requests. Default is 1.</li>
+          <li>remove-ratio [optional]: Ratio of REMOVE requests. Default is 0.</li>
+          <li>repeat-condition [optional]: If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.</li>
+          <li>request-period [optional]: Target period of requests - e.g. when this is set to 10 msthe benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>statistics [optional]: Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).</li>
+          <li>synchronous-requests [optional]: Local threads synchronize on starting each round of requests. Note that with requestPeriod &gt; 0, there is still the random ramp-up delay. Default is false.</li>
+          <li>test-name [optional]: Name of the test as used for reporting. Default is 'Test'.</li>
+          <li>timeout [optional]: Max duration of the test. Default is infinite.</li>
+          <li>total-threads [optional]: Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.</li>
+          <li>transaction-size [optional]: Number of requests in one transaction. Default is 1.</li>
+          <li>use-transactions [optional]: Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize &gt; 0. Default is IF_TRANSACTIONAL.</li>
+          <li>value-generator [optional]: Generator of values used in the test. By default the generator is retrieved from slave state.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-bulk-operations-test" class="anchor" href="#bulk-operations-test" aria-hidden="true"></a>bulk-operations-test</h3>
+
+        <p>Executes operations from BulkOperations trait.</p>
+
+        <ul>
+          <li>amend-test [optional]: By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</li>
+          <li>bulk-size [optional]: Number of keys inserted/retrieved within one operation. Applicable only when the cache wrapper supports bulk operations. Default is 10.</li>
+          <li>cache-selector [optional]: Selects which caches will be used in the test. By default the selector is retrieved from slave state.</li>
+          <li>commit-transactions [optional]: Specifies whether the transactions should be committed (true) or rolled back (false). Default is true</li>
+          <li>duration [optional]: Benchmark duration. This takes precedence over numRequests. By default switched off.</li>
+          <li>entry-size [optional]: Size of the value in bytes. Default is 1000.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>get-all-async-ratio [optional]: Ratio of GET_ALL_ASYNC requests. Default is 0.</li>
+          <li>get-all-native-ratio [optional]: Ratio of GET_ALL_NATIVE requests. Default is 4.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>iteration-property [optional]: Property, which value will be used to identify individual iterations (e.g. num-threads).</li>
+          <li>key-generator [optional]: Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.</li>
+          <li>key-selector [mandatory]: Selects which key IDs are used in the test.</li>
+          <li>log-period [optional]: Number of operations after which a log entry should be written. Default is 10000.</li>
+          <li>merge-thread-stats [optional]: Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.</li>
+          <li>num-requests [optional]: Total number of request to be made against this session: reads + writes. If duration is specified this value is ignored. Default is 50000.</li>
+          <li>num-threads-per-node [optional]: The number of threads executing on each node. You have to set either this or 'total-threads'. No default.</li>
+          <li>put-all-async-ratio [optional]: Ratio of PUT_ALL_ASYNC requests. Default is 0.</li>
+          <li>put-all-native-ratio [optional]: Ratio of PUT_ALL_NATIVE requests. Default is 1.</li>
+          <li>remove-all-async-ratio [optional]: Ratio of REMOVE_ALL_ASYNC requests. Default is 0.</li>
+          <li>remove-all-native-ratio [optional]: Ratio of REMOVE_ALL_NATIVE requests. Default is 0.</li>
+          <li>repeat-condition [optional]: If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.</li>
+          <li>request-period [optional]: Target period of requests - e.g. when this is set to 10 msthe benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>statistics [optional]: Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).</li>
+          <li>synchronous-requests [optional]: Local threads synchronize on starting each round of requests. Note that with requestPeriod &gt; 0, there is still the random ramp-up delay. Default is false.</li>
+          <li>test-name [optional]: Name of the test as used for reporting. Default is 'Test'.</li>
+          <li>timeout [optional]: Max duration of the test. Default is infinite.</li>
+          <li>total-threads [optional]: Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.</li>
+          <li>transaction-size [optional]: Number of requests in one transaction. Default is 1.</li>
+          <li>use-transactions [optional]: Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize &gt; 0. Default is IF_TRANSACTIONAL.</li>
+          <li>value-generator [optional]: Generator of values used in the test. By default the generator is retrieved from slave state.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-check-cache-data" class="anchor" href="#check-cache-data" aria-hidden="true"></a>check-cache-data</h3>
+
+        <p>Stage for checking presence or absence of data entered in other stages.</p>
+
+        <ul>
+          <li>check-entry-count [optional]: Number of entries that will be checked in each step. Default is 1.</li>
+          <li>check-subparts-are-replicas [optional]: Check that number of non-zero subparts is equal to number of replicas. Default is false.</li>
+          <li>check-subparts-equal [optional]: Check whether the same subparts from each cache have the same size. Default is false.</li>
+          <li>check-subparts-sum-local [optional]: Check whether the sum of subparts sizes is the same as local size. Default is false.</li>
+          <li>check-threads [optional]: Number of thread per node which check data validity. Default is 1.</li>
+          <li>debug-null [optional]: If the GET request results in null response, call wrapper-specific functions to show debug info. Default is false.</li>
+          <li>deleted [optional]: If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.</li>
+          <li>entry-size [mandatory]: Number of bytes carried in single entry.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>extra-entries [optional]: Entries that do not have the expected form but occur in the cluster. This string specifies a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2<em>4 + 3</em>4*4 = 57 extra entries.Defaults to 0.</li>
+          <li>fail-on-null [optional]: If entry is null, fail immediately. Default is false.</li>
+          <li>first-entry-offset [optional]: Index of key of the first entry.</li>
+          <li>first-entry-offset-slave-index [optional]: Index of key of the first entry. This number will be multiplied by slaveIndex. Default is 0. Has precedence over 'first-entry-offset'.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>ignore-sum [optional]: Usually the test checks that sum of local nodes = numOwners * numEntries + extraEntries.This option disables such behaviour. Default is false.</li>
+          <li>key-generator [optional]: Generator of keys (transforms key ID into key object). By default the generator is retrieved from slave state.</li>
+          <li>live-slaves-hint [optional]: Hint how many slaves are currently alive - if set to &gt; 0 then the query for number of entries in this cache is postponed until the cache appears to be fully replicated. By default this is disabled.</li>
+          <li>log-checks-count [optional]: Number of queries after which a DEBUG log message is printed. Default is 10000.</li>
+          <li>memory-only [optional]: If the cache wrapper supports persistent storage and this is set to true, the check will be executed only against in-memory data. Default is false.</li>
+          <li>num-entries [mandatory]: Number of entries with key in form specified by the last used key generator, in the cache.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>size-only [optional]: If true, the entries are not retrieved, this stage only checks that the sum of entries from local nodes is correct. Default is false.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>step-entry-count [optional]: Number of entries stepped in each step. Default is 1.</li>
+          <li>value-generator [optional]: Generator of values. By default the generator is retrieved from slave state.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-check-topology" class="anchor" href="#check-topology" aria-hidden="true"></a>check-topology</h3>
+
+        <p>Controls which topology events have (not) happened recently</p>
+
+        <ul>
+          <li>cache-name [optional]: Name of the cache. Default is the default cache.</li>
+          <li>changed [optional]: The check controls if this event has happened (true) or not happened (false). Defaults to true.</li>
+          <li>check-events [optional]: Type of events to check in this stage. Default are TOPOLOGY, REHASH, CACHE_STATUS (see org.radargun.traits.TopologyHistory.HistoryType).</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>period [optional]: The period in milliseconds which is checked. Default is infinite.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-clear-cache" class="anchor" href="#clear-cache" aria-hidden="true"></a>clear-cache</h3>
+
+        <p>Removes all data from the cache</p>
+
+        <ul>
+          <li>cache-name [optional]: Name of the cache to be cleared. Default is the default cache.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>local [optional]: Execute local variant of clear on each slave. Default is null - local clear is performed, only if it is provided by the service. True enforces local clear - if given service does not provide the feature, exception is thrown.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>use-transaction [optional]: Execute the clear inside explicit transaction.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-cluster-validation" class="anchor" href="#cluster-validation" aria-hidden="true"></a>cluster-validation</h3>
+
+        <p>Verifies that the cluster is formed by injecting an entry into the cache and then reading it from other nodes.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>partial-replication [optional]: If set to true, then the slave will consider that the cluster is formed when one slave replicated the control entry. Otherwise the replication will only be considered successful if all slaves replicated the control value. Default is false.</li>
+          <li>replication-time-sleep [optional]: Delay between attempts to retrieve the control entry.</li>
+          <li>replication-try-count [optional]: How many times we should try to retrieve the control entry.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-command" class="anchor" href="#command" aria-hidden="true"></a>command</h3>
+
+        <p>Stage that allows you to execute generic command on the slave machine.</p>
+
+        <ul>
+          <li>args [optional]: Arguments to this command. Default are none</li>
+          <li>cmd [mandatory]: Command that should be executed.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>exit-values [optional]: List of exit values that are allowed from the command. Default is {0}.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-conditional-operations-test" class="anchor" href="#conditional-operations-test" aria-hidden="true"></a>conditional-operations-test</h3>
+
+        <p>Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio- this operation is executed anytime the selected key does not have value.</p>
+
+        <ul>
+          <li>amend-test [optional]: By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</li>
+          <li>cache-selector [optional]: Selects which caches will be used in the test. By default the selector is retrieved from slave state.</li>
+          <li>commit-transactions [optional]: Specifies whether the transactions should be committed (true) or rolled back (false). Default is true</li>
+          <li>duration [optional]: Benchmark duration. This takes precedence over numRequests. By default switched off.</li>
+          <li>entry-size [optional]: Size of the value in bytes. Default is 1000.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>get-and-replace-ratio [optional]: Ratio of GET_AND_REPLACE requests. Default is 1.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>iteration-property [optional]: Property, which value will be used to identify individual iterations (e.g. num-threads).</li>
+          <li>key-generator [optional]: Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.</li>
+          <li>key-selector [mandatory]: Selects which key IDs are used in the test.</li>
+          <li>log-period [optional]: Number of operations after which a log entry should be written. Default is 10000.</li>
+          <li>match-percentage [optional]: Percentage of requests in which the condition should be satisfied. Default is 50%.</li>
+          <li>merge-thread-stats [optional]: Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.</li>
+          <li>num-requests [optional]: Total number of request to be made against this session: reads + writes. If duration is specified this value is ignored. Default is 50000.</li>
+          <li>num-threads-per-node [optional]: The number of threads executing on each node. You have to set either this or 'total-threads'. No default.</li>
+          <li>remove-ratio [optional]: Ratio of REMOVE requests. Default is 1.</li>
+          <li>repeat-condition [optional]: If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.</li>
+          <li>replace-any-ratio [optional]: Ratio of REPLACE_ANY requests. Default is 1.</li>
+          <li>replace-ratio [optional]: Ratio of REPLACE requests. Default is 1.</li>
+          <li>request-period [optional]: Target period of requests - e.g. when this is set to 10 msthe benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>statistics [optional]: Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).</li>
+          <li>synchronous-requests [optional]: Local threads synchronize on starting each round of requests. Note that with requestPeriod &gt; 0, there is still the random ramp-up delay. Default is false.</li>
+          <li>test-name [optional]: Name of the test as used for reporting. Default is 'Test'.</li>
+          <li>timeout [optional]: Max duration of the test. Default is infinite.</li>
+          <li>total-threads [optional]: Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.</li>
+          <li>transaction-size [optional]: Number of requests in one transaction. Default is 1.</li>
+          <li>use-transactions [optional]: Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize &gt; 0. Default is IF_TRANSACTIONAL.</li>
+          <li>value-generator [optional]: Generator of values used in the test. By default the generator is retrieved from slave state.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-define" class="anchor" href="#define" aria-hidden="true"></a>define</h3>
+
+        <p>Use for setting certain value</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>value [mandatory]: Value of the variable.</li>
+          <li>var [mandatory]: Name of the variable that should be set.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-distributed-task" class="anchor" href="#distributed-task" aria-hidden="true"></a>distributed-task</h3>
+
+        <p>Stage which executes a MapReduce Task against all keys in the cache.</p>
+
+        <ul>
+          <li>callable [mandatory]: Fully qualified class name of the java.util.concurrent.Callable implementation to execute.</li>
+          <li>callable-params [optional]: A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the callable. The method must be public and take a String parameter. Default is none.</li>
+          <li>execution-policy [optional]: The name of the execution policy. The default is default policy of the service.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>failover-policy [optional]: The name of the failover policy. The default is default policy of the service.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>node-address [optional]: The node address where the task will be executed. The default is null, and tasks will be executed against all nodes in the cluster.</li>
+          <li>num-executions [optional]: The number of times to execute the Callable. The default is 1.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>total-bytes-key [optional]: The name of the key in the MasterState object that returns the total number of bytes processed by the Callable. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-isolation-level-check" class="anchor" href="#isolation-level-check" aria-hidden="true"></a>isolation-level-check</h3>
+
+        <p>Stage for testing guaranties of isolation levels.</p>
+
+        <ul>
+          <li>duration [optional]: How long should this stage take. Default is 1 minute.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>expected-level [mandatory]: Expected isolation level (should match to cache configuration). Supported values are [READ_COMMITTED, REPEATABLE_READ].</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>readers [optional]: Number of concurrent threads that try to retrieve the value. Default is 10.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>transaction-size [optional]: Number of reads executed inside on transaction. Default is 30.</li>
+          <li>writers [optional]: Number of concurrent threads that modify the value. Default is 2.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-iterate" class="anchor" href="#iterate" aria-hidden="true"></a>iterate</h3>
+
+        <p>Iterates through all entries.</p>
+
+        <ul>
+          <li>amend-test [optional]: By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</li>
+          <li>commit-transactions [optional]: Specifies whether the transactions should be committed (true) or rolled back (false). Default is true</li>
+          <li>container-name [optional]: Name of the container (e.g. cache, DB table etc.) that should be iterated. Default is the default container.</li>
+          <li>converter-class [optional]: Full class name of the converter. Default is no converter (Map.Entry is returned).</li>
+          <li>converter-param [optional]: Parameter for the converter (used to resolve its properties). No defaults.</li>
+          <li>duration [optional]: Benchmark duration. This takes precedence over numRequests. By default switched off.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>fail-on-failed-iteration [optional]: Fail the stage if some of the stressors has failed. Default is true.</li>
+          <li>fail-on-not-total-size [optional]: Fail when the number of elements is different than total size. Default is true if filter is not defined and false otherwise.</li>
+          <li>fail-on-uneven-elements [optional]: Fail when the number of elements iterated is not same. Default is true.</li>
+          <li>filter-class [optional]: Full class name of the filter used to iterate through entries. Default is none (accept all).</li>
+          <li>filter-param [optional]: Parameters for the filter (used to resolve its properties). No defaults.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>iteration-property [optional]: Property, which value will be used to identify individual iterations (e.g. num-threads).</li>
+          <li>log-period [optional]: Number of operations after which a log entry should be written. Default is 10000.</li>
+          <li>max-next-failures [optional]: Number of next() calls that are allowed to fail until we break the loop. Default is 100.</li>
+          <li>merge-thread-stats [optional]: Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.</li>
+          <li>num-requests [optional]: Total number of request to be made against this session: reads + writes. If duration is specified this value is ignored. Default is 50000.</li>
+          <li>num-threads-per-node [optional]: The number of threads executing on each node. You have to set either this or 'total-threads'. No default.</li>
+          <li>repeat-condition [optional]: If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.</li>
+          <li>request-period [optional]: Target period of requests - e.g. when this is set to 10 msthe benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>statistics [optional]: Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).</li>
+          <li>synchronous-requests [optional]: Local threads synchronize on starting each round of requests. Note that with requestPeriod &gt; 0, there is still the random ramp-up delay. Default is false.</li>
+          <li>test-name [optional]: Name of the test as used for reporting. Default is 'Test'.</li>
+          <li>timeout [optional]: Max duration of the test. Default is infinite.</li>
+          <li>total-threads [optional]: Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.</li>
+          <li>transaction-size [optional]: Number of requests in one transaction. Default is 1.</li>
+          <li>use-transactions [optional]: Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize &gt; 0. Default is IF_TRANSACTIONAL.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-j-profiler" class="anchor" href="#j-profiler" aria-hidden="true"></a>j-profiler</h3>
+
+        <p>Stage for invoking operations on JProfiler.
+          Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=100,config=/path/to/configuration.xml"</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>operations [mandatory]: Operations that should be invoked on the Controller</li>
+          <li>reset-cpu-stats [optional]: If true, any previously accumulated CPU profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_CPU_RECORDING and STOP_CPU_RECORDING. Default is false.</li>
+          <li>reset-memory-stats [optional]: If true, any previously accumulated Memory profiling data will be discarded. If false, CPU data willbe accumulated across pairs of invocations of START_MEMORY_RECORDING and STOP_MEMORY_RECORDING. Default is false.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>snapshot-directory [optional]: Directory where the snapshot should be written (for SAVE_SNAPSHOT).</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-jmx-cluster-validation" class="anchor" href="#jmx-cluster-validation" aria-hidden="true"></a>jmx-cluster-validation</h3>
+
+        <p>Validates formation of the cluster remotely via JMX.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>jmx-connection-timeout [optional]: JMX connection timeout. Default is 3 seconds.</li>
+          <li>plugin [optional]: Plugin used for class-loading JMX connector.</li>
+          <li>prop1 [optional]: Generic property 1.</li>
+          <li>prop2 [optional]: Generic property 1.</li>
+          <li>prop3 [optional]: Generic property 1.</li>
+          <li>slaves [optional]: Indices of slaves that should be up. Default is empty.</li>
+          <li>wait-timeout [optional]: Cluster validation timeout. Default is 1 minute.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-jmx-cluster-validation-prepare" class="anchor" href="#jmx-cluster-validation-prepare" aria-hidden="true"></a>jmx-cluster-validation-prepare</h3>
+
+        <p>Collects configuration for JMXClusterValidationStage.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>jmx-connection-timeout [optional]: JMX Connection timeout. Default is 3 seconds.</li>
+          <li>prop1 [optional]: Generic property 1.</li>
+          <li>prop2 [optional]: Generic property 2.</li>
+          <li>prop3 [optional]: Generic property 3.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>wait-timeout [optional]: Cluster validation timeout. Default is 1 minute.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-jmx-invocation" class="anchor" href="#jmx-invocation" aria-hidden="true"></a>jmx-invocation</h3>
+
+        <p>Allows to invoke JMX-exposed methods and attributes.</p>
+
+        <ul>
+          <li>continue-on-failure [optional]: Continue method invocations if an exception occurs. Default is false.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>expected-slave-result [optional]: Expected result value. If specified, results of method invocations are compared with this value.</li>
+          <li>expected-total-result [optional]: Expected result, calculated as sum/concatenation (with ',' delimeter) of results from individual slaves.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>method-parameters [optional]: Method parameters. If specified, the number of parameters must match the number of parameter signatures supplied.</li>
+          <li>method-signatures [optional]: Method parameter signatures.</li>
+          <li>operation-type [optional]: Type of action to be performed. Invocation of specified method (INVOKE_METHOD) is performed by default. Optionally, query for a specified attribute (via method-parameters) can be performed (GET_ATTRIBUTE_VALUE) or setting a specified attribute (via method-parameters) can be performed(SET_ATTRIBUTE_VALUE).</li>
+          <li>query [mandatory]: Method will be invoked on all ObjectInstances matching given query.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>target-name [mandatory]: Name of the method to be invoked / attribute to be queried for.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-jvm-monitor-start" class="anchor" href="#jvm-monitor-start" aria-hidden="true"></a>jvm-monitor-start</h3>
+
+        <p>Starts collecting statistics locally on each slave node.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>interface-name [optional]: Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.</li>
+          <li>period [optional]: Period of statistics collection. The default is 1 second.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-jvm-monitor-stop" class="anchor" href="#jvm-monitor-stop" aria-hidden="true"></a>jvm-monitor-stop</h3>
+
+        <p>Stop collecting statistics on each slave node and return collected statistics to the master node.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-key-expiration-test" class="anchor" href="#key-expiration-test" aria-hidden="true"></a>key-expiration-test</h3>
+
+        <p>During execution, keys expire (entries are removed from the cache) and new keys are used.</p>
+
+        <ul>
+          <li>amend-test [optional]: By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</li>
+          <li>cache-selector [optional]: Selects which caches will be used in the test. By default the selector is retrieved from slave state.</li>
+          <li>commit-transactions [optional]: Specifies whether the transactions should be committed (true) or rolled back (false). Default is true</li>
+          <li>duration [optional]: Benchmark duration. This takes precedence over numRequests. By default switched off.</li>
+          <li>entry-lifespan [optional]: With fixedKeys=false, maximum lifespan of an entry. Default is 1 hour.</li>
+          <li>entry-size [optional]: Size of the value in bytes. Default is 1000.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>expect-lost-keys [optional]: Due to configuration (eviction, expiration), some keys may spuriously disappear. Do not issue a warning for this situation. Default is false.</li>
+          <li>get-ratio [optional]: Ratio of GET requests. Default is 4.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>iteration-property [optional]: Property, which value will be used to identify individual iterations (e.g. num-threads).</li>
+          <li>key-generator [optional]: Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.</li>
+          <li>log-period [optional]: Number of operations after which a log entry should be written. Default is 10000.</li>
+          <li>merge-thread-stats [optional]: Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.</li>
+          <li>num-bytes-per-thread [optional]: Maximum number of bytes in entries' values stored in the cache by one stressor thread at one moment.</li>
+          <li>num-entries-per-thread [optional]: Maximum number of entries stored in the cache by one stressor thread at one moment.</li>
+          <li>num-requests [optional]: Total number of request to be made against this session: reads + writes. If duration is specified this value is ignored. Default is 50000.</li>
+          <li>num-threads-per-node [optional]: The number of threads executing on each node. You have to set either this or 'total-threads'. No default.</li>
+          <li>put-ratio [optional]: Ratio of PUT requests. Default is 1.</li>
+          <li>repeat-condition [optional]: If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.</li>
+          <li>request-period [optional]: Target period of requests - e.g. when this is set to 10 msthe benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>statistics [optional]: Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).</li>
+          <li>synchronous-requests [optional]: Local threads synchronize on starting each round of requests. Note that with requestPeriod &gt; 0, there is still the random ramp-up delay. Default is false.</li>
+          <li>test-name [optional]: Name of the test as used for reporting. Default is 'Test'.</li>
+          <li>timeout [optional]: Max duration of the test. Default is infinite.</li>
+          <li>total-threads [optional]: Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.</li>
+          <li>transaction-size [optional]: Number of requests in one transaction. Default is 1.</li>
+          <li>use-transactions [optional]: Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize &gt; 0. Default is IF_TRANSACTIONAL.</li>
+          <li>value-generator [optional]: Generator of values used in the test. By default the generator is retrieved from slave state.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-load-data" class="anchor" href="#load-data" aria-hidden="true"></a>load-data</h3>
+
+        <p>Loads data into the cache using specified generators.</p>
+
+        <ul>
+          <li>batch-size [optional]: Size of batch to be loaded into cache (using putAll). If &lt;= 0, put() operation is used sequentially.</li>
+          <li>cache-selector [optional]: Selects which caches will be loaded. Default is the default cache.</li>
+          <li>entry-size [optional]: Size of the value in bytes. Default is 1000.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>key-generator [optional]: Generator of keys (transforms key ID into key object). Default is 'string'.</li>
+          <li>key-id-offset [optional]: Initial key ID used for numbering the keys. Default is 0.</li>
+          <li>load-all-keys [optional]: This option forces local loading of all keys on all slaves in this group (not only numEntries/numNodes). Default is false.</li>
+          <li>log-period [optional]: Number of loaded entries after which a log entry should be written. Default is 10000.</li>
+          <li>max-load-attempts [optional]: During loading phase, if the insert fails, try it again. This is the maximum number of attempts. Default is 10.</li>
+          <li>num-entries [optional]: Total number of key-value entries that should be loaded into cache. Default is 100.</li>
+          <li>num-threads [optional]: The number of threads that should load the entries on one slave. Default is 10.</li>
+          <li>remove [optional]: If set to true, the entries are removed instead of being inserted. Default is false.</li>
+          <li>request-period [optional]: Target period of put operations - e.g. when this is set to 10 msthe benchmark will try to do one put operation every 10 ms. By default the requests are executed at maximum speed.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>seed [optional]: Seed used for initialization of random generators - with same seed (and other arguments), the stage guarantees same entries added to the cache. By default the seed is not set.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>transaction-size [optional]: Numbers of entries loaded in one transaction. Default is to not use transactions.</li>
+          <li>use-async-batch-loading [optional]: Controls whether batch insertion is performed in asychronous way. Default is false (prefer synchronous operations).</li>
+          <li>use-transactions [optional]: Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize &gt; 0. Default is IF_TRANSACTIONAL.</li>
+          <li>value-generator [optional]: Generator of values. Default is byte-array.</li>
+          <li>wait-on-error [optional]: When an attempt to load an entry fails, wait this period to reduce the chances of failing again. Default is one second.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-load-file" class="anchor" href="#load-file" aria-hidden="true"></a>load-file</h3>
+
+        <p>Loads the contents of a file into the cache.</p>
+
+        <ul>
+          <li>bucket [optional]: The name of the bucket where keys are written. The default is null.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>file-path [mandatory]: Full pathname to the file.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>print-write-statistics [optional]: If true, then the time for each put operation is written to the logs. The default is false.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>string-data [optional]: If true, then String objects are written to the cache. The default is false.</li>
+          <li>value-size [optional]: The size of the values to put into the cache from the contents of the file. The default size is 1MB (1024 * 1024).</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-map-reduce" class="anchor" href="#map-reduce" aria-hidden="true"></a>map-reduce</h3>
+
+        <p>Stage which executes a MapReduce Task against all keys in the cache.</p>
+
+        <ul>
+          <li>cache-name [optional]: Name of the cache where map-reduce task should beexecuted. Default is the default cache.</li>
+          <li>collator-fqn [optional]: Fully qualified class name of the org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.</li>
+          <li>collator-params [optional]: A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Collator Object. The method must be public and take a String parameter. The default is null.</li>
+          <li>combiner-fqn [optional]: Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to use as a combiner.</li>
+          <li>combiner-params [optional]: A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Reducer Object used as a combiner. The method must be public and take a String parameter. The default is null.</li>
+          <li>distribute-reduce-phase [optional]: Boolean value that determines if the Reduce phase of the MapReduceTask is distributed. The default is true.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>mapper-fqn [mandatory]: Fully qualified class name of the mapper implementation to execute.</li>
+          <li>mapper-params [optional]: A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Mapper Object. The method must be public and take a String parameter. The default is null.</li>
+          <li>num-executions [optional]: The number of times to execute the Map/Reduce task. The default is 10.</li>
+          <li>print-result [optional]: Boolean value that determines if the final results of the MapReduceTask are written to the log of the first slave node. The default is false.</li>
+          <li>reducer-fqn [mandatory]: Fully qualified class name of the org.infinispan.distexec.mapreduce.Reducer implementation to execute.</li>
+          <li>reducer-params [optional]: A String in the form of 'methodName:methodParameter;methodName1:methodParameter1' that allows invoking a method on the Reducer Object. The method must be public and take a String parameter. The default is null.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>store-result-in-cache [optional]: Boolean value that determines if the final results of the MapReduceTask are stored in the cache. The collated object will be stored at key MAPREDUCE_RESULT_KEY. The result map will be stored in a cache named MAPREDUCE_RESULT_KEY. The default is false.</li>
+          <li>timeout [optional]: A timeout value for the remote communication that happens during a Map/Reduce task. The default is zero which means to wait forever.</li>
+          <li>total-bytes-key [optional]: The name of the key in the MasterState object that returns the total number of bytes processed by the Map/Reduce task. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.</li>
+          <li>unit [optional]: The java.util.concurrent.TimeUnit to use with the timeout property. The default is TimeUnit.MILLISECONDS.</li>
+          <li>use-intermediate-shared-cache [optional]: Boolean value that determines if the intermediate results of the MapReduceTask are shared. The default is true.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-monitor-start" class="anchor" href="#monitor-start" aria-hidden="true"></a>monitor-start</h3>
+
+        <p>Starts collecting statistics locally on each slave node.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>interface-name [optional]: Specifies the network interface where statistics are gathered. If not specified, then statistics are not collected.</li>
+          <li>period [optional]: Period of statistics collection. The default is 1 second.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-monitor-stop" class="anchor" href="#monitor-stop" aria-hidden="true"></a>monitor-stop</h3>
+
+        <p>Stop collecting statistics on each slave node and return collected statistics to the master node.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-parallel-start-stop" class="anchor" href="#parallel-start-stop" aria-hidden="true"></a>parallel-start-stop</h3>
+
+        <p>The stage start and stops some nodes concurrently (without waiting for each other).</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>graceful [optional]: If set to false, the node crash should be simulated. By default node should be shutdown gracefully.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>may-fail-on [optional]: Set of slaves where the start may fail but this will not cause an error. Default is none.</li>
+          <li>reachable [optional]: Applicable only for cache wrappers with Partitionable feature. Set of slaves that should be reachable from the new node. Default is all slaves.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>start [optional]: Set of slaves which should be started in this stage. Default is empty.</li>
+          <li>start-delay [optional]: Delay before the slaves are started. Default is 0.</li>
+          <li>stop [optional]: Set of slaves which should be stopped in this stage. Default is empty.</li>
+          <li>stop-delay [optional]: Delay before the slaves are stopped. Default is 0.</li>
+          <li>stop-roles [optional]: Set of roles which should be stopped in this stage. Default is empty.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-periodic-heap-dump" class="anchor" href="#periodic-heap-dump" aria-hidden="true"></a>periodic-heap-dump</h3>
+
+        <p>Periodically generates heap dumps.</p>
+
+        <ul>
+          <li>dir [mandatory]: Location on disk where the heap dumps should be stored.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>initial-delay [optional]: Delay before the first heap dump. Default is 0.</li>
+          <li>period [optional]: How often should be the heap dumps created. Default is every 30 minutes.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>stop [optional]: Set this flag to true in order to terminate the heap dumper. Default is false.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-query" class="anchor" href="#query" aria-hidden="true"></a>query</h3>
+
+        <p>Stage which executes a Query using Infinispan-query API against all keys in the cache.</p>
+
+        <ul>
+          <li>amend-test [optional]: By default, each stage creates a new test. If this property is set to true,results are amended to existing test (as iterations). Default is false.</li>
+          <li>check-same-result [optional]: Check whether all slaves got the same result, and fail if not. Default is false.</li>
+          <li>commit-transactions [optional]: Specifies whether the transactions should be committed (true) or rolled back (false). Default is true</li>
+          <li>conditions [mandatory]: Conditions used in the query</li>
+          <li>duration [optional]: Benchmark duration. This takes precedence over numRequests. By default switched off.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>iteration-property [optional]: Property, which value will be used to identify individual iterations (e.g. num-threads).</li>
+          <li>limit [optional]: Maximum number of the results. Default is none.</li>
+          <li>log-period [optional]: Number of operations after which a log entry should be written. Default is 10000.</li>
+          <li>merge-thread-stats [optional]: Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.</li>
+          <li>num-requests [optional]: Total number of request to be made against this session: reads + writes. If duration is specified this value is ignored. Default is 50000.</li>
+          <li>num-threads-per-node [optional]: The number of threads executing on each node. You have to set either this or 'total-threads'. No default.</li>
+          <li>offset [optional]: Offset in the results. Default is none.</li>
+          <li>order-by [optional]: Use sorting order, in form [attribute[:(ASC|DESC)]][,attribute[:(ASC|DESC)]]*. Without specifying ASC or DESC the sort order defaults to ASC. Default is unordereded.</li>
+          <li>projection [optional]: Use projection instead of returning full object. Default is without projection.</li>
+          <li>query-object-class [mandatory]: Full class name of the object that should be queried. Mandatory.</li>
+          <li>repeat-condition [optional]: If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.</li>
+          <li>request-period [optional]: Target period of requests - e.g. when this is set to 10 msthe benchmark will try to do one request every 10 ms. By default the requests are executed at maximum speed.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>statistics [optional]: Type of gathered statistics. Default are the 'default' statistics (fixed size memory footprint for each operation).</li>
+          <li>synchronous-requests [optional]: Local threads synchronize on starting each round of requests. Note that with requestPeriod &gt; 0, there is still the random ramp-up delay. Default is false.</li>
+          <li>test-name [optional]: Name of the test as used for reporting. Default is 'Test'.</li>
+          <li>timeout [optional]: Max duration of the test. Default is infinite.</li>
+          <li>total-threads [optional]: Total number of threads across whole cluster. You have to set either this or 'num-threads-per-node'. No default.</li>
+          <li>transaction-size [optional]: Number of requests in one transaction. Default is 1.</li>
+          <li>use-transactions [optional]: Specifies if the requests should be explicitly wrapped in transactions. Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if the cache configuration is transactional and transactionSize &gt; 0. Default is IF_TRANSACTIONAL.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-random-data" class="anchor" href="#random-data" aria-hidden="true"></a>random-data</h3>
+
+        <p>Generates random data to fill the cache.</p>
+
+        <ul>
+          <li>bucket [optional]: The name of the bucket where keys are written. The default is null.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>limit-word-count [optional]: If true, then the random word generator selects a word from a pre-defined list. The default is false.</li>
+          <li>max-sleep-interval [optional]: The maximum number of seconds to sleep before retrying a failed put command. The default is 5.</li>
+          <li>max-word-count [optional]: The maximum number of words to generate in the pre-defined list of words used with limitWordCount.The default is 100.</li>
+          <li>max-word-length [optional]: The maximum number of characters allowed in a word. The default is 20.</li>
+          <li>print-write-statistics [optional]: If true, then the time for each put operation is written to the logs. The default is false.</li>
+          <li>put-retry-count [optional]: The number of times to retry a put if it fails. Default is 10.</li>
+          <li>ram-percentage [optional]: A double that represents the percentage of the total Java heap used to determine the amount of data to put into the cache. Either valueCount or ramPercentageDataSize should be specified, but not both.</li>
+          <li>random-seed [optional]: The seed to use for the java.util.Random object. The default is the return value of Calendar.getInstance().getWeekYear().</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>share-words [optional]: If false, then each node in the cluster generates a list of maxWordCount words. If true, then each node in the cluster shares the same list of words. The default is false.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>string-data [optional]: If true, then String objects with printable characters are written to the cache.The default is false</li>
+          <li>target-memory-use [optional]: The number of bytes to write to the cache when the valueByteOverhead, stringData, and valueSize are taken into account. The code assumes this is an even multiple of valueSize plus valueByteOverhead. If stringData is true, then the code assumes this is an even multiple of (2 * valueSize) plus valueByteOverhead.</li>
+          <li>value-byte-overhead [optional]: The bytes used over the size of the key and value when putting to the cache. By default the stage retrieves the value from cache wrapper automatically.</li>
+          <li>value-count [optional]: The number of values of valueSize to write to the cache. Either valueCount or ramPercentageDataSize should be specified, but not both.</li>
+          <li>value-size [optional]: The size of the values to put into the cache. The default size is 1MB (1024 * 1024).</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-register-listeners" class="anchor" href="#register-listeners" aria-hidden="true"></a>register-listeners</h3>
+
+        <p>Benchmark operations performance where cluster listenersTrait are enabled or disabled.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>register-listeners [optional]: Before stress stage, cluster listeners would be enabled. This is flag to turn them on. Default is false.</li>
+          <li>reset-stats [optional]: Allows to reset statistics at the begining of the stage. Default is false.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>sleep-time [optional]: Use sleep time to simulate some work on listener. Default is -1(do not sleep) ms.</li>
+          <li>sync [optional]: Setup if cache listener is synchronous/asynchronous. Default is true</li>
+          <li>test-name [optional]: Name of the test as used for reporting. Default is 'Test'.</li>
+          <li>unregister-listeners [optional]: Before stress stage, cluster listeners would be disabled. This is flag to turn them off. Default is false.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-reindex" class="anchor" href="#reindex" aria-hidden="true"></a>reindex</h3>
+
+        <p>Runs Queryable.reindex()</p>
+
+        <ul>
+          <li>container [optional]: Container (e.g. cache or DB table) which should be reindex. Default is the default container.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>test [optional]: Test under which performance of reindexing should be recorded. Default is 'reindex'.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-repeat-begin" class="anchor" href="#repeat-begin" aria-hidden="true"></a>repeat-begin</h3>
+
+        <p>DO NOT USE DIRECTLY. This stage is added at the beginning of each repeat.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>from [optional]: Initial counter value. Default is 0.</li>
+          <li>inc [optional]: Counter increment. Default is 1.</li>
+          <li>name [optional]: Repeat name. Default is none.</li>
+          <li>times [optional]: Sets from=0, to=times-1. Default is none.</li>
+          <li>to [optional]: Maximum counter value. Default is none.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-repeat-continue" class="anchor" href="#repeat-continue" aria-hidden="true"></a>repeat-continue</h3>
+
+        <p>DO NOT USE DIRECTLY. This stage is added at the end of each repeat.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>from [optional]: Initial counter value. Default is 0.</li>
+          <li>inc [optional]: Counter increment. Default is 1.</li>
+          <li>name [optional]: Repeat name. Default is none.</li>
+          <li>times [optional]: Sets from=0, to=times-1. Default is none.</li>
+          <li>to [optional]: Maximum counter value. Default is none.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-repeat-end" class="anchor" href="#repeat-end" aria-hidden="true"></a>repeat-end</h3>
+
+        <p>DO NOT USE DIRECTLY. This stage is added at the end of each repeat.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>from [optional]: Initial counter value. Default is 0.</li>
+          <li>inc [optional]: Counter increment. Default is 1.</li>
+          <li>name [optional]: Repeat name. Default is none.</li>
+          <li>times [optional]: Sets from=0, to=times-1. Default is none.</li>
+          <li>to [optional]: Maximum counter value. Default is none.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-scenario-cleanup" class="anchor" href="#scenario-cleanup" aria-hidden="true"></a>scenario-cleanup</h3>
+
+        <p>DO NOT USE DIRECTLY. This stage is automatically inserted after the last stage in each scenario. You can alter the properties in &lt;cleanup/&amp;gt element.</p>
+
+        <ul>
+          <li>check-memory [optional]: Specifies whether the check for amount of free memory should be performed. Default is true.</li>
+          <li>check-threads [optional]: Specifies whether the check for unfinished threads should be performed. Default is true.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>heap-dump-dir [optional]: Directory where the heap dump will be produced if the memory threshold is hit or some threads have not finished. By default the dump will not be produced.</li>
+          <li>memory-release-timeout [optional]: Timeout for releasing memory through garbage collections. Default is 30 seconds.</li>
+          <li>memory-threshold [optional]: If the available (free) memory after service destroy and System.gc() is below percentage specified in this property the benchmark will fail. Default is 95.</li>
+          <li>stop-timeout [optional]: Timeout for stopped threads to join. Default is 10 seconds.</li>
+          <li>stop-unfinished-threads [optional]: Calls Thread.stop() on threads that have not finished. Works only if checkThreads=true. Default is true.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-scenario-destroy" class="anchor" href="#scenario-destroy" aria-hidden="true"></a>scenario-destroy</h3>
+
+        <p>DO NOT USE DIRECTLY. This stage is automatically inserted after the last stage in each scenario.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>graceful-stop-timeout [optional]: Timeout for the Lifecycle.stop() execution - if the stop() does not return within this timeout, Killable.kill() is called (if it is supported). Default is 30 seconds.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-scenario-init" class="anchor" href="#scenario-init" aria-hidden="true"></a>scenario-init</h3>
+
+        <p>DO NOT USE DIRECTLY. This stage is automatically inserted before the beginning of scenario.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>heap-dump-dir [optional]: Directory where the heap dump will be produced. Contrary to scenario-cleanup, if this directory is set, the heap dump is written always. By default the dump will not be produced.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-service-start" class="anchor" href="#service-start" aria-hidden="true"></a>service-start</h3>
+
+        <p>Starts services on specified slaves</p>
+
+        <ul>
+          <li>cluster-formation-timeout [optional]: Time allowed the cluster to reach <code>expectNumSlaves</code> members. Default is 3 minutes.</li>
+          <li>delay-after-first-slave-starts [optional]: Delay (staggering) after first slave's start is initiated. Default is 5s.</li>
+          <li>delay-between-starting-slaves [optional]: Delay between initiating start of i-th and (i+1)-th slave. Default is 500 ms.</li>
+          <li>dump-config [optional]: Collect configuration files and properties for the service, and pass those to reporters. Default is true.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>expect-num-slaves [optional]: The number of slaves that should be up after all slaves are started. Applicable only with validateCluster=true. Default is all slaves in the cluster where this stage will be executed (in the same site in case of multi-site configuration).</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>may-fail-on [optional]: Set of slaves where the start may fail but this will not cause an error. Default is none.</li>
+          <li>reachable [optional]: Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>stagger-slave-startup [optional]: If set to true, the slaves will not be started in one moment but the startup will be delayed. Default is true.</li>
+          <li>validate-cluster [optional]: Specifies whether the cluster formation should be checked after cache wrapper startup. Default is true.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-service-stop" class="anchor" href="#service-stop" aria-hidden="true"></a>service-stop</h3>
+
+        <p>Stops or kills (simulates node crash) one or more nodes.</p>
+
+        <ul>
+          <li>async [optional]: If set to true the benchmark will not wait until the node is stopped. Default is false.</li>
+          <li>delay-execution [optional]: If this value is positive the stage will spawn a thread which will stop the node after the delay. The stage will not wait for anything. By default the stop is immediate and synchronous.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>graceful [optional]: If set to false, the node crash should be simulated. By default node should be shutdown gracefully.</li>
+          <li>graceful-stop-timeout [optional]: Timeout for the Lifecycle.stop() execution - if the stop() does not return within this timeout, Killable.kill() is called (if it is supported). Default is 2 minutes.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>wait-for-delayed [optional]: If set, the stage will not stop any node but will wait until the delayed execution is finished. Default is false.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-set-log-level" class="anchor" href="#set-log-level" aria-hidden="true"></a>set-log-level</h3>
+
+        <p>Debugging stage: changes log priorities</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>package [mandatory]: The package or class which should be affected.</li>
+          <li>pop [optional]: If set to true, instead of setting the priority directly just undo the last priority change. Default is false.</li>
+          <li>priority [optional]: The new priority that should be used. No defaults.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-set-partitions" class="anchor" href="#set-partitions" aria-hidden="true"></a>set-partitions</h3>
+
+        <p>Partitions the cluster into several parts that cannot communicate.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>partitions [mandatory]: Set of sets of partitions, e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-single-tx-check" class="anchor" href="#single-tx-check" aria-hidden="true"></a>single-tx-check</h3>
+
+        <p>Paired with SingleTXLoadStage. Checks that the previous stage had the expected result</p>
+
+        <ul>
+          <li>commit-slave [optional]: Indices of slaves which should have committed the transaction (others rolled back). Default is all committed.</li>
+          <li>commit-thread [optional]: Indices of threads which should have committed the transaction (others rolled back). Default is all committed.</li>
+          <li>deleted [optional]: If this is set to true, REMOVE operation should have been executed. Default is false.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>transaction-size [optional]: Expected size of the transcation.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-single-tx-load" class="anchor" href="#single-tx-load" aria-hidden="true"></a>single-tx-load</h3>
+
+        <p>Performs single transaction with requests on key0 .. keyN in multiple threads on multiple slaves.</p>
+
+        <ul>
+          <li>commit-slave [optional]: Indices of slaves which should commit the transaction (others will rollback). Default is all commit.</li>
+          <li>commit-thread [optional]: Indices of threads which should commit the transaction (others will rollback). Default is all commit.</li>
+          <li>delete [optional]: The threads by default do the PUT request, if this is set to true they will do REMOVE. Default is false.</li>
+          <li>duration [optional]: The enforced duration of the transaction. If &gt; 0 the threads will sleep for duration/transactionSize after each request. Default is 0.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>threads [optional]: Number of threads that should execute the transaction. Default is 1.</li>
+          <li>transaction-size [optional]: Number of request in the transaction. Default is 20.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-sleep" class="anchor" href="#sleep" aria-hidden="true"></a>sleep</h3>
+
+        <p>Sleeps specified number of milliseconds.</p>
+
+        <ul>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>time [mandatory]: Sleep duration.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-stack-trace-watchdog" class="anchor" href="#stack-trace-watchdog" aria-hidden="true"></a>stack-trace-watchdog</h3>
+
+        <p>Debug usage only. Periodically check for all thread stack traces and print them out.</p>
+
+        <ul>
+          <li>async-logging [optional]: If set to true the watchdog will not use standard logging for output but will push the output to queue consumed (logged) by another thread. Default is false.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>mask [optional]: If set, only those threads which have this mask in the name will be checked. Default is not set.</li>
+          <li>only-stuck [optional]: By default the check will print out only those threads which appear to be stuck. If this is set to false all threads will be printed out. Default is true.</li>
+          <li>period [optional]: The delay between consecutive checks. Default is 10 seconds.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>short-stack [optional]: Threads with stack lower or equal to this value are never printed (because usually such threads are parked in thread pools). Default is 10.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-tpcc-benchmark" class="anchor" href="#tpcc-benchmark" aria-hidden="true"></a>tpcc-benchmark</h3>
+
+        <p>Simulate the activities found in complex OLTP application environments.</p>
+
+        <ul>
+          <li>arrival-rate [optional]: Average arrival rate of the transactions to the system. Default is 0.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>num-threads [optional]: Number of threads that will work on this slave. Default is 10.</li>
+          <li>order-status-weight [optional]: Percentage of Order Status transactions. Default is 5 %.</li>
+          <li>payment-weight [optional]: Percentage of Payment transactions. Default is 45 %.</li>
+          <li>per-thread-simul-time [optional]: Total time (in seconds) of simulation for each stressor thread. Default is 180.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-tpcc-population" class="anchor" href="#tpcc-population" aria-hidden="true"></a>tpcc-population</h3>
+
+        <p>This stage shuld be run before the TpccBenchmarkStage.</p>
+
+        <ul>
+          <li>c-id-mask [optional]: Mask used to generate non-uniformly distributed random customer numbers. Default is 1023.</li>
+          <li>c-last-mask [optional]: Mask used to generate non-uniformly distributed random customer last names. Default is 255.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>num-warehouses [optional]: Number of Warehouses. Default is 1.</li>
+          <li>ol-id-mask [optional]: Mask used to generate non-uniformly distributed random item numbers. Default is 8191.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-wait-for-topology-event" class="anchor" href="#wait-for-topology-event" aria-hidden="true"></a>wait-for-topology-event</h3>
+
+        <p>Waits until some event occurs. Note that the initial rehash is not recorded in this manner, therefore waiting for that will result in timeout.</p>
+
+        <ul>
+          <li>cache-name [optional]: Name of the cache where we detect the events. Default is the default cache.</li>
+          <li>condition [optional]: Condition we are waiting for. Default is END (see org.radargun.traits.TopologyHistory.Event.EventType).</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>max-members [optional]: The maximum number of slaves that participated in this event. Default is indefinite.</li>
+          <li>min-members [optional]: The minimum number of slaves that participated in this event. Default is 0.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>set [optional]: Set last state before finishing. Default is true.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>timeout [optional]: How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</li>
+          <li>type [optional]: Type of event we are detecting. Default is REHASH (see org.radargun.traits.TopologyHistory.HistoryType).</li>
+          <li>wait [optional]: Wait for the event to happen. Default is true.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-wait-for-topology-settle" class="anchor" href="#wait-for-topology-settle" aria-hidden="true"></a>wait-for-topology-settle</h3>
+
+        <p>Waits for a period without any change in membership/topology history.</p>
+
+        <ul>
+          <li>cache-name [optional]: Name of the cache where we detect the events. Default is the default cache.</li>
+          <li>check-events [optional]: Type of events to check in this stage. Default are TOPOLOGY, REHASH, CACHE_STATUS (see org.radargun.traits.TopologyHistory.HistoryType).</li>
+          <li>check-membership [optional]: Wait for cluster membership to settle. Default is true (if the Clustered trait is supported).</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>period [optional]: How long period without any change are we looking for. Default is 10 seconds.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>timeout [optional]: How long should we wait until we give up with error, 0 means indefinitely. Default is 10 minutes.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-write-skew-check" class="anchor" href="#write-skew-check" aria-hidden="true"></a>write-skew-check</h3>
+
+        <p>Stage checking the write skew detection in transactional caches.</p>
+
+        <ul>
+          <li>duration [optional]: Duration of the test. Default is 1 minute.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>test-null [optional]: Should write skew between null value and first value be tested? Default is false.</li>
+          <li>threads [optional]: Number of threads overwriting concurrently the entry. Default is 10.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-xs-repl-check" class="anchor" href="#xs-repl-check" aria-hidden="true"></a>xs-repl-check</h3>
+
+        <p>Checks loaded data for validity. Useful for testing cross-site replication.</p>
+
+        <ul>
+          <li>backup-caches [optional]: Comma-separated list of all backup caches to be checked. Ignored if backup-value-generator is not specified.</li>
+          <li>backup-value-generator [optional]: Backup value generator. By default, only main (default) cache is checked. If specified, backup caches will be checked too.</li>
+          <li>check-entry-count [optional]: Number of entries that will be checked in each step. Default is 1.</li>
+          <li>check-subparts-are-replicas [optional]: Check that number of non-zero subparts is equal to number of replicas. Default is false.</li>
+          <li>check-subparts-equal [optional]: Check whether the same subparts from each cache have the same size. Default is false.</li>
+          <li>check-subparts-sum-local [optional]: Check whether the sum of subparts sizes is the same as local size. Default is false.</li>
+          <li>check-threads [optional]: Number of thread per node which check data validity. Default is 1.</li>
+          <li>debug-null [optional]: If the GET request results in null response, call wrapper-specific functions to show debug info. Default is false.</li>
+          <li>deleted [optional]: If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.</li>
+          <li>entry-size [mandatory]: Number of bytes carried in single entry.</li>
+          <li>exit-on-failure [optional]: If true, then the benchmark stops when the stage returns an error. If false, then the stages in the current scenario are skipped, and the next scenario starts executing. Default is false.</li>
+          <li>extra-entries [optional]: Entries that do not have the expected form but occur in the cluster. This string specifies a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2<em>4 + 3</em>4*4 = 57 extra entries.Defaults to 0.</li>
+          <li>fail-on-null [optional]: If entry is null, fail immediately. Default is false.</li>
+          <li>first-entry-offset [optional]: Index of key of the first entry.</li>
+          <li>first-entry-offset-slave-index [optional]: Index of key of the first entry. This number will be multiplied by slaveIndex. Default is 0. Has precedence over 'first-entry-offset'.</li>
+          <li>groups [optional]: Specifies in which groups this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all groups.</li>
+          <li>ignore-sum [optional]: Usually the test checks that sum of local nodes = numOwners * numEntries + extraEntries.This option disables such behaviour. Default is false.</li>
+          <li>key-generator [optional]: Generator of keys (transforms key ID into key object). By default the generator is retrieved from slave state.</li>
+          <li>live-slaves-hint [optional]: Hint how many slaves are currently alive - if set to &gt; 0 then the query for number of entries in this cache is postponed until the cache appears to be fully replicated. By default this is disabled.</li>
+          <li>log-checks-count [optional]: Number of queries after which a DEBUG log message is printed. Default is 10000.</li>
+          <li>memory-only [optional]: If the cache wrapper supports persistent storage and this is set to true, the check will be executed only against in-memory data. Default is false.</li>
+          <li>num-entries [mandatory]: Number of entries with key in form specified by the last used key generator, in the cache.</li>
+          <li>roles [optional]: Specifies on which slaves this stage should actively run, by their roles. The result set is intersection of specified slaves, groups and roles. Supported roles are [COORDINATOR]. Default is all roles.</li>
+          <li>size-only [optional]: If true, the entries are not retrieved, this stage only checks that the sum of entries from local nodes is correct. Default is false.</li>
+          <li>slaves [optional]: Specifies on which slaves this stage should actively run. The result set is intersection of specified slaves, groups and roles. Default is all slaves.</li>
+          <li>step-entry-count [optional]: Number of entries stepped in each step. Default is 1.</li>
+          <li>value-generator [optional]: Generator of values. By default the generator is retrieved from slave state.</li>
+        </ul>
+
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">RadarGun maintained by <a href="https://github.com/radargun">radargun</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

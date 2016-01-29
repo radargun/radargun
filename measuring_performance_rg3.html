@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="RadarGun : The RadarGun benchmarking framework for data grids and distributed caches">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>RadarGun</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/radargun/radargun">View on GitHub</a>
+
+          <h1 id="project_title"><a href="index.html">RadarGun</a></h1>
+          <h2 id="project_tagline">Benchmarking framework for data grids and distributed caches</h2>
+
+          <section id="navigation">
+            <nav>
+              <ul>
+                <li>Getting started
+                  <ul>
+                    <li><a href="five_minute_tutorial.html">Five minute tutorial</a></li>
+                    <li><a href="building_binaries.html">Building binaries</a></li>
+                    <li><a href="using_the_scripts.html">Using scripts</a></li>
+                     <li><a href="writing_custom_plugins.html">Writing custom plugins</a></li>
+                  </ul>
+                </li>
+                <li>Architecture
+                  <ul>
+                    <li><a href="design_documentation.html">Design documentation</a></li>
+                    <li><a href="benchmark_configuration.html">Benchmark configuration</a></li>
+                    <li><a href="stage_list.html">Stage list</a></li>
+                    <li><a href="trait_list.html">Trait list</a></li>
+                    <li><a href="namespaces.html">Namespaces</a></li>
+                  </ul>
+                </li>
+                <li>Measuring performance
+                  <ul>
+                    <li><a href="stress_test.html">Stress test</a></li>
+                    <li><a href="measuring_performance_rg2.html">Understanding results in RG 2</a></li>
+                    <li><a href="measuring_performance_rg3.html">Understanding results in RG 3</a></li>
+                  </ul>
+                </li>
+                <li>Other docs
+                  <ul>
+                    <li><a href="failover_tests.html">Failover tests</a></li>
+                    <li><a href="benchmarking_jta_performance.html">Benchmarking JTA performance</a></li>
+                    <li><a href="coherence_plugin_setup.html">Coherence plugin setup</a></li>
+                  </ul>
+                </li>
+                <li>Download
+                  <ul>
+                    <li><a href="download.html">Download</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </nav>
+          </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+         <h2>Understanding results in RadarGun 3</h2>
+
+        <h3>
+          <a id="user-content-whats-wrong-about-how-radargun-2x-measures-response-times" class="anchor" href="#whats-wrong-about-how-radargun-2x-measures-response-times" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What's wrong about how RadarGun 2.x measures response times</h3>
+
+        <p>The stress tests used in Radargun 2.x (the logic mostly in <a href="https://github.com/radargun/radargun/blob/branch_2.x/core/src/main/java/org/radargun/stages/test/TestStage.java">TestStage</a> and its inheritors, and <a href="https://github.com/radargun/radargun/blob/branch_2.x/core/src/main/java/org/radargun/stages/test/Stressor.java">Stressor</a>) share a flaw that appears in many benchmark tools. These tools try to simulate unlimited amount of users, executing requests (or sequences of requests - <em>conversations</em>) using fixed number of threads.</p>
+
+        <p>Currently, we set fixed number of threads and (when we set non-zero request <code>period</code>) each of them follows this pattern:</p>
+
+<pre><code>long startTime = currentTime();
+  for (long request = 1; ; ++request) {
+  doRequest();
+  long nextRequestTime = startTime + request * period;
+  long sleepTime = nextRequestTime - currentTime();
+  if (sleepTime &gt; 0) {
+  sleep(sleepTime);
+  }
+  }
+</code></pre>
+
+        <p>This works as long as all the requests take shorter time than <code>period</code>, but this is not true in practice. As an example imagine that <code>period</code> = 10ms, regular request takes 2ms but a stalled request takes 35ms.
+          When we're benchmarking for 100ms (for the sake of this example), we can execute e.g. 4x 2ms (at time 0, 10, 20 and 30), then at 40 the 35ms one, then another 4 at 75, 77, 79 and 81 and last one at 90. The average response time would be <code>(9 * 2 + 35) / 10 = 5.3ms</code>, but this is not correct.</p>
+
+        <p>The thread that is stalled for 35 ms is often holding a lock (or occupying worker thread - any kind of synchronization) on the service and therefore it can block the other requests.
+          If users requested our service uniformly (every 10ms), they would experience latencies 2, 2, 2, 2, 35, 27, 19, 11, 3 and 2ms. This gives us average response time <code>5 * 2 + 35 + 27 + 19 + 11 + 3 / 10 = 10.5ms</code> which is almost twice the previous result. And this is what users would actually experience.</p>
+
+        <p>Average response time is not the only property we measure, but others are skewed as well by our way of sampling the requests.</p>
+
+        <p>So, current stress tests don't report response times correctly. Do these provide precise value for throughput? Yes, we have actually been able to execute X requests in Y minutes, but that's all. It is not the maximum throughput possible; for determining maximum throughput we need to scale up the load = lower the period of requests or increase the number of threads. But finding out the maximum throughput takes several iterations. We can also see throughput when the server is overloaded, although the response times are in this situation even further from users experienced response times.</p>
+
+        <p>In the past we also used tests with no request period whatsoever (this configuration option is preserved), just having fixed number of threads executing requests as fast as possible. This is a degenerated case of the above; we even don't attempt to set certain load on the servers, the response time defines the load through backpressure. So you can compare two services at certain <em>concurrency</em>, but not at given load. Another glitch is that you can execute different types of requests, with certain probabilities. If the same thread executes different requests, one slow type limits the number of executed requests of another type.</p>
+
+        <p>When designing/configuring a benchmark, always ask yourselves: what do I want to measure? You can't measure just <em>performance</em> - that's not a <em>quantity</em>. Common things you'd like to see is:</p>
+
+        <ul>
+          <li>response time (average and distribution) under certain load
+            ** meeting certain threshold may be more important than the actual values; your SLA can tell e.g. 90% requests &lt; 1ms, 99% &lt; 100ms</li>
+          <li>maximum throughput: in any test, you need to increase the load until the service can't handle that
+            ** not handling the load can either mean not meeting certain performance criteria (SLA), or just not getting the responses at all (usually you get an exceptional response such as timeout) - that means that you're not actually executing the desired load</li>
+          <li>compare different services/versions under the same load: backpressure must not affect the test itself, otherwise you are not comparing apples to apples</li>
+          <li>scale cluster size (or any resource that can be scaled)
+            ** keep the load constant or scale load along with the resources, and see how response times change</li>
+          <li>compare maximum throughput of different versions or with different number of responses: measure maximum throughput independently and compare the result values</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-how-to-measure-response-time" class="anchor" href="#how-to-measure-response-time" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How to measure response time</h3>
+
+        <p>One user does not prevent another user from issuing a request, so we have to do the same. As the users keep coming, we would need unlimited number of threads - though, that's not really practical. <a href="https://github.com/radargun/radargun/pull/236">This PR</a> tries to solve it.</p>
+
+        <p>Each test requires at least two stages: <em>setup</em> stage, in which we set the target throughput and start executing the requests and spawn threads, and <em>test</em> stage when the test should be in <em>steady state</em> - we execute the requests with requested frequency and do not spawn any additional threads. We measure and record response times only during the <em>test</em>, not in <em>setup</em>. These pairs of stages can be chained (for tests that seek the maximum throughput or just want to acquire data at different load levels).</p>
+
+        <p>For each <em>conversation</em> (sequence of requests), the setup stage specifies request period and number of invocations in this period. This is a base for the schedule (actually implemented in the <code>SchedulingSelector</code>); the threads are blocked in the selector until the schedule assigns them to execute a conversation. When the threads get its task assigned, it checks if there are another threads (configurable number, but at least 1) waiting for next conversation. If this condition is satisfied, it executes its conversation and waits for next one in the selector. If it is not satisfied, the behavior differs for <em>setup</em> and for <em>test</em>:</p>
+
+        <p>During <em>setup</em>, the thread spawns another sibling, since no threads waiting for next conversation means that all threads are occupied and a scheduled conversation might be missed. Spawning a thread can take some time, but we don't care about missed operations during <em>setup</em>. The stage has configurable minimum duration and steady period: the setup is finished when there are no more threads created in last X seconds (defined by this steady period). There is also a cap on the number of threads that prevents RadarGun from running out of memory. This cap is reached when the requests stall too long and in this case the setup (and whole test) fails. Reaching maximum number of threads is in fact the only way for the setup to fail - service's inability to handle the target throughput results in spawning more and more threads.</p>
+
+        <p>During <em>test</em>, we don't want to spawn any more threads. Attempt to create another thread means that we can't reach the desired throughput; the setup has not created enough threads as it has not experienced all the possible situations (it was too short). Therefore, the test fails and you need to reconfigure the benchmark.</p>
+
+        <p>It can happen that the scheduled quantum of conversations is not retrieved from <code>SchedulingSelector</code> in target period, although there are threads waiting for next operations. This happens quite usually even if the CPU load on machine is low, in practice I have observed that about 2-3% of requests are not executed on time. We do not re-schedule those operations for later, just ignore them. In the report, you can then see that this lower number of requests - at this point it's up to the user to validate if the test is acceptable or not, in future we might issue more warnings/invalidate the test if we miss too many of them.</p>
+
+        <p>At this point, old logic was mostly preserved and moved to <code>legacy</code> package, with stages having <code>legacy</code> in their names, too. We might consider keeping the old names and having them in separate legacy XML namespace.</p>
+
+        <p>For more information about the subject I highly recommend watching <a href="https://www.youtube.com/watch?v=9MKY4KypBzg">Gil Tene's presentation about latency</a>. It also gives hints for understanding the percentiles chart that RadarGun reports (when using histogram-based statistics). Note that in this presentation Gil mentions <em>service time</em> and <em>response time</em>; in RadarGun we can measure only response time of the service implementation, if the request goes remotely, RadarGun can't know about that.</p>
+
+        <h3>
+          <a id="user-content-the-concept-mapped-to-the-code" class="anchor" href="#the-concept-mapped-to-the-code" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The concept mapped to the code</h3>
+
+        <p>As the test is spread over multiple stages, its state is preserved in <code>RunningTest</code>. This works as the thread-pool implementation;  it's the <code>RunningTest.ThreadPoolingSelector</code> checks the number of threads waiting for next conversation and possibly lets the <code>RunningTest</code> add a new thread.</p>
+
+        <p>Conversations are mapped to <code>Conversation</code>. Stages do not define the <code>ConversationSelector</code> directly anymore, instead they use <code>SchedulingSelector.Builder</code> to define the frequency of conversations. When defining stress tests on new traits, inherit from <code>TestSetupStage</code>. <code>TestStage</code> needs to be overridden only in cases that you want to gather other information than just statistics (invocations' response times). When chaining multiple tests (changing the frequency of operations), set <code>&lt;test finish="false"/&gt;</code> and then use <code>&lt;finish-test/&gt;</code> in the end.</p>
+
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">RadarGun maintained by <a href="https://github.com/radargun">radargun</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

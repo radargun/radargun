@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="RadarGun : The RadarGun benchmarking framework for data grids and distributed caches">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>RadarGun</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/radargun/radargun">View on GitHub</a>
+
+          <h1 id="project_title"><a href="index.html">RadarGun</a></h1>
+          <h2 id="project_tagline">Benchmarking framework for data grids and distributed caches</h2>
+
+           <section id="navigation">
+              <nav>
+                 <ul>
+                    <li>Getting started
+                       <ul>
+                          <li><a href="five_minute_tutorial.html">Five minute tutorial</a></li>
+                          <li><a href="building_binaries.html">Building binaries</a></li>
+                          <li><a href="using_the_scripts.html">Using scripts</a></li>
+                          <li><a href="writing_custom_plugins.html">Writing custom plugins</a></li>
+                       </ul>
+                    </li>
+                    <li>Architecture
+                       <ul>
+                          <li><a href="design_documentation.html">Design documentation</a></li>
+                          <li><a href="benchmark_configuration.html">Benchmark configuration</a></li>
+                          <li><a href="stage_list.html">Stage list</a></li>
+                          <li><a href="trait_list.html">Trait list</a></li>
+                          <li><a href="namespaces.html">Namespaces</a></li>
+                       </ul>
+                    </li>
+                    <li>Measuring performance
+                       <ul>
+                          <li><a href="stress_test.html">Stress test</a></li>
+                          <li><a href="measuring_performance_rg2.html">Understanding results in RG 2</a></li>
+                          <li><a href="measuring_performance_rg3.html">Understanding results in RG 3</a></li>
+                       </ul>
+                    </li>
+                    <li>Other docs
+                       <ul>
+                          <li><a href="failover_tests.html">Failover tests</a></li>
+                          <li><a href="benchmarking_jta_performance.html">Benchmarking JTA performance</a></li>
+                          <li><a href="coherence_plugin_setup.html">Coherence plugin setup</a></li>
+                       </ul>
+                    </li>
+                    <li>Download
+                       <ul>
+                          <li><a href="download.html">Download</a></li>
+                       </ul>
+                    </li>
+                 </ul>
+              </nav>
+           </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+         <h2>
+            <a id="user-content-scripts" class="anchor" href="#scripts" aria-hidden="true"></a>Using scripts</h2>
+
+         <h3>Scripts</h3>
+
+         <p>RadarGun ships with a number of scripts to help you deploy the framework across a cluster of nodes.  The scripts currently require:</p>
+
+         <ul>
+            <li>UNIX or UNIX-like environment to run
+
+               <ul>
+                  <li>Tested on Fedora and RHEL Linux</li>
+               </ul>
+            </li>
+            <li>SSH with passphraseless keys installed such that the master node can connect to slaves transparently
+
+               <ul>
+                  <li>Java, Maven and git installed and on the user's path on all of the nodes</li>
+               </ul>
+            </li>
+         </ul>
+
+         <p><em>Important</em></p>
+
+         <ol>
+            <li>the scripts that start master/slaves must be run from the distribution directory (i.e. one level up from <code>bin</code>). This is because the resulting processes will look up classed from <code>plugin</code> directory, and they depend on the relative location of it.</li>
+            <li>for all the scripts, when run <code>-h</code> argument will print a help message.</li>
+         </ol>
+
+         <h3>
+            <a id="user-content-slavesh" class="anchor" href="#slavesh" aria-hidden="true"></a>slave.sh</h3>
+
+         <p>Designed to be run on each slave, to start up the local slave process. Slaves need to be aware of the IP[:port] of the master. Master must be running before starting a slave. </p>
+
+         <h3>
+            <a id="user-content-mastersh" class="anchor" href="#mastersh" aria-hidden="true"></a>master.sh</h3>
+
+         <p>Designed to be run on the master node, in order to start the master. Default config used is <code>conf/benchmark.xml</code></p>
+
+         <h3>
+            <a id="user-content-localsh" class="anchor" href="#localsh" aria-hidden="true"></a>local.sh</h3>
+
+         <p>Used for running local benchmarks. Default config used is <code>conf/benchamrk-local.xml</code></p>
+
+         <h3>
+            <a id="user-content-benchmarksh-distsh" class="anchor" href="#benchmarksh-distsh" aria-hidden="true"></a>benchmark.sh (dist.sh)</h3>
+
+         <p>Starts the master and then it starts all the slaves. For starting the master it relies on <code>master.sh</code>, for slaves it relies on <code>slave.sh</code>. In order to be able to start the slaves, it ssh on slaves's machine and runs <code>slave.sh</code> there. Addresses of slaves can be specified in <code>environment.sh</code>.</p>
+
+         <h3>
+            <a id="user-content-environmentsh" class="anchor" href="#environmentsh" aria-hidden="true"></a>environment.sh</h3>
+
+         <p>Used by other scripts to set environment variables (JVM options, binding addresses of slaves , etc.).</p>
+
+         <h3>
+            <a id="user-content-detect_slave_ipssh" class="anchor" href="#detect_slave_ipssh" aria-hidden="true"></a>detect_slave_ips.sh</h3>
+
+         <p>This script helps detect slave IPs if slaves are assigned IPs using DHCP and no proper domain is set.  Assumes that the script is run on the master node, and the master node runs the DHCP server which the slaves use to obtain IPs.  Slave names are added to <code>/etc/hosts</code> so that slaves can easily be reached after running this script. This script shall be run manually, i.e. it is not called implicitly by <code>master.sh</code> or <code>slave.sh</code>.</p>
+
+         <h3>
+            <a id="user-content-ssh_key_acceptorsh" class="anchor" href="#ssh_key_acceptorsh" aria-hidden="true"></a>ssh_key_acceptor.sh</h3>
+
+         <p>Useful when slaves are reprovisioned each time, e.g., using PXE boot and kickstart.  This adds each slave's SSH keys/fingerprints to the local user's SSH <code>known_hosts</code> file so that the user isn't prompted to accept the fingerprint the first time an SSH connection is made.</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">RadarGun maintained by <a href="https://github.com/radargun">radargun</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

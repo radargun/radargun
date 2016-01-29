@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="RadarGun : The RadarGun benchmarking framework for data grids and distributed caches">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>RadarGun</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/radargun/radargun">View on GitHub</a>
+
+          <h1 id="project_title"><a href="index.html">RadarGun</a></h1>
+          <h2 id="project_tagline">Benchmarking framework for data grids and distributed caches</h2>
+
+          <section id="navigation">
+            <nav>
+              <ul>
+                <li>Getting started
+                  <ul>
+                    <li><a href="five_minute_tutorial.html">Five minute tutorial</a></li>
+                    <li><a href="building_binaries.html">Building binaries</a></li>
+                    <li><a href="using_the_scripts.html">Using scripts</a></li>
+                    <li><a href="writing_custom_plugins.html">Writing custom plugins</a></li>
+                  </ul>
+                </li>
+                <li>Architecture
+                  <ul>
+                    <li><a href="design_documentation.html">Design documentation</a></li>
+                    <li><a href="benchmark_configuration.html">Benchmark configuration</a></li>
+                    <li><a href="stage_list.html">Stage list</a></li>
+                    <li><a href="trait_list.html">Trait list</a></li>
+                    <li><a href="namespaces.html">Namespaces</a></li>
+                  </ul>
+                </li>
+                <li>Measuring performance
+                  <ul>
+                    <li><a href="stress_test.html">Stress test</a></li>
+                    <li><a href="measuring_performance_rg2.html">Understanding results in RG 2</a></li>
+                    <li><a href="measuring_performance_rg3.html">Understanding results in RG 3</a></li>
+                  </ul>
+                </li>
+                <li>Other docs
+                  <ul>
+                    <li><a href="failover_tests.html">Failover tests</a></li>
+                    <li><a href="benchmarking_jta_performance.html">Benchmarking JTA performance</a></li>
+                    <li><a href="coherence_plugin_setup.html">Coherence plugin setup</a></li>
+                  </ul>
+                </li>
+                <li>Download
+                  <ul>
+                    <li><a href="download.html">Download</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </nav>
+          </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>Writing custom plugins</h2>
+        <h3>
+          <a id="user-content-note-this-document-is-related-to-radargun-1x" class="anchor" href="#note-this-document-is-related-to-radargun-1x" aria-hidden="true"></a>Note: this document is related to RadarGun 1.x</h3>
+
+        <p>For RadarGun 2.0, the <strong>CacheWrapper</strong> was renamed to <strong>Service</strong> and the actual SPI was split into <strong>Traits</strong>. See <a class="internal present" href="design_documentation.html">Design Documentation</a> for more information.</p>
+
+        <hr>
+
+        <h3>
+          <a id="user-content-context" class="anchor" href="#context" aria-hidden="true"></a>Context</h3>
+
+        <p>RadarGun is meant to be a generic benchmarking mechanism in which both the benchmark (i.e. the data access pattern used) and the product that needs to be benchmarked are pluggable. This page describes the way in which new products (i.e. <em>plugins</em>, in RadarGun parlance) can be added to the framework.</p>
+
+        <h3>
+          <a id="user-content-directory-structure" class="anchor" href="#directory-structure" aria-hidden="true"></a>Directory structure</h3>
+
+        <ol>
+          <li><p>The first thing to do is to get the source code from git (a plugin can also be built based on binaries, but this is the simplest way to do it). In order to do that, refer to the <em>Download source code</em> section on the <a class="internal present" href="building_binaries.html">Building Binaries</a> page.</p></li>
+          <li><p>Add new product plugin directory. A new directory should be added under the <code>${RADARGUN_HOME}/plugins</code> directory. The naming convention used is <code>&lt;product-name&gt;&lt;major-version&gt;</code>, e.g., <code>infinispan4</code>, <code>jbosscache3</code> etc. All the plugin-related code and configuration will be added to this directory. <strong>Important</strong>: this directory name will identify the product and will be used in configuration files. E.g. in <a href="https://github.com/radargun/radargun/blob/master/framework/src/main/resources/benchmark.xml">this benchmark.xml file</a>, <code>jbosscache3</code> and <code>infinispan4</code> correspond to existing plugin directories <code>${RADARGUN_HOME}/plugins/jbosscache3</code> and <code>${RADARGUN_HOME}/plugins/infinispan4</code>, respectively.</p></li>
+          <li><p>Add maven support. It's going to be maven that will do the building and assembly, so maven configuration files will be required. Add a <code>pom.xml</code> file in the root of the newly created module. As an example, refer to the <code>infinispan4</code> plugin's <code>pom.xml</code> <a href="https://github.com/radargun/radargun/blob/master/plugins/infinispan4/pom.xml">file</a>.</p></li>
+          <li><p>Implement the <code>CacheWrapper</code> interface. This is an abstraction of a distributed cache, and RadarGun is only aware of this abstraction. Follow the javadocs for more details of the API.  Useful help might come from existing implementations as well. This new implementation should be placed under <code>${RADARGUN_ROOT}/plugins/&lt;new-plugin&gt;/src/main/java</code>. As an example, if the plugin class is <code>org.radargun.ProductXyzWrapper</code>, then the file location relative to the RadarGun root is: <code>${RADARGUN_ROOT}/plugins/&lt;new-plugin&gt;/src/main/java/org/radargun/ProductXyzWrapper.java</code></p></li>
+          <li>
+            <p>Specify the plugin implementation. The following file must exist: <code>${RADARGUN_ROOT}/plugins/&lt;new-plugin&gt;/src/main/resources/cacheprovider.properties</code>. This file should contain following entry (replace <code>org.radargun.ProductXyzWrapper</code> with the appropriate class name):</p>
+
+            <p>org.radargun.wrapper org.radargun.ProductXyzWrapper</p>
+          </li>
+          <li><p>Other resources needed by the cache wrapper implementation. Any other such resources should be placed under <code>${RADARGUN_ROOT}/plugins/&lt;new-plugin&gt;/src/main/resources</code>. That directory will be in the classpath at runtime.</p></li>
+        </ol>
+
+        <h3>
+          <a id="user-content-rebuilding-the-distribution" class="anchor" href="#rebuilding-the-distribution" aria-hidden="true"></a>Rebuilding the distribution</h3>
+
+        <p>After all the above steps are done, you'll have to re-build a distribution to include the new plugin. First thing you'll have to enable the plugin in <code>${RADARGUN_ROOT}/pom.xml</code>, by adding it in the module section:</p>
+
+<pre><code>&lt;modules&gt;
+  &lt;module&gt;framework&lt;/module&gt;
+  &lt;!-- add the plugin bellow, as an module element--&gt;
+  &lt;module&gt;plugins/infinispan4&lt;/module&gt;
+  &lt;module&gt;plugins/jbosscache2&lt;/module&gt;
+  &lt;module&gt;plugins/jbosscache3&lt;/module&gt;
+  &lt;module&gt;plugins/ehcache16&lt;/module&gt;
+  &lt;module&gt;plugins/ehcache17&lt;/module&gt;
+  &lt;module&gt;plugins/terracotta3&lt;/module&gt;
+  &lt;/modules&gt;
+</code></pre>
+
+        <p>After that follow the stept described in the <code>Compile and build distribution</code> section of <a class="internal present" href="building_binaries.html">Building Binaries</a>.</p>
+
+        <h3>
+          <a id="user-content-contribute-your-changes" class="anchor" href="#contribute-your-changes" aria-hidden="true"></a>Contribute your changes!</h3>
+
+        <p>If it is not for a proprietary clustering solution, we request you to contribute your new plugin back to the RadarGun project, via a pull request on GitHub.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">RadarGun maintained by <a href="https://github.com/radargun">radargun</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

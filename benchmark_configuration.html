@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="RadarGun : The RadarGun benchmarking framework for data grids and distributed caches">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>RadarGun</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/radargun/radargun">View on GitHub</a>
+
+          <h1 id="project_title"><a href="index.html">RadarGun</a></h1>
+          <h2 id="project_tagline">Benchmarking framework for data grids and distributed caches</h2>
+
+           <section id="navigation">
+              <nav>
+                 <ul>
+                    <li>Getting started
+                       <ul>
+                          <li><a href="five_minute_tutorial.html">Five minute tutorial</a></li>
+                          <li><a href="building_binaries.html">Building binaries</a></li>
+                          <li><a href="using_the_scripts.html">Using scripts</a></li>
+                          <li><a href="writing_custom_plugins.html">Writing custom plugins</a></li>
+                       </ul>
+                    </li>
+                    <li>Architecture
+                       <ul>
+                          <li><a href="design_documentation.html">Design documentation</a></li>
+                          <li><a href="benchmark_configuration.html">Benchmark configuration</a></li>
+                          <li><a href="stage_list.html">Stage list</a></li>
+                          <li><a href="trait_list.html">Trait list</a></li>
+                          <li><a href="namespaces.html">Namespaces</a></li>
+                       </ul>
+                    </li>
+                    <li>Measuring performance
+                       <ul>
+                          <li><a href="stress_test.html">Stress test</a></li>
+                          <li><a href="measuring_performance_rg2.html">Understanding results in RG 2</a></li>
+                          <li><a href="measuring_performance_rg3.html">Understanding results in RG 3</a></li>
+                       </ul>
+                    </li>
+                    <li>Other docs
+                       <ul>
+                          <li><a href="failover_tests.html">Failover tests</a></li>
+                          <li><a href="benchmarking_jta_performance.html">Benchmarking JTA performance</a></li>
+                          <li><a href="coherence_plugin_setup.html">Coherence plugin setup</a></li>
+                       </ul>
+                    </li>
+                    <li>Download
+                       <ul>
+                          <li><a href="download.html">Download</a></li>
+                       </ul>
+                    </li>
+                 </ul>
+              </nav>
+           </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+         <h2>Benchmark configuration</h2>
+         <h3>
+            <a id="user-content-context" class="anchor" href="#context" aria-hidden="true"></a>Context</h3>
+
+         <p>One of the most important purposes of RadarGun is to support benchmarking of distributed caches/data grids.  Generally speaking, a benchmark on a distributed cache is performed as follows:</p>
+
+         <ul>
+            <li>a number of nodes are started, each living in its own process. A node is an instance of a distributed cache</li>
+            <li>RadarGun waits until all these nodes see each other and form a cluster</li>
+            <li>once the cluster is formed, RadarGun will warm up the cluster: run a set of operations (read+write) against each node in the cluster. This is in order to allow any JVM compiler optimizations to kick in (reproduce production-like environment)</li>
+            <li>after the warm up is finished the actual benchmark is executed. Same benchmark code will be executed against each node within the cluster. Each benchmark stresses each node and records performance data, e.g. average write/read duration</li>
+            <li>optionally, the same benchmark might be run again on greater number of nodes. This is useful for observing how performance is affected by the cluster size (i.e. how does the distributed cache scales out)</li>
+            <li>optionally, same benchmark might be run on a different cache product, for comparative benchmarks</li>
+            <li>at the end, a report is generated comparing the performance of different products, on different cluster sizes. Bellow is an example of such a generated report, comparing write performance between <a href="http://www.jboss.org/infinispan">Infinispan</a> and <a href="http://www.jboss.org/jbosscache/">JBossCache</a>
+            </li>
+         </ul>
+
+         <p><img src="https://github.com/downloads/radargun/radargun/Replicated_PUT_for_5minsstartup.png" alt="Replicated put"></p>
+
+         <h3>
+            <a id="user-content-architecture" class="anchor" href="#architecture" aria-hidden="true"></a>Architecture</h3>
+
+         <p>In order to be able to benchmark distributed caches, RadarGun is using a client/server architecture, in which the RadarGun control node (<em>Master</em>) coordinates multiple <em>slave</em>s. Each slave runs as an independent process, that handles one of the nodes of the benchmarked cluster.
+            The Master has the following responsibilities:</p>
+
+         <ul>
+            <li>parse the configuration (see <em>Configuration</em> section bellow), and based on that give work to slaves</li>
+            <li>the unit of work the master gives to slaves is named <em>stage</em>. E.g. here are the stages that might constitute an benchmark run:
+
+               <ul>
+                  <li>ServiceStartStage - master broadcasts this stage to all slaves. Each slave will start an distributed cache node, and, after it it started acknowledge to the master. Once master has acknowledgment from all slaves it will move to the next stage.</li>
+                  <li>ClusterValidationStage - now that all the nodes are started, the master will ask all the slaves to verify that they are part of the cluster. Each slave verifies and acknowledge to the master. Once master has acknowledgment from all slaves it will move to the next stage.</li>
+                  <li>BasicOperationsTest, warmup - when the slaves receive this stage, they will execute an set of read and write operations on each node of the cluster. The purpose of this is to to simulate a production environment by allowing the hot spot to kick in.</li>
+                  <li>BasicOperationsTest - this is the actual test that will be monitored for performance. </li>
+               </ul>
+            </li>
+            <li>after broadcasting a stage to all slave, the master will block until all stages acknowledge the termination of it. Only after that the master will move to the next stage. If an error appears at any point (e.g. one of the nodes don't pass ClusterValidation stage) then the benchmark will be skipped.</li>
+         </ul>
+
+         <p>For a complete reference of the architecture behind RadarGun please refer to the <a class="internal present" href="design_documentation.html">Design documentation</a></p>
+
+         <h3>
+            <a id="user-content-configuration" class="anchor" href="#configuration" aria-hidden="true"></a>Configuration</h3>
+
+         <p>Here is where you can find the complete example (see <code>conf/benchmark-dist.xml</code>). This section will take each individual element and detail it.
+            An important aspect is the fact that the configuration will only be defined on the master, and it basically defines the way in which the master coordinates the slaves.</p>
+
+         <p><em>Root element</em></p>
+
+         <div class="highlight highlight-text-xml"><pre>     &lt;<span class="pl-ent">benchmark</span> <span class="pl-e">xmlns</span>=<span class="pl-s"><span class="pl-pds">"</span>urn:radargun:benchmark:2.1<span class="pl-pds">"</span></span>&gt;</pre></div>
+
+         <p>During compilation RadarGun generates schema (XSD) with documented properties for all stages in the distributed benchmark. With this you can be sure that the properties in schema are always in sync with source code. Schema files can be located in <code>schema</code> directory of RadarGun distribution. </p>
+
+         <p><em>Master configuration</em></p>
+
+         <div class="highlight highlight-text-xml"><pre>     &lt;<span class="pl-ent">master</span> <span class="pl-e">bindAddress</span>=<span class="pl-s"><span class="pl-pds">"</span>${master.address:127.0.0.1}<span class="pl-pds">"</span></span> <span class="pl-e">port</span>=<span class="pl-s"><span class="pl-pds">"</span>${master.port:2103}<span class="pl-pds">"</span></span>/&gt;</pre></div>
+
+         <p>Master will open its sever socket at that address (host/port) and wait for connections from slaves. "${master.address:127.0.0.1}" syntax can be read: if there is a system property named "master.address" then use that one; otherwise default to "127.0.0.1". This way of specifying values can be used for all XML attributes.</p>
+
+         <p><em>Cluster configuration</em></p>
+
+         <div class="highlight highlight-text-xml"><pre>     &lt;<span class="pl-ent">clusters</span>&gt;
+        &lt;<span class="pl-ent">scale</span> <span class="pl-e">from</span>=<span class="pl-s"><span class="pl-pds">"</span>2<span class="pl-pds">"</span></span> <span class="pl-e">to</span>=<span class="pl-s"><span class="pl-pds">"</span>3<span class="pl-pds">"</span></span> <span class="pl-e">inc</span>=<span class="pl-s"><span class="pl-pds">"</span>1<span class="pl-pds">"</span></span>&gt;
+           &lt;<span class="pl-ent">cluster</span> /&gt;
+        &lt;/<span class="pl-ent">scale</span>&gt;
+     &lt;/<span class="pl-ent">clusters</span>&gt;</pre></div>
+
+         <p>This section contains definition of clusters, which specify number nodes that the benchmark will run on. In this example, the benchmark will initially run on 2 nodes (from - initial size), and then 3 nodes (to - final size). After each run, the cluster size is incremented with "inc", until the "to" is reached. If scaling is not required we omit <code>scale</code> element and use <code>cluster</code> element directly.  </p>
+
+         <p><em>Product configuration</em></p>
+
+         <div class="highlight highlight-text-xml"><pre>     &lt;<span class="pl-ent">configurations</span>&gt;
+        &lt;<span class="pl-ent">config</span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">"</span>Infinispan 5.2 - distributed<span class="pl-pds">"</span></span>&gt;
+           &lt;<span class="pl-ent">setup</span> <span class="pl-e">plugin</span>=<span class="pl-s"><span class="pl-pds">"</span>infinispan52<span class="pl-pds">"</span></span>&gt;
+              &lt;<span class="pl-ent">embedded</span> <span class="pl-e">xmlns</span>=<span class="pl-s"><span class="pl-pds">"</span>urn:radargun:plugins:infinispan52:2.2<span class="pl-pds">"</span></span> <span class="pl-e">file</span>=<span class="pl-s"><span class="pl-pds">"</span>dist-sync.xml<span class="pl-pds">"</span></span>/&gt;
+           &lt;/<span class="pl-ent">setup</span>&gt;
+        &lt;/<span class="pl-ent">config</span>&gt;
+        &lt;<span class="pl-ent">config</span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">"</span>Infinispan 6.0 - distributed<span class="pl-pds">"</span></span>&gt;
+           &lt;<span class="pl-ent">setup</span> <span class="pl-e">plugin</span>=<span class="pl-s"><span class="pl-pds">"</span>infinispan60<span class="pl-pds">"</span></span>&gt;
+              &lt;<span class="pl-ent">embedded</span> <span class="pl-e">xmlns</span>=<span class="pl-s"><span class="pl-pds">"</span>urn:radargun:plugins:infinispan60:2.2<span class="pl-pds">"</span></span> <span class="pl-e">file</span>=<span class="pl-s"><span class="pl-pds">"</span>dist-sync.xml<span class="pl-pds">"</span></span>/&gt;
+           &lt;/<span class="pl-ent">setup</span>&gt;
+        &lt;/<span class="pl-ent">config</span>&gt;
+     &lt;/<span class="pl-ent">configurations</span>&gt;</pre></div>
+
+         <p>In this section we specify configurations we want to benchmark - our example uses two products: infinispan52 and infinispan60. The scenario will be run against every (config, cluster size) combo: infinispan52 configured with "dist-sync.xml" file will be run on a cluster of 2, then 3 nodes. Once this is finished, RadarGun will run the next infinispan60 configuration (dist-sync.xml) on 2 and 3 nodes. There's no restriction on the number of configured products or configurations.</p>
+
+         <p>For some scenarios you may also want to pass different configuration to different slaves. This can be achieved by configuring <code>groups</code>.</p>
+
+         <div class="highlight highlight-text-xml"><pre>     &lt;<span class="pl-ent">config</span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">"</span>Infinispan 5.2 - distributed<span class="pl-pds">"</span></span>&gt;
+        &lt;<span class="pl-ent">setup</span> <span class="pl-e">plugin</span>=<span class="pl-s"><span class="pl-pds">"</span>infinispan52<span class="pl-pds">"</span></span> <span class="pl-e">group</span>=<span class="pl-s"><span class="pl-pds">"</span>group-lon<span class="pl-pds">"</span></span>&gt;
+           &lt;<span class="pl-ent">embedded</span> <span class="pl-e">xmlns</span>=<span class="pl-s"><span class="pl-pds">"</span>urn:radargun:plugins:infinispan52:2.2<span class="pl-pds">"</span></span> <span class="pl-e">file</span>=<span class="pl-s"><span class="pl-pds">"</span>dist-sync-lon.xml<span class="pl-pds">"</span></span>/&gt;
+        &lt;/<span class="pl-ent">setup</span>&gt;
+        &lt;<span class="pl-ent">setup</span> <span class="pl-e">plugin</span>=<span class="pl-s"><span class="pl-pds">"</span>infinispan52<span class="pl-pds">"</span></span> <span class="pl-e">group</span>=<span class="pl-s"><span class="pl-pds">"</span>group-nyc<span class="pl-pds">"</span></span>&gt;
+           &lt;<span class="pl-ent">embedded</span> <span class="pl-e">xmlns</span>=<span class="pl-s"><span class="pl-pds">"</span>urn:radargun:plugins:infinispan52:2.2<span class="pl-pds">"</span></span> <span class="pl-e">file</span>=<span class="pl-s"><span class="pl-pds">"</span>dist-sync-nyc.xml<span class="pl-pds">"</span></span>/&gt;
+        &lt;/<span class="pl-ent">setup</span>&gt;
+        &lt;<span class="pl-ent">setup</span> <span class="pl-e">plugin</span>=<span class="pl-s"><span class="pl-pds">"</span>infinispan52<span class="pl-pds">"</span></span> <span class="pl-e">group</span>=<span class="pl-s"><span class="pl-pds">"</span>group-sfo<span class="pl-pds">"</span></span>&gt;
+           &lt;<span class="pl-ent">embedded</span> <span class="pl-e">xmlns</span>=<span class="pl-s"><span class="pl-pds">"</span>urn:radargun:plugins:infinispan52:2.2<span class="pl-pds">"</span></span> <span class="pl-e">file</span>=<span class="pl-s"><span class="pl-pds">"</span>dist-sync-sfo.xml<span class="pl-pds">"</span></span>/&gt;
+        &lt;/<span class="pl-ent">setup</span>&gt;
+     &lt;/<span class="pl-ent">config</span>&gt;</pre></div>
+
+         <p>This requires groups to be explicitly specified in <code>clusters</code> definition</p>
+
+         <div class="highlight highlight-text-xml"><pre>     &lt;<span class="pl-ent">clusters</span>&gt;
+        &lt;<span class="pl-ent">cluster</span>&gt;
+           &lt;<span class="pl-ent">group</span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">"</span>group-lon<span class="pl-pds">"</span></span> <span class="pl-e">size</span>=<span class="pl-s"><span class="pl-pds">"</span>4<span class="pl-pds">"</span></span>/&gt;
+           &lt;<span class="pl-ent">group</span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">"</span>group-nyc<span class="pl-pds">"</span></span> <span class="pl-e">size</span>=<span class="pl-s"><span class="pl-pds">"</span>4<span class="pl-pds">"</span></span>/&gt;
+           &lt;<span class="pl-ent">group</span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">"</span>group-sfo<span class="pl-pds">"</span></span> <span class="pl-e">size</span>=<span class="pl-s"><span class="pl-pds">"</span>4<span class="pl-pds">"</span></span>/&gt;
+        &lt;/<span class="pl-ent">cluster</span>&gt;
+     &lt;/<span class="pl-ent">clusters</span>&gt;</pre></div>
+
+         <p>Each stage (see the next section) can be restricted to run only on selected set of groups. For this purpose use <code>groups</code> attribute of any stage element.</p>
+
+         <h3>
+            <a id="user-content-scenario" class="anchor" href="#scenario" aria-hidden="true"></a>Scenario</h3>
+
+         <div class="highlight highlight-text-xml"><pre>     &lt;<span class="pl-ent">scenario</span>&gt;
+        &lt;<span class="pl-ent">service-start</span> /&gt;
+        &lt;<span class="pl-ent">jvm-monitor-start</span> /&gt;
+
+        &lt;<span class="pl-ent">load-data</span> <span class="pl-e">num-entries</span>=<span class="pl-s"><span class="pl-pds">"</span>5000<span class="pl-pds">"</span></span>/&gt;
+        &lt;<span class="pl-ent">basic-operations-test</span> <span class="pl-e">test-name</span>=<span class="pl-s"><span class="pl-pds">"</span>warmup<span class="pl-pds">"</span></span> <span class="pl-e">num-requests</span>=<span class="pl-s"><span class="pl-pds">"</span>10000<span class="pl-pds">"</span></span> <span class="pl-e">num-threads-per-node</span>=<span class="pl-s"><span class="pl-pds">"</span>5<span class="pl-pds">"</span></span>&gt;
+           &lt;<span class="pl-ent">key-selector</span>&gt;
+              &lt;<span class="pl-ent">concurrent-keys</span> <span class="pl-e">total-entries</span>=<span class="pl-s"><span class="pl-pds">"</span>5000<span class="pl-pds">"</span></span> /&gt;
+           &lt;/<span class="pl-ent">key-selector</span>&gt;
+        &lt;/<span class="pl-ent">basic-operations-test</span>&gt;
+
+        &lt;<span class="pl-ent">clear-cache</span> /&gt;
+
+        &lt;<span class="pl-ent">load-data</span> <span class="pl-e">num-entries</span>=<span class="pl-s"><span class="pl-pds">"</span>10000<span class="pl-pds">"</span></span>/&gt;
+           &lt;<span class="pl-ent">repeat</span> <span class="pl-e">from</span>=<span class="pl-s"><span class="pl-pds">"</span>10<span class="pl-pds">"</span></span> <span class="pl-e">to</span>=<span class="pl-s"><span class="pl-pds">"</span>30<span class="pl-pds">"</span></span> <span class="pl-e">inc</span>=<span class="pl-s"><span class="pl-pds">"</span>10<span class="pl-pds">"</span></span>&gt;
+           &lt;<span class="pl-ent">basic-operations-test</span> <span class="pl-e">test-name</span>=<span class="pl-s"><span class="pl-pds">"</span>stress-test<span class="pl-pds">"</span></span> <span class="pl-e">amend-test</span>=<span class="pl-s"><span class="pl-pds">"</span>true<span class="pl-pds">"</span></span>
+                                  <span class="pl-e">duration</span>=<span class="pl-s"><span class="pl-pds">"</span>30s<span class="pl-pds">"</span></span> <span class="pl-e">num-threads-per-node</span>=<span class="pl-s"><span class="pl-pds">"</span>${repeat.counter}<span class="pl-pds">"</span></span>&gt;
+              &lt;<span class="pl-ent">key-selector</span>&gt;
+                 &lt;<span class="pl-ent">concurrent-keys</span> <span class="pl-e">total-entries</span>=<span class="pl-s"><span class="pl-pds">"</span>10000<span class="pl-pds">"</span></span>/&gt;
+              &lt;/<span class="pl-ent">key-selector</span>&gt;
+              &lt;<span class="pl-ent">statistics</span>&gt;
+                 &lt;<span class="pl-ent">default</span>&gt;
+                    &lt;<span class="pl-ent">operation-stats</span>&gt;
+                       &lt;<span class="pl-ent">default</span> /&gt;
+                       &lt;<span class="pl-ent">histogram</span> /&gt;
+                    &lt;/<span class="pl-ent">operation-stats</span>&gt;
+                 &lt;/<span class="pl-ent">default</span>&gt;
+              &lt;/<span class="pl-ent">statistics</span>&gt;
+           &lt;/<span class="pl-ent">basic-operations-test</span>&gt;
+        &lt;/<span class="pl-ent">repeat</span>&gt;
+
+        &lt;<span class="pl-ent">jvm-monitor-stop</span> /&gt;
+     &lt;/<span class="pl-ent">scenario</span>&gt;</pre></div>
+
+         <p>In this section we define sequence of stages:</p>
+
+         <ul>
+            <li>The benchmark workflow is defined by the stages:
+
+               <ul>
+                  <li>service-start: this will start the cluster on an appropriate number of nodes (from &lt;= num. nodes &lt;= to). Additionally it verifies that the cluster is formed.</li>
+                  <li>jvm-monitor-start: this starts monitoring of memory/cpu usage. For example, use this to examine effects of garbage collection on performance (provided there are unexpected spikes in report).</li>
+                  <li>load-data: loads specified number of entries into cache. Use nested cache-selector to define target cache (default cache is used instead), key-generator to define format of keys and value-generator to specify type of values inserted into cache.</li>
+                  <li>basic-operations-test: when name of this stage is set to <code>warmup</code>, statistics are not stored. Applies to all types of tests (*-test). </li>
+                  <li>
+                     <a class="internal present" href="stress_test.html">basic-operations-test</a>: the actual benchmark. Follow the link for a closer description. This stage performs randomly-selected operations against the cache (write/read/remove, ratio is configurable). Configure this stage to run for a specified period of time (<code>duration</code>), or define request count to be performed with <code>num-requests</code> parameter.</li>
+               </ul>
+            </li>
+            <li>If you want to repeat a sequence of the stages, you can use the <code>Repeat</code> element. See <a class="internal absent" href="/radargun/radargun/wiki/Repeat">Repeat</a> description for details.</li>
+            <li>There are many other stages that you can use in your benchmark, and each has several configuration attributes. Here is a <a class="internal present" href="stage_list.html">list of stages</a> provided in the latest snapshot - however, this may be outdated. When you build RadarGun, XML schema files (XSD) are generated and placed in <code>target/distribution/RadarGun.x.y.z/schema</code> folder with up-to-date list of stages and their attributes, including the documentation.</li>
+         </ul>
+
+         <h3>
+            <a id="user-content-report-generation" class="anchor" href="#report-generation" aria-hidden="true"></a>Report generation</h3>
+
+         <div class="highlight highlight-text-xml"><pre>     &lt;<span class="pl-ent">reports</span>&gt;
+        &lt;<span class="pl-ent">reporter</span> <span class="pl-e">type</span>=<span class="pl-s"><span class="pl-pds">"</span>csv<span class="pl-pds">"</span></span> /&gt;
+        &lt;<span class="pl-ent">reporter</span> <span class="pl-e">type</span>=<span class="pl-s"><span class="pl-pds">"</span>html<span class="pl-pds">"</span></span> /&gt;
+        &lt;<span class="pl-ent">reporter</span> <span class="pl-e">type</span>=<span class="pl-s"><span class="pl-pds">"</span>serialized<span class="pl-pds">"</span></span> /&gt;
+   &lt;/<span class="pl-ent">reports</span>&gt;</pre></div>
+
+         <p>In this last section report generation is configured. Use <code>csv</code> reporter if you want to process the results outside of RadarGun. <code>html</code> reporter generates graphical output and includes JVM monitoring output, histograms, configuration properties and many more. It is a good practice to define <code>serialized</code> reporter in your <code>reports</code> section, as this enables you to rerun all the reporters without the need to run the benchmark again (e.g. if something goes wrong during reporting). Recently <code>perfrepo</code> reporter has been added, which enables you to store performance results into an external repository for further analysis. Please see README file located in <code>reporter-perfrepo</code> folder for configuration example.   </p>
+
+         <h3>
+            <a id="user-content-running-the-benchmark" class="anchor" href="#running-the-benchmark" aria-hidden="true"></a>Running the benchmark</h3>
+
+         <p>The sequence in which RadarGun should be started is the following:</p>
+
+         <ul>
+            <li>start the master. Once started, the master will block until all the slaves connected to it. The number of slaves expected to connect is equal to <code>to</code> attribute, from the <code>scale</code> element, or <code>size</code> attribute of <code>cluster</code> element if you don't use scaling.</li>
+            <li>start <code>to/size</code> (see below) slaves</li>
+            <li>after all the slaves are started and connected to the master, the benchmark will start as described in the <em>Architecture</em> section</li>
+            <li>after the master is started and all the slaves are connected, it is not possible to add/remove/replace slaves</li>
+            <li>if one of the slave process fails unexpectedly, then master will shutdown itself and all slaves</li>
+            <li>if the master is killed, all slaves shut down. This might take a while, depending on the length of the task the slave was executing at the time</li>
+         </ul>
+
+         <p>RadarGun comes with a number of scripts that help starting the master and the nodes. They are present in the distribution: </p>
+
+         <ul>
+            <li>see <a class="internal present" href="building_binaries.html">Building Binaries</a> for obtaining a distribution and about its content </li>
+            <li>and <a class="internal present" href="using_the_scripts.html">Using scripts</a> for information on what each scripts does and how it should be launched </li>
+         </ul>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">RadarGun maintained by <a href="https://github.com/radargun">radargun</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

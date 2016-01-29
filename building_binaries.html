@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="RadarGun : The RadarGun benchmarking framework for data grids and distributed caches">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>RadarGun</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/radargun/radargun">View on GitHub</a>
+
+          <h1 id="project_title"><a href="index.html">RadarGun</a></h1>
+          <h2 id="project_tagline">Benchmarking framework for data grids and distributed caches</h2>
+
+           <section id="navigation">
+              <nav>
+                 <ul>
+                    <li>Getting started
+                       <ul>
+                          <li><a href="five_minute_tutorial.html">Five minute tutorial</a></li>
+                          <li><a href="building_binaries.html">Building binaries</a></li>
+                          <li><a href="using_the_scripts.html">Using scripts</a></li>
+                          <li><a href="writing_custom_plugins.html">Writing custom plugins</a></li>
+                       </ul>
+                    </li>
+                    <li>Architecture
+                       <ul>
+                          <li><a href="design_documentation.html">Design documentation</a></li>
+                          <li><a href="benchmark_configuration.html">Benchmark configuration</a></li>
+                          <li><a href="stage_list.html">Stage list</a></li>
+                          <li><a href="trait_list.html">Trait list</a></li>
+                          <li><a href="namespaces.html">Namespaces</a></li>
+                       </ul>
+                    </li>
+                    <li>Measuring performance
+                       <ul>
+                          <li><a href="stress_test.html">Stress test</a></li>
+                          <li><a href="measuring_performance_rg2.html">Understanding results in RG 2</a></li>
+                          <li><a href="measuring_performance_rg3.html">Understanding results in RG 3</a></li>
+                       </ul>
+                    </li>
+                    <li>Other docs
+                       <ul>
+                          <li><a href="failover_tests.html">Failover tests</a></li>
+                          <li><a href="benchmarking_jta_performance.html">Benchmarking JTA performance</a></li>
+                          <li><a href="coherence_plugin_setup.html">Coherence plugin setup</a></li>
+                       </ul>
+                    </li>
+                    <li>Download
+                       <ul>
+                          <li><a href="download.html">Download</a></li>
+                       </ul>
+                    </li>
+                 </ul>
+              </nav>
+           </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+         <h2>Building binaries</h2>
+         <h3>
+            <a id="user-content-prerequisites" class="anchor" href="#prerequisites" aria-hidden="true"></a>Prerequisites</h3>
+
+         <p>Following tools are required to build RadarGun from sources</p>
+
+         <ul>
+            <li>git &gt;= 1.6.5, needed for obtaining the source code.  Alternatively, a ZIPped archive of the sources can be <a href="https://github.com/radargun/radargun/zipball/master">used instead</a>.</li>
+            <li>A <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Java Development Kit</a> version 1.7 or above is required.</li>
+            <li>
+               <a href="http://maven.apache.org">Apache Maven</a> &gt;= 3.0, needed for downloading dependencies and building the source code</li>
+         </ul>
+
+         <h3>
+            <a id="user-content-download-source-code" class="anchor" href="#download-source-code" aria-hidden="true"></a>Download source code</h3>
+
+         <p>Move to a directory where you will build the binaries and run:</p>
+
+<pre><code>$ git clone git://github.com/radargun/radargun.git
+</code></pre>
+
+         <h3>
+            <a id="user-content-compile-and-build-distribution" class="anchor" href="#compile-and-build-distribution" aria-hidden="true"></a>Compile and build distribution</h3>
+
+<pre><code>$ cd  radargun
+   $ mvn clean install -DskipTests
+</code></pre>
+
+         <p>This operation might take a few minutes, as it will download the dependencies needed by the various plugins (e.g., it will download Infinispan and its dependencies, EHCache and its dependencies, etc). Once the install is complete, you will find the distribution in <code>./target/distribution/RadarGun-&lt;version&gt;.zip</code>. Unzip this on cluster nodes where you wish to run RadarGun.</p>
+
+         <h3>
+            <a id="user-content-distributionss-content-for-radargun-21x" class="anchor" href="#distributionss-content-for-radargun-21x" aria-hidden="true"></a>Distributions's content (for RadarGun 2.1.x)</h3>
+
+<pre><code>   |-bin
+   |-conf
+   |-lib
+   |-plugins
+   |---ehcache26
+   |-----conf
+   |-----lib
+   |---hazelcast3
+   |-----conf
+   |-----lib
+   |---infinispan80
+   |-----conf
+   |-----lib
+   |---...
+   |-reporters
+   |-schema
+   |-results (optional)
+</code></pre>
+
+         <ul>
+            <li><p>The <code>bin</code> directory contains scripts for launching the master, the slaves and some other utility scripts.  This directory also contains scripts to run RadarGun in local mode. For details on how to run a distributed benchmark see <a class="internal present" href="benchmark_configuration.html">Benchmark configuration</a> and <a class="internal present" href="using_the_scripts.html">Using scripts</a>.</p></li>
+            <li><p>The <code>conf</code> directory contains configuration files for running distributed benchmarks (<code>benchmark-dist.xml</code>), local benchmarks (<code>local-benchmark.xml</code>) and the log4j cofiguration file.</p></li>
+            <li><p>The <code>plugins</code> directory contains a directory for each (product,version) combo that can be benchmarked. <code>conf</code> folder contains configuration files used by the product, which can be referenced in benchmark configuration. <code>lib</code> folder contains all libraries and other resources needed to run selected product.</p></li>
+            <li><p>The <code>reporters</code> directory includes reporters, which provide way to process and output statistics gathered during test runs.</p></li>
+            <li><p>The <code>schema</code> directory includes XSD schema files which can be used to verify whether benchmark configuration is correct.</p></li>
+            <li><p>By default the <code>results</code> directory is created once the test finishes and reporters generate results. Result location is configurable. </p></li>
+         </ul>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">RadarGun maintained by <a href="https://github.com/radargun">radargun</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="RadarGun : The RadarGun benchmarking framework for data grids and distributed caches">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>RadarGun</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/radargun/radargun">View on GitHub</a>
+
+          <h1 id="project_title"><a href="index.html">RadarGun</a></h1>
+          <h2 id="project_tagline">Benchmarking framework for data grids and distributed caches</h2>
+
+           <section id="navigation">
+              <nav>
+                 <ul>
+                    <li>Getting started
+                       <ul>
+                          <li><a href="five_minute_tutorial.html">Five minute tutorial</a></li>
+                          <li><a href="building_binaries.html">Building binaries</a></li>
+                          <li><a href="using_the_scripts.html">Using scripts</a></li>
+                          <li><a href="writing_custom_plugins.html">Writing custom plugins</a></li>
+                       </ul>
+                    </li>
+                    <li>Architecture
+                       <ul>
+                          <li><a href="design_documentation.html">Design documentation</a></li>
+                          <li><a href="benchmark_configuration.html">Benchmark configuration</a></li>
+                          <li><a href="stage_list.html">Stage list</a></li>
+                          <li><a href="trait_list.html">Trait list</a></li>
+                          <li><a href="namespaces.html">Namespaces</a></li>
+                       </ul>
+                    </li>
+                    <li>Measuring performance
+                       <ul>
+                          <li><a href="stress_test.html">Stress test</a></li>
+                          <li><a href="measuring_performance_rg2.html">Understanding results in RG 2</a></li>
+                          <li><a href="measuring_performance_rg3.html">Understanding results in RG 3</a></li>
+                       </ul>
+                    </li>
+                    <li>Other docs
+                       <ul>
+                          <li><a href="failover_tests.html">Failover tests</a></li>
+                          <li><a href="benchmarking_jta_performance.html">Benchmarking JTA performance</a></li>
+                          <li><a href="coherence_plugin_setup.html">Coherence plugin setup</a></li>
+                       </ul>
+                    </li>
+                    <li>Download
+                       <ul>
+                          <li><a href="download.html">Download</a></li>
+                       </ul>
+                    </li>
+                 </ul>
+              </nav>
+           </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+         <h2>Design documentation</h2>
+         <h3>
+            <a id="user-content-introduction" class="anchor" href="#introduction" aria-hidden="true"></a>Introduction</h3>
+
+         <p>This document should describe the architecture of RadarGun 2.0+. The architecture of previous versions won't be described.</p>
+
+         <h3>
+            <a id="user-content-master-and-slaves" class="anchor" href="#master-and-slaves" aria-hidden="true"></a>Master and Slaves</h3>
+
+         <p>RadarGun has two types of nodes:</p>
+
+         <h4>
+            <a id="user-content-master" class="anchor" href="#master" aria-hidden="true"></a>Master</h4>
+
+         <p>There is always only one master. This loads the configuration, controls execution of the benchmark and produces reports. The master is started as a server, slaves connect to it. No Service (tested system - see below) is started on the master.</p>
+
+         <h4>
+            <a id="user-content-slave" class="anchor" href="#slave" aria-hidden="true"></a>Slave</h4>
+
+         <p>Slaves are nodes which execute the benchmark, gather statistics and other info. The slaves start a Service - this is the tested system (such as Infinispan, EHCache, Memcached client etc.). Naturally, there can be many slaves.</p>
+
+         <h4>
+            <a id="user-content-local-mode" class="anchor" href="#local-mode" aria-hidden="true"></a>Local mode</h4>
+
+         <p>Local mode has been removed in RadarGun 3.0 which restarts slaves in order to isolate services, rather than using separate class loader.</p>
+
+         <p>RadarGun 2.x:</p>
+
+         <blockquote>
+            <p>In clustered scenario, there are separate JVMs for each Master and Slave. If you need only single Slave, you can start both Master and Slave in the same JVM - this is called the local mode and is triggered using &lt;local /&gt; instead of &lt;clusters&gt;...&lt;/clusters&gt; in the configuration.</p>
+         </blockquote>
+
+         <h3>
+            <a id="user-content-stages" class="anchor" href="#stages" aria-hidden="true"></a>Stages</h3>
+
+         <p>This is the core concept of RadarGun since its first days. After all Slaves connect to the Master, Master starts the scenario: a sequence of steps called Stages. Master synchronizes execution of these so that in every moment each Slave executes the same stage, in parallel.</p>
+
+         <p>There are two types of stages: MasterStage (executed only on Master), and DistStage (distributed to the slaves). </p>
+
+         <p>MasterStage has only two methods: init() and execute(), the meaning is obvious.</p>
+
+         <p>In DistStage, after the stage is initialized by initOnMaster() or initOnSlave(), the slaves run executeOnSlave(). The return value is either DistStageAck - simple acknowledgement that stage ran successfully or failed - or any serializable object extending it, usually carrying payload such as test statistics. Master collects these from all slaves and then runs processAcksOnMaster() on the master node.</p>
+
+         <p>The stages have Properties configurable from the benchmark configuration file. The Properties are evaluated on the target node (Master or Slave) and the value can differ on each node (this is useful for example if it contains some file-system path). RadarGun can automatically convert basic types such as primitives, or collections of primitives, you can define simple converters from strings or complex converters from XML (note: this is very new feature).</p>
+
+         <p>The XSD schema for the configuration XML is generated in each build of RadarGun by scanning the properties on stages, therefore, the documentation can be always up to date with sources. Also a Wiki documentation generator is available for presentation here, in the Markdown syntax.</p>
+
+         <h3>
+            <a id="user-content-plugins-service-and-traits" class="anchor" href="#plugins-service-and-traits" aria-hidden="true"></a>Plugins, Service and Traits</h3>
+
+         <p>RadarGun can benchmark many distributed systems (such as Infinispan or Oracle Coherence). Each such system needs an adaptor, these adaptors are built as maven modules in the plugins/ directory - for historical reasons, we call them simply Plugins. Therefore, Plugin is module used to adapt any distributed system used in RadarGun. We sometimes also use the term Plugin for the distributed system itself.</p>
+
+         <p>In order to interface the vendor-specific API with RadarGun, we need an adaptation layer. As there are usually multiple features that each Plugin provides (such as lifecycle, information about cluster, transactions, java.util.Map-like interface etc.), RadarGun defines interfaces called Traits (annotated with @Trait, see org.radargun.traits package).</p>
+
+         <p>RadarGun retrieves the Traits from a Service - this is a class (annotated with @Service) in the Plugin which binds the Trait implementation (as functionality) to the instance of the distributed system. The Service is created before each scenario and persists until the scenario ends. It can have several no-arg methods annotated with @ProvidesTrait - these are called after the service is created and the runtime objects returned are analyzed: this way RadarGun detects which Traits the Service provides. Checkout <a class="internal present" href="trait_list.html">the list of provided Traits</a>.</p>
+
+         <p>Each plugin may provide multiple Services (in order to spare resources). For example, plugin infinispan60 provides service with Infinispan in embedded mode, service with Infinispan HotRod client, and service that can run standalone Infinispan Server. The plugin and service is selected in configuration using: <pre><code>&lt;setup plugin="my_plugin" service="my_service" /&gt;</code></pre> <br/> The service name here is only symbolic; each plugin contains the file conf/plugin.properties which binds these names to the implementing class:</p>
+
+         <pre><code>service.my_service=com.my.Service</code></pre>
+
+         <p>Note that each plugin is loaded in its own classloader, which has all JARs from the plugins' lib/ directory and RadarGun's main classloader as its parent. When some stage has a property that accepts class name, the class is usually loaded from this classloader in order to allow plugin-specific classes to be used.</p>
+
+         <h3>
+            <a id="user-content-statistics-and-reporters" class="anchor" href="#statistics-and-reporters" aria-hidden="true"></a>Statistics and Reporters</h3>
+
+         <p>The statistics of tests executed and events detected throughout the benchmark are stored on the Master node in-memory until all configurations (cluster sizes x configurations) are executed. Then these are passed to each of the configured reporters in order to create the desired output.</p>
+
+         <p>Those methods on Traits that should be benchmarked are called Operations. The Trait provides a constant Operation (uniquely identified with some name in form TraitName.MethodName) that is passed to the statistics to identify this operation. In some scenarios, we need to denote a special version of this operation (to be distinguished in the statistics) - you can use the derive() method on the operation to create a suffixed version of this operation.</p>
+
+         <p>Usually, on thread operates on private instance of statistics. The statistics from multiple threads/slaves can be later merged. The list of statistics from stage form a Test - in one test, the results of one Operation should be approximately same, e.g. you should provide the same size of an argument. The results of a Test from different service configurations can be later compared against each other in the reporter.
+            If the results are expected to change during the Test execution (e.g. because we increase the number of testing threads, or the amount of data stored in the service grows), we can split the test into Iterations - this is more convenient and allows better presentation than using distinct Tests. </p>
+
+         <p>The Reporters are pluggable and implemented in a similar fashion as the plugins: each reporter module contains file plugin.properties with the reporter classes it provides. Currently implemented reporters can create HTML report or CSV files convenient for further processing, but storing the results in a database is one of expected contributions to the reporter system.</p>
+
+         <p>Statistics implementation and the stages where these statistics are loosely coupled - Stage only needs to report the duration of each operation (either successful or nor) to statistics. On the other hand, Reporter needs to present the results in a way that fits the collected data, and therefore, it is quite tightly coupled with the concrete Statistics - e.g. if you want to draw a histogram in the report, you have to collect more than a sum of durations of requests and request count.</p>
+
+         <p>RadarGun user is responsible for using appropriate configuration of statistics and reporter plugins, but the Reporter needs a generic way of retrieving data from the Statistics instance. That's why we use the Representation abstraction: the Reporter can ask the statistics for instance of particular class (e.g. DefaultOutcome - simple struct containing number of requests, errors, mean and maximum time - or Histogram) and the statistics either return the instance with requested data or null if this Representation is not supported for these Statistics.</p>
+
+         <h3>
+            <a id="user-content-extensions" class="anchor" href="#extensions" aria-hidden="true"></a>Extensions</h3>
+
+         <p>RadarGun is extensible in plugins, reporters and also in stages. If you don't want to include your stages in the core JAR, you can put your module into the extensions/ directory. Try</p>
+
+         <pre><code>mvn clean install -Pextension-example</code></pre>
+
+         <p>You can also build your JAR separately and copy it into the lib/ directory afterwards - all JARs in this directory are scanned for the stages, although the XSD will not reflect it.</p>
+
+         <h3>
+            <a id="user-content-specific-modules" class="anchor" href="#specific-modules" aria-hidden="true"></a>Specific modules</h3>
+
+         <p>This feature has been removed in RadarGun 3.0 as there's only single classpath (including both core libraries, stages and plugins). Specification-style dependencies use <code>provided</code> Maven dependency.</p>
+
+         <p>RadarGun 2.x:</p>
+
+         <blockquote>
+            <p>In directory specific/ you can find few modules that differ in the way that how these are built and used. These are classloaded in plugin's classloader, though they are not compiled against plugin-specific dependencies.
+               One example is JPA module which has entities that are annotated with JPA annotations. During compilation, we use JPA specification dependency, but this is omitted in run time and plugin is expected to provide its own JPA dependencies. This allows us to reuse the entity classes for multiple plugins.</p>
+         </blockquote>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">RadarGun maintained by <a href="https://github.com/radargun">radargun</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

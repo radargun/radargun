@@ -266,7 +266,7 @@ Full-Width Styles
 
 .inner {
   position: relative;
-  max-width: 640px;
+  max-width: 800px;
   padding: 20px 10px;
   margin: 0 auto;
 }
@@ -296,7 +296,7 @@ Full-Width Styles
 }
 
 #header_wrap .inner {
-  padding: 50px 10px 30px 10px;
+  padding: 50px 10px 0px 10px;
 }
 
 #project_title {
@@ -305,6 +305,14 @@ Full-Width Styles
   font-size: 42px;
   font-weight: 700;
   text-shadow: #111 0px 0px 10px;
+}
+
+#project_title a {
+   color: white;
+}
+
+#project_title a:hover {
+   text-decoration: none;
 }
 
 #project_tagline {
@@ -361,14 +369,64 @@ Full-Width Styles
 }
 
 #main_content {
-  padding-top: 40px;
+  padding-top: 20px;
 }
 
 #footer_wrap {
   background: #212121;
 }
 
+/******************************************************************************
+Navigation Menu
+*******************************************************************************/
+nav {
+   text-align: left;
+}
 
+nav ul {
+   max-width: 800px;
+   padding-left: 0px;
+   background: #262626;
+   padding-right: 20px;
+   position: relative;
+}
+
+nav ul:after {
+   content: ""; clear: both; display: block;
+}
+
+nav ul li {
+   display: block; padding: 10px 30px 10px 10px;
+   text-decoration: none;
+   float: left;
+   color: white;
+}
+
+nav ul li:hover > ul {
+   display: block;
+   z-index: 30;
+}
+
+nav ul ul {
+	display: none;
+	padding: 0;
+   position: absolute; top: 100%;
+}
+
+nav ul ul li {
+	float: none;
+	border-top: 1px solid white;
+	position: relative;
+}
+
+nav ul ul li a {
+   padding: 10px 30px;
+	color: #fff;
+}
+
+nav ul ul ul {
+   position: absolute; left: 100%; top:0;
+}
 
 /*******************************************************************************
 Small Device Styles

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="RadarGun : The RadarGun benchmarking framework for data grids and distributed caches">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>RadarGun</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/radargun/radargun">View on GitHub</a>
+
+          <h1 id="project_title"><a href="index.html">RadarGun</a></h1>
+          <h2 id="project_tagline">Benchmarking framework for data grids and distributed caches</h2>
+
+          <section id="navigation">
+            <nav>
+              <ul>
+                <li>Getting started
+                  <ul>
+                    <li><a href="five_minute_tutorial.html">Five minute tutorial</a></li>
+                    <li><a href="building_binaries.html">Building binaries</a></li>
+                    <li><a href="using_the_scripts.html">Using scripts</a></li>
+                    <li><a href="writing_custom_plugins.html">Writing custom plugins</a></li>
+                  </ul>
+                </li>
+                <li>Architecture
+                  <ul>
+                    <li><a href="design_documentation.html">Design documentation</a></li>
+                    <li><a href="benchmark_configuration.html">Benchmark configuration</a></li>
+                    <li><a href="stage_list.html">Stage list</a></li>
+                    <li><a href="trait_list.html">Trait list</a></li>
+                    <li><a href="namespaces.html">Namespaces</a></li>
+                  </ul>
+                </li>
+                <li>Measuring performance
+                  <ul>
+                    <li><a href="stress_test.html">Stress test</a></li>
+                    <li><a href="measuring_performance_rg2.html">Understanding results in RG 2</a></li>
+                    <li><a href="measuring_performance_rg3.html">Understanding results in RG 3</a></li>
+                  </ul>
+                </li>
+                <li>Other docs
+                  <ul>
+                    <li><a href="failover_tests.html">Failover tests</a></li>
+                    <li><a href="benchmarking_jta_performance.html">Benchmarking JTA performance</a></li>
+                    <li><a href="coherence_plugin_setup.html">Coherence plugin setup</a></li>
+                  </ul>
+                </li>
+                <li>Download
+                  <ul>
+                    <li><a href="download.html">Download</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </nav>
+          </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>Benchmarking JTA performance</h2>
+        <h3>
+          <a id="user-content-context" class="anchor" href="#context" aria-hidden="true"></a>Context</h3>
+
+        <p>JTA Transactions are an important aspect of enterprise Java applications. Datagrid providers support transactions in various forms, even though there is a tendency to support standard JTA based transactions.</p>
+
+        <p>RadarGun supports benchmarking interactions with a data grid when used in a JTA transactional environment.</p>
+
+        <h3>
+          <a id="user-content-plugin-support" class="anchor" href="#plugin-support" aria-hidden="true"></a>Plugin support</h3>
+
+        <p>In order to be able to benchmark, the <code>CacheWrapper</code>'s <code>startTransaction()</code> and <code>endTransaction()</code> methods need to be implemented by plugin providers.</p>
+
+        <h4>
+          <a id="user-content-cachewrapperstarttransaction" class="anchor" href="#cachewrapperstarttransaction" aria-hidden="true"></a>CacheWrapper.startTransaction()</h4>
+
+        <p>This method starts a transaction on the node. All the <code>put</code>, <code>get</code> and <code>empty</code> operations invoked after this method returns will take place within the scope of the transaction started. The transaction will be completed by invoking <code>endTransaction()</code>.</p>
+
+        <h4>
+          <a id="user-content-cachewrapperendtransaction" class="anchor" href="#cachewrapperendtransaction" aria-hidden="true"></a>CacheWrapper.endTransaction()</h4>
+
+        <p>Called in conjunction with <code>startTransaction()</code> in order to complete a transaction by either committing or rolling it back.  A boolean flag is passed into this method, <code>true</code> if the transaction is to be committed, <code>false</code> if it is to be aborted.</p>
+
+        <h3>
+          <a id="user-content-configuring-the-stress-test-to-use-transactions" class="anchor" href="#configuring-the-stress-test-to-use-transactions" aria-hidden="true"></a>Configuring the Stress test to use transactions</h3>
+
+        <p>In order to execute the operations within a transaction, the following attributes of the <a class="internal present" href="stress_test.html">Stress Test</a> are relevant: <code>useTransactions</code>, <code>transactionSize</code> and <code>commitTransactions</code>. These are fully described in the <a class="internal present" href="stress_test.html">Stress Test</a> guide.</p>
+
+        <p>If the transactionSize is 1 (default) then a transaction will be created and committed for each operation. You might also want to tune the <code>writePercentage</code> attribute, e.g. by setting it to 100 in order to only measure transactional writes.</p>
+
+        <h3>
+          <a id="user-content-plugin-specific-configurations" class="anchor" href="#plugin-specific-configurations" aria-hidden="true"></a>Plugin specific configurations</h3>
+
+        <p>The <code>infinispan5</code> plugin supports a transaction attribute: <code>enlistExtraXAResource</code>. E.g.</p>
+
+        <div class="highlight highlight-text-xml"><pre>   &lt;<span class="pl-ent">products</span>&gt;
+      &lt;<span class="pl-ent">infinispan5</span>&gt;
+         ...
+         &lt;<span class="pl-ent">config</span> <span class="pl-e">file</span>=<span class="pl-s"><span class="pl-pds">"</span>dist-tx.xml<span class="pl-pds">"</span></span> <span class="pl-e">cache</span>=<span class="pl-s"><span class="pl-pds">"</span>xaNoRecovery<span class="pl-pds">"</span></span> <span class="pl-e">name</span>=<span class="pl-s"><span class="pl-pds">"</span>xa-no-recovery-1pc-off<span class="pl-pds">"</span></span> <span class="pl-e">enlistExtraXAResource</span>=<span class="pl-s"><span class="pl-pds">"</span>true<span class="pl-pds">"</span></span>/&gt;
+         ...
+      &lt;/<span class="pl-ent">infinispan5</span>&gt;
+   &lt;/<span class="pl-ent">products</span>&gt;</pre></div>
+
+        <p>When this is configured, the <code>InfinispanWrapper</code> registers an additional XAResource whenever it starts a new transaction. This is for enforcing the <code>TransactionManager</code> to always write the transaction log to the disk, in order to avoid a last-resource-commit optimization that some transaction managers do.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">RadarGun maintained by <a href="https://github.com/radargun">radargun</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

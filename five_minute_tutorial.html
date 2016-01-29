@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="RadarGun : The RadarGun benchmarking framework for data grids and distributed caches">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>RadarGun</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/radargun/radargun">View on GitHub</a>
+
+          <h1 id="project_title"><a href="index.html">RadarGun</a></h1>
+          <h2 id="project_tagline">Benchmarking framework for data grids and distributed caches</h2>
+
+           <section id="navigation">
+              <nav>
+                 <ul>
+                    <li>Getting started
+                       <ul>
+                          <li><a href="five_minute_tutorial.html">Five minute tutorial</a></li>
+                          <li><a href="building_binaries.html">Building binaries</a></li>
+                          <li><a href="using_the_scripts.html">Using scripts</a></li>
+                          <li><a href="writing_custom_plugins.html">Writing custom plugins</a></li>
+                       </ul>
+                    </li>
+                    <li>Architecture
+                       <ul>
+                          <li><a href="design_documentation.html">Design documentation</a></li>
+                          <li><a href="benchmark_configuration.html">Benchmark configuration</a></li>
+                          <li><a href="stage_list.html">Stage list</a></li>
+                          <li><a href="trait_list.html">Trait list</a></li>
+                          <li><a href="namespaces.html">Namespaces</a></li>
+                       </ul>
+                    </li>
+                    <li>Measuring performance
+                       <ul>
+                          <li><a href="stress_test.html">Stress test</a></li>
+                          <li><a href="measuring_performance_rg2.html">Understanding results in RG 2</a></li>
+                          <li><a href="measuring_performance_rg3.html">Understanding results in RG 3</a></li>
+                       </ul>
+                    </li>
+                    <li>Other docs
+                       <ul>
+                          <li><a href="failover_tests.html">Failover tests</a></li>
+                          <li><a href="benchmarking_jta_performance.html">Benchmarking JTA performance</a></li>
+                          <li><a href="coherence_plugin_setup.html">Coherence plugin setup</a></li>
+                       </ul>
+                    </li>
+                    <li>Download
+                       <ul>
+                          <li><a href="download.html">Download</a></li>
+                       </ul>
+                    </li>
+                 </ul>
+              </nav>
+           </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+         <h2>Five minute tutorial</h2>
+        <h3>
+          <a id="user-content-0-what-is-radargun" class="anchor" href="#0-what-is-radargun" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What is RadarGun?</h3>
+
+        <p>Radargun 1.x was a tool for comparing the performance of different caching/data grid products (e.g. Infinispan, EHCache, Coherence). Since version 2.0 it has become a general distributed system testing tool, although the primary focus on implementation is still on clustered caches. Version 3 (development in progress) will bring support for testing other areas as well (e.g. JPA).</p>
+
+        <p>RadarGun is based on the master-slave pattern and the concept of <strong>stages</strong>. The execution is controlled from the master node, which sequentially signalizes the slave nodes that a stage should be ran, all slaves run this stage in parallel and send results to the master to process them. After that, another stage can be executed.</p>
+
+        <p><img src="https://camo.githubusercontent.com/a48c296dd9ee1ab028ff44ec578bbaecd1611369/687474703a2f2f736f75726365666f7267652e6e65742f617070732f747261632f726164617267756e2f7261772d6174746163686d656e742f77696b692f466976654d696e757465735475746f7269616c2f62656e63686d61726b5f73746570732e706e67" alt="Diagram" data-canonical-src="http://sourceforge.net/apps/trac/radargun/raw-attachment/wiki/FiveMinutesTutorial/benchmark_steps.png"></p>
+
+        <h3>
+          <a id="user-content-1-install" class="anchor" href="#1-install" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install</h3>
+
+        <p>Provided you use one of the released versions <a href="https://github.com/radargun/radargun/releases/download/RadarGun-2.1.0.Final/RadarGun-2.1.0.Final.zip">RadarGun 2.1.0</a>, or <a href="https://github.com/radargun/radargun/releases/download/RadarGun-1.1.0.Final/RadarGun-1.1.0.Final.zip">RadarGun 1.1.0</a>, just download the file and unzip it.</p>
+
+<pre><code>$ unzip radargun-x.y.z.zip
+  $ cd radargun-x.y.z
+</code></pre>
+
+        <p>Radargun 3.0 is still under development, but you can check out sources from git and build, using:</p>
+
+<pre><code>$ git clone https://github.com/radargun/radargun.git
+  $ cd radargun
+  $ mvn clean install -DskipTests
+</code></pre>
+
+        <p>The installation will create <code>distribution</code> folder in <code>target</code>.</p>
+
+        <h3>
+          <a id="user-content-2-edit-your-configuration" class="anchor" href="#2-edit-your-configuration" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Edit your configuration.</h3>
+
+        <p>Configurations reside in the <code>conf</code> folder. Please see <code>conf/benchmark-dist.xml</code> config file for basic  distributed benchmark example, <code>conf/benchmark-local.xml</code> for non-distributed, single-node tests. There are several examples covering MapReduce, querying, JCache integration etc. Please see these files for more details on how to configure RadarGun.</p>
+
+        <p>Some notes about the configuration file:</p>
+
+        <ul>
+          <li>the <code>master</code> element defines where the master process listens for connections from slaves. The master process is the one that coordinates multiple slaves for running a distributed benchmark.</li>
+          <li>element <code>configurations</code> specifies which product/configs are benchmarked. For each such (product,config) combo, the benchmark (described by <code>scenario</code> element) is run.</li>
+          <li>the <code>scenario</code> element configures what stages are performed during benchmark. The master coordinates all the slaves, so that each stage starts on all slaves at the same time.<br>
+          </li>
+          <li>last section <code>reports</code> configures what reports are generated. More on this later, after we run the benchmark.</li>
+        </ul>
+
+        <h3>
+          <a id="user-content-3-start-the-master-node" class="anchor" href="#3-start-the-master-node" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Start the master node</h3>
+
+<pre><code>./bin/master.sh
+  === Cache Benchmark Framework: master.sh ===
+  This script is used to launch the master process, which coordinates tests run
+  on slaves.
+  Master's PID is 37133 running on spark.local
+</code></pre>
+
+        <p>You can also specify which benchmark configuration file will be used by running <code>./bin/master.sh -c /path/to/benchmark</code>. If <code>-c</code> option is not provided, default value is <code>./conf/benchmark-dist.xml</code>. </p>
+
+        <p>Check that master is successfully started:</p>
+
+<pre><code>./bin/master.sh -status
+  Master is running, pid is 37037.
+</code></pre>
+
+        <p>See all available options by showing help with <code>./bin/master.sh -h</code>.</p>
+
+        <h3>
+          <a id="user-content-4-start-the-slaves" class="anchor" href="#4-start-the-slaves" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Start the slaves</h3>
+
+        <p>The number of slaves that need to be started is defined by settings in <code>clusters</code> element (or if <code>local</code> element is present than it is necessary to start only 1 slave). In our example it is 3.</p>
+
+<pre><code>$ ./bin/slave.sh
+  === Radargun: slave.sh ===
+  This script is used to launch the local slave process.
+  ... done! Slave process started on host spark.local!
+
+  $ ./bin/slave.sh
+  === Radargun: slave.sh ===
+  This script is used to launch the local slave process.
+  ... done! Slave process started on host spark.local!
+
+  $ ./bin/slave.sh
+  === Radargun: slave.sh ===
+  This script is used to launch the local slave process.
+  ... done! Slave process started on host spark.local!
+</code></pre>
+
+        <p><em>Note</em> in this example we use <code>slave.sh</code> that starts a process on the same machine.  In real-world, you would most likely have multiple nodes running on multiple machines. For easily starting remote slave processes on remote machines, refer to <code>dist.sh</code>: this knows how to ssh on remote nodes and run <code>slave.sh</code> there. It can be configured via <code>environment.sh</code>, where addresses of individual slaves need to be specified (SLAVE_ADDRESS). Optionally, addresses to which the slaves bind can be included (BIND_ADDRESS).</p>
+
+<pre><code>slave1_SLAVE_ADDRESS=127.0.0.1
+  slave1_BIND_ADDRESS=127.0.0.2
+
+  slave2_SLAVE_ADDRESS=127.0.0.1
+  slave2_BIND_ADDRESS=127.0.0.3
+
+  slave3_SLAVE_ADDRESS=127.0.0.1
+  slave3_BIND_ADDRESS=127.0.0.4
+</code></pre>
+
+        <p>Running the master and slaves is then straightforward.</p>
+
+<pre><code>$ ./bin/dist.sh slave1 slave2 slave3
+</code></pre>
+
+        <p>See all available options by showing help with <code>./bin/slave.sh -h</code>.</p>
+
+        <h3>
+          <a id="user-content-5-check-on-progress" class="anchor" href="#5-check-on-progress" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Check on progress</h3>
+
+        <p>At this point the benchmark is running, and it will take a while until all the benchmarks are run on all the nodes. To monitor progress run the following:</p>
+
+<pre><code>$ tail -f radargun.log
+</code></pre>
+
+        <p>When the benchmark is finished you should see something line this: </p>
+
+<pre><code>13:38:02,017 INFO  [org.radargun.Master] (main) Executed all benchmarks in 4 mins 35 secs, reporting...
+  ...
+  13:38:13,906 INFO  [org.radargun.Master] (main) All reporters have been executed, exiting.
+  13:38:13,914 INFO  [org.radargun.ShutDownHook] (Thread-0) Master process is being shutdown
+</code></pre>
+
+        <h3>
+          <a id="user-content-6-see-reports" class="anchor" href="#6-see-reports" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>See reports</h3>
+
+        <p>All the reports are generated in the <code>results</code> directory. Depending on the settings in <code>reports</code> element in configuration, it will contain directories with results in desired format, e.g. <code>csv</code> directory, <code>html</code> directory etc.</p>
+
+        <h3>
+          <a id="user-content-7-where-do-we-go-from-here" class="anchor" href="#7-where-do-we-go-from-here" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Where do we go from here</h3>
+
+        <p>For more details on how to configure and run the benchmarks go to <a class="internal present" href="benchmark_configuration.html">Benchmark configuration</a> and <a class="internal present" href="stress_test.html">Stress test</a>.</p>
+
+        <p>RadarGun supports by default a number of products (including JBossCache, Infinispan, Oracle's Coherence) but if you want to benchmark against a new product refer to <a class="internal present" href="writing_custom_plugins.html">Writing custom plugins</a>.</p>
+
+        <p>For more details on how the scripts should be used refer to <a class="internal present" href="using_the_scripts.html">Using scripts</a>.</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">RadarGun maintained by <a href="https://github.com/radargun">radargun</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

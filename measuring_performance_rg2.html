@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="RadarGun : The RadarGun benchmarking framework for data grids and distributed caches">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>RadarGun</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/radargun/radargun">View on GitHub</a>
+
+          <h1 id="project_title"><a href="index.html">RadarGun</a></h1>
+          <h2 id="project_tagline">Benchmarking framework for data grids and distributed caches</h2>
+
+          <section id="navigation">
+            <nav>
+              <ul>
+                <li>Getting started
+                  <ul>
+                    <li><a href="five_minute_tutorial.html">Five minute tutorial</a></li>
+                    <li><a href="building_binaries.html">Building binaries</a></li>
+                    <li><a href="using_the_scripts.html">Using scripts</a></li>
+                    <li><a href="writing_custom_plugins.html">Writing custom plugins</a></li>
+                  </ul>
+                </li>
+                <li>Architecture
+                  <ul>
+                    <li><a href="design_documentation.html">Design documentation</a></li>
+                    <li><a href="benchmark_configuration.html">Benchmark configuration</a></li>
+                    <li><a href="stage_list.html">Stage list</a></li>
+                    <li><a href="trait_list.html">Trait list</a></li>
+                    <li><a href="namespaces.html">Namespaces</a></li>
+                  </ul>
+                </li>
+                <li>Measuring performance
+                  <ul>
+                    <li><a href="stress_test.html">Stress test</a></li>
+                    <li><a href="measuring_performance_rg2.html">Understanding results in RG 2</a></li>
+                    <li><a href="measuring_performance_rg3.html">Understanding results in RG 3</a></li>
+                  </ul>
+                </li>
+                <li>Other docs
+                  <ul>
+                    <li><a href="failover_tests.html">Failover tests</a></li>
+                    <li><a href="benchmarking_jta_performance.html">Benchmarking JTA performance</a></li>
+                    <li><a href="coherence_plugin_setup.html">Coherence plugin setup</a></li>
+                  </ul>
+                </li>
+                <li>Download
+                  <ul>
+                    <li><a href="download.html">Download</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </nav>
+          </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>Understanding results in RadarGun 2</h2>
+        <h3>
+          <a id="user-content-introduction" class="anchor" href="#introduction" aria-hidden="true"></a>Introduction</h3>
+
+        <p>The goal of this document is to describe the way how stress test results should be interpreted in RadarGun 2.x.
+          Artificial scenario of 2 different products (Product 1, Product 2) will be used with the following characteristics:</p>
+
+        <ul>
+          <li>Simple stress test (basic-operations-test) performing GET and PUT operations in ratio 4:1</li>
+          <li>Test duration - 60s</li>
+        </ul>
+
+        <p><strong>BasicOperations.Get</strong></p>
+
+        <table><tr>
+          <td>
+            <img src="https://raw.githubusercontent.com/wiki/radargun/radargun/images/stress-test_BasicOperations.Get_mean_dev.png" alt="BasicOperations.Get - Response time mean" width="90%" height="90%">
+          </td>
+          <td>
+            <img src="https://raw.githubusercontent.com/wiki/radargun/radargun/images/stress-test_BasicOperations.Get_throughput_net.png" alt="BasicOperations.Get - Throughput net" width="90%" height="90%">
+          </td>
+        </tr></table>
+
+        <table>
+          <thead>
+          <tr>
+            <th>Configuration stress-test</th>
+            <th>requests</th>
+            <th>errors</th>
+            <th>mean</th>
+            <th>std.dev</th>
+            <th>net operation throughput</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td>Product 1 / Cluster[default=4]</td>
+            <td>6295856</td>
+            <td>0</td>
+            <td>530.13 us</td>
+            <td>668.76 us</td>
+            <td>104913 reqs/s</td>
+          </tr>
+          <tr>
+            <td>Product 2 / Cluster[default=4]</td>
+            <td>2839287</td>
+            <td>0</td>
+            <td>344.5 us</td>
+            <td>5.87 ms</td>
+            <td>46816 reqs/s</td>
+          </tr>
+          </tbody>
+        </table>
+
+        <p>At first sight the results might look a bit confusing. How come Product 1 is able to achieve higher throughput than Product 2 (104913 reqs/s vs 46816 reqs/s), when the mean response time of Get requests is higher (530.13 us vs 344.5 us)? To understand this, we need to examine the results of Put operations at first.</p>
+
+        <p><strong>BasicOperations.Put</strong></p>
+
+        <table><tr>
+          <td>
+            <img src="https://raw.githubusercontent.com/wiki/radargun/radargun/images/stress-test_BasicOperations.Put_mean_dev.png" alt="BasicOperations.Put - Response time mean" width="90%" height="90%">
+          </td>
+          <td>
+            <img src="https://raw.githubusercontent.com/wiki/radargun/radargun/images/stress-test_BasicOperations.Put_throughput_net.png" alt="BasicOperations.Put - Throughput net" width="90%" height="90%">
+          </td>
+        </tr></table>
+
+        <table>
+          <thead>
+          <tr>
+            <th>Configuration stress-test</th>
+            <th>requests</th>
+            <th>errors</th>
+            <th>mean</th>
+            <th>std.dev</th>
+            <th>net operation throughput</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td>Product 1 / Cluster[default=4]</td>
+            <td>1572984</td>
+            <td>0</td>
+            <td>906.56 us</td>
+            <td>913.04 us</td>
+            <td>26212 reqs/s</td>
+          </tr>
+          <tr>
+            <td>Product 2 / Cluster[default=4]</td>
+            <td>707001</td>
+            <td>0</td>
+            <td>5.4 ms</td>
+            <td>50.92 ms</td>
+            <td>11657 reqs/s</td>
+          </tr>
+          </tbody>
+        </table>
+
+        <p>Product 1 was able to achieve higher throughput when performing Put operations (26212 reqs/s vs 11657 reqs/s). Put operations were also considerably slower than Gets for both products (Product 1 - Put: 906.56 us, Get: 530.13 us, Product 2 - Put: 5.4 ms, Get: 344.5 us). Important thing to notice here is that 4:1 Get:Put ratio is reflected in operation throughput (Product 1 - Put: 104913 reqs/s, Get: 26212 reqs/s, Product 2 - Put: 46816 reqs/s, Get: 11657 reqs/s). To proceed further, let's have a look at how the results are calculated.</p>
+
+        <p><strong>Throughput(operation) (ops/sec) = num_requests / test_duration (s)</strong></p>
+
+        <p>e.g. Product 1 - Throughput(Put)</p>
+
+        <p>26212 reqs/s = 1572984 / 60</p>
+
+        <p><strong>Response time mean (RTM)</strong></p>
+
+        <p>Here we simply record how long it took the method invocation performing a request to return.</p>
+
+        <p>It's obvious that RTM &amp; throughput calculation are not related to each other. In previous versions we provided <em>theoretical throughput</em>, which was calculated as 1 / RTM, however this doesn't reflect how many operations per second the product was <strong>actually</strong> able to perform, therefore we decided to drop it from the summary.</p>
+
+        <p>With this knowledge let's get back to the Get results. The only way how Product 1 could achieve higher Get throughput with higher response time mean is with the help of fast Puts. Indeed, in this test Product 1 performed Puts 6 times faster (906.56 us vs 5.4 ms). As the operations (Get &amp; Put) are performed one after the other, each time Product 2 spent considerable amount of time waiting for Put operation to return, Product1 was able to perform multiple operations meanwhile. This is reflected in higher request count (Product 1 - Put: 1572984, Get: 6295856, Product 2 - Put: 707001, Get: 2839287). As the throughput is calculated based only on number of requests the product was able to perform (not RTM), this can lead to misinterpretation of the results.</p>
+
+        <h3>
+          <a id="user-content-alternatives" class="anchor" href="#alternatives" aria-hidden="true"></a>Alternatives</h3>
+
+        <ol>
+          <li>Calculate total throughput as a sum of partial results (Get/Put) to avoid confusion.</li>
+          <li>If you're in a need to calculate the performance of reads and writes separately, run a test exclusively with reads or writes. This can be achieved by tweaking get-ratio and put-ratio attributes of basic-operations-test stage (e.g. get-ratio="1" put-ratio="0" for read only test).</li>
+        </ol>
+
+        <h3>
+          <a id="user-content-todo" class="anchor" href="#todo" aria-hidden="true"></a>TODO</h3>
+
+        <ol>
+          <li>Remove partial throughput charts from the report and provide "total throughput" chart only. </li>
+        </ol>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">RadarGun maintained by <a href="https://github.com/radargun">radargun</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
