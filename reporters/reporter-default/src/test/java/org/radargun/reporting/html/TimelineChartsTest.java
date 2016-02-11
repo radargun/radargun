@@ -1,3 +1,5 @@
+package org.radargun.reporting.html;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

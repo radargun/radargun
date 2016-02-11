@@ -280,6 +280,17 @@ public class Utils {
       }
    }
 
+   public static void deleteDirectory(File file) {
+      if (file.isDirectory()) {
+         for (File f : file.listFiles()) {
+            deleteDirectory(f);
+         }
+      }
+      if (file.exists()) {
+         file.delete();
+      }
+   }
+
    public static String prettyPrintTime(long time, TimeUnit unit) {
       NumberFormat nf = NumberFormat.getNumberInstance();
       nf.setMaximumFractionDigits(2);

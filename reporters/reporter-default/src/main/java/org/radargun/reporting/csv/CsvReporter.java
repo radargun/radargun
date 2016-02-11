@@ -3,6 +3,8 @@ package org.radargun.reporting.csv;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -19,6 +21,7 @@ import org.radargun.stats.representation.DataThroughput;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.MeanAndDev;
 import org.radargun.stats.representation.OperationThroughput;
+import org.radargun.stats.representation.Percentile;
 import org.radargun.utils.Utils;
 
 /**
@@ -45,6 +48,9 @@ public class CsvReporter implements Reporter {
 
    @Property(doc = "Compute aggregated statistics from all nodes. Default is true.")
    private boolean computeTotal = true;
+
+   @Property(doc = "Compute response times at certain percentiles. Default is 95% and 99%.")
+   protected double[] percentiles = new double[] { 95d, 99d };
 
    @Override
    public void run(Collection<Report> reports) {
@@ -163,24 +169,30 @@ public class CsvReporter implements Reporter {
          rowData.put(operationName + ".Requests", String.valueOf(defaultOutcome.requests));
          rowData.put(operationName + ".Errors", String.valueOf(defaultOutcome.errors));
          rowData.put(operationName + ".ResponseTimeMax", String.valueOf(defaultOutcome.responseTimeMax));
-         rowData.put(operationName + ".ResponseTimeMean", String.valueOf(defaultOutcome.responseTimeMean));
+         rowData.put(operationName + ".ResponseTimeMean", String.valueOf(round(defaultOutcome.responseTimeMean, 2)));
       }
       OperationThroughput throughput = os.getRepresentation(OperationThroughput.class, TimeUnit.MILLISECONDS.toNanos(summary.getEnd() - summary.getBegin()));
       if (throughput != null) {
-         rowData.put(operationName + ".ThroughputGross", String.valueOf(throughput.gross));
-         rowData.put(operationName + ".ThroughputNet", String.valueOf(throughput.net));
+         rowData.put(operationName + ".ThroughputGross", String.valueOf(round(throughput.gross, 1)));
+         rowData.put(operationName + ".ThroughputNet", String.valueOf(round(throughput.net, 1)));
+      }
+      for (double percentile : percentiles) {
+         Percentile result = os.getRepresentation(Percentile.class, percentile);
+         if (result != null) {
+            rowData.put(operationName + ".RTM_" + percentile, String.valueOf(round(result.responseTimeMax, 2)));
+         }
       }
       MeanAndDev meanAndDev = os.getRepresentation(MeanAndDev.class);
       if (meanAndDev != null) {
-         rowData.put(operationName + ".ResponseTimeMean", String.valueOf(meanAndDev.mean));
-         rowData.put(operationName + ".ResponseTimeDeviation", String.valueOf(meanAndDev.dev));
+         rowData.put(operationName + ".ResponseTimeMean", String.valueOf(round(meanAndDev.mean, 2)));
+         rowData.put(operationName + ".ResponseTimeDeviation", String.valueOf(round(meanAndDev.dev, 2)));
       }
       DataThroughput dataThroughput = os.getRepresentation(DataThroughput.class);
       if (dataThroughput != null) {
-         rowData.put(operationName + ".DataThrouputMin", String.valueOf(dataThroughput.minThroughput));
-         rowData.put(operationName + ".DataThrouputMax", String.valueOf(dataThroughput.maxThroughput));
-         rowData.put(operationName + ".DataThrouputMean", String.valueOf(dataThroughput.meanThroughput));
-         rowData.put(operationName + ".DataThrouputStdDeviation", String.valueOf(dataThroughput.deviation));
+         rowData.put(operationName + ".DataThrouputMin", String.valueOf(round(dataThroughput.minThroughput, 1)));
+         rowData.put(operationName + ".DataThrouputMax", String.valueOf(round(dataThroughput.maxThroughput, 1)));
+         rowData.put(operationName + ".DataThrouputMean", String.valueOf(round(dataThroughput.meanThroughput, 1)));
+         rowData.put(operationName + ".DataThrouputStdDeviation", String.valueOf(round(dataThroughput.deviation, 2)));
          rowData.put(operationName + ".TotalBytes", String.valueOf(dataThroughput.totalBytes));
          rowData.put(operationName + ".ResponseTimes", Arrays.toString(dataThroughput.responseTimes).replace(",", ""));
       }
@@ -277,6 +289,11 @@ public class CsvReporter implements Reporter {
             }
          }
       }
+   }
+
+   private double round(double number, int places) {
+      BigDecimal bigDecimal = new BigDecimal(number).setScale(places, RoundingMode.HALF_UP);
+      return bigDecimal.doubleValue();
    }
 
 }
