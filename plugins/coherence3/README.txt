@@ -1,2 +1,2 @@
 Due to licensing restrictions, Coherence JARs cannot be distributed with this benchmark framework.  To enable benchmarking
-For installing coherence follow the instructions here: https://github.com/radargun/radargun/wiki/Coherence-Plugin-Setup
+For installing coherence follow the instructions here: https://radargun.github.io/coherence_plugin_setup.html

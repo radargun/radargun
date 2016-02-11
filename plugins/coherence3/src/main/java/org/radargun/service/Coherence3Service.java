@@ -16,8 +16,6 @@ import com.oracle.common.internal.net.MultiProviderSelectionService;
 import com.oracle.common.net.SelectionService;
 import com.oracle.common.net.SelectionServices;
 import com.tangosol.net.CacheFactory;
-import com.tangosol.net.ConfigurableCacheFactory;
-import com.tangosol.net.DefaultConfigurableCacheFactory;
 import com.tangosol.net.MemberEvent;
 import com.tangosol.net.NamedCache;
 import com.tangosol.net.PartitionedService;
@@ -113,10 +111,6 @@ public class Coherence3Service implements Lifecycle, Clustered {
       return nc;
    }
 
-   protected ConfigurableCacheFactory createCacheFactory() {
-      return new DefaultConfigurableCacheFactory(configFile);
-   }
-
    @Override
    public synchronized void start() {
       if (usePOF) {
@@ -126,7 +120,6 @@ public class Coherence3Service implements Lifecycle, Clustered {
          System.setProperty("tangosol.pof.enabled", "false");
       }
       System.setProperty("tangosol.coherence.cacheconfig", configFile);
-//      CacheFactory.setConfigurableCacheFactory(createCacheFactory());
       started = true;
       // ensure that at least the main cache is started
       NamedCache cache = getCache(cacheName);

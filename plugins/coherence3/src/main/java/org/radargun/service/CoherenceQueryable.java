@@ -28,6 +28,7 @@ import com.tangosol.util.filter.LikeFilter;
 import com.tangosol.util.filter.LimitFilter;
 import com.tangosol.util.filter.NotFilter;
 import org.radargun.aggregators.LimitAggregator;
+import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.Projections;
 
@@ -52,7 +53,7 @@ public class CoherenceQueryable implements Queryable {
    }
 
    @Override
-   public QueryBuilder getBuilder(String containerName, Class<?> clazz) {
+   public Query.Builder getBuilder(String containerName, Class<?> clazz) {
       return new QueryBuilderImpl();
    }
 
@@ -75,79 +76,79 @@ public class CoherenceQueryable implements Queryable {
       }
    }
 
-   private static class QueryBuilderImpl implements QueryBuilder {
+   private static class QueryBuilderImpl implements Query.Builder {
       private final ArrayList<Filter> filters = new ArrayList<Filter>();
-      private LinkedHashMap<String, SortOrder> orderBy;
+      private LinkedHashMap<String, Query.SortOrder> orderBy;
       private long offset = 0, limit = -1;
       private String[] projection;
 
       @Override
-      public QueryBuilder subquery() {
+      public Query.Builder subquery() {
          return new QueryBuilderImpl();
       }
 
       @Override
-      public QueryBuilder eq(String attribute, Object value) {
+      public Query.Builder eq(String attribute, Object value) {
          filters.add(new EqualsFilter(attribute, value));
          return this;
       }
 
       @Override
-      public QueryBuilder lt(String attribute, Object value) {
+      public Query.Builder lt(String attribute, Object value) {
          filters.add(new LessFilter(attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public QueryBuilder le(String attribute, Object value) {
+      public Query.Builder le(String attribute, Object value) {
          filters.add(new LessEqualsFilter(attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public QueryBuilder gt(String attribute, Object value) {
+      public Query.Builder gt(String attribute, Object value) {
          filters.add(new GreaterFilter(attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public QueryBuilder ge(String attribute, Object value) {
+      public Query.Builder ge(String attribute, Object value) {
          filters.add(new GreaterEqualsFilter(attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public QueryBuilder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
+      public Query.Builder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
          filters.add(new BetweenFilter(attribute, (Comparable) lowerBound, (Comparable) upperBound));
          return this;
       }
 
       @Override
-      public QueryBuilder isNull(String attribute) {
+      public Query.Builder isNull(String attribute) {
          filters.add(new IsNullFilter(attribute));
          return this;
       }
 
       @Override
-      public QueryBuilder like(String attribute, String pattern) {
+      public Query.Builder like(String attribute, String pattern) {
          filters.add(new LikeFilter(attribute, pattern));
          return this;
       }
 
       @Override
-      public QueryBuilder contains(String attribute, Object value) {
+      public Query.Builder contains(String attribute, Object value) {
          filters.add(new ContainsFilter(attribute, value));
          return this;
       }
 
       @Override
-      public QueryBuilder not(QueryBuilder subquery) {
+      public Query.Builder not(Query.Builder subquery) {
          filters.add(new NotFilter(((QueryBuilderImpl) subquery).getFilter()));
          return this;
       }
 
       @Override
-      public QueryBuilder any(QueryBuilder... subqueries) {
+      public Query.Builder any(Query.Builder... subqueries) {
          Filter[] subs = new Filter[subqueries.length];
          for (int i = 0; i < subqueries.length; ++i) {
             subs[i] = ((QueryBuilderImpl) subqueries[i]).getFilter();
@@ -157,8 +158,8 @@ public class CoherenceQueryable implements Queryable {
       }
 
       @Override
-      public QueryBuilder orderBy(String attribute, SortOrder order) {
-         if (orderBy == null) orderBy = new LinkedHashMap<String, SortOrder>();
+      public Query.Builder orderBy(String attribute, Query.SortOrder order) {
+         if (orderBy == null) orderBy = new LinkedHashMap<String, Query.SortOrder>();
          if (orderBy.put(attribute, order) != null) {
             throw new IllegalArgumentException("Order by " + attribute + " already set");
          }
@@ -171,7 +172,7 @@ public class CoherenceQueryable implements Queryable {
       }
 
       @Override
-      public QueryBuilder projection(String... attribute) {
+      public Query.Builder projection(String... attribute) {
          if (attribute == null || attribute.length == 0) throw new IllegalArgumentException();
          if (projection != null) throw new IllegalStateException("Projection already set");
          this.projection = attribute;
@@ -179,14 +180,14 @@ public class CoherenceQueryable implements Queryable {
       }
 
       @Override
-      public QueryBuilder offset(long offset) {
+      public Query.Builder offset(long offset) {
          if (this.offset < 0) throw new IllegalArgumentException("Offset " + offset + " < 0 not allowed");
          this.offset = offset;
          return this;
       }
 
       @Override
-      public QueryBuilder limit(long limit) {
+      public Query.Builder limit(long limit) {
          if (limit < 1) throw new IllegalArgumentException("Limit " + limit + " < 1 not allowed");
          this.limit = limit;
          return this;
@@ -295,7 +296,7 @@ public class CoherenceQueryable implements Queryable {
       }
 
       @Override
-      public QueryResult execute(QueryContext resource) {
+      public Query.Result execute(Query.Context resource) {
          NamedCache cache = getCache(resource);
          if (projection == null) {
             if (comparator == null) {
@@ -325,13 +326,13 @@ public class CoherenceQueryable implements Queryable {
          }
       }
 
-      protected NamedCache getCache(QueryContext context) {
+      protected NamedCache getCache(Query.Context context) {
          QueryContextImpl impl = (QueryContextImpl) context;
          return impl.cache;
       }
    }
 
-   private static class QueryResultImpl implements QueryResult {
+   private static class QueryResultImpl implements Query.Result {
       private final Set<Map.Entry> entrySet;
       private final Collection valueSet;
       private final int skip;
@@ -393,7 +394,7 @@ public class CoherenceQueryable implements Queryable {
       }
    }
 
-   protected static class QueryContextImpl implements Queryable.QueryContext {
+   protected static class QueryContextImpl implements Query.Context {
       protected final NamedCache cache;
 
       public QueryContextImpl(NamedCache cache) {
@@ -407,20 +408,20 @@ public class CoherenceQueryable implements Queryable {
 
    public static class ProjectionComparator implements Comparator, Serializable, PortableObject {
       private int index;
-      private SortOrder order;
+      private Query.SortOrder order;
 
       public ProjectionComparator() {
          // for POF deserialization only
       }
 
-      private ProjectionComparator(int index, SortOrder order) {
+      private ProjectionComparator(int index, Query.SortOrder order) {
          this.index = index;
          this.order = order;
       }
 
       @Override
       public int compare(Object o1, Object o2) {
-         return order == SortOrder.ASCENDING ? compareAsc(o1, o2) : compareAsc(o2, o1);
+         return order == Query.SortOrder.ASCENDING ? compareAsc(o1, o2) : compareAsc(o2, o1);
       }
 
       private final int compareAsc(Object o1, Object o2) {
@@ -438,7 +439,7 @@ public class CoherenceQueryable implements Queryable {
       @Override
       public void readExternal(PofReader pofReader) throws IOException {
          index = pofReader.readInt(0);
-         order = SortOrder.values()[pofReader.readInt(1)];
+         order = Query.SortOrder.values()[pofReader.readInt(1)];
       }
 
       @Override
