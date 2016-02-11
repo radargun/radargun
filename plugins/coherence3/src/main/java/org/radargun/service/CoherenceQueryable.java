@@ -316,7 +316,7 @@ public class CoherenceQueryable implements Queryable {
       }
    }
 
-   private static class QueryResultImpl implements QueryResult {
+   private static class QueryResultImpl implements Query.QueryResult {
       private final Set<Map.Entry> entrySet;
       private final Collection valueSet;
       private final int skip;
