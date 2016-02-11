@@ -1,7 +1,8 @@
+package org.radargun.reporting.html;
+
 import java.io.IOException;
 import java.util.Random;
 
-import org.radargun.reporting.html.LineChart;
 import org.testng.annotations.Test;
 
 /**
