@@ -97,7 +97,7 @@ public class TimelineChart {
       for (Timeline.Event event : events) {
          if (event instanceof Timeline.Value) {
             Timeline.Value value = (Timeline.Value) event;
-            int bucket = (int) ((event.timestamp - startTimestamp) * MAX_EVENT_VALUES / (endTimestamp - startTimestamp));
+            int bucket = (int) ((event.timestamp - startTimestamp) * (MAX_EVENT_VALUES - 1) / (endTimestamp - startTimestamp));
             if (minValues[bucket] == null) {
                minValues[bucket] = value.value;
                maxValues[bucket] = value.value;
