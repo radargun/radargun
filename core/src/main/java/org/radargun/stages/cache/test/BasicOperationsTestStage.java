@@ -1,5 +1,7 @@
 package org.radargun.stages.cache.test;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
 
 import org.radargun.Operation;
@@ -50,6 +52,25 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
             .add(BasicOperations.REMOVE, removeRatio)
             .add(BasicOperations.GET_AND_REMOVE, getAndRemoveRatio)
             .build();
+      statisticsPrototype.registerOperationsGroup(BasicOperations.class.getSimpleName() + ".Total",
+                                                  new HashSet<>(Arrays.asList(
+                                                        BasicOperations.GET,
+                                                        Invocations.Get.GET_NULL,
+                                                        BasicOperations.CONTAINS_KEY,
+                                                        BasicOperations.PUT,
+                                                        BasicOperations.GET_AND_PUT,
+                                                        BasicOperations.REMOVE,
+                                                        BasicOperations.GET_AND_REMOVE)));
+      statisticsPrototype.registerOperationsGroup(BasicOperations.class.getSimpleName() + ".Total.TX",
+                                                  new HashSet<>(Arrays.asList(
+                                                        Invocations.Get.GET_TX,
+                                                        Invocations.Get.GET_NULL_TX,
+                                                        Invocations.ContainsKey.TX,
+                                                        Invocations.Put.TX,
+                                                        Invocations.GetAndPut.TX,
+                                                        Invocations.Remove.TX,
+                                                        Invocations.GetAndRemove.TX
+                                                  )));
    }
 
    @Override

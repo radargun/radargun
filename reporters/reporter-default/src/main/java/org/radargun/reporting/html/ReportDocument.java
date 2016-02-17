@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.radargun.Operation;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -101,9 +102,9 @@ public abstract class ReportDocument extends HtmlDocument {
       return resultFileName;
    }
 
-   protected boolean createChart(String filename, int clusterSize, String operation, String rangeAxisLabel,
+   protected boolean createChart(String filename, int clusterSize, String target, String rangeAxisLabel,
                                  ChartType chartType) throws IOException {
-      ComparisonChart chart = generateChart(clusterSize, operation, rangeAxisLabel, chartType);
+      ComparisonChart chart = generateChart(clusterSize, target, rangeAxisLabel, chartType);
       if (chart != null) {
          chart.setWidth(Math.min(Math.max(maxConfigurations, maxIterations) * 100 + 200, 1800));
          chart.setHeight(Math.min(maxConfigurations * 100 + 200, 800));
@@ -126,7 +127,7 @@ public abstract class ReportDocument extends HtmlDocument {
       return chart;
    }
 
-   protected boolean addToChart(ComparisonChart chart, String subCategory, String operation, ChartType chartType,
+   protected boolean addToChart(ComparisonChart chart, String subCategory, String target, ChartType chartType,
                                 Map<Report, List<Aggregation>> reportAggregationMap) {
       Map<String, List<Report>> byConfiguration = Projections.groupBy(reportAggregationMap.keySet(), new Projections.Func<Report, String>() {
          @Override
@@ -136,9 +137,22 @@ public abstract class ReportDocument extends HtmlDocument {
       });
       for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
          for (Aggregation aggregation : entry.getValue()) {
-            OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
-            if (operationStats == null)
-               return false;
+            OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(target);
+            if (operationStats == null) {
+               // For throughput charts, check whether target is a group of operations
+               OperationStats groupOperationStats = aggregation.totalStats.getOperationStatsForGroups().get(target);
+               if (groupOperationStats != null && (chartType == ChartType.OPERATION_THROUGHPUT_GROSS || chartType == ChartType.OPERATION_THROUGHPUT_NET)) {
+                  operationStats = groupOperationStats;
+               } else {
+                  return false;
+               }
+            } else {
+               // Check whether operation belongs to any group. If so, skip throughput chart generation
+               String operatiosGroup = aggregation.totalStats.getOperationsGroup(Operation.getByName(target));
+               if (operatiosGroup != null && (chartType == ChartType.OPERATION_THROUGHPUT_GROSS || chartType == ChartType.OPERATION_THROUGHPUT_NET)) {
+                  return false;
+               }
+            }
 
             String categoryName = entry.getKey().getConfiguration().name;
             if (subCategory != null) {
@@ -230,6 +244,14 @@ public abstract class ReportDocument extends HtmlDocument {
                @Override
                public boolean accept(Aggregation aggregation) {
                   OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
+                  if (operationStats == null) {
+                     operationStats = aggregation.totalStats.getOperationStatsForGroups().get(operation);
+                  } else if (OperationThroughput.class.equals(representationClass)) { // Both op stats present -> operation group defined, skip throughput
+                     String operationsGroup = aggregation.totalStats.getOperationsGroup(Operation.getByName(operation));
+                     if (operationsGroup != null) {
+                        return false;
+                     }
+                  }
                   return operationStats != null && operationStats.getRepresentation(representationClass, representationArgs) != null;
                }
             });
@@ -237,26 +259,26 @@ public abstract class ReportDocument extends HtmlDocument {
       });
    }
 
-   public void createCharts(String operation, int clusterSize) throws IOException {
+   public void createCharts(String target, int clusterSize) throws IOException {
       String suffix = clusterSize > 0 ? "_" + clusterSize : "";
       String directory = this.directory.endsWith(File.separator) ? this.directory : this.directory + File.separator;
 
       if (createChart(
-              String.format("%s%s%s_%s%s_mean_dev.png", directory, File.separator, testName, operation, suffix),
-              clusterSize, operation, "Response time (ms)", ChartType.MEAN_AND_DEV))
-         generatedCharts.add("mean_dev");
+              String.format("%s%s%s_%s%s_mean_dev.png", directory, File.separator, testName, target, suffix),
+              clusterSize, target, "Response time (ms)", ChartType.MEAN_AND_DEV))
+         generatedCharts.add("mean_dev" + "_" + target);
       if (createChart(
-              String.format("%s%s%s_%s%s_throughput_gross.png", directory, File.separator, testName, operation, suffix),
-              clusterSize, operation, "Operations/sec", ChartType.OPERATION_THROUGHPUT_GROSS))
-         generatedCharts.add("throughput_gross");
+              String.format("%s%s%s_%s%s_throughput_gross.png", directory, File.separator, testName, target, suffix),
+              clusterSize, target, "Operations/sec", ChartType.OPERATION_THROUGHPUT_GROSS))
+         generatedCharts.add("throughput_gross" + "_" + target);
       if (createChart(
-              String.format("%s%s%s_%s%s_throughput_net.png", directory, File.separator, testName, operation, suffix),
-              clusterSize, operation, "Operations/sec", ChartType.OPERATION_THROUGHPUT_NET))
-         generatedCharts.add("throughput_net");
+              String.format("%s%s%s_%s%s_throughput_net.png", directory, File.separator, testName, target, suffix),
+              clusterSize, target, "Operations/sec", ChartType.OPERATION_THROUGHPUT_NET))
+         generatedCharts.add("throughput_net" + "_" + target);
       if (createChart(
-              String.format("%s%s%s_%s%s_data_throughput.png", directory, File.separator, testName, operation, suffix),
-              clusterSize, operation, "MB/sec", ChartType.DATA_THROUGHPUT))
-         generatedCharts.add("data_throughput");
+              String.format("%s%s%s_%s%s_data_throughput.png", directory, File.separator, testName, target, suffix),
+              clusterSize, target, "MB/sec", ChartType.DATA_THROUGHPUT))
+         generatedCharts.add("data_throughput" + "_" + target);
    }
 
    // generating Histogram and Percentile Graphs
@@ -409,6 +431,9 @@ public abstract class ReportDocument extends HtmlDocument {
       OperationStats operationStats = null;
       if (statistics != null) {
          operationStats = statistics.getOperationsStats().get(operation);
+      }
+      if (operationStats == null) {
+         operationStats = statistics.getOperationStatsForGroups().get(operation);
       }
       return operationStats;
    }

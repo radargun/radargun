@@ -11,6 +11,8 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.TemporalOperations;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
 
 /**
@@ -68,6 +70,27 @@ public class TemporalOperationsTestStage extends CacheOperationsTestStage {
             .add(TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN, putIfAbsentWithLifespanRatio)
             .add(TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE, putIfAbsentWithLifespanAndMaxIdleRatio)
             .build();
+      statisticsPrototype.registerOperationsGroup(TemporalOperations.class.getSimpleName() + ".Total",
+                                                  new HashSet<>(Arrays.asList(
+                                                        BasicOperations.GET,
+                                                        Invocations.Get.GET_NULL,
+                                                        TemporalOperations.PUT_WITH_LIFESPAN,
+                                                        TemporalOperations.GET_AND_PUT_WITH_LIFESPAN,
+                                                        TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE,
+                                                        TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE,
+                                                        TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN,
+                                                        TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE)));
+      statisticsPrototype.registerOperationsGroup(TemporalOperations.class.getSimpleName() + ".Total.TX",
+                                                  new HashSet<>(Arrays.asList(
+                                                        Invocations.Get.GET_TX,
+                                                        Invocations.Get.GET_NULL_TX,
+                                                        Invocations.PutWithLifespan.TX,
+                                                        Invocations.GetAndPutWithLifespan.TX,
+                                                        Invocations.PutWithLifespanAndMaxIdle.TX,
+                                                        Invocations.GetAndPutWithLifespanAndMaxIdle.TX,
+                                                        Invocations.PutIfAbsentWithLifespan.TX,
+                                                        Invocations.PutIfAbsentWithLifespanAndMaxIdle.TX
+                                                  )));
    }
 
    @Override

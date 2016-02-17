@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.radargun.Operation;
 import org.radargun.config.DefinitionElement;
@@ -105,12 +106,27 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationD
    }
 
    @Override
+   public void registerOperationsGroup(String name, Set<Operation> operations) {
+      prototype.registerOperationsGroup(name, operations);
+   }
+
+   @Override
    public void merge(Statistics otherStats) {
       throw new UnsupportedOperationException();
    }
 
    @Override
    public Map<String, OperationStats> getOperationsStats() {
+      return prototype.getOperationsStats();
+   }
+
+   @Override
+   public String getOperationsGroup(Operation operation) {
+      return prototype.getOperationsGroup(operation);
+   }
+
+   @Override
+   public Map<String, OperationStats> getOperationStatsForGroups() {
       throw new UnsupportedOperationException();
    }
 

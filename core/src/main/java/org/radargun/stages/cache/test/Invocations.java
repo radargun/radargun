@@ -20,9 +20,9 @@ import org.radargun.traits.Queryable;
  */
 public class Invocations {
    public static final class Get implements Invocation {
-      private final static Operation GET_NULL = BasicOperations.GET.derive("Null");
-      private final static Operation GET_TX = BasicOperations.GET.derive("TX");
-      private final static Operation GET_NULL_TX = BasicOperations.GET.derive("TX");
+      public final static Operation GET_NULL = BasicOperations.GET.derive("Null");
+      public final static Operation GET_TX = BasicOperations.GET.derive("TX");
+      public final static Operation GET_NULL_TX = BasicOperations.GET.derive("TX");
       private final BasicOperations.Cache cache;
       private final Object key;
       private Object value;
@@ -49,7 +49,7 @@ public class Invocations {
    }
 
    public static final class Put implements Invocation {
-      private final static Operation TX = BasicOperations.PUT.derive("TX");
+      public final static Operation TX = BasicOperations.PUT.derive("TX");
       private final BasicOperations.Cache cache;
       private final Object key;
       private final Object value;
@@ -78,7 +78,7 @@ public class Invocations {
    }
 
    public static final class PutWithLifespan implements Invocation {
-      private final static Operation TX = TemporalOperations.PUT_WITH_LIFESPAN.derive("TX");
+      public final static Operation TX = TemporalOperations.PUT_WITH_LIFESPAN.derive("TX");
       private final TemporalOperations.Cache cache;
       private final Object key;
       private final Object value;
@@ -109,7 +109,7 @@ public class Invocations {
    }
 
    public static final class PutWithLifespanAndMaxIdle implements Invocation {
-      private final static Operation TX = TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
+      public final static Operation TX = TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
       private final TemporalOperations.Cache cache;
       private final Object key;
       private final Object value;
@@ -142,7 +142,7 @@ public class Invocations {
    }
 
    public static final class Remove implements Invocation {
-      private final static Operation TX = BasicOperations.REMOVE.derive("TX");
+      public final static Operation TX = BasicOperations.REMOVE.derive("TX");
       private final BasicOperations.Cache cache;
       private final Object key;
 
@@ -168,7 +168,7 @@ public class Invocations {
    }
 
    public static final class ContainsKey implements Invocation {
-      private final static Operation TX = BasicOperations.CONTAINS_KEY.derive("TX");
+      public final static Operation TX = BasicOperations.CONTAINS_KEY.derive("TX");
       private final BasicOperations.Cache cache;
       private final Object key;
 
@@ -194,7 +194,7 @@ public class Invocations {
    }
 
    public static final class GetAndPut implements Invocation {
-      private final static Operation TX = BasicOperations.GET_AND_PUT.derive("TX");
+      public final static Operation TX = BasicOperations.GET_AND_PUT.derive("TX");
       private final BasicOperations.Cache cache;
       private final Object key;
       private final Object value;
@@ -222,7 +222,7 @@ public class Invocations {
    }
 
    public static final class GetAndPutWithLifespan implements Invocation {
-      private final static Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN.derive("TX");
+      public final static Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN.derive("TX");
       private final TemporalOperations.Cache cache;
       private final Object key;
       private final Object value;
@@ -250,7 +250,7 @@ public class Invocations {
    }
 
    public static final class GetAndPutWithLifespanAndMaxIdle implements Invocation {
-      private final static Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
+      public final static Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
       private final TemporalOperations.Cache cache;
       private final Object key;
       private final Object value;
@@ -280,7 +280,7 @@ public class Invocations {
    }
 
    public static final class GetAndRemove implements Invocation {
-      private final static Operation TX = BasicOperations.GET_AND_REMOVE.derive("TX");
+      public final static Operation TX = BasicOperations.GET_AND_REMOVE.derive("TX");
       private final BasicOperations.Cache cache;
       private final Object key;
 
@@ -306,7 +306,7 @@ public class Invocations {
    }
 
    public static final class PutIfAbsent implements Invocation {
-      private final static Operation TX = ConditionalOperations.PUT_IF_ABSENT.derive("TX");
+      public final static Operation TX = ConditionalOperations.PUT_IF_ABSENT.derive("TX");
       private final ConditionalOperations.Cache cache;
       private final Object key;
       private final Object value;
@@ -334,7 +334,7 @@ public class Invocations {
    }
 
    public static final class PutIfAbsentWithLifespan implements Invocation {
-      private final static Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN.derive("TX");
+      public final static Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN.derive("TX");
       private final TemporalOperations.Cache cache;
       private final Object key;
       private final Object value;
@@ -364,7 +364,7 @@ public class Invocations {
    }
 
    public static final class PutIfAbsentWithLifespanAndMaxIdle implements Invocation {
-      private final static Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
+      public final static Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
       private final TemporalOperations.Cache cache;
       private final Object key;
       private final Object value;
@@ -396,7 +396,7 @@ public class Invocations {
    }
 
    public static final class RemoveConditionally implements Invocation {
-      private final static Operation TX = ConditionalOperations.REMOVE.derive("TX");
+      public final static Operation TX = ConditionalOperations.REMOVE.derive("TX");
       private final ConditionalOperations.Cache cache;
       private final Object key;
       private final Object value;
@@ -424,7 +424,7 @@ public class Invocations {
    }
 
    public static final class Replace implements Invocation {
-      private final static Operation TX = ConditionalOperations.REPLACE.derive("TX");
+      public final static Operation TX = ConditionalOperations.REPLACE.derive("TX");
       private final ConditionalOperations.Cache cache;
       private final Object key;
       private final Object oldValue;
@@ -454,7 +454,7 @@ public class Invocations {
    }
 
    public static final class ReplaceAny implements Invocation {
-      private final static Operation TX = ConditionalOperations.REPLACE_ANY.derive("TX");
+      public final static Operation TX = ConditionalOperations.REPLACE_ANY.derive("TX");
       private final ConditionalOperations.Cache cache;
       private final Object key;
       private final Object newValue;
@@ -482,7 +482,7 @@ public class Invocations {
    }
 
    public static final class GetAndReplace implements Invocation {
-      private final static Operation TX = ConditionalOperations.GET_AND_REPLACE.derive("TX");
+      public final static Operation TX = ConditionalOperations.GET_AND_REPLACE.derive("TX");
       private final ConditionalOperations.Cache cache;
       private final Object key;
       private final Object newValue;
@@ -510,7 +510,7 @@ public class Invocations {
    }
 
    public static final class GetAll implements Invocation {
-      private final static Operation NATIVE_TX = BulkOperations.GET_ALL_NATIVE.derive("TX");
+      public final static Operation NATIVE_TX = BulkOperations.GET_ALL_NATIVE.derive("TX");
       private final static Operation ASYNC_TX = BulkOperations.GET_ALL_ASYNC.derive("TX");
       private final BulkOperations.Cache cache;
       private final Set keys;
@@ -539,7 +539,7 @@ public class Invocations {
    }
 
    public static final class PutAll implements Invocation {
-      private final static Operation NATIVE_TX = BulkOperations.PUT_ALL_NATIVE.derive("TX");
+      public final static Operation NATIVE_TX = BulkOperations.PUT_ALL_NATIVE.derive("TX");
       private final static Operation ASYNC_TX = BulkOperations.PUT_ALL_ASYNC.derive("TX");
       private final BulkOperations.Cache cache;
       private final Map entries;
@@ -569,7 +569,7 @@ public class Invocations {
    }
 
    public static final class RemoveAll implements Invocation {
-      private final static Operation NATIVE_TX = BulkOperations.REMOVE_ALL_NATIVE.derive("TX");
+      public final static Operation NATIVE_TX = BulkOperations.REMOVE_ALL_NATIVE.derive("TX");
       private final static Operation ASYNC_TX = BulkOperations.REMOVE_ALL_ASYNC.derive("TX");
       private final BulkOperations.Cache cache;
       private final Set keys;
@@ -599,7 +599,7 @@ public class Invocations {
    }
 
    public static final class Query implements Invocation {
-      protected static final Operation TX = Queryable.QUERY.derive("TX");
+      public static final Operation TX = Queryable.QUERY.derive("TX");
       private final org.radargun.traits.Query query;
 
       public Query(org.radargun.traits.Query query) {

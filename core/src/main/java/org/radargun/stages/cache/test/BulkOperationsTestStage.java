@@ -1,5 +1,6 @@
 package org.radargun.stages.cache.test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -13,6 +14,7 @@ import org.radargun.config.Stage;
 import org.radargun.stages.test.Invocation;
 import org.radargun.stages.test.OperationLogic;
 import org.radargun.stages.test.Stressor;
+import org.radargun.traits.BasicOperations;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.InjectTrait;
 
@@ -58,6 +60,20 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
             .add(BulkOperations.REMOVE_ALL_NATIVE, removeAllNativeRatio)
             .add(BulkOperations.REMOVE_ALL_ASYNC, removeAllAsyncRatio)
             .build();
+      statisticsPrototype.registerOperationsGroup(BulkOperations.class.getSimpleName() + ".Total",
+                                                  new HashSet<>(Arrays.asList(
+                                                        BulkOperations.GET_ALL_NATIVE,
+                                                        BulkOperations.GET_ALL_ASYNC,
+                                                        BulkOperations.PUT_ALL_NATIVE,
+                                                        BulkOperations.PUT_ALL_ASYNC,
+                                                        BulkOperations.REMOVE_ALL_NATIVE,
+                                                        BulkOperations.REMOVE_ALL_ASYNC)));
+      statisticsPrototype.registerOperationsGroup(BulkOperations.class.getSimpleName() + ".Total.TX",
+                                                  new HashSet<>(Arrays.asList(
+                                                        Invocations.GetAll.NATIVE_TX,
+                                                        Invocations.PutAll.NATIVE_TX,
+                                                        Invocations.RemoveAll.NATIVE_TX
+                                                  )));
    }
 
    @Override

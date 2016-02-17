@@ -1,5 +1,6 @@
 package org.radargun;
 
+import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -8,7 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public final class Operation {
+// TODO split into Operation + operations repository
+public final class Operation implements Serializable {
    private static int nextId = 1;
    private static ConcurrentHashMap<Integer, Operation> byId = new ConcurrentHashMap<Integer, Operation>();
    private static ConcurrentHashMap<String, Operation> byName = new ConcurrentHashMap<String, Operation>();
@@ -88,10 +90,22 @@ public final class Operation {
       return operation;
    }
 
+   /**
+    * Remove all registered operations. WARNING: Should only be used when no clients access Operations class any longer (e.g. testing purposes)
+    */
+   public static synchronized void clear() {
+      nextId = 1;
+      byId.clear();
+      byName.clear();
+   }
+
    @Override
    public boolean equals(Object o) {
-      // there should be only one instance of each operation
-      return this == o;
+      if (o instanceof Operation) {
+         Operation op = (Operation) o;
+         return this.id == op.id;
+      }
+      return false;
    }
 
    @Override

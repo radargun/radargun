@@ -33,6 +33,7 @@ public class TestAggregations {
 
    private int maxIterations = 0;
    private Set<String> operations = new TreeSet<>();
+   private Set<String> operationGroups = new TreeSet<>();
    private Set<Cluster> clusters = new TreeSet<>();
 
    public TestAggregations(String testName, List<Report.Test> tests){
@@ -112,18 +113,19 @@ public class TestAggregations {
          for (Map.Entry<String, OperationStats> op : totalStats.getOperationsStats().entrySet()) {
             if (!op.getValue().isEmpty()) operations.add(op.getKey());
          }
+         operationGroups.addAll(totalStats.getOperationStatsForGroups().keySet());
       }
 
       if (it != null && it.getResults() != null) {
          for (Map.Entry<String, Report.TestResult> entry : it.getResults().entrySet()) {
             Map<Report, List<Report.TestResult>> resultsByType = results.get(entry.getKey());
             if (resultsByType == null) {
-               resultsByType = new TreeMap<Report, List<Report.TestResult>>();
+               resultsByType = new TreeMap<>();
                results.put(entry.getKey(), resultsByType);
             }
             List<Report.TestResult> resultsList = resultsByType.get(test.getReport());
             if (resultsList == null) {
-               resultsList = new ArrayList<Report.TestResult>();
+               resultsList = new ArrayList<>();
                resultsByType.put(test.getReport(), resultsList);
             }
             resultsList.add(entry.getValue());
@@ -145,6 +147,10 @@ public class TestAggregations {
 
    public Set<String> getAllOperations() {
       return Collections.unmodifiableSet(operations);
+   }
+
+   public Set<String> getOperationGroups() {
+      return Collections.unmodifiableSet(operationGroups);
    }
 
    public Set<Cluster> getAllClusters() {

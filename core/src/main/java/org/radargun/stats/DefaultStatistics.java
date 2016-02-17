@@ -1,10 +1,15 @@
 package org.radargun.stats;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.radargun.Operation;
 import org.radargun.config.DefinitionElement;
@@ -19,6 +24,9 @@ import org.radargun.config.Property;
 public class DefaultStatistics extends IntervalStatistics {
    private transient OperationStats[] operationStats = new OperationStats[0];
    private Map<String, OperationStats> operationStatsMap = new HashMap<String, OperationStats>();
+
+   private Map<String, Set<Operation>> groupOperationsMap = new HashMap<>();
+   private Map<Operation, String> operationGroupMap = new HashMap<>();
 
    @Property(name = "operationStats", doc = "Operation statistics prototype.", complexConverter = OperationStats.Converter.class)
    protected OperationStats prototype = new DefaultOperationStats();
@@ -94,12 +102,29 @@ public class DefaultStatistics extends IntervalStatistics {
       return copy;
    }
 
+   @Override
+   public void registerOperationsGroup(String name, Set<Operation> operations) {
+      if (groupOperationsMap.containsKey(name)) {
+         throw new IllegalArgumentException("Group with name " + name + " already exists");
+      }
+      for (Map.Entry<String, Set<Operation>> entry : groupOperationsMap.entrySet()) {
+         for (Operation operation : operations) {
+            if (entry.getValue().contains(operation)) {
+               throw new IllegalArgumentException("Operation " + operation + " is already included in group " + entry.getKey());
+            }
+         }
+      }
+      groupOperationsMap.put(name, operations);
+      for (Operation operation : operations) {
+         ensure(operation.id + 1);
+         operationGroupMap.put(operation, name);
+      }
+   }
+
    /**
-    *
     * Merge otherStats to this. leaves otherStats unchanged.
     *
     * @param otherStats
-    *
     */
    @Override
    public void merge(Statistics otherStats) {
@@ -122,11 +147,50 @@ public class DefaultStatistics extends IntervalStatistics {
             operationStats[i].merge(stats.operationStats[i]);
          }
       }
+      for (Map.Entry<String, Set<Operation>> entryOtherStats : ((DefaultStatistics) otherStats).groupOperationsMap.entrySet()) {
+         if (!groupOperationsMap.containsKey(entryOtherStats.getKey())) {
+            groupOperationsMap.put(entryOtherStats.getKey(), new HashSet<Operation>());
+         }
+         groupOperationsMap.get(entryOtherStats.getKey()).addAll(entryOtherStats.getValue());
+      }
+      for (Map.Entry<Operation, String> entryOtherStats : ((DefaultStatistics) otherStats).operationGroupMap.entrySet()) {
+         String groupThisStats = operationGroupMap.get(entryOtherStats.getKey());
+         if (groupThisStats != null && !groupThisStats.equals(entryOtherStats.getValue())) {
+            throw new IllegalStateException(String.format("Operation %s was already registered with different group %s, expected %s",
+                                                          entryOtherStats.getKey(), entryOtherStats.getValue(), groupThisStats));
+         }
+         operationGroupMap.put(entryOtherStats.getKey(), entryOtherStats.getValue());
+      }
    }
 
    @Override
    public Map<String, OperationStats> getOperationsStats() {
       return operationStatsMap;
+   }
+
+   @Override
+   public Map<String, OperationStats> getOperationStatsForGroups() {
+      Map<String, OperationStats> result = new HashMap<>(groupOperationsMap.size());
+      for (Map.Entry<String, Set<Operation>> entry : groupOperationsMap.entrySet()) {
+         OperationStats mergedOperationStats = null;
+         for (Operation operation : entry.getValue()) {
+            OperationStats os = operationStats[operation.id];
+            if (mergedOperationStats == null) {
+               mergedOperationStats = os.copy();
+            } else {
+               mergedOperationStats.merge(os);
+            }
+         }
+         if (!mergedOperationStats.isEmpty()) {
+            result.put(entry.getKey(), mergedOperationStats);
+         }
+      }
+      return result;
+   }
+
+   @Override
+   public String getOperationsGroup(Operation operation) {
+      return operationGroupMap.get(operation);
    }
 
    @Override

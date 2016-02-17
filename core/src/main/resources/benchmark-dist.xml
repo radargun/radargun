@@ -16,7 +16,7 @@
    <!-- List of configurations of the services -->
    <configurations>
       <config name="Infinispan 5.2 - distributed">
-         <!-- All slaves use the same configuration -->
+      <!-- All slaves use the same configuration -->
          <setup plugin="infinispan52">
             <embedded xmlns="urn:radargun:plugins:infinispan52:2.2" file="dist-sync.xml"/>
          </setup>
