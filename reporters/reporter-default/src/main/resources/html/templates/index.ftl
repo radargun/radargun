@@ -65,7 +65,17 @@
                             <ul>
                                <#list setup.properties?keys as property>
                                  <@writeProperty name=property definition=(setup.properties)[property] />
-                              </#list>
+                               </#list>
+                            </ul>
+                        </li>
+                     </#if>
+                     <#if setup.vmArgs??>
+                        <li>
+                           VM args:
+                            <ul>
+                               <#list setup.vmArgs?keys as arg>
+                                 <@writeProperty name=arg definition=(setup.vmArgs)[arg] />
+                               </#list>
                             </ul>
                         </li>
                      </#if>
@@ -132,13 +142,14 @@
    ${name} : ${definition}
 </li>
 <#elseif definition.getClass().getSimpleName() == "ComplexDefinition">
-<li>
-    <ul>
-       <#list definition.attributes?keys as attributeKey>
-            <@writeProperty name=attributeKey definition=(definition.attributes)[attributeKey]/>
+   <li>
+      ${name}:
+      <ul>
+         <#list definition.attributes as attribute>
+            <@writeProperty name=attribute.name definition=attribute.definition/>
          </#list>
-    </ul>
-</li>
+      </ul>
+   </li>
 </#if>
 </#macro>
 
