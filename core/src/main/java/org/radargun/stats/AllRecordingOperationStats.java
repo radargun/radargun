@@ -9,7 +9,6 @@ import org.radargun.stats.representation.Histogram;
 import org.radargun.stats.representation.MeanAndDev;
 import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.stats.representation.Percentile;
-import org.radargun.utils.Projections;
 
 /**
  * This class remembers all requests as these came, storing them in memory.
@@ -154,7 +153,7 @@ public class AllRecordingOperationStats implements OperationStats {
             ranges.add(max);
             counts.add(accCount - lastCount);
          }
-         return new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
+         return new Histogram(ranges.stream().mapToLong(l -> l).toArray(), counts.stream().mapToLong(l -> l).toArray());
       }
    }
 

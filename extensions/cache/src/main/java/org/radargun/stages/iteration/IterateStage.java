@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.radargun.DistStageAck;
 import org.radargun.Operation;
@@ -22,7 +23,6 @@ import org.radargun.stats.Statistics;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Iterable;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
@@ -100,14 +100,9 @@ public class IterateStage extends LegacyTestStage {
             test.setIterationValue(testIteration, iterationValue);
          }
       }
-      for (IterationAck ack : Projections.instancesOf(acks, IterationAck.class)) {
+      for (IterationAck ack : instancesOf(acks, IterationAck.class)) {
          if (test != null) {
-            test.addStatistics(getTestIteration(), ack.getSlaveIndex(), Projections.project(ack.results, new Projections.Func<IterationResult, Statistics>() {
-               @Override
-               public Statistics project(IterationResult result) {
-                  return result.stats;
-               }
-            }));
+            test.addStatistics(getTestIteration(), ack.getSlaveIndex(), ack.results.stream().map(r -> r.stats).collect(Collectors.toList()));
          }
          long slaveMinElements = -1, slaveMaxElements = -1;
          for (int i = 0; i < ack.results.size(); ++i) {

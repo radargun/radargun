@@ -13,7 +13,6 @@ import org.radargun.reporting.Report;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.utils.MinMax;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeService;
 
 /**
@@ -96,7 +95,7 @@ public class TestStage extends BaseTestStage {
       Map<Integer, Report.SlaveResult> slaveResults = new HashMap<Integer, Report.SlaveResult>();
       Statistics aggregated = null;
       boolean failed = false;
-      for (StatisticsAck ack : Projections.instancesOf(acks, StatisticsAck.class)) {
+      for (StatisticsAck ack : instancesOf(acks, StatisticsAck.class)) {
          if (test != null) {
             // TODO: this looks like we could get same iteration value for all iterations reported
             String iterationValue = resolveIterationValue();

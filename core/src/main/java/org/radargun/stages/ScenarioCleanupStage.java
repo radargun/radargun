@@ -14,7 +14,6 @@ import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.SlaveState;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
@@ -97,7 +96,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
 
    @Override
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      for (CleanupAck ack : Projections.instancesOf(acks, CleanupAck.class)) {
+      for (CleanupAck ack : instancesOf(acks, CleanupAck.class)) {
          log.infof("Node %d has changed available memory from %d MB to %d MB and has %d unfinished threads",
             ack.getSlaveIndex(), ack.initialAvailableMemory / 1048576, ack.finalAvailableMemory / 1048576, ack.unfinishedThreads);
          if (ack.isError()) {

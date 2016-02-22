@@ -10,7 +10,6 @@ import java.util.TreeSet;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.commons.Aggregation;
 import org.radargun.reporting.commons.TestAggregations;
-import org.radargun.utils.Projections;
 
 /**
  * This reporter is used for combining multiple test results into 1 html document Thats specially if you want to compare
@@ -27,22 +26,11 @@ public class CombinedReportDocument extends ReportDocument {
    private Set<Integer> clusterSizes = new TreeSet<>();
 
    public CombinedReportDocument(List<TestAggregations> testAggregations, String testName, List<String> combined, String targetDir, Configuration configuration) {
-      super(targetDir, testName, Projections.max(Projections.project(testAggregations, new Projections.Func<TestAggregations, Integer>() {
-         @Override
-         public Integer project(TestAggregations testAggregations) {
-            return testAggregations.byReports().size();
-         }
-      })), Projections.max(Projections.project(testAggregations, new Projections.Func<TestAggregations, Integer>() {
-         @Override
-         public Integer project(TestAggregations testAggregations) {
-            return testAggregations.getAllClusters().size();
-         }
-      })), Projections.max(Projections.project(testAggregations, new Projections.Func<TestAggregations, Integer>() {
-         @Override
-         public Integer project(TestAggregations testAggregations) {
-            return testAggregations.getMaxIterations();
-         }
-      })), configuration);
+      super(targetDir, testName,
+            testAggregations.stream().map(ta -> ta.byReports().size()).max(Integer::max).get(),
+            testAggregations.stream().map(ta -> ta.getAllClusters().size()).max(Integer::max).get(),
+            testAggregations.stream().map(ta -> ta.getMaxIterations()).max(Integer::max).get(),
+            configuration);
       this.testAggregations = testAggregations;
       this.combined = combined;
       for (TestAggregations h : testAggregations) {
@@ -52,12 +40,7 @@ public class CombinedReportDocument extends ReportDocument {
 
    @Override
    protected ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, ChartType chartType) {
-      String iterationsName = concatOrDefault(Projections.project(testAggregations, new Projections.Func<TestAggregations, String>() {
-         @Override
-         public String project(TestAggregations testAggregations) {
-            return testAggregations.iterationsName;
-         }
-      }), null);
+      String iterationsName = testAggregations.stream().map(ta -> ta.iterationsName).collect(concatOrDefault(null));
       ComparisonChart chart = createComparisonChart(iterationsName, rangeAxisLabel);
       for (TestAggregations ta : testAggregations) {
          String subCategory;

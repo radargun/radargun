@@ -2,6 +2,7 @@ package org.radargun.stages.query;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
@@ -16,7 +17,6 @@ import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.Queryable;
-import org.radargun.utils.Projections;
 
 /**
  * This stage was refactored out to {@link org.radargun.stages.query} package in order
@@ -57,18 +57,8 @@ public class QueryStage extends LegacyTestStage {
       StageResult result = super.processAckOnMaster(acks);
       if (result.isError()) return result;
 
-      Map<Integer, QueryBase.Data> results = Projections.asMap(Projections.instancesOf(acks, QueryAck.class),
-         new Projections.Func<QueryAck, Integer>() {
-            @Override
-            public Integer project(QueryAck ack) {
-               return ack.getSlaveIndex();
-            }
-         }, new Projections.Func<QueryAck, QueryBase.Data>() {
-            @Override
-            public QueryBase.Data project(QueryAck ack) {
-               return ack.data;
-            }
-         });
+      Map<Integer, QueryBase.Data> results = acks.stream().filter(QueryAck.class::isInstance).collect(
+            Collectors.toMap(ack -> ack.getSlaveIndex(), ack -> ((QueryAck) ack).data));
       Report.Test test = getTest(true); // the test was already created in super.processAckOnMaster
 
       base.checkAndRecordResults(results, test, getTestIteration());

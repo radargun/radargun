@@ -20,7 +20,6 @@ import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
@@ -123,7 +122,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
       // we cannot use aggregated = createStatistics() since with PeriodicStatistics the merge would fail
       Statistics aggregated = null;
       int threads = 0;
-      for (StatisticsAck ack : Projections.instancesOf(acks, StatisticsAck.class)) {
+      for (StatisticsAck ack : instancesOf(acks, StatisticsAck.class)) {
          if (ack.iterations != null) {
             int i = getTestIteration();
             for (List<Statistics> threadStats : ack.iterations) {

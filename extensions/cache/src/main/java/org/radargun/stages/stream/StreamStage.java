@@ -23,7 +23,6 @@ import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Streamable;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
@@ -87,7 +86,7 @@ public class StreamStage extends AbstractDistStage {
       Map<Integer, Report.SlaveResult> numberOfResultKeysResult = new HashMap<>();
       Map<Integer, Report.SlaveResult> durationsResult = new HashMap<>();
 
-      for (StreamStageAck ack : Projections.instancesOf(acks, StreamStageAck.class)) {
+      for (StreamStageAck ack : instancesOf(acks, StreamStageAck.class)) {
          if (ack.stats != null) {
             DataOperationStats opStats = (DataOperationStats) ack.stats.getOperationsStats().get(Streamable.STREAMABLE.name);
 

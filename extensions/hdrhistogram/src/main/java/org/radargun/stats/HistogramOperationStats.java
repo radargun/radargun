@@ -18,7 +18,6 @@ import org.radargun.stats.representation.MeanAndDev;
 import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.stats.representation.Percentile;
 import org.radargun.utils.NanoTimeConverter;
-import org.radargun.utils.Projections;
 
 /**
  * Keeps several buckets for response time ranges and stores number of requests falling into this range.
@@ -124,7 +123,7 @@ public final class HistogramOperationStats implements OperationStats {
          ranges.add(value.getValueIteratedTo());
          counts.add(value.getCountAddedInThisIterationStep());
       }
-      return new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
+      return new Histogram(ranges.stream().mapToLong(l -> l).toArray(), counts.stream().mapToLong(l -> l).toArray());
    }
 
    private Histogram getReformattedHistogram(AbstractHistogram histogram, Object[] args) {
@@ -155,7 +154,7 @@ public final class HistogramOperationStats implements OperationStats {
          ranges.add(max);
          counts.add(accCount - lastCount);
       }
-      return new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
+      return new Histogram(ranges.stream().mapToLong(l -> l).toArray(), counts.stream().mapToLong(l -> l).toArray());
    }
 
    @Override
@@ -185,7 +184,7 @@ public final class HistogramOperationStats implements OperationStats {
             counts.add(value.getCountAddedInThisIterationStep());
          }
       }
-      compacted = new Histogram(Projections.toLongArray(ranges), Projections.toLongArray(counts));
+      compacted = new Histogram(ranges.stream().mapToLong(l -> l).toArray(), counts.stream().mapToLong(l -> l).toArray());
       soft = new SoftReference<>(histogram);
       histogram = null;
    }

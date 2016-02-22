@@ -11,7 +11,6 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
-import org.radargun.utils.Projections;
 import org.radargun.utils.Table;
 
 /**
@@ -54,7 +53,7 @@ public class BackgroundStatisticsStopStage extends AbstractDistStage {
       Report report = masterState.getReport();
       Report.Test test = report.createTest(testName, null, false);
       Table<Integer, Integer, Long> cacheSizes = new Table<Integer, Integer, Long>();
-      for (StatisticsAck ack : Projections.instancesOf(acks, StatisticsAck.class)) {
+      for (StatisticsAck ack : instancesOf(acks, StatisticsAck.class)) {
          int i = 0;
          for (BackgroundStatisticsManager.IterationStats stats : ack.iterations) {
             test.addStatistics(i, ack.getSlaveIndex(), stats.statistics);

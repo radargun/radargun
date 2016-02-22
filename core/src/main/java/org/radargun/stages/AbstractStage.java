@@ -1,5 +1,10 @@
 package org.radargun.stages;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
@@ -21,6 +26,10 @@ public abstract class AbstractStage implements org.radargun.Stage {
       + "error. If false, then the stages in the current scenario are skipped, "
       + "and the next scenario starts executing. Default is false.")
    protected boolean exitOnFailure = false;
+
+   protected static <T extends DistStageAck> List<T> instancesOf(Collection<? extends DistStageAck> acks, Class<T> clazz) {
+      return acks.stream().filter(clazz::isInstance).map(clazz::cast).collect(Collectors.toList());
+   }
 
    public String getName() {
       return StageHelper.getStageName(getClass());

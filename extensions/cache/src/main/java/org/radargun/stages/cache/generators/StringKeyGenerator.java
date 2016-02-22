@@ -8,9 +8,9 @@ import org.radargun.config.Property;
  */
 @DefinitionElement(name = "string", doc = "Generates strings with configurable format.")
 public class StringKeyGenerator implements KeyGenerator {
-   private final static char[] DIGITS = {
-         '0', '1', '2', '3', '4', '5', '6', '7',
-         '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+   private static final char[] DIGITS = {
+      '0', '1', '2', '3', '4', '5', '6', '7',
+      '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
    @Property(doc = "Formatting string for the keys. Default is 'key_%016X'.")
    private String format; // use "key_%016X" but without the formatter

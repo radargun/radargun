@@ -17,7 +17,6 @@ import org.radargun.stats.Statistics;
 import org.radargun.stats.SynchronizedStatistics;
 import org.radargun.traits.CacheListeners;
 import org.radargun.traits.InjectTrait;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
@@ -89,7 +88,7 @@ public class RegisterListenersStage extends AbstractDistStage {
       if (test != null) {
          int testIteration = test.getIterations().size();
 
-         for (ListenersAck ack : Projections.instancesOf(acks, ListenersAck.class)) {
+         for (ListenersAck ack : instancesOf(acks, ListenersAck.class)) {
             if (ack.stats != null)
                test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
          }

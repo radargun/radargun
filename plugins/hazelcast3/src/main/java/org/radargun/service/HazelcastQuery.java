@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.TransactionalMap;
@@ -18,7 +20,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Query;
 import org.radargun.utils.OptimizedMap;
-import org.radargun.utils.Projections;
 
 public class HazelcastQuery implements Query {
    private static final Log log = LogFactory.getLog(HazelcastQuery.class);
@@ -71,12 +72,12 @@ public class HazelcastQuery implements Query {
    public static class Result implements Query.Result {
       private final Collection values;
 
-      public Result(Collection values, int offset, String[] projection) {
+      public Result(Collection<Object> values, int offset, String[] projection) {
          if (offset > 0) {
-            values = Projections.subset(values, offset, Integer.MAX_VALUE);
+            values = values.stream().skip(offset).collect(Collectors.toList());
          }
          if (projection != null) {
-            values = Projections.project(values, new ReflectionProjector(projection));
+            values = values.stream().map(new ReflectionProjector(projection)).collect(Collectors.toList());
          }
          this.values = values;
       }
@@ -92,9 +93,9 @@ public class HazelcastQuery implements Query {
       }
    }
 
-   private static class ReflectionProjector implements Projections.Func {
+   private static class ReflectionProjector implements Function<Object, Object> {
       private final String[] projection;
-      private transient Map<Class<?>, ArrayList<Accessor>> accessorMap = new OptimizedMap<Class<?>, ArrayList<Accessor>>();
+      private transient Map<Class<?>, ArrayList<Accessor>> accessorMap = new OptimizedMap<>();
 
       public ReflectionProjector(String[] projection) {
          this.projection = projection;
@@ -103,11 +104,11 @@ public class HazelcastQuery implements Query {
       // magic deserialization method
       private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
          in.readObject();
-         accessorMap = new OptimizedMap<Class<?>, ArrayList<Accessor>>();
+         accessorMap = new OptimizedMap<>();
       }
 
       @Override
-      public Object project(Object o) {
+      public Object apply(Object o) {
          Class<?> clazz = o.getClass();
          ArrayList<Accessor> accessors = accessorMap.get(clazz);
          if (accessors == null) {

@@ -12,7 +12,6 @@ import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeConverter;
 
 /**
@@ -96,7 +95,7 @@ public class IsolationLevelCheckStage extends CheckStage {
       if (result.isError()) return result;
 
       boolean anyValueChangeDetected = false;
-      for (ChangeAck ack : Projections.instancesOf(acks, ChangeAck.class)) {
+      for (ChangeAck ack : instancesOf(acks, ChangeAck.class)) {
          log.debugf("Value change detected on slave %d: %s", ack.getSlaveIndex(), ack.valueChangeDetected);
          if (expectedLevel.equalsIgnoreCase(REPEATABLE_READ) && ack.valueChangeDetected) {
             log.error("Value change was detected but this should not happen with isolation " + expectedLevel);
