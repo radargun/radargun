@@ -36,6 +36,9 @@ public class StressorTest extends PowerMockTestCase {
 
    private final List<InvocationOnMock> unexpectedInvocations = Collections.synchronizedList(new ArrayList<>());
    private final Answer unexpectedAnswer = invocation -> {
+      if (invocation.getMethod().getName().equals("finalize")) {
+         invocation.callRealMethod();
+      }
       unexpectedInvocations.add(invocation);
       throw new IllegalStateException();
    };
