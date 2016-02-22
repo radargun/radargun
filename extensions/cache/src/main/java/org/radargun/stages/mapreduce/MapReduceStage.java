@@ -25,7 +25,6 @@ import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Iterable;
 import org.radargun.traits.MapReducer;
 import org.radargun.traits.MapReducer.Task;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
@@ -149,7 +148,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       Map<Integer, Report.SlaveResult> numberOfResultKeysResult = new HashMap<Integer, Report.SlaveResult>();
       Map<Integer, Report.SlaveResult> durationsResult = new HashMap<Integer, Report.SlaveResult>();
 
-      for (MapReduceAck ack : Projections.instancesOf(acks, MapReduceAck.class)) {
+      for (MapReduceAck ack : instancesOf(acks, MapReduceAck.class)) {
          if (ack.stats != null) {
             DataOperationStats opStats;
             if (ack.stats.getOperationsStats().containsKey(MapReducer.MAPREDUCE.name)) {

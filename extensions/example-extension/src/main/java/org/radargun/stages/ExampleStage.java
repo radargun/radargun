@@ -7,7 +7,6 @@ import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.state.SlaveState;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeConverter;
 
 /**
@@ -37,7 +36,7 @@ public class ExampleStage extends AbstractDistStage {
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
       StageResult result = super.processAckOnMaster(acks);
       if (!result.isError()) {
-         for (ExampleAck ack : Projections.instancesOf(acks, ExampleAck.class)) {
+         for (ExampleAck ack : instancesOf(acks, ExampleAck.class)) {
             log.infof("Slave %d reports: %s", ack.getSlaveIndex(), ack.getExampleMessage());
          }
       }

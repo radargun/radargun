@@ -15,7 +15,6 @@ import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.utils.NanoTimeConverter;
-import org.radargun.utils.Projections;
 import org.radargun.utils.ReflexiveConverters;
 import org.radargun.utils.Utils;
 
@@ -27,19 +26,6 @@ public abstract class PerformanceCondition {
 
    public abstract boolean evaluate(Statistics statistics);
 
-   private static class Predicate implements Projections.Condition<PerformanceCondition> {
-      private final Statistics statistics;
-
-      public Predicate(Statistics statistics) {
-         this.statistics = statistics;
-      }
-
-      @Override
-      public boolean accept(PerformanceCondition cond) {
-         return cond.evaluate(statistics);
-      }
-   }
-
    @DefinitionElement(name = "any", doc = "Any of inner conditions is true", resolveType = DefinitionElement.ResolveType.PASS_BY_DEFINITION)
    protected static class Any extends PerformanceCondition {
       @Property(name = "", doc = "Inner conditions", complexConverter = ListConverter.class)
@@ -47,7 +33,7 @@ public abstract class PerformanceCondition {
 
       @Override
       public boolean evaluate(final Statistics statistics) {
-         return Projections.any(subs, new Predicate(statistics));
+         return subs.stream().anyMatch(condition -> condition.evaluate(statistics));
       }
 
       @Override
@@ -66,7 +52,7 @@ public abstract class PerformanceCondition {
 
       @Override
       public boolean evaluate(final Statistics statistics) {
-         return Projections.all(subs, new Predicate(statistics));
+         return subs.stream().allMatch(condition -> condition.evaluate(statistics));
       }
 
       @Override

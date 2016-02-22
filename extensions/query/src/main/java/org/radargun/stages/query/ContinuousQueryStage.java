@@ -21,7 +21,6 @@ import org.radargun.traits.ContinuousQuery;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Timestamped;
 
@@ -96,7 +95,7 @@ public class ContinuousQueryStage extends AbstractDistStage {
       if (test != null) {
          int testIteration = (mergeCq || remove) ? 0 : test.getIterations().size(); // when merging or removing CQ, don't consider iterations
 
-         for (ContinuousQueryAck ack : Projections.instancesOf(acks, ContinuousQueryAck.class)) {
+         for (ContinuousQueryAck ack : instancesOf(acks, ContinuousQueryAck.class)) {
             if (ack.stats != null)
                test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
          }

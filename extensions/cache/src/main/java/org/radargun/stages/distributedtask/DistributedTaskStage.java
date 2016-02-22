@@ -25,7 +25,6 @@ import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.DistributedTaskExecutor;
 import org.radargun.traits.InjectTrait;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
@@ -89,7 +88,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
 
       Map<Integer, Report.SlaveResult> durationsResult = new HashMap<Integer, Report.SlaveResult>();
 
-      for (DistributedTaskAck ack : Projections.instancesOf(acks, DistributedTaskAck.class)) {
+      for (DistributedTaskAck ack : instancesOf(acks, DistributedTaskAck.class)) {
          if (ack.stats != null) {
             DataOperationStats opStats = (DataOperationStats) ack.stats.getOperationsStats().get(DistributedTaskExecutor.EXECUTE.name);
             opStats.setTotalBytes((Long) masterState.get(totalBytesKey));

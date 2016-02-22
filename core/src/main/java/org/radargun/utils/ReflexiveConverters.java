@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.radargun.config.*;
 
@@ -247,12 +248,8 @@ public class ReflexiveConverters {
             if (sb.length() != 0) sb.append("|");
             sb.append('(').append(entry.getKey());
             Map<String, Path> properties = PropertyHelper.getProperties(entry.getValue(), true, false, true);
-            Map<String, Path> mandatory = Projections.where(properties, null, new Projections.Condition<Path>() {
-               @Override
-               public boolean accept(Path path) {
-                  return !path.getTargetAnnotation().optional();
-               }
-            });
+            Map<String, Path> mandatory = properties.entrySet().stream().filter(e -> !e.getValue().getTargetAnnotation().optional())
+                  .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
             if (!mandatory.isEmpty()) {
                sb.append(" +");
                for (Map.Entry<String, Path> property : mandatory.entrySet()) {

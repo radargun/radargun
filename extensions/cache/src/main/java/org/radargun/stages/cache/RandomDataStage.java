@@ -24,7 +24,6 @@ import org.radargun.stats.Statistics;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
-import org.radargun.utils.Projections;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
@@ -470,7 +469,7 @@ public class RandomDataStage extends AbstractDistStage {
       long totalBytes = 0;
       long totalNodeWordCount = 0;
       Map<String, Integer> clusterWordCount = new TreeMap<String, Integer>();
-      for (DataInsertAck ack : Projections.instancesOf(acks, DataInsertAck.class)) {
+      for (DataInsertAck ack : instancesOf(acks, DataInsertAck.class)) {
          if (ack.wordCount != null) {
             for (Map.Entry<String, Integer> entry : ack.wordCount.entrySet()) {
                if (clusterWordCount.containsKey(entry.getKey())) {
