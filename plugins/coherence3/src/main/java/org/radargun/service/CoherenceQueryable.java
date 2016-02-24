@@ -26,6 +26,7 @@ import com.tangosol.util.extractor.MultiExtractor;
 import com.tangosol.util.extractor.ReflectionExtractor;
 import com.tangosol.util.filter.*;
 import org.radargun.aggregators.LimitAggregator;
+import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.Projections;
 
