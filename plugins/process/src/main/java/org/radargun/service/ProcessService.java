@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
@@ -53,16 +52,7 @@ public class ProcessService {
    public boolean stderrToStdout = false;
 
    private CopyOnWriteArrayList<Action> actions = new CopyOnWriteArrayList<Action>();
-   protected String tag;
-
-   public ProcessService() {
-      Random random = new Random();
-      StringBuilder sb = new StringBuilder(16);
-      for (int i = 0; i < 16; ++i) {
-         sb.append((char) (random.nextInt('z' - 'a' + 1) + 'a'));
-      }
-      tag = sb.toString();
-   }
+   protected String pid;
 
    @ProvidesTrait
    public ProcessLifecycle createLifecycle() {
@@ -88,12 +78,16 @@ public class ProcessService {
       return ".sh";
    }
 
-   public String getCommandTag() {
-      return tag;
-   }
-
    public Map<String, String> getEnvironment() {
       return env;
+   }
+
+   public String getPid() {
+      return pid;
+   }
+
+   public void setPid(String pid) {
+      this.pid = pid;
    }
 
    public void registerAction(Pattern pattern, OutputListener action) {
