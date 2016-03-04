@@ -5,17 +5,19 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import com.sun.tools.attach.AttachNotSupportedException;
-import com.sun.tools.attach.VirtualMachine;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.traits.ProvidesTrait;
+
+import com.sun.tools.attach.AttachNotSupportedException;
+import com.sun.tools.attach.VirtualMachine;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -76,20 +78,25 @@ public class JavaProcessService extends ProcessService {
    }
 
    public String getJavaPIDs() {
-      ProcessBuilder pb = new ProcessBuilder().command(Arrays.asList(getCommandPrefix() + "jvms" + getCommandSuffix(), tag));
-      pb.redirectError(ProcessBuilder.Redirect.INHERIT);
-      pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
-      try {
-         Process process = pb.start();
-         StringBuilder sb = new StringBuilder();
-         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) sb.append(line);
+      if (getPid() != null) {
+         ProcessBuilder pb = new ProcessBuilder()
+               .command(Arrays.asList(getCommandPrefix() + "jvms" + getCommandSuffix(), getPid()));
+         pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+         pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
+         try {
+            Process process = pb.start();
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+               String line;
+               while ((line = reader.readLine()) != null)
+                  sb.append(line);
+            }
+            return sb.toString().split(" ")[0];
+         } catch (IOException e) {
+            log.error("Failed to read JVM PIDs", e);
+            return null;
          }
-         return sb.toString().trim();
-      } catch (IOException e) {
-         log.error("Failed to read JVM PIDs", e);
-         return null;
       }
+      return null;
    }
 }
