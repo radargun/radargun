@@ -323,6 +323,20 @@
             <module>plugins/jcache</module>
          </modules>
       </profile>
+      <profile>
+         <id>http</id>
+         <activation>
+            <property>
+               <name>!no-http</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/resteasy-http</module>
+         </modules>
+         <properties>
+            <plugins.http>resteasy-http</plugins.http>
+         </properties>
+      </profile>
    </profiles>
 
    <build>
@@ -484,7 +498,7 @@
                         </path>
 
                         <echo message="Packaging plugins: " />
-                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdk18},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.http},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdk18},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>

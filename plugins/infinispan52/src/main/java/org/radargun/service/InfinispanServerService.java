@@ -162,7 +162,7 @@ public class InfinispanServerService extends JavaProcessService {
    @Override
    protected List<String> getCommand() {
       ArrayList<String> command = new ArrayList<String>();
-      command.add(FileSystems.getDefault().getPath(home, "bin", "clustered." + (windows ? "bat" : "sh")).toString());
+      command.add(FileSystems.getDefault().getPath(home, "bin", "standalone." + (windows ? "bat" : "sh")).toString());
       command.add("-Djboss.node.name=slave" + ServiceHelper.getSlaveIndex());
       if (logDir != null) {
          command.add("-Djboss.server.log.dir=" + logDir);

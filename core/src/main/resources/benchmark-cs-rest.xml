@@ -1,0 +1,85 @@
+<!-- RadarGun 2.2 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:2.2">
+
+   <!-- Specifies where should the master open socket  -->
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <!-- List of cluster configurations where the benchmark should run-->
+   <clusters>
+      <cluster>
+         <group name="servers" size="2" />
+         <group name="clients" size="1" />
+      </cluster>
+   </clusters>
+
+   <!-- List of configurations of the services -->
+   <configurations>
+      <config name="Infinispan 7.2 - REST">
+         <!-- Configuration for the server group -->
+         <setup group="servers" plugin="infinispan72">
+            <!-- Properties are evaluated on each slave individually, therefore you can
+                 e.g. specify different bind address for each server in args -->
+            <server xmlns="urn:radargun:plugins:infinispan72:2.2" file="server.xml">
+               <!-- Additional arguments passed to ${env.ISPN_HOME}/bin/standalone.sh -->
+               <args>
+                  -Djboss.default.multicast.address=224.0.0.1
+                  -Djboss.node.name=node${slave.index}
+                  -Djboss.socket.binding.port-offset=#{10 * ${slave.index}}
+               </args>   
+               <!-- Home directory for the Infinispan Server -->
+               <home>${env.ISPN_HOME}</home>
+               <jmx-domain>jboss.infinispan</jmx-domain>
+               <cache-manager-name>clustered</cache-manager-name>
+            </server>
+         </setup>
+         <!-- Configuration for the REST client -->
+         <setup group="clients" plugin="resteasy-http">
+            <rest-client xmlns="urn:radargun:plugins:resteasy-http:2.2">
+               <!-- Clients are not paired with servers automatically - we have to explicitly provide the address -->
+               <servers>127.0.0.1:8080</servers>
+               <username>rest</username>
+               <password>R3dH@t13</password>
+            </rest-client>
+         </setup>
+      </config>
+   </configurations>
+
+   <!-- Sequence of stages executed on the cluster -->
+   <scenario>
+      <service-start groups="servers"/>
+      <service-start groups="clients" validate-cluster="false" />
+
+      <jvm-monitor-start />
+      <!-- <key-expiration-test duration="480m" num-threads-per-node="10" -->
+      <key-expiration-test duration="2m" num-threads-per-node="10"
+                           entry-size="10%: 10, 20%: 100, 40%: 1000, 20%: 10000, 10: 100000"
+                           num-bytes-per-thread="100 MB"
+                           entry-lifespan="5s"
+                           test-name="DistributedCache"
+                           groups="clients">
+         <statistics>
+            <periodic period="30s" />
+         </statistics>
+         <cache-selector>
+            <use-cache cache="default" />
+         </cache-selector>
+         <key-generator>
+            <string/>
+         </key-generator>
+         <value-generator>
+            <byte-array/>
+         </value-generator>
+      </key-expiration-test>
+
+      <jvm-monitor-stop />
+   </scenario>
+
+   <!-- How the statistics are reported -->
+   <reports>
+      <!-- Produce CSV statistics report -->
+      <reporter type="csv" />
+      <!-- Produce HTML statistics report -->
+      <reporter type="html" />
+   </reports>
+
+</benchmark>
