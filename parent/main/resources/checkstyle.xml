@@ -1,0 +1,108 @@
+<?xml version="1.0" ?>
+<!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.2//EN"
+      "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+
+<module name="Checker">
+   <!--
+       If you set the basedir property below, then all reported file
+       names will be relative to the specified directory. See
+       http://checkstyle.sourceforge.net/5.x/config.html#Checker
+       <property name="basedir" value="${basedir}"/>
+   -->
+
+   <!-- Checks for whitespace                               -->
+   <!-- See http://checkstyle.sf.net/config_whitespace.html -->
+   <module name="FileTabCharacter"/>
+
+   <module name="FileLength"/>
+
+   <module name="TreeWalker">
+
+      <!-- Checks for Naming Conventions.                  -->
+      <!-- See http://checkstyle.sf.net/config_naming.html -->
+      <!--<module name="ClassTypeParameterName"/>-->
+      <module name="ConstantName">
+         <property name="format"
+                   value="^[log(ger)?|[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$|trace$|debug$]"/>
+      </module>
+      <module name="LocalFinalVariableName"/>
+      <module name="LocalVariableName"/>
+      <module name="MemberName"/>
+      <module name="MethodName"/>
+      <module name="PackageName"/>
+      <module name="ParameterName"/>
+      <module name="StaticVariableName"/>
+
+      <!-- Checks for imports                              -->
+      <!-- See http://checkstyle.sf.net/config_import.html -->
+      <module name="IllegalImport"/> <!-- defaults to sun.* packages -->
+      <module name="ImportOrder">
+         <property name="groups" value="java,javax,*"/>
+         <property name="ordered" value="true"/>
+         <property name="separated" value="false"/>
+         <property name="option" value="bottom"/>
+         <property name="sortStaticImportsAlphabetically" value="true"/>
+      </module>
+      <module name="RedundantImport"/>
+      <module name="UnusedImports"/>
+
+      <!-- Checks for Size Violations.                    -->
+      <!-- See http://checkstyle.sf.net/config_sizes.html -->
+      <module name="MethodLength">
+         <property name="max" value="200"/>
+      </module>
+
+      <!-- Checks for whitespace                               -->
+      <!-- See http://checkstyle.sf.net/config_whitespace.html -->
+      <module name="GenericWhitespace"/>
+      <module name="MethodParamPad"/>
+      <module name="ParenPad"/>
+      <module name="TypecastParenPad"/>
+
+      <!-- Modifier Checks                                    -->
+      <!-- See http://checkstyle.sf.net/config_modifiers.html -->
+      <module name="ModifierOrder"/>
+
+      <!-- Checks for blocks. You know, those {}'s         -->
+      <!-- See http://checkstyle.sf.net/config_blocks.html -->
+      <module name="AvoidNestedBlocks">
+         <property name="allowInSwitchCase" value="true"/>
+      </module>
+      <module name="EmptyBlock"/>
+      <module name="EmptyCatchBlock"/>
+      <module name="LeftCurly"/>
+      <module name="RightCurly"/>
+
+      <!-- Checks for common coding problems               -->
+      <!-- See http://checkstyle.sf.net/config_coding.html -->
+      <module name="DeclarationOrder">
+         <property name="ignoreModifiers" value="true"/>
+      </module>
+      <module name="EmptyStatement"/>
+      <module name="EqualsHashCode"/>
+      <module name="IllegalInstantiation"/>
+      <module name="OneStatementPerLine"/>
+      <module name="SimplifyBooleanExpression"/>
+      <module name="SimplifyBooleanReturn"/>
+      <module name="StringLiteralEquality"/>
+
+      <!-- Checks for class design                         -->
+      <!-- See http://checkstyle.sf.net/config_design.html -->
+      <module name="HideUtilityClassConstructor"/>
+
+      <!-- Miscellaneous other checks.                   -->
+      <!-- See http://checkstyle.sf.net/config_misc.html -->
+      <module name="ArrayTypeStyle"/>
+      <module name="UpperEll"/>
+
+      <module name="Indentation">
+         <property name="basicOffset" value="3"/>
+         <property name="caseIndent" value="3"/>
+         <property name="throwsIndent" value="3"/>
+         <property name="arrayInitIndent" value="3"/>
+         <property name="lineWrappingIndentation" value="3"/>
+      </module>
+
+   </module>
+
+</module>
