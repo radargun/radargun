@@ -1,8 +1,8 @@
 package org.radargun.stages.query;
 
-import org.radargun.config.Property;
-
 import java.util.List;
+
+import org.radargun.config.Property;
 
 /**
  *
@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class QueryConfiguration {
    @Property(name = "class", deprecatedName = "queryObjectClass", optional = false,
-         doc = "Full class name of the object that should be queried. Mandatory.")
+      doc = "Full class name of the object that should be queried. Mandatory.")
    public String clazz;
 
    @Property(optional = false, doc = "Conditions used in the query", complexConverter = Condition.ConditionConverter.class)
@@ -21,8 +21,8 @@ public class QueryConfiguration {
    public String[] projection;
 
    @Property(doc = "Use sorting order, in form [attribute[:(ASC|DESC)]][,attribute[:(ASC|DESC)]]*. " +
-         "Without specifying ASC or DESC the sort order defaults to ASC. Default is unordereded.",
-         converter = OrderBy.ListConverter.class)
+      "Without specifying ASC or DESC the sort order defaults to ASC. Default is unordereded.",
+      converter = OrderBy.ListConverter.class)
    public List<OrderBy> orderBy;
 
    @Property(doc = "Offset in the results. Default is none.")

@@ -15,8 +15,8 @@ public class SharedLogValue implements Serializable {
    private final long[] operationIds;
 
    public SharedLogValue(int threadId, long operationId) {
-      threadIds = new int[] { threadId };
-      operationIds = new long[] { operationId };
+      threadIds = new int[] {threadId};
+      operationIds = new long[] {operationId};
    }
 
    protected SharedLogValue(int[] threadIds, long[] operationIds) {

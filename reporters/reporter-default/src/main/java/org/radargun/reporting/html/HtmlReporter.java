@@ -6,12 +6,23 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import freemarker.cache.ClassTemplateLoader;
-import freemarker.template.*;
+import freemarker.template.DefaultObjectWrapper;
+import freemarker.template.DefaultObjectWrapperBuilder;
+import freemarker.template.Template;
+import freemarker.template.TemplateModelException;
 import org.radargun.config.Configuration;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyDelegate;
@@ -106,7 +117,7 @@ public class HtmlReporter implements Reporter {
             }
             for (String config : normalized) {
                NormalizedConfigDocument document = new NormalizedConfigDocument(
-                       targetDir, report.getConfiguration().name, setup.group, report.getCluster(), config, report.getNormalizedServiceConfigs(), slaves);
+                  targetDir, report.getConfiguration().name, setup.group, report.getCluster(), config, report.getNormalizedServiceConfigs(), slaves);
 
                document.createReportDirectory();
 
@@ -177,7 +188,7 @@ public class HtmlReporter implements Reporter {
       for (Report report : reports) {
          String configName = report.getConfiguration().name;
          TimelineDocument timelineDocument = new TimelineDocument(timelineConfig, targetDir,
-                 configName + "_" + report.getCluster().getClusterIndex(), configName + " on " + report.getCluster(), report.getTimelines(), report.getCluster());
+            configName + "_" + report.getCluster().getClusterIndex(), configName + " on " + report.getCluster(), report.getTimelines(), report.getCluster());
 
          timelineDocument.createReportDirectory();
          timelineDocument.createTestCharts();

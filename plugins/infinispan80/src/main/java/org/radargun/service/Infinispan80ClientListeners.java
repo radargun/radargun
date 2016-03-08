@@ -1,5 +1,10 @@
 package org.radargun.service;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.annotation.ClientCacheEntryExpired;
 import org.infinispan.client.hotrod.annotation.ClientListener;
@@ -7,17 +12,10 @@ import org.infinispan.client.hotrod.event.ClientCacheEntryExpiredEvent;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 /**
- * 
  * Generic Infinispan remote listeners for Infinispan 8, similar to {@link InfinispanCacheListeners}.
- * 
+ *
  * @author Martin Gencur &lt;mgencur@redhat.com&gt;
- * 
  */
 public class Infinispan80ClientListeners extends InfinispanClientListeners {
 
@@ -73,17 +71,17 @@ public class Infinispan80ClientListeners extends InfinispanClientListeners {
    @ClientListener
    public static class GenericInfinispan80ClientListener extends GenericClientListener {
 
-       protected static final Log log = LogFactory.getLog(GenericInfinispan80ClientListener.class);
+      protected static final Log log = LogFactory.getLog(GenericInfinispan80ClientListener.class);
 
-       @ClientCacheEntryExpired
-       public void expired(ClientCacheEntryExpiredEvent e) {
-           for (ExpiredListener listener : expired) {
-               try {
-                   listener.expired(e.getKey(), null);
-               } catch (Exception ex) {
-                   log.error("Listener " + listener + " has thrown an exception", ex);
-               }
-           }
-       }
+      @ClientCacheEntryExpired
+      public void expired(ClientCacheEntryExpiredEvent e) {
+         for (ExpiredListener listener : expired) {
+            try {
+               listener.expired(e.getKey(), null);
+            } catch (Exception ex) {
+               log.error("Listener " + listener + " has thrown an exception", ex);
+            }
+         }
+      }
    }
 }

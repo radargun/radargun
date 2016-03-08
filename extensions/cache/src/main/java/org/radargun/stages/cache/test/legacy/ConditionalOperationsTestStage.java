@@ -7,11 +7,11 @@ import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.cache.test.CacheInvocations;
+import org.radargun.stages.test.legacy.LegacyStressor;
 import org.radargun.stages.test.legacy.LegacyTestStage;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.stages.test.legacy.OperationSelector;
 import org.radargun.stages.test.legacy.RatioOperationSelector;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;
@@ -21,7 +21,7 @@ import org.radargun.traits.InjectTrait;
  */
 @Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio" +
-      "- this operation is executed anytime the selected key does not have value.")
+   "- this operation is executed anytime the selected key does not have value.")
 public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
 
    @Property(doc = "Ratio of REMOVE requests. Default is 1.")
@@ -48,11 +48,11 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
    @Override
    protected OperationSelector createOperationSelector() {
       return new RatioOperationSelector.Builder()
-            .add(ConditionalOperations.REMOVE, removeRatio)
-            .add(ConditionalOperations.REPLACE, replaceRatio)
-            .add(ConditionalOperations.REPLACE_ANY, replaceAnyRatio)
-            .add(ConditionalOperations.GET_AND_REPLACE, getAndReplaceRatio)
-            .build();
+         .add(ConditionalOperations.REMOVE, removeRatio)
+         .add(ConditionalOperations.REPLACE, replaceRatio)
+         .add(ConditionalOperations.REPLACE_ANY, replaceAnyRatio)
+         .add(ConditionalOperations.GET_AND_REPLACE, getAndReplaceRatio)
+         .build();
    }
 
    @Override
@@ -129,12 +129,12 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
             }
          } else if (operation == ConditionalOperations.REMOVE) {
             Boolean removed = (Boolean) stressor.makeRequest(new CacheInvocations.RemoveConditionally(conditionalCache, key,
-                  shouldMatch ? oldValue : newValue));
+               shouldMatch ? oldValue : newValue));
             matchSelector.record(removed);
          } else if (operation == ConditionalOperations.REPLACE) {
             Object wrongValue = valueGenerator.generateValue(key, entrySize.next(random), random);
             Boolean replaced = (Boolean) stressor.makeRequest(new CacheInvocations.Replace(conditionalCache, key,
-                  shouldMatch ? oldValue : wrongValue, newValue));
+               shouldMatch ? oldValue : wrongValue, newValue));
             matchSelector.record(replaced);
          } else if (operation == ConditionalOperations.REPLACE_ANY) {
             Object prevValue;

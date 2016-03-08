@@ -49,7 +49,7 @@ public class ServerJGroupsDumper implements Runnable {
          String clusterName = (String) connection.getAttribute(channel, CLUSTER_NAME);
          log.debugf("Channel for cluster %s:", clusterName);
          Set<ObjectName> protocols = connection.queryNames(
-               new ObjectName(String.format("jgroups:type=protocol,cluster=\"%s\",protocol=*", clusterName)), null);
+            new ObjectName(String.format("jgroups:type=protocol,cluster=\"%s\",protocol=*", clusterName)), null);
          for (ObjectName protocol : protocols) {
             String protocolName = (String) connection.getAttribute(protocol, NAME);
             log.debugf("%s:", protocolName);

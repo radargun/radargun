@@ -7,11 +7,11 @@ import java.util.Set;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
+import org.radargun.utils.TimeConverter;
 
 /**
  * Performs single transaction in multiple threads on multiple slaves.
@@ -22,7 +22,7 @@ import org.radargun.traits.Transactional;
 public class SingleTXLoadStage extends AbstractDistStage {
 
    @Property(converter = TimeConverter.class, doc = "The enforced duration of the transaction. If > 0 the threads " +
-         "will sleep for duration/transactionSize after each request. Default is 0.")
+      "will sleep for duration/transactionSize after each request. Default is 0.")
    private long duration = 0;
 
    @Property(doc = "Number of threads that should execute the transaction. Default is 1.")
@@ -79,7 +79,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
          super("ClientThread-" + slaveState.getSlaveIndex() + "-" + id);
          this.id = id;
       }
-      
+
       @Override
       public void run() {
          try {
@@ -90,7 +90,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
             for (int i = 0; i < transactionSize; ++i) {
                if (!delete) {
                   try {
-                	 log.trace("Inserting key");
+                     log.trace("Inserting key");
                      cache.put("txKey" + i, "txValue" + i + "@" + slaveState.getSlaveIndex() + "-" + id);
                      log.trace("Key inserted");
                   } catch (Exception e) {
@@ -99,7 +99,7 @@ public class SingleTXLoadStage extends AbstractDistStage {
                   }
                } else {
                   try {
-                  cache.remove("txKey" + i);
+                     cache.remove("txKey" + i);
                   } catch (Exception e) {
                      log.error("Failed to remove key txKey" + i, e);
                      throw e;
@@ -107,13 +107,13 @@ public class SingleTXLoadStage extends AbstractDistStage {
                }
                if (duration > 0) {
                   try {
-                	 log.trace("Sleeping for " + (duration / transactionSize));
+                     log.trace("Sleeping for " + (duration / transactionSize));
                      Thread.sleep(duration / transactionSize);
                   } catch (InterruptedException e) {
                      log.error("Thread has been interrupted", e);
                      Thread.currentThread().interrupt();
                   }
-               }            
+               }
             }
             boolean successfull = (commitSlave == null || commitSlave.contains(slaveState.getSlaveIndex())) && (commitThread == null || commitThread.contains(id));
             if (successfull) {

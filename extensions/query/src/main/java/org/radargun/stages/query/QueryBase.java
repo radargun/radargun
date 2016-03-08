@@ -98,7 +98,7 @@ public class QueryBase {
 
          if (totalResultSize.isSet() && (totalResultSize.min() != data.minResultSize || totalResultSize.max() != data.maxResultSize)) {
             String message = String.format("The size got from %d -> %d .. %d is not the same as from other slaves -> %d .. %d ",
-                  slaveIndex, data.minResultSize, data.maxResultSize, totalResultSize.min(), totalResultSize.max());
+               slaveIndex, data.minResultSize, data.maxResultSize, totalResultSize.min(), totalResultSize.max());
             if (checkSameResult) {
                throw new IllegalStateException(message);
             } else {
@@ -129,7 +129,7 @@ public class QueryBase {
          test.addResult(iteration, new Report.TestResult("Query result size", slaveResultSizes, totalResultSize.toString(), false));
          for (Map.Entry<String, Map<Integer, Report.SlaveResult>> entry : exposedResults.entrySet()) {
             test.addResult(iteration, new Report.TestResult("Exposed: " + entry.getKey(),
-                  entry.getValue(), exposedAggregations.get(entry.getKey()).toString(), false));
+               entry.getValue(), exposedAggregations.get(entry.getKey()).toString(), false));
          }
       } else {
          log.info("No test name - results are not recorded");

@@ -1,20 +1,18 @@
 package org.radargun.service;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-import org.radargun.traits.Lifecycle;
-import org.radargun.utils.Utils;
-
-import javax.cache.CacheManager;
-import javax.cache.Caching;
-import javax.cache.configuration.MutableConfiguration;
-import javax.cache.spi.CachingProvider;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
+import javax.cache.Caching;
+import javax.cache.spi.CachingProvider;
+
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+import org.radargun.traits.Lifecycle;
+import org.radargun.utils.Utils;
 
 /**
  * @author Matej Cimbora

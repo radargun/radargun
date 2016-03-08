@@ -40,19 +40,19 @@ public abstract class LegacyTestStage extends BaseTestStage {
    protected int totalThreads = 0;
 
    @Property(doc = "Specifies if the requests should be explicitly wrapped in transactions. " +
-         "Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if " +
-         "the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.")
+      "Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if " +
+      "the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.")
    protected TransactionMode useTransactions = TransactionMode.IF_TRANSACTIONAL;
 
    @Property(doc = "Specifies whether the transactions should be committed (true) or rolled back (false). " +
-         "Default is true")
+      "Default is true")
    protected boolean commitTransactions = true;
 
    @Property(doc = "Number of requests in one transaction. Default is 1.")
    protected int transactionSize = 1;
 
    @Property(doc = "Local threads synchronize on starting each round of requests. Note that with requestPeriod > 0, " +
-         "there is still the random ramp-up delay. Default is false.")
+      "there is still the random ramp-up delay. Default is false.")
    protected boolean synchronousRequests = false;
 
    @Property(doc = "Max duration of the test. Default is infinite.", converter = TimeConverter.class)
@@ -77,8 +77,10 @@ public abstract class LegacyTestStage extends BaseTestStage {
 
    @Init
    public void init() {
-      if (totalThreads <= 0 && numThreadsPerNode <= 0) throw new IllegalStateException("You have to set either total-threads or num-threads-per-node.");
-      if (totalThreads > 0 && numThreadsPerNode > 0) throw new IllegalStateException("You have to set only one ot total-threads, num-threads-per-node");
+      if (totalThreads <= 0 && numThreadsPerNode <= 0)
+         throw new IllegalStateException("You have to set either total-threads or num-threads-per-node.");
+      if (totalThreads > 0 && numThreadsPerNode > 0)
+         throw new IllegalStateException("You have to set only one ot total-threads, num-threads-per-node");
       if (totalThreads < 0 || numThreadsPerNode < 0) throw new IllegalStateException("Number of threads can't be < 0");
    }
 
@@ -360,6 +362,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
 
    protected interface ResultRetriever<T> {
       T getResult(LegacyStressor stressor);
+
       void mergeResult(T into, T that);
    }
 

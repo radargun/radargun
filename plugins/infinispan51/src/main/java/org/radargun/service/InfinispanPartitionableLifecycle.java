@@ -8,11 +8,11 @@ import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
 import org.jgroups.protocols.TP;
 import org.jgroups.stack.ProtocolStack;
-import org.radargun.traits.Partitionable;
 import org.radargun.protocols.SLAVE_PARTITION;
+import org.radargun.traits.Partitionable;
 
 public class InfinispanPartitionableLifecycle extends InfinispanKillableLifecycle implements Partitionable {
-   
+
    private int mySlaveIndex = -1;
    private Set<Integer> initiallyReachable;
 

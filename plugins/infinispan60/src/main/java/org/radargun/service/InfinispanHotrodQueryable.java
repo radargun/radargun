@@ -31,14 +31,14 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
    public InfinispanHotrodQueryable(Infinispan60HotrodService service) {
       this.service = service;
    }
-   
+
    @Override
    public Query.Builder getBuilder(String cacheName, Class<?> clazz) {
       if (cacheName == null) {
          cacheName = service.cacheName;
       }
       QueryFactory factory = Search.getQueryFactory(
-            cacheName == null ? service.managerForceReturn.getCache() : service.managerForceReturn.getCache(cacheName));
+         cacheName == null ? service.managerForceReturn.getCache() : service.managerForceReturn.getCache(cacheName));
       return new QueryBuilderImpl(factory, clazz);
    }
 
@@ -92,7 +92,7 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
          closeConnector(connector);
       }
    }
-   
+
    protected String getRemotingJmxUrlTemplate() {
       return REMOTING_JMX_SERVICE_URL_TEMPLATE;
    }
@@ -101,8 +101,8 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
       ObjectName objName = null;
       try {
          objName = new ObjectName(service.jmxDomain + ":type=RemoteQuery,name="
-                 + ObjectName.quote(service.clusterName)
-                 + ",component=" + ProtobufMetadataManager.OBJECT_NAME);
+            + ObjectName.quote(service.clusterName)
+            + ",component=" + ProtobufMetadataManager.OBJECT_NAME);
       } catch (MalformedObjectNameException e) {
          throw new IllegalStateException("Failed to register protofiles", e);
       }
@@ -115,7 +115,7 @@ public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
             throw new IllegalStateException("Failed to read protofile " + protofile, e);
          }
          try {
-            connection.invoke(objName, "registerProtofile", new Object[]{descriptor}, new String[]{byte[].class.getName()});
+            connection.invoke(objName, "registerProtofile", new Object[] {descriptor}, new String[] {byte[].class.getName()});
             log.info("Protofile " + protofile + " registered.");
          } catch (Exception e) {
             throw new IllegalStateException("Failed to register protofile " + protofile, e);

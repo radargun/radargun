@@ -16,11 +16,11 @@ public abstract class PrimitiveValue {
    @DefinitionElement(name = "string", doc = "Element representing String.")
    public static class PrimitiveString extends PrimitiveValue {
 
-      public PrimitiveString() {
-      }
-
       @Property(optional = false, doc = "Value")
       public String value;
+
+      public PrimitiveString() {
+      }
 
       @Override
       public Object getElementValue() {
@@ -31,11 +31,11 @@ public abstract class PrimitiveValue {
    @DefinitionElement(name = "int", doc = "Element representing int.")
    public static class PrimitiveInteger extends PrimitiveValue {
 
-      public PrimitiveInteger() {
-      }
-
       @Property(optional = false, doc = "Value")
       public Integer value;
+
+      public PrimitiveInteger() {
+      }
 
       @Override
       public Object getElementValue() {
@@ -46,11 +46,11 @@ public abstract class PrimitiveValue {
    @DefinitionElement(name = "long", doc = "Element representing long.")
    public static class PrimitiveLong extends PrimitiveValue {
 
-      public PrimitiveLong() {
-      }
-
       @Property(optional = false, doc = "Value")
       public Long value;
+
+      public PrimitiveLong() {
+      }
 
       @Override
       public Object getElementValue() {
@@ -61,11 +61,11 @@ public abstract class PrimitiveValue {
    @DefinitionElement(name = "boolean", doc = "Element representing boolean.")
    public static class PrimitiveBoolean extends PrimitiveValue {
 
-      public PrimitiveBoolean() {
-      }
-
       @Property(optional = false, doc = "Value")
       public Boolean value;
+
+      public PrimitiveBoolean() {
+      }
 
       @Override
       public Object getElementValue() {
@@ -76,11 +76,11 @@ public abstract class PrimitiveValue {
    @DefinitionElement(name = "short", doc = "Element representing short.")
    public static class PrimitiveShort extends PrimitiveValue {
 
-      public PrimitiveShort() {
-      }
-
       @Property(optional = false, doc = "Value")
       public Short value;
+
+      public PrimitiveShort() {
+      }
 
       @Override
       public Object getElementValue() {
@@ -91,11 +91,11 @@ public abstract class PrimitiveValue {
    @DefinitionElement(name = "byte", doc = "Element representing byte.")
    public static class PrimitiveByte extends PrimitiveValue {
 
-      public PrimitiveByte() {
-      }
-
       @Property(optional = false, doc = "Value")
       public Byte value;
+
+      public PrimitiveByte() {
+      }
 
       @Override
       public Object getElementValue() {
@@ -106,11 +106,11 @@ public abstract class PrimitiveValue {
    @DefinitionElement(name = "char", doc = "Element representing char.")
    public static class PrimitiveChar extends PrimitiveValue {
 
-      public PrimitiveChar() {
-      }
-
       @Property(optional = false, doc = "Value")
       public Character value;
+
+      public PrimitiveChar() {
+      }
 
       @Override
       public Object getElementValue() {
@@ -125,13 +125,13 @@ public abstract class PrimitiveValue {
 
       public ListConverter() {
          super(new Class[] {
-               PrimitiveValue.PrimitiveString.class,
-               PrimitiveValue.PrimitiveInteger.class,
-               PrimitiveValue.PrimitiveLong.class,
-               PrimitiveValue.PrimitiveBoolean.class,
-               PrimitiveValue.PrimitiveShort.class,
-               PrimitiveValue.PrimitiveChar.class,
-               PrimitiveValue.PrimitiveByte.class});
+            PrimitiveValue.PrimitiveString.class,
+            PrimitiveValue.PrimitiveInteger.class,
+            PrimitiveValue.PrimitiveLong.class,
+            PrimitiveValue.PrimitiveBoolean.class,
+            PrimitiveValue.PrimitiveShort.class,
+            PrimitiveValue.PrimitiveChar.class,
+            PrimitiveValue.PrimitiveByte.class});
       }
 
    }
@@ -143,13 +143,13 @@ public abstract class PrimitiveValue {
 
       public ObjectConverter() {
          super(new Class[] {
-               PrimitiveValue.PrimitiveString.class,
-               PrimitiveValue.PrimitiveInteger.class,
-               PrimitiveValue.PrimitiveLong.class,
-               PrimitiveValue.PrimitiveBoolean.class,
-               PrimitiveValue.PrimitiveShort.class,
-               PrimitiveValue.PrimitiveChar.class,
-               PrimitiveValue.PrimitiveByte.class});
+            PrimitiveValue.PrimitiveString.class,
+            PrimitiveValue.PrimitiveInteger.class,
+            PrimitiveValue.PrimitiveLong.class,
+            PrimitiveValue.PrimitiveBoolean.class,
+            PrimitiveValue.PrimitiveShort.class,
+            PrimitiveValue.PrimitiveChar.class,
+            PrimitiveValue.PrimitiveByte.class});
       }
 
    }

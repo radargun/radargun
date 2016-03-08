@@ -20,7 +20,7 @@ import org.radargun.traits.InjectTrait;
 @Stage(doc = "Paired with SingleTXLoadStage. Checks that the previous stage had the expected result")
 public class SingleTXCheckStage extends AbstractDistStage {
 
-   private static final Pattern txValue = Pattern.compile("txValue(\\d*)@(\\d*-\\d*)");
+   private static final Pattern TX_VALUE = Pattern.compile("txValue(\\d*)@(\\d*-\\d*)");
 
    @Property(doc = "Indices of slaves which should have committed the transaction (others rolled back). Default is all committed.")
    private Set<Integer> commitSlave;
@@ -39,7 +39,7 @@ public class SingleTXCheckStage extends AbstractDistStage {
 
    @InjectTrait
    private CacheInformation cacheInformation;
-   
+
    @Override
    public DistStageAck executeOnSlave() {
       if (!shouldExecute()) {
@@ -57,57 +57,57 @@ public class SingleTXCheckStage extends AbstractDistStage {
             log.info("Checking cache " + cacheName);
          }
          BasicOperations.Cache cache = basicOperations.getCache(cacheName);
-    	   String committer = null;
-	      for (int i = 0; i < transactionSize; ++i) {
-	         try {
-	            Object value = cache.get("txKey" + i);
-	               if (!deleted) {
-	               Matcher m;
-	               if (value != null && value instanceof String && (m = txValue.matcher((String) value)).matches()) {
-	                  if (Integer.parseInt(m.group(1)) != i) {
-	                     return errorResponse("Unexpected value for txKey" + i + " = " + value);
-	                  }
-	                  if (committer == null) {                  
-	                     committer = m.group(2);
-	                     if (commitSlave != null) {
-	                        boolean found = false;
-	                        for (int slave : commitSlave) {
-	                           if (committer.startsWith(String.valueOf(slave))) {
-	                              found = true;
-	                              break;
-	                           }
-	                        }
-	                        if (!found) {
-	                           return errorResponse("The transaction should be committed by slave " + commitSlave + " but commiter is " + committer);
-	                        }
-	                     }
-	                     if (commitThread != null) {
-	                        boolean found = false;
+         String committer = null;
+         for (int i = 0; i < transactionSize; ++i) {
+            try {
+               Object value = cache.get("txKey" + i);
+               if (!deleted) {
+                  Matcher m;
+                  if (value != null && value instanceof String && (m = TX_VALUE.matcher((String) value)).matches()) {
+                     if (Integer.parseInt(m.group(1)) != i) {
+                        return errorResponse("Unexpected value for txKey" + i + " = " + value);
+                     }
+                     if (committer == null) {
+                        committer = m.group(2);
+                        if (commitSlave != null) {
+                           boolean found = false;
+                           for (int slave : commitSlave) {
+                              if (committer.startsWith(String.valueOf(slave))) {
+                                 found = true;
+                                 break;
+                              }
+                           }
+                           if (!found) {
+                              return errorResponse("The transaction should be committed by slave " + commitSlave + " but commiter is " + committer);
+                           }
+                        }
+                        if (commitThread != null) {
+                           boolean found = false;
                            for (int slave : commitThread) {
                               if (committer.endsWith(String.valueOf(slave))) {
                                  found = true;
                                  break;
                               }
                            }
-	                        if (!found) {
-	                           return errorResponse("The transaction should be committed by thread " + commitThread + " but commiter is " + committer);
-	                        }
-	                     }
-	                  } else if (!committer.equals(m.group(2))) {
-	                     return errorResponse("Inconsistency: previous committer was " + committer + ", this is " + m.group(2));
-	                  }
-	               } else {
-	                  return errorResponse("Unexpected value for txKey" + i + " = " + value);
-	               }
-	            } else {
-	               if (value != null) {
-	                  return errorResponse("The value for txKey" + i + " should have been deleted, is " + value);
-	               }
-	            }
-	         } catch (Exception e) {
-	            return errorResponse("Failed to get key txKey" + i, e);
-	         }
-	      }
+                           if (!found) {
+                              return errorResponse("The transaction should be committed by thread " + commitThread + " but commiter is " + committer);
+                           }
+                        }
+                     } else if (!committer.equals(m.group(2))) {
+                        return errorResponse("Inconsistency: previous committer was " + committer + ", this is " + m.group(2));
+                     }
+                  } else {
+                     return errorResponse("Unexpected value for txKey" + i + " = " + value);
+                  }
+               } else {
+                  if (value != null) {
+                     return errorResponse("The value for txKey" + i + " should have been deleted, is " + value);
+                  }
+               }
+            } catch (Exception e) {
+               return errorResponse("Failed to get key txKey" + i, e);
+            }
+         }
       }
       return successfulResponse();
    }

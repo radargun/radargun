@@ -11,7 +11,7 @@ import org.radargun.config.DefinitionElement;
  */
 @DefinitionElement(name = "word-in-haystack", doc = "Generates text-objects with string with single randomly picked word surrounded by another characters.")
 public class WordInHaystackGenerator extends DictionaryTextObjectGenerator {
-   private static char[] ALPHABET = "abcdefghijklmnopqrstuvw 1234567890".toCharArray();
+   private static final char[] ALPHABET = "abcdefghijklmnopqrstuvw 1234567890".toCharArray();
 
    @Override
    public Object generateValue(Object key, int size, Random random) {

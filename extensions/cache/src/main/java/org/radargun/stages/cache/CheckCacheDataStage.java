@@ -52,22 +52,22 @@ public class CheckCacheDataStage extends AbstractDistStage {
    protected int entrySize;
 
    @Property(doc = "Entries that do not have the expected form but occur in the cluster. This string specifies " +
-         "a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries." +
-         "Defaults to 0.")
+      "a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries." +
+      "Defaults to 0.")
    private String extraEntries;
 
    @Property(doc = "Number of thread per node which check data validity. Default is 1.")
    private int checkThreads = 1;
 
    @Property(doc = "Usually the test checks that sum of local nodes = numOwners * numEntries + extraEntries." +
-         "This option disables such behaviour. Default is false.")
+      "This option disables such behaviour. Default is false.")
    private boolean ignoreSum = false;
 
    @Property(doc = "If true, the entries are not retrieved, this stage only checks that the sum of entries from local nodes is correct. Default is false.")
    private boolean sizeOnly = false;
 
    @Property(doc = "Hint how many slaves are currently alive - if set to > 0 then the query for number of entries in " +
-         "this cache is postponed until the cache appears to be fully replicated. By default this is disabled.")
+      "this cache is postponed until the cache appears to be fully replicated. By default this is disabled.")
    private int liveSlavesHint = -1;
 
    @Property(doc = "If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.")
@@ -77,22 +77,22 @@ public class CheckCacheDataStage extends AbstractDistStage {
    private int logChecksCount = 10000;
 
    @Property(doc = "If the GET request results in null response, call wrapper-specific functions to show debug info. " +
-         "Default is false.")
+      "Default is false.")
    private boolean debugNull = false;
 
    @Property(doc = "If entry is null, fail immediately. Default is false.")
    private boolean failOnNull = false;
 
    @Property(doc = "If the cache wrapper supports persistent storage and this is set to true, the check " +
-         "will be executed only against in-memory data. Default is false.")
+      "will be executed only against in-memory data. Default is false.")
    private boolean memoryOnly = false;
 
    @Property(doc = "Generator of keys (transforms key ID into key object). By default the generator is retrieved from slave state.",
-         complexConverter = KeyGenerator.ComplexConverter.class)
+      complexConverter = KeyGenerator.ComplexConverter.class)
    protected KeyGenerator keyGenerator = null;
 
    @Property(doc = "Generator of values. By default the generator is retrieved from slave state.",
-         complexConverter = ValueGenerator.ComplexConverter.class)
+      complexConverter = ValueGenerator.ComplexConverter.class)
    protected ValueGenerator valueGenerator = null;
 
    // TODO: better names, even when these are kind of hacks
@@ -142,7 +142,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
          } else {
             basicCache = basicOperations.getCache(getCacheName());
          }
-         if (debugable != null){
+         if (debugable != null) {
             debugableCache = debugable.getCache(getCacheName());
          }
 
@@ -224,12 +224,12 @@ public class CheckCacheDataStage extends AbstractDistStage {
 
    private class CheckRangeTask implements Callable<CheckResult> {
       private long from, to;
-      
+
       public CheckRangeTask(long from, long to) {
          this.from = from;
          this.to = to;
       }
-      
+
       @Override
       public CheckResult call() throws Exception {
          try {
@@ -361,7 +361,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
                for (Map.Entry<Integer, Long> os : otherSubparts.entrySet()) {
                   if (Long.compare(subpart.getValue(), os.getValue()) != 0) {
                      log.errorf("Slave %d reports %s = %d but slave %d reported size %d",
-                           info.getSlaveIndex(), subpart.getKey(), subpart.getValue(), os.getKey(), os.getValue());
+                        info.getSlaveIndex(), subpart.getKey(), subpart.getValue(), os.getKey(), os.getValue());
                      result = errorResult();
                   }
                }
@@ -370,7 +370,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
          }
          if (checkSubpartsSumLocal && sumSubpartSize != info.localSize) {
             log.errorf("On slave %d sum of subparts sizes (%d) is not the same as local size (%d)",
-                  info.getSlaveIndex(), sumSubpartSize, info.localSize);
+               info.getSlaveIndex(), sumSubpartSize, info.localSize);
             result = errorResult();
          }
       }
@@ -423,7 +423,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
 
    private long getExtraEntries() {
       if (extraEntries == null) return 0;
-      
+
       long sum = 0;
       int multiplicator = 1;
       try {
@@ -486,7 +486,7 @@ public class CheckCacheDataStage extends AbstractDistStage {
       @Override
       public String toString() {
          return String.format("[checked=%d, found=%d, nullValues=%d, invalidValues=%d, exceptions=%d]",
-                              checked, found, nullValues, invalidValues, exceptions);
+            checked, found, nullValues, invalidValues, exceptions);
       }
    }
 }

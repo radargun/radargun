@@ -13,7 +13,6 @@ import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.distribution.ch.DefaultConsistentHash;
 import org.infinispan.distribution.ch.TopologyInfo;
 import org.infinispan.remoting.transport.Address;
-import org.infinispan.util.Immutables;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.cache.generators.ObjectKeyGenerator;
@@ -29,8 +28,8 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
     * Why static? because the consistent hash is recreated when cluster changes and there's no other way to pass these
     * across
     */
-   private volatile static int threadCountPerNode = -1;
-   private volatile static int keysPerThread = -1;
+   private static volatile int threadCountPerNode = -1;
+   private static volatile int keysPerThread = -1;
    private volatile DefaultConsistentHash existing;
 
    private final List<Address> cachesList = new ArrayList<Address>();
@@ -43,18 +42,19 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
 
    @Override
    public List<Address> locate(Object key, int replCount) {
-      if(! (key instanceof ObjectKeyGenerator.ObjectKey)) {
+      if (!(key instanceof ObjectKeyGenerator.ObjectKey)) {
          if (log.isTraceEnabled()) log.trace("Delegating key " + key + " to default CH");
          return existing.locate(key, replCount);
       }
 
-      if (threadCountPerNode <= 0 || keysPerThread <= 0) throw new IllegalStateException("keysPerThread and threadCountPerNode need to be set!");
+      if (threadCountPerNode <= 0 || keysPerThread <= 0)
+         throw new IllegalStateException("keysPerThread and threadCountPerNode need to be set!");
 
       Set<Address> caches = existing.getCaches();
       int clusterSize = caches.size();
 
       long keyIndexInCluster = getSequenceNumber((ObjectKeyGenerator.ObjectKey) key);
-      int firstIndex = (int)(keyIndexInCluster % caches.size());
+      int firstIndex = (int) (keyIndexInCluster % caches.size());
 
       List<Address> result = new ArrayList<Address>();
 
@@ -64,7 +64,7 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
          if (result.size() == replCount) break;
       }
       if (log.isTraceEnabled())
-         log.trace("Handling key " + key + ", clusterIndex==" + keyIndexInCluster +" and EvenSpreadingConsistentHash --> " + result);
+         log.trace("Handling key " + key + ", clusterIndex==" + keyIndexInCluster + " and EvenSpreadingConsistentHash --> " + result);
 
       return Collections.unmodifiableList(result);
    }
@@ -110,7 +110,7 @@ public class EvenSpreadingConsistentHash implements ConsistentHash {
 
    @Override
    public List<Address> getBackupsForNode(Address node, int replCount) {
-      if (log.isTraceEnabled()) log.trace("getBackupsForNode (" + node +")");
+      if (log.isTraceEnabled()) log.trace("getBackupsForNode (" + node + ")");
       return existing.getBackupsForNode(node, replCount);
    }
 

@@ -5,14 +5,14 @@ import java.util.List;
 
 /**
  * Validates cluster formation via JMX
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 public interface JMXClusterValidator {
    /**
-    * 
+    *
     * Initialises the validator instance.
-    * 
+    *
     * @param slaveAddresses
     *           All slave addresses
     * @param jmxConnectionTimeout
@@ -27,9 +27,9 @@ public interface JMXClusterValidator {
    void init(List<InetSocketAddress> slaveAddresses, long jmxConnectionTimeout, String prop1, String prop2, String prop3);
 
    /**
-    * 
+    *
     * Block until the cluster is formed.
-    * 
+    *
     * @param slaveIndices
     *           Indices of slaves that we want to form the cluster.
     * @param timeout

@@ -38,7 +38,7 @@ public class ReporterSchemaGenerator extends SchemaGenerator {
       }
    }
 
-   public static void main(String args[]) {
+   public static void main(String[] args) {
       if (args.length < 3 || args[0] == null || args[1] == null || args[2] == null)
          throw new IllegalArgumentException("No schema location directory specified!" + args);
 

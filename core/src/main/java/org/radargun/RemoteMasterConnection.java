@@ -47,7 +47,7 @@ public class RemoteMasterConnection {
    public InetAddress connectToMaster(int slaveIndex) throws IOException {
       InetSocketAddress socketAddress = new InetSocketAddress(masterHost, masterPort);
       log.info("Attempting to connect to master " + masterHost + ":" + masterPort);
-      for (int i = 0;; ++i) {
+      for (int i = 0; ; ++i) {
          try {
             socketChannel = SocketChannel.open();
             socketChannel.connect(socketAddress);

@@ -19,7 +19,7 @@ import org.radargun.stages.AbstractDistStage;
 @Stage(doc = "Debugging stage: changes log priorities")
 public class SetLogLevelStage extends AbstractDistStage {
 
-   @Property(optional = false, name="package", doc = "The package or class which should be affected.")
+   @Property(optional = false, name = "package", doc = "The package or class which should be affected.")
    private String pkg;
 
    @Property(doc = "The new priority that should be used. No defaults.")

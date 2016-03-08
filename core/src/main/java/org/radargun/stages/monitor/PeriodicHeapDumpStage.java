@@ -73,7 +73,7 @@ public class PeriodicHeapDumpStage extends AbstractDistStage {
             public void run() {
                try {
                   File heapDumpFile = new File(PeriodicHeapDumpStage.this.dir, slaveState.getConfigName() + "." + slaveState.getSlaveIndex()
-                        + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".hprof");
+                     + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".hprof");
                   log.info("Dumping heap into " + heapDumpFile.getAbsolutePath());
                   Utils.dumpHeap(heapDumpFile.getAbsolutePath());
                   log.info("Successfully written heap dump.");

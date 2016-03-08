@@ -17,7 +17,7 @@ import org.radargun.utils.TimeConverter;
 
 /**
  * Stage that starts a CacheWrapper on each slave.
- * 
+ *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Stage(doc = "Starts services on specified slaves")
@@ -42,8 +42,8 @@ public class ServiceStartStage extends AbstractServiceStartStage {
    private boolean dumpConfig = true;
 
    @Property(doc = "The number of slaves that should be up after all slaves are started. Applicable only with "
-         + "validateCluster=true. Default is all slaves in the cluster where this stage will be executed (in the "
-         + "same site in case of multi-site configuration).")
+      + "validateCluster=true. Default is all slaves in the cluster where this stage will be executed (in the "
+      + "same site in case of multi-site configuration).")
    private Integer expectNumSlaves = -1;
 
    @Property(doc = "Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.")
@@ -72,13 +72,13 @@ public class ServiceStartStage extends AbstractServiceStartStage {
       staggerStartup(index);
 
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
-            + ". This slave's index is: " + slaveState.getSlaveIndex());
-      
+         + ". This slave's index is: " + slaveState.getSlaveIndex());
+
       // If no value of expectNumSlaves is supplied, then use the slaves where the stage is executing as a default
       if (expectNumSlaves == -1) {
          expectNumSlaves = getExecutingSlaves().size();
       }
-      
+
       try {
          LifecycleHelper.start(slaveState, validateCluster, expectNumSlaves, clusterFormationTimeout, reachable);
       } catch (RuntimeException e) {
@@ -105,7 +105,7 @@ public class ServiceStartStage extends AbstractServiceStartStage {
       }
       long toSleep = delayAfterFirstSlaveStarts + thisNodeIndex * delayBetweenStartingSlaves;
       log.info(" Startup staggering, this is the slave with index "
-            + thisNodeIndex + ". Sleeping for " + toSleep + " millis.");
+         + thisNodeIndex + ". Sleeping for " + toSleep + " millis.");
       try {
          Thread.sleep(toSleep);
       } catch (InterruptedException e) {

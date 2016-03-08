@@ -20,8 +20,7 @@ public class ValueConditionalPut extends ConditionalPut {
 
    @Override
    public Object process(InvocableMap.Entry entry) {
-      if (InvocableMapHelper.evaluateEntry(this.m_filter, entry))
-      {
+      if (InvocableMapHelper.evaluateEntry(this.m_filter, entry)) {
          Object old = entry.getValue();
          entry.setValue(this.m_oValue, false);
          return old;

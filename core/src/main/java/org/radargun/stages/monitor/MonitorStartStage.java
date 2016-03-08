@@ -17,9 +17,9 @@ import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.utils.TimeConverter;
 
 /**
- * 
+ *
  * Starts collecting JVM statistics locally on each slave node. {@link org.radargun.sysmonitor.Monitors}
- * 
+ *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 
@@ -27,7 +27,7 @@ import org.radargun.utils.TimeConverter;
 public class MonitorStartStage extends AbstractDistStage {
 
    @Property(doc = "Specifies the network interface where statistics are gathered. "
-         + "If not specified, then statistics are not collected.")
+      + "If not specified, then statistics are not collected.")
    private String interfaceName;
 
    @Property(doc = "Period of statistics collection. The default is 1 second.", converter = TimeConverter.class)

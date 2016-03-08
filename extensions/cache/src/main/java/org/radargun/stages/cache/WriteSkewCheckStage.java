@@ -109,7 +109,7 @@ public class WriteSkewCheckStage extends CheckStage {
       log.infof("Total increments: %d, Skews: %d, DB value: %d", sumIncrements, sumSkews, maxValue);
       if (maxValue + sumSkews != sumIncrements) {
          log.errorf("Database contains value %d but slaves report %d successful increments",
-               maxValue, sumIncrements - sumSkews);
+            maxValue, sumIncrements - sumSkews);
          return errorResult();
       } else {
          log.infof("Performed %d successful increments in %d ms", sumIncrements - sumSkews, duration);
@@ -132,10 +132,10 @@ public class WriteSkewCheckStage extends CheckStage {
       @Override
       public String toString() {
          return "Counters{" +
-               "totalCounter=" + totalCounter +
-               ", skewCounter=" + skewCounter +
-               ", ispnCounter=" + ispnCounter +
-               "} " + super.toString();
+            "totalCounter=" + totalCounter +
+            ", skewCounter=" + skewCounter +
+            ", ispnCounter=" + ispnCounter +
+            "} " + super.toString();
       }
    }
 
@@ -170,7 +170,7 @@ public class WriteSkewCheckStage extends CheckStage {
                skewCounter.incrementAndGet();
                skew = true;
             }
-            if (!skew && ((Long) value).longValue() == 0l) {
+            if (!skew && ((Long) value).longValue() == 0L) {
                log.trace("Successfully inserted 1");
             }
             totalCounter.incrementAndGet();

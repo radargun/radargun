@@ -1,5 +1,9 @@
 package org.radargun.stages.cache.listeners.cluster;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
@@ -17,10 +21,6 @@ import org.radargun.utils.Projections;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.radargun.traits.CacheListeners.*;
 
@@ -47,7 +47,7 @@ public class RegisterListenersStage extends AbstractDistStage {
 
    @Property(doc = "Setup if cache listener is synchronous/asynchronous. Default is true")
    private boolean sync = true;
-   
+
    @Property(doc = "Allows to reset statistics at the begining of the stage. Default is false.")
    private boolean resetStats = false;
 
@@ -158,10 +158,10 @@ public class RegisterListenersStage extends AbstractDistStage {
       };
       slaveState.put(EXPIRED.name, expiredListener);
    }
-   
+
    private long getResponseTime(Object key) {
-      if(key instanceof TimestampKey) {
-         return (TimeUnit.NANOSECONDS.convert(TimeService.currentTimeMillis() - ((TimestampKey)key).getTimestamp(), TimeUnit.MILLISECONDS));
+      if (key instanceof TimestampKey) {
+         return (TimeUnit.NANOSECONDS.convert(TimeService.currentTimeMillis() - ((TimestampKey) key).getTimestamp(), TimeUnit.MILLISECONDS));
       }
       return 0; //latency of event arrival is not measured
    }

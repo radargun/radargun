@@ -1,9 +1,9 @@
 package org.radargun.service;
 
-import org.radargun.utils.TimeService;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.radargun.utils.TimeService;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -12,9 +12,9 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
    private boolean serverStarted;
    private boolean serverStopped;
    private final InfinispanServerService service;
-   private final static Pattern START_OK = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started in.*");
-   private final static Pattern START_ERROR = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started \\(with errors\\) in.*");
-   private final static Pattern STOPPED = Pattern.compile(".*\\[org\\.jboss\\.as\\].*stopped in.*");
+   private static final Pattern START_OK = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started in.*");
+   private static final Pattern START_ERROR = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started \\(with errors\\) in.*");
+   private static final Pattern STOPPED = Pattern.compile(".*\\[org\\.jboss\\.as\\].*stopped in.*");
 
    private volatile boolean gracefulStop = true;
 

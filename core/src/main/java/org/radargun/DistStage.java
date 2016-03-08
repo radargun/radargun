@@ -48,6 +48,7 @@ public interface DistStage extends Stage, Serializable {
    StageResult processAckOnMaster(List<DistStageAck> acks);
 
    //TODO: remove the call from stages
+
    /**
     * Should this stage be executed, based on its properties?
     * @return

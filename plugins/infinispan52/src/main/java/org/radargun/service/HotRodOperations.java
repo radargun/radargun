@@ -1,5 +1,7 @@
 package org.radargun.service;
 
+import java.util.concurrent.TimeUnit;
+
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.VersionedValue;
 import org.radargun.logging.Log;
@@ -8,8 +10,6 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.TemporalOperations;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * Implementation of the {@link BasicOperations} and {@link ConditionalOperations}
  * through the HotRod protocol.
@@ -17,8 +17,8 @@ import java.util.concurrent.TimeUnit;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class HotRodOperations implements BasicOperations, ConditionalOperations, TemporalOperations {
-   protected final static Log log = LogFactory.getLog(HotRodOperations.class);
-   protected final static boolean trace = log.isTraceEnabled();
+   protected static final Log log = LogFactory.getLog(HotRodOperations.class);
+   protected static final boolean trace = log.isTraceEnabled();
    protected final InfinispanHotrodService service;
 
    public HotRodOperations(InfinispanHotrodService service) {
@@ -31,9 +31,9 @@ public class HotRodOperations implements BasicOperations, ConditionalOperations,
          cacheName = service.cacheName;
       }
       if (cacheName == null) {
-         return new HotRodCache<>((RemoteCache<K,V>) service.managerNoReturn.getCache(false), (RemoteCache<K,V>) service.managerForceReturn.getCache(true));
+         return new HotRodCache<>((RemoteCache<K, V>) service.managerNoReturn.getCache(false), (RemoteCache<K, V>) service.managerForceReturn.getCache(true));
       } else {
-         return new HotRodCache<>((RemoteCache<K,V>) service.managerNoReturn.getCache(cacheName, false), (RemoteCache<K,V>) service.managerForceReturn.getCache(cacheName, true));
+         return new HotRodCache<>((RemoteCache<K, V>) service.managerNoReturn.getCache(cacheName, false), (RemoteCache<K, V>) service.managerForceReturn.getCache(cacheName, true));
       }
    }
 
@@ -99,7 +99,7 @@ public class HotRodOperations implements BasicOperations, ConditionalOperations,
       @Override
       public boolean remove(K key, V oldValue) {
          if (trace) log.tracef("REMOVE cache=%s key=%s value=%s", forceReturn.getName(), key, oldValue);
-         for (;;) {
+         for (; ; ) {
             VersionedValue<V> versioned = forceReturn.getVersioned(key);
             if (oldValue == null || versioned == null) {
                return false;
@@ -117,8 +117,9 @@ public class HotRodOperations implements BasicOperations, ConditionalOperations,
 
       @Override
       public boolean replace(K key, V oldValue, V newValue) {
-         if (trace) log.tracef("REPLACE cache=%s key=%s old=%s, new=%s", forceReturn.getName(), key, oldValue, newValue);
-         for (;;) {
+         if (trace)
+            log.tracef("REPLACE cache=%s key=%s old=%s, new=%s", forceReturn.getName(), key, oldValue, newValue);
+         for (; ; ) {
             VersionedValue<V> versioned = forceReturn.getVersioned(key);
             if (oldValue == null || versioned == null) {
                return false;
@@ -148,37 +149,43 @@ public class HotRodOperations implements BasicOperations, ConditionalOperations,
 
       @Override
       public void put(K key, V value, long lifespan) {
-         if (trace) log.tracef("PUT_WITH_LIFESPAN cache=%s key=%s value=%s lifespan=%s", noReturn.getName(), key, value, lifespan);
+         if (trace)
+            log.tracef("PUT_WITH_LIFESPAN cache=%s key=%s value=%s lifespan=%s", noReturn.getName(), key, value, lifespan);
          noReturn.put(key, value, lifespan, TimeUnit.MILLISECONDS);
       }
 
       @Override
       public V getAndPut(K key, V value, long lifespan) {
-         if (trace) log.tracef("GET_AND_PUT_WITH_LIFESPAN cache=%s key=%s value=%s lifespan=%s", forceReturn.getName(), key, value, lifespan);
+         if (trace)
+            log.tracef("GET_AND_PUT_WITH_LIFESPAN cache=%s key=%s value=%s lifespan=%s", forceReturn.getName(), key, value, lifespan);
          return forceReturn.put(key, value, lifespan, TimeUnit.MILLISECONDS);
       }
 
       @Override
       public boolean putIfAbsent(K key, V value, long lifespan) {
-         if (trace) log.tracef("PUT_IF_ABSENT_WITH_LIFESPAN cache=%s key=%s value=%s lifespan=%s", forceReturn.getName(), key, value, lifespan);
+         if (trace)
+            log.tracef("PUT_IF_ABSENT_WITH_LIFESPAN cache=%s key=%s value=%s lifespan=%s", forceReturn.getName(), key, value, lifespan);
          return forceReturn.putIfAbsent(key, value, lifespan, TimeUnit.MILLISECONDS) == null;
       }
 
       @Override
       public void put(K key, V value, long lifespan, long maxIdleTime) {
-         if (trace) log.tracef("PUT_WITH_LIFESPAN_AND_MAXIDLE cache=%s key=%s value=%s lifespan=%s maxIdle=%s", noReturn.getName(), key, value, lifespan, maxIdleTime);
+         if (trace)
+            log.tracef("PUT_WITH_LIFESPAN_AND_MAXIDLE cache=%s key=%s value=%s lifespan=%s maxIdle=%s", noReturn.getName(), key, value, lifespan, maxIdleTime);
          noReturn.put(key, value, lifespan, TimeUnit.MILLISECONDS, maxIdleTime, TimeUnit.MILLISECONDS);
       }
 
       @Override
       public V getAndPut(K key, V value, long lifespan, long maxIdleTime) {
-         if (trace) log.tracef("GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE cache=%s key=%s value=%s lifespan=%s maxIdle=%s", forceReturn.getName(), key, value, lifespan, maxIdleTime);
+         if (trace)
+            log.tracef("GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE cache=%s key=%s value=%s lifespan=%s maxIdle=%s", forceReturn.getName(), key, value, lifespan, maxIdleTime);
          return forceReturn.put(key, value, lifespan, TimeUnit.MILLISECONDS, maxIdleTime, TimeUnit.MILLISECONDS);
       }
 
       @Override
       public boolean putIfAbsent(K key, V value, long lifespan, long maxIdleTime) {
-         if (trace) log.tracef("PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE cache=%s key=%s value=%s lifespan=%s maxIdle=%s", forceReturn.getName(), key, value, lifespan, maxIdleTime);
+         if (trace)
+            log.tracef("PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE cache=%s key=%s value=%s lifespan=%s maxIdle=%s", forceReturn.getName(), key, value, lifespan, maxIdleTime);
          return forceReturn.putIfAbsent(key, value, lifespan, TimeUnit.MILLISECONDS, maxIdleTime, TimeUnit.MILLISECONDS) == null;
       }
    }

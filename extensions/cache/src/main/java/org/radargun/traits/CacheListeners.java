@@ -1,8 +1,8 @@
 package org.radargun.traits;
 
-import org.radargun.Operation;
-
 import java.util.Collection;
+
+import org.radargun.Operation;
 
 /**
  * The interface is not in-line with JSR-107, as JCache allows the listener to be invoked
@@ -39,15 +39,23 @@ public interface CacheListeners {
    Collection<Type> getSupportedListeners();
 
    void addCreatedListener(String cacheName, CreatedListener listener, boolean sync);
+
    void addUpdatedListener(String cacheName, UpdatedListener listener, boolean sync);
+
    void addRemovedListener(String cacheName, RemovedListener listener, boolean sync);
+
    void addEvictedListener(String cacheName, EvictedListener listener, boolean sync);
+
    void addExpiredListener(String cacheName, ExpiredListener listener, boolean sync);
 
    void removeCreatedListener(String cacheName, CreatedListener listener, boolean sync);
+
    void removeUpdatedListener(String cacheName, UpdatedListener listener, boolean sync);
+
    void removeRemovedListener(String cacheName, RemovedListener listener, boolean sync);
+
    void removeEvictedListener(String cacheName, EvictedListener listener, boolean sync);
+
    void removeExpiredListener(String cacheName, ExpiredListener listener, boolean sync);
 
    interface CreatedListener<K, V> {

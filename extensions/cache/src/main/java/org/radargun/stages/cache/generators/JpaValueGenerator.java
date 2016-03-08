@@ -73,7 +73,7 @@ public class JpaValueGenerator implements ValueGenerator {
       return sb.toString();
    }
 
-   public static abstract class JpaValue implements Serializable {
+   public abstract static class JpaValue implements Serializable {
       public int size() {
          throw new UnsupportedOperationException();
       }

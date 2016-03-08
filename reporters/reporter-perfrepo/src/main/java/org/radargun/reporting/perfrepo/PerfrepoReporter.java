@@ -61,7 +61,7 @@ public class PerfrepoReporter implements Reporter {
    @Property(doc = "Date of jenkins build that produced this report (default current date)", converter = DateConverter.class)
    private Date jenkinsBuildDate = Calendar.getInstance().getTime();
    @Property(doc = "Name mapping between radargun statistics names and perfrepo metric names. Only statistics with defined mapping will be uploaded.",
-         complexConverter = MetricNameMappingConverter.class)
+      complexConverter = MetricNameMappingConverter.class)
    private List<MetricNameMapping> metricNameMapping = new ArrayList<>();
    @Property(doc = "Additional build parameters", converter = KeyValueListConverter.class)
    private Map<String, String> buildParams = new HashMap<>();
@@ -180,7 +180,7 @@ public class PerfrepoReporter implements Reporter {
             if (mapping.computeMRD) {
                List<Double> mrds = mrdMapping.get(mapping);
                if (!mrds.isEmpty()) {
-                  testExecutionBuilder.value(mapping.to, StatsUtils.calculateMrd(mrds),  iterationsName, iterationValue);
+                  testExecutionBuilder.value(mapping.to, StatsUtils.calculateMrd(mrds), iterationsName, iterationValue);
                }
             } else {
                double value = mapping.representation.getValue(operationStats, duration);
@@ -210,10 +210,10 @@ public class PerfrepoReporter implements Reporter {
       String configName = "JDG RG (" + report.getConfiguration().name + ") " + jenkinsBuild;
 
       TestExecutionBuilder testExecutionBuilder =
-            TestExecution.builder()
-                  .name(configName)
-                  .testUid(perfRepoTest)
-                  .started(jenkinsBuildDate);
+         TestExecution.builder()
+            .name(configName)
+            .testUid(perfRepoTest)
+            .started(jenkinsBuildDate);
       addTags(testExecutionBuilder, report);
       testExecutionBuilder.tag(test.name);
       addBasicParameters(testExecutionBuilder, report);
@@ -280,11 +280,11 @@ public class PerfrepoReporter implements Reporter {
                for (Map.Entry<Object, Object> property : configItem.getValue().entrySet()) {
                   StringBuilder key = new StringBuilder();
                   key.append("slave")
-                        .append(normalizedConfig.getKey())
-                        .append(".");
+                     .append(normalizedConfig.getKey())
+                     .append(".");
                   key.append(configItem.getKey())
-                        .append(".")
-                        .append(property.getKey());
+                     .append(".")
+                     .append(property.getKey());
                   testExecutionBuilder.parameter(key.toString(), property.getValue() == null ? "null" : (String) property.getValue());
                }
             }
@@ -342,7 +342,7 @@ public class PerfrepoReporter implements Reporter {
       protected String operation;
 
       @Property(doc = "Which representation should be retrieved", optional = false,
-            converter = RepresentationType.SimpleConverter.class)
+         converter = RepresentationType.SimpleConverter.class)
       protected RepresentationType representation;
 
       @Property(doc = "Name of the target metric.", optional = false)
@@ -354,7 +354,7 @@ public class PerfrepoReporter implements Reporter {
 
    private static class MetricNameMappingConverter extends ReflexiveConverters.ListConverter {
       public MetricNameMappingConverter() {
-         super(new Class[] { MetricNameMapping.class });
+         super(new Class[] {MetricNameMapping.class});
       }
    }
 }

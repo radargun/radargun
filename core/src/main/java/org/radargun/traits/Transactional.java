@@ -8,8 +8,8 @@ import org.radargun.Operation;
 @Trait(doc = "Trait providing transactional operations.")
 public interface Transactional {
    String TRAIT = Transactional.class.getSimpleName();
-   Operation BEGIN =    Operation.register(TRAIT + ".Begin");
-   Operation COMMIT =   Operation.register(TRAIT + ".Commit");
+   Operation BEGIN = Operation.register(TRAIT + ".Begin");
+   Operation COMMIT = Operation.register(TRAIT + ".Commit");
    Operation ROLLBACK = Operation.register(TRAIT + ".Rollback");
    Operation DURATION = Operation.register(TRAIT + ".Duration");
 

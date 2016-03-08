@@ -1,5 +1,11 @@
 package org.radargun.service;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntriesEvicted;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
@@ -16,20 +22,14 @@ import org.infinispan.notifications.cachemanagerlistener.event.CacheStoppedEvent
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 /**
  * Generic listener is registered only once for each cache, then it multiplexes the events to the
  * RadarGun listeners. The listener registration is not expected to survive cache manager restarts.
- * 
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InfinispanCacheListeners extends
-      AbstractInfinispanListeners {
+   AbstractInfinispanListeners {
 
    protected static final Log log = LogFactory.getLog(InfinispanCacheListeners.class);
 
@@ -104,7 +104,7 @@ public class InfinispanCacheListeners extends
          service.getCache(cacheName).getAdvancedCache().removeListener(listener);
    }
 
-   protected static abstract class GenericCacheListener extends AbstractInfinispanListeners.GenericListener {
+   protected abstract static class GenericCacheListener extends AbstractInfinispanListeners.GenericListener {
 
       @CacheEntryCreated
       public void created(CacheEntryCreatedEvent e) {
@@ -159,11 +159,12 @@ public class InfinispanCacheListeners extends
             }
          }
       }
+
       public abstract boolean sync();
    }
 
    @Listener(clustered = true, sync = true)
-   protected static class SyncCacheListener extends GenericCacheListener{
+   protected static class SyncCacheListener extends GenericCacheListener {
 
       @Override
       public boolean sync() {

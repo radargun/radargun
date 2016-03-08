@@ -117,5 +117,5 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
 
    protected ConfigDumpHelper createConfigDumpHelper() {
       return new ConfigDumpHelper60();
-   }   
+   }
 }

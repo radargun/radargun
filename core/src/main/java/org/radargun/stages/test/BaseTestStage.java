@@ -22,14 +22,14 @@ public abstract class BaseTestStage extends AbstractDistStage {
    protected String testName = "Test";
 
    @Property(doc = "By default, each stage creates a new test. If this property is set to true," +
-         "results are amended to existing test (as iterations). Default is false.")
+      "results are amended to existing test (as iterations). Default is false.")
    protected boolean amendTest = false;
 
    @Property(converter = TimeConverter.class, doc = "Benchmark duration.", optional = false)
    protected long duration;
 
    @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'default' statistics " +
-         "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
+      "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
    protected Statistics statisticsPrototype = new DefaultStatistics();
 
    @Property(doc = "Property, which value will be used to identify individual iterations (e.g. num-threads).")

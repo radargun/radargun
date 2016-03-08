@@ -53,7 +53,7 @@ class PercentileLogAxis extends ValueAxis {
       state = drawTickMarksAndLabels(g2, cursor, plotArea, dataArea, edge);
       if (getAttributedLabel() != null) {
          state = drawAttributedLabel(getAttributedLabel(), g2, plotArea,
-               dataArea, edge, state);
+            dataArea, edge, state);
 
       } else {
          state = drawLabel(getLabel(), g2, plotArea, dataArea, edge, state);
@@ -84,9 +84,9 @@ class PercentileLogAxis extends ValueAxis {
       DecimalFormat formatter = new DecimalFormat("##.#%");
       int tick = 1;
       ticks.add(new NumberTick(TickType.MINOR, 0.5, "50%", textAnchor, TextAnchor.TOP_LEFT, TICK_LABEL_ANGLE));
-      for (;;) {
+      for (; ; ) {
          formatter.setMinimumFractionDigits(tick - 2);
-         formatter.setMaximumFractionDigits(tick - 1);;
+         formatter.setMaximumFractionDigits(tick - 1);
          double current = computeInverseTicks(tick);
          if (current > limit) break;
          if (range.contains(current)) {

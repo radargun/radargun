@@ -17,7 +17,10 @@ import java.util.Set;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Projections {
+public final class Projections {
+
+   private Projections() {}
+
    public static <A, B> Collection<B> project(Collection<? extends A> collection, Func<A, B> func) {
       return new ProjectCollection<>(collection, func);
    }
@@ -78,7 +81,7 @@ public class Projections {
       Map<A, B> newMap = new HashMap<>();
       for (Map.Entry<A, B> entry : map.entrySet()) {
          if ((keyCondition == null || keyCondition.accept(entry.getKey()))
-               && (valueCondition == null || valueCondition.accept(entry.getValue()))) {
+            && (valueCondition == null || valueCondition.accept(entry.getValue()))) {
             newMap.put(entry.getKey(), entry.getValue());
          }
       }
@@ -179,6 +182,7 @@ public class Projections {
 
    public static class Identity<A> implements Func<A, A> {
       public static final Identity INSTANCE = new Identity();
+
       @Override
       public A project(A a) {
          return a;
@@ -217,6 +221,7 @@ public class Projections {
       public Iterator<B> iterator() {
          return new Iterator<B>() {
             Iterator<? extends A> ait = collection.iterator();
+
             @Override
             public boolean hasNext() {
                return ait.hasNext();
@@ -336,6 +341,7 @@ public class Projections {
          for (int i = 0; it.hasNext() && i < skip; ++i) it.next();
          return new Iterator<A>() {
             int counter = 0;
+
             @Override
             public boolean hasNext() {
                return counter < limit && it.hasNext();
@@ -426,7 +432,7 @@ public class Projections {
       }
    }
 
-   private static class ProjectList<A, B> extends ProjectCollection<A,B> implements List<B> {
+   private static class ProjectList<A, B> extends ProjectCollection<A, B> implements List<B> {
       private final List<? extends A> list;
 
       public ProjectList(List<? extends A> list, Func<A, B> func) {

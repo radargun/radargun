@@ -23,7 +23,7 @@ public class HistogramChart extends Chart {
     * @param operation Name of the plotted operation
     * @param histogram Histogram that should be plotted
     */
-   public HistogramChart setData(String operation, Histogram histogram)  {
+   public HistogramChart setData(String operation, Histogram histogram) {
       XYSeries series = new XYSeries(operation + " response times");
       long totalCount = 0;
       for (long count : histogram.counts) {
@@ -42,7 +42,7 @@ public class HistogramChart extends Chart {
 
    protected JFreeChart createChart() {
       JFreeChart chart = ChartFactory.createXYStepAreaChart(null, "Response time", "Percentage", dataset,
-                                                       PlotOrientation.VERTICAL, false, false, false);
+         PlotOrientation.VERTICAL, false, false, false);
       XYPlot plot = (XYPlot) chart.getPlot();
       LogTimeAxis xAxis = new LogTimeAxis("Response time");
       xAxis.setRange(left, right);

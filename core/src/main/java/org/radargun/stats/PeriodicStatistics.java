@@ -50,7 +50,7 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationD
 
    private Statistics getCurrentBucket() {
       long currentTime = TimeService.currentTimeMillis();
-      int bucket = (int)((currentTime - getBegin()) / period);
+      int bucket = (int) ((currentTime - getBegin()) / period);
       while (buckets.size() <= bucket) {
          Statistics bucketStats = prototype.copy();
          if (bucketStats instanceof IntervalStatistics) {

@@ -13,14 +13,14 @@ import org.radargun.logging.LogFactory;
  * Apostrophes cannot be escaped.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ */
 public class ArgsConverter implements Converter<List<String>> {
    private static Log log = LogFactory.getLog(ArgsConverter.class);
 
    @Override
    public List<String> convert(String string, Type type) {
       ArrayList<String> list = new ArrayList<String>();
-      Tokenizer tokenizer = new Tokenizer(string, new String[] { " ", "\t", "\n", "\r", "\f", "'" }, true, false, 0);
+      Tokenizer tokenizer = new Tokenizer(string, new String[] {" ", "\t", "\n", "\r", "\f", "'"}, true, false, 0);
       StringBuilder sb = null;
       while (tokenizer.hasMoreTokens()) {
          String token = tokenizer.nextToken();

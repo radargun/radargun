@@ -34,7 +34,7 @@ public class LoadFileStage extends AbstractDistStage {
    private String filePath;
 
    @Property(doc = "The size of the values to put into the cache from the contents"
-         + " of the file. The default size is 1MB (1024 * 1024).")
+      + " of the file. The default size is 1MB (1024 * 1024).")
    private int valueSize = 1024 * 1024;
 
    @Property(doc = "The name of the bucket where keys are written. The default is null.")
@@ -58,10 +58,10 @@ public class LoadFileStage extends AbstractDistStage {
       log.info("--------------------");
       log.info("Size of file '" + filePath + "' is " + fileSize + " bytes");
       log.info("Value size is '" + valueSize + "' which will produce " + (int) Math.ceil((double) fileSize / valueSize)
-            + " keys");
+         + " keys");
       for (ResultAck ack : Projections.instancesOf(acks, ResultAck.class)) {
          log.info("Slave " + ack.getSlaveIndex() + " wrote " + ack.putCount
-               + " values to the cache with a total size of " + ack.totalBytesRead + " bytes");
+            + " values to the cache with a total size of " + ack.totalBytesRead + " bytes");
       }
       log.info("--------------------");
       return StageResult.SUCCESS;
@@ -70,7 +70,7 @@ public class LoadFileStage extends AbstractDistStage {
    @Override
    public DistStageAck executeOnSlave() {
       int totalWriters = slaveState.getClusterSize();
-      long fileOffset = valueSize * slaveState.getSlaveIndex();// index starts at 0
+      long fileOffset = valueSize * slaveState.getSlaveIndex(); // index starts at 0
 
       RandomAccessFile file = null;
       FileChannel fileChannel = null;
@@ -101,7 +101,7 @@ public class LoadFileStage extends AbstractDistStage {
                totalBytesRead += bytesRead;
                if (putCount % 5000 == 0) {
                   log.info("Writing " + bytesRead + " bytes to cache key: " + key + " at position "
-                        + fileChannel.position());
+                     + fileChannel.position());
                }
                buffer.rewind();
                long start = TimeService.nanoTime();
@@ -114,7 +114,7 @@ public class LoadFileStage extends AbstractDistStage {
                }
                if (printWriteStatistics) {
                   log.info("Put on slave-" + slaveState.getSlaveIndex() + " took "
-                        + Utils.prettyPrintTime(TimeService.nanoTime() - start, TimeUnit.NANOSECONDS));
+                     + Utils.prettyPrintTime(TimeService.nanoTime() - start, TimeUnit.NANOSECONDS));
                }
                putCount++;
                fileChannel.position(initPos + (valueSize * totalWriters));
@@ -154,9 +154,9 @@ public class LoadFileStage extends AbstractDistStage {
       @Override
       public String toString() {
          return "ResultAck{" +
-               "putCount=" + putCount +
-               ", totalBytesRead=" + totalBytesRead +
-               "} " + super.toString();
+            "putCount=" + putCount +
+            ", totalBytesRead=" + totalBytesRead +
+            "} " + super.toString();
       }
    }
 }

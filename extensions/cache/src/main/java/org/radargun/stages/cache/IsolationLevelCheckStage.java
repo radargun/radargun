@@ -40,7 +40,7 @@ public class IsolationLevelCheckStage extends CheckStage {
    private int transactionSize = 30;
 
    @Property(optional = false, doc = "Expected isolation level (should match to cache configuration). Supported " +
-         "values are [" + IsolationLevelCheckStage.READ_COMMITTED + ", " + IsolationLevelCheckStage.REPEATABLE_READ + "].")
+      "values are [" + IsolationLevelCheckStage.READ_COMMITTED + ", " + IsolationLevelCheckStage.REPEATABLE_READ + "].")
    private String expectedLevel;
 
    private volatile boolean finished;

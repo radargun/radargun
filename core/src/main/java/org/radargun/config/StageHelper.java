@@ -1,16 +1,16 @@
 package org.radargun.config;
 
-import org.radargun.utils.Utils;
-
 import java.io.File;
 import java.util.*;
+
+import org.radargun.utils.Utils;
 
 /**
  * Instantiates stages based on annotations
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class StageHelper {
+public final class StageHelper {
    private static Map<String, SortedMap<String, Class<? extends org.radargun.Stage>>> stagesByNamespace = new HashMap<>();
    protected static final String NAMESPACE_ROOT = "urn:radargun:stages:";
 
@@ -24,9 +24,11 @@ public class StageHelper {
       });
    }
 
+   private StageHelper() {}
+
    private static void addStage(String stageName, Class<? extends org.radargun.Stage> stageClazz) {
       NamespaceHelper.Coords coords = NamespaceHelper.suggestCoordinates(NAMESPACE_ROOT, stageClazz, "radargun-");
-      File[] codepaths = coords.explicit ? null : new File[] { new File(Utils.getCodePath(stageClazz)) };
+      File[] codepaths = coords.explicit ? null : new File[] {new File(Utils.getCodePath(stageClazz))};
       NamespaceHelper.registerNamespace(coords.namespace, codepaths, coords.jarMajorMinor);
       SortedMap<String, Class<? extends org.radargun.Stage>> stages = stagesByNamespace.get(coords.namespace);
       if (stages == null) {
@@ -60,7 +62,7 @@ public class StageHelper {
 
    public static boolean isStage(Class<?> stageClass) {
       return stageClass != null && org.radargun.Stage.class.isAssignableFrom(stageClass)
-            && stageClass.isAnnotationPresent(Stage.class);
+         && stageClass.isAnnotationPresent(Stage.class);
    }
 
    public static String getStageName(Class<? extends org.radargun.Stage> clazz) {

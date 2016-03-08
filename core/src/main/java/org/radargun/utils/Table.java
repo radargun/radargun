@@ -180,7 +180,7 @@ public class Table<TRowKey, TColumnKey, TValue> {
       }
    }
 
-   protected class ColumnMap extends AbstractColumn implements Map<TRowKey, TValue>{
+   protected class ColumnMap extends AbstractColumn implements Map<TRowKey, TValue> {
 
       private ColumnMap(TColumnKey column) {
          super(column);
@@ -304,14 +304,14 @@ public class Table<TRowKey, TColumnKey, TValue> {
       public <T> T[] toArray(T[] a) {
          if (ensure()) {
             if (a.length < data.size()) {
-               a = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), data.size());
+               a = (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), data.size());
             }
             for (int i = 0; i < data.size(); ++i) {
                a[i] = (T) Table.this.get(i, columnIndex);
             }
             return a;
          } else {
-            return (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), 0);
+            return (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), 0);
          }
       }
 
@@ -426,7 +426,7 @@ public class Table<TRowKey, TColumnKey, TValue> {
       public <T> T[] toArray(T[] a) {
          if (ensure()) {
             if (a.length < data.size()) {
-               a = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), data.size());
+               a = (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), data.size());
             }
             Iterator<TRowKey> rowKeyIterator = rowIndices.keySet().iterator();
             for (int i = 0; i < data.size(); ++i) {
@@ -434,7 +434,7 @@ public class Table<TRowKey, TColumnKey, TValue> {
             }
             return a;
          } else {
-            return (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), 0);
+            return (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), 0);
          }
       }
 
@@ -468,7 +468,7 @@ public class Table<TRowKey, TColumnKey, TValue> {
       @Override
       public boolean addAll(Collection<? extends Map.Entry<TRowKey, TValue>> c) {
          boolean changed = false;
-         for (Map.Entry<TRowKey, TValue> entry : c ) {
+         for (Map.Entry<TRowKey, TValue> entry : c) {
             changed = add(entry) || changed;
          }
          return changed;
@@ -482,7 +482,7 @@ public class Table<TRowKey, TColumnKey, TValue> {
       @Override
       public boolean removeAll(Collection<?> c) {
          boolean changed = false;
-         for (Object o : c ) {
+         for (Object o : c) {
             changed = remove(o) || changed;
          }
          return changed;
@@ -677,7 +677,7 @@ public class Table<TRowKey, TColumnKey, TValue> {
       public <T> T[] toArray(T[] a) {
          if (ensure()) {
             if (a.length < columnIndices.size()) {
-               a = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), columnIndices.size());
+               a = (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), columnIndices.size());
             }
             for (int i = 0; i < rowList.size(); ++i) {
                a[i] = (T) rowList.get(i);
@@ -687,7 +687,7 @@ public class Table<TRowKey, TColumnKey, TValue> {
             }
             return a;
          } else {
-            return (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), 0);
+            return (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), 0);
          }
       }
 
@@ -806,7 +806,7 @@ public class Table<TRowKey, TColumnKey, TValue> {
       public <T> T[] toArray(T[] a) {
          if (ensure()) {
             if (a.length < columnIndices.size()) {
-               a = (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), columnIndices.size());
+               a = (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), columnIndices.size());
             }
             Iterator<TColumnKey> columnKeyIterator = columnIndices.keySet().iterator();
             for (int i = 0; i < rowList.size(); ++i) {
@@ -817,7 +817,7 @@ public class Table<TRowKey, TColumnKey, TValue> {
             }
             return a;
          } else {
-            return (T[])java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), 0);
+            return (T[]) java.lang.reflect.Array.newInstance(a.getClass().getComponentType(), 0);
          }
       }
 

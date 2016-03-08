@@ -35,7 +35,7 @@ public class StressorRecordPool {
    }
 
    private void init(List<StressorRecord> stressorRecords) {
-      for (StressorRecord stressorRecord: stressorRecords) {
+      for (StressorRecord stressorRecord : stressorRecords) {
          availableRecords.add(stressorRecord);
          allRecords.set(stressorRecord.getThreadId(), stressorRecord);
       }

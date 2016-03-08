@@ -14,6 +14,7 @@ public interface ConfigurationProvider {
     * @return normalized config properties
     */
    Map<String, Properties> getNormalizedConfigs();
+
    /**
     * Gets service's original configuration files in form of byte arrays. Keys represent file names (including extension).
     *

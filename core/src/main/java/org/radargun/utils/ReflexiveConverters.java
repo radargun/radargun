@@ -22,7 +22,7 @@ import org.radargun.config.*;
  */
 public class ReflexiveConverters {
 
-   protected static abstract class Base {
+   protected abstract static class Base {
       protected final Map<String, Class<?>> classes = new HashMap<String, Class<?>>();
 
       protected Base(Class<?>[] classes) {
@@ -33,7 +33,7 @@ public class ReflexiveConverters {
             }
             if (this.classes.containsKey(de.name())) {
                throw new IllegalArgumentException("Trying to register " + clazz.getName() + " as '" + de.name()
-                     + "' but this is already used by " + this.classes.get(de.name()));
+                  + "' but this is already used by " + this.classes.get(de.name()));
             }
             this.classes.put(de.name(), clazz);
          }
@@ -44,7 +44,7 @@ public class ReflexiveConverters {
             DefinitionElement de = clazz.getAnnotation(DefinitionElement.class);
             if (this.classes.containsKey(de.name())) {
                throw new IllegalArgumentException("Trying to register " + clazz.getName() + " as '" + de.name()
-                     + "' but this is already used by " + this.classes.get(de.name()));
+                  + "' but this is already used by " + this.classes.get(de.name()));
             }
             classes.put(de.name(), clazz);
          });
@@ -113,7 +113,8 @@ public class ReflexiveConverters {
       public String convertToString(Object value) {
          if (value == null) return "null";
          DefinitionElement de = value.getClass().getAnnotation(DefinitionElement.class);
-         if (de == null) throw new IllegalArgumentException("Object does not have DefinitionElement attached: " + value);
+         if (de == null)
+            throw new IllegalArgumentException("Object does not have DefinitionElement attached: " + value);
          return String.format("%s -> %s", de.name(), value);
       }
 
@@ -157,7 +158,8 @@ public class ReflexiveConverters {
             if (!List.class.isAssignableFrom(clazz)) throw new IllegalArgumentException(type.toString());
          } else if (type instanceof ParameterizedType) {
             ParameterizedType ptype = (ParameterizedType) type;
-            if (!List.class.isAssignableFrom((Class<?>) ptype.getRawType())) throw new IllegalArgumentException(type.toString());
+            if (!List.class.isAssignableFrom((Class<?>) ptype.getRawType()))
+               throw new IllegalArgumentException(type.toString());
          }
          List list = new ArrayList();
          for (ComplexDefinition.Entry entry : definition.getAttributes()) {

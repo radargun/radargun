@@ -96,4 +96,9 @@ public abstract class JmxMonitor implements Monitor {
    public boolean equals(Object o) {
       return o != null && o.getClass() == this.getClass();
    }
+
+   @Override
+   public int hashCode() {
+      return super.hashCode();
+   }
 }

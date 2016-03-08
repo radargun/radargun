@@ -1,7 +1,6 @@
 package org.radargun.stages.test;
 
 import org.radargun.Operation;
-import org.radargun.stages.test.legacy.LegacyStressor;
 
 /**
  * Represent an operation that the {@link LegacyStressor}

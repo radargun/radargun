@@ -36,7 +36,7 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
    protected List<String> removedCaches = Collections.EMPTY_LIST;
 
    @Property(doc = "Timeout for retrieving the JGroupsTransport and its channels. Default is 2 minutes.",
-         converter = TimeConverter.class)
+      converter = TimeConverter.class)
    public long channelRetrievalTimeout = 120000;
 
    protected InfinispanPartitionableLifecycle partitionable;
@@ -48,14 +48,14 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
    // rather dirty hack to replace KeyGeneratorAware
    private static Infinispan51EmbeddedService instance;
 
-   static Infinispan51EmbeddedService getInstance() {
-      return instance;
-   }
-
    public Infinispan51EmbeddedService() {
       instance = this;
       partitionable = (InfinispanPartitionableLifecycle) lifecycle;
       topologyAware = createTopologyAware();
+   }
+
+   static Infinispan51EmbeddedService getInstance() {
+      return instance;
    }
 
    @Override
@@ -185,7 +185,8 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
 
    public int getNumOwners(Cache<?, ?> cache) {
       switch (cache.getCacheConfiguration().clustering().cacheMode()) {
-         case LOCAL: return 1;
+         case LOCAL:
+            return 1;
          case REPL_SYNC:
          case REPL_ASYNC:
             return cacheManager.getMembers().size();

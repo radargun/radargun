@@ -7,7 +7,10 @@ import java.util.Locale;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class XmlHelper {
+public final class XmlHelper {
+
+   private XmlHelper() {}
+
    public static String dashToCamelCase(String name, boolean firstLetterUpper) {
       int currIndex = 0, dashIndex;
       StringBuilder camelName = new StringBuilder(name.length());

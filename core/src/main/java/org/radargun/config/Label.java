@@ -7,6 +7,8 @@ package org.radargun.config;
  */
 public @interface Label {
    String prefix() default "";
+
    String suffix() default "";
+
    String separator() default ".";
 }

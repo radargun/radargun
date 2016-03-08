@@ -28,7 +28,7 @@ public class OpenFilesMonitor extends JmxMonitor {
          }
 
          OperatingSystemMXBean osBean = ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME,
-               OperatingSystemMXBean.class);
+            OperatingSystemMXBean.class);
          Long openFiles = (Long) connection.getAttribute(osBean.getObjectName(), OPEN_FILE_DESCRIPTOR_COUNT);
          Long maxOpenFiles = (Long) connection.getAttribute(osBean.getObjectName(), MAX_FILE_DESCRIPTOR_COUNT);
          if (openFiles != null) {

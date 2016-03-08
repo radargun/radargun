@@ -35,13 +35,13 @@ public class MemoryUsageMonitor extends JmxMonitor {
          }
 
          MemoryMXBean memMbean = ManagementFactory.newPlatformMXBeanProxy(connection, ManagementFactory.MEMORY_MXBEAN_NAME,
-               MemoryMXBean.class);
+            MemoryMXBean.class);
          MemoryUsage mem = memMbean.getHeapMemoryUsage();
 
          timeline.addValue(MEMORY_USAGE, new Timeline.Value(mem.getUsed() / 1048576));
 
          log.trace("Memory usage: used=" + formatDecimal(mem.getUsed()) + " B, size=" + formatDecimal(mem.getCommitted())
-               + " B, max=" + formatDecimal(mem.getMax()));
+            + " B, max=" + formatDecimal(mem.getMax()));
       } catch (Exception e) {
          log.error("Error in JMX memory stats retrieval", e);
       }

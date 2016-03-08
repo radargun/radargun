@@ -19,7 +19,7 @@ public class CacheAwareTextGenerator implements ValueGenerator {
    private String cacheName;
 
    @Property(doc = "String encoded into the value so that the entry may be distinguished from entries loaded in " +
-         "different load stages. Default is empty string.")
+      "different load stages. Default is empty string.")
    private String suffix = "";
 
    public static final String VALUE_TEMPLATE = "value_%s_%s@%s";

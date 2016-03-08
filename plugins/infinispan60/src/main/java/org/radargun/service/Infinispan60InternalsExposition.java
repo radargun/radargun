@@ -23,8 +23,12 @@ import org.radargun.traits.InternalsExposition;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Infinispan60InternalsExposition implements InternalsExposition {
-   protected final static Log log = LogFactory.getLog(Infinispan60InternalsExposition.class);
+   protected static final Log log = LogFactory.getLog(Infinispan60InternalsExposition.class);
    protected final Infinispan60EmbeddedService service;
+
+   private static Field lazyInitializingExecutorServiceDelegate;
+   private static Field blockingTaskAwareExecutorServiceDelegate;
+   private static Field lazyInitializingBlockingTaskAwareExecutorServiceDelegate;
 
    public Infinispan60InternalsExposition(Infinispan60EmbeddedService service) {
       this.service = service;
@@ -61,10 +65,6 @@ public class Infinispan60InternalsExposition implements InternalsExposition {
       values.put(executorName + " Active", threadPoolExecutor.getActiveCount());
       values.put(executorName + " Total", threadPoolExecutor.getPoolSize());
    }
-
-   private static Field lazyInitializingExecutorServiceDelegate;
-   private static Field blockingTaskAwareExecutorServiceDelegate;
-   private static Field lazyInitializingBlockingTaskAwareExecutorServiceDelegate;
 
    static {
       try {

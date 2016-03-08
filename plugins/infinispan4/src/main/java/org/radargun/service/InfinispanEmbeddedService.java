@@ -1,7 +1,5 @@
 package org.radargun.service;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
-
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
@@ -30,6 +28,8 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
+
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
 public class InfinispanEmbeddedService {
@@ -71,7 +71,10 @@ public class InfinispanEmbeddedService {
    protected InfinispanLifecycle createLifecycle() {
       return new InfinispanLifecycle(this);
    }
-   protected InfinispanClustered createClustered() { return new InfinispanClustered(this); }
+
+   protected InfinispanClustered createClustered() {
+      return new InfinispanClustered(this);
+   }
 
    @ProvidesTrait
    public InfinispanLifecycle getLifecycle() {
@@ -115,7 +118,7 @@ public class InfinispanEmbeddedService {
          String cacheNames = cacheManager.getDefinedCacheNames();
          if (!cacheNames.contains(cacheName))
             throw new IllegalStateException("The requested cache(" + cacheName + ") is not defined. Defined cache " +
-                                                  "names are " + cacheNames);
+               "names are " + cacheNames);
          caches.put(null, cacheManager.getCache(cacheName));
          int i = 0;
          for (String name : cacheManager.getCacheNames()) {
@@ -213,9 +216,11 @@ public class InfinispanEmbeddedService {
       if (isCacheDistributed(cache)) {
          ConsistentHash ch = cache.getAdvancedCache().getDistributionManager().getConsistentHash();
          if (ch instanceof EvenSpreadingConsistentHash) {
-            if (threadsPerNode < 0) throw new IllegalStateException("When EvenSpreadingConsistentHash is used threadsPerNode must also be set.");
-            if (keysPerThread < 0) throw new IllegalStateException("When EvenSpreadingConsistentHash is used must also be set.");
-            ((EvenSpreadingConsistentHash)ch).init(threadsPerNode, keysPerThread);
+            if (threadsPerNode < 0)
+               throw new IllegalStateException("When EvenSpreadingConsistentHash is used threadsPerNode must also be set.");
+            if (keysPerThread < 0)
+               throw new IllegalStateException("When EvenSpreadingConsistentHash is used must also be set.");
+            ((EvenSpreadingConsistentHash) ch).init(threadsPerNode, keysPerThread);
             log.info("Using an even consistent hash!");
          }
       }
@@ -249,7 +254,8 @@ public class InfinispanEmbeddedService {
 
    public int getNumOwners(Cache<?, ?> cache) {
       switch (cache.getConfiguration().getCacheMode()) {
-         case LOCAL: return 1;
+         case LOCAL:
+            return 1;
          case REPL_SYNC:
          case REPL_ASYNC:
             return cacheManager.getMembers().size();

@@ -14,17 +14,17 @@ import org.radargun.utils.ReflexiveConverters;
 @Stage(doc = "Common ancestor for all xOperationsTestStages")
 public abstract class CacheOperationsTestStage extends CacheTestStage {
    @Property(name = "keySelector", doc = "Selects which key IDs are used in the test.", optional = false,
-         complexConverter = KeySelectorFactoryConverter.class)
+      complexConverter = KeySelectorFactoryConverter.class)
    protected KeySelectorFactory keySelectorFactory;
 
    protected KeySelector getKeySelector(LegacyStressor stressor) {
       return keySelectorFactory.newInstance(CacheOperationsTestStage.this,
-            stressor.getRandom(), stressor.getGlobalThreadIndex(), stressor.getThreadIndex());
+         stressor.getRandom(), stressor.getGlobalThreadIndex(), stressor.getThreadIndex());
    }
 
    private static class KeySelectorFactoryConverter extends ReflexiveConverters.ObjectConverter {
       protected KeySelectorFactoryConverter() {
-         super(new Class<?>[] { CollidingKeysSelector.Factory.class, ConcurrentKeysSelector.Factory.class, GaussianKeysSelector.Factory.class});
+         super(new Class<?>[] {CollidingKeysSelector.Factory.class, ConcurrentKeysSelector.Factory.class, GaussianKeysSelector.Factory.class});
       }
    }
 }

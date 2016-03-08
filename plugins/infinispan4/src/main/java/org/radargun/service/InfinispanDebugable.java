@@ -9,10 +9,10 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.container.DataContainer;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.factories.ComponentRegistry;
-import org.radargun.traits.Debugable;
 import org.radargun.logging.Level;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.traits.Debugable;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -34,11 +34,11 @@ public class InfinispanDebugable implements Debugable {
    }
 
    protected String[] getDebugKeyPackages() {
-      return new String[] { "org.infinispan", "org.jgroups" };
+      return new String[] {"org.infinispan", "org.jgroups"};
    }
 
    protected String[] getDebugKeyClassesTraceFix() {
-      return new String[] { "org.infinispan.container.EntryFactoryImpl" };
+      return new String[] {"org.infinispan.container.EntryFactoryImpl"};
    }
 
    private void setTraceField(ComponentRegistry registry, String clazzName, boolean value) {

@@ -6,9 +6,9 @@ import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 
 /**
- * 
+ *
  * Stop BackgroundStressors.
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 @Stage(doc = "Stop BackgroundStressors.")

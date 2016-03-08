@@ -8,8 +8,7 @@ import org.radargun.traits.ProvidesTrait;
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Service(doc = "JBossCache 3.x")
-public class JBossCache3Service extends JBossCache2Service
-{
+public class JBossCache3Service extends JBossCache2Service {
    @Property(doc = "Use flat cache")
    protected boolean flatCache;
 

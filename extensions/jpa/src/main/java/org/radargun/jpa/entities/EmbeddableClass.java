@@ -1,15 +1,17 @@
 package org.radargun.jpa.entities;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import javax.persistence.Col
+mn;
+   im ort javax.persistence.Emb
+   ddable
 import java.io.Serializable;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 @Embeddable
 public class EmbeddableClass implements Serializable {
-   @Column(length=65536)
+   @Column(length = 65536)
    public String embeddedContent;
 
    public EmbeddableClass() {}

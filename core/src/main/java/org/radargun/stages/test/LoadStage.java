@@ -24,14 +24,14 @@ public abstract class LoadStage extends AbstractDistStage {
    protected int numThreads = 10;
 
    @Property(doc = "Seed used for initialization of random generators - with same seed (and other arguments)," +
-         " the stage guarantees same entries added to the cache. By default the seed is not set.")
+      " the stage guarantees same entries added to the cache. By default the seed is not set.")
    protected Long seed;
 
    @Property(doc = "During loading phase, if the insert fails, try it again. This is the maximum number of attempts. Default is 10.")
    protected int maxLoadAttempts = 10;
 
    @Property(doc = "When an attempt to load an entry fails, wait this period to reduce the chances of failing again. Default is one second.",
-         converter = TimeConverter.class)
+      converter = TimeConverter.class)
    protected long waitOnError = 1000;
 
    protected AtomicLong entryCounter = new AtomicLong(0);
@@ -47,7 +47,7 @@ public abstract class LoadStage extends AbstractDistStage {
       long totalSize = sizeSum.addAndGet(size);
       if (prevEntryCount / logPeriod < currentEntryCount / logPeriod) {
          log.infof("This node %s %d entries (~%d bytes)",
-               remove ? "removed" : "loaded", currentEntryCount, totalSize);
+            remove ? "removed" : "loaded", currentEntryCount, totalSize);
       }
    }
 

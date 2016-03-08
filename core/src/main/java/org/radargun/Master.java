@@ -119,7 +119,7 @@ public class Master {
                }
             }
             log.info("Finished benchmarking configuration '" + configuration.name + "' in "
-                    + Utils.getMillisDurationString(TimeService.currentTimeMillis() - configStart));
+               + Utils.getMillisDurationString(TimeService.currentTimeMillis() - configStart));
             for (MasterListener listener : state.getListeners()) {
                listener.afterConfiguration();
             }

@@ -24,7 +24,7 @@ import org.radargun.utils.TimeService;
  * Manages background stressors and log checkers (start/stop/check for errors).
  *
  * //TODO: more polishing to make this class agnostic to implemented logic (just pass configuration)
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */

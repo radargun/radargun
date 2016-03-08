@@ -27,7 +27,7 @@ public class InfinispanBulkOperations implements BulkOperations {
 
    @Override
    public <K, V> Cache<K, V> getCache(String cacheName, boolean preferAsync) {
-      return new Cache<K, V>((AdvancedCache<K,V>) service.getCache(cacheName).getAdvancedCache(), preferAsync);
+      return new Cache<K, V>((AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache(), preferAsync);
    }
 
    protected class Cache<K, V> implements BulkOperations.Cache<K, V>, AdvancedCacheHolder {

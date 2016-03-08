@@ -1,19 +1,19 @@
 package org.radargun.service;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.radargun.utils.Utils;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * @author Matej Cimbora
  */
 public class Infinispan70HotrodQueryable extends InfinispanHotrodQueryable {
 
-   private static String PROTOBUF_METADATA_CACHE_NAME = "___protobuf_metadata";
+   private static final String PROTOBUF_METADATA_CACHE_NAME = "___protobuf_metadata";
 
    public Infinispan70HotrodQueryable(Infinispan60HotrodService service) {
       super(service);

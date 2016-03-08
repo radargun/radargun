@@ -56,7 +56,7 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
 
    @Init
    public void init() {
-       distributedTaskExecutor = new InfinispanDistributedTask(this);
+      distributedTaskExecutor = new InfinispanDistributedTask(this);
    }
 
    @Override

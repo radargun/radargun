@@ -56,7 +56,7 @@ public class ManyIntegersObjectGenerator implements ValueGenerator {
 
    @Override
    public Object generateValue(Object key, int size, Random random) {
-      if (ctor == null)  throw new IllegalStateException("The generator was not properly initialized");
+      if (ctor == null) throw new IllegalStateException("The generator was not properly initialized");
       Object[] params = new Object[numInts];
       for (int i = 0; i < params.length; ++i) params[i] = randomInt(random);
       try {
@@ -68,7 +68,7 @@ public class ManyIntegersObjectGenerator implements ValueGenerator {
 
    private int randomInt(Random random) {
       long l = random.nextLong();
-      return  max > min ? (int)((l < 0 ? ~l : l) % (max - min + 1) + min) : 0;
+      return max > min ? (int) ((l < 0 ? ~l : l) % (max - min + 1) + min) : 0;
    }
 
    @Override
@@ -78,7 +78,7 @@ public class ManyIntegersObjectGenerator implements ValueGenerator {
 
    @Override
    public boolean checkValue(Object value, Object key, int expectedSize) {
-      if (clazz == null)  throw new IllegalStateException("The generator was not properly initialized");
+      if (clazz == null) throw new IllegalStateException("The generator was not properly initialized");
       if (!clazz.isInstance(value)) return false;
       try {
          for (Field f : fields) {

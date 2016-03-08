@@ -28,7 +28,7 @@ import org.radargun.utils.Utils;
 /**
  * A CacheWrapper that implements the DistributedTaskCapable interface, so it is capable of
  * executing a Callable against the cache using the DistributedExecutorService.
- * 
+ *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 
@@ -38,6 +38,7 @@ public class InfinispanDistributedTask<K, V, T> implements DistributedTaskExecut
    protected final Infinispan52EmbeddedService service;
    protected final ExecutorService executorService = Executors.newCachedThreadPool(new ThreadFactory() {
       AtomicInteger counter = new AtomicInteger();
+
       @Override
       public Thread newThread(Runnable r) {
          return new Thread(r, "DistributedTask-" + counter.incrementAndGet());

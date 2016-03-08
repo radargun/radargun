@@ -16,19 +16,15 @@ import org.infinispan.client.hotrod.event.ClientCacheEntryRemovedEvent;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
-import static org.radargun.service.AbstractInfinispanListeners.GenericListener;
-
 /**
- * 
  * Generic Infinispan remote listeners, similar to {@link InfinispanCacheListeners}.
- * 
+ *
  * @author vjuranek
- * 
  */
 public class InfinispanClientListeners extends AbstractInfinispanListeners {
 
    protected static final Log log = LogFactory.getLog(InfinispanClientListeners.class);
-  
+
    protected final Infinispan70HotrodService service;
    protected final ConcurrentMap<String, GenericClientListener> listeners = new ConcurrentHashMap<String, GenericClientListener>();
 

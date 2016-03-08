@@ -1,11 +1,11 @@
 package org.radargun.stages.cache.background;
 
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.utils.TimeService;
-
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Manager class holding failures occurring during test run.
@@ -19,15 +19,15 @@ public class FailureManager {
 
    private BackgroundOpsManager manager;
 
-   public FailureManager(BackgroundOpsManager manager) {
-      this.manager = manager;
-   }
-
    private AtomicLong missingOperations = new AtomicLong();
    private AtomicLong missingNotifications = new AtomicLong();
    private AtomicLong staleReads = new AtomicLong();
    private AtomicLong failedTransactionAttempts = new AtomicLong();
    private AtomicLong delayedRemovesErrors = new AtomicLong();
+
+   public FailureManager(BackgroundOpsManager manager) {
+      this.manager = manager;
+   }
 
    public long getMissingOperations() {
       return missingOperations.get();
@@ -74,11 +74,11 @@ public class FailureManager {
          return null;
       }
       if (getMissingOperations() > 0 || getMissingNotifications() > 0 || getStaleReads() > 0
-            || getDelayedRemovesErrors() > 0 || getFailedTransactionAttempts() > 0) {
+         || getDelayedRemovesErrors() > 0 || getFailedTransactionAttempts() > 0) {
          return String.format("Background stressors report %d missing operations, %d missing notifications, %d stale reads, " +
-                                    "%d failed transaction attempts and %d delayed removes errors",
-                              getMissingOperations(), getMissingNotifications(), getStaleReads(),
-                              getFailedTransactionAttempts(), getDelayedRemovesErrors());
+               "%d failed transaction attempts and %d delayed removes errors",
+            getMissingOperations(), getMissingNotifications(), getStaleReads(),
+            getFailedTransactionAttempts(), getDelayedRemovesErrors());
       }
       if (failuresOnly) {
          return null;

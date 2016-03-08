@@ -14,14 +14,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Cluster implements Serializable, Comparable<Cluster> {
-   private final static AtomicInteger indexGenerator = new AtomicInteger(0);
-   public final static String DEFAULT_GROUP = "default";
+   private static final AtomicInteger INDEX_GENERATOR = new AtomicInteger(0);
+   public static final String DEFAULT_GROUP = "default";
 
    private List<Group> groups = new ArrayList<Group>();
    private final int index;
 
    public Cluster() {
-      index = indexGenerator.getAndIncrement();
+      index = INDEX_GENERATOR.getAndIncrement();
    }
 
    public void addGroup(String name, int size) {
@@ -159,6 +159,13 @@ public class Cluster implements Serializable, Comparable<Cluster> {
          if (!name.equals(group.name)) return false;
 
          return true;
+      }
+
+      @Override
+      public int hashCode() {
+         int result = name.hashCode();
+         result = 31 * result + size;
+         return result;
       }
    }
 }

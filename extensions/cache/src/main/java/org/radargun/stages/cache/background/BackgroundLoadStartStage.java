@@ -9,7 +9,7 @@ import org.radargun.stages.cache.test.LoadStage;
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
  */
 @Stage(doc = "Allows to load data into a cache in the background, while other stages may take place. To force process " +
-      "termination, use BackgroundLoadDataStopStage.")
+   "termination, use BackgroundLoadDataStopStage.")
 public class BackgroundLoadStartStage extends LoadStage {
 
    private static final String BACKGROUND_LOADERS = "BackgroundLoaders";

@@ -43,8 +43,7 @@ public class SpyMemcachedService implements Lifecycle {
    @Property(doc = "Failure mode for the client. Default is 'Redistribute' (continue with next living node).")
    protected FailureMode failureMode = FailureMode.Redistribute;
 
-   @Property(doc = "Timeout for operation (request will throw exception after this timeout). Default is 15 seconds."
-         , converter = TimeConverter.class)
+   @Property(doc = "Timeout for operation (request will throw exception after this timeout). Default is 15 seconds.", converter = TimeConverter.class)
    protected long operationTimeout = 15000;
 
    @Property(doc = "Number of memcached client instances (each keeps only single connection to each server). Default is 100.")

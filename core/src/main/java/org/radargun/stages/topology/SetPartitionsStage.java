@@ -16,14 +16,14 @@ import org.radargun.traits.Partitionable;
 
 /**
  * Stage that partitions the cluster into several parts that cannot communicate
- * 
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Partitions the cluster into several parts that cannot communicate.")
 public class SetPartitionsStage extends AbstractDistStage {
 
    @Property(optional = false, converter = UniqueCheckerConverter.class, doc = "Set of sets of partitions, " +
-         "e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.")
+      "e.g. [0,1],[2] makes two partitions, one with slaves 0 and 1 and second with slave 2 alone.")
    private List<Set<Integer>> partitions;
 
    @InjectTrait(dependency = InjectTrait.Dependency.SKIP)

@@ -7,8 +7,11 @@ package org.radargun.state;
  */
 public interface MasterListener {
    void beforeConfiguration();
+
    void afterConfiguration();
+
    void beforeCluster();
+
    void afterCluster();
 
    class Adapter implements MasterListener {

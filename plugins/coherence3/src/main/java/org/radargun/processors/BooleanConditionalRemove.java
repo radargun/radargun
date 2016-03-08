@@ -20,8 +20,7 @@ public class BooleanConditionalRemove extends ConditionalRemove {
 
    @Override
    public Object process(InvocableMap.Entry entry) {
-      if ((entry.isPresent()) && (InvocableMapHelper.evaluateEntry(this.m_filter, entry)))
-      {
+      if ((entry.isPresent()) && (InvocableMapHelper.evaluateEntry(this.m_filter, entry))) {
          entry.remove(false);
          return Boolean.TRUE;
       }

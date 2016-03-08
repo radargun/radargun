@@ -14,7 +14,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface DefinitionElement {
    String name();
+
    String doc();
+
    ResolveType resolveType() default ResolveType.PASS_BY_MAP;
 
    enum ResolveType {

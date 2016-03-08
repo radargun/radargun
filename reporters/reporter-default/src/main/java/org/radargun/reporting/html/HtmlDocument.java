@@ -1,8 +1,6 @@
 package org.radargun.reporting.html;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 /**
  * Base class for formatting HTML file.
@@ -40,6 +38,7 @@ public abstract class HtmlDocument {
       File dir = new File(directory);
       dir.mkdirs();
    }
+
    /**
     * The following methods are used in Freemarker templates
     * e.g. method getPercentiles() can be used as getPercentiles() or percentiles in template

@@ -70,7 +70,7 @@ public class InfinispanServerClustered implements Clustered {
             }
             String[] nodes;
             if (!membersString.startsWith("[") || !membersString.endsWith("]")) {
-               nodes = new String[] { membersString };
+               nodes = new String[] {membersString};
             } else {
                nodes = membersString.substring(1, membersString.length() - 1).split(",", 0);
             }

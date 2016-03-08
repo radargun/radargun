@@ -40,7 +40,7 @@ public class Infinispan52CacheInfo extends InfinispanCacheInfo {
       @Override
       public Map<?, Long> getStructuredSize() {
          ConsistentHash ch = ((DistributionManager) cache.getDistributionManager()).getReadConsistentHash();
-         int segmentSizes[] = new int[ch.getNumSegments()];
+         int[] segmentSizes = new int[ch.getNumSegments()];
          for (InternalCacheEntry entry : cache.getDataContainer()) {
             segmentSizes[ch.getSegment(entry.getKey())]++;
          }
@@ -63,7 +63,7 @@ public class Infinispan52CacheInfo extends InfinispanCacheInfo {
          CacheSizer<?, ?, Integer> cacheSizer = new CacheSizer<Object, Object, Integer>();
          DistributedTaskBuilder<Integer> taskBuilder = des.createDistributedTaskBuilder(cacheSizer);
          List<Future<Integer>> futureList = des.submitEverywhere(taskBuilder.build());
-         
+
          for (Future<Integer> future : futureList) {
             try {
                totalSize += future.get().intValue();
@@ -75,7 +75,7 @@ public class Infinispan52CacheInfo extends InfinispanCacheInfo {
                return -1;
             }
          }
-         
+
          if (cache.getAdvancedCache().getDistributionManager() != null) {
             int numMembers = cache.getCacheManager().getMembers().size();
             int numOwners = cache.getAdvancedCache().getCacheConfiguration().clustering().hash().numOwners();

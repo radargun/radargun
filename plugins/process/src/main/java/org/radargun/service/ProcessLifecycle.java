@@ -345,15 +345,21 @@ public class ProcessLifecycle implements Lifecycle, Killable {
 
    public interface Listener {
       void beforeStart();
+
       void afterStart();
+
       void beforeStop(boolean graceful);
+
       void afterStop(boolean graceful);
    }
 
    public static class ListenerAdapter implements Listener {
       public void beforeStart() {}
+
       public void afterStart() {}
+
       public void beforeStop(boolean graceful) {}
+
       public void afterStop(boolean graceful) {}
    }
 }

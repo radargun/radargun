@@ -183,7 +183,7 @@ public abstract class AbstractConfigurationTest extends PowerMockTestCase {
       for (Scenario.StageDescription stage : stages) {
          Map<String, Definition> properties = stage.properties;
          if (stage.stageClass.equals(RepeatBeginStage.class) || stage.stageClass.equals(RepeatContinueStage.class) ||
-                 stage.stageClass.equals(RepeatEndStage.class))
+            stage.stageClass.equals(RepeatEndStage.class))
             assertRepeatProperties(properties);
       }
    }

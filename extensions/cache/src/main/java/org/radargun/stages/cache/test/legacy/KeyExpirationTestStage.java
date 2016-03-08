@@ -10,11 +10,11 @@ import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.cache.test.CacheInvocations;
+import org.radargun.stages.test.legacy.LegacyStressor;
 import org.radargun.stages.test.legacy.LegacyTestStage;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.stages.test.legacy.OperationSelector;
 import org.radargun.stages.test.legacy.RatioOperationSelector;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.SizeConverter;
@@ -55,9 +55,9 @@ public class KeyExpirationTestStage extends CacheTestStage {
    public void init() {
       super.init();
       operationSelector = new RatioOperationSelector.Builder()
-            .add(BasicOperations.PUT, putRatio)
-            .add(BasicOperations.GET, getRatio)
-            .build();
+         .add(BasicOperations.PUT, putRatio)
+         .add(BasicOperations.GET, getRatio)
+         .build();
    }
 
 
@@ -216,7 +216,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
          // ~sqrt probability for 1 - maxRoot^2
          final long maxRoot = (long) Math.sqrt((double) entryLifespan);
          long rand = random.nextLong() % maxRoot;
-         return current + rand * rand + random.nextLong() % (2*maxRoot - 2) + 1;
+         return current + rand * rand + random.nextLong() % (2 * maxRoot - 2) + 1;
       }
 
       private KeyWithRemovalTime getRandomPair(TreeSet<KeyWithRemovalTime> scheduledKeys, long timestamp, Random random) {

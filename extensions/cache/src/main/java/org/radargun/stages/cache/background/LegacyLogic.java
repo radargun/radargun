@@ -69,10 +69,10 @@ class LegacyLogic extends AbstractLogic {
    }
 
    private void loadKeyRange(long from, long to) {
-      int loaded_keys = 0;
+      int loadedKeys = 0;
       boolean loadWithPutIfAbsent = manager.getLegacyLogicConfiguration().isLoadWithPutIfAbsent();
       int entrySize = manager.getLegacyLogicConfiguration().getEntrySize();
-      for (long keyId = from; keyId < to && !stressor.isTerminated(); keyId++, loaded_keys++) {
+      for (long keyId = from; keyId < to && !stressor.isTerminated(); keyId++, loadedKeys++) {
          while (!stressor.isTerminated()) {
             try {
                Object key = keyGenerator.generateKey(keyId);
@@ -82,8 +82,8 @@ class LegacyLogic extends AbstractLogic {
                } else {
                   nonTxBasicCache.put(key, value);
                }
-               if (loaded_keys % 1000 == 0) {
-                  log.debug("Loaded " + loaded_keys + " out of " + (to - from));
+               if (loadedKeys % 1000 == 0) {
+                  log.debug("Loaded " + loadedKeys + " out of " + (to - from));
                }
                // if we get an exception, it's OK - we can retry.
                break;
@@ -169,7 +169,7 @@ class LegacyLogic extends AbstractLogic {
             }
          }
       } catch (Exception e) {
-         InterruptedException ie = Utils.findThrowableCauseByClass(e,InterruptedException.class);
+         InterruptedException ie = Utils.findThrowableCauseByClass(e, InterruptedException.class);
          if (ie != null) {
             throw ie;
          } else if (e.getClass().getName().contains("SuspectException")) {

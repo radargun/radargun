@@ -35,12 +35,12 @@ public class NormalizedConfigDocument extends HtmlDocument {
 
    private static String getTitle(String configName, String groupName, Cluster cluster, String config) {
       return String.format("Normalized configuration %s for %s, group %s on %s",
-              config, configName, groupName, cluster);
+         config, configName, groupName, cluster);
    }
 
    public static String getFilename(String configName, String groupName, Cluster cluster, String config) {
       return String.format("normalized_%s_%s_%d_%s.html",
-              configName, groupName, cluster.getClusterIndex(), config);
+         configName, groupName, cluster.getClusterIndex(), config);
    }
 
    /**

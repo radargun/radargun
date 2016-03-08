@@ -1,9 +1,9 @@
 package org.radargun.util;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.traits.BasicOperations;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * General test tools.

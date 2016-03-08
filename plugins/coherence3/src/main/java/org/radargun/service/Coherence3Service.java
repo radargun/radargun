@@ -32,7 +32,7 @@ import org.radargun.traits.ProvidesTrait;
 
 /**
  * Oracle Coherence 3.x CacheWrapper implementation.
- * 
+ *
  * @author Manik Surtani &lt;msurtani@gmail.com&gt;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
@@ -153,7 +153,7 @@ public class Coherence3Service implements Lifecycle, Clustered {
          Field ssField = MultiProviderSelectionService.class.getDeclaredField("m_mapServices");
          ssField.setAccessible(true);
          ConcurrentMap<SelectorProvider, SelectionService> selectionServices
-               = (ConcurrentMap<SelectorProvider, SelectionService>) ssField.get(SelectionServices.getDefaultService());
+            = (ConcurrentMap<SelectorProvider, SelectionService>) ssField.get(SelectionServices.getDefaultService());
          for (SelectionService ss : selectionServices.values()) {
             ss.shutdown();
          }

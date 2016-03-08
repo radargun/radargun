@@ -10,6 +10,7 @@ interface Logic {
     * Initialize the logic within thread. Called before first invoke but with all the caches set.
     */
    void init();
+
    /**
     * Execute one (logical) operation on the cache.
     *

@@ -66,19 +66,19 @@ public class BasicOperationsTestSetupStage extends CacheTestSetupStage {
    @Override
    protected SchedulingSelector<Conversation> createSelector() {
       return new SchedulingSelector.Builder<>(Conversation.class)
-            .add(new Get(), get.invocations, get.interval)
-            .add(new GetTx(), getTx.invocations, getTx.interval)
-            .add(new ContainsKey(), containsKey.invocations, containsKey.interval)
-            .add(new ContainsKeyTx(), containsKeyTx.invocations, containsKeyTx.interval)
-            .add(new Put(), put.invocations, put.interval)
-            .add(new PutTx(), putTx.invocations, putTx.interval)
-            .add(new GetAndPut(), getAndPut.invocations, getAndPut.interval)
-            .add(new GetAndPutTx(), getAndPutTx.invocations, getAndPutTx.interval)
-            .add(new Remove(), remove.invocations, remove.interval)
-            .add(new RemoveTx(), removeTx.invocations, removeTx.interval)
-            .add(new GetAndRemove(), getAndRemove.invocations, getAndRemove.interval)
-            .add(new GetAndRemoveTx(), getAndRemoveTx.invocations, getAndRemoveTx.interval)
-            .build();
+         .add(new Get(), get.invocations, get.interval)
+         .add(new GetTx(), getTx.invocations, getTx.interval)
+         .add(new ContainsKey(), containsKey.invocations, containsKey.interval)
+         .add(new ContainsKeyTx(), containsKeyTx.invocations, containsKeyTx.interval)
+         .add(new Put(), put.invocations, put.interval)
+         .add(new PutTx(), putTx.invocations, putTx.interval)
+         .add(new GetAndPut(), getAndPut.invocations, getAndPut.interval)
+         .add(new GetAndPutTx(), getAndPutTx.invocations, getAndPutTx.interval)
+         .add(new Remove(), remove.invocations, remove.interval)
+         .add(new RemoveTx(), removeTx.invocations, removeTx.interval)
+         .add(new GetAndRemove(), getAndRemove.invocations, getAndRemove.interval)
+         .add(new GetAndRemoveTx(), getAndRemoveTx.invocations, getAndRemoveTx.interval)
+         .build();
    }
 
    @Override

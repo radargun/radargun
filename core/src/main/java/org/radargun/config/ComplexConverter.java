@@ -10,6 +10,7 @@ import java.util.Collection;
 public interface ComplexConverter<T> {
 
    T convert(ComplexDefinition definition, Type type);
+
    String convertToString(T value);
 
    public static class Dummy implements ComplexConverter<Object> {

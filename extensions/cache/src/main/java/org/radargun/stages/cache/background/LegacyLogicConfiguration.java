@@ -37,7 +37,7 @@ public class LegacyLogicConfiguration {
    protected boolean noLoading = false;
 
    @Property(doc = "Generator of values. Default is byte-array.",
-         complexConverter = ValueGenerator.ComplexConverter.class)
+      complexConverter = ValueGenerator.ComplexConverter.class)
    protected ValueGenerator valueGenerator = new ByteArrayValueGenerator();
 
    public int getEntrySize() {

@@ -20,7 +20,7 @@ public class Path {
    }
 
    public Path(Field field) {
-      this(new Field[]{ field });
+      this(new Field[] {field});
    }
 
    public Object get(Object source) throws IllegalAccessException {

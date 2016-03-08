@@ -9,8 +9,6 @@ import java.util.*;
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
 import org.radargun.config.Definition;
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.radargun.stats.Statistics;
 
 /**
@@ -19,7 +17,6 @@ import org.radargun.stats.Statistics;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Report implements Comparable<Report>, Serializable {
-   private static final Log log = LogFactory.getLog(Report.class);
 
    /* Configuration part */
    private Configuration configuration;
@@ -373,7 +370,7 @@ public class Report implements Comparable<Report>, Serializable {
          }
       }
 
-      private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException {
+      private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
          name = (String) in.readObject();
          definition = (Definition) in.readObject();
          value = in.readObject();

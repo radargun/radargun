@@ -24,7 +24,7 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class JGroupsDumper extends Thread {
-   private final static Log log = LogFactory.getLog(JGroupsDumper.class);
+   private static final Log log = LogFactory.getLog(JGroupsDumper.class);
    private final ProtocolStack stack;
    private static final List<ProtocolDumper> dumpers = new ArrayList<ProtocolDumper>();
 
@@ -72,6 +72,7 @@ public class JGroupsDumper extends Thread {
 
    private interface ProtocolDumper {
       boolean accepts(Protocol protocol);
+
       void dump(Protocol protocol);
    }
 
@@ -102,7 +103,7 @@ public class JGroupsDumper extends Thread {
    }
 
    private static class TPDumper implements ProtocolDumper {
-      final private Set<String> dumped = new HashSet<String>();
+      private final Set<String> dumped = new HashSet<String>();
 
       @Override
       public boolean accepts(Protocol protocol) {
@@ -136,8 +137,8 @@ public class JGroupsDumper extends Thread {
       private boolean checkThreadPool(ThreadPoolExecutor tpe, String name) {
          int threshold = (tpe.getMaximumPoolSize() * 95 / 100) - 1;
          log.infof("%s current: %d, active: %d, core: %d, max: %d, scheduled: %d, completed: %d, queue size: %d", name,
-               tpe.getPoolSize(), tpe.getActiveCount(), tpe.getCorePoolSize(), tpe.getMaximumPoolSize(),
-               tpe.getTaskCount(), tpe.getCompletedTaskCount(), tpe.getQueue() != null ? tpe.getQueue().size() : -1);
+            tpe.getPoolSize(), tpe.getActiveCount(), tpe.getCorePoolSize(), tpe.getMaximumPoolSize(),
+            tpe.getTaskCount(), tpe.getCompletedTaskCount(), tpe.getQueue() != null ? tpe.getQueue().size() : -1);
          boolean dump = tpe.getActiveCount() >= threshold || (tpe.getPoolSize() >= threshold && !dumped.contains(name));
          if (dump) dumped.add(name);
          if (tpe.getPoolSize() < threshold) dumped.remove(name);

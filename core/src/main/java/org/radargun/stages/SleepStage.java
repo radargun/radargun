@@ -8,7 +8,7 @@ import org.radargun.utils.TimeConverter;
 
 /**
  * Sleeps specified number of milliseconds.
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 @Stage(doc = "Sleeps specified number of milliseconds.")

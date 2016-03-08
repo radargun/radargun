@@ -7,8 +7,8 @@ import org.radargun.config.DefinitionElement;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.Histogram;
 import org.radargun.stats.representation.MeanAndDev;
-import org.radargun.stats.representation.Percentile;
 import org.radargun.stats.representation.OperationThroughput;
+import org.radargun.stats.representation.Percentile;
 import org.radargun.utils.Projections;
 
 /**
@@ -18,6 +18,7 @@ import org.radargun.utils.Projections;
  */
 @DefinitionElement(name = "all", doc = "Operation statistics recording all requests' response times.")
 public class AllRecordingOperationStats implements OperationStats {
+
    private static final int INITIAL_CAPACITY = (1 << 10);
    protected static final int MAX_CAPACITY = (1 << 20); // max 8MB
 
@@ -28,9 +29,9 @@ public class AllRecordingOperationStats implements OperationStats {
    protected long errors;
 
    /**
-    * 
+    *
     * Factory method to use in the copy method
-    * 
+    *
     * @return a new AllRecordingOperationStats instance
     */
    @Override
@@ -40,7 +41,7 @@ public class AllRecordingOperationStats implements OperationStats {
 
    @Override
    public void registerRequest(long responseTime) {
-       if (pos >= responseTimes.length) {
+      if (pos >= responseTimes.length) {
          int newCapacity = Math.min(responseTimes.length << 1, MAX_CAPACITY);
          if (newCapacity <= responseTimes.length) {
             pos = 0;

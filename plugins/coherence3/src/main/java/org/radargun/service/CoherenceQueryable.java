@@ -1,5 +1,15 @@
 package org.radargun.service;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.tangosol.io.pof.PofReader;
 import com.tangosol.io.pof.PofWriter;
 import com.tangosol.io.pof.PortableObject;
@@ -14,33 +24,11 @@ import com.tangosol.util.comparator.InverseComparator;
 import com.tangosol.util.extractor.ChainedExtractor;
 import com.tangosol.util.extractor.MultiExtractor;
 import com.tangosol.util.extractor.ReflectionExtractor;
-import com.tangosol.util.filter.AllFilter;
-import com.tangosol.util.filter.AnyFilter;
-import com.tangosol.util.filter.BetweenFilter;
-import com.tangosol.util.filter.ContainsFilter;
-import com.tangosol.util.filter.EqualsFilter;
-import com.tangosol.util.filter.GreaterEqualsFilter;
-import com.tangosol.util.filter.GreaterFilter;
-import com.tangosol.util.filter.IsNullFilter;
-import com.tangosol.util.filter.LessEqualsFilter;
-import com.tangosol.util.filter.LessFilter;
-import com.tangosol.util.filter.LikeFilter;
-import com.tangosol.util.filter.LimitFilter;
-import com.tangosol.util.filter.NotFilter;
+import com.tangosol.util.filter.*;
 import org.radargun.aggregators.LimitAggregator;
 import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.Projections;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -365,11 +353,11 @@ public class CoherenceQueryable implements Queryable {
                values = Projections.subset(values, skip, limit());
             }
             return Projections.project(values, new Projections.Func<Map.Entry, Object>() {
-            @Override
-            public Object project(Map.Entry entry) {
-               return entry.getValue();
-            }
-         });
+               @Override
+               public Object project(Map.Entry entry) {
+                  return entry.getValue();
+               }
+            });
          } else {
             Collection values = valueSet;
             if (skip > 0 || limit >= 0) {

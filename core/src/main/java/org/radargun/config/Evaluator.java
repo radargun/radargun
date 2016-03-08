@@ -1,7 +1,6 @@
 package org.radargun.config;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +26,10 @@ import org.radargun.utils.Tokenizer;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Evaluator {
-   private final static Log log = LogFactory.getLog(Evaluator.class);
+public final class Evaluator {
+   private static final Log log = LogFactory.getLog(Evaluator.class);
+
+   private Evaluator() {}
 
    /**
     * Parse string possibly containing expressions and properties and convert the value to integer.
@@ -48,8 +49,8 @@ public class Evaluator {
          int propertyIndex = string.indexOf("${", currentIndex);
          int expressionIndex = string.indexOf("#{", currentIndex);
          int nextIndex = propertyIndex < 0 ?
-               (expressionIndex < 0 ? string.length() : expressionIndex) :
-               (expressionIndex < 0 ? propertyIndex : Math.min(expressionIndex, propertyIndex));
+            (expressionIndex < 0 ? string.length() : expressionIndex) :
+            (expressionIndex < 0 ? propertyIndex : Math.min(expressionIndex, propertyIndex));
          sb.append(string.substring(currentIndex, nextIndex));
          currentIndex = nextIndex + 2;
          if (nextIndex == propertyIndex) {
@@ -116,7 +117,7 @@ public class Evaluator {
                } else {
                   while (true) {
                      if (operators.isEmpty() || operators.peek() == Operator.OPENPAR ||
-                         operators.peek().precedence() < op.precedence()) {
+                        operators.peek().precedence() < op.precedence()) {
                         operators.push(op);
                         break;
                      }
@@ -496,6 +497,7 @@ public class Evaluator {
                o = d = Double.parseDouble(string);
                t = ValueType.DOUBLE;
             } catch (NumberFormatException e2) {
+               // ok
             }
          }
          type = t;
@@ -662,8 +664,7 @@ public class Evaluator {
          public Value exec(Value value) {
             return gcd(value);
          }
-      }, null),
-      ;
+      }, null);
 
       private static Map<String, Operator> symbolMap = new HashMap<String, Operator>();
       private String symbol;

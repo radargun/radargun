@@ -45,7 +45,7 @@ public class TimeStressorCompletion extends AbstractCompletion {
          //make sure negative durations are not printed
          long remaining = Math.max(0, (startTime + duration) - now);
          log.infof(PROGRESS_STRING, executedOps, Utils.getNanosDurationString(now - startTime),
-               Utils.getNanosDurationString(remaining), Utils.getNanosDurationString(duration));
+            Utils.getNanosDurationString(remaining), Utils.getNanosDurationString(duration));
       }
    }
 }

@@ -21,11 +21,11 @@ import org.radargun.logging.LogFactory;
 import org.radargun.utils.TimeService;
 
 /**
- * 
+ *
  * Periodically polls for values exposed via JMX on multiple nodes.
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- * 
+ *
  */
 public abstract class JMXPoller implements NotificationListener {
    public static final String DEFAULT_SERVICE_URL_TEMPLATE = "service:jmx:rmi:///jndi/rmi://%s:%d/jmxrmi";
@@ -49,9 +49,9 @@ public abstract class JMXPoller implements NotificationListener {
    }
 
    /**
-    * 
+    *
     * Create a new JMXPoller.
-    * 
+    *
     * @param jmxEndpoints
     *           jmx endpoints in form host:port
     * @param logicalNodeNames
@@ -73,7 +73,7 @@ public abstract class JMXPoller implements NotificationListener {
 
    /**
     * Override to poll for certain JMX attributes.
-    * 
+    *
     * @param connection
     *           Connection to a JMX endpoint.
     * @param nodeName
@@ -87,8 +87,7 @@ public abstract class JMXPoller implements NotificationListener {
    protected String endpointToString(InetSocketAddress endpoint) {
       return endpoint.getHostName() + ":" + endpoint.getPort();
    }
-   
-   
+
 
    private void discardConnector(InetSocketAddress endpoint, JMXConnector connector) {
       connectors.remove(endpoint);
@@ -187,7 +186,7 @@ public abstract class JMXPoller implements NotificationListener {
          return cachedConnector;
       }
       JMXServiceURL serviceURL = new JMXServiceURL(String.format(this.serviceUrlTemplate, endpoint.getHostName(),
-            endpoint.getPort()));
+         endpoint.getPort()));
       JMXConnector newConnector = JMXConnectorFactory.newJMXConnector(serviceURL, null);
       try {
          newConnector.connect();

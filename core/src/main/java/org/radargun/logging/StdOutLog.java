@@ -16,6 +16,7 @@ public class StdOutLog implements Log {
          return new SimpleDateFormat("HH:mm:ss.SSS");
       }
    };
+
    public StdOutLog(String className) {
       this.className = className;
    }
@@ -185,7 +186,7 @@ public class StdOutLog implements Log {
    }
 
    private Object[] prefix(Object[] args) {
-      return new Object[]{ getTime(), className, Thread.currentThread().getName(), args};
+      return new Object[] {getTime(), className, Thread.currentThread().getName(), args};
    }
 
 }

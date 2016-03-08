@@ -107,7 +107,7 @@ public class StressorTest extends PowerMockTestCase {
 
    protected void runSingleCycle(boolean tx) throws InterruptedException {
       CountDownLatch rampUpLatch = new CountDownLatch(10);
-      conversation = stressor -> runConversation(stressor, tx ,rampUpLatch, new Foo(), new Bar());
+      conversation = stressor -> runConversation(stressor, tx, rampUpLatch, new Foo(), new Bar());
 
       // wait until 10 conversations are invoked
       assertTrue(rampUpLatch.await(10, TimeUnit.SECONDS));
@@ -118,8 +118,14 @@ public class StressorTest extends PowerMockTestCase {
       AtomicInteger ends = new AtomicInteger(0);
       ConcurrentMap<Operation, Long> requests = new ConcurrentHashMap<>();
       ConcurrentMap<Operation, Long> errors = new ConcurrentHashMap<>();
-      doAnswer(invocation -> { begins.incrementAndGet(); return null; }).when(statistics).begin();
-      doAnswer(invocation -> { ends.incrementAndGet(); return null; }).when(statistics).end();
+      doAnswer(invocation -> {
+         begins.incrementAndGet();
+         return null;
+      }).when(statistics).begin();
+      doAnswer(invocation -> {
+         ends.incrementAndGet();
+         return null;
+      }).when(statistics).end();
       doAnswer(invocation -> incrementOps(requests, invocation)).when(statistics).registerRequest(Matchers.anyLong(), Matchers.any(Operation.class));
       doAnswer(invocation -> incrementOps(errors, invocation)).when(statistics).registerError(Matchers.anyLong(), Matchers.any(Operation.class));
       doReturn("").when(statistics).toString();

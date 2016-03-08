@@ -1,9 +1,9 @@
 package org.radargun.utils;
 
+import java.util.Random;
+
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
-
-import java.util.Random;
 
 /**
  * Random configuration values.
@@ -15,19 +15,19 @@ public interface RandomValue<T> {
 
    class PrimitiveConverter extends ReflexiveConverters.ObjectConverter {
       public <T> PrimitiveConverter() {
-         super(new Class[] { StringValue.class, IntegerValue.class, DoubleValue.class });
+         super(new Class[] {StringValue.class, IntegerValue.class, DoubleValue.class});
       }
    }
 
    class NumberConverter extends ReflexiveConverters.ObjectConverter {
       public NumberConverter() {
-         super(new Class[] { IntegerValue.class, DoubleValue.class });
+         super(new Class[] {IntegerValue.class, DoubleValue.class});
       }
    }
 
    class StringConverter extends ReflexiveConverters.ObjectConverter {
       public StringConverter() {
-         super(new Class[] { StringValue.class });
+         super(new Class[] {StringValue.class});
       }
    }
 
@@ -66,7 +66,7 @@ public interface RandomValue<T> {
       @Override
       public Integer nextValue(Random random) {
          long l = random.nextLong();
-         return max >= min ? (int)((l < 0 ? ~l : l) % (max - min + 1) + min) : 0;
+         return max >= min ? (int) ((l < 0 ? ~l : l) % (max - min + 1) + min) : 0;
       }
    }
 

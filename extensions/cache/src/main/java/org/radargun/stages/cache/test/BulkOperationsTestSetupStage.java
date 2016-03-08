@@ -81,25 +81,25 @@ public class BulkOperationsTestSetupStage extends CacheTestSetupStage {
    @Override
    protected SchedulingSelector<Conversation> createSelector() {
       return new SchedulingSelector.Builder<>(Conversation.class)
-              .add(new GetAll(false), getAllNative.invocations, getAllNative.interval)
-              .add(new GetAllTx(false, getAllNativeTx), getAllNativeTx.invocations, getAllNativeTx.interval)
-              .add(new GetAll(false), getAllAsync.invocations, getAllAsync.interval)
-              .add(new GetAllTx(false, getAllAsyncTx), getAllAsyncTx.invocations, getAllAsyncTx.interval)
-              .add(new PutAll(false), putAllNative.invocations, putAllNative.interval)
-              .add(new PutAllTx(false, putAllNativeTx), putAllNativeTx.invocations, putAllNativeTx.interval)
-              .add(new PutAll(false), putAllAsync.invocations, putAllAsync.interval)
-              .add(new PutAllTx(false, putAllAsyncTx), putAllAsyncTx.invocations, putAllAsyncTx.interval)
-              .add(new RemoveAll(false), removeAllNative.invocations, removeAllNative.interval)
-              .add(new RemoveAllTx(false, removeAllNativeTx), removeAllNativeTx.invocations, removeAllNativeTx.interval)
-              .add(new RemoveAll(false), removeAllAsync.invocations, removeAllAsync.interval)
-              .add(new RemoveAllTx(false, removeAllAsyncTx), removeAllAsyncTx.invocations, removeAllAsyncTx.interval)
-              .build();
+         .add(new GetAll(false), getAllNative.invocations, getAllNative.interval)
+         .add(new GetAllTx(false, getAllNativeTx), getAllNativeTx.invocations, getAllNativeTx.interval)
+         .add(new GetAll(false), getAllAsync.invocations, getAllAsync.interval)
+         .add(new GetAllTx(false, getAllAsyncTx), getAllAsyncTx.invocations, getAllAsyncTx.interval)
+         .add(new PutAll(false), putAllNative.invocations, putAllNative.interval)
+         .add(new PutAllTx(false, putAllNativeTx), putAllNativeTx.invocations, putAllNativeTx.interval)
+         .add(new PutAll(false), putAllAsync.invocations, putAllAsync.interval)
+         .add(new PutAllTx(false, putAllAsyncTx), putAllAsyncTx.invocations, putAllAsyncTx.interval)
+         .add(new RemoveAll(false), removeAllNative.invocations, removeAllNative.interval)
+         .add(new RemoveAllTx(false, removeAllNativeTx), removeAllNativeTx.invocations, removeAllNativeTx.interval)
+         .add(new RemoveAll(false), removeAllAsync.invocations, removeAllAsync.interval)
+         .add(new RemoveAllTx(false, removeAllAsyncTx), removeAllAsyncTx.invocations, removeAllAsyncTx.interval)
+         .build();
    }
 
    private Map getRandomKeyValues(Stressor stressor) {
       Map map = new HashMap<>(bulkSize);
       Random random = stressor.getRandom();
-      for (int i = 0; i < bulkSize;) {
+      for (int i = 0; i < bulkSize; ) {
          Object key = getRandomKey(random);
          if (!map.containsKey(key)) {
             map.put(key, valueGenerator.generateValue(key, entrySize.next(random), random));
@@ -112,9 +112,9 @@ public class BulkOperationsTestSetupStage extends CacheTestSetupStage {
    private Set getRandomKeys(Stressor stressor) {
       Set set = new HashSet<>(bulkSize);
       Random random = stressor.getRandom();
-      for (int i = 0; i < bulkSize;) {
+      for (int i = 0; i < bulkSize; ) {
          Object key = getRandomKey(random);
-         if (set.add(key)){
+         if (set.add(key)) {
             ++i;
          }
       }

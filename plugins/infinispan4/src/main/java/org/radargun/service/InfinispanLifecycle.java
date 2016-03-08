@@ -109,7 +109,7 @@ public class InfinispanLifecycle implements Lifecycle {
             Thread.sleep(1000);
             stateLock.lock();
          }
-         if (state == State.FAILED){
+         if (state == State.FAILED) {
             log.info("Cannot start, previous attempt failed");
          } else if (state == State.STARTING) {
             log.info("Service already starting");

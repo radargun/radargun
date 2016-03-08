@@ -7,15 +7,16 @@ import java.util.regex.Pattern;
 import org.radargun.config.Converter;
 
 /**
-* Converts numbers to instance of correct type (according to the prefix).
-*
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * Converts numbers to instance of correct type (according to the prefix).
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 public class NumberConverter implements Converter<Number> {
    private static final Pattern INT_PATTERN = Pattern.compile("int (.*)");
    private static final Pattern LONG_PATTERN = Pattern.compile("long (.*)");
    private static final Pattern FLOAT_PATTERN = Pattern.compile("float (.*)");
    private static final Pattern DOUBLE_PATTERN = Pattern.compile("double (.*)");
+
    @Override
    public Number convert(String string, Type type) {
       Number n = toNumber(string);
@@ -39,10 +40,14 @@ public class NumberConverter implements Converter<Number> {
          if (l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE) {
             return (int) l;
          }
-      } catch (NumberFormatException e) {}
+      } catch (NumberFormatException e) {
+         // ok
+      }
       try {
          return Double.parseDouble(string);
-      } catch (NumberFormatException e) {}
+      } catch (NumberFormatException e) {
+         // ok
+      }
       return null;
    }
 

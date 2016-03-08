@@ -22,11 +22,11 @@ public abstract class TestSetupStage extends AbstractDistStage {
    private long rampUpMinDuration = 0;
 
    @Property(doc = "Maximum time for the ramp-up. If the number of threads does not stabilize until this limit " +
-         "consider the test failed. Default is unlimited.", converter = TimeConverter.class)
+      "consider the test failed. Default is unlimited.", converter = TimeConverter.class)
    private long rampUpMaxDuration = 0;
 
    @Property(doc = "How long does the test need to have constant number of threads in order to execute " +
-         "the transition from ramp-up to steady-state. Default is 1 minute.", converter = TimeConverter.class)
+      "the transition from ramp-up to steady-state. Default is 1 minute.", converter = TimeConverter.class)
    private long rampUpMinSteadyPeriod = 60000;
 
    @Property(doc = "Minimum number of threads waiting for next operation during ramp-up. Default is 4.")
@@ -118,7 +118,7 @@ public abstract class TestSetupStage extends AbstractDistStage {
       public int invocations = 0;
 
       @Property(doc = "Size of the slot in milliseconds. Raising this risks having bursts" +
-            "at the beginning of the interval. Default is 1 ms.", converter = TimeConverter.class)
+         "at the beginning of the interval. Default is 1 ms.", converter = TimeConverter.class)
       public long interval = 1;
    }
 
@@ -128,7 +128,7 @@ public abstract class TestSetupStage extends AbstractDistStage {
       public int transactionSize = 1;
 
       @Property(doc = "Percentage of transactions committed (as opposed to rolled back). " +
-            "Default is 1 - all transactions are committed.")
+         "Default is 1 - all transactions are committed.")
       public double commit = 1d;
 
       public boolean shouldCommit(Random random) {

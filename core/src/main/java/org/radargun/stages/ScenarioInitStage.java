@@ -20,7 +20,7 @@ public final class ScenarioInitStage extends AbstractDistStage {
    static final String INITIAL_THREADS = "INITIAL_THREADS";
 
    @Property(doc = "Directory where the heap dump will be produced. Contrary to scenario-cleanup, " +
-         "if this directory is set, the heap dump is written always. By default the dump will not be produced.")
+      "if this directory is set, the heap dump is written always. By default the dump will not be produced.")
    private String heapDumpDir;
 
    @Override
@@ -38,7 +38,7 @@ public final class ScenarioInitStage extends AbstractDistStage {
       if (heapDumpDir != null) {
          try {
             File heapDumpFile = new File(heapDumpDir, slaveState.getConfigName() + "." + slaveState.getSlaveIndex()
-                  + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".bin");
+               + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".bin");
             log.info("Dumping heap into " + heapDumpFile.getAbsolutePath());
             Utils.dumpHeap(heapDumpFile.getAbsolutePath());
             log.info("Successfully written heap dump.");

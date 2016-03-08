@@ -24,7 +24,7 @@ public class BarChart extends ComparisonChart {
    @Override
    protected JFreeChart createChart() {
       JFreeChart chart = ChartFactory.createBarChart(null, domainLabel, rangeLabel,
-            categorySet, PlotOrientation.VERTICAL, true, false, false);
+         categorySet, PlotOrientation.VERTICAL, true, false, false);
       if (hasDeviations) {
          chart.getCategoryPlot().setRenderer(new StatisticalBarRenderer());
       }

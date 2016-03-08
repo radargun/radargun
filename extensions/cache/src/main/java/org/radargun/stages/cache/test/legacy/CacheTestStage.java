@@ -23,15 +23,15 @@ public abstract class CacheTestStage extends LegacyTestStage {
    protected Fuzzy<Integer> entrySize = Fuzzy.always(1000);
 
    @Property(doc = "Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.",
-         complexConverter = KeyGenerator.ComplexConverter.class)
+      complexConverter = KeyGenerator.ComplexConverter.class)
    protected KeyGenerator keyGenerator = null;
 
    @Property(doc = "Generator of values used in the test. By default the generator is retrieved from slave state.",
-         complexConverter = ValueGenerator.ComplexConverter.class)
+      complexConverter = ValueGenerator.ComplexConverter.class)
    protected ValueGenerator valueGenerator = null;
 
    @Property(doc = "Selects which caches will be used in the test. By default the selector is retrieved from slave state.",
-         complexConverter = CacheSelector.ComplexConverter.class)
+      complexConverter = CacheSelector.ComplexConverter.class)
    protected CacheSelector cacheSelector = null;
 
    @InjectTrait
@@ -61,7 +61,7 @@ public abstract class CacheTestStage extends LegacyTestStage {
 
       if (cacheSelector == null) {
          cacheSelector = (CacheSelector) slaveState.get(CacheSelector.CACHE_SELECTOR);
-         if (cacheSelector == null){
+         if (cacheSelector == null) {
             throw new IllegalStateException("No cache selector defined.");
          }
       } else {

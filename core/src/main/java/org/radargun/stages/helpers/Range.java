@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public final class Range {
-   
+
    private long start;
    private long end;
 
@@ -19,9 +19,11 @@ public final class Range {
    public long getStart() {
       return start;
    }
+
    public long getEnd() {
       return end;
    }
+
    public long getSize() {
       return end - start;
    }
@@ -32,7 +34,7 @@ public final class Range {
 
    @Override
    public int hashCode() {
-      return (int)(start + 31*(end - 1));
+      return (int) (start + 31 * (end - 1));
    }
 
    @Override
@@ -48,11 +50,11 @@ public final class Range {
    }
 
    /**
-    * 
+    *
     * Returns pair [startKey, endKey] that specifies a subrange { startKey, ..., endKey-1 } of key
     * range { 0, 1, ..., numKeys-1 } divideRange divides the keyset evenly to numParts parts with
     * difference of part lengths being max 1.
-    * 
+    *
     * @param numKeys
     *           Total number of keys
     * @param numParts

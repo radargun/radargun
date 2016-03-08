@@ -23,7 +23,7 @@ class LogTimeAxis extends LogAxis {
    protected final int[] minorTicks;
 
    public LogTimeAxis(String label) {
-      this(label, Math.PI / 4, new int[] { 2, 3, 4, 5, 6, 7, 8, 9 });
+      this(label, Math.PI / 4, new int[] {2, 3, 4, 5, 6, 7, 8, 9});
    }
 
    public LogTimeAxis(String label, double tickLabelAngle, int[] minorTicks) {
@@ -80,7 +80,7 @@ class LogTimeAxis extends LogAxis {
       } else if (value < 1000000d) {
          unit = "us";
          value /= 1000d;
-      } else if (value < 1000000000d){
+      } else if (value < 1000000000d) {
          unit = "ms";
          value /= 1000000d;
       } else {

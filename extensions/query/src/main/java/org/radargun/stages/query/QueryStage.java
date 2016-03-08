@@ -58,17 +58,17 @@ public class QueryStage extends LegacyTestStage {
       if (result.isError()) return result;
 
       Map<Integer, QueryBase.Data> results = Projections.asMap(Projections.instancesOf(acks, QueryAck.class),
-            new Projections.Func<QueryAck, Integer>() {
-         @Override
-         public Integer project(QueryAck ack) {
-            return ack.getSlaveIndex();
-         }
-      }, new Projections.Func<QueryAck, QueryBase.Data>() {
-         @Override
-         public QueryBase.Data project(QueryAck ack) {
-            return ack.data;
-         }
-      });
+         new Projections.Func<QueryAck, Integer>() {
+            @Override
+            public Integer project(QueryAck ack) {
+               return ack.getSlaveIndex();
+            }
+         }, new Projections.Func<QueryAck, QueryBase.Data>() {
+            @Override
+            public QueryBase.Data project(QueryAck ack) {
+               return ack.data;
+            }
+         });
       Report.Test test = getTest(true); // the test was already created in super.processAckOnMaster
 
       base.checkAndRecordResults(results, test, getTestIteration());

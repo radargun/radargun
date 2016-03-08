@@ -51,7 +51,8 @@ public class ContinuousQueryStage extends AbstractDistStage {
    protected boolean remove = false;
 
    @PropertyDelegate
-   QueryConfiguration query = new QueryConfiguration();;
+   QueryConfiguration query = new QueryConfiguration();
+   ;
 
    @InjectTrait
    private ContinuousQuery continuousQueryTrait;
@@ -160,7 +161,7 @@ public class ContinuousQueryStage extends AbstractDistStage {
       };
 
       Map<String, ContinuousQuery.ContinuousQueryListener> listeners = (Map<String, ContinuousQuery.ContinuousQueryListener>) slaveState
-            .get(ContinuousQuery.LISTENERS);
+         .get(ContinuousQuery.LISTENERS);
       if (listeners == null) {
          listeners = new HashMap<>();
          slaveState.put(ContinuousQuery.LISTENERS, listeners);
@@ -172,7 +173,7 @@ public class ContinuousQueryStage extends AbstractDistStage {
 
    public void unregisterCQ(SlaveState slaveState) {
       Map<String, ContinuousQuery.ContinuousQueryListener> listeners = (Map<String, ContinuousQuery.ContinuousQueryListener>) slaveState
-            .get(ContinuousQuery.LISTENERS);
+         .get(ContinuousQuery.LISTENERS);
       if (listeners != null && listeners.containsKey(testName)) {
          ContinuousQuery.ContinuousQueryListener cqListener = listeners.get(testName);
          listeners.remove(testName);

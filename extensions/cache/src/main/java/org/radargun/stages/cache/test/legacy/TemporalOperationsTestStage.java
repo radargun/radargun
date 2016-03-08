@@ -1,5 +1,7 @@
 package org.radargun.stages.cache.test.legacy;
 
+import java.util.Random;
+
 import org.radargun.Operation;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
@@ -14,8 +16,6 @@ import org.radargun.stages.test.legacy.RatioOperationSelector;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.TemporalOperations;
-
-import java.util.Random;
 
 /**
  * @author Martin Gencur &lt;mgencur@redhat.com&gt;
@@ -63,14 +63,14 @@ public class TemporalOperationsTestStage extends CacheOperationsTestStage {
    @Override
    protected OperationSelector createOperationSelector() {
       return new RatioOperationSelector.Builder()
-            .add(BasicOperations.GET, getRatio)
-            .add(TemporalOperations.PUT_WITH_LIFESPAN, putWithLifespanRatio)
-            .add(TemporalOperations.GET_AND_PUT_WITH_LIFESPAN, getAndPutWithLifespanRatio)
-            .add(TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE, putWithLifespanAndMaxIdleRatio)
-            .add(TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE, getAndPutWithLifespanAndMaxIdleRatio)
-            .add(TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN, putIfAbsentWithLifespanRatio)
-            .add(TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE, putIfAbsentWithLifespanAndMaxIdleRatio)
-            .build();
+         .add(BasicOperations.GET, getRatio)
+         .add(TemporalOperations.PUT_WITH_LIFESPAN, putWithLifespanRatio)
+         .add(TemporalOperations.GET_AND_PUT_WITH_LIFESPAN, getAndPutWithLifespanRatio)
+         .add(TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE, putWithLifespanAndMaxIdleRatio)
+         .add(TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE, getAndPutWithLifespanAndMaxIdleRatio)
+         .add(TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN, putIfAbsentWithLifespanRatio)
+         .add(TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE, putIfAbsentWithLifespanAndMaxIdleRatio)
+         .build();
    }
 
    @Override

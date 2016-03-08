@@ -1,13 +1,13 @@
 package org.radargun.service;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.infinispan.query.dsl.FilterConditionContext;
 import org.infinispan.query.dsl.FilterConditionEndContext;
 import org.infinispan.query.dsl.QueryFactory;
 import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Provides implementation of querying suited to Infinispan DSL Queries
@@ -144,13 +144,14 @@ public abstract class AbstractInfinispanQueryable implements Queryable {
       public Query.Builder orderBy(String attribute, Query.SortOrder order) {
          if (builder == null) throw new IllegalArgumentException("You have to call orderBy() on root query builder!");
          builder.orderBy(attribute, order == Query.SortOrder.ASCENDING ?
-               org.infinispan.query.dsl.SortOrder.ASC : org.infinispan.query.dsl.SortOrder.DESC);
+            org.infinispan.query.dsl.SortOrder.ASC : org.infinispan.query.dsl.SortOrder.DESC);
          return this;
       }
 
       @Override
       public Query.Builder projection(String... attributes) {
-         if (builder == null) throw new IllegalArgumentException("You have to call projection() on root query builder!");
+         if (builder == null)
+            throw new IllegalArgumentException("You have to call projection() on root query builder!");
          builder.setProjection(attributes);
          return this;
       }

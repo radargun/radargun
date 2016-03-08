@@ -20,7 +20,7 @@ public class BackgroundLoadStopStage extends AbstractDistStage {
    private static final String BACKGROUND_LOADERS = "BackgroundLoaders";
 
    @Property(converter = TimeConverter.class, doc = "Maximum time to wait for loading threads to finish. By default, " +
-         "wait until the threads finish their job.")
+      "wait until the threads finish their job.")
    private long timeoutDuration = 0;
 
    @Override
@@ -37,7 +37,7 @@ public class BackgroundLoadStopStage extends AbstractDistStage {
                      remaining -= TimeService.currentTimeMillis() - start;
                   } else {
                      return errorResponse(String.format("Timed out after waiting for loading threads to finish." +
-                           " Timeout duration was %s.", Utils.prettyPrintTime(timeoutDuration, TimeUnit.MILLISECONDS)));
+                        " Timeout duration was %s.", Utils.prettyPrintTime(timeoutDuration, TimeUnit.MILLISECONDS)));
                   }
                } else {
                   loader.join();

@@ -1,13 +1,13 @@
 package org.radargun.reporting;
 
-import org.radargun.utils.TimeService;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.radargun.utils.TimeService;
 
 /**
  * Events that should be presented in report
@@ -91,7 +91,7 @@ public class Timeline implements Serializable, Comparable<Timeline> {
    /**
     * Generic event in timeline
     */
-   public static abstract class Event implements Serializable, Comparable<Event> {
+   public abstract static class Event implements Serializable, Comparable<Event> {
       public final long timestamp;
 
       protected Event(long timestamp) {
@@ -185,7 +185,7 @@ public class Timeline implements Serializable, Comparable<Timeline> {
       @Override
       public String toString() {
          return String.format("IntervalEvent{timestamp=%d, duration=%d, description=%s}",
-               timestamp, duration, description);
+            timestamp, duration, description);
       }
    }
 

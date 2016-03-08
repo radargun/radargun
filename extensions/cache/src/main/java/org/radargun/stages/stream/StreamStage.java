@@ -1,5 +1,13 @@
 package org.radargun.stages.stream;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
@@ -19,14 +27,6 @@ import org.radargun.utils.Projections;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
 /**
  * @author Roman Macor &lt;rmacor@redhat.com&gt;
  */
@@ -37,8 +37,8 @@ public class StreamStage extends AbstractDistStage {
    protected String testName = "Stream_Stage";
 
    @Property(doc = "Boolean value that determines if the "
-           + "final results of the stream are written to the log of the "
-           + "first slave node. The default is false.")
+      + "final results of the stream are written to the log of the "
+      + "first slave node. The default is false.")
    private boolean printResult = false;
 
    @Property(doc = "The number of times to execute the stream task. The default is 10.")
@@ -48,7 +48,7 @@ public class StreamStage extends AbstractDistStage {
    private String cacheName;
 
    @Property(doc = "The name of the key in the MasterState object that returns the total number of "
-           + "bytes processed by the stream task. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
+      + "bytes processed by the stream task. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
    private String totalBytesKey = RandomDataStage.RANDOMDATA_TOTALBYTES_KEY;
 
    @Property(optional = false, doc = "Fully qualified class name of the StreamConsumer implementation.")
@@ -58,7 +58,7 @@ public class StreamStage extends AbstractDistStage {
    private boolean parallelStream = false;
 
    @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'dataOperation' statistics " +
-           "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
+      "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
    protected Statistics statisticsPrototype = new DefaultStatistics(new DataOperationStats());
 
    @InjectTrait
@@ -99,7 +99,7 @@ public class StreamStage extends AbstractDistStage {
          if (ack.numberOfResultKeys != null) {
             numberOfResultKeysResult.put(ack.getSlaveIndex(), new Report.SlaveResult(ack.numberOfResultKeys, false));
             test.addResult(testIteration, new Report.TestResult("Key count in stream result map on slave" + ack.getSlaveIndex(),
-                    numberOfResultKeysResult, "", false));
+               numberOfResultKeysResult, "", false));
          }
       }
       return StageResult.SUCCESS;
@@ -167,7 +167,7 @@ public class StreamStage extends AbstractDistStage {
          durationNanos = TimeService.nanoTime() - start;
          stats.registerRequest(durationNanos, Streamable.STREAMABLE);
          log.info("Stream task completed in "
-                 + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+            + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
 
          long resultCount = function.getResultCount();
 
@@ -189,9 +189,9 @@ public class StreamStage extends AbstractDistStage {
          log.error("executeStreamTask() returned an exception", e);
       }
 
-      if (clustered != null && cacheInformation != null){
+      if (clustered != null && cacheInformation != null) {
          log.infof("%d nodes were used. %d entries on this node", clustered.getMembers().size(), cacheInformation
-                 .getCache(cacheName).getLocallyStoredSize());
+            .getCache(cacheName).getLocallyStoredSize());
       }
       log.info("--------------------");
 

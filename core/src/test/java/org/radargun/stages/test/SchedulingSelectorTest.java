@@ -1,14 +1,5 @@
 package org.radargun.stages.test;
 
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.testng.PowerMockTestCase;
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-import org.radargun.utils.TimeService;
-import org.testng.annotations.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,13 +12,22 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.testng.PowerMockTestCase;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+import org.radargun.utils.TimeService;
+import org.testng.annotations.Test;
+
 import static org.testng.Assert.*;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Test
-@PowerMockIgnore( {"javax.management.*"})
+@PowerMockIgnore({"javax.management.*"})
 @PrepareForTest(TimeService.class)
 public class SchedulingSelectorTest extends PowerMockTestCase {
    private static Log log = LogFactory.getLog(SchedulingSelectorTest.class);
@@ -38,9 +38,9 @@ public class SchedulingSelectorTest extends PowerMockTestCase {
       PowerMockito.mockStatic(TimeService.class);
       setTime(0);
       SchedulingSelector<String> selector = new SchedulingSelector.Builder<>(String.class)
-            .add("a", 2, 5L)
-            .add("b", 3, 3L)
-            .build();
+         .add("a", 2, 5L)
+         .add("b", 3, 3L)
+         .build();
       checkReturns(selector, "a", "a", "b", "b", "b");
       checkBlocks(selector);
       setTime(1);

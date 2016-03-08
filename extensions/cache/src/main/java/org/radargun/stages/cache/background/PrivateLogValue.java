@@ -14,7 +14,7 @@ public class PrivateLogValue implements Serializable {
 
    public PrivateLogValue(int threadId, long operationId) {
       this.threadId = threadId;
-      operationIds = new long[] { operationId };
+      operationIds = new long[] {operationId};
    }
 
    public PrivateLogValue(int threadId, long[] operationIds) {

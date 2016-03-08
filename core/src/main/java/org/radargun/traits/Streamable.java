@@ -1,9 +1,8 @@
 package org.radargun.traits;
 
-import org.radargun.Operation;
-
-import java.util.function.Function;
 import java.util.stream.Stream;
+
+import org.radargun.Operation;
 
 /**
  * @author Roman Macor &lt;rmacor@redhat.com&gt;

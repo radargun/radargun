@@ -64,13 +64,13 @@ public class NumberObjectGenerator implements ValueGenerator {
    @Override
    public Object generateValue(Object key, int size, Random random) {
       long l = random.nextLong();
-      int i =  intMax >= intMin ? (int)((l < 0 ? ~l : l) % (intMax - intMin + 1) + intMin) : 0;
+      int i = intMax >= intMin ? (int) ((l < 0 ? ~l : l) % (intMax - intMin + 1) + intMin) : 0;
       double d = doubleMax > doubleMin ? random.nextDouble() * (doubleMax - doubleMin) + doubleMin : 0d;
       return newInstance(i, d);
    }
 
    private Object newInstance(int i, double d) {
-      if (ctor == null)  throw new IllegalStateException("The generator was not properly initialized");
+      if (ctor == null) throw new IllegalStateException("The generator was not properly initialized");
       try {
          return ctor.newInstance(i, d);
       } catch (Exception e) {
@@ -85,12 +85,13 @@ public class NumberObjectGenerator implements ValueGenerator {
 
    @Override
    public boolean checkValue(Object value, Object key, int expectedSize) {
-      if (getInt == null || getDouble == null)  throw new IllegalStateException("The generator was not properly initialized");
+      if (getInt == null || getDouble == null)
+         throw new IllegalStateException("The generator was not properly initialized");
       try {
          int integerValue = (Integer) getInt.invoke(value);
          double doubleValue = (Double) getDouble.invoke(value);
          return integerValue >= intMin && integerValue <= intMax
-               && doubleValue >= doubleMin && doubleValue < doubleMax;
+            && doubleValue >= doubleMin && doubleValue < doubleMax;
       } catch (Exception e) {
          throw new IllegalStateException(e);
       }

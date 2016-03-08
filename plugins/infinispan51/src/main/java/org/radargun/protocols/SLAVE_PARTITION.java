@@ -16,54 +16,54 @@ import org.jgroups.util.Streamable;
 
 public class SLAVE_PARTITION extends Protocol {
 
-   protected static final short PROTOCOL_ID = (short)0x51A7;
+   protected static final short PROTOCOL_ID = (short) 0x51A7;
    protected static Log log = LogFactory.getLog(SLAVE_PARTITION.class);
-   
+
    protected int slaveIndex = -1;
    protected Set<Integer> allowedSlaves;
-   
+
    static {
       log.info("Registering SLAVE_PARTITION with id " + PROTOCOL_ID);
       ClassConfigurator.add(PROTOCOL_ID, SlaveHeader.class);
    }
-   
+
    public void setAllowedSlaves(Set<Integer> slaves) {
       allowedSlaves = slaves;
    }
-   
+
    public void setSlaveIndex(int slaveIndex) {
       this.slaveIndex = slaveIndex;
    }
-   
+
    @Override
    public Object up(Event evt) {
       switch (evt.getType()) {
-      case Event.MSG:
-         Message msg = (Message) evt.getArg();
-         SlaveHeader header = (SlaveHeader)msg.getHeader(PROTOCOL_ID);
-         if (header != null && header.getIndex() < 0) {
-            log.trace("Message " + msg.getSrc() + " -> " + msg.getDest() + " with slaveIndex -1");
-         } else if (header != null && allowedSlaves != null) {
-            if (!allowedSlaves.contains(header.getIndex())) {
-               log.trace("Discarding message " + msg.getSrc() + " -> " + msg.getDest() + " with slaveIndex " + header.getIndex());
-               return null;
+         case Event.MSG:
+            Message msg = (Message) evt.getArg();
+            SlaveHeader header = (SlaveHeader) msg.getHeader(PROTOCOL_ID);
+            if (header != null && header.getIndex() < 0) {
+               log.trace("Message " + msg.getSrc() + " -> " + msg.getDest() + " with slaveIndex -1");
+            } else if (header != null && allowedSlaves != null) {
+               if (!allowedSlaves.contains(header.getIndex())) {
+                  log.trace("Discarding message " + msg.getSrc() + " -> " + msg.getDest() + " with slaveIndex " + header.getIndex());
+                  return null;
+               }
             }
-         }         
       }
-      
+
       return up_prot.up(evt);
    }
-   
+
    @Override
    public Object down(Event evt) {
       switch (evt.getType()) {
-      case Event.MSG:
-         Message msg = (Message) evt.getArg();
-         msg.putHeader(PROTOCOL_ID, new SlaveHeader(this.slaveIndex));         
+         case Event.MSG:
+            Message msg = (Message) evt.getArg();
+            msg.putHeader(PROTOCOL_ID, new SlaveHeader(this.slaveIndex));
       }
       return down_prot.down(evt);
    }
-   
+
    public static class SlaveHeader extends Header implements Streamable {
       int index = -1;
 
@@ -71,19 +71,19 @@ public class SLAVE_PARTITION extends Protocol {
       }
 
       public SlaveHeader(int index) {
-          this.index=index;
+         this.index = index;
       }
-      
+
       public int getIndex() {
          return index;
       }
 
       public String toString() {
-          return "slaveIndex=" + index;
+         return "slaveIndex=" + index;
       }
 
       public int size() {
-          return Global.INT_SIZE;
+         return Global.INT_SIZE;
       }
 
       @Override
@@ -93,7 +93,7 @@ public class SLAVE_PARTITION extends Protocol {
 
       @Override
       public void readFrom(DataInput in) throws Exception {
-         index=in.readInt();
+         index = in.readInt();
       }
    }
 }
