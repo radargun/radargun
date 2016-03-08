@@ -35,7 +35,7 @@ import org.radargun.utils.Utils;
  * address of a node is specified in <code>nodeAddress</code>, then the Callable is only executed on
  * that node. Public String Fields on the Callable object can be set using the
  * <code>distributedExecutionParams</code> property.
- * 
+ *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 @Stage(doc = "Stage which executes a MapReduce Task against all keys in the cache.")
@@ -43,12 +43,12 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
 
    // TODO: use approach similar to generators
    @Property(optional = false, doc = "Fully qualified class name of the "
-         + "java.util.concurrent.Callable implementation to execute.")
+      + "java.util.concurrent.Callable implementation to execute.")
    private String callable;
 
    @Property(doc = "A String in the form of "
-         + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
-         + " invoking a method on the callable. The method must be public and take a String parameter. Default is none.")
+      + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
+      + " invoking a method on the callable. The method must be public and take a String parameter. Default is none.")
    private String callableParams;
 
    @Property(doc = "The name of the execution policy. The default is default policy of the service.")
@@ -60,14 +60,14 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
    // TODO: specify rather the slave ids/groups - RadarGun identifier.
    // However, another stage + trait to gather these data would be required.
    @Property(doc = "The node address where the task will be "
-         + "executed. The default is null, and tasks will be executed against all nodes in the cluster.")
+      + "executed. The default is null, and tasks will be executed against all nodes in the cluster.")
    private String nodeAddress;
 
    @Property(doc = "The number of times to execute the Callable. The default is 1.")
    private int numExecutions = 1;
 
    @Property(doc = "The name of the key in the MasterState object that returns the total number of "
-         + "bytes processed by the Callable. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
+      + "bytes processed by the Callable. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
    private String totalBytesKey = RandomDataStage.RANDOMDATA_TOTALBYTES_KEY;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
@@ -159,9 +159,9 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          stats.registerRequest(durationNanos, DistributedTaskExecutor.EXECUTE);
 
          log.info("Distributed Execution task completed in "
-               + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+            + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
          log.infof("%d nodes were used. %d entries on this node", clustered.getMembers().size(), cacheInformation
-               .getCache(null).getLocallyStoredSize());
+            .getCache(null).getLocallyStoredSize());
          log.info("Distributed execution results:");
          log.info("--------------------");
          for (T t : resultList) {

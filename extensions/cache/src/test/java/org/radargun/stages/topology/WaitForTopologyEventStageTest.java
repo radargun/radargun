@@ -27,7 +27,7 @@ import static org.testng.Assert.*;
  * @author Matej Cimbora
  */
 @Test
-@PowerMockIgnore( {"javax.management.*"})
+@PowerMockIgnore({"javax.management.*"})
 @PrepareForTest(TimeService.class)
 public class WaitForTopologyEventStageTest extends PowerMockTestCase {
 
@@ -96,7 +96,7 @@ public class WaitForTopologyEventStageTest extends PowerMockTestCase {
       SlaveState slaveState = getClassProperty(AbstractDistStage.class, stage, "slaveState", SlaveState.class);
 
       switch (condition) {
-         case START : {
+         case START: {
             doReturn(unfinishedEvent1).when(slaveState).get(anyString());
             break;
          }
@@ -104,7 +104,7 @@ public class WaitForTopologyEventStageTest extends PowerMockTestCase {
             doReturn(finishedEvent1).when(slaveState).get(anyString());
             break;
          }
-         case SINGLE : {
+         case SINGLE: {
             doReturn(singleEvent1).when(slaveState).get(anyString());
             break;
          }

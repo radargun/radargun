@@ -33,9 +33,11 @@ public class SizeConverter implements Converter<Long> {
       if (value == 0) return "0";
       if ((value & (GIGA - 1)) == 0) {
          return String.format("%d GB", value / GIGA);
-      } if ((value & (MEGA - 1)) == 0) {
+      }
+      if ((value & (MEGA - 1)) == 0) {
          return String.format("%d MB", value / MEGA);
-      } if ((value & (KILO - 1)) == 0) {
+      }
+      if ((value & (KILO - 1)) == 0) {
          return String.format("%d kB", value / KILO);
       }
       return String.valueOf(value);

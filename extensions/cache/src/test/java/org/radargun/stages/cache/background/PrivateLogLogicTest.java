@@ -41,7 +41,7 @@ public class PrivateLogLogicTest {
       // operationId 0 -> 1, PUT
       logic.operationId++;
       logic.invokeLogic(0);
-      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[]{0, 1}));
+      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[] {0, 1}));
       assertEquals(cache.get("-1"), null);
       assertEquals(logic.delayedRemoves.get(0l), null);
       assertEquals(logic.delayedRemoves.get(-1l), null);
@@ -50,44 +50,44 @@ public class PrivateLogLogicTest {
       logic.operationId++;
       doReturn(BasicOperations.REMOVE).when(logic).getOperation(any(Random.class));
       logic.invokeLogic(0);
-      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[]{0, 1}));
-      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[]{0, 1, 2}));
-      assertEquals(logic.delayedRemoves.get(0l).oldValue, new PrivateLogValue(0, new long[]{0, 1}));
+      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[] {0, 1}));
+      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[] {0, 1, 2}));
+      assertEquals(logic.delayedRemoves.get(0l).oldValue, new PrivateLogValue(0, new long[] {0, 1}));
       assertEquals(logic.delayedRemoves.get(-1l), null);
 
       // operationId 2 -> 3, REMOVE
       logic.operationId++;
       logic.invokeLogic(0);
-      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[]{0, 1, 2, 3}));
-      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[]{0, 1, 2}));
+      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[] {0, 1, 2, 3}));
+      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[] {0, 1, 2}));
       assertEquals(logic.delayedRemoves.get(0l), null);
-      assertEquals(logic.delayedRemoves.get(-1l).oldValue, new PrivateLogValue(0, new long[]{0, 1, 2}));
+      assertEquals(logic.delayedRemoves.get(-1l).oldValue, new PrivateLogValue(0, new long[] {0, 1, 2}));
 
       // operationId 3 -> 4, PUT
       logic.operationId++;
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
       logic.invokeLogic(0);
-      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[]{0, 1, 2, 3, 4}));
-      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[]{0, 1, 2}));
+      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4}));
+      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[] {0, 1, 2}));
       assertEquals(logic.delayedRemoves.get(0l), null);
-      assertEquals(logic.delayedRemoves.get(-1l).oldValue, new PrivateLogValue(0, new long[]{0, 1, 2}));
+      assertEquals(logic.delayedRemoves.get(-1l).oldValue, new PrivateLogValue(0, new long[] {0, 1, 2}));
 
       // operationId 4 -> 5, REMOVE
       logic.operationId++;
       doReturn(BasicOperations.REMOVE).when(logic).getOperation(any(Random.class));
       logic.invokeLogic(0);
-      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[]{0, 1, 2, 3, 4}));
-      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[]{0, 1, 2, 3, 4, 5}));
+      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4}));
+      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4, 5}));
       assertEquals(logic.delayedRemoves.get(0l).oldValue, new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4}));
       assertEquals(logic.delayedRemoves.get(-1l), null);
 
       logic.operationId++;
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
       logic.invokeLogic(0);
-      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[]{0, 1, 2, 3, 4, 5, 6}));
-      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[]{0, 1, 2, 3, 4, 5}));
+      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4, 5, 6}));
+      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4, 5}));
       assertEquals(logic.delayedRemoves.get(0l), null);
-      assertEquals(logic.delayedRemoves.get(-1l).oldValue, new PrivateLogValue(0, new long[]{0, 1, 2, 3, 4, 5}));
+      assertEquals(logic.delayedRemoves.get(-1l).oldValue, new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4, 5}));
 
       // No test errors are expected
       assertNull(getFailureManager(logic).getError(true));
@@ -119,7 +119,7 @@ public class PrivateLogLogicTest {
       // operationId 0 -> 1, PUT
       logic.operationId++;
       logic.invokeLogic(0);
-      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[]{0, 1}));
+      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[] {0, 1}));
       assertEquals(cache.get("-1"), null);
       assertEquals(timestamps.get(0l).operationId, 1);
 
@@ -128,13 +128,13 @@ public class PrivateLogLogicTest {
       doReturn(BasicOperations.REMOVE).when(logic).getOperation(any(Random.class));
       logic.invokeLogic(0);
       assertEquals(cache.get("0"), null);
-      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[]{0, 1, 2}));
+      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[] {0, 1, 2}));
       assertEquals(timestamps.get(0l).operationId, 2);
 
       // operationId 2 -> 3, REMOVE
       logic.operationId++;
       logic.invokeLogic(0);
-      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[]{0, 1, 2, 3}));
+      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[] {0, 1, 2, 3}));
       assertEquals(cache.get("-1"), null);
       assertEquals(timestamps.get(0l).operationId, 3);
 
@@ -142,7 +142,7 @@ public class PrivateLogLogicTest {
       logic.operationId++;
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
       logic.invokeLogic(0);
-      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[]{0, 1, 2, 3, 4}));
+      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4}));
       assertEquals(cache.get("-1"), null);
       assertEquals(timestamps.get(0l).operationId, 4);
 
@@ -151,13 +151,13 @@ public class PrivateLogLogicTest {
       doReturn(BasicOperations.REMOVE).when(logic).getOperation(any(Random.class));
       logic.invokeLogic(0);
       assertEquals(cache.get("0"), null);
-      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[]{0, 1, 2, 3, 4, 5}));
+      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4, 5}));
       assertEquals(timestamps.get(0l).operationId, 5);
 
       logic.operationId++;
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
       logic.invokeLogic(0);
-      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[]{0, 1, 2, 3, 4, 5, 6}));
+      assertEquals(cache.get("0"), new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4, 5, 6}));
       assertEquals(cache.get("-1"), null);
       assertEquals(timestamps.get(0l).operationId, 6);
 
@@ -184,7 +184,7 @@ public class PrivateLogLogicTest {
       logic.operationId++;
       logic.invokeLogic(0);
       assertEquals(cache.get("0"), new PrivateLogValue(0, 0));
-      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[]{0, 1}));
+      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[] {0, 1}));
       assertEquals(logic.delayedRemoves.get(0l).oldValue, new PrivateLogValue(0, 0));
       assertEquals(logic.delayedRemoves.get(-1l), null);
 
@@ -192,7 +192,7 @@ public class PrivateLogLogicTest {
       logic.operationId++;
       logic.invokeLogic(0);
       assertEquals(cache.get("0"), new PrivateLogValue(0, new long[] {0, 1, 2}));
-      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[]{0, 1}));
+      assertEquals(cache.get("-1"), new PrivateLogValue(0, new long[] {0, 1}));
       assertEquals(logic.delayedRemoves.get(0l), null);
       assertEquals(logic.delayedRemoves.get(-1l).oldValue, new PrivateLogValue(0, new long[] {0, 1}));
 
@@ -234,7 +234,7 @@ public class PrivateLogLogicTest {
 
       Map<Long, PrivateLogLogic.OperationTimestampPair> timestamps = ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "timestamps", Map.class);
       timestamps.put(0l, new PrivateLogLogic.OperationTimestampPair(5l, 123l));
-      cache.put("0", new PrivateLogValue(0, new long[]{0, 1, 2}));
+      cache.put("0", new PrivateLogValue(0, new long[] {0, 1, 2}));
       logic.operationId = 3;
 
       logic.invokeLogic(0);
@@ -255,8 +255,8 @@ public class PrivateLogLogicTest {
 
       Map<Long, PrivateLogLogic.OperationTimestampPair> timestamps = ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "timestamps", Map.class);
       timestamps.put(0l, new PrivateLogLogic.OperationTimestampPair(5l, 123l));
-      cache.put("0", new PrivateLogValue(0, new long[]{0, 1, 2}));
-      cache.put("-1", new PrivateLogValue(0, new long[]{0, 1, 2, 3}));
+      cache.put("0", new PrivateLogValue(0, new long[] {0, 1, 2}));
+      cache.put("-1", new PrivateLogValue(0, new long[] {0, 1, 2, 3}));
       logic.operationId = 4;
       logic.invokeLogic(0);
 
@@ -276,7 +276,7 @@ public class PrivateLogLogicTest {
 
       Map<Long, PrivateLogLogic.OperationTimestampPair> timestamps = ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "timestamps", Map.class);
       timestamps.put(0l, new PrivateLogLogic.OperationTimestampPair(5l, 123l));
-      cache.put("-1", new PrivateLogValue(0, new long[]{0, 1, 2, 3}));
+      cache.put("-1", new PrivateLogValue(0, new long[] {0, 1, 2, 3}));
       logic.operationId = 4;
 
       logic.invokeLogic(0);
@@ -319,7 +319,7 @@ public class PrivateLogLogicTest {
 
       Map<Long, PrivateLogLogic.OperationTimestampPair> timestamps = ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "timestamps", Map.class);
       timestamps.put(0l, new PrivateLogLogic.OperationTimestampPair(5l, 123l));
-      cache.put("0", new PrivateLogValue(0, new long[]{0, 1, 2}));
+      cache.put("0", new PrivateLogValue(0, new long[] {0, 1, 2}));
       logic.operationId = 3;
 
       logic.invokeLogic(0);
@@ -345,7 +345,7 @@ public class PrivateLogLogicTest {
 
       Map<Long, PrivateLogLogic.OperationTimestampPair> timestamps = ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "timestamps", Map.class);
       timestamps.put(0l, new PrivateLogLogic.OperationTimestampPair(4l, 123l));
-      txCache.put("0", new PrivateLogValue(0, new long[]{0, 1, 2, 3, 4}));
+      txCache.put("0", new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4}));
       logic.operationId = 5;
       logic.invokeLogic(0);
 
@@ -373,7 +373,7 @@ public class PrivateLogLogicTest {
 
       Map<Long, PrivateLogLogic.OperationTimestampPair> timestamps = ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "timestamps", Map.class);
       timestamps.put(0l, new PrivateLogLogic.OperationTimestampPair(4l, 123l));
-      cache.put("-1", new PrivateLogValue(0, new long[]{0, 1, 2, 3, 4}));
+      cache.put("-1", new PrivateLogValue(0, new long[] {0, 1, 2, 3, 4}));
       logic.operationId = 5;
       logic.invokeLogic(0);
 

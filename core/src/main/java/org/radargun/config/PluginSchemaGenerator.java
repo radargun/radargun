@@ -41,7 +41,7 @@ public class PluginSchemaGenerator extends SchemaGenerator {
       }
    }
 
-   public static void main(String args[]) {
+   public static void main(String[] args) {
       if (args.length < 2 || args[0] == null || args[1] == null)
          throw new IllegalArgumentException("No schema location directory or plugin name specified!" + args);
 

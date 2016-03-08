@@ -1,8 +1,5 @@
 package org.radargun.sysmonitor;
 
-import static java.lang.management.ManagementFactory.GARBAGE_COLLECTOR_MXBEAN_DOMAIN_TYPE;
-import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
-
 import java.io.Serializable;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -16,6 +13,9 @@ import javax.management.ObjectName;
 
 import org.radargun.reporting.Timeline;
 import org.radargun.traits.JmxConnectionProvider;
+
+import static java.lang.management.ManagementFactory.GARBAGE_COLLECTOR_MXBEAN_DOMAIN_TYPE;
+import static java.lang.management.ManagementFactory.newPlatformMXBeanProxy;
 
 /**
  * In each invocation of the {@link #run()} method, retrieves information
@@ -41,7 +41,7 @@ public class GcMonitor extends JmxMonitor implements Serializable {
          }
 
          OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(connection,
-               ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+            ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
          int procCount = os.getAvailableProcessors();
 
          List<GarbageCollectorMXBean> gcMbeans = getGarbageCollectorMXBeans(connection);

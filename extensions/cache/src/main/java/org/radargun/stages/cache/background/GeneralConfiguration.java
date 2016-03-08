@@ -19,7 +19,7 @@ public class GeneralConfiguration {
    protected int removes = 0;
 
    @Property(doc = "Number of entries (key-value pairs) inserted into the cache. Default is 1024. Needs to be greater " +
-         "than or equal to the product of 'numThreads' and group size.")
+      "than or equal to the product of 'numThreads' and group size.")
    protected long numEntries = 1024;
 
    @Property(doc = "First key ID used for key generation. Default is 0.")
@@ -38,7 +38,7 @@ public class GeneralConfiguration {
    protected long deadSlaveTimeout = 90000;
 
    @Property(doc = "By default each thread accesses only its private set of keys. This allows all threads all values. " +
-         "Atomic operations are required for this functionality. Default is false.")
+      "Atomic operations are required for this functionality. Default is false.")
    protected boolean sharedKeys = false;
 
    @Property(doc = "Cache used for the background operations. Default is null (default).")

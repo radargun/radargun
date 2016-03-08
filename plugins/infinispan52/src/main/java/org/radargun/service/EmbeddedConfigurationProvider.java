@@ -29,10 +29,10 @@ public class EmbeddedConfigurationProvider extends AbstractConfigurationProvider
          if (!globalProperties.isEmpty()) {
             configurationMap.put("global", globalProperties);
          }
-         for (Map.Entry<String,Cache> cache : service.caches.entrySet()) {
+         for (Map.Entry<String, Cache> cache : service.caches.entrySet()) {
             Properties cacheProperties = configDumpHelper.dumpCache(
-                  cache.getValue().getAdvancedCache().getCacheConfiguration(), jmxDomain,
-                  service.cacheManager.getName(), cache.getValue().getName());
+               cache.getValue().getAdvancedCache().getCacheConfiguration(), jmxDomain,
+               service.cacheManager.getName(), cache.getValue().getName());
             if (cacheProperties != null && !cacheProperties.isEmpty()) {
                configurationMap.put("cache_" + cache.getValue().getName(), cacheProperties);
             }

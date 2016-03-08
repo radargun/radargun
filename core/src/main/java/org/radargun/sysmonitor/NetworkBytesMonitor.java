@@ -13,13 +13,13 @@ import org.radargun.reporting.Timeline;
 
 /**
  * Parse the /proc/net/dev file for a value on the specified network interface
- * 
+ *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 public class NetworkBytesMonitor implements Monitor {
-   
-   private static int TRANSMIT_BYTES_INDEX = 8;
-   private static int RECEIVE_BYTES_INDEX = 0;
+
+   private static final int TRANSMIT_BYTES_INDEX = 8;
+   private static final int RECEIVE_BYTES_INDEX = 0;
 
    /** The serialVersionUID */
    private static final long serialVersionUID = -260611570251145013L;
@@ -27,9 +27,15 @@ public class NetworkBytesMonitor implements Monitor {
    private static Log log = LogFactory.getLog(NetworkBytesMonitor.class);
 
    private final Timeline timeline;
-   String iface;
-   int valueIndex = -1;
-   BigDecimal initialValue;
+   private String iface;
+   private int valueIndex = -1;
+   private BigDecimal initialValue;
+
+   private NetworkBytesMonitor(String iface, int valueIndex, Timeline timeline) {
+      this.timeline = timeline;
+      this.iface = iface;
+      this.valueIndex = valueIndex;
+   }
 
    public static NetworkBytesMonitor createReceiveMonitor(String iface, Timeline timeline) {
       return new NetworkBytesMonitor(iface, RECEIVE_BYTES_INDEX, timeline);
@@ -37,12 +43,6 @@ public class NetworkBytesMonitor implements Monitor {
 
    public static NetworkBytesMonitor createTransmitMonitor(String iface, Timeline timeline) {
       return new NetworkBytesMonitor(iface, TRANSMIT_BYTES_INDEX, timeline);
-   }
-
-   private NetworkBytesMonitor(String iface, int valueIndex, Timeline timeline) {
-      this.timeline = timeline;
-      this.iface = iface;
-      this.valueIndex = valueIndex;
    }
 
    public void run() {

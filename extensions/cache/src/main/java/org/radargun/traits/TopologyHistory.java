@@ -69,9 +69,16 @@ public interface TopologyHistory {
          if (!(o instanceof Event)) return false;
          Event e = (Event) o;
          return ((getTime() == null && e.getTime() == null)
-                       || (getTime() != null && getTime().equals(e.getTime())))
-               && ((getType() == null && e.getType() == null)
-                       || (getType() != null && getType().equals(e.getType())));
+            || (getTime() != null && getTime().equals(e.getTime())))
+            && ((getType() == null && e.getType() == null)
+            || (getType() != null && getType().equals(e.getType())));
+      }
+
+      @Override
+      public int hashCode() {
+         int result = getTime().hashCode();
+         result = 31 * result + getType().hashCode();
+         return result;
       }
 
       @Override

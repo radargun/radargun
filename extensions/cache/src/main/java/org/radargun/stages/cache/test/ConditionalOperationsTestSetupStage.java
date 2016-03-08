@@ -18,16 +18,16 @@ import org.radargun.traits.Transactional;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio" +
-      "- this operation is executed anytime the selected key does not have value.")
+   "- this operation is executed anytime the selected key does not have value.")
 public class ConditionalOperationsTestSetupStage extends CacheTestSetupStage {
-   protected static Operation PUT_IF_ABSENT_OR_REMOVE_TX = Operation.register("PUT_IF_ABSENT_OR_REMOVE_TX");
-   protected static Operation PUT_IF_ABSENT_OR_REPLACE_TX = Operation.register("PUT_IF_ABSENT_OR_REPLACE_TX");
-   protected static Operation PUT_IF_ABSENT_OR_REPLACE_ANY_TX = Operation.register("PUT_IF_ABSENT_OR_REPLACE_ANY_TX");
-   protected static Operation PUT_IF_ABSENT_OR_GET_AND_REPLACE_TX = Operation.register("PUT_IF_ABSENT_OR_GET_AND_REPLACE_TX");
-   protected static Operation FAIL_PUT_IF_ABSENT_OR_REMOVE_TX = Operation.register("FAIL_PUT_IF_ABSENT_OR_REMOVE_TX");
-   protected static Operation FAIL_PUT_IF_ABSENT_OR_REPLACE_TX = Operation.register("FAIL_PUT_IF_ABSENT_OR_REPLACE_TX");
-   protected static Operation FAIL_PUT_IF_ABSENT_OR_REPLACE_ANY_TX = Operation.register("FAIL_PUT_IF_ABSENT_OR_REPLACE_ANY_TX");
-   protected static Operation FAIL_PUT_IF_ABSENT_OR_GET_AND_REPLACE_TX = Operation.register("FAIL_PUT_IF_ABSENT_OR_GET_AND_REPLACE_TX");
+   protected static final Operation PUT_IF_ABSENT_OR_REMOVE_TX = Operation.register("PUT_IF_ABSENT_OR_REMOVE_TX");
+   protected static final Operation PUT_IF_ABSENT_OR_REPLACE_TX = Operation.register("PUT_IF_ABSENT_OR_REPLACE_TX");
+   protected static final Operation PUT_IF_ABSENT_OR_REPLACE_ANY_TX = Operation.register("PUT_IF_ABSENT_OR_REPLACE_ANY_TX");
+   protected static final Operation PUT_IF_ABSENT_OR_GET_AND_REPLACE_TX = Operation.register("PUT_IF_ABSENT_OR_GET_AND_REPLACE_TX");
+   protected static final Operation FAIL_PUT_IF_ABSENT_OR_REMOVE_TX = Operation.register("FAIL_PUT_IF_ABSENT_OR_REMOVE_TX");
+   protected static final Operation FAIL_PUT_IF_ABSENT_OR_REPLACE_TX = Operation.register("FAIL_PUT_IF_ABSENT_OR_REPLACE_TX");
+   protected static final Operation FAIL_PUT_IF_ABSENT_OR_REPLACE_ANY_TX = Operation.register("FAIL_PUT_IF_ABSENT_OR_REPLACE_ANY_TX");
+   protected static final Operation FAIL_PUT_IF_ABSENT_OR_GET_AND_REPLACE_TX = Operation.register("FAIL_PUT_IF_ABSENT_OR_GET_AND_REPLACE_TX");
 
 
    @PropertyDelegate(prefix = "putIfAbsentOrRemove.")
@@ -99,23 +99,23 @@ public class ConditionalOperationsTestSetupStage extends CacheTestSetupStage {
 
    protected SchedulingSelector<Conversation> createSelector() {
       return new SchedulingSelector.Builder<>(Conversation.class)
-              .add(new PutIfAbsentOrRemove(false), putIfAbsentOrRemove.invocations, putIfAbsentOrRemove.interval)
-              .add(new PutIfAbsentOrRemoveTx(putIfAbsentOrRemoveTx, false), putIfAbsentOrRemoveTx.invocations, putIfAbsentOrRemoveTx.interval)
-              .add(new PutIfAbsentOrReplace(false), putIfAbsentOrReplace.invocations, putIfAbsentOrReplace.interval)
-              .add(new PutIfAbsentOrReplaceTx(putIfAbsentOrReplaceTx, false), putIfAbsentOrReplaceTx.invocations, putIfAbsentOrReplaceTx.interval)
-              .add(new PutIfAbsentOrReplaceAny(false), putIfAbsentOrReplaceAny.invocations, putIfAbsentOrReplaceAny.interval)
-              .add(new PutIfAbsentOrReplaceAnyTx(putIfAbsentOrReplaceAnyTx, false), putIfAbsentOrReplaceAnyTx.invocations, putIfAbsentOrReplaceAnyTx.interval)
-              .add(new PutIfAbsentOrGetAndReplace(false), putIfAbsentOrGetAndReplace.invocations, putIfAbsentOrGetAndReplace.interval)
-              .add(new PutIfAbsentOrGetAndReplaceTx(putIfAbsentOrGetAndReplaceTx, false), putIfAbsentOrGetAndReplaceTx.invocations, putIfAbsentOrGetAndReplaceTx.interval)
-              .add(new PutIfAbsentOrRemove(true), failPutIfAbsentOrRemove.invocations, failPutIfAbsentOrRemove.interval)
-              .add(new PutIfAbsentOrRemoveTx(failPutIfAbsentOrRemoveTx, true), failPutIfAbsentOrRemoveTx.invocations, failPutIfAbsentOrRemoveTx.interval)
-              .add(new PutIfAbsentOrReplace(true), failPutIfAbsentOrReplace.invocations, failPutIfAbsentOrReplace.interval)
-              .add(new PutIfAbsentOrReplaceTx(failPutIfAbsentOrReplaceTx, true), failPutIfAbsentOrReplaceTx.invocations, failPutIfAbsentOrReplaceTx.interval)
-              .add(new PutIfAbsentOrReplaceAny(true), failPutIfAbsentOrReplaceAny.invocations, failPutIfAbsentOrReplaceAny.interval)
-              .add(new PutIfAbsentOrReplaceAnyTx(failPutIfAbsentOrReplaceAnyTx, true), failPutIfAbsentOrReplaceAnyTx.invocations, failPutIfAbsentOrReplaceAnyTx.interval)
-              .add(new PutIfAbsentOrGetAndReplace(true), failPutIfAbsentOrGetAndReplace.invocations, failPutIfAbsentOrGetAndReplace.interval)
-              .add(new PutIfAbsentOrGetAndReplaceTx(failPutIfAbsentOrGetAndReplaceTx, true), failPutIfAbsentOrGetAndReplaceTx.invocations, failPutIfAbsentOrGetAndReplaceTx.interval)
-              .build();
+         .add(new PutIfAbsentOrRemove(false), putIfAbsentOrRemove.invocations, putIfAbsentOrRemove.interval)
+         .add(new PutIfAbsentOrRemoveTx(putIfAbsentOrRemoveTx, false), putIfAbsentOrRemoveTx.invocations, putIfAbsentOrRemoveTx.interval)
+         .add(new PutIfAbsentOrReplace(false), putIfAbsentOrReplace.invocations, putIfAbsentOrReplace.interval)
+         .add(new PutIfAbsentOrReplaceTx(putIfAbsentOrReplaceTx, false), putIfAbsentOrReplaceTx.invocations, putIfAbsentOrReplaceTx.interval)
+         .add(new PutIfAbsentOrReplaceAny(false), putIfAbsentOrReplaceAny.invocations, putIfAbsentOrReplaceAny.interval)
+         .add(new PutIfAbsentOrReplaceAnyTx(putIfAbsentOrReplaceAnyTx, false), putIfAbsentOrReplaceAnyTx.invocations, putIfAbsentOrReplaceAnyTx.interval)
+         .add(new PutIfAbsentOrGetAndReplace(false), putIfAbsentOrGetAndReplace.invocations, putIfAbsentOrGetAndReplace.interval)
+         .add(new PutIfAbsentOrGetAndReplaceTx(putIfAbsentOrGetAndReplaceTx, false), putIfAbsentOrGetAndReplaceTx.invocations, putIfAbsentOrGetAndReplaceTx.interval)
+         .add(new PutIfAbsentOrRemove(true), failPutIfAbsentOrRemove.invocations, failPutIfAbsentOrRemove.interval)
+         .add(new PutIfAbsentOrRemoveTx(failPutIfAbsentOrRemoveTx, true), failPutIfAbsentOrRemoveTx.invocations, failPutIfAbsentOrRemoveTx.interval)
+         .add(new PutIfAbsentOrReplace(true), failPutIfAbsentOrReplace.invocations, failPutIfAbsentOrReplace.interval)
+         .add(new PutIfAbsentOrReplaceTx(failPutIfAbsentOrReplaceTx, true), failPutIfAbsentOrReplaceTx.invocations, failPutIfAbsentOrReplaceTx.interval)
+         .add(new PutIfAbsentOrReplaceAny(true), failPutIfAbsentOrReplaceAny.invocations, failPutIfAbsentOrReplaceAny.interval)
+         .add(new PutIfAbsentOrReplaceAnyTx(failPutIfAbsentOrReplaceAnyTx, true), failPutIfAbsentOrReplaceAnyTx.invocations, failPutIfAbsentOrReplaceAnyTx.interval)
+         .add(new PutIfAbsentOrGetAndReplace(true), failPutIfAbsentOrGetAndReplace.invocations, failPutIfAbsentOrGetAndReplace.interval)
+         .add(new PutIfAbsentOrGetAndReplaceTx(failPutIfAbsentOrGetAndReplaceTx, true), failPutIfAbsentOrGetAndReplaceTx.invocations, failPutIfAbsentOrGetAndReplaceTx.interval)
+         .build();
    }
 
    private abstract class NonTxConversation extends AbstractConversation {

@@ -13,12 +13,14 @@ import java.util.Set;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class TraitHelper {
+public final class TraitHelper {
    public enum InjectResult {
       SUCCESS,
       FAILURE,
       SKIP
    }
+
+   private TraitHelper() {}
 
    /**
     * Via reflection, inject the provided traits into field on the target
@@ -51,9 +53,13 @@ public class TraitHelper {
                }
             } else {
                switch (annotation.dependency()) {
-                  case OPTIONAL: break; // no action, leave to null
-                  case MANDATORY: return InjectResult.FAILURE;
-                  case SKIP: result = InjectResult.SKIP; break;
+                  case OPTIONAL:
+                     break; // no action, leave to null
+                  case MANDATORY:
+                     return InjectResult.FAILURE;
+                  case SKIP:
+                     result = InjectResult.SKIP;
+                     break;
                }
             }
          }

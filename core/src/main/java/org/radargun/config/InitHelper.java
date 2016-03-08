@@ -1,18 +1,21 @@
 package org.radargun.config;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class InitHelper {
+public final class InitHelper {
+
    private static final Log log = LogFactory.getLog(InitHelper.class);
+
+   private InitHelper() {}
 
    public static void init(Object target) {
       processAnnotatedMethods(target, Init.class, false);
@@ -85,7 +88,7 @@ public class InitHelper {
                boolean overridden = false;
                for (Method m2 : annotatedMethods) {
                   if (m2.getName().equals(m.getName())
-                        && Arrays.equals(m2.getGenericParameterTypes(), m.getGenericParameterTypes())) {
+                     && Arrays.equals(m2.getGenericParameterTypes(), m.getGenericParameterTypes())) {
                      log.warnf("Method %s overrides %s but both are declared with @%s annotation: calling only once", m2, m, annotationClass.getSimpleName());
                      overridden = true;
                   }

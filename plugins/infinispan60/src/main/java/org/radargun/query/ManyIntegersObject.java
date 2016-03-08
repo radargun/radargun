@@ -93,16 +93,16 @@ public class ManyIntegersObject implements Serializable {
       @Override
       public ManyIntegersObject readFrom(ProtoStreamReader reader) throws IOException {
          return new ManyIntegersObject(
-               reader.readInt("int0"),
-               reader.readInt("int1"),
-               reader.readInt("int2"),
-               reader.readInt("int3"),
-               reader.readInt("int4"),
-               reader.readInt("int5"),
-               reader.readInt("int6"),
-               reader.readInt("int7"),
-               reader.readInt("int8"),
-               reader.readInt("int9"));
+            reader.readInt("int0"),
+            reader.readInt("int1"),
+            reader.readInt("int2"),
+            reader.readInt("int3"),
+            reader.readInt("int4"),
+            reader.readInt("int5"),
+            reader.readInt("int6"),
+            reader.readInt("int7"),
+            reader.readInt("int8"),
+            reader.readInt("int9"));
       }
 
       @Override

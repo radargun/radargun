@@ -19,7 +19,7 @@ import org.radargun.utils.SizeConverter;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class VmArgs implements Serializable {
-   private final static Log log = LogFactory.getLog(VmArgs.class);
+   private static final Log log = LogFactory.getLog(VmArgs.class);
 
    @Property(doc = "Ignore all VM arguments passed to slave and use only those specified here. Default is false.")
    private boolean ignoreDefault = false;
@@ -141,7 +141,7 @@ public class VmArgs implements Serializable {
 
       private static class Converter extends ReflexiveConverters.ListConverter {
          public Converter() {
-            super(new Class[] { Custom.class });
+            super(new Class[] {Custom.class});
          }
       }
    }
@@ -178,7 +178,7 @@ public class VmArgs implements Serializable {
 
       public static class Converter extends ReflexiveConverters.ListConverter {
          public Converter() {
-            super(new Class[] { Prop.class });
+            super(new Class[] {Prop.class});
          }
       }
    }

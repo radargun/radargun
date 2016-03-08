@@ -8,8 +8,8 @@ import java.util.Set;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.stages.helpers.RoleHelper;
+import org.radargun.utils.TimeConverter;
 
 /**
  * The stage start and kills some nodes concurrently (without waiting for each other).
@@ -38,7 +38,7 @@ public class ParallelStartStopStage extends AbstractServiceStartStage {
    private long startDelay = 0;
 
    @Property(doc = "Applicable only for cache wrappers with Partitionable feature. Set of slaves that should be " +
-         "reachable from the new node. Default is all slaves.")
+      "reachable from the new node. Default is all slaves.")
    private Set<Integer> reachable = null;
 
    @Override
@@ -59,7 +59,7 @@ public class ParallelStartStopStage extends AbstractServiceStartStage {
                   log.info("Wrapper already set on this slave, not starting it again.");
                   startMe = false;
                   return successfulResponse();
-               } 
+               }
             } else {
                if (startDelay > 0) {
                   try {
@@ -74,7 +74,7 @@ public class ParallelStartStopStage extends AbstractServiceStartStage {
                   return errorResponse("Issues while instantiating/starting cache wrapper", e);
                }
                startMe = false;
-            }            
+            }
          }
          if (stopMe) {
             if (!lifecycle.isRunning()) {

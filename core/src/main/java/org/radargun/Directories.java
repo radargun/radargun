@@ -1,17 +1,19 @@
 package org.radargun;
 
-import org.radargun.utils.Utils;
-
 import java.io.File;
+
+import org.radargun.utils.Utils;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Directories {
-   public final static File ROOT_DIR;
-   public final static File LIB_DIR;
-   public final static File PLUGINS_DIR;
-   public final static File REPORTERS_DIR;
+public final class Directories {
+   public static final File ROOT_DIR;
+   public static final File LIB_DIR;
+   public static final File PLUGINS_DIR;
+   public static final File REPORTERS_DIR;
+
+   private Directories() {}
 
    static {
       String path = Utils.getCodePath(Directories.class);

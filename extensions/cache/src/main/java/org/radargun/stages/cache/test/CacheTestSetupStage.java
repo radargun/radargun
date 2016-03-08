@@ -9,7 +9,6 @@ import org.radargun.config.Stage;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.test.AbstractConversation;
-import org.radargun.stages.test.Conversation;
 import org.radargun.stages.test.Stressor;
 import org.radargun.stages.test.TestSetupStage;
 import org.radargun.traits.ConditionalOperations;
@@ -27,11 +26,11 @@ public abstract class CacheTestSetupStage extends TestSetupStage {
    protected Fuzzy<Integer> entrySize = Fuzzy.always(1000);
 
    @Property(doc = "Generator of keys used in the test (transforms key ID into key object). By default the generator is retrieved from slave state.",
-         complexConverter = KeyGenerator.ComplexConverter.class)
+      complexConverter = KeyGenerator.ComplexConverter.class)
    protected KeyGenerator keyGenerator = null;
 
    @Property(doc = "Generator of values used in the test. By default the generator is retrieved from slave state.",
-         complexConverter = ValueGenerator.ComplexConverter.class)
+      complexConverter = ValueGenerator.ComplexConverter.class)
    protected ValueGenerator valueGenerator = null;
 
    @Property(doc = "Name of the cache. Default is the default cache.")
@@ -71,7 +70,7 @@ public abstract class CacheTestSetupStage extends TestSetupStage {
       return keyGenerator.generateKey((random.nextLong() & Long.MAX_VALUE) % numEntries);
    }
 
-   protected static abstract class BaseTxConversation<CacheType> extends AbstractConversation {
+   protected abstract static class BaseTxConversation<CacheType> extends AbstractConversation {
       private final Operation txOperation;
       private final TxInvocationSetting invocationSetting;
 

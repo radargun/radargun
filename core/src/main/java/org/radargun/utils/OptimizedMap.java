@@ -18,6 +18,7 @@ public class OptimizedMap<K, V> implements Map<K, V>, Serializable {
       SINGLE,
       MAP
    }
+
    private Type type = Type.EMPTY;
    private Map<K, V> inner;
    private K singleKey;
@@ -66,7 +67,7 @@ public class OptimizedMap<K, V> implements Map<K, V>, Serializable {
             return null;
          case SINGLE:
             return key == null ? (singleKey == null ? singleValue : null)
-                  : (key.equals(singleKey) ? singleValue : null);
+               : (key.equals(singleKey) ? singleValue : null);
          case MAP:
             return inner.get(key);
       }

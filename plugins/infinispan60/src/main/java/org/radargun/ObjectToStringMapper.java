@@ -1,9 +1,9 @@
 package org.radargun;
 
-import org.infinispan.persistence.keymappers.TwoWayKey2StringMapper;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import org.infinispan.persistence.keymappers.TwoWayKey2StringMapper;
 
 /**
  * Hackish generic implementation - keeps all objects in a map for reverse mapping.

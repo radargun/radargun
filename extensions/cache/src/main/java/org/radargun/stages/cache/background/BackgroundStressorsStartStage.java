@@ -8,9 +8,9 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.helpers.CacheSelector;
 
 /**
- * 
+ *
  * Create BackgroundStressors and store them to SlaveState. Optionally start stressor or stat threads.
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -35,7 +35,7 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
       slaveState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.UseCache(generalConfiguration.cacheName));
       try {
          BackgroundOpsManager instance = BackgroundOpsManager.getOrCreateInstance(slaveState, name,
-               generalConfiguration, legacyLogicConfiguration, logLogicConfiguration);
+            generalConfiguration, legacyLogicConfiguration, logLogicConfiguration);
 
          log.info("Starting stressor threads " + name);
          if (isServiceRunning()) {
@@ -51,8 +51,8 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
    private void validateConfiguration() {
       if (generalConfiguration.numEntries < generalConfiguration.numThreads * slaveState.getGroupSize()) {
          throw new IllegalArgumentException(String.format("'numEntries' needs to be greater than or equal to the product" +
-                     " of 'numThreads' and group size'. Required minimum '%d', was: '%d'.", generalConfiguration.numEntries,
-               generalConfiguration.numThreads * slaveState.getGroupSize()));
+               " of 'numThreads' and group size'. Required minimum '%d', was: '%d'.", generalConfiguration.numEntries,
+            generalConfiguration.numThreads * slaveState.getGroupSize()));
       }
    }
 }

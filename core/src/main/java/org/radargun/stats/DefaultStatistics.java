@@ -17,12 +17,19 @@ import org.radargun.config.Property;
  */
 @DefinitionElement(name = "default", doc = "Statistics with the same implementation of operation statistics.")
 public class DefaultStatistics extends IntervalStatistics {
-   private final static OperationStats[] EMPTY_ARRAY = new OperationStats[0];
+   private static final OperationStats[] EMPTY_ARRAY = new OperationStats[0];
    private transient OperationStats[] operationStats = EMPTY_ARRAY;
    private Map<String, OperationStats> operationStatsMap = new HashMap<String, OperationStats>();
 
    @Property(name = "operationStats", doc = "Operation statistics prototype.", complexConverter = OperationStats.Converter.class)
    protected OperationStats prototype = new DefaultOperationStats();
+
+   public DefaultStatistics() {
+   }
+
+   public DefaultStatistics(OperationStats prototype) {
+      this.prototype = prototype;
+   }
 
    public static Statistics merge(Collection<Statistics> set) {
       if (set.size() == 0) {
@@ -34,13 +41,6 @@ public class DefaultStatistics extends IntervalStatistics {
          res.merge(elems.next());
       }
       return res;
-   }
-
-   public DefaultStatistics() {
-   }
-
-   public DefaultStatistics(OperationStats prototype) {
-      this.prototype = prototype;
    }
 
    protected OperationStats createOperationStats(int operationId) {
@@ -104,7 +104,8 @@ public class DefaultStatistics extends IntervalStatistics {
     */
    @Override
    public void merge(Statistics otherStats) {
-      if (!(otherStats instanceof DefaultStatistics)) throw new IllegalArgumentException(otherStats.getClass().getName());
+      if (!(otherStats instanceof DefaultStatistics))
+         throw new IllegalArgumentException(otherStats.getClass().getName());
       super.merge(otherStats);
       DefaultStatistics stats = (DefaultStatistics) otherStats;
       if (operationStats == null) {

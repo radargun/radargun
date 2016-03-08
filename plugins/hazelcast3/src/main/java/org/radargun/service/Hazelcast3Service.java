@@ -3,7 +3,6 @@ package org.radargun.service;
 import java.util.Collections;
 import java.util.List;
 
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.MembershipListener;
 import org.radargun.Service;
@@ -59,7 +58,7 @@ public class Hazelcast3Service extends HazelcastService {
                continue;
             }
             if ((index.mapName == null && map.getName().equals(this.mapName))
-                  || (index.mapName != null && map.getName().equals(index.mapName))) {
+               || (index.mapName != null && map.getName().equals(index.mapName))) {
                map.addIndex(index.path, index.ordered);
                index.added = true;
             }
@@ -85,7 +84,7 @@ public class Hazelcast3Service extends HazelcastService {
 
    protected static class IndexConverter extends ReflexiveConverters.ListConverter {
       public IndexConverter() {
-         super(new Class[] { Index.class });
+         super(new Class[] {Index.class});
       }
    }
 }

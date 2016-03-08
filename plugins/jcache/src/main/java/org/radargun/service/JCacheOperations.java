@@ -1,9 +1,9 @@
 package org.radargun.service;
 
+import javax.cache.configuration.MutableConfiguration;
+
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
-
-import javax.cache.configuration.MutableConfiguration;
 
 /**
  * @author Matej Cimbora

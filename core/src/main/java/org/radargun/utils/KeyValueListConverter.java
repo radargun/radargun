@@ -26,8 +26,8 @@ public class KeyValueListConverter implements Converter<Map<String, String>> {
       while (it.hasNext()) {
          Map.Entry<String, String> pair = it.next();
          kvBuilder.append(pair.getKey())
-               .append(":")
-               .append(pair.getValue());
+            .append(":")
+            .append(pair.getValue());
          if (it.hasNext()) {
             kvBuilder.append(";");
          }

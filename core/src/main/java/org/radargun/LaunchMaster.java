@@ -11,9 +11,11 @@ import org.radargun.utils.ArgsHolder;
 /**
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-public class LaunchMaster {
+public final class LaunchMaster {
 
    private static Log log = LogFactory.getLog(LaunchMaster.class);
+
+   private LaunchMaster() {}
 
    public static void main(String[] args) {
 

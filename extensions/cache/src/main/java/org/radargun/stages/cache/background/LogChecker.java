@@ -36,7 +36,7 @@ public abstract class LogChecker extends Thread {
    protected static final boolean trace = log.isTraceEnabled();
    protected static final long UNSUCCESSFUL_CHECK_MIN_DELAY_MS = 10;
    protected static final String LAST_OPERATION_PREFIX = "stressor_";
-   protected static final ThreadLocal<DateFormat> formatter = new ThreadLocal<DateFormat>() {
+   protected static final ThreadLocal<DateFormat> FORMATTER = new ThreadLocal<DateFormat>() {
       @Override
       protected DateFormat initialValue() {
          return new SimpleDateFormat("HH:mm:ss,S");
@@ -112,12 +112,12 @@ public abstract class LogChecker extends Thread {
                checkIgnoreRecord(record);
                if (record.getOperationId() != 0) {
                   log.tracef("Check for thread %d continues from operation %d",
-                             record.getThreadId(), record.getOperationId());
+                     record.getThreadId(), record.getOperationId());
                }
             }
             if (trace) {
                log.tracef("Checking operation %d for thread %d on key %d (%s)",
-                          record.getOperationId(), record.getThreadId(), record.getKeyId(), keyGenerator.generateKey(record.getKeyId()));
+                  record.getOperationId(), record.getThreadId(), record.getKeyId(), keyGenerator.generateKey(record.getKeyId()));
             }
             boolean notification = record.hasNotification(record.getOperationId());
             Object value = findValue(record);
@@ -128,7 +128,7 @@ public abstract class LogChecker extends Thread {
                }
                if (record.getOperationId() % logLogicConfiguration.getCounterUpdatePeriod() == 0) {
                   basicCache.put(checkerKey(slaveIndex, record.getThreadId()),
-                        new LastOperation(record.getOperationId(), Utils.getRandomSeed(record.getRand())));
+                     new LastOperation(record.getOperationId(), Utils.getRandomSeed(record.getRand())));
                }
                record.next();
                record.setLastUnsuccessfulCheckTimestamp(Long.MIN_VALUE);
@@ -139,24 +139,24 @@ public abstract class LogChecker extends Thread {
                   log.debug("Detected stale read, keyId: " + keyGenerator.generateKey(record.getKeyId()));
                }
                if (confirmationTimestamp >= 0
-                     && (logLogicConfiguration.writeApplyMaxDelay <= 0 || TimeService.currentTimeMillis() > confirmationTimestamp + logLogicConfiguration.writeApplyMaxDelay)) {
+                  && (logLogicConfiguration.writeApplyMaxDelay <= 0 || TimeService.currentTimeMillis() > confirmationTimestamp + logLogicConfiguration.writeApplyMaxDelay)) {
                   // Verify whether record should not be ignored
                   if (checkIgnoreRecord(record)) {
                      continue;
                   }
                   if (!notification) {
                      log.errorf("Missing notification for operation %d for thread %d on key %d (%s), required for %d, notified for %s",
-                                record.getOperationId(), record.getThreadId(), record.getKeyId(),
-                           keyGenerator.generateKey(record.getKeyId()), record.getRequireNotify(), record.getNotifiedOps());
+                        record.getOperationId(), record.getThreadId(), record.getKeyId(),
+                        keyGenerator.generateKey(record.getKeyId()), record.getRequireNotify(), record.getNotifiedOps());
                      failureManager.reportMissingNotification();
                      debugFailure(record);
                      record.setLastUnsuccessfulCheckTimestamp(TimeService.currentTimeMillis());
                   }
                   if (!contains) {
                      log.errorf("Missing operation %d for thread %d on key %d (%s) %s",
-                                record.getOperationId(), record.getThreadId(), record.getKeyId(),
-                           keyGenerator.generateKey(record.getKeyId()),
-                           value == null ? " - entry was completely lost" : "");
+                        record.getOperationId(), record.getThreadId(), record.getKeyId(),
+                        keyGenerator.generateKey(record.getKeyId()),
+                        value == null ? " - entry was completely lost" : "");
                      log.errorf("Not found in %s", value);
                      failureManager.reportMissingOperation();
                      debugFailure(record);
@@ -243,7 +243,7 @@ public abstract class LogChecker extends Thread {
       @Override
       public String toString() {
          return String.format("LastOperation{operationId=%d, seed=%016X, timestamp=%s}", operationId, seed,
-               formatter.get().format(new Date(timestamp)));
+            FORMATTER.get().format(new Date(timestamp)));
       }
    }
 

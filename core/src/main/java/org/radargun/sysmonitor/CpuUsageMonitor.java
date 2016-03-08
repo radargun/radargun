@@ -35,7 +35,7 @@ public class CpuUsageMonitor extends JmxMonitor {
 
          long cpuTimeMultiplier = getCpuMultiplier(connection);
          OperatingSystemMXBean os = ManagementFactory.newPlatformMXBeanProxy(connection,
-               ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
+            ManagementFactory.OPERATING_SYSTEM_MXBEAN_NAME, OperatingSystemMXBean.class);
          int procCount = os.getAvailableProcessors();
 
          long jmxCpuTime = (Long) connection.getAttribute(OS_NAME, PROCESS_CPU_TIME_ATTR);

@@ -41,7 +41,8 @@ public class InfinispanIterable implements Iterable {
 
    @Override
    public <K, V, T> CloseableIterator<T> getIterator(String cacheName, Filter<K, V> filter, Converter<K, V, T> converter) {
-      if (trace) log.tracef("Retrieving iterator for cache %s using filter %s and converter %s", cacheName, filter, converter);
+      if (trace)
+         log.tracef("Retrieving iterator for cache %s using filter %s and converter %s", cacheName, filter, converter);
       AdvancedCache<K, V> cache = (AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache();
       EntryIterable<K, V> iterable = cache.filterEntries(wrap(filter));
       return new CloseableIteratorImpl(iterable.converter(wrap(converter)), new ValueOutConverter<K, T>());

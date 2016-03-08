@@ -35,8 +35,8 @@ public class ClusterValidationStage extends AbstractDistStage {
    private static final String CONFIRMATION_KEY = "_confirmation_";
 
    @Property(doc = "If set to true, then the slave will consider that the cluster is formed when one slave " +
-         "replicated the control entry. Otherwise the replication will only be considered successful if all " +
-         "slaves replicated the control value. Default is false.")
+      "replicated the control entry. Otherwise the replication will only be considered successful if all " +
+      "slaves replicated the control value. Default is false.")
    private boolean partialReplication = false;
 
    @Property(doc = "How many times we should try to retrieve the control entry.")
@@ -143,7 +143,7 @@ public class ClusterValidationStage extends AbstractDistStage {
 
    private int checkReplicationSeveralTimes() throws Exception {
       tryToPut();
-      int replCount = 0;      
+      int replCount = 0;
       for (int i = 0; i < replicationTryCount; i++) {
          replCount = replicationCount();
          if ((partialReplication && replCount >= 1) || (!partialReplication && (replCount == getExecutingSlaves().size() - 1))) {
@@ -153,7 +153,7 @@ public class ClusterValidationStage extends AbstractDistStage {
          //adding our stuff one more time
          tryToPut();
          log.info("Replication test failed, " + (i + 1) + " tries so far. Sleeping for " + Utils.prettyPrintMillis(replicationTimeSleep)
-               + " and trying again.");
+            + " and trying again.");
          Thread.sleep(replicationTimeSleep);
       }
       log.info("Replication test failed. Last replication count is " + replCount);

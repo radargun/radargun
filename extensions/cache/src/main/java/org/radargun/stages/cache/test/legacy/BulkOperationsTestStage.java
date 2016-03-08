@@ -12,11 +12,11 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.cache.test.CacheInvocations;
 import org.radargun.stages.test.Invocation;
+import org.radargun.stages.test.legacy.LegacyStressor;
 import org.radargun.stages.test.legacy.LegacyTestStage;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.stages.test.legacy.OperationSelector;
 import org.radargun.stages.test.legacy.RatioOperationSelector;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.InjectTrait;
 
@@ -27,7 +27,7 @@ import org.radargun.traits.InjectTrait;
 @Stage(doc = "Executes operations from BulkOperations trait.")
 public class BulkOperationsTestStage extends CacheOperationsTestStage {
    @Property(doc = "Number of keys inserted/retrieved within one operation. Applicable only when the cache wrapper" +
-         " supports bulk operations. Default is 10.")
+      " supports bulk operations. Default is 10.")
    protected int bulkSize = 10;
 
    @Property(doc = "Ratio of GET_ALL_NATIVE requests. Default is 4.")
@@ -54,13 +54,13 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
    @Override
    protected OperationSelector createOperationSelector() {
       return new RatioOperationSelector.Builder()
-            .add(BulkOperations.GET_ALL_NATIVE, getAllNativeRatio)
-            .add(BulkOperations.GET_ALL_ASYNC, getAllAsyncRatio)
-            .add(BulkOperations.PUT_ALL_NATIVE, putAllNativeRatio)
-            .add(BulkOperations.PUT_ALL_ASYNC, putAllAsyncRatio)
-            .add(BulkOperations.REMOVE_ALL_NATIVE, removeAllNativeRatio)
-            .add(BulkOperations.REMOVE_ALL_ASYNC, removeAllAsyncRatio)
-            .build();
+         .add(BulkOperations.GET_ALL_NATIVE, getAllNativeRatio)
+         .add(BulkOperations.GET_ALL_ASYNC, getAllAsyncRatio)
+         .add(BulkOperations.PUT_ALL_NATIVE, putAllNativeRatio)
+         .add(BulkOperations.PUT_ALL_ASYNC, putAllAsyncRatio)
+         .add(BulkOperations.REMOVE_ALL_NATIVE, removeAllNativeRatio)
+         .add(BulkOperations.REMOVE_ALL_ASYNC, removeAllAsyncRatio)
+         .build();
    }
 
    @Override
@@ -111,7 +111,7 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
          Invocation invocation;
          if (operation == BulkOperations.PUT_ALL_NATIVE || operation == BulkOperations.PUT_ALL_ASYNC) {
             Map<Object, Object> map = new HashMap<>(bulkSize);
-            for (int i = 0; i < bulkSize;) {
+            for (int i = 0; i < bulkSize; ) {
                Object key = keyGenerator.generateKey(keySelector.next());
                if (!map.containsKey(key)) {
                   map.put(key, valueGenerator.generateValue(key, entrySize.next(random), random));
@@ -142,7 +142,7 @@ public class BulkOperationsTestStage extends CacheOperationsTestStage {
                if (operation == BulkOperations.REMOVE_ALL_NATIVE) {
                   invocation = new CacheInvocations.RemoveAll(nativeCache, false, set);
                } else {
-                  invocation = new CacheInvocations.RemoveAll(asyncCache,true, set);
+                  invocation = new CacheInvocations.RemoveAll(asyncCache, true, set);
                }
             }
          }

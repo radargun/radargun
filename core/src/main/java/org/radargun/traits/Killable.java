@@ -9,7 +9,7 @@ public interface Killable {
     * Kill the Service instance abruptly.
     */
    void kill();
-   
+
    /**
     * Wait until the Service is in the state where it can be killed, but then kill it in different thread.
     */

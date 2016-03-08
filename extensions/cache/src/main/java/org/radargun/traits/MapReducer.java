@@ -64,7 +64,7 @@ public interface MapReducer<KOut, VOut, R> {
        * @return this builder instance
        * @throws {@link java.lang.UnsupportedOperationException} if {@link #supportsResultCacheName()} returns false
        */
-      Builder<KOut, VOut, R>  resultCacheName(String resultCacheName);
+      Builder<KOut, VOut, R> resultCacheName(String resultCacheName);
 
       /**
        * @param mapperFqn
@@ -121,18 +121,18 @@ public interface MapReducer<KOut, VOut, R> {
 
    interface Task<KOut, VOut, R> {
       /**
-       * 
+       *
        * Execute the MapTask against all of the keys in the cache
-       * 
+       *
        * @return a Map where each key is an output key and value is reduced value for that output
        *         key
        */
       Map<KOut, VOut> execute();
 
       /**
-       * 
+       *
        * Execute the MapTask against all of the keys in the cache and use a Collator on the results
-       * 
+       *
        * @return the collated result object
        */
       R executeWithCollator();

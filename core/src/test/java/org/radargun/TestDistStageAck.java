@@ -1,7 +1,6 @@
 package org.radargun;
 
 import org.radargun.state.SlaveState;
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 /**

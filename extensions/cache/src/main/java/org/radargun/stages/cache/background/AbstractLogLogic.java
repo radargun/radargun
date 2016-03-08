@@ -102,7 +102,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
             txFailedAttempts++;
             log.tracef("Transaction rollbacked, number of attempts so far=%d", txFailedAttempts);
             if (manager.getLogLogicConfiguration().getMaxTransactionAttempts() >= 0
-                  && txFailedAttempts > manager.getLogLogicConfiguration().getMaxTransactionAttempts()) {
+               && txFailedAttempts > manager.getLogLogicConfiguration().getMaxTransactionAttempts()) {
                log.error("Maximum number of transaction attempts attained, reporting.");
                manager.getFailureManager().reportFailedTransactionAttempt();
             }
@@ -118,11 +118,11 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
    public String getStatus() {
       long currentTime = TimeService.currentTimeMillis();
       return String.format("current[id=%d, key=%s], lastSuccessfulOpTime=%d",
-            operationId, keyGenerator.generateKey(keyId), lastSuccessfulOpTimestamp - currentTime)
-            + (transactionSize > 0 ?
-               String.format(", txStart[id=%d, key=%s], remainingTxOps=%d, lastSuccessfulTxTime=%d",
-                     txStartOperationId, keyGenerator.generateKey(txStartKeyId), remainingTxOps,
-                     lastSuccessfulTxTimestamp - currentTime) : "");
+         operationId, keyGenerator.generateKey(keyId), lastSuccessfulOpTimestamp - currentTime)
+         + (transactionSize > 0 ?
+         String.format(", txStart[id=%d, key=%s], remainingTxOps=%d, lastSuccessfulTxTime=%d",
+            txStartOperationId, keyGenerator.generateKey(txStartKeyId), remainingTxOps,
+            lastSuccessfulTxTimestamp - currentTime) : "");
    }
 
    /* Return value = true: follow with next operation,
@@ -311,7 +311,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
          // we have to write down the keySelectorRandom as well in order to be able to continue work if this slave
          // is restarted
          basicCache.put(LogChecker.lastOperationKey(stressor.id),
-                        new LastOperation(operationId, Utils.getRandomSeed(keySelectorRandom)));
+            new LastOperation(operationId, Utils.getRandomSeed(keySelectorRandom)));
       } catch (Exception e) {
          log.errorf(e, "Error while writing last operation %d for stressor %s", operationId, stressor.getStatus());
       }
@@ -340,7 +340,7 @@ abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
                Long ignoredOperationId = (Long) basicCache.get(LogChecker.ignoredKey(i, stressorId));
                if (ignoredOperationId == null || ignoredOperationId < operationId) {
                   log.tracef("Setting ignore operation for checker slave %d and stressor %d: %d -> %d (last checked operation %d)",
-                             i, stressorId, ignoredOperationId, operationId, lastCheckedOperationId);
+                     i, stressorId, ignoredOperationId, operationId, lastCheckedOperationId);
                   basicCache.put(LogChecker.ignoredKey(i, stressorId), operationId);
                   if (transactionSize > 0) {
                      throw new BreakTxRequest();

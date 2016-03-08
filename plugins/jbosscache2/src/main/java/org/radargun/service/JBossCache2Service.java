@@ -22,8 +22,7 @@ import org.radargun.traits.Transactional;
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 @Service(doc = "JBossCache 2.x")
-public class JBossCache2Service implements Lifecycle, Clustered
-{
+public class JBossCache2Service implements Lifecycle, Clustered {
    private Log log = LogFactory.getLog(JBossCache2Service.class);
    private HashMap<String, Cache> caches = new HashMap<String, Cache>();
 
@@ -63,16 +62,14 @@ public class JBossCache2Service implements Lifecycle, Clustered
    }
 
    @Override
-   public synchronized void start()
-   {
+   public synchronized void start() {
       log.info("Running follwing JBossCacheVersion: " + org.jboss.cache.Version.version);
       log.info("Running follwing JBossCacheCodeName: " + org.jboss.cache.Version.codename);
       getCache(null);
    }
 
    @Override
-   public synchronized void stop()
-   {
+   public synchronized void stop() {
       for (Cache cache : caches.values()) {
          cache.stop();
       }

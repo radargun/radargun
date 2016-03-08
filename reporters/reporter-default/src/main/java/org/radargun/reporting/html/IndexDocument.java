@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -36,7 +35,7 @@ public class IndexDocument extends HtmlDocument {
 
    private void writeConfig(Cluster cluster, Configuration.Setup setup, OriginalConfig config) {
       String configFile = String.format("original_%s_%s_%d_%s",
-            setup.getConfiguration().name, setup.group, cluster.getClusterIndex(), config.filename).replace(File.separator, "_");
+         setup.getConfiguration().name, setup.group, cluster.getClusterIndex(), config.filename).replace(File.separator, "_");
       try (FileOutputStream contentWriter = new FileOutputStream(directory + File.separator + configFile)) {
          contentWriter.write(config.content);
       } catch (FileNotFoundException e) {
@@ -104,7 +103,7 @@ public class IndexDocument extends HtmlDocument {
 
    public String getFilename(String configName, String groupName, Cluster cluster, String config) {
       return String.format("normalized_%s_%s_%d_%s.html",
-              configName, groupName, cluster.getClusterIndex(), config);
+         configName, groupName, cluster.getClusterIndex(), config);
    }
 
    public Set<String> getNormalized() {

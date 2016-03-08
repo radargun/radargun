@@ -8,5 +8,6 @@ package org.radargun.sysmonitor;
  */
 public interface Monitor extends Runnable {
    void start();
+
    void stop();
 }

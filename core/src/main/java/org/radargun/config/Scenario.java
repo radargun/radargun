@@ -67,7 +67,7 @@ public class Scenario implements Serializable {
          throw new RuntimeException("Cannot instantiate " + description.stageClass.getName(), e);
       }
       PropertyHelper.setPropertiesFromDefinitions(stage, description.properties,
-              localExtras, state != null ? state.asStringMap() : Collections.EMPTY_MAP);
+         localExtras, state != null ? state.asStringMap() : Collections.EMPTY_MAP);
 
       if (report != null) {
          Report.Stage reportStage = report.addStage(stage.getName());

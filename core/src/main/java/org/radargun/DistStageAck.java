@@ -1,14 +1,14 @@
 package org.radargun;
 
-import org.radargun.logging.LogFactory;
-import org.radargun.state.SlaveState;
-
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.radargun.logging.LogFactory;
+import org.radargun.state.SlaveState;
 
 /**
  * Asck that is sent from each slave to the master containing the result of the slave's processing for a stage.

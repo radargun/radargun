@@ -13,8 +13,10 @@ import java.nio.ByteBuffer;
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-public class SerializationHelper {
+public final class SerializationHelper {
    private static final int MIN_REMAINING = 32;
+
+   private SerializationHelper() {}
 
    /**
     * Write serialized representation of given object to the buffer on the current position.
@@ -54,7 +56,7 @@ public class SerializationHelper {
       }
       int sizePosition = buffer.position();
       buffer.position(sizePosition + 4);
-      try (ByteBufferOutputStream out = new ByteBufferOutputStream(buffer); ObjectOutputStream oos = new ObjectOutputStream(out)){
+      try (ByteBufferOutputStream out = new ByteBufferOutputStream(buffer); ObjectOutputStream oos = new ObjectOutputStream(out)) {
          oos.writeObject(serializable);
          buffer = out.getBuffer();
          buffer.putInt(sizePosition, buffer.position() - sizePosition - 4);

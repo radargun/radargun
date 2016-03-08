@@ -35,7 +35,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
    private long memoryReleaseTimeout = 30000;
 
    @Property(doc = "Directory where the heap dump will be produced if the memory threshold is hit " +
-         "or some threads have not finished. By default the dump will not be produced.")
+      "or some threads have not finished. By default the dump will not be produced.")
    private String heapDumpDir = null;
 
    @Property(doc = "Specifies whether the check for unfinished threads should be performed. Default is true.")
@@ -78,7 +78,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
          if ((unfinishedThreads > 0 || !memoryCheckResult) && heapDumpDir != null) {
             try {
                File heapDumpFile = new File(heapDumpDir, slaveState.getConfigName() + "." + slaveState.getSlaveIndex()
-                     + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".bin");
+                  + "." + new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date()) + ".bin");
                log.info("Dumping heap into " + heapDumpFile.getAbsolutePath());
                Utils.dumpHeap(heapDumpFile.getAbsolutePath());
                log.info("Successfully written heap dump.");
@@ -99,7 +99,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
       for (CleanupAck ack : Projections.instancesOf(acks, CleanupAck.class)) {
          log.infof("Node %d has changed available memory from %d MB to %d MB and has %d unfinished threads",
-               ack.getSlaveIndex(), ack.initialAvailableMemory / 1048576, ack.finalAvailableMemory / 1048576, ack.unfinishedThreads);
+            ack.getSlaveIndex(), ack.initialAvailableMemory / 1048576, ack.finalAvailableMemory / 1048576, ack.unfinishedThreads);
          if (ack.isError()) {
             log.warn("Ack contains errors: " + ack);
          }
@@ -113,7 +113,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
       long percentage = -1;
       long currentFreeMemory = -1;
       long deadline = TimeService.currentTimeMillis() + memoryReleaseTimeout;
-      for (;;) {
+      for (; ; ) {
          System.gc();
          Runtime runtime = Runtime.getRuntime();
          currentFreeMemory = runtime.freeMemory() + runtime.maxMemory() - runtime.totalMemory();
@@ -150,7 +150,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
          log.info("Interrupting thread " + getThreadId(thread));
          thread.interrupt();
       }
-      long deadline = TimeService.currentTimeMillis() + stopTimeout/2;
+      long deadline = TimeService.currentTimeMillis() + stopTimeout / 2;
       for (Thread thread : threads) {
          long timeout = deadline - TimeService.currentTimeMillis();
          if (timeout > 0) {
@@ -162,7 +162,7 @@ public final class ScenarioCleanupStage extends InternalDistStage {
          }
       }
 
-      deadline += stopTimeout/2;
+      deadline += stopTimeout / 2;
       for (Thread thread : threads) {
          if (!thread.isAlive()) continue;
          log.info("Stopping thread " + getThreadId(thread));

@@ -21,7 +21,7 @@ public class Infinispan51Operations extends InfinispanOperations implements InMe
 
    @Override
    public <K, V> InfinispanCache<K, V> getCache(String cacheName) {
-      AdvancedCache<K,V> cache = (AdvancedCache<K,V>) service.getCache(cacheName).getAdvancedCache();
+      AdvancedCache<K, V> cache = (AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache();
       if (service.isExplicitLocking(cache)) {
          return new ExplicitLockingCache<K, V>(service, cache);
       } else {

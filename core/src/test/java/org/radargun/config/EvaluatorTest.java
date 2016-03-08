@@ -14,7 +14,7 @@ public class EvaluatorTest {
       assertEvals("${custom.property:aDefaultVal}", "aDefaultVal");
    }
 
-   public void testWithDefaultAndReplacement(){
+   public void testWithDefaultAndReplacement() {
       System.setProperty("org.radargun.testWithDefaultAndReplacement", "nonDefaultValue");
       assertEvals("${org.radargun.testWithDefaultAndReplacement:aDefaultVal}", "nonDefaultValue");
    }
@@ -58,7 +58,7 @@ public class EvaluatorTest {
    public void testColons() {
       System.setProperty("org.radargun.testColons", "xxx");
       assertEvals("fo:o${org.radargun.testColons}bar:${org.radargun.testColons:yyy}bar:${org.radargun.noProperty:zzz}bar:foo",
-            "fo:oxxxbar:xxxbar:zzzbar:foo");
+         "fo:oxxxbar:xxxbar:zzzbar:foo");
    }
 
    public void testNegative() {

@@ -35,6 +35,8 @@ public class InfinispanHotrodService implements Lifecycle, InternalsExposition {
    protected RemoteCacheManager managerNoReturn;
    protected RemoteCacheManager managerForceReturn;
 
+   private volatile Field transportFactoryField = null;
+
    @ProvidesTrait
    public HotRodOperations createOperations() {
       return new HotRodOperations(this);
@@ -68,9 +70,6 @@ public class InfinispanHotrodService implements Lifecycle, InternalsExposition {
    public boolean isRunning() {
       return managerNoReturn != null && managerNoReturn.isStarted();
    }
-
-
-   private volatile Field transportFactoryField = null;
 
    protected TcpTransportFactory getTransportFactory(RemoteCacheManager manager) {
       try {

@@ -14,17 +14,17 @@ public class Infinispan71HotrodService extends Infinispan70HotrodService {
 
    @PropertyDelegate(prefix = "nearCaching.")
    protected NearCaching nearCachingConfig = new NearCaching();
-   
+
    protected ConfigurationBuilder getDefaultHotRodConfig() {
       ConfigurationBuilder cb = super.getDefaultHotRodConfig();
       cb.nearCache().mode(nearCachingConfig.mode).maxEntries(nearCachingConfig.maxEntries);
       return cb;
    }
-   
+
    public static class NearCaching {
       @Property(doc = "Near caching mode. Default is DISABLED.")
       protected NearCacheMode mode = NearCacheMode.DISABLED;
-      
+
       @Property(doc = "Maximum number or entires in near cache")
       protected int maxEntries = -1;
    }

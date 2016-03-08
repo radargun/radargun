@@ -11,11 +11,11 @@ import org.radargun.Operation;
 public interface ConditionalOperations {
    String TRAIT = ConditionalOperations.class.getSimpleName();
    // from performance perspective, executed and not executed conditional operation can have very different results
-   Operation PUT_IF_ABSENT =      Operation.register(TRAIT + ".PutIfAbsent");
-   Operation REMOVE =             Operation.register(TRAIT + ".Remove");
-   Operation REPLACE =            Operation.register(TRAIT + ".Replace");
-   Operation REPLACE_ANY =        Operation.register(TRAIT + ".ReplaceAny");
-   Operation GET_AND_REPLACE =    Operation.register(TRAIT + ".GetAndReplace");
+   Operation PUT_IF_ABSENT = Operation.register(TRAIT + ".PutIfAbsent");
+   Operation REMOVE = Operation.register(TRAIT + ".Remove");
+   Operation REPLACE = Operation.register(TRAIT + ".Replace");
+   Operation REPLACE_ANY = Operation.register(TRAIT + ".ReplaceAny");
+   Operation GET_AND_REPLACE = Operation.register(TRAIT + ".GetAndReplace");
 
    <K, V> Cache<K, V> getCache(String cacheName);
 

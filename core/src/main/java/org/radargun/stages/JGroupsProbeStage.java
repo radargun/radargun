@@ -1,19 +1,18 @@
 package org.radargun.stages;
 
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.radargun.DistStageAck;
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.utils.ReflexiveConverters;
 import org.radargun.utils.TimeConverter;
-
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Inspired by org.jgroups.tests.Probe.
@@ -33,7 +32,7 @@ public class JGroupsProbeStage extends AbstractDistStage {
    private int port = 7500;
 
    @Property(doc = "Maximum time to wait for query responses. Default is 60 seconds. Valid only when used in conjunction " +
-         "with expectedResponseCount parameter.", converter = TimeConverter.class)
+      "with expectedResponseCount parameter.", converter = TimeConverter.class)
    private long timeout = 60_000;
 
    @Property(doc = "Minimum number of responses to wait for. Default is -1 don't wait for responses.", optional = false)
@@ -81,7 +80,7 @@ public class JGroupsProbeStage extends AbstractDistStage {
          }
       } catch (IOException e) {
          String errorMessage = "Exception while performing multicast socket operation. Make sure 'enable_diagnostics' property of TP is enabled " +
-               "and correct diagnostics port is specified";
+            "and correct diagnostics port is specified";
          log.error(errorMessage, e);
          return errorResponse(errorMessage, e);
       } finally {
@@ -111,7 +110,7 @@ public class JGroupsProbeStage extends AbstractDistStage {
 
    protected static class ListConverter extends ReflexiveConverters.ListConverter {
       public ListConverter() {
-         super(new Class<?>[] { Query.class});
+         super(new Class<?>[] {Query.class});
       }
    }
 }

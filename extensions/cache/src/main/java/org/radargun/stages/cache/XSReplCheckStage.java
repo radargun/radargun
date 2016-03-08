@@ -19,7 +19,7 @@ import org.radargun.traits.Debugable;
 public class XSReplCheckStage extends CheckCacheDataStage {
 
    @Property(doc = "Backup value generator. By default, only main (default) cache is checked. " +
-         "If specified, backup caches will be checked too.", complexConverter = ValueGenerator.ComplexConverter.class)
+      "If specified, backup caches will be checked too.", complexConverter = ValueGenerator.ComplexConverter.class)
    protected ValueGenerator backupValueGenerator = null;
 
    @Property(doc = "Comma-separated list of all backup caches to be checked. Ignored if backup-value-generator is not specified.")

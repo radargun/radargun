@@ -14,15 +14,15 @@ import org.infinispan.configuration.global.GlobalConfiguration;
 
 /**
  * ConfigDumpHelper that uses Infinispan 6.0's own property dumping mechanism.
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- * 
+ *
  */
 public class ConfigDumpHelper60 extends ConfigDumpHelper {
 
    private ObjectName findCacheBean(MBeanServer mbeanServer, String domain, String managerName, String cacheName) throws MalformedObjectNameException {
       Set<ObjectInstance> beanObjs = mbeanServer.queryMBeans(new ObjectName(
-            String.format("%s:type=Cache,name=*,manager=\"%s\",component=Cache", domain, managerName)), null);
+         String.format("%s:type=Cache,name=*,manager=\"%s\",component=Cache", domain, managerName)), null);
       for (ObjectInstance beanObj : beanObjs) {
          String name = beanObj.getObjectName().getKeyProperty("name");
          if (name != null && (name.startsWith(cacheName) || name.startsWith("\"" + cacheName))) {

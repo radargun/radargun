@@ -24,8 +24,8 @@ import org.radargun.utils.Projections;
  * Keeps several buckets for response time ranges and stores number of requests falling into this range.
  * Does not differentiate between successful and error requests.
  *
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 @DefinitionElement(name = "histogram", doc = "Stores data required for producing histogram or percentiles.")
 public final class HistogramOperationStats implements OperationStats {
    @Property(doc = "Maximum value that could be recorded. Default is one hour.", converter = NanoTimeConverter.class)
@@ -42,16 +42,16 @@ public final class HistogramOperationStats implements OperationStats {
    public HistogramOperationStats() {
    }
 
-   @Init
-   public void init() {
-      if (histogram != null) throw new IllegalStateException("This histogram was already initialized!");
-      histogram = new org.HdrHistogram.Histogram(maxValue, digits);
-   }
-
    private HistogramOperationStats(AbstractHistogram histogram, long maxValue, int digits) {
       this.histogram = histogram;
       this.maxValue = maxValue;
       this.digits = digits;
+   }
+
+   @Init
+   public void init() {
+      if (histogram != null) throw new IllegalStateException("This histogram was already initialized!");
+      histogram = new org.HdrHistogram.Histogram(maxValue, digits);
    }
 
    @Override

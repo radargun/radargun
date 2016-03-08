@@ -71,9 +71,7 @@ public abstract class ReportDocument extends HtmlDocument {
       String resultFileName = "";
       if (presentedStatistics.contains(StatisticType.HISTOGRAM)) {
          final Histogram histogram = operationStats == null ? null : operationStats.getRepresentation(Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
-         if (histogram == null) {
-
-         } else {
+         if (histogram != null) {
             final String histogramFilename = getHistogramName(operationStats, operation, configurationName, cluster, iteration, node, presentedStatistics);
             chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
                @Override
@@ -165,29 +163,29 @@ public abstract class ReportDocument extends HtmlDocument {
                   MeanAndDev meanAndDev = operationStats.getRepresentation(MeanAndDev.class);
                   if (meanAndDev == null) return false;
                   chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), categoryName, subCategoryNumeric,
-                          subCategoryValue);
+                     subCategoryValue);
                   break;
                }
                case OPERATION_THROUGHPUT_GROSS: {
                   OperationThroughput throughput = operationStats.getRepresentation(OperationThroughput.class,
-                          TimeUnit.MILLISECONDS.toNanos(aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin()));
+                     TimeUnit.MILLISECONDS.toNanos(aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin()));
                   if (throughput == null) return false;
                   chart.addValue(throughput.gross, 0, categoryName, subCategoryNumeric, subCategoryValue);
                   break;
                }
                case OPERATION_THROUGHPUT_NET: {
                   OperationThroughput throughput = operationStats.getRepresentation(OperationThroughput.class,
-                          TimeUnit.MILLISECONDS.toNanos(aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin()));
+                     TimeUnit.MILLISECONDS.toNanos(aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin()));
                   if (throughput == null) return false;
                   chart.addValue(throughput.net, 0, categoryName, subCategoryNumeric, subCategoryValue);
                   break;
                }
                case DATA_THROUGHPUT: {
                   DataThroughput dataThroughput = operationStats.getRepresentation(DataThroughput.class,
-                          aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
+                     aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
                   if (dataThroughput == null) return false;
                   chart.addValue(dataThroughput.meanThroughput / (1024.0 * 1024.0), dataThroughput.deviation
-                          / (1024.0 * 1024.0), categoryName, subCategoryNumeric, subCategoryValue);
+                     / (1024.0 * 1024.0), categoryName, subCategoryNumeric, subCategoryValue);
                   break;
                }
             }
@@ -244,20 +242,20 @@ public abstract class ReportDocument extends HtmlDocument {
       String directory = this.directory.endsWith(File.separator) ? this.directory : this.directory + File.separator;
 
       if (createChart(
-              String.format("%s%s%s_%s%s_mean_dev.png", directory, File.separator, testName, operation, suffix),
-              clusterSize, operation, "Response time (ms)", ChartType.MEAN_AND_DEV))
+         String.format("%s%s%s_%s%s_mean_dev.png", directory, File.separator, testName, operation, suffix),
+         clusterSize, operation, "Response time (ms)", ChartType.MEAN_AND_DEV))
          generatedCharts.add("mean_dev");
       if (createChart(
-              String.format("%s%s%s_%s%s_throughput_gross.png", directory, File.separator, testName, operation, suffix),
-              clusterSize, operation, "Operations/sec", ChartType.OPERATION_THROUGHPUT_GROSS))
+         String.format("%s%s%s_%s%s_throughput_gross.png", directory, File.separator, testName, operation, suffix),
+         clusterSize, operation, "Operations/sec", ChartType.OPERATION_THROUGHPUT_GROSS))
          generatedCharts.add("throughput_gross");
       if (createChart(
-              String.format("%s%s%s_%s%s_throughput_net.png", directory, File.separator, testName, operation, suffix),
-              clusterSize, operation, "Operations/sec", ChartType.OPERATION_THROUGHPUT_NET))
+         String.format("%s%s%s_%s%s_throughput_net.png", directory, File.separator, testName, operation, suffix),
+         clusterSize, operation, "Operations/sec", ChartType.OPERATION_THROUGHPUT_NET))
          generatedCharts.add("throughput_net");
       if (createChart(
-              String.format("%s%s%s_%s%s_data_throughput.png", directory, File.separator, testName, operation, suffix),
-              clusterSize, operation, "MB/sec", ChartType.DATA_THROUGHPUT))
+         String.format("%s%s%s_%s%s_data_throughput.png", directory, File.separator, testName, operation, suffix),
+         clusterSize, operation, "MB/sec", ChartType.DATA_THROUGHPUT))
          generatedCharts.add("data_throughput");
    }
 
@@ -279,7 +277,7 @@ public abstract class ReportDocument extends HtmlDocument {
 
       for (Aggregation aggregation : aggregations) {
          createHistogramAndPercentileChart(aggregation.totalStats, operation, report.getConfiguration().name, report.getCluster().getClusterIndex(),
-                 aggregation.iteration.id, "total", presentedStatistics);
+            aggregation.iteration.id, "total", presentedStatistics);
       }
 
       if (configuration.generateNodeStats) {
@@ -288,7 +286,7 @@ public abstract class ReportDocument extends HtmlDocument {
                Statistics statistics = node >= aggregation.nodeStats.size() ? null : aggregation.nodeStats.get(node);
 
                createHistogramAndPercentileChart(statistics, operation, report.getConfiguration().name, report.getCluster().getClusterIndex(),
-                       aggregation.iteration.id, "node" + node, presentedStatistics);
+                  aggregation.iteration.id, "node" + node, presentedStatistics);
             }
             if (configuration.generateThreadStats) {
                int maxThreads = getMaxThreads(aggregations, node);
@@ -298,7 +296,7 @@ public abstract class ReportDocument extends HtmlDocument {
                      Statistics threadStats = nodeStats == null || nodeStats.size() <= thread ? null : nodeStats.get(thread);
 
                      createHistogramAndPercentileChart(threadStats, operation, report.getConfiguration().name, report.getCluster().getClusterIndex(),
-                             aggregation.iteration.id, "thread" + node + "_" + thread, presentedStatistics);
+                        aggregation.iteration.id, "thread" + node + "_" + thread, presentedStatistics);
                   }
                }
             }
@@ -566,7 +564,7 @@ public abstract class ReportDocument extends HtmlDocument {
       protected int histogramHeight = 600;
 
       @Property(doc = "Show response time at certain percentiles. Default is 95% and 99%.")
-      protected double[] percentiles = new double[]{95d, 99d};
+      protected double[] percentiles = new double[] {95d, 99d};
 
       @Property(doc = "Generate statistics for each node (expandable menu). Default is true.")
       protected boolean generateNodeStats = true;

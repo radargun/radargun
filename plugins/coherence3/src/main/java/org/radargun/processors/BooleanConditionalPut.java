@@ -20,8 +20,7 @@ public class BooleanConditionalPut extends ConditionalPut {
 
    @Override
    public Object process(InvocableMap.Entry entry) {
-      if (InvocableMapHelper.evaluateEntry(this.m_filter, entry))
-      {
+      if (InvocableMapHelper.evaluateEntry(this.m_filter, entry)) {
          entry.setValue(this.m_oValue, false);
          return Boolean.TRUE;
       }

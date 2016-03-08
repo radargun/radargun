@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-
 import javax.management.MBeanServer;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
@@ -43,6 +42,8 @@ public class Utils {
 
    // field to store the hotspot diagnostic MBean
    private static volatile Object hotspotMBean;
+   // field to store random seed
+   private static volatile Field randomSeedField = null;
 
    private Utils() {
    }
@@ -53,8 +54,7 @@ public class Utils {
       long remainingSecs = secs % 60;
       if (mins > 0) {
          return String.format("%d mins %d secs", mins, remainingSecs);
-      }
-      else {
+      } else {
          return String.format("%.3f secs", millis / 1000.0);
       }
    }
@@ -67,18 +67,17 @@ public class Utils {
       Runtime run = Runtime.getRuntime();
       StringBuilder memoryInfo = new StringBuilder();
       memoryInfo.append("Runtime free: ").append(kbString(run.freeMemory()))
-            .append("\nRuntime max:").append(kbString(run.maxMemory()))
-            .append("\nRuntime total:").append(kbString(run.totalMemory()));
+         .append("\nRuntime max:").append(kbString(run.maxMemory()))
+         .append("\nRuntime total:").append(kbString(run.totalMemory()));
       Iterator<MemoryPoolMXBean> iter = ManagementFactory.getMemoryPoolMXBeans().iterator();
-      while (iter.hasNext())
-      {
+      while (iter.hasNext()) {
          MemoryPoolMXBean item = iter.next();
          MemoryUsage usage = item.getUsage();
          memoryInfo.append("\nMX ").append(item.getName()).append("(").append(item.getType()).append("): ")
-               .append("used: ").append(kbString(usage.getUsed()))
-               .append(", init: ").append(kbString(usage.getInit()))
-               .append(", committed: ").append(kbString(usage.getCommitted()))
-               .append(", max: ").append(kbString(usage.getMax()));
+            .append("used: ").append(kbString(usage.getUsed()))
+            .append(", init: ").append(kbString(usage.getInit()))
+            .append(", committed: ").append(kbString(usage.getCommitted()))
+            .append(", max: ").append(kbString(usage.getMax()));
       }
       return memoryInfo.toString();
    }
@@ -175,10 +174,10 @@ public class Utils {
    }
 
    public static void deleteOnExitRecursive(File file) {
-       if (!file.exists()) return;
-       file.deleteOnExit();
-       if (!file.isDirectory()) return;
-       for (File f : file.listFiles()) deleteOnExitRecursive(f);
+      if (!file.exists()) return;
+      file.deleteOnExit();
+      if (!file.isDirectory()) return;
+      for (File f : file.listFiles()) deleteOnExitRecursive(f);
    }
 
    public static String getCodePath(Class<?> clazz) {
@@ -206,7 +205,7 @@ public class Utils {
       ArgsHolder.PluginParam pluginParam = ArgsHolder.getPluginParams().get(plugin);
       Properties properties = new Properties();
       File pluginDir = pluginParam != null && pluginParam.getPath() != null
-            ? new File(pluginParam.getPath()) : new File(Directories.PLUGINS_DIR, plugin);
+         ? new File(pluginParam.getPath()) : new File(Directories.PLUGINS_DIR, plugin);
       File confDir = new File(pluginDir, "conf");
       File file = new File(confDir, PROPERTIES_FILE);
       if (!file.exists()) {
@@ -348,7 +347,7 @@ public class Utils {
       InitHelper.init(instance);
       return instance;
    }
-   
+
    public static long string2Millis(String duration) {
       long durationMillis = 0;
       duration = duration.toUpperCase().trim();
@@ -406,7 +405,7 @@ public class Utils {
 
       if (!reportFile.exists()) {
          throw new IllegalStateException(reportFile.getAbsolutePath()
-               + " was deleted? Not allowed to delete report file during test run!");
+            + " was deleted? Not allowed to delete report file during test run!");
       } else {
          log.info("Report file '" + reportFile.getAbsolutePath() + "' created");
       }
@@ -421,12 +420,11 @@ public class Utils {
    }
 
    /**
-    * 
-    * Parse a string containing method names and String parameters. Multiple method names and
-    * parameters are separated by a ';'. Method names and parameters are separated by a ':'.
-    * 
-    * @return a Map with the method name as the key, and the String parameter as the value, or an
-    *         empty Map if <code>parameterString</code> is <code>null</code>
+    * Parse a string containing method names and String parameters. Multiple method names and parameters are separated
+    * by a ';'. Method names and parameters are separated by a ':'.
+    *
+    * @return a Map with the method name as the key, and the String parameter as the value, or an empty Map if
+    * <code>parameterString</code> is <code>null</code>
     */
    public static Map<String, String> parseParams(String parameterString) {
       Map<String, String> result = new HashMap<String, String>();
@@ -438,15 +436,12 @@ public class Utils {
       }
       return result;
    }
-   
+
    /**
-    * 
     * Invoke a public method with a String argument on an Object
-    * 
-    * @param object
-    *           the Object where the method is invoked
-    * @param properties
-    *           a Map where the public method name is the key, and the String parameter is the value
+    *
+    * @param object     the Object where the method is invoked
+    * @param properties a Map where the public method name is the key, and the String parameter is the value
     * @return the modified Object, or <code>null</code> if the field can't be changed
     */
    public static <T> T invokeMethodWithString(T object, Map<String, String> properties) {
@@ -469,7 +464,7 @@ public class Utils {
             if (hotspotMBean == null) {
                MBeanServer server = ManagementFactory.getPlatformMBeanServer();
                hotspotMBean =
-                     ManagementFactory.newPlatformMXBeanProxy(server, HOTSPOT_BEAN_NAME, HotSpotDiagnosticMXBean.class);
+                  ManagementFactory.newPlatformMXBeanProxy(server, HOTSPOT_BEAN_NAME, HotSpotDiagnosticMXBean.class);
             }
          }
       }
@@ -477,8 +472,6 @@ public class Utils {
       Method m = clazz.getMethod(HOTSPOT_BEAN_DUMP_METHOD, String.class, boolean.class);
       m.invoke(hotspotMBean, file, true);
    }
-
-   private static volatile Field randomSeedField = null;
 
    public static long getRandomSeed(Random random) {
       try {
@@ -501,11 +494,10 @@ public class Utils {
    }
 
    /**
-    * 
     * Sort and save properties to a file.
-    * 
+    *
     * @param props Properties
-    * @param file file
+    * @param file  file
     * @throws Exception
     */
    public static void saveSorted(Properties props, File file) throws Exception {
@@ -548,7 +540,7 @@ public class Utils {
          while ((line = br.readLine()) != null) {
             lines.add(line);
          }
-      } catch(IOException ex) {
+      } catch (IOException ex) {
          log.error("Error is thrown during file reading!", ex);
          throw new RuntimeException(ex);
       } finally {
@@ -598,7 +590,8 @@ public class Utils {
    }
 
    public static <T> T getArg(Object[] args, int arg, Class<T> clazz) {
-      if (args == null || args.length <= arg || !clazz.isInstance(args[arg])) throw new IllegalArgumentException(Arrays.toString(args));
+      if (args == null || args.length <= arg || !clazz.isInstance(args[arg]))
+         throw new IllegalArgumentException(Arrays.toString(args));
       return (T) args[arg];
    }
 

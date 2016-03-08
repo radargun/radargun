@@ -7,10 +7,10 @@ import org.radargun.stats.representation.MeanAndDev;
 import org.radargun.stats.representation.OperationThroughput;
 
 /**
-* Underlying statistical data gathered for single operation type.
-*
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * Underlying statistical data gathered for single operation type.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 @DefinitionElement(name = "default", doc = "Operations statistics with fixed memory footprint.")
 public class DefaultOperationStats implements OperationStats {
    private static final double INVERSE_NORMAL_95 = 1.96;
@@ -64,7 +64,7 @@ public class DefaultOperationStats implements OperationStats {
 
    public String toString() {
       return requests == 0 ? "requests=0" : String.format("requests=%d, responseTimeMax=%d, responseTimeSum=%d, errors=%d",
-                           requests, responseTimeMax, responseTimeSum, errors);
+         requests, responseTimeMax, responseTimeSum, errors);
    }
 
    @Override
@@ -74,8 +74,8 @@ public class DefaultOperationStats implements OperationStats {
       responseTimeSum += responseTime;
       // see http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm
       double delta = (double) responseTime - responseTimeMean;
-      responseTimeMean += delta/(double) requests;
-      responseTimeM2 += delta * ((double)responseTime - responseTimeMean);
+      responseTimeMean += delta / (double) requests;
+      responseTimeM2 += delta * ((double) responseTime - responseTimeMean);
    }
 
    @Override
@@ -88,9 +88,9 @@ public class DefaultOperationStats implements OperationStats {
       if (requests < 2) {
          return new BoxAndWhiskers(responseTimeMean, responseTimeMean, responseTimeMean, responseTimeMean, responseTimeMean);
       }
-      double stddev =  Math.sqrt(responseTimeM2 / (double) (requests - 1));
+      double stddev = Math.sqrt(responseTimeM2 / (double) (requests - 1));
       return new BoxAndWhiskers(responseTimeMean + INVERSE_NORMAL_95 * stddev, responseTimeMean + INVERSE_NORMAL_50 * stddev,
-            responseTimeMean, responseTimeMean - INVERSE_NORMAL_50 * stddev, responseTimeMean - INVERSE_NORMAL_95 * stddev);
+         responseTimeMean, responseTimeMean - INVERSE_NORMAL_50 * stddev, responseTimeMean - INVERSE_NORMAL_95 * stddev);
    }
 
    public MeanAndDev getMeanAndDev() {

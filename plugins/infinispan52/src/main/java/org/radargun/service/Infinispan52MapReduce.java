@@ -48,7 +48,7 @@ public class Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> extends InfinispanMa
       @Override
       public Task build() {
          MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask
-               = new MapReduceTask<KIn, VIn, KOut, VOut>(cache, distributedReducePhase, useIntermediateSharedCache);
+            = new MapReduceTask<KIn, VIn, KOut, VOut>(cache, distributedReducePhase, useIntermediateSharedCache);
          mapReduceTask.mappedWith(mapper).reducedWith(reducer).combinedWith(combiner);
          return new Task(mapReduceTask, collator);
       }

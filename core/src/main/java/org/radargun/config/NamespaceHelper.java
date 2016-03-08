@@ -1,21 +1,23 @@
 package org.radargun.config;
 
-import org.radargun.utils.Utils;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.radargun.utils.Utils;
+
 /**
  * Helper code for namespace-relate stuff.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class NamespaceHelper {
+public final class NamespaceHelper {
    private static Map<String, String> namespaceToJarMajorMinor = new HashMap<>();
    private static Map<File, String> codepathToToJarMajorMinor = new HashMap<>();
+
+   private NamespaceHelper() {}
 
    public static void registerNamespace(String namespace, File[] codepaths, String jarMinorMajor) {
       String prev = namespaceToJarMajorMinor.put(namespace, jarMinorMajor);

@@ -48,7 +48,7 @@ public class Infinispan52Lifecycle extends InfinispanPartitionableLifecycle {
             for (Object bridge : bridges) {
                if (channelField == null) {
                   channelField = bridge.getClass().getDeclaredField("channel");
-                  channelField.setAccessible(true);                  
+                  channelField.setAccessible(true);
                }
                JChannel bridgeChannel = (JChannel) channelField.get(bridge);
                if (bridgeChannel.isOpen()) {

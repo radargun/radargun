@@ -1,8 +1,8 @@
 package org.radargun.service;
 
-import org.radargun.traits.Streamable;
-
 import java.util.stream.Stream;
+
+import org.radargun.traits.Streamable;
 
 /**
  * @author Roman Macor &lt;rmacor@redhat.com&gt;

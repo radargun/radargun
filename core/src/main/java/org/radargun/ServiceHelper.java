@@ -16,13 +16,15 @@ import org.radargun.utils.Utils;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class ServiceHelper {
+public final class ServiceHelper {
    private static final Log log = LogFactory.getLog(ServiceHelper.class);
    private static final String SERVICE_PROPERTY_PREFIX = "service.";
 
    private static String currentPlugin;
    private static String currentConfigName;
    private static int currentSlaveIndex;
+
+   private ServiceHelper() {}
 
    public static String getPlugin() {
       return currentPlugin;

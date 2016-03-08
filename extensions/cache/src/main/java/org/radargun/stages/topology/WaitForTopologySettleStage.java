@@ -45,7 +45,7 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
          return successfulResponse();
       }
       long startTime = TimeService.currentTimeMillis();
-      for (;;) {
+      for (; ; ) {
          long now = TimeService.currentTimeMillis();
          if (now >= startTime + timeout) {
             return errorResponse("The topology has not settled within timeout.");
@@ -90,7 +90,7 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
             return false;
          }
          switch (event.getType()) {
-            case START: {
+            case START:
                if (finished <= 0) {
                   log.debugf("%s event has not finished: %s", eventName, event);
                   return false;
@@ -98,14 +98,11 @@ public class WaitForTopologySettleStage extends AbstractDistStage {
                   finished--;
                }
                break;
-            }
-            case END: {
+            case END:
                finished++;
                break;
-            }
-            case SINGLE: {
+            case SINGLE:
                // no op
-            }
          }
       }
       if (finished != 0) {

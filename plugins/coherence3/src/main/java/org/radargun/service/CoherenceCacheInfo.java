@@ -79,8 +79,8 @@ public class CoherenceCacheInfo implements CacheInformation {
                }
             }
             try {
-               AttributeList list = mBeanServer.getAttributes(new ObjectName(jmxCacheName), new String[] { "Units", "UnitFactor" } );
-               return ((Integer) ((Attribute) list.get(0)).getValue()) * ((Integer) ((Attribute)list.get(1)).getValue());
+               AttributeList list = mBeanServer.getAttributes(new ObjectName(jmxCacheName), new String[] {"Units", "UnitFactor"});
+               return ((Integer) ((Attribute) list.get(0)).getValue()) * ((Integer) ((Attribute) list.get(1)).getValue());
             } catch (Exception e) {
                log.warn("Failed to retrieve JMX info from object " + jmxCacheName + "\n" + e);
                return -1;

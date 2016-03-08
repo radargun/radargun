@@ -125,7 +125,7 @@ public class RemoteSlaveConnection {
             }
          } else if (slaveIndex >= slaves.length) {
             throw new IllegalArgumentException("Slave requests invalid slaveIndex "
-                  + slaveIndex + " (expected " + slaves.length + " slaves)");
+               + slaveIndex + " (expected " + slaves.length + " slaves)");
          }
          if (slaves[slaveIndex] == null) {
             if (uuid.getLeastSignificantBits() != 0 || uuid.getMostSignificantBits() != 0) {
@@ -136,7 +136,7 @@ public class RemoteSlaveConnection {
             RemoteSlaveConnection.SlaveRecord record = slaves[slaveIndex];
             if (!uuid.equals(record.uuid)) {
                throw new IllegalArgumentException(String.format("For slave %d expecting UUID %s but new generation (%s) has UUID %s",
-                     slaveIndex, record.uuid, socketChannel, uuid));
+                  slaveIndex, record.uuid, socketChannel, uuid));
             }
             record.channel = socketChannel;
          }
@@ -267,7 +267,7 @@ public class RemoteSlaveConnection {
             readBufferMap.put(socketChannel, replacer);
             if (log.isTraceEnabled())
                log.trace("Expected size(" + expectedSize + ")" + " is > ByteBuffer's capacity(" +
-                     byteBuffer.capacity() + ")" + ".Replacing " + byteBuffer + " with " + replacer);
+                  byteBuffer.capacity() + ")" + ".Replacing " + byteBuffer + " with " + replacer);
             byteBuffer = replacer;
          }
          if (log.isTraceEnabled())
@@ -407,5 +407,5 @@ public class RemoteSlaveConnection {
       }
    }
 
-   public static class Restart implements  Serializable {}
+   public static class Restart implements Serializable {}
 }

@@ -38,7 +38,7 @@ public class ProcessService {
    protected List<String> args = Collections.emptyList();
 
    @Property(doc = "Environment arguments. Empty by default.", converter = EnvsConverter.class)
-   protected Map<String,String> env = Collections.emptyMap();
+   protected Map<String, String> env = Collections.emptyMap();
 
    @Property(doc = "Current operating system. Default is UNIX.")
    protected String os = "unix";

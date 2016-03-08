@@ -31,7 +31,7 @@ import org.radargun.utils.Utils;
 
 /**
  * Executes a MapReduce Task against the cache.
- * 
+ *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 @SuppressWarnings("serial")
@@ -47,73 +47,73 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    private String mapperFqn;
 
    @Property(optional = true, doc = "A String in the form of "
-         + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
-         + " invoking a method on the Mapper Object. The method"
-         + " must be public and take a String parameter. The default is null.")
+      + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
+      + " invoking a method on the Mapper Object. The method"
+      + " must be public and take a String parameter. The default is null.")
    private String mapperParams = null;
 
    @Property(optional = false, doc = "Fully qualified class name of the "
-         + "org.infinispan.distexec.mapreduce.Reducer implementation to execute.")
+      + "org.infinispan.distexec.mapreduce.Reducer implementation to execute.")
    private String reducerFqn;
 
    @Property(optional = true, doc = "A String in the form of "
-         + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
-         + " invoking a method on the Reducer Object. The method"
-         + " must be public and take a String parameter. The default is null.")
+      + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
+      + " invoking a method on the Reducer Object. The method"
+      + " must be public and take a String parameter. The default is null.")
    private String reducerParams = null;
 
    @Property(optional = true, doc = "Fully qualified class name of the "
-         + "org.infinispan.distexec.mapreduce.Reducer implementation to use as a combiner.")
+      + "org.infinispan.distexec.mapreduce.Reducer implementation to use as a combiner.")
    private String combinerFqn;
 
    @Property(optional = true, doc = "A String in the form of "
-         + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
-         + " invoking a method on the Reducer Object used as a combiner. The method"
-         + " must be public and take a String parameter. The default is null.")
+      + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
+      + " invoking a method on the Reducer Object used as a combiner. The method"
+      + " must be public and take a String parameter. The default is null.")
    private String combinerParams = null;
 
    @Property(optional = true, doc = "Fully qualified class name of the "
-         + "org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.")
+      + "org.infinispan.distexec.mapreduce.Collator implementation to execute. The default is null.")
    private String collatorFqn = null;
 
    @Property(optional = true, doc = "A String in the form of "
-         + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
-         + " invoking a method on the Collator Object. The method"
-         + " must be public and take a String parameter. The default is null.")
+      + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
+      + " invoking a method on the Collator Object. The method"
+      + " must be public and take a String parameter. The default is null.")
    private String collatorParams = null;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
-         + "Reduce phase of the MapReduceTask is distributed. The default is true.")
+      + "Reduce phase of the MapReduceTask is distributed. The default is true.")
    private boolean distributeReducePhase = true;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
-         + "intermediate results of the MapReduceTask are shared. The default is true.")
+      + "intermediate results of the MapReduceTask are shared. The default is true.")
    private boolean useIntermediateSharedCache = true;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
-         + "final results of the MapReduceTask are stored in the cache. "
-         + "The collated object will be stored at key MAPREDUCE_RESULT_KEY. "
-         + "The result map will be stored in a cache named MAPREDUCE_RESULT_KEY. The default is false.")
+      + "final results of the MapReduceTask are stored in the cache. "
+      + "The collated object will be stored at key MAPREDUCE_RESULT_KEY. "
+      + "The result map will be stored in a cache named MAPREDUCE_RESULT_KEY. The default is false.")
    private boolean storeResultInCache = false;
 
    @Property(optional = true, doc = "Boolean value that determines if the "
-         + "final results of the MapReduceTask are written to the log of the "
-         + "first slave node. The default is false.")
+      + "final results of the MapReduceTask are written to the log of the "
+      + "first slave node. The default is false.")
    private boolean printResult = false;
 
    @Property(doc = "A timeout value for the remote communication that happens "
-         + "during a Map/Reduce task. The default is zero which means to wait forever.")
+      + "during a Map/Reduce task. The default is zero which means to wait forever.")
    private long timeout = 0;
 
    @Property(doc = "The java.util.concurrent.TimeUnit to use with the timeout "
-         + "property. The default is TimeUnit.MILLISECONDS.")
+      + "property. The default is TimeUnit.MILLISECONDS.")
    private TimeUnit unit = TimeUnit.MILLISECONDS;
 
    @Property(doc = "The number of times to execute the Map/Reduce task. The default is 10.")
    private int numExecutions = 10;
 
    @Property(doc = "The name of the key in the MasterState object that returns the total number of "
-         + "bytes processed by the Map/Reduce task. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
+      + "bytes processed by the Map/Reduce task. The default is RandomDataStage.RANDOMDATA_TOTALBYTES_KEY.")
    private String totalBytesKey = RandomDataStage.RANDOMDATA_TOTALBYTES_KEY;
 
    private Map<KOut, VOut> payloadMap = null;
@@ -165,7 +165,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          if (ack.numberOfResultKeys != null) {
             numberOfResultKeysResult.put(ack.getSlaveIndex(), new Report.SlaveResult(ack.numberOfResultKeys, false));
             test.addResult(testIteration, new Report.TestResult("Key count in Map/Reduce result map",
-                  numberOfResultKeysResult, "", false));
+               numberOfResultKeysResult, "", false));
          }
       }
 
@@ -199,7 +199,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
             if (prevPayloadMap != null) {
                if (prevPayloadMap.keySet().equals(payloadMap.keySet())
-                     && prevPayloadMap.entrySet().equals(payloadMap.entrySet())) {
+                  && prevPayloadMap.entrySet().equals(payloadMap.entrySet())) {
                   log.info(i + ": Got the same results for two Map/Reduce runs");
                } else {
                   log.error(i + ": Did not get the same results for two Map/Reduce runs");
@@ -243,7 +243,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
    private Task<KOut, VOut, R> configureMapReduceTask() {
       MapReducer.Builder<KOut, VOut, R> builder = mapReducer.builder(cacheName)
-            .mapper(mapperFqn, Utils.parseParams(mapperParams)).reducer(reducerFqn, Utils.parseParams(reducerParams));
+         .mapper(mapperFqn, Utils.parseParams(mapperParams)).reducer(reducerFqn, Utils.parseParams(reducerParams));
 
       log.info("--------------------");
       String mapReducerName = mapReducer.getClass().getName();
@@ -302,7 +302,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
             durationNanos = TimeService.nanoTime() - start;
             stats.registerRequest(durationNanos, MapReducer.MAPREDUCE_COLLATOR);
             log.info("MapReduce task with Collator completed in "
-                  + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+               + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
             ack.setStats(stats);
             if (printResult) {
                log.info("MapReduce result: " + payloadObject.toString());
@@ -317,7 +317,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                if (storeResultInCache) {
                   log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
                   log.info("Result map contains '" + cacheInformation.getCache(MAPREDUCE_RESULT_KEY).getTotalSize()
-                        + "' keys.");
+                     + "' keys.");
                   ack.setNumberOfResultKeys(cacheInformation.getCache(MAPREDUCE_RESULT_KEY).getTotalSize());
                   ack.setStats(stats);
                   if (printResult && iterable != null) {
@@ -358,7 +358,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
          log.error("executeMapReduceTask() returned an exception", e);
       }
       log.infof("%d nodes were used. %d entries on this node", clustered.getMembers().size(), cacheInformation
-            .getCache(cacheName).getLocallyStoredSize());
+         .getCache(cacheName).getLocallyStoredSize());
       log.info("--------------------");
 
       return ack;

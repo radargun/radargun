@@ -9,23 +9,23 @@ import java.util.List;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ListBuilder<T> {
-    private List<T> list;
+   private List<T> list;
 
-    public ListBuilder(List<T> list) {
-        this.list = list;
-    }
+   public ListBuilder(List<T> list) {
+      this.list = list;
+   }
 
-    public ListBuilder<T> add(T element) {
-        list.add(element);
-        return this;
-    }
+   public ListBuilder<T> add(T element) {
+      list.add(element);
+      return this;
+   }
 
-    public ListBuilder<T> addAll(Collection<T> elements) {
-        list.addAll(elements);
-        return this;
-    }
+   public ListBuilder<T> addAll(Collection<T> elements) {
+      list.addAll(elements);
+      return this;
+   }
 
-    public List<T> build() {
-        return list;
-    }
+   public List<T> build() {
+      return list;
+   }
 }

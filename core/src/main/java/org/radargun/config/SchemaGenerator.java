@@ -1,16 +1,5 @@
 package org.radargun.config;
 
-import org.radargun.utils.Utils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -18,6 +7,19 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+
+import org.radargun.utils.Utils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * Base class for generators of schemas.
@@ -106,7 +108,7 @@ public abstract class SchemaGenerator {
       if (clazz.getSuperclass() != Object.class) {
          superType = generateClass(clazz.getSuperclass());
       }
-      NamespaceHelper.Coords coords = NamespaceHelper.getCoords(namespaceRoot, clazz,  omitPrefix);
+      NamespaceHelper.Coords coords = NamespaceHelper.getCoords(namespaceRoot, clazz, omitPrefix);
       if (coords == null || coords.namespace.equals(this.namespace)) {
          String source = Utils.getCodePath(clazz);
          if (source == null) source = "unknown source";
@@ -115,7 +117,7 @@ public abstract class SchemaGenerator {
          schema.appendChild(doc.createComment("From " + source));
 
          Element typeElement = createComplexType(typeName, superType == null ? null : superType.toString(), true,
-               Modifier.isAbstract(clazz.getModifiers()), findDocumentation(clazz));
+            Modifier.isAbstract(clazz.getModifiers()), findDocumentation(clazz));
          Element propertiesSequence = createSequence(typeElement);
          for (Map.Entry<String, Path> property : PropertyHelper.getDeclaredProperties(clazz, true, true)) {
             generateProperty(typeElement, propertiesSequence, property.getKey(), property.getValue(), true);
@@ -242,7 +244,7 @@ public abstract class SchemaGenerator {
                      extended = generateComplexType(valueProperty.getTargetType(), valueProperty.getTargetAnnotation().complexConverter());
                      subtypeProperties.remove("");
                   }
-                  Element subtypeType = createComplexType(subtypeName, extended == null ? null: extended.toString(), true, false, de.doc());
+                  Element subtypeType = createComplexType(subtypeName, extended == null ? null : extended.toString(), true, false, de.doc());
                   Element subtypeSequence = createSequence(subtypeType);
                   for (Map.Entry<String, Path> property : subtypeProperties.entrySet()) {
                      if (property.getKey().isEmpty()) {
@@ -265,7 +267,7 @@ public abstract class SchemaGenerator {
    }
 
    protected XmlType generateSimpleType(Class<?> type,
-                                       Class<? extends Converter<?>> converterClass) {
+                                        Class<? extends Converter<?>> converterClass) {
       String typeName = class2xmlId(type);
       if (!DefaultConverter.class.equals(converterClass)) {
          typeName += "-converted-by-" + class2xmlId(converterClass);
@@ -293,7 +295,7 @@ public abstract class SchemaGenerator {
             converter = ctor.newInstance();
          } catch (Exception e) {
             System.err.printf("Cannot instantiate converter service %s: %s",
-                    converterClass.getName(), e.getMessage());
+               converterClass.getName(), e.getMessage());
             return STRING_TYPE;
          }
          Element propertyPattern = doc.createElementNS(NS_XS, XS_PATTERN);
@@ -494,6 +496,7 @@ public abstract class SchemaGenerator {
       doc.appendChild(schema);
       return schema;
    }
+
    /**
     * Generates scheme file
     */

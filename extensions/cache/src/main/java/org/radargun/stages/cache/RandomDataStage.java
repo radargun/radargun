@@ -38,7 +38,7 @@ import org.radargun.utils.Utils;
  * The amount of free memory on each node will be calculated and then used to determine the number
  * of values that are written by the node.
  * </p>
- * 
+ *
  * <p>
  * To add a precise amount of data to the cache, you need to be aware of the storage overhead. For a
  * byte array, each value needs an additional 152 bytes. When <code>stringData</code> is enabled,
@@ -55,44 +55,44 @@ public class RandomDataStage extends AbstractDistStage {
    public static final String RANDOMDATA_CLUSTER_WORDCOUNT_KEY = "randomDataClusterWordcount";
 
    @Property(doc = "The seed to use for the java.util.Random object. "
-         + "The default is the return value of Calendar.getInstance().getWeekYear().")
+      + "The default is the return value of Calendar.getInstance().getWeekYear().")
    private long randomSeed = Calendar.getInstance().getWeekYear();
 
    @Property(doc = "The size of the values to put into the cache. The default size is 1MB (1024 * 1024).")
    private int valueSize = 1024 * 1024;
 
    @Property(doc = "The number of values of valueSize to write to the cache. "
-         + "Either valueCount or ramPercentageDataSize should be specified, but not both.")
+      + "Either valueCount or ramPercentageDataSize should be specified, but not both.")
    private long valueCount = -1;
 
    @Property(doc = "A double that represents the percentage of the total Java heap "
-         + "used to determine the amount of data to put into the cache. "
-         + "Either valueCount or ramPercentageDataSize should be specified, but not both.")
+      + "used to determine the amount of data to put into the cache. "
+      + "Either valueCount or ramPercentageDataSize should be specified, but not both.")
    private double ramPercentage = -1;
 
    @Property(doc = "The name of the bucket where keys are written. The default is null.")
    private String bucket = null;
 
    @Property(doc = "If true, then String objects with printable characters are written to the cache."
-         + "The default is false")
+      + "The default is false")
    private boolean stringData = false;
 
    @Property(doc = "If true, then the time for each put operation is written to the logs. The default is false.")
    private boolean printWriteStatistics = false;
 
    @Property(doc = "If true, then the random word generator selects a word from a pre-defined list. "
-         + "The default is false.")
+      + "The default is false.")
    private boolean limitWordCount = false;
 
    @Property(doc = "The maximum number of words to generate in the pre-defined list of words used with limitWordCount."
-         + "The default is 100.")
+      + "The default is 100.")
    private int maxWordCount = 100;
 
    @Property(doc = "The maximum number of characters allowed in a word. The default is 20.")
    private int maxWordLength = 20;
 
    @Property(doc = "If false, then each node in the cluster generates a list of maxWordCount words. "
-         + "If true, then each node in the cluster shares the same list of words. The default is false.")
+      + "If true, then each node in the cluster shares the same list of words. The default is false.")
    private boolean shareWords = false;
 
    /*
@@ -100,13 +100,13 @@ public class RandomDataStage extends AbstractDistStage {
     * http://infinispan.blogspot.com/2013/07/lower-memory-overhead-in-infinispan.html
     */
    @Property(doc = "The bytes used over the size of the key and value when "
-         + "putting to the cache. By default the stage retrieves the value from cache wrapper automatically.")
+      + "putting to the cache. By default the stage retrieves the value from cache wrapper automatically.")
    private int valueByteOverhead = -1;
 
    @Property(doc = "The number of bytes to write to the cache when the valueByteOverhead, "
-         + "stringData, and valueSize are taken into account. The code assumes this is an "
-         + "even multiple of valueSize plus valueByteOverhead. If stringData is true, then "
-         + "the code assumes this is an even multiple of (2 * valueSize) plus valueByteOverhead.")
+      + "stringData, and valueSize are taken into account. The code assumes this is an "
+      + "even multiple of valueSize plus valueByteOverhead. If stringData is true, then "
+      + "the code assumes this is an even multiple of (2 * valueSize) plus valueByteOverhead.")
    private long targetMemoryUse = -1;
 
    @Property(doc = "The number of times to retry a put if it fails. Default is 10.")
@@ -130,12 +130,12 @@ public class RandomDataStage extends AbstractDistStage {
    private HashMap<String, Integer> wordCount = new HashMap<String, Integer>();
 
    /**
-    * 
+    *
     * Fills a multi-dimensional array with randomly generated words. The first dimension of the
     * array is based on the length of the word in characters, and runs from 1 to maxWordLength.
     * Dividing the wordCount by maxWordLength determines how many words of each length are
     * generated.
-    * 
+    *
     * @param wordCount
     *           the total number of words to generate
     * @param maxWordLength
@@ -226,7 +226,7 @@ public class RandomDataStage extends AbstractDistStage {
          if (targetMemoryUse > 0) {
             if (targetMemoryUse % valueSizeWithOverhead != 0) {
                log.warn("The supplied value for targetMemoryUse (" + targetMemoryUse
-                     + ") is not evenly divisible by the value size plus byte overhead (" + valueSizeWithOverhead + ")");
+                  + ") is not evenly divisible by the value size plus byte overhead (" + valueSizeWithOverhead + ")");
             }
             totalPutCount = targetMemoryUse / valueSizeWithOverhead;
          }
@@ -236,7 +236,7 @@ public class RandomDataStage extends AbstractDistStage {
           * correct number of values are written to the cache
           */
          if ((totalPutCount % slaveState.getClusterSize() != 0)
-               && slaveState.getSlaveIndex() < (totalPutCount % slaveState.getClusterSize())) {
+            && slaveState.getSlaveIndex() < (totalPutCount % slaveState.getClusterSize())) {
             nodePutCount++;
          }
       }
@@ -282,7 +282,7 @@ public class RandomDataStage extends AbstractDistStage {
                   stats.registerRequest(durationNanos, BasicOperations.PUT);
                   if (printWriteStatistics) {
                      log.info("Put on slave" + slaveState.getSlaveIndex() + " took "
-                           + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+                        + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
                   }
                   success = true;
                   break;
@@ -293,7 +293,7 @@ public class RandomDataStage extends AbstractDistStage {
             }
             if (!success) {
                return errorResponse("Failed to insert entry into cache",
-                     new RuntimeException(String.format("Failed to insert entry %d times.", putRetryCount)));
+                  new RuntimeException(String.format("Failed to insert entry %d times.", putRetryCount)));
             }
 
             if (stringData) {
@@ -307,11 +307,11 @@ public class RandomDataStage extends AbstractDistStage {
          stats.end();
          System.gc();
          log.info("Memory - free: " + Utils.kbString(runtime.freeMemory()) + " - max: "
-               + Utils.kbString(runtime.maxMemory()) + "- total: " + Utils.kbString(runtime.totalMemory()));
+            + Utils.kbString(runtime.maxMemory()) + "- total: " + Utils.kbString(runtime.totalMemory()));
          log.debug("nodePutCount = " + nodePutCount + "; bytesWritten = " + bytesWritten + "; targetMemoryUse = "
-               + targetMemoryUse + "; countOfWordsInData = " + countOfWordsInData);
+            + targetMemoryUse + "; countOfWordsInData = " + countOfWordsInData);
          return new DataInsertAck(slaveState, nodePutCount, cacheInformation.getCache(null).getLocallyStoredSize(),
-               bytesWritten, targetMemoryUse, countOfWordsInData, wordCount, stats);
+            bytesWritten, targetMemoryUse, countOfWordsInData, wordCount, stats);
       } catch (Exception e) {
          return errorResponse("An exception occurred", e);
       } finally {
@@ -369,9 +369,9 @@ public class RandomDataStage extends AbstractDistStage {
    }
 
    /**
-    * 
+    *
     * Randomly selects a random length word based on the words array defined above
-    * 
+    *
     * @param maxLength
     *           the maximum length of the word
     * @return the word as a String whose length may be less than <code>maxLength</code>
@@ -394,9 +394,9 @@ public class RandomDataStage extends AbstractDistStage {
    }
 
    /**
-    * 
+    *
     * Generates a random length "word" by randomly selecting single and multi-byte characters
-    * 
+    *
     * @param maxLength
     *           the maximum length of the word
     * @param randomLength
@@ -435,7 +435,7 @@ public class RandomDataStage extends AbstractDistStage {
       if (ramPercentage > 0) {
          if (stringData) {
             log.info("Filled cache with String objects totaling " + Math.round(ramPercentage * 100)
-                  + "% of the Java heap");
+               + "% of the Java heap");
          } else {
             log.info("Filled cache with byte arrays totaling " + Math.round(ramPercentage * 100) + "% of the Java heap");
          }
@@ -450,10 +450,10 @@ public class RandomDataStage extends AbstractDistStage {
       if (valueCount > 0) {
          if (stringData) {
             log.info("Filled cache with " + Utils.kbString((valueSize * 2) * valueCount) + " of " + valueSize
-                  + " character String objects");
+               + " character String objects");
          } else {
             log.info("Filled cache with " + Utils.kbString(valueSize * valueCount) + " of " + Utils.kbString(valueSize)
-                  + " byte arrays");
+               + " byte arrays");
          }
       }
 
@@ -488,7 +488,7 @@ public class RandomDataStage extends AbstractDistStage {
          totalValues += ack.nodePutCount;
          totalBytes += ack.bytesWritten;
          String logInfo = "Slave " + ack.getSlaveIndex() + " wrote " + ack.nodePutCount
-               + " values to the cache with a total size of " + Utils.kbString(ack.bytesWritten);
+            + " values to the cache with a total size of " + Utils.kbString(ack.bytesWritten);
          if (ramPercentage > 0) {
             logInfo += "; targetMemoryUse = " + Utils.kbString(ack.targetMemoryUse);
             nodeTargetMemoryUseResult.put(ack.getSlaveIndex(), new Report.SlaveResult(Long.toString(ack.targetMemoryUse), false));
@@ -521,17 +521,17 @@ public class RandomDataStage extends AbstractDistStage {
 
       masterState.put(RANDOMDATA_TOTALBYTES_KEY, totalBytes);
       test.addResult(
-            testIteration,
-            new Report.TestResult("Kilobytes written per node", nodeBytesWritten, Utils.kbString(totalBytes), false));
+         testIteration,
+         new Report.TestResult("Kilobytes written per node", nodeBytesWritten, Utils.kbString(totalBytes), false));
 
       test.addResult(testIteration, new Report.TestResult("Key count per node", nodeKeyCountsResult, "", false));
       if (!nodeTargetMemoryUseResult.isEmpty()) {
          test.addResult(testIteration, new Report.TestResult("Target memory use per node", nodeTargetMemoryUseResult,
-               Utils.kbString(totalBytes), false));
+            Utils.kbString(totalBytes), false));
       }
       if (!nodeCountOfWordsInDataResult.isEmpty()) {
          test.addResult(testIteration, new Report.TestResult("Count of words in data per node",
-               nodeCountOfWordsInDataResult, Long.toString(totalNodeWordCount), false));
+            nodeCountOfWordsInDataResult, Long.toString(totalNodeWordCount), false));
       }
 
       return StageResult.SUCCESS;
@@ -547,7 +547,7 @@ public class RandomDataStage extends AbstractDistStage {
       final Statistics nodePutStats;
 
       private DataInsertAck(SlaveState slaveState, long nodePutCount, long nodeKeyCount, long bytesWritten,
-            long targetMemoryUse, long countOfWordsInData, Map<String, Integer> wordCount, Statistics nodePutStats) {
+                            long targetMemoryUse, long countOfWordsInData, Map<String, Integer> wordCount, Statistics nodePutStats) {
          super(slaveState);
          this.nodePutCount = nodePutCount;
          this.nodeKeyCount = nodeKeyCount;

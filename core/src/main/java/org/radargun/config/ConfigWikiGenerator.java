@@ -10,7 +10,10 @@ import org.radargun.Stage;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class ConfigWikiGenerator {
+public final class ConfigWikiGenerator {
+
+   private ConfigWikiGenerator() {}
+
    public static void main(String[] args) {
       for (Map.Entry<String, Map<String, Class<? extends Stage>>> pair : StageHelper.getStages().entrySet()) {
          String namespace = pair.getKey();
@@ -23,7 +26,7 @@ public class ConfigWikiGenerator {
                Property propertyAnnotation = property.getValue().getTargetAnnotation();
                if (propertyAnnotation.readonly()) continue;
                System.out.println("* " + property.getKey()
-                     + (propertyAnnotation.optional() ? " [optional]" : " [mandatory]") + ": " + propertyAnnotation.doc());
+                  + (propertyAnnotation.optional() ? " [optional]" : " [mandatory]") + ": " + propertyAnnotation.doc());
             }
             System.out.println();
          }

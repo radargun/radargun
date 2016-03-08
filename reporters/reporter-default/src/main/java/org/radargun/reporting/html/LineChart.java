@@ -41,7 +41,7 @@ public class LineChart extends ComparisonChart {
    @Override
    protected JFreeChart createChart() {
       JFreeChart chart = ChartFactory.createXYLineChart(null, domainLabel, rangeLabel,
-            dataset, PlotOrientation.VERTICAL, true, false, false);
+         dataset, PlotOrientation.VERTICAL, true, false, false);
       DeviationRenderer renderer = new DeviationRenderer();
       renderer.setAlpha(0.2f);
       chart.getXYPlot().setRenderer(renderer);

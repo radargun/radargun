@@ -7,9 +7,9 @@ import org.infinispan.affinity.KeyAffinityService;
 import org.infinispan.affinity.KeyAffinityServiceFactory;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
-import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.stages.cache.generators.KeyGenerator;
 
 /**
  * A key generator using a key affinity service. All keys produced by this key generator

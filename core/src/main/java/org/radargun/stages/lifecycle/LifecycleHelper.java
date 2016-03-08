@@ -21,11 +21,11 @@ import org.radargun.utils.TimeService;
  */
 public class LifecycleHelper {
 
+   private static final Log log = LogFactory.getLog(LifecycleHelper.class);
    protected static final String LIFECYCLE = "Lifecycle";
 
-   private LifecycleHelper() {}
-   
-   private static final Log log = LogFactory.getLog(LifecycleHelper.class);
+   private LifecycleHelper() {
+   }
 
    /**
     * Starts the service.
@@ -64,7 +64,7 @@ public class LifecycleHelper {
             int expectedNumberOfSlaves = expectedSlaves != null ? expectedSlaves : slaveState.getGroupSize();
 
             long clusterFormationDeadline = TimeService.currentTimeMillis() + clusterFormationTimeout;
-            for (;;) {
+            for (; ; ) {
                Collection<Clustered.Member> members = clustered.getMembers();
                if (members == null || members.size() != expectedNumberOfSlaves) {
                   String msg = "Number of members=" + members + " is not the one expected: " + expectedNumberOfSlaves;

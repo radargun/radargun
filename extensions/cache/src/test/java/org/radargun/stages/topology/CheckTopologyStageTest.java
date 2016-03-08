@@ -30,7 +30,7 @@ import static org.testng.Assert.*;
  * @author Matej Cimbora
  */
 @Test
-@PowerMockIgnore( {"javax.management.*"})
+@PowerMockIgnore({"javax.management.*"})
 @PrepareForTest(TimeService.class)
 public class CheckTopologyStageTest extends PowerMockTestCase {
 

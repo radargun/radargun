@@ -1,13 +1,13 @@
 package org.radargun.query;
 
-import org.hibernate.search.annotations.Indexed;
-import org.hibernate.search.annotations.IndexedEmbedded;
-import org.infinispan.protostream.MessageMarshaller;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.search.annotations.Indexed;
+import org.hibernate.search.annotations.IndexedEmbedded;
+import org.infinispan.protostream.MessageMarshaller;
 
 /**
  * @author Matej Cimbora
@@ -50,11 +50,11 @@ public class ComposedObject implements Serializable {
    @Override
    public String toString() {
       return "ComposedObject{" +
-            "textObject=" + textObject +
-            ", numberObject=" + numberObject +
-            ", textObjectList=" + textObjectList +
-            ", numberObjectList=" + numberObjectList +
-            '}';
+         "textObject=" + textObject +
+         ", numberObject=" + numberObject +
+         ", textObjectList=" + textObjectList +
+         ", numberObjectList=" + numberObjectList +
+         '}';
    }
 
    public static class Marshaller implements MessageMarshaller<ComposedObject> {
@@ -64,9 +64,9 @@ public class ComposedObject implements Serializable {
       @Override
       public ComposedObject readFrom(ProtoStreamReader reader) throws IOException {
          return new ComposedObject(reader.readObject("textObject", TextObject.class),
-                                   reader.readObject("numberObject", NumberObject.class),
-                                   reader.readCollection("textObjectList", new ArrayList<TextObject>(), TextObject.class),
-                                   reader.readCollection("numberObjectList", new ArrayList<NumberObject>(), NumberObject.class));
+            reader.readObject("numberObject", NumberObject.class),
+            reader.readCollection("textObjectList", new ArrayList<TextObject>(), TextObject.class),
+            reader.readCollection("numberObjectList", new ArrayList<NumberObject>(), NumberObject.class));
       }
 
       @Override

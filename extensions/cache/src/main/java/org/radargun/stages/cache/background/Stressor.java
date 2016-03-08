@@ -6,15 +6,15 @@ import org.radargun.stats.DefaultOperationStats;
 import org.radargun.stats.SynchronizedStatistics;
 
 /**
-* Stressor thread running in parallel to many stages. Its behavior is specified by plugging in specific
-* {@link org.radargun.stages.cache.background.Logic} implementation.
-*
-* @See org.radargun.stages.cache.background.LegacyLogic
-* @See org.radargun.stages.cache.background.PrivateLogLogic
-* @See org.radargun.stages.cache.background.SharedLogLogic
-*
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * Stressor thread running in parallel to many stages. Its behavior is specified by plugging in specific
+ * {@link org.radargun.stages.cache.background.Logic} implementation.
+ *
+ * @See org.radargun.stages.cache.background.LegacyLogic
+ * @See org.radargun.stages.cache.background.PrivateLogLogic
+ * @See org.radargun.stages.cache.background.SharedLogLogic
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 class Stressor extends Thread {
 
    private static final Log log = LogFactory.getLog(Stressor.class);
@@ -67,7 +67,7 @@ class Stressor extends Thread {
 
    public String getStatus() {
       return String.format("%s [id=%d, terminated=%s]: %s [%s]", getName(), id, terminate,
-            logic.getClass().getSimpleName(), logic.getStatus());
+         logic.getClass().getSimpleName(), logic.getStatus());
    }
 
    public Logic getLogic() {

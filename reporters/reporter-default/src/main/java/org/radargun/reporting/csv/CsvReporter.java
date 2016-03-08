@@ -50,7 +50,7 @@ public class CsvReporter implements Reporter {
    private boolean computeTotal = true;
 
    @Property(doc = "Compute response times at certain percentiles. Default is 95% and 99%.")
-   protected double[] percentiles = new double[] { 95d, 99d };
+   protected double[] percentiles = new double[] {95d, 99d};
 
    @Override
    public void run(Collection<Report> reports) {
@@ -85,7 +85,7 @@ public class CsvReporter implements Reporter {
                }
             }
             if (computeTotal && aggregated != null) {
-               Map<String,OperationStats> operationStats = aggregated.getOperationsStats();
+               Map<String, OperationStats> operationStats = aggregated.getOperationsStats();
                Map<String, String> rowData = new HashMap<String, String>();
                rows.add(rowData);
                for (Map.Entry<String, OperationStats> os : operationStats.entrySet()) {
@@ -146,7 +146,7 @@ public class CsvReporter implements Reporter {
             summary.merge(other);
          }
       }
-      Map<String,OperationStats> operationStats = summary.getOperationsStats();
+      Map<String, OperationStats> operationStats = summary.getOperationsStats();
       Map<String, String> rowData = new HashMap<String, String>();
       rows.add(rowData);
       for (Map.Entry<String, OperationStats> os : operationStats.entrySet()) {
@@ -282,10 +282,12 @@ public class CsvReporter implements Reporter {
          } catch (IOException e) {
             log.error("Failed to create timeline report for category " + valueCategory, e);
          } finally {
-            if (writer != null) try {
-               writer.close();
-            } catch (IOException e) {
-               log.error("Failed to close", e);
+            if (writer != null) {
+               try {
+                  writer.close();
+               } catch (IOException e) {
+                  log.error("Failed to close", e);
+               }
             }
          }
       }

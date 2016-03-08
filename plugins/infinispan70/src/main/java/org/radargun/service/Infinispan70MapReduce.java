@@ -37,15 +37,15 @@ public class Infinispan70MapReduce<KIn, VIn, KOut, VOut, R> extends Infinispan53
 
       @Override
       public Task build() {
-         InfinispanMapReduce<KIn,VIn,KOut,VOut,R>.Task task =  super.build();
+         InfinispanMapReduce<KIn, VIn, KOut, VOut, R>.Task task = super.build();
          return new Task(task.mapReduceTask, task.collator, resultCacheName);
       }
    }
 
-   protected class Task extends InfinispanMapReduce<KIn,VIn,KOut,VOut,R>.Task {
+   protected class Task extends InfinispanMapReduce<KIn, VIn, KOut, VOut, R>.Task {
       protected final String resultCacheName;
 
-      public Task(MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask, Collator<KOut,VOut,R> collator, String resultCacheName) {
+      public Task(MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask, Collator<KOut, VOut, R> collator, String resultCacheName) {
          super(mapReduceTask, collator);
          this.resultCacheName = resultCacheName;
       }

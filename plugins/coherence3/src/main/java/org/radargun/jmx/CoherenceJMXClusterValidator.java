@@ -13,11 +13,11 @@ import org.radargun.logging.LogFactory;
 import org.radargun.utils.TimeService;
 
 /**
- * 
+ *
  * JMXClusterValidator for Oracle Coherence
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- * 
+ *
  */
 public class CoherenceJMXClusterValidator implements JMXClusterValidator {
    private static final Log log = LogFactory.getLog(CoherenceJMXClusterValidator.class);
@@ -87,7 +87,7 @@ public class CoherenceJMXClusterValidator implements JMXClusterValidator {
          ObjectName clusterObj = new ObjectName(OBJ_CLUSTER);
          Integer clusterSize = (Integer) connection.getAttribute(clusterObj, ATTR_CLUSTER_SIZE);
          String members = Arrays.asList((String[]) connection.getAttribute(clusterObj, ATTR_MEMBERS)).toString();
-         return new Object[] { members, clusterSize };
+         return new Object[] {members, clusterSize};
       }
 
    }
@@ -97,7 +97,7 @@ public class CoherenceJMXClusterValidator implements JMXClusterValidator {
 
    @Override
    public void init(List<InetSocketAddress> slaveAddresses, long jmxConnectionTimeout, String prop1, String prop2,
-         String prop3) {
+                    String prop3) {
       this.endpoints = slaveAddresses;
       this.jmxConnectionTimeout = jmxConnectionTimeout;
    }

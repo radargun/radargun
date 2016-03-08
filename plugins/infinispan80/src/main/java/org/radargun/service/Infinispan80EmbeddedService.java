@@ -1,11 +1,11 @@
 package org.radargun.service;
 
+import java.util.concurrent.ForkJoinPool;
+
 import org.radargun.Service;
 import org.radargun.config.Destroy;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.Utils;
-
-import java.util.concurrent.ForkJoinPool;
 
 /**
  * @author Matej Cimbora

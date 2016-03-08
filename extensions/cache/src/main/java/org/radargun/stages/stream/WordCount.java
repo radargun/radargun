@@ -22,8 +22,8 @@ public class WordCount implements StreamStage.StreamFunction {
    @Override
    public Object apply(Stream stream) {
       Object result = stream.map((Serializable & Function<Map.Entry<String, String>, String[]>) e -> e.getValue().split("[\\p{Punct}\\s&&[^'-]]+")).
-              flatMap((Serializable & Function<String[], Stream<String>>) Arrays::stream).
-              collect(serializableCollector(() -> Collectors.groupingBy(Function.identity(), Collectors.counting())));
+         flatMap((Serializable & Function<String[], Stream<String>>) Arrays::stream).
+         collect(serializableCollector(() -> Collectors.groupingBy(Function.identity(), Collectors.counting())));
       this.result = (Map<Object, Object>) result;
       return result;
    }
@@ -55,15 +55,15 @@ public class WordCount implements StreamStage.StreamFunction {
       private final Supplier<Collector<T, ?, R>> supplier;
       private transient Collector<T, Object, R> collector;
 
+      CollectorSupplier(Supplier<Collector<T, ?, R>> supplier) {
+         this.supplier = supplier;
+      }
+
       private Collector<T, Object, R> getCollector() {
          if (collector == null) {
             collector = (Collector<T, Object, R>) supplier.get();
          }
          return collector;
-      }
-
-      CollectorSupplier(Supplier<Collector<T, ?, R>> supplier) {
-         this.supplier = supplier;
       }
 
       @Override

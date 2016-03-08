@@ -11,7 +11,7 @@ public class RoleHelper {
       COORDINATOR
    }
 
-   public final static String SUPPORTED_ROLES = "[COORDINATOR]";
+   public static final String SUPPORTED_ROLES = "[COORDINATOR]";
 
    private RoleHelper() {}
 

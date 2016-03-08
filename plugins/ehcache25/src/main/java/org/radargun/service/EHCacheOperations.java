@@ -59,7 +59,7 @@ public class EHCacheOperations implements BasicOperations, ConditionalOperations
       @Override
       public V getAndPut(K key, V value) {
          Element element = new Element(key, value);
-         for (;;) {
+         for (; ; ) {
             Element prev = cache.replace(element);
             if (prev == null) {
                prev = cache.putIfAbsent(element);
@@ -77,7 +77,7 @@ public class EHCacheOperations implements BasicOperations, ConditionalOperations
 
       @Override
       public V getAndRemove(K key) {
-         for (;;) {
+         for (; ; ) {
             Element prev = cache.get(key);
             if (prev == null) return null;
             if (cache.removeElement(prev)) {

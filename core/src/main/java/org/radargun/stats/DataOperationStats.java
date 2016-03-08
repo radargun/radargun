@@ -10,16 +10,16 @@ import org.radargun.stats.representation.Histogram;
  */
 public class DataOperationStats extends AllRecordingOperationStats {
    protected long totalBytes = 0;
-   
+
    @Override
    public DataOperationStats newInstance() {
       return new DataOperationStats();
    }
-   
+
    /**
-    * 
+    *
     * Set the amount of data processed in the operation to calculate DataThrouput
-    * 
+    *
     * @param totalBytes
     *           data size in bytes
     */
@@ -50,12 +50,12 @@ public class DataOperationStats extends AllRecordingOperationStats {
    }
 
    @Override
-   public OperationStats copy() {      
+   public OperationStats copy() {
       DataOperationStats copy = (DataOperationStats) super.copy();
       copy.totalBytes = totalBytes;
       return copy;
    }
-   
+
    @SuppressWarnings("unchecked")
    @Override
    public <T> T getRepresentation(Class<T> clazz, Object... args) {

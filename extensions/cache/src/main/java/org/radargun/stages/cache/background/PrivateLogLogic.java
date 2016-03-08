@@ -115,7 +115,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       long writeApplyMaxDelay = manager.getLogLogicConfiguration().writeApplyMaxDelay;
       if (writeApplyMaxDelay > 0) {
          long now = TimeService.currentTimeMillis();
-         if (lastWriteTimestamp > now - writeApplyMaxDelay){
+         if (lastWriteTimestamp > now - writeApplyMaxDelay) {
             log.debugf("Last write of %08X was at %d, waiting 5 seconds to evade stale reads", keyId);
             Thread.sleep(5000);
          }
@@ -151,7 +151,7 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       if (prevValue.size() >= manager.getLogLogicConfiguration().getValueMaxSize()) {
          int checkedValues;
          // TODO some limit after which the stressor will terminate
-         for (;;) {
+         for (; ; ) {
             if (stressor.isInterrupted() || stressor.isTerminated()) {
                return null;
             }

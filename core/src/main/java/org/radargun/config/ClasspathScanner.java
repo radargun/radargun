@@ -33,7 +33,7 @@ public final class ClasspathScanner {
    private ClasspathScanner() {}
 
    public static <TClass, TAnnotation extends Annotation> void scanClasspath(
-         Class<TClass> superClass, Class<TAnnotation> annotationClass, String requirePackage, Consumer<Class<? extends TClass>> consumer) {
+      Class<TClass> superClass, Class<TAnnotation> annotationClass, String requirePackage, Consumer<Class<? extends TClass>> consumer) {
       String classPath = System.getProperty("java.class.path");
       String[] classPathParts = classPath.split(File.pathSeparator);
 
@@ -55,7 +55,7 @@ public final class ClasspathScanner {
    }
 
    protected static <TClass, TAnnotation extends Annotation> void scanFile(String resource, int prefixLength,
-         Class<TClass> superClass, Class<TAnnotation> annotationClass, String requirePackage, Consumer<Class<? extends TClass>> consumer) {
+                                                                           Class<TClass> superClass, Class<TAnnotation> annotationClass, String requirePackage, Consumer<Class<? extends TClass>> consumer) {
       if (resource.endsWith(".jar")) {
          scanJar(resource, superClass, annotationClass, requirePackage, consumer);
       } else if (resource.endsWith(CLASS_SUFFIX)) {
@@ -65,10 +65,10 @@ public final class ClasspathScanner {
    }
 
    public static <TClass, TAnnotation extends Annotation> void scanJar(String path,
-         Class<TClass> superClass, Class<TAnnotation> annotationClass, String requirePackage, Consumer<Class<? extends TClass>> consumer) {
+                                                                       Class<TClass> superClass, Class<TAnnotation> annotationClass, String requirePackage, Consumer<Class<? extends TClass>> consumer) {
       log.tracef("Looking for @%s %s, loading classes from %s", annotationClass.getSimpleName(), superClass.getSimpleName(), path);
       try (ZipInputStream inputStream = new ZipInputStream(new FileInputStream(path))) {
-         for(;;) {
+         for (; ; ) {
             ZipEntry entry = inputStream.getNextEntry();
             if (entry == null) break;
             if (!entry.getName().endsWith(CLASS_SUFFIX)) continue;
@@ -83,7 +83,7 @@ public final class ClasspathScanner {
    }
 
    protected static <TClass, TAnnotation extends Annotation> void scanClass(String className,
-         Class<TClass> superClass, Class<TAnnotation> annotationClass, String requirePackage, Consumer<Class<? extends TClass>> consumer) {
+                                                                            Class<TClass> superClass, Class<TAnnotation> annotationClass, String requirePackage, Consumer<Class<? extends TClass>> consumer) {
       if (requirePackage != null && !className.startsWith(requirePackage)) return;
       Class<?> clazz;
       try {

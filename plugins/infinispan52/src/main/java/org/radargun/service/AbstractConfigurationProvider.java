@@ -39,7 +39,7 @@ public abstract class AbstractConfigurationProvider implements ConfigurationProv
          InputStream is = null;
          try {
             is = getClass().getClassLoader().getResourceAsStream(filename);
-            if(is == null) { //not attached as resource - assume the direct path on filesystem
+            if (is == null) { //not attached as resource - assume the direct path on filesystem
                is = new FileInputStream(new File(filename));
             }
             configs.put(filename, Utils.readAsBytes(is));

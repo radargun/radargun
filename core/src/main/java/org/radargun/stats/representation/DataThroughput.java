@@ -24,7 +24,7 @@ public class DataThroughput {
       this.meanThroughput = mean;
       this.deviation = deviation;
       this.responseTimes = responseTimes;
-      this.totalBytes =totalBytes;
+      this.totalBytes = totalBytes;
    }
 
    public static DataThroughput compute(long totalBytes, long[] responseTimes, int requestCount) {
@@ -49,7 +49,7 @@ public class DataThroughput {
          meanDurationSecs = toSecs(meanDurationSecs / requestCount);
       }
       return new DataThroughput(totalBytes / maxDurationSecs, totalBytes / minDurationSecs, totalBytes
-            / meanDurationSecs, getDeviation(throughputs), totalBytes, requestTimes);
+         / meanDurationSecs, getDeviation(throughputs), totalBytes, requestTimes);
    }
 
    private static double toSecs(double nanos) {

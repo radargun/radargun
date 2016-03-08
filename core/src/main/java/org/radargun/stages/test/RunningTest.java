@@ -196,7 +196,8 @@ public class RunningTest extends ServiceListenerAdapter {
       int threadIndex;
       do {
          threadIndex = threadCounter.get();
-         if (threadIndex >= maxThreads) {reachedMax = true;
+         if (threadIndex >= maxThreads) {
+            reachedMax = true;
             return -1;
          }
       } while (!threadCounter.compareAndSet(threadIndex, threadIndex + 1));

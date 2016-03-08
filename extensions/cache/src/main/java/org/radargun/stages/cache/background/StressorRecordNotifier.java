@@ -1,11 +1,11 @@
 package org.radargun.stages.cache.background;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.CacheListeners;
-
-import java.util.Arrays;
-import java.util.Collection;
 
 /**
  * Listener handling {@link org.radargun.stages.cache.background.StressorRecord} notifications.

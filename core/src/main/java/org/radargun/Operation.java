@@ -12,7 +12,7 @@ public final class Operation {
    private static int nextId = 1;
    private static ConcurrentHashMap<Integer, Operation> byId = new ConcurrentHashMap<Integer, Operation>();
    private static ConcurrentHashMap<String, Operation> byName = new ConcurrentHashMap<String, Operation>();
-   public static Operation UNKNOWN = new Operation(0, "UNKNOWN");
+   public static final Operation UNKNOWN = new Operation(0, "UNKNOWN");
 
    public final int id;
    public final String name;
@@ -20,6 +20,11 @@ public final class Operation {
    static {
       byId.put(0, UNKNOWN);
       byName.put(UNKNOWN.name, UNKNOWN);
+   }
+
+   private Operation(int id, String name) {
+      this.id = id;
+      this.name = name;
    }
 
    /**
@@ -66,11 +71,6 @@ public final class Operation {
          operation = register(name);
       }
       return operation;
-   }
-
-   private Operation(int id, String name) {
-      this.id = id;
-      this.name = name;
    }
 
    /**

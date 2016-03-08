@@ -17,7 +17,7 @@ public class TimestampKeyGenerator implements KeyGenerator {
    public static class TimestampKey implements Timestamped, Serializable {
 
       private static final long serialVersionUID = 1L;
-      
+
       private final long key;
       private final long timestamp;
 
@@ -25,7 +25,7 @@ public class TimestampKeyGenerator implements KeyGenerator {
          this.key = key;
          this.timestamp = timestamp;
       }
-      
+
       public long getKey() {
          return key;
       }

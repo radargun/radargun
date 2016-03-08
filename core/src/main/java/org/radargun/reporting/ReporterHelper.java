@@ -28,23 +28,25 @@ import org.radargun.utils.Utils;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class ReporterHelper {
+public final class ReporterHelper {
    private static final String REPORTER_PREFIX = "reporter.";
 
    private static final Log log = LogFactory.getLog(ReporterHelper.class);
-   private static final Map<String, Class<? extends Reporter>> reporters = new HashMap<>();
+   private static final Map<String, Class<? extends Reporter>> REPORTERS = new HashMap<>();
 
    static {
       for (File reporterDir : Directories.REPORTERS_DIR.listFiles()) {
-         loadReporters(reporterDir, reporters);
+         loadReporters(reporterDir, REPORTERS);
       }
       for (String path : ArgsHolder.getReporterPaths()) {
-         loadReporters(new File(path), reporters);
+         loadReporters(new File(path), REPORTERS);
       }
    }
 
+   private ReporterHelper() {}
+
    public static void registerReporters(String reporterDir) {
-      loadReporters(new File(reporterDir), reporters);
+      loadReporters(new File(reporterDir), REPORTERS);
    }
 
    public static void loadReporters(File reporterDir, Map<String, Class<? extends Reporter>> reporters) {
@@ -94,7 +96,7 @@ public class ReporterHelper {
     * @return True if reporter with this name was found.
     */
    public static boolean isRegistered(String type) {
-      return reporters.containsKey(type);
+      return REPORTERS.containsKey(type);
    }
 
    /**
@@ -104,7 +106,7 @@ public class ReporterHelper {
     * @return
     */
    public static Reporter createReporter(String type, Map<String, Definition> properties) {
-      Class<? extends Reporter> clazz = reporters.get(type);
+      Class<? extends Reporter> clazz = REPORTERS.get(type);
       if (clazz == null) {
          throw new IllegalArgumentException("Reporter for type '" + type + "' was not found");
       }
@@ -119,6 +121,6 @@ public class ReporterHelper {
    }
 
    public static Set<String> getReporterNames() {
-      return Collections.unmodifiableSet(reporters.keySet());
+      return Collections.unmodifiableSet(REPORTERS.keySet());
    }
 }

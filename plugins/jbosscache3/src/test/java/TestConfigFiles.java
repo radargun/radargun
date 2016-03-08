@@ -7,7 +7,7 @@ import static org.jboss.cache.config.Configuration.CacheMode.LOCAL;
 import static org.jboss.cache.lock.IsolationLevel.READ_COMMITTED;
 import static org.jboss.cache.lock.IsolationLevel.REPEATABLE_READ;
 
-@Test (enabled = false)
+@Test(enabled = false)
 public class TestConfigFiles {
    public void testConfigFilesRR() {
       Cache cache = new DefaultCacheFactory().createCache("mvcc/mvcc-local-RR.xml");

@@ -66,7 +66,7 @@ public class SpyMemcachedOperations implements BasicOperations, ConditionalOpera
       public V getAndPut(K key, V value) {
          String stringKey = key.toString();
          CASResponse response;
-         for (;;) {
+         for (; ; ) {
             CASValue<Object> prev = client.gets(stringKey);
             if (prev.getValue() == null) {
                try {
@@ -99,7 +99,7 @@ public class SpyMemcachedOperations implements BasicOperations, ConditionalOpera
       @Override
       public V getAndRemove(K key) {
          String stringKey = key.toString();
-         for (;;) {
+         for (; ; ) {
             CASValue<Object> prev = client.gets(stringKey);
             if (prev.getValue() == null) {
                return null;
@@ -136,7 +136,7 @@ public class SpyMemcachedOperations implements BasicOperations, ConditionalOpera
       @Override
       public boolean remove(K key, V oldValue) {
          String stringKey = key.toString();
-         for (;;) {
+         for (; ; ) {
             CASValue<Object> prev = client.gets(stringKey);
             if (oldValue.equals(prev.getValue())) {
                if (client.cas(stringKey, prev.getCas(), null) == CASResponse.OK) {
@@ -151,7 +151,7 @@ public class SpyMemcachedOperations implements BasicOperations, ConditionalOpera
       @Override
       public boolean replace(K key, V oldValue, V newValue) {
          String stringKey = key.toString();
-         for (;;) {
+         for (; ; ) {
             CASValue<Object> prev = client.gets(stringKey);
             if (oldValue.equals(prev.getValue())) {
                if (client.cas(stringKey, prev.getCas(), newValue) == CASResponse.OK) {
@@ -178,7 +178,7 @@ public class SpyMemcachedOperations implements BasicOperations, ConditionalOpera
       public V getAndReplace(K key, V value) {
          String stringKey = key.toString();
          CASResponse response;
-         for (;;) {
+         for (; ; ) {
             CASValue<Object> prev = client.gets(stringKey);
             if (prev.getValue() == null) {
                return null;

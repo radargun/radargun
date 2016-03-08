@@ -78,7 +78,7 @@ public interface Clustered {
    }
 
    class Membership {
-      private final static ThreadLocal<DateFormat> formatter = new ThreadLocal<DateFormat>() {
+      private static final ThreadLocal<DateFormat> FORMATTER = new ThreadLocal<DateFormat>() {
          @Override
          protected DateFormat initialValue() {
             return new SimpleDateFormat("HH:mm:ss,S");
@@ -86,6 +86,11 @@ public interface Clustered {
       };
       public final Date date;
       public final Collection<Member> members;
+
+      public Membership(Date date, Collection<Member> members) {
+         this.date = date;
+         this.members = members;
+      }
 
       public static Membership empty() {
          return new Membership(new Date(), Collections.EMPTY_LIST);
@@ -95,15 +100,10 @@ public interface Clustered {
          return new Membership(new Date(), Collections.unmodifiableCollection(members));
       }
 
-      public Membership(Date date, Collection<Member> members) {
-         this.date = date;
-         this.members = members;
-      }
-
       @Override
       public String toString() {
          final StringBuilder sb = new StringBuilder();
-         sb.append(formatter.get().format(date)).append(' ').append(members);
+         sb.append(FORMATTER.get().format(date)).append(' ').append(members);
          return sb.toString();
       }
    }

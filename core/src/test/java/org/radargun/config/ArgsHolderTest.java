@@ -1,10 +1,10 @@
 package org.radargun.config;
 
-import org.radargun.utils.ArgsHolder;
-import org.testng.annotations.Test;
-
 import java.util.List;
 import java.util.Map;
+
+import org.radargun.utils.ArgsHolder;
+import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
 
@@ -17,7 +17,7 @@ public class ArgsHolderTest {
    public void testParseArgs() {
       String[] masterArgs = {"--config", "/foo/configFile.xml", "--add-reporter=/foo/reporterDir", "--add-reporter=/bar/reporterDir"};
       String[] slaveArgs = {"--master", "127.0.0.1:2103", "--slaveIndex", "1", "--add-plugin=/foo/plugin1", "--add-config=plugin1:/foo/config.xml",
-            "--add-config=plugin1:/foo/jgroups.xml", "--add-plugin=/bar/plugin2", "--add-config=plugin2:/bar/config.xml"};
+         "--add-config=plugin1:/foo/jgroups.xml", "--add-plugin=/bar/plugin2", "--add-config=plugin2:/bar/config.xml"};
       ArgsHolder.init(masterArgs, ArgsHolder.ArgType.LAUNCH_MASTER);
       ArgsHolder.init(slaveArgs, ArgsHolder.ArgType.SLAVE);
 

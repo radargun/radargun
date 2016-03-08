@@ -40,15 +40,15 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
    protected int numThreads = 10;
 
    @Property(doc = "Generator of keys (transforms key ID into key object). Default is 'string'.",
-         complexConverter = KeyGenerator.ComplexConverter.class)
+      complexConverter = KeyGenerator.ComplexConverter.class)
    protected KeyGenerator keyGenerator = new StringKeyGenerator();
 
    @Property(doc = "Generator of values. Default is byte-array.",
-         complexConverter = ValueGenerator.ComplexConverter.class)
+      complexConverter = ValueGenerator.ComplexConverter.class)
    protected ValueGenerator valueGenerator = new ByteArrayValueGenerator();
 
    @Property(doc = "Selects which caches will be loaded. Default is the default cache.",
-         complexConverter = CacheSelector.ComplexConverter.class)
+      complexConverter = CacheSelector.ComplexConverter.class)
    protected CacheSelector cacheSelector = new CacheSelector.Default();
 
    @Property(doc = "This option forces local loading of all keys on all slaves in this group (not only numEntries/numNodes). Default is false.")
@@ -58,19 +58,19 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
    private boolean remove = false;
 
    @Property(doc = "Seed used for initialization of random generators - with same seed (and other arguments)," +
-         " the stage guarantees same entries added to the cache. By default the seed is not set.")
+      " the stage guarantees same entries added to the cache. By default the seed is not set.")
    protected Long seed;
 
    @Property(doc = "Specifies if the requests should be explicitly wrapped in transactions. " +
-         "Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if " +
-         "the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.")
+      "Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if " +
+      "the cache configuration is transactional and transactionSize > 0. Default is IF_TRANSACTIONAL.")
    protected TransactionMode useTransactions = TransactionMode.IF_TRANSACTIONAL;
 
    @Property(doc = "Numbers of entries loaded in one transaction. Default is to not use transactions.")
    protected int transactionSize = 0;
 
    @Property(converter = TimeConverter.class, doc = "Target period of put operations - e.g. when this is set to 10 ms" +
-         "the benchmark will try to do one put operation every 10 ms. By default the requests are executed at maximum speed.")
+      "the benchmark will try to do one put operation every 10 ms. By default the requests are executed at maximum speed.")
    protected long requestPeriod = 0;
 
    @Property(doc = "Size of batch to be loaded into cache (using putAll). If <= 0, put() operation is used sequentially.")
@@ -122,10 +122,13 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
    private interface LoaderIds {
       /** Return next key ID */
       long next();
+
       /** Create a mark we can later return to */
       void mark();
+
       /** Resets current index to mark */
       void resetToMark();
+
       /* Returns index of the key */
       long currentKeyIndex();
    }
@@ -282,7 +285,7 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
                break;
             } catch (Exception e) {
                log.warnf(e, "Attempt %d/%d to %s cache failed, waiting %d ms before next attempt",
-                         i + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
+                  i + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
                try {
                   Thread.sleep(waitOnError);
                } catch (InterruptedException e1) {
@@ -292,7 +295,7 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
          }
          if (!success) {
             String message = String.format("Failed to %s entry key=%s, value=%s %d times.",
-                                           remove ? "remove" : "insert", key, value, maxLoadAttempts);
+               remove ? "remove" : "insert", key, value, maxLoadAttempts);
             throw new RuntimeException(message);
          }
          logLoaded(1, size, remove);
@@ -345,7 +348,7 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
                return true;
             } catch (Exception e) {
                log.warnf(e, "Attempt %d/%d to %s cache failed, waiting %d ms before next attempt",
-                         i + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
+                  i + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
                try {
                   Thread.sleep(waitOnError);
                } catch (InterruptedException e1) {
@@ -355,7 +358,7 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
          }
          // Reached only when maxLoadAttempts attempts have been attained
          String message = String.format("Failed to %s batch entries %d times.",
-                                        remove ? "remove" : "insert", maxLoadAttempts);
+            remove ? "remove" : "insert", maxLoadAttempts);
          logLoaded(batchSize, totalSize, remove);
          throw new RuntimeException(message);
       }
@@ -391,7 +394,7 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
                txValuesSize += size;
             } catch (Exception e) {
                log.warnf(e, "Attempt %d/%d to %s cache failed, waiting %d ms before next attempt",
-                         txAttempts + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
+                  txAttempts + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
                try {
                   tx.rollback();
                } catch (Exception re) {
@@ -470,7 +473,7 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
             txValuesSize += totalSize;
          } catch (Exception e) {
             log.warnf(e, "Attempt %d/%d to %s cache failed, waiting %d ms before next attempt",
-                      txAttempts + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
+               txAttempts + 1, maxLoadAttempts, remove ? "remove entry from" : "insert entry into", waitOnError);
             try {
                tx.rollback();
             } catch (Exception re) {

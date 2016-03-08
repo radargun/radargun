@@ -1,11 +1,10 @@
 package org.radargun.service;
 
+import javax.cache.CacheManager;
+
 import org.radargun.Service;
 import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
-
-import javax.cache.Cache;
-import javax.cache.CacheManager;
 
 /**
  * @author Matej Cimbora
@@ -23,7 +22,7 @@ public class JCacheService {
    protected String cacheName;
 
    @Property(doc = "Fully qualified class name of caching provider. Needs to be specified when multiple caching providers " +
-         "are available on classpath.")
+      "are available on classpath.")
    protected String cachingProviderClass;
 
    // Initialized via {@link org.radargun.service.JCacheLifecycle} once the service is started.

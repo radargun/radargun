@@ -28,7 +28,7 @@ import static org.testng.Assert.*;
  * @author Matej Cimbora
  */
 @Test
-@PowerMockIgnore( {"javax.management.*"})
+@PowerMockIgnore({"javax.management.*"})
 @PrepareForTest(TimeService.class)
 public class WaitForTopologySettleStageTest extends PowerMockTestCase {
 
@@ -126,27 +126,27 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
 
       if (checkEvents.contains(HistoryType.TOPOLOGY)) {
          doReturn(topologyEvents1)
-               .doReturn(topologyEvents2)
-               .doReturn(topologyEvents3)
-               .doReturn(topologyEvents4)
-               .doReturn(topologyEvents5)
-               .when(topologyHistory).getTopologyChangeHistory(anyString());
+            .doReturn(topologyEvents2)
+            .doReturn(topologyEvents3)
+            .doReturn(topologyEvents4)
+            .doReturn(topologyEvents5)
+            .when(topologyHistory).getTopologyChangeHistory(anyString());
       }
       if (checkEvents.contains(HistoryType.REHASH)) {
          doReturn(topologyEvents1)
-               .doReturn(topologyEvents2)
-               .doReturn(topologyEvents3)
-               .doReturn(topologyEvents4)
-               .doReturn(topologyEvents5)
-               .when(topologyHistory).getRehashHistory(anyString());
+            .doReturn(topologyEvents2)
+            .doReturn(topologyEvents3)
+            .doReturn(topologyEvents4)
+            .doReturn(topologyEvents5)
+            .when(topologyHistory).getRehashHistory(anyString());
       }
       if (checkEvents.contains(HistoryType.CACHE_STATUS)) {
          doReturn(topologyEvents1)
-               .doReturn(topologyEvents2)
-               .doReturn(topologyEvents3)
-               .doReturn(topologyEvents4)
-               .doReturn(topologyEvents5)
-               .when(topologyHistory).getCacheStatusChangeHistory(anyString());
+            .doReturn(topologyEvents2)
+            .doReturn(topologyEvents3)
+            .doReturn(topologyEvents4)
+            .doReturn(topologyEvents5)
+            .when(topologyHistory).getCacheStatusChangeHistory(anyString());
       }
 
       PowerMockito.mockStatic(TimeService.class);
@@ -190,8 +190,8 @@ public class WaitForTopologySettleStageTest extends PowerMockTestCase {
 
       PowerMockito.mockStatic(TimeService.class);
       PowerMockito.when(TimeService.currentTimeMillis())
-            .thenReturn(0l).thenReturn(5l)
-            .thenReturn(15l);
+         .thenReturn(0l).thenReturn(5l)
+         .thenReturn(15l);
 
       DistStageAck distStageAck = stage.executeOnSlave();
       assertFalse(distStageAck.isError());

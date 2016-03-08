@@ -1,12 +1,12 @@
 package org.radargun.stages.cache.test.legacy;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.TemporalOperations;
-
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;

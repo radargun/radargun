@@ -23,9 +23,9 @@ import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.utils.PrimitiveValue;
 
 /**
- * 
+ *
  * See example configurations in the benchmark-xsite-jmx.xml file.
- * 
+ *
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
  */
 @Stage(doc = "Allows to invoke JMX-exposed methods and attributes.")
@@ -38,13 +38,13 @@ public class JMXInvocationStage extends AbstractDistStage {
    private String targetName;
 
    @Property(doc = "Type of action to be performed. Invocation of specified method (INVOKE_METHOD) is performed "
-         + "by default. Optionally, query for a specified attribute (via method-parameters) can be performed "
-         + "(GET_ATTRIBUTE_VALUE) or setting a specified attribute (via method-parameters) can be performed"
-         + "(SET_ATTRIBUTE_VALUE).")
+      + "by default. Optionally, query for a specified attribute (via method-parameters) can be performed "
+      + "(GET_ATTRIBUTE_VALUE) or setting a specified attribute (via method-parameters) can be performed"
+      + "(SET_ATTRIBUTE_VALUE).")
    private OperationType operationType = OperationType.INVOKE_METHOD;
 
    @Property(doc = "Method parameters. If specified, the number of parameters must match the number of parameter "
-         + "signatures supplied.", complexConverter = PrimitiveValue.ListConverter.class)
+      + "signatures supplied.", complexConverter = PrimitiveValue.ListConverter.class)
    private List<PrimitiveValue> methodParameters = new ArrayList<>();
 
    @Property(doc = "Method parameter signatures.")
@@ -54,11 +54,11 @@ public class JMXInvocationStage extends AbstractDistStage {
    private boolean continueOnFailure = false;
 
    @Property(doc = "Expected result value. If specified, results of method invocations are compared with this value.",
-         complexConverter = PrimitiveValue.ObjectConverter.class)
+      complexConverter = PrimitiveValue.ObjectConverter.class)
    private PrimitiveValue expectedSlaveResult;
 
    @Property(doc = "Expected result, calculated as sum/concatenation (with ',' delimeter) of results from individual slaves.",
-         complexConverter = PrimitiveValue.ObjectConverter.class)
+      complexConverter = PrimitiveValue.ObjectConverter.class)
    private PrimitiveValue expectedTotalResult;
 
    @InjectTrait
@@ -116,7 +116,7 @@ public class JMXInvocationStage extends AbstractDistStage {
             } else if (operationType == OperationType.SET_ATTRIBUTE_VALUE) {
                if (methodParameters != null && !methodParameters.isEmpty()) {
                   log.trace("Setting value of attribute " + targetName + " to "
-                        + methodParameters.get(0).getElementValue().toString());
+                     + methodParameters.get(0).getElementValue().toString());
                   Attribute attribute = new Attribute(targetName, methodParameters.get(0).getElementValue());
                   connection.setAttribute(objectInstance.getObjectName(), attribute);
                   result = connection.getAttribute(objectInstance.getObjectName(), targetName);
@@ -167,7 +167,7 @@ public class JMXInvocationStage extends AbstractDistStage {
                         log.trace(String.format("Adding value %s, current total value %s", ackResult.toString(), totalResult.toString()));
                         if (!totalResult.getClass().equals(ackResult.getClass())) {
                            throw new IllegalStateException(String.format("Failed to determine total result due to incompatible value." +
-                                 " Expected %s, got %s.", totalResult.getClass().getName(), ackResult.getClass().getName()));
+                              " Expected %s, got %s.", totalResult.getClass().getName(), ackResult.getClass().getName()));
                         }
                         if (ackResult instanceof Long) {
                            totalResult = (Long) totalResult + (Long) ackResult;
@@ -202,7 +202,7 @@ public class JMXInvocationStage extends AbstractDistStage {
             return StageResult.SUCCESS;
          } else {
             log.error(String.format("Total value %s is not the one expected %s.",
-                  totalResult.toString(), expectedTotalResult.getElementValue().toString()));
+               totalResult.toString(), expectedTotalResult.getElementValue().toString()));
             return StageResult.FAIL;
          }
       } else {

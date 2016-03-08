@@ -7,10 +7,10 @@ import java.util.regex.Pattern;
 import org.radargun.config.Converter;
 
 /**
-* Converts strings, booleans and number to instance of correct type (according to the prefix).
-*
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * Converts strings, booleans and number to instance of correct type (according to the prefix).
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 public class ObjectConverter implements Converter<Object> {
    private static final NumberConverter NUMBER_CONVERTER = new NumberConverter();
    private static final Pattern STRING_PATTERN = Pattern.compile("string (.*)");

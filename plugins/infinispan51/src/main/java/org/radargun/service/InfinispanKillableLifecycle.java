@@ -15,10 +15,10 @@ import org.radargun.traits.Killable;
 import org.radargun.utils.TimeService;
 
 /**
- * 
+ *
  * InfinispanEmbeddedService that can kill the cache manager by cutting JGroups communication and is able to
  * perform explicit locking.
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * @author Ondrej Nevelik &lt;onevelik@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -26,6 +26,9 @@ import org.radargun.utils.TimeService;
 public class InfinispanKillableLifecycle extends InfinispanLifecycle implements Killable {
 
    protected Infinispan51EmbeddedService service;
+
+   private KillRequest killState = KillRequest.NO_REQUEST;
+   private Object killSync = new Object();
 
    public InfinispanKillableLifecycle(Infinispan51EmbeddedService service) {
       super(service);
@@ -37,9 +40,6 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
       KILL_STARTED,
       KILL_FINISHED
    }
-
-   private KillRequest killState = KillRequest.NO_REQUEST;
-   private Object killSync = new Object();
 
    @Override
    public void start() {
@@ -69,7 +69,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
          startDiscarding();
          if (beginStop(true)) {
             killInternal();
-                    
+
             stateLock.lock();
             state = State.STOPPED;
          }
@@ -87,7 +87,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
          setKillFinished();
       }
    }
-   
+
    @Override
    public void killAsync() {
       try {
@@ -116,7 +116,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
                   setKillFinished();
                }
             }
-            }).start();                                
+         }).start();
       } catch (Exception e) {
          // only in case of exception, cannot use finally
          setKillFinished();
@@ -131,7 +131,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
          killSync.notifyAll();
       }
    }
-   
+
    private void killInternal() throws Exception {
       List<Address> addressList = service.cacheManager.getMembers();
       service.stopCaches();
@@ -151,7 +151,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
    protected List<JChannel> getChannels() {
       return getChannels(null);
    }
-         
+
    protected List<JChannel> getChannels(JChannel parentChannel) {
       long deadline = TimeService.currentTimeMillis() + service.channelRetrievalTimeout;
       List<JChannel> list = new ArrayList<JChannel>();
@@ -176,7 +176,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
          }
       }
       if (!hasClustered) return list;
-      for (;;) {
+      for (; ; ) {
          transport = (JGroupsTransport) ((DefaultCacheManager) service.cacheManager).getTransport();
          if (transport != null) break;
          if (TimeService.currentTimeMillis() > deadline) {
@@ -186,7 +186,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
          Thread.yield();
       }
       JChannel channel;
-      for(;;) {
+      for (; ; ) {
          channel = (JChannel) transport.getChannel();
          if (channel != null && channel.getName() != null && channel.isOpen()) break;
          if (TimeService.currentTimeMillis() > deadline) {
@@ -205,7 +205,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
          killState = KillRequest.KILL_STARTED;
       }
       for (JChannel channel : getChannels()) {
-         DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
+         DISCARD discard = (DISCARD) channel.getProtocolStack().findProtocol(DISCARD.class);
          if (discard == null) {
             discard = new DISCARD();
             log.debug("No DISCARD protocol in stack for " + channel.getName() + ", inserting new instance");
@@ -214,25 +214,25 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
             } catch (Exception e) {
                log.error("Failed to insert the DISCARD protocol to stack for " + channel.getName());
                return;
-            }         
-         }  
+            }
+         }
          discard.setValue("discard_all", true);
          // The FD_SOCK requires special handling because it uses non-standard sockets to interconnect
-         FD_SOCK fdSock = (FD_SOCK)channel.getProtocolStack().findProtocol(FD_SOCK.class);
+         FD_SOCK fdSock = (FD_SOCK) channel.getProtocolStack().findProtocol(FD_SOCK.class);
          if (fdSock != null) {
             fdSock.stopServerSocket(false);
          }
       }
       log.debug("Started discarding packets");
    }
-   
+
    protected synchronized void stopDiscarding() {
       if (service.cacheManager == null) {
          log.warn("Cache manager is not ready!");
          return;
       }
       for (JChannel channel : getChannels()) {
-         DISCARD discard = (DISCARD)channel.getProtocolStack().findProtocol(DISCARD.class); 
+         DISCARD discard = (DISCARD) channel.getProtocolStack().findProtocol(DISCARD.class);
          if (discard != null) {
             discard.setValue("discard_all", false);
          } else {

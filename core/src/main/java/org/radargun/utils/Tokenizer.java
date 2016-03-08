@@ -104,12 +104,12 @@ public class Tokenizer implements Enumeration<String> {
       }
       String token;
       if (nextDelimPos >= 0) {
-         token = string.substring(pos,  nextDelimPos);
+         token = string.substring(pos, nextDelimPos);
          pos = nextDelimPos + nextDelim.length();
          if (returnDelims) {
             nextIsDelim = true;
          } else {
-            for (;;) {
+            for (; ; ) {
                findNextDelim();
                if (returnEmpty) {
                   break;

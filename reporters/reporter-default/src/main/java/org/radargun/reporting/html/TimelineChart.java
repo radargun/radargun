@@ -89,10 +89,10 @@ public class TimelineChart {
       plot.setRangeGridlinesVisible(false);
       plot.setRangeZeroBaselineVisible(true);
 
-      Number minValues[] = new Number[MAX_EVENT_VALUES];
-      Number maxValues[] = new Number[MAX_EVENT_VALUES];
-      long minTimestamps[] = new long[MAX_EVENT_VALUES];
-      long maxTimestamps[] = new long[MAX_EVENT_VALUES];
+      Number[] minValues = new Number[MAX_EVENT_VALUES];
+      Number[] maxValues = new Number[MAX_EVENT_VALUES];
+      long[] minTimestamps = new long[MAX_EVENT_VALUES];
+      long[] maxTimestamps = new long[MAX_EVENT_VALUES];
       //long lastTimestamp = Long.MIN_VALUE;
       for (Timeline.Event event : events) {
          if (event instanceof Timeline.Value) {

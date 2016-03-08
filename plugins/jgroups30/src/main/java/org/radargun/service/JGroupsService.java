@@ -1,7 +1,22 @@
 package org.radargun.service;
 
-import org.jgroups.*;
-import org.jgroups.blocks.*;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+
+import org.jgroups.Address;
+import org.jgroups.JChannel;
+import org.jgroups.Message;
+import org.jgroups.ReceiverAdapter;
+import org.jgroups.View;
+import org.jgroups.blocks.MethodCall;
+import org.jgroups.blocks.MethodLookup;
+import org.jgroups.blocks.RequestOptions;
+import org.jgroups.blocks.ResponseMode;
+import org.jgroups.blocks.RpcDispatcher;
 import org.jgroups.logging.Log;
 import org.jgroups.logging.LogFactory;
 import org.jgroups.util.RspList;
@@ -12,13 +27,6 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.ProvidesTrait;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 
 /**
@@ -239,32 +247,32 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
 
    @Override
    public Object get(Object key) {
-      return read(new MethodCall(GET, new Object[]{key}));
+      return read(new MethodCall(GET, new Object[] {key}));
    }
 
    @Override
    public boolean containsKey(Object key) {
-      return (Boolean) read(new MethodCall(CONTAINS_KEY, new Object[]{key}));
+      return (Boolean) read(new MethodCall(CONTAINS_KEY, new Object[] {key}));
    }
 
    @Override
    public void put(Object key, Object value) {
-      write(new MethodCall(PUT, new Object[]{key, value}));
+      write(new MethodCall(PUT, new Object[] {key, value}));
    }
 
    @Override
    public Object getAndPut(Object key, Object value) {
-      return write(new MethodCall(GET_AND_PUT, new Object[]{key, value}));
+      return write(new MethodCall(GET_AND_PUT, new Object[] {key, value}));
    }
 
    @Override
    public boolean remove(Object key) {
-      return (Boolean) write(new MethodCall(REMOVE, new Object[] { key }));
+      return (Boolean) write(new MethodCall(REMOVE, new Object[] {key}));
    }
 
    @Override
    public Object getAndRemove(Object key) {
-      return write(new MethodCall(GET_AND_REMOVE, new Object[] { key }));
+      return write(new MethodCall(GET_AND_REMOVE, new Object[] {key}));
    }
 
    public void clear() {
@@ -313,7 +321,7 @@ public class JGroupsService extends ReceiverAdapter implements Lifecycle, Cluste
       // self also has the keys for the previous numOwners - 1 nodes
       if (noopSelfRequests && index >= members.size() - numOwners)
          return null;
-      
+
       return members.get(index);
    }
 

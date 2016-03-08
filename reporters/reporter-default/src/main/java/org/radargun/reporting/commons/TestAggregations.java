@@ -35,7 +35,7 @@ public class TestAggregations {
    private Set<String> operations = new TreeSet<>();
    private Set<Cluster> clusters = new TreeSet<>();
 
-   public TestAggregations(String testName, List<Report.Test> tests){
+   public TestAggregations(String testName, List<Report.Test> tests) {
       this.testName = testName;
       Set<String> iterationsNames = new TreeSet<>();
 

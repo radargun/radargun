@@ -28,7 +28,7 @@ import org.radargun.traits.ProvidesTrait;
  */
 @Service(doc = "EHCache")
 public class EHCacheService implements Lifecycle, Clustered {
-   private final static Log log = LogFactory.getLog(EHCacheService.class);
+   private static final Log log = LogFactory.getLog(EHCacheService.class);
    protected static final String RMI_SCHEME = "RMI";
 
    protected CacheManager manager;
@@ -55,7 +55,7 @@ public class EHCacheService implements Lifecycle, Clustered {
    }
 
    @Override
-   public synchronized void start()  {
+   public synchronized void start() {
       if (log.isTraceEnabled()) log.trace("Entering EHCacheService.setUp()");
       log.debug("Initializing the cache with " + configFile);
       URL url = getClass().getClassLoader().getResource(configFile);
@@ -92,7 +92,7 @@ public class EHCacheService implements Lifecycle, Clustered {
    @Override
    public Collection<Member> getMembers() {
       ArrayList<Member> members = new ArrayList<>();
-      for (Object peer: manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(getCache(null))) {
+      for (Object peer : manager.getCacheManagerPeerProvider("RMI").listRemoteCachePeers(getCache(null))) {
          members.add(new Member(peer.toString(), false, false));
       }
       members.add(new Member("localhost", true, false));

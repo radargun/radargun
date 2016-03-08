@@ -25,7 +25,7 @@ public class RepeatBeginStage extends RepeatStage {
 
    @Override
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
-      masterState.addListener(new MasterListener.Adapter(){
+      masterState.addListener(new MasterListener.Adapter() {
          @Override
          public void afterCluster() {
             masterState.remove(getCounterName());

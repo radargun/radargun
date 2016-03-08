@@ -1,7 +1,6 @@
 package org.radargun.stages.test.legacy;
 
 import org.radargun.Operation;
-import org.radargun.stages.test.Invocation;
 
 /**
  * Implementations specify what operations should be executed during the stress test.

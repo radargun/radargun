@@ -1,8 +1,8 @@
 package org.radargun.logging;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 public enum Level {
    TRACE, DEBUG, INFO, WARN, ERROR, FATAL;
 

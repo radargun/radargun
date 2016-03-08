@@ -11,6 +11,7 @@ public interface Converter<T> {
    String ANY_MULTI_LINE = "(.|\n|\r)*";
 
    T convert(String string, Type type);
+
    String convertToString(T value);
 
    /**

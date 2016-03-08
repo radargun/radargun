@@ -10,7 +10,7 @@ import org.radargun.stages.InternalDistStage;
  */
 @Stage(internal = true, doc = "Parent class for repeat-related stages.")
 public abstract class RepeatStage extends InternalDistStage {
-   public final static String REPEAT_NAMES = "REPEAT_NAMES";
+   public static final String REPEAT_NAMES = "REPEAT_NAMES";
 
    @Property(doc = "Repeat name. Default is none.")
    protected String name;

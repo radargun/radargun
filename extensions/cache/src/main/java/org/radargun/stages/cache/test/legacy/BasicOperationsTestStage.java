@@ -8,11 +8,11 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.cache.test.CacheInvocations;
 import org.radargun.stages.test.Invocation;
+import org.radargun.stages.test.legacy.LegacyStressor;
 import org.radargun.stages.test.legacy.LegacyTestStage;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.stages.test.legacy.OperationSelector;
 import org.radargun.stages.test.legacy.RatioOperationSelector;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 
@@ -46,13 +46,13 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
    @Override
    protected OperationSelector createOperationSelector() {
       return new RatioOperationSelector.Builder()
-            .add(BasicOperations.GET, getRatio)
-            .add(BasicOperations.CONTAINS_KEY, containsRatio)
-            .add(BasicOperations.PUT, putRatio)
-            .add(BasicOperations.GET_AND_PUT, getAndPutRatio)
-            .add(BasicOperations.REMOVE, removeRatio)
-            .add(BasicOperations.GET_AND_REMOVE, getAndRemoveRatio)
-            .build();
+         .add(BasicOperations.GET, getRatio)
+         .add(BasicOperations.CONTAINS_KEY, containsRatio)
+         .add(BasicOperations.PUT, putRatio)
+         .add(BasicOperations.GET_AND_PUT, getAndPutRatio)
+         .add(BasicOperations.REMOVE, removeRatio)
+         .add(BasicOperations.GET_AND_REMOVE, getAndRemoveRatio)
+         .build();
    }
 
    @Override

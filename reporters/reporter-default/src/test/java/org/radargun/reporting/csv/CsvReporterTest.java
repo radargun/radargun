@@ -122,9 +122,9 @@ public class CsvReporterTest {
          // header (1 line) + 2 iterations (4 lines) + summary (2 lines)
          Assert.assertEquals(lines.size(), 7);
          Assert.assertEquals(lines.get(0), "SlaveIndex;Iteration;Period;ThreadCount;" +
-               "op1.Errors;op1.RTM_95.0;op1.RTM_99.0;op1.Requests;op1.ResponseTimeDeviation;op1.ResponseTimeMax;op1.ResponseTimeMean;op1.ThroughputGross;op1.ThroughputNet;" +
-               "op2.Errors;op2.RTM_95.0;op2.RTM_99.0;op2.Requests;op2.ResponseTimeDeviation;op2.ResponseTimeMax;op2.ResponseTimeMean;op2.ThroughputGross;op2.ThroughputNet;" +
-               "op3.Errors;op3.RTM_95.0;op3.RTM_99.0;op3.Requests;op3.ResponseTimeDeviation;op3.ResponseTimeMax;op3.ResponseTimeMean;op3.ThroughputGross;op3.ThroughputNet;");
+            "op1.Errors;op1.RTM_95.0;op1.RTM_99.0;op1.Requests;op1.ResponseTimeDeviation;op1.ResponseTimeMax;op1.ResponseTimeMean;op1.ThroughputGross;op1.ThroughputNet;" +
+            "op2.Errors;op2.RTM_95.0;op2.RTM_99.0;op2.Requests;op2.ResponseTimeDeviation;op2.ResponseTimeMax;op2.ResponseTimeMean;op2.ThroughputGross;op2.ThroughputNet;" +
+            "op3.Errors;op3.RTM_95.0;op3.RTM_99.0;op3.Requests;op3.ResponseTimeDeviation;op3.ResponseTimeMax;op3.ResponseTimeMean;op3.ThroughputGross;op3.ThroughputNet;");
          Assert.assertEquals(lines.get(1), "0;0;1001;1;0;30.0;30.0;3;10.0;30;20.0;3.0;3.0;0;200.0;200.0;2;70.71;200;150.0;2.0;2.0;0;300.0;300.0;2;0.0;300;300.0;2.0;2.0;");
          Assert.assertEquals(lines.get(2), "1;0;1001;1;0;30.0;30.0;3;10.0;30;20.0;3.0;3.0;0;200.0;200.0;2;70.71;200;150.0;2.0;2.0;0;300.0;300.0;2;0.0;300;300.0;2.0;2.0;");
          Assert.assertEquals(lines.get(3), "TOTAL;0;1001;2;0;30.0;30.0;6;8.94;30;20.0;6.0;6.0;0;200.0;200.0;4;57.74;200;150.0;4.0;4.0;0;300.0;300.0;4;0.0;300;300.0;4.0;4.0;");
@@ -136,9 +136,9 @@ public class CsvReporterTest {
          // header (1 line) + 2 iterations (6 lines) + summary (2 lines)
          Assert.assertEquals(lines.size(), 9);
          Assert.assertEquals(lines.get(0), "SlaveIndex;Iteration;Period;ThreadCount;" +
-               "op1.Errors;op1.RTM_95.0;op1.RTM_99.0;op1.Requests;op1.ResponseTimeDeviation;op1.ResponseTimeMax;op1.ResponseTimeMean;op1.ThroughputGross;op1.ThroughputNet;" +
-               "op2.Errors;op2.RTM_95.0;op2.RTM_99.0;op2.Requests;op2.ResponseTimeDeviation;op2.ResponseTimeMax;op2.ResponseTimeMean;op2.ThroughputGross;op2.ThroughputNet;" +
-               "op3.Errors;op3.RTM_95.0;op3.RTM_99.0;op3.Requests;op3.ResponseTimeDeviation;op3.ResponseTimeMax;op3.ResponseTimeMean;op3.ThroughputGross;op3.ThroughputNet;");
+            "op1.Errors;op1.RTM_95.0;op1.RTM_99.0;op1.Requests;op1.ResponseTimeDeviation;op1.ResponseTimeMax;op1.ResponseTimeMean;op1.ThroughputGross;op1.ThroughputNet;" +
+            "op2.Errors;op2.RTM_95.0;op2.RTM_99.0;op2.Requests;op2.ResponseTimeDeviation;op2.ResponseTimeMax;op2.ResponseTimeMean;op2.ThroughputGross;op2.ThroughputNet;" +
+            "op3.Errors;op3.RTM_95.0;op3.RTM_99.0;op3.Requests;op3.ResponseTimeDeviation;op3.ResponseTimeMax;op3.ResponseTimeMean;op3.ThroughputGross;op3.ThroughputNet;");
          Assert.assertEquals(lines.get(1), "0;0;1001;1;0;30.0;30.0;3;10.0;30;20.0;3.0;3.0;0;200.0;200.0;2;70.71;200;150.0;2.0;2.0;0;300.0;300.0;2;0.0;300;300.0;2.0;2.0;");
          Assert.assertEquals(lines.get(2), "1;0;1001;1;0;30.0;30.0;3;10.0;30;20.0;3.0;3.0;0;200.0;200.0;2;70.71;200;150.0;2.0;2.0;0;300.0;300.0;2;0.0;300;300.0;2.0;2.0;");
          Assert.assertEquals(lines.get(3), "2;0;1001;1;0;30.0;30.0;3;10.0;30;20.0;3.0;3.0;0;200.0;200.0;2;70.71;200;150.0;2.0;2.0;0;300.0;300.0;2;0.0;300;300.0;2.0;2.0;");

@@ -12,11 +12,11 @@ import org.radargun.logging.LogFactory;
 import org.radargun.utils.TimeService;
 
 /**
- * 
+ *
  * JMXClusterValidator for Infinispan
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- * 
+ *
  */
 public class InfinispanJMXClusterValidator implements JMXClusterValidator {
    private static final Log log = LogFactory.getLog(InfinispanJMXClusterValidator.class);
@@ -34,7 +34,7 @@ public class InfinispanJMXClusterValidator implements JMXClusterValidator {
       public Set<String> incompleteStateTransferNodes;
 
       public ClusterStatus(int numAvailableNodes, int numMembers, Set<String> partitions,
-            Set<String> incompleteJoinNodes, Set<String> incompleteStateTransferNodes) {
+                           Set<String> incompleteJoinNodes, Set<String> incompleteStateTransferNodes) {
          super();
          this.numAvailableNodes = numAvailableNodes;
          this.numMembers = numMembers;
@@ -94,18 +94,18 @@ public class InfinispanJMXClusterValidator implements JMXClusterValidator {
             }
          }
          return new ClusterStatus(numAvailableNodes, (numMembersEqual ? numMembers : -1), partitions,
-               incompleteJoinNodes, incompleteStateTransferNodes);
+            incompleteJoinNodes, incompleteStateTransferNodes);
       }
 
       protected Object[] pollNode(MBeanServerConnection connection, String node, int nodeIdx) throws Exception {
          String view = (String) connection.getAttribute(new ObjectName(channelObjectName), ATTR_VIEW);
          Integer numMembers = (Integer) connection
-               .getAttribute(new ObjectName(gmsProtocolObjectName), ATTR_NUM_MEMBERS);
+            .getAttribute(new ObjectName(gmsProtocolObjectName), ATTR_NUM_MEMBERS);
          Boolean joinComplete = (Boolean) connection.getAttribute(new ObjectName(stateTransferMgrObjectName),
-               ATTR_STM_JOIN_COMPLETE);
+            ATTR_STM_JOIN_COMPLETE);
          Boolean stInProgres = (Boolean) connection.getAttribute(new ObjectName(stateTransferMgrObjectName),
-               ATTR_STM_STATE_TRANSFER_IN_PROGRESS);
-         return new Object[] { view, numMembers, joinComplete, stInProgres };
+            ATTR_STM_STATE_TRANSFER_IN_PROGRESS);
+         return new Object[] {view, numMembers, joinComplete, stInProgres};
       }
 
    }
@@ -118,7 +118,7 @@ public class InfinispanJMXClusterValidator implements JMXClusterValidator {
 
    @Override
    public void init(List<InetSocketAddress> slaveAddresses, long jmxConnectionTimeout, String prop1, String prop2,
-         String prop3) {
+                    String prop3) {
       this.endpoints = slaveAddresses;
       this.jmxConnectionTimeout = jmxConnectionTimeout;
       channelObjectName = prop1;
@@ -163,8 +163,8 @@ public class InfinispanJMXClusterValidator implements JMXClusterValidator {
 
    private boolean isClusterFormed(ClusterStatus status, int expectedClusterSize) {
       return status.numAvailableNodes == expectedClusterSize && status.numMembers == expectedClusterSize
-            && status.jgroupsViews.size() == 1 && status.incompleteJoinNodes.isEmpty()
-            && status.incompleteStateTransferNodes.isEmpty();
+         && status.jgroupsViews.size() == 1 && status.incompleteJoinNodes.isEmpty()
+         && status.incompleteStateTransferNodes.isEmpty();
    }
 
    private String getDebugStatus(ClusterStatus status) {

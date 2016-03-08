@@ -1,13 +1,13 @@
 package org.radargun.stages.cache.background;
 
+import java.util.Random;
+
 import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.Transactional;
-
-import java.util.Random;
 
 /**
  * Common operations for all logic types.

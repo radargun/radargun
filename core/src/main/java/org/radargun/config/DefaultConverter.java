@@ -12,7 +12,7 @@ import org.radargun.utils.Tokenizer;
  * Default converter that can print or parse any common object
  */
 public class DefaultConverter implements Converter<Object> {
-   private static final Map<Class<?>, Parser> parserMap;
+   private static final Map<Class<?>, Parser> PARSER_MAP;
 
    static {
       Map<Class<?>, Parser> definedMap = new HashMap<Class<?>, Parser>();
@@ -90,7 +90,7 @@ public class DefaultConverter implements Converter<Object> {
        *  This approach has some flaws with generics.
        */
       Map<Class<?>, Parser> completionMap = new HashMap<>(definedMap);
-      for (;;) {
+      for (; ; ) {
          for (Map.Entry<Class<?>, Parser> entry : definedMap.entrySet()) {
             Class<?> superclazz = entry.getKey().getSuperclass();
             if (superclazz != null && !completionMap.containsKey(superclazz)) {
@@ -106,7 +106,7 @@ public class DefaultConverter implements Converter<Object> {
          definedMap = completionMap;
          completionMap = new HashMap<>(definedMap);
       }
-      parserMap = completionMap;
+      PARSER_MAP = completionMap;
    }
 
    @Override
@@ -123,13 +123,13 @@ public class DefaultConverter implements Converter<Object> {
          if (clazz.isArray()) {
             return parseArray(string, clazz.getComponentType());
          }
-         Parser parser = parserMap.get(clazz);
+         Parser parser = PARSER_MAP.get(clazz);
          if (parser == null) throw new IllegalArgumentException("Unable to parse '" + string + "' as type " + type);
          return parser.parse(string, null);
       } else if (type instanceof ParameterizedType) {
          ParameterizedType pt = (ParameterizedType) type;
          if (!(pt.getRawType() instanceof Class<?>)) throw new IllegalArgumentException("Raw type expected");
-         Parser parser = parserMap.get((Class<?>) pt.getRawType());
+         Parser parser = PARSER_MAP.get((Class<?>) pt.getRawType());
          if (parser == null) throw new IllegalArgumentException("Unable to parse '" + string + "' as type " + type);
          return parser.parse(string, pt.getActualTypeArguments());
       } else if (type instanceof GenericArrayType) {
@@ -147,7 +147,7 @@ public class DefaultConverter implements Converter<Object> {
          arrayComponentType = (Class<?>) componentType;
       } else if (componentType instanceof ParameterizedType) {
          arrayComponentType = (Class<?>) ((ParameterizedType) componentType).getRawType();
-      } else  {
+      } else {
          throw new IllegalArgumentException("Unable to parse '" + string + "' int array of " + componentType);
       }
       Object array = Array.newInstance(arrayComponentType, list.size());
@@ -200,7 +200,7 @@ public class DefaultConverter implements Converter<Object> {
    /* Includes special handling for .. operator, but lacks brackets handling as int collection shouldn't contain
     * any sub-collection. */
    private static List<Object> parseIntCollection(String string, Type type) {
-      Tokenizer tokenizer = new Tokenizer(string.trim(), new String[] { ",", ".."}, true, false, -1);
+      Tokenizer tokenizer = new Tokenizer(string.trim(), new String[] {",", ".."}, true, false, -1);
       List list = new ArrayList<Object>();
 
       Integer lastNumber = null;

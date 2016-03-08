@@ -1,5 +1,14 @@
 package org.radargun.config;
 
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.radargun.Properties;
 import org.radargun.ShutDownHook;
 import org.radargun.logging.Log;
@@ -12,15 +21,6 @@ import org.radargun.stages.control.RepeatBeginStage;
 import org.radargun.stages.control.RepeatContinueStage;
 import org.radargun.stages.control.RepeatEndStage;
 import org.w3c.dom.*;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
@@ -135,7 +135,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
          }
       } else {
          throw new IllegalStateException(String.format("Unexpected root element in %s: namespace=%s, local-name=%s",
-               scenarioUri, root.getNamespaceURI(), root.getLocalName()));
+            scenarioUri, root.getNamespaceURI(), root.getLocalName()));
       }
    }
 
@@ -179,7 +179,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
    private void parseClusters(MasterConfig masterConfig, Element clustersElement) {
       if (!ELEMENT_CLUSTERS.equals(clustersElement.getLocalName())) {
-         throw unexpected(clustersElement.getLocalName(), new String[]{ELEMENT_CLUSTERS});
+         throw unexpected(clustersElement.getLocalName(), new String[] {ELEMENT_CLUSTERS});
       }
       if (masterConfig.getPort() == 0 || masterConfig.getHost() == null) {
          throw new IllegalArgumentException("Master not configured for distributed scenario!");
@@ -209,7 +209,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                }
             }
          } else {
-            throw unexpected(childElement.getLocalName(), new String[]{ELEMENT_CLUSTER, ELEMENT_SCALE});
+            throw unexpected(childElement.getLocalName(), new String[] {ELEMENT_CLUSTER, ELEMENT_SCALE});
          }
          System.setProperty(Properties.PROPERTY_CLUSTER_SIZE, "");
       }
@@ -425,7 +425,7 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
    private void addScenarioItem(Scenario scenario, Element element) {
       if (element.getLocalName().equalsIgnoreCase(ELEMENT_REPEAT)) {
-         wrapStages(scenario, element, new Class[]{RepeatBeginStage.class}, new Class[]{RepeatContinueStage.class, RepeatEndStage.class});
+         wrapStages(scenario, element, new Class[] {RepeatBeginStage.class}, new Class[] {RepeatContinueStage.class, RepeatEndStage.class});
       } else {
          scenario.addStage(StageHelper.getStageClassByDashedName(element.getNamespaceURI(), element.getLocalName()), parseProperties(element, true), null);
       }

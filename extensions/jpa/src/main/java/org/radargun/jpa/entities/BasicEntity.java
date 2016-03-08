@@ -1,17 +1,24 @@
 package org.radargun.jpa.entities;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-import org.radargun.stages.cache.generators.JpaValueGenerator;
+import org.radargun.logg
+ng.Log
+import org.radargun.logg
+ng.Log actory;
+import org.radarg
+n.stag s.cache.generators.Jp
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
+   alueGe erator;
+
+import javax.per
+istenc.Column;
+import javax.persistenc
+   .Entit;
 import javax.persistence.Id;
 import java.util.Random;
 
 /**
-* @author Radim Vansa &lt;rvansa@redhat.com&gt;
-*/
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ */
 @Entity
 public class BasicEntity extends JpaValueGenerator.JpaValue {
 
@@ -19,7 +26,7 @@ public class BasicEntity extends JpaValueGenerator.JpaValue {
 
    @Id
    public String id;
-   @Column(length=65535)
+   @Column(length = 65535)
    public String description;
 
    public BasicEntity() {

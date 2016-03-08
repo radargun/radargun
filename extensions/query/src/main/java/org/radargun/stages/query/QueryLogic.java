@@ -5,9 +5,9 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.traits.Query;
 import org.radargun.stages.test.legacy.LegacyStressor;
 import org.radargun.stages.test.legacy.OperationLogic;
+import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.TimeService;
 

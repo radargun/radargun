@@ -21,14 +21,15 @@ import org.radargun.logging.LogFactory;
 
 /**
  * Extracts configuration to properties. Valid for caches since 5.2
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- * 
+ *
  */
 public class ConfigDumpHelper {
 
    protected static Log log = LogFactory.getLog(ConfigDumpHelper.class);
    private static Method plainToString = null;
+
    static {
       try {
          plainToString = Object.class.getMethod("toString");
@@ -107,9 +108,9 @@ public class ConfigDumpHelper {
    }
 
    /**
-    * 
+    *
     * This is a generic method for reflection copied from PropertyFormatter from Infinispan 6.0
-    * 
+    *
     * @param obj
     * @param p
     * @param prefix

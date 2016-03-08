@@ -1,12 +1,12 @@
 package org.radargun.state;
 
-import org.radargun.config.MasterConfig;
-import org.radargun.reporting.Report;
-import org.radargun.reporting.Timeline;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.radargun.config.MasterConfig;
+import org.radargun.reporting.Report;
+import org.radargun.reporting.Timeline;
 
 /**
  * State residing on the server, passed to each stage before execution.

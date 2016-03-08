@@ -43,6 +43,7 @@ public class Monitors implements ServiceListener {
    private synchronized void startInternal() {
       exec = Executors.newScheduledThreadPool(1, new ThreadFactory() {
          AtomicInteger counter = new AtomicInteger();
+
          @Override
          public Thread newThread(Runnable r) {
             return new Thread(r, "MonitorThread-" + counter.getAndIncrement());
@@ -71,7 +72,7 @@ public class Monitors implements ServiceListener {
       slaveState.remove(MONITORS);
       stopInternal();
    }
-   
+
    private synchronized void stopInternal() {
       if (exec == null) return;
       for (Monitor m : monitors) {

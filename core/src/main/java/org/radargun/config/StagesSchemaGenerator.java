@@ -1,11 +1,11 @@
 package org.radargun.config;
 
-import org.radargun.utils.Utils;
-import org.w3c.dom.Element;
-
 import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.*;
+
+import org.radargun.utils.Utils;
+import org.w3c.dom.Element;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -73,10 +73,10 @@ public class StagesSchemaGenerator extends SchemaGenerator {
       // be referenced from another namespace
       Map<String, List<Class<?>>> definitions = new HashMap<>();
       ClasspathScanner.scanClasspath(Object.class, DefinitionElement.class, "org.radargun",
-            clazz -> indexClass(definitions, clazz));
+         clazz -> indexClass(definitions, clazz));
       Set<String> allNamespaces = new HashSet<>(definitions.keySet());
       ClasspathScanner.scanClasspath(Object.class, EnsureInSchema.class, "org.radargun",
-            clazz -> indexClass(definitions, clazz));
+         clazz -> indexClass(definitions, clazz));
       allNamespaces.addAll(StageHelper.getStages().keySet());
       for (String namespace : allNamespaces) {
          Map<String, Class<? extends org.radargun.Stage>> stages = StageHelper.getStages().get(namespace);
@@ -93,7 +93,7 @@ public class StagesSchemaGenerator extends SchemaGenerator {
 
    protected static void indexClass(Map<String, List<Class<?>>> definitions, Class<?> clazz) {
       NamespaceHelper.Coords coords = NamespaceHelper.suggestCoordinates(StageHelper.NAMESPACE_ROOT, clazz, "radargun-");
-      File[] codepaths = coords.explicit ? null : new File[] { new File(Utils.getCodePath(clazz)) };
+      File[] codepaths = coords.explicit ? null : new File[] {new File(Utils.getCodePath(clazz))};
       NamespaceHelper.registerNamespace(coords.namespace, codepaths, coords.jarMajorMinor);
       List<Class<?>> byNamespace = definitions.get(coords.namespace);
       if (byNamespace == null) {

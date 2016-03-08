@@ -26,7 +26,7 @@ public class JavaProcessService extends ProcessService {
    private final Log log = LogFactory.getLog(getClass());
 
    private static final String CONNECTOR_ADDRESS =
-         "com.sun.management.jmxremote.localConnectorAddress";
+      "com.sun.management.jmxremote.localConnectorAddress";
 
    @Property(doc = "Connect to the process and retrieve JMX connection. Default is true.")
    protected boolean jmxConnectionEnabled = true;
@@ -71,8 +71,8 @@ public class JavaProcessService extends ProcessService {
                String connectorAddress = vm.getAgentProperties().getProperty(CONNECTOR_ADDRESS);
                if (connectorAddress == null) {
                   String agent = vm.getSystemProperties().getProperty("java.home") +
-                        File.separator + "lib" + File.separator +
-                        "management-agent.jar";
+                     File.separator + "lib" + File.separator +
+                     "management-agent.jar";
                   try {
                      vm.loadAgent(agent);
                      connectorAddress = vm.getAgentProperties().getProperty(CONNECTOR_ADDRESS);

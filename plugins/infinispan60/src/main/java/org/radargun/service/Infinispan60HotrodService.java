@@ -27,21 +27,21 @@ import org.radargun.traits.Queryable;
 @Service(doc = Infinispan60HotrodService.SERVICE_DESCRIPTION)
 public class Infinispan60HotrodService extends InfinispanHotrodService {
    protected static final Pattern ADDRESS_PATTERN = Pattern
-         .compile("(\\[([0-9A-Fa-f:]+)\\]|([^:/?#]*))(?::(\\d*))?");
+      .compile("(\\[([0-9A-Fa-f:]+)\\]|([^:/?#]*))(?::(\\d*))?");
    protected static final String CLASS_PATTERN = "([\\p{L}_$][\\p{L}\\p{N}_$]*\\.)*[\\p{L}_$][\\p{L}\\p{N}_$]*";
    protected static final Log log = LogFactory.getLog(Infinispan60HotrodService.class);
 
    @Property(doc = "Enables query functionality. This requires using the ProtostreamMarshaller," +
-         "defining the objects and involves further overhead. Default is false.")
+      "defining the objects and involves further overhead. Default is false.")
    private boolean enableQuery = false;
 
    // TODO: use complexConverter when this will be implemented for setup.properties
    @Property(doc = "Classes that should be registered as marshalled. By default, none.",
-         converter = RegisteredClassConverter.class)
+      converter = RegisteredClassConverter.class)
    protected List<RegisteredClass> classes;
 
    @Property(doc = "Paths to the .protobin files. Defaul is query/values.protobin")
-   protected String[] protofiles = new String[] { "/query/values.protobin" };
+   protected String[] protofiles = new String[] {"/query/values.protobin"};
 
    @Property(doc = "Name of the cluster (used for JMX operations). Default is 'default'.")
    protected String clusterName = "default";
@@ -64,10 +64,10 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
    protected Configuration configuration;
 
    @Init
-   public void init() {   
+   public void init() {
       configuration = getDefaultHotRodConfig().build();
    }
-   
+
    protected ConfigurationBuilder getDefaultHotRodConfig() {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       builder.connectionPool().maxActive(maxConnectionsServer).maxTotal(maxConnectionsTotal);
@@ -82,8 +82,8 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
          String host = v6host != null ? v6host : v4host;
          String portString = matcher.group(4);
          int port = portString == null
-               ? ConfigurationProperties.DEFAULT_HOTROD_PORT
-               : Integer.parseInt(portString);
+            ? ConfigurationProperties.DEFAULT_HOTROD_PORT
+            : Integer.parseInt(portString);
 
          serverHostnames.add(host);
          builder.addServer().host(host).port(port);
@@ -141,7 +141,7 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
       public Class<T> clazz;
 
       @Property(doc = "Full name of the class marshaller that should be used. By default, inner class with name 'Marshaller' is used.",
-            converter = ClassLoadConverter.class)
+         converter = ClassLoadConverter.class)
       Class<? extends MessageMarshaller<T>> marshaller;
 
       public RegisteredClass() {
@@ -213,7 +213,7 @@ public class Infinispan60HotrodService extends InfinispanHotrodService {
             }
             try {
                list.add(new RegisteredClass(Class.forName(className),
-                     marshaller == null ? null : Class.forName(marshaller)));
+                  marshaller == null ? null : Class.forName(marshaller)));
             } catch (ClassNotFoundException e) {
                throw new IllegalArgumentException("Cannot find class " + part, e);
             }

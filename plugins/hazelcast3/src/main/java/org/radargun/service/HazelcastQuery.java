@@ -1,14 +1,5 @@
 package org.radargun.service;
 
-import com.hazelcast.core.IMap;
-import com.hazelcast.core.TransactionalMap;
-import com.hazelcast.query.Predicate;
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-import org.radargun.traits.Query;
-import org.radargun.utils.OptimizedMap;
-import org.radargun.utils.Projections;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -19,6 +10,15 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+
+import com.hazelcast.core.IMap;
+import com.hazelcast.core.TransactionalMap;
+import com.hazelcast.query.Predicate;
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+import org.radargun.traits.Query;
+import org.radargun.utils.OptimizedMap;
+import org.radargun.utils.Projections;
 
 public class HazelcastQuery implements Query {
    private static final Log log = LogFactory.getLog(HazelcastQuery.class);

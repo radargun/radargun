@@ -24,7 +24,7 @@ public class PercentilesChart extends Chart {
     * @param seriesName Name of the plotted operation
     * @param histogram Histogram that should be plotted
     */
-   public PercentilesChart addSeries(String seriesName, Histogram histogram)  {
+   public PercentilesChart addSeries(String seriesName, Histogram histogram) {
       XYSeries percentileSeries = new XYSeries(seriesName + ": max response time");
       XYSeries responseTimeSeries = new XYSeries(seriesName + ": average response time");
       long totalCount = 0;
@@ -59,12 +59,12 @@ public class PercentilesChart extends Chart {
 
    protected JFreeChart createChart() {
       JFreeChart chart = ChartFactory.createXYLineChart(null, "Percentage", "Response time", dataset,
-            PlotOrientation.VERTICAL, true, false, false);
+         PlotOrientation.VERTICAL, true, false, false);
       XYPlot plot = (XYPlot) chart.getPlot();
       PercentileLogAxis xAxis = new PercentileLogAxis("Percentiles", limit);
       xAxis.setRange(0, limit);
       plot.setDomainAxis(xAxis);
-      final LogTimeAxis yAxis = new LogTimeAxis("Response time", 0, new int[] { 2, 5 });
+      final LogTimeAxis yAxis = new LogTimeAxis("Response time", 0, new int[] {2, 5});
       if (lowerBound < upperBound) yAxis.setRange(new Range(lowerBound, upperBound * 1.1));
       plot.setRangeAxis(yAxis);
       return chart;

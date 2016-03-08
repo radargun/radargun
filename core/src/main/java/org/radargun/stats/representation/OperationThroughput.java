@@ -30,7 +30,7 @@ public class OperationThroughput {
       long duration = getDuration(args);
       if (duration == 0) return null;
       return new OperationThroughput(TimeUnit.SECONDS.toNanos(1) * (double) requests / duration,
-            TimeUnit.SECONDS.toNanos(1) * (double) (requests - errors) / duration);
+         TimeUnit.SECONDS.toNanos(1) * (double) (requests - errors) / duration);
    }
 
    public static long getDuration(Object[] args) {

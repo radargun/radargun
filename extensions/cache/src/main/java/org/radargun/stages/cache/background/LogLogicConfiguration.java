@@ -25,21 +25,21 @@ public class LogLogicConfiguration {
    protected long maxTransactionAttempts = -1;
 
    @Property(doc = "Maximum number of attempts to perform delayed removes when using transactions (as removes are performed in a separate TX," +
-         "which can fail independently of TX performing PUT operations). If the value is negative, number of attempts is unlimited. Default is -1.")
+      "which can fail independently of TX performing PUT operations). If the value is negative, number of attempts is unlimited. Default is -1.")
    protected long maxDelayedRemoveAttempts = -1;
 
    @Property(doc = "Check whether the value that is being removed matches the expected value. In failure scenarios, this may cause " +
-         "incorrect test failures. Default is true.")
+      "incorrect test failures. Default is true.")
    protected boolean checkDelayedRemoveExpectedValue = true;
 
    @Property(doc = "Maximum time for which are the log value checkers allowed to show no new checked values, " +
-         "when waiting for checks to complete or stressors to confirm new progress. Default is 10 minutes.",
-         converter = TimeConverter.class, deprecatedName = "checkersNoProgressTimeout")
+      "when waiting for checks to complete or stressors to confirm new progress. Default is 10 minutes.",
+      converter = TimeConverter.class, deprecatedName = "checkersNoProgressTimeout")
    protected long noProgressTimeout = 600000;
 
    @Property(doc = "When the log value is full, the stressor needs to wait until all checkers confirm that " +
-         "the records have been checked before discarding oldest records. With ignoreDeadCheckers=true " +
-         "the stressor does not wait for checkers on dead nodes. Default is false.")
+      "the records have been checked before discarding oldest records. With ignoreDeadCheckers=true " +
+      "the stressor does not wait for checkers on dead nodes. Default is false.")
    protected boolean ignoreDeadCheckers = false;
 
    @Property(doc = "Check that listeners have been fired for each operation on each node (at least once). Default is false.")
@@ -49,7 +49,7 @@ public class LogLogicConfiguration {
    protected boolean debugFailures = false;
 
    @Property(doc = "Maximum allowed delay to detect operation confirmed by stressor. Default is no delay.",
-         converter = TimeConverter.class)
+      converter = TimeConverter.class)
    protected long writeApplyMaxDelay = 0;
 
    public boolean isEnabled() {

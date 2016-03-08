@@ -5,10 +5,10 @@ import java.util.List;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.TopologyHistory;
+import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 
 import static org.radargun.traits.TopologyHistory.Event.EventType;
@@ -18,7 +18,7 @@ import static org.radargun.traits.TopologyHistory.HistoryType;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Waits until some event occurs. Note that the initial rehash is not recorded in this manner, " +
-      "therefore waiting for that will result in timeout.")
+   "therefore waiting for that will result in timeout.")
 public class WaitForTopologyEventStage extends AbstractDistStage {
 
    @Property(doc = "Name of the cache where we detect the events. Default is the default cache.")
@@ -65,7 +65,8 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
                if (condition == EventType.END) {
                   for (int i = history.size() - 1; i >= 0; --i) {
                      TopologyHistory.Event e = history.get(i);
-                     if (setEvent != null && setEvent.getType() == EventType.END && !e.getTime().after(setEvent.getTime())) break;
+                     if (setEvent != null && setEvent.getType() == EventType.END && !e.getTime().after(setEvent.getTime()))
+                        break;
                      if (e.getType() == EventType.END && e.getMembersAtEnd() >= minMembers && e.getMembersAtEnd() <= maxMembers) {
                         break wait_loop;
                      }
@@ -73,7 +74,8 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
                } else if (condition == EventType.START) {
                   for (int i = history.size() - 1; i >= 0; --i) {
                      TopologyHistory.Event e = history.get(i);
-                     if (setEvent != null && setEvent.getType() == EventType.START && !e.getTime().after(setEvent.getTime())) break;
+                     if (setEvent != null && setEvent.getType() == EventType.START && !e.getTime().after(setEvent.getTime()))
+                        break;
                      if (e.getType() == EventType.START && e.getMembersAtEnd() >= minMembers && e.getMembersAtEnd() <= maxMembers) {
                         break wait_loop;
                      }
@@ -81,7 +83,8 @@ public class WaitForTopologyEventStage extends AbstractDistStage {
                } else if (condition == EventType.SINGLE) {
                   for (int i = history.size() - 1; i >= 0; --i) {
                      TopologyHistory.Event e = history.get(i);
-                     if (setEvent != null && setEvent.getType() == EventType.SINGLE && !e.getTime().after(setEvent.getTime())) break;
+                     if (setEvent != null && setEvent.getType() == EventType.SINGLE && !e.getTime().after(setEvent.getTime()))
+                        break;
                      if (e.getType() == EventType.SINGLE && e.getMembersAtEnd() >= minMembers && e.getMembersAtEnd() <= maxMembers) {
                         break wait_loop;
                      }

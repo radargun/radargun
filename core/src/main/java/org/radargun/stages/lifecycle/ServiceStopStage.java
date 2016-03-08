@@ -3,14 +3,14 @@ package org.radargun.stages.lifecycle;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
+import org.radargun.utils.TimeConverter;
 
 /**
- * 
+ *
  * Will simulate a node stop on specified nodes. If the used Service does not provide Killable trait
  * it will always stop the node gracefully.
- * 
+ *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -23,19 +23,19 @@ public class ServiceStopStage extends AbstractDistStage {
    private boolean graceful = true;
 
    @Property(doc = "Timeout for the Lifecycle.stop() execution - if the stop() does not return within this timeout," +
-         " Killable.kill() is called (if it is supported). Default is 2 minutes.", converter = TimeConverter.class)
+      " Killable.kill() is called (if it is supported). Default is 2 minutes.", converter = TimeConverter.class)
    protected long gracefulStopTimeout = 120000;
 
    @Property(doc = "If set to true the benchmark will not wait until the node is stopped. Default is false.")
    private boolean async = false;
 
    @Property(converter = TimeConverter.class, doc = "If this value is positive the stage will spawn a thread which " +
-         "will stop the node after the delay. The stage will not wait for anything. By default the stop is immediate " +
-         "and synchronous.")
+      "will stop the node after the delay. The stage will not wait for anything. By default the stop is immediate " +
+      "and synchronous.")
    private long delayExecution;
 
-   @Property(doc="If set, the stage will not stop any node but will wait until the delayed execution is finished. " +
-         "Default is false.")
+   @Property(doc = "If set, the stage will not stop any node but will wait until the delayed execution is finished. " +
+      "Default is false.")
    private boolean waitForDelayed = false;
 
    public DistStageAck executeOnSlave() {

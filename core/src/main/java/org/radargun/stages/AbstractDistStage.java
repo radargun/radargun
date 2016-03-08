@@ -32,16 +32,16 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
    protected Log log = LogFactory.getLog(getClass());
 
    @Property(doc = "Specifies on which slaves this stage should actively run. " +
-         "The result set is intersection of specified slaves, groups and roles. Default is all slaves.")
+      "The result set is intersection of specified slaves, groups and roles. Default is all slaves.")
    protected Set<Integer> slaves;
 
    @Property(doc = "Specifies in which groups this stage should actively run. " +
-         "The result set is intersection of specified slaves, groups and roles. Default is all groups.")
+      "The result set is intersection of specified slaves, groups and roles. Default is all groups.")
    protected Set<String> groups;
 
    @Property(doc = "Specifies on which slaves this stage should actively run, by their roles. " +
-         "The result set is intersection of specified slaves, groups and roles. " +
-         "Supported roles are " + RoleHelper.SUPPORTED_ROLES + ". Default is all roles.")
+      "The result set is intersection of specified slaves, groups and roles. " +
+      "Supported roles are " + RoleHelper.SUPPORTED_ROLES + ". Default is all roles.")
    protected Set<RoleHelper.Role> roles;
 
    @InjectTrait
@@ -96,7 +96,7 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
          Collections.sort(slaves);
       }
       if (groups != null) {
-         for (Iterator<Integer> it = slaves.iterator(); it.hasNext();) {
+         for (Iterator<Integer> it = slaves.iterator(); it.hasNext(); ) {
             int slaveIndex = it.next();
             if (!groups.contains(state.getCluster().getGroup(slaveIndex).name)) {
                it.remove();
@@ -133,7 +133,7 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
 
       String processingDuration = "Durations [";
       boolean first = true;
-      for (DistStageAck ack: acks) {
+      for (DistStageAck ack : acks) {
          if (first) first = false;
          else processingDuration += ", ";
          processingDuration += ack.getSlaveIndex() + " = " + Utils.prettyPrintMillis(ack.getDuration());

@@ -11,8 +11,8 @@ import org.radargun.traits.Transactional;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InfinispanTransactional implements Transactional {
-   protected final static Log log = LogFactory.getLog(InfinispanTransactional.class);
-   protected final static boolean trace = log.isTraceEnabled();
+   protected static final Log log = LogFactory.getLog(InfinispanTransactional.class);
+   protected static final boolean trace = log.isTraceEnabled();
 
    protected final InfinispanEmbeddedService service;
    protected final boolean enlistExtraXAResource;
@@ -25,7 +25,7 @@ public class InfinispanTransactional implements Transactional {
    @Override
    public Configuration getConfiguration(String cacheName) {
       return service.isCacheTransactional(service.getCache(cacheName)) ?
-            Configuration.TRANSACTIONAL : Configuration.NON_TRANSACTIONAL;
+         Configuration.TRANSACTIONAL : Configuration.NON_TRANSACTIONAL;
    }
 
    @Override
@@ -69,8 +69,7 @@ public class InfinispanTransactional implements Transactional {
             if (enlistExtraXAResource) {
                transaction.enlistResource(new DummyXAResource());
             }
-         }
-         catch (Exception e) {
+         } catch (Exception e) {
             throw new RuntimeException(e);
          }
       }

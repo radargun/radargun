@@ -43,10 +43,12 @@ public class SchedulingSelector<T> {
     * @throws InterruptedException
     */
    public T next() throws InterruptedException {
-      WAIT_LOOP: for (;;) {
+      WAIT_LOOP:
+      for (; ; ) {
          long now = TimeService.currentTimeMillis();
          int myOffset = offset;
-         INVOCATIONS_LOOP: for (int i = 0; i < operations.length; ++i) {
+         INVOCATIONS_LOOP:
+         for (int i = 0; i < operations.length; ++i) {
             int operationIndex = (i + myOffset) % operations.length;
 
             long myInterval = intervals[operationIndex];
@@ -56,7 +58,8 @@ public class SchedulingSelector<T> {
             boolean hasSetLastInterval = false;
             do {
                lastInterval = lastIntervals.get(operationIndex);
-            } while (currentInterval > lastInterval && !(hasSetLastInterval = lastIntervals.compareAndSet(operationIndex, lastInterval, currentInterval)));
+            }
+            while (currentInterval > lastInterval && !(hasSetLastInterval = lastIntervals.compareAndSet(operationIndex, lastInterval, currentInterval)));
             if (hasSetLastInterval) {
                int frequency = invocations[operationIndex];
                // we ignore the requests that should have been executed in previous slots;
@@ -121,8 +124,8 @@ public class SchedulingSelector<T> {
       public SchedulingSelector<T> build() {
          if (operations.isEmpty()) throw new IllegalStateException("No operations set!");
          return new SchedulingSelector(operations.toArray((T[]) Array.newInstance(clazz, operations.size())),
-               invocations.stream().mapToInt(i -> i.intValue()).toArray(),
-               intervals.stream().mapToLong(l -> l.longValue()).toArray());
+            invocations.stream().mapToInt(i -> i.intValue()).toArray(),
+            intervals.stream().mapToLong(l -> l.longValue()).toArray());
       }
    }
 }

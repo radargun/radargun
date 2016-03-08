@@ -118,21 +118,20 @@ public class IterateStage extends LegacyTestStage {
             } else {
                if (sr.minElements != sr.maxElements) {
                   log.warnf("Slave %d, stressor %d reports %d .. %d elements",
-                        ack.getSlaveIndex(), i, sr.minElements, sr.maxElements);
+                     ack.getSlaveIndex(), i, sr.minElements, sr.maxElements);
                   result = failOnUnevenElements ? errorResult() : result;
                }
                if (totalMinElements < 0) {
                   totalMinElements = sr.minElements;
                   totalMaxElements = sr.maxElements;
-               }
-               else if (totalMinElements != sr.minElements || totalMaxElements != sr.maxElements) {
+               } else if (totalMinElements != sr.minElements || totalMaxElements != sr.maxElements) {
                   log.warnf("Previous stressor reported %d .. %d elements but slave %d, stressor %d reports %d .. %d elements",
-                        totalMinElements, totalMaxElements, ack.getSlaveIndex(), i, sr.minElements, sr.maxElements);
+                     totalMinElements, totalMaxElements, ack.getSlaveIndex(), i, sr.minElements, sr.maxElements);
                   result = failOnUnevenElements ? errorResult() : result;
                }
                if (ack.totalSize >= 0 && (sr.minElements != ack.totalSize || sr.maxElements != ack.totalSize)) {
                   log.warnf("Slave %d stressor %d reports %d element but " +
-                        "total size is %d", ack.getSlaveIndex(), i, sr.maxElements, ack.totalSize);
+                     "total size is %d", ack.getSlaveIndex(), i, sr.maxElements, ack.totalSize);
                   result = failOnNotTotalSize ? errorResult() : result;
                }
                totalMinElements = Math.min(totalMinElements, sr.minElements);
@@ -152,11 +151,11 @@ public class IterateStage extends LegacyTestStage {
             result = failOnNotTotalSize ? errorResult() : result;
          }
          slaveResults.put(ack.getSlaveIndex(), new Report.SlaveResult(range(slaveMinElements, slaveMaxElements),
-               slaveMinElements != slaveMaxElements));
+            slaveMinElements != slaveMaxElements));
       }
       if (test != null) {
          test.addResult(getTestIteration(), new Report.TestResult("Elements", slaveResults,
-               range(totalMinElements, totalMaxElements), totalMinElements != totalMaxElements));
+            range(totalMinElements, totalMaxElements), totalMinElements != totalMaxElements));
       }
       return result;
    }

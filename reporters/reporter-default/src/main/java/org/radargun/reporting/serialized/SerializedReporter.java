@@ -24,7 +24,6 @@ import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
 import org.radargun.reporting.ReporterHelper;
-import org.radargun.utils.Utils;
 
 /**
  * Serializes all data from the report to disc, in order to create reports in the future.
@@ -46,7 +45,7 @@ public class SerializedReporter implements Reporter {
       DateFormat formatter = new SimpleDateFormat("yyyyMMdd-HHmmss");
       for (Report report : reports) {
          String filename = String.format("%s-%s-%s-%s.bin", report.getConfiguration().name,
-                                         report.getCluster().getSize(), report.getCluster().getClusterIndex(), formatter.format(new Date()));
+            report.getCluster().getSize(), report.getCluster().getClusterIndex(), formatter.format(new Date()));
          try (FileOutputStream fileOutputStream = new FileOutputStream(new File(dir, filename));
               ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
             objectOutputStream.writeObject(report);
@@ -56,7 +55,7 @@ public class SerializedReporter implements Reporter {
       }
    }
 
-   public static void main(String args[]) {
+   public static void main(String[] args) {
       if (args.length < 2) {
          System.err.println("java " + SerializedReporter.class.getName() + " benchmark.xml /path/to/target-dir [reporter-dir...]");
          return;

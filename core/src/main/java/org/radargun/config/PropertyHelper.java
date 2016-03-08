@@ -1,9 +1,5 @@
 package org.radargun.config;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-import org.radargun.utils.MapEntry;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -17,12 +13,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+import org.radargun.utils.MapEntry;
+
 /**
  * Helper for retrieving properties from the class
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class PropertyHelper {
+
+   private static Log log = LogFactory.getLog(PropertyHelper.class);
    private static final Comparator<Map.Entry<String, Path>> MAP_ENTRY_KEY_COMPARATOR = new Comparator<Map.Entry<String, Path>>() {
       @Override
       public int compare(Map.Entry<String, Path> o1, Map.Entry<String, Path> o2) {
@@ -33,7 +35,6 @@ public class PropertyHelper {
    private PropertyHelper() {
    }
 
-   private static Log log = LogFactory.getLog(PropertyHelper.class);
 
    /**
     * Retrieve all properties from this class and all its superclasses.
@@ -142,7 +143,7 @@ public class PropertyHelper {
             }
             // TODO: delegate properties are added according to field type, this does not allow polymorphism
             addProperties(field.getType(), properties, useDashedName,
-                  includeDelegates, includeAliases, prefix + delegatePrefix, newPath);
+               includeDelegates, includeAliases, prefix + delegatePrefix, newPath);
          }
       }
    }
@@ -272,11 +273,11 @@ public class PropertyHelper {
                   path.set(target, converter.convert((ComplexDefinition) entry.getValue(), path.getTargetGenericType()));
                } catch (InstantiationException e) {
                   log.errorf(e, "Cannot instantiate converter %s for setting %s (%s)",
-                        converterClass.getName(), path, propName);
+                     converterClass.getName(), path, propName);
                   throw new IllegalArgumentException(e);
                } catch (IllegalAccessException e) {
                   log.errorf(e, "Cannot access converter %s for setting %s (%s)",
-                        converterClass.getName(), path, propName);
+                     converterClass.getName(), path, propName);
                   throw new IllegalArgumentException(e);
                } catch (Throwable t) {
                   log.error("Failed to convert definition " + entry.getValue(), t);
@@ -306,11 +307,11 @@ public class PropertyHelper {
          path.set(target, converter.convert(evaluated, path.getTargetGenericType()));
       } catch (InstantiationException e) {
          log.errorf(e, "Cannot instantiate converter %s for setting %s (%s)",
-               converterClass.getName(), path, propName);
+            converterClass.getName(), path, propName);
          throw new IllegalArgumentException(e);
       } catch (IllegalAccessException e) {
          log.errorf(e, "Cannot access converter %s for setting %s (%s)",
-               converterClass.getName(), path, propName);
+            converterClass.getName(), path, propName);
          throw new IllegalArgumentException(e);
       } catch (Throwable t) {
          log.errorf(t, "Failed to convert value '%s' evaluated to '%s'", propertyString, evaluated);

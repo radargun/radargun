@@ -1,5 +1,9 @@
 package org.radargun.stages.query;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
@@ -9,10 +13,6 @@ import org.radargun.utils.NumberConverter;
 import org.radargun.utils.ObjectConverter;
 import org.radargun.utils.RandomValue;
 import org.radargun.utils.ReflexiveConverters;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Definition elements that formulate the condition that should be
@@ -27,7 +27,7 @@ public abstract class Condition {
       return PropertyHelper.getDefinitionElementName(getClass()) + PropertyHelper.toString(this);
    }
 
-   public static abstract class PathCondition extends Condition {
+   public abstract static class PathCondition extends Condition {
       @Property(doc = "Target path (field on the queried object or path through embedded objects)", optional = false)
       public String path;
    }
@@ -52,7 +52,7 @@ public abstract class Condition {
       }
    }
 
-   public static abstract class PathNumberCondition extends PathCondition {
+   public abstract static class PathNumberCondition extends PathCondition {
       @Property(doc = "Value used in the condition", converter = NumberConverter.class)
       public Number value;
 
@@ -124,10 +124,14 @@ public abstract class Condition {
 
       @Init
       public void init() {
-         if (lowerBound == null && randomLowerBound == null) throw new IllegalStateException("Define either lowerBound or randomLowerBound");
-         if (lowerBound != null && randomLowerBound != null) throw new IllegalStateException("Define one of: lowerBound, randomLowerBound");
-         if (upperBound == null && randomUpperBound == null) throw new IllegalStateException("Define either upperBound or randomUpperBound");
-         if (upperBound != null && randomUpperBound != null) throw new IllegalStateException("Define one of: upperBound, randomUpperBound");
+         if (lowerBound == null && randomLowerBound == null)
+            throw new IllegalStateException("Define either lowerBound or randomLowerBound");
+         if (lowerBound != null && randomLowerBound != null)
+            throw new IllegalStateException("Define one of: lowerBound, randomLowerBound");
+         if (upperBound == null && randomUpperBound == null)
+            throw new IllegalStateException("Define either upperBound or randomUpperBound");
+         if (upperBound != null && randomUpperBound != null)
+            throw new IllegalStateException("Define one of: upperBound, randomUpperBound");
       }
 
       @Override
@@ -171,6 +175,7 @@ public abstract class Condition {
          if (value == null && random == null) throw new IllegalStateException("Define either value or random");
          if (value != null && random != null) throw new IllegalStateException("Define one of: value, random");
       }
+
       @Override
       public void apply(Query.Builder builder) {
          builder.contains(path, value != null ? value : random.nextValue(ThreadLocalRandom.current()));
@@ -207,7 +212,7 @@ public abstract class Condition {
 
       @Override
       public void apply(Query.Builder builder) {
-         Query.Builder subBuilders[] = new Query.Builder[subs.size()];
+         Query.Builder[] subBuilders = new Query.Builder[subs.size()];
          int i = 0;
          for (Condition sub : subs) {
             Query.Builder subBuilder = builder.subquery();

@@ -14,7 +14,9 @@ import org.jfree.ui.TextAnchor;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class ChartsHelper {
+public final class ChartsHelper {
+
+   private ChartsHelper() {}
 
    public static double getMaximumTickLabelHeight(List<Tick> ticks, Graphics2D g2, RectangleInsets insets, Font font, double tickLabelAngle) {
       g2.setFont(font);
@@ -25,9 +27,9 @@ public class ChartsHelper {
             labelBounds = TextUtilities.calculateRotatedStringBounds(tick.getText(), g2, 0, 0, TextAnchor.TOP_LEFT, tickLabelAngle, TextAnchor.TOP_LEFT).getBounds2D();
          }
          if (labelBounds != null && labelBounds.getWidth()
-               + insets.getTop() + insets.getBottom() > maxHeight) {
+            + insets.getTop() + insets.getBottom() > maxHeight) {
             maxHeight = labelBounds.getWidth()
-                  + insets.getTop() + insets.getBottom();
+               + insets.getTop() + insets.getBottom();
          }
       }
       return maxHeight;
@@ -42,10 +44,10 @@ public class ChartsHelper {
             labelBounds = TextUtilities.calculateRotatedStringBounds(tick.getText(), g2, 0, 0, TextAnchor.TOP_LEFT, tickLabelAngle, TextAnchor.TOP_LEFT).getBounds2D();
          }
          if (labelBounds != null
-               && labelBounds.getWidth() + insets.getLeft()
-               + insets.getRight() > maxWidth) {
+            && labelBounds.getWidth() + insets.getLeft()
+            + insets.getRight() > maxWidth) {
             maxWidth = labelBounds.getWidth()
-                  + insets.getLeft() + insets.getRight();
+               + insets.getLeft() + insets.getRight();
          }
       }
       return maxWidth;

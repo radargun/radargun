@@ -61,7 +61,7 @@ public class ChmCache implements BasicOperations.Cache, ConditionalOperations.Ca
 
    @Override
    public boolean replace(Object key, Object value) {
-      for (;;) {
+      for (; ; ) {
          Object oldValue = chm.get(key);
          if (oldValue == null) return false;
          if (chm.replace(key, oldValue, value)) return true;
@@ -75,7 +75,7 @@ public class ChmCache implements BasicOperations.Cache, ConditionalOperations.Ca
 
    @Override
    public Object getAndReplace(Object key, Object value) {
-      for (;;) {
+      for (; ; ) {
          Object oldValue = chm.get(key);
          if (oldValue == null) return null;
          if (chm.replace(key, oldValue, value)) return oldValue;

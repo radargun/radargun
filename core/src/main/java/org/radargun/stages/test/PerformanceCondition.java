@@ -23,7 +23,7 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class PerformanceCondition {
-   private static Log log = LogFactory.getLog(PerformanceCondition.class);
+   private static final Log log = LogFactory.getLog(PerformanceCondition.class);
 
    public abstract boolean evaluate(Statistics statistics);
 
@@ -78,7 +78,7 @@ public abstract class PerformanceCondition {
       }
    }
 
-   protected static abstract class AbstractCondition extends PerformanceCondition {
+   protected abstract static class AbstractCondition extends PerformanceCondition {
       @Property(doc = "Identifier of the operation (or its derivate) that should be tested.", optional = false)
       protected String on;
 
@@ -115,7 +115,7 @@ public abstract class PerformanceCondition {
       }
    }
 
-   protected static abstract class ThroughputBase extends AbstractCondition {
+   protected abstract static class ThroughputBase extends AbstractCondition {
       @Property(doc = "Test if the actual throughput is below specified value (operations per second)")
       protected Long below;
 
@@ -133,8 +133,8 @@ public abstract class PerformanceCondition {
          OperationStats stats = statistics.getOperationsStats().get(on);
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          org.radargun.stats.representation.OperationThroughput throughput = stats.getRepresentation(
-               org.radargun.stats.representation.OperationThroughput.class,
-               TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin()));
+            org.radargun.stats.representation.OperationThroughput.class,
+            TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin()));
          if (throughput == null) throw new IllegalStateException("Cannot determine throughput from " + stats);
          log.info(getClass().getSimpleName() + " is " + getThroughput(throughput) + " ops/s " + PropertyHelper.toString(this));
          if (below != null) return getThroughput(throughput) < below;
@@ -207,7 +207,8 @@ public abstract class PerformanceCondition {
          if (totalOver != null) defs++;
          if (percentBelow != null) defs++;
          if (percentOver != null) defs++;
-         if (defs != 1) throw new IllegalStateException("Must define exactly one of 'total-below', 'total-over', 'percent-below', 'percent-over'");
+         if (defs != 1)
+            throw new IllegalStateException("Must define exactly one of 'total-below', 'total-over', 'percent-below', 'percent-over'");
       }
 
       @Override
@@ -226,7 +227,7 @@ public abstract class PerformanceCondition {
    }
 
    @DefinitionElement(name = "percentile", doc = "Checks value of the response time of given operation " +
-         "at some percentile (0 = fastest operation, 100 = slowest operation).")
+      "at some percentile (0 = fastest operation, 100 = slowest operation).")
    protected static class Percentile extends AbstractCondition {
       @Property(doc = "Test if the response time is below specified value (use time unit!)", converter = NanoTimeConverter.class)
       protected Long below;
@@ -248,7 +249,7 @@ public abstract class PerformanceCondition {
          OperationStats stats = statistics.getOperationsStats().get(on);
          if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          org.radargun.stats.representation.Percentile percentile
-               = stats.getRepresentation(org.radargun.stats.representation.Percentile.class, value);
+            = stats.getRepresentation(org.radargun.stats.representation.Percentile.class, value);
          if (percentile == null) throw new IllegalStateException("Cannot determine percentile from " + stats);
          log.info("Response time is " + Utils.prettyPrintTime((long) percentile.responseTimeMax, TimeUnit.NANOSECONDS) + PropertyHelper.toString(this));
          if (below != null) return percentile.responseTimeMax < below;
@@ -259,13 +260,13 @@ public abstract class PerformanceCondition {
 
    public static class Converter extends ReflexiveConverters.ObjectConverter {
       public Converter() {
-         super(new Class<?>[] { Any.class, All.class, Mean.class, GrossThroughput.class, NetThroughput.class, Requests.class, Errors.class, Percentile.class});
+         super(new Class<?>[] {Any.class, All.class, Mean.class, GrossThroughput.class, NetThroughput.class, Requests.class, Errors.class, Percentile.class});
       }
    }
 
    protected static class ListConverter extends ReflexiveConverters.ListConverter {
       public ListConverter() {
-         super(new Class<?>[] { Any.class, All.class, Mean.class, GrossThroughput.class, NetThroughput.class, Requests.class, Errors.class, Percentile.class});
+         super(new Class<?>[] {Any.class, All.class, Mean.class, GrossThroughput.class, NetThroughput.class, Requests.class, Errors.class, Percentile.class});
       }
    }
 }

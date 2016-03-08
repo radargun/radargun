@@ -13,12 +13,12 @@ import org.radargun.Operation;
 @Trait(doc = "Operations using multiple key-value pairs.")
 public interface BulkOperations {
    String TRAIT = BulkOperations.class.getSimpleName();
-   Operation GET_ALL_NATIVE =    Operation.register(TRAIT + ".GetAll.Native");
-   Operation GET_ALL_ASYNC =     Operation.register(TRAIT + ".GetAll.Async");
-   Operation PUT_ALL_NATIVE =    Operation.register(TRAIT + ".PutAll.Native");
-   Operation PUT_ALL_ASYNC =     Operation.register(TRAIT + ".PutAll.Async");
+   Operation GET_ALL_NATIVE = Operation.register(TRAIT + ".GetAll.Native");
+   Operation GET_ALL_ASYNC = Operation.register(TRAIT + ".GetAll.Async");
+   Operation PUT_ALL_NATIVE = Operation.register(TRAIT + ".PutAll.Native");
+   Operation PUT_ALL_ASYNC = Operation.register(TRAIT + ".PutAll.Async");
    Operation REMOVE_ALL_NATIVE = Operation.register(TRAIT + ".RemoveAll.Native");
-   Operation REMOVE_ALL_ASYNC =  Operation.register(TRAIT + ".RemoveAll.Async");
+   Operation REMOVE_ALL_ASYNC = Operation.register(TRAIT + ".RemoveAll.Async");
 
    /**
     * The cache may provide native implementation of bulk get or it may be simulated

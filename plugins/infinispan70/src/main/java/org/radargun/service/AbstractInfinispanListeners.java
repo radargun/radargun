@@ -1,7 +1,5 @@
 package org.radargun.service;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.radargun.traits.CacheListeners;
@@ -100,7 +98,9 @@ public abstract class AbstractInfinispanListeners implements CacheListeners {
          created.remove(listener);
       }
 
-      public void remove(UpdatedListener listener) { updated.remove(listener); }
+      public void remove(UpdatedListener listener) {
+         updated.remove(listener);
+      }
 
       public void remove(RemovedListener listener) {
          removed.remove(listener);
@@ -116,8 +116,8 @@ public abstract class AbstractInfinispanListeners implements CacheListeners {
 
       public boolean isEmpty() {
          return created.isEmpty() && updated.isEmpty() &&
-                removed.isEmpty() && evicted.isEmpty() &&
-                expired.isEmpty();
+            removed.isEmpty() && evicted.isEmpty() &&
+            expired.isEmpty();
       }
 
    }

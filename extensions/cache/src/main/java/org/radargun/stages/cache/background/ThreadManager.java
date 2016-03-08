@@ -1,9 +1,5 @@
 package org.radargun.stages.cache.background;
 
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
-import org.radargun.utils.TimeService;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -12,6 +8,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+
+import org.radargun.logging.Log;
+import org.radargun.logging.LogFactory;
+import org.radargun.utils.TimeService;
 
 /**
  * Component responsible for starting/stopping background stressors and checkers.
@@ -56,8 +56,8 @@ public class ThreadManager {
          manager.setLoaded(true);
       }
       if (legacyLogicConfiguration.loadDataOnSlaves != null
-            && !legacyLogicConfiguration.loadDataOnSlaves.isEmpty()
-            && !legacyLogicConfiguration.loadDataOnSlaves.contains(manager.getSlaveState().getSlaveIndex())) {
+         && !legacyLogicConfiguration.loadDataOnSlaves.isEmpty()
+         && !legacyLogicConfiguration.loadDataOnSlaves.contains(manager.getSlaveState().getSlaveIndex())) {
          log.info("This slave is not loading any data");
          return;
       }
@@ -278,8 +278,8 @@ public class ThreadManager {
                StressorRecord record = allRecords.get(i);
                if (record == null) continue;
                sb.append(record.getThreadId()).append("# ")
-                     .append(record.getOperationId()).append(" (")
-                     .append(record.getLastConfirmedOperationId()).append("), ");
+                  .append(record.getOperationId()).append(" (")
+                  .append(record.getLastConfirmedOperationId()).append("), ");
             }
             log.debug(sb.toString());
             return null;

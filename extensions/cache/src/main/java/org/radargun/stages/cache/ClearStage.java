@@ -23,7 +23,7 @@ import org.radargun.utils.Utils;
 public class ClearStage extends AbstractDistStage {
 
    @Property(doc = "Execute local variant of clear on each slave. Default is null - local clear is performed, only if it is provided by the service." +
-         " True enforces local clear - if given service does not provide the feature, exception is thrown.")
+      " True enforces local clear - if given service does not provide the feature, exception is thrown.")
    private Boolean local = null;
 
    @Property(doc = "Execute the clear inside explicit transaction.")
@@ -83,7 +83,7 @@ public class ClearStage extends AbstractDistStage {
             log.warn("Failed to clear cache(s)", e);
          } finally {
             System.gc();
-            log.info( "After executing clear, memory looks like this: \n" + Utils.getMemoryInfo());
+            log.info("After executing clear, memory looks like this: \n" + Utils.getMemoryInfo());
          }
       }
       return errorResponse("Failed to clear the cache.", null);

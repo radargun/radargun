@@ -8,8 +8,8 @@ import org.radargun.utils.TimeService;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class AbstractCompletion implements Completion {
-   protected final static String PROGRESS_STRING = "Number of operations executed by this thread: %d. Elapsed time: %s. Remaining: %s. Total: %s.";
-   protected final static Log log = LogFactory.getLog(Completion.class);
+   protected static final String PROGRESS_STRING = "Number of operations executed by this thread: %d. Elapsed time: %s. Remaining: %s. Total: %s.";
+   protected static final Log log = LogFactory.getLog(Completion.class);
 
    protected boolean started, completed;
    protected long startTime;
