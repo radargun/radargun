@@ -139,7 +139,6 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
       cbh.getGlobalConfigurationBuilder().transport().transport(partitionable.createTransport());
       DefaultCacheManager cm = new DefaultCacheManager(cbh, false);
       beforeCacheManagerStart(cm);
-      cm.start();
       return cm;
    }
 
