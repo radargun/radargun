@@ -111,6 +111,7 @@ public class InfinispanEmbeddedService {
       log.tracef("TxControl: %s", TxControl.isEnabled() ? "enabled" : "disabled");
 
       cacheManager = createCacheManager(configFile);
+      cacheManager.start();
       try {
          String cacheNames = cacheManager.getDefinedCacheNames();
          if (!cacheNames.contains(cacheName))
@@ -179,7 +180,6 @@ public class InfinispanEmbeddedService {
    protected DefaultCacheManager createCacheManager(String configFile) throws IOException {
       DefaultCacheManager cm = new DefaultCacheManager(configFile, false);
       beforeCacheManagerStart(cm);
-      cm.start();
       return cm;
    }
 
