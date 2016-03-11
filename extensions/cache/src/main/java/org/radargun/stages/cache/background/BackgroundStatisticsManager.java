@@ -2,10 +2,12 @@ package org.radargun.stages.cache.background;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -118,12 +120,7 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
          if (threads == null) {
             stats = Collections.EMPTY_LIST;
          } else {
-            stats = new ArrayList<Statistics>(threads.length);
-            for (int i = 0; i < threads.length; i++) {
-               if (threads[i] != null) {
-                  stats.add(threads[i].getStatsSnapshot(true));
-               }
-            }
+            stats = Arrays.asList(threads).stream().filter(t -> t != null).map(t -> t.getStatsSnapshot(true)).collect(Collectors.toList());
          }
          Timeline timeline = backgroundOpsManager.getSlaveState().getTimeline();
          long now = TimeService.currentTimeMillis();
@@ -137,10 +134,7 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
                }
             }
          } else {
-            Statistics aggregated = stats.get(0).copy();
-            for (int i = 1; i < stats.size(); ++i) {
-               aggregated.merge(stats.get(i));
-            }
+            Statistics aggregated = stats.stream().reduce(Statistics.MERGE).orElseThrow(() -> new IllegalStateException("No statistics!"));
             for (Map.Entry<String, OperationStats> entry : aggregated.getOperationsStats().entrySet()) {
                OperationThroughput throughput = entry.getValue().getRepresentation(OperationThroughput.class, TimeUnit.MILLISECONDS.toNanos(aggregated.getEnd() - aggregated.getBegin()));
                if (throughput != null && (throughput.gross != 0 || timeline.getValues(entry.getKey() + " Throughput") != null)) {

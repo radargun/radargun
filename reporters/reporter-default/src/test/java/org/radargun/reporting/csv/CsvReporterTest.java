@@ -1,5 +1,8 @@
 package org.radargun.reporting.csv;
 
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.radargun.Operation;
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
@@ -8,7 +11,10 @@ import org.radargun.reporting.Timeline;
 import org.radargun.stats.AllRecordingOperationStats;
 import org.radargun.stats.DataOperationStats;
 import org.radargun.stats.DefaultStatistics;
+import org.radargun.stats.OperationStats;
+import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
+import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -26,6 +32,8 @@ import java.util.Map;
  * @author Matej Cimbora
  */
 @Test
+@PowerMockIgnore( {"javax.management.*"})
+@PrepareForTest(TimeService.class)
 public class CsvReporterTest {
 
    public void testReporterOutput() throws IOException {
@@ -63,20 +71,20 @@ public class CsvReporterTest {
 
          DefaultStatistics defaultStatistics1 = new DefaultStatistics(new AllRecordingOperationStats());
          defaultStatistics1.setBegin(0);
-         defaultStatistics1.registerRequest(10, operation1);
-         defaultStatistics1.registerRequest(20, operation1);
-         defaultStatistics1.registerRequest(30, operation1);
-         defaultStatistics1.registerRequest(100, operation2);
-         defaultStatistics1.registerRequest(200, operation2);
-         defaultStatistics1.registerRequest(300, operation3);
-         defaultStatistics1.registerError(300, operation3);
+         fakeRequest(defaultStatistics1, 10, operation1);
+         fakeRequest(defaultStatistics1, 20, operation1);
+         fakeRequest(defaultStatistics1, 30, operation1);
+         fakeRequest(defaultStatistics1, 100, operation2);
+         fakeRequest(defaultStatistics1, 200, operation2);
+         fakeRequest(defaultStatistics1, 300, operation3);
+         fakeRequestError(defaultStatistics1, 300,operation3);
          defaultStatistics1.setEnd(1001);
 
          DataOperationStats dos = new DataOperationStats();
          DefaultStatistics defaultStatistics2 = new DefaultStatistics();
          defaultStatistics2.setBegin(0);
-         defaultStatistics2.registerRequest(100, operation1);
-         defaultStatistics2.registerRequest(200, operation1);
+         fakeRequest(defaultStatistics2, 100, operation1);
+         fakeRequest(defaultStatistics2, 200, operation1);
          dos.setTotalBytes(200l);
          defaultStatistics2.setEnd(1001);
 
@@ -176,5 +184,19 @@ public class CsvReporterTest {
             Utils.deleteDirectory(tempDirectory.toFile());
          }
       }
+   }
+
+   private void fakeRequest(DefaultStatistics stats, long duration, Operation operation) {
+      PowerMockito.when(TimeService.nanoTime()).thenReturn(0L);
+      Request request = stats.startRequest();
+      PowerMockito.when(TimeService.nanoTime()).thenReturn(duration);
+      request.succeeded(operation);
+   }
+
+   private void fakeRequestError(DefaultStatistics stats, long duration, Operation operation) {
+      PowerMockito.when(TimeService.nanoTime()).thenReturn(0L);
+      Request request = stats.startRequest();
+      PowerMockito.when(TimeService.nanoTime()).thenReturn(duration);
+      request.failed(operation);
    }
 }

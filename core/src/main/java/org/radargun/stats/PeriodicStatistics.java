@@ -33,7 +33,7 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationD
       this.buckets = new ArrayList<>();
    }
 
-   public PeriodicStatistics(Statistics prototype, long period) {
+   PeriodicStatistics(Statistics prototype, long period) {
       this();
       this.prototype = prototype;
       this.period = period;
@@ -64,13 +64,18 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationD
    }
 
    @Override
-   public void registerRequest(long responseTime, Operation operation) {
-      getCurrentBucket().registerRequest(responseTime, operation);
+   public void record(Request request, Operation operation) {
+      getCurrentBucket().record(request, operation);
    }
 
    @Override
-   public void registerError(long responseTime, Operation operation) {
-      getCurrentBucket().registerError(responseTime, operation);
+   public void record(Message message, Operation operation) {
+      getCurrentBucket().record(message, operation);
+   }
+
+   @Override
+   public void record(RequestSet requestSet, Operation operation) {
+      getCurrentBucket().record(requestSet, operation);
    }
 
    @Override

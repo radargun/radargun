@@ -50,15 +50,15 @@ public class SynchronizedStatistics extends DefaultStatistics {
    }
 
    @Override
-   public synchronized void registerRequest(long responseTime, Operation operation) {
+   public synchronized void record(Request request, Operation operation) {
       ensureNotSnapshot();
-      super.registerRequest(responseTime, operation);
+      super.record(request, operation);
    }
 
    @Override
-   public synchronized void registerError(long responseTime, Operation operation) {
+   public synchronized void record(Message message, Operation operation) {
       ensureNotSnapshot();
-      super.registerError(responseTime, operation);
+      super.record(message, operation);
    }
 
    @Override

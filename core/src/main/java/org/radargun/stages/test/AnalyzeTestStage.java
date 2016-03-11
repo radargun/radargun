@@ -153,35 +153,16 @@ public class AnalyzeTestStage extends AbstractDistStage {
             break;
          case GROUP_BY_NODE:
             for (Map.Entry<Integer, List<Statistics>> entry : statistics) {
-               Statistics aggregation = null;
-               for (Statistics s : entry.getValue()) {
-                  if (aggregation == null) {
-                     aggregation = s.copy();
-                  } else {
-                     aggregation.merge(s);
-                  }
-               }
-               if (aggregation != null) {
-                  groups.add(new Group(aggregation.getOperationsStats().get(operation), entry.getValue().size(), duration(aggregation), new Origin(iteration, entry.getKey(), -1)));
-               }
+               entry.getValue().stream().reduce(Statistics.MERGE).map(aggregation ->
+                  groups.add(new Group(aggregation.getOperationsStats().get(operation), entry.getValue().size(), duration(aggregation), new Origin(iteration, entry.getKey(), -1)))
+               );
             }
             break;
          case GROUP_ALL:
-            Statistics aggregation = null;
-            int threads = 1;
-            for (Map.Entry<Integer, List<Statistics>> entry : statistics) {
-               for (Statistics s : entry.getValue()) {
-                  if (aggregation == null) {
-                     aggregation = s.copy();
-                  } else {
-                     aggregation.merge(s);
-                     ++threads;
-                  }
-               }
-            }
-            if (aggregation != null) {
-               groups.add(new Group(aggregation.getOperationsStats().get(operation), threads, duration(aggregation), new Origin(iteration, -1, -1)));
-            }
+            int threads = statistics.stream().mapToInt(e -> e.getValue().size()).sum();
+            statistics.stream().flatMap(e -> e.getValue().stream()).reduce(Statistics.MERGE).map(aggregation ->
+               groups.add(new Group(aggregation.getOperationsStats().get(operation), threads, duration(aggregation), new Origin(iteration, -1, -1)))
+            );
             break;
          default:
             throw new IllegalStateException("Unexpected thread grouping: " + threadGrouping);

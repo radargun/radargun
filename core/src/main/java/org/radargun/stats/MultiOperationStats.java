@@ -37,16 +37,23 @@ public class MultiOperationStats implements OperationStats {
    }
 
    @Override
-   public void registerRequest(long responseTime) {
+   public void record(Request request) {
       for (OperationStats impl : impls) {
-         impl.registerRequest(responseTime);
+         impl.record(request);
       }
    }
 
    @Override
-   public void registerError(long responseTime) {
+   public void record(Message message) {
       for (OperationStats impl : impls) {
-         impl.registerError(responseTime);
+         impl.record(message);
+      }
+   }
+
+   @Override
+   public void record(RequestSet requestSet) {
+      for (OperationStats impl : impls) {
+         impl.record(requestSet);
       }
    }
 

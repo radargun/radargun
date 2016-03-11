@@ -20,6 +20,7 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.DefaultOperationStats;
 import org.radargun.stats.DefaultStatistics;
+import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.BulkOperations;
@@ -120,6 +121,10 @@ public class RandomDataStage extends AbstractDistStage {
 
    @Property(doc = "Controls whether batch insertion is performed in asychronous way. Default is false (prefer synchronous operations).")
    public boolean useAsyncBatchLoading = false;
+
+   @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'default' statistics " +
+      "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
+   private Statistics statisticsPrototype = new DefaultStatistics(new DefaultOperationStats());
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected BasicOperations basicOperations;
@@ -270,14 +275,12 @@ public class RandomDataStage extends AbstractDistStage {
 
       try {
          byte[] buffer = new byte[valueSize];
-         Statistics stats = new DefaultStatistics(new DefaultOperationStats());
+         Statistics stats = statisticsPrototype.copy();
          stats.begin();
          int counter = 0;
          Map map = new HashMap(numOperationsToPerform);
          while (putCount > 0) {
             String key = Integer.toString(slaveState.getSlaveIndex()) + "-" + putCount + ":" + TimeService.nanoTime();
-
-            long start = -1;
 
             String cacheData = null;
 
@@ -295,6 +298,7 @@ public class RandomDataStage extends AbstractDistStage {
 
             // putCount == 1 -> last iteration
             if (counter == numOperationsToPerform - 1 || putCount == 1) {
+               Request request;
                boolean success = false;
                for (int i = 0; i < putRetryCount; ++i) {
                   try {
@@ -303,7 +307,7 @@ public class RandomDataStage extends AbstractDistStage {
                            log.info(i + ": Writing string length " + valueSize + " to cache key: " + key);
                         }
 
-                        start = TimeService.nanoTime();
+                        request = stats.startRequest();
                         if (batchSize > 0) {
                            bulkOperationsCache.putAll(map);
                         } else {
@@ -314,18 +318,17 @@ public class RandomDataStage extends AbstractDistStage {
                            log.info(i + ": Writing " + valueSize + " bytes to cache key: " + key);
                         }
 
-                        start = TimeService.nanoTime();
+                        request = stats.startRequest();
                         if (batchSize > 0) {
                            bulkOperationsCache.putAll(map);
                         } else {
                            basicOperationsCache.put(key, buffer);
                         }
                      }
-                     long durationNanos = TimeService.nanoTime() - start;
-                     stats.registerRequest(durationNanos, BasicOperations.PUT);
+                     request.succeeded(BasicOperations.PUT);
                      if (printWriteStatistics) {
                         log.info("Put on slave" + slaveState.getSlaveIndex() + " took "
-                           + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+                           + Utils.prettyPrintTime(request.duration(), TimeUnit.NANOSECONDS));
                      }
                      success = true;
                      counter = -1;

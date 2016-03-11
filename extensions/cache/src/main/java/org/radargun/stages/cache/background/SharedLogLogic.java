@@ -5,9 +5,9 @@ import java.util.Map;
 
 import org.radargun.Operation;
 import org.radargun.stages.helpers.Range;
+import org.radargun.stats.Request;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
-import org.radargun.utils.TimeService;
 
 /**
  * This logic operates on {@link SharedLogValue shared log values}
@@ -126,57 +126,31 @@ class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
    }
 
    private SharedLogValue checkedGetValue(long keyId) throws Exception {
-      Object prevValue;
-      long startTime = TimeService.nanoTime();
-      try {
-         prevValue = basicCache.get(keyGenerator.generateKey(keyId));
-      } catch (Exception e) {
-         stressor.stats.registerError(TimeService.nanoTime() - startTime, BasicOperations.GET);
-         throw e;
-      }
-      long endTime = TimeService.nanoTime();
-      if (prevValue != null && !(prevValue instanceof SharedLogValue)) {
-         stressor.stats.registerError(endTime - startTime, BasicOperations.GET);
-         log.error("Value is not an instance of SharedLogValue: " + prevValue);
-         throw new IllegalStateException();
-      } else {
-         stressor.stats.registerRequest(endTime - startTime, prevValue == null ? GET_NULL : BasicOperations.GET);
-         return (SharedLogValue) prevValue;
-      }
+      return (SharedLogValue) stressor.stats.startRequest().exec(BasicOperations.GET,
+         () -> basicCache.get(keyGenerator.generateKey(keyId)),
+         prevValue -> {
+            if (prevValue != null && !(prevValue instanceof SharedLogValue)) {
+               log.error("Value is not an instance of SharedLogValue: " + prevValue);
+               throw new IllegalStateException();
+            }
+            return true;
+         });
    }
 
    private boolean checkedPutValue(long keyId, SharedLogValue oldValue, SharedLogValue newValue) throws Exception {
-      boolean returnValue;
-      long startTime = TimeService.nanoTime();
-      Operation operation = Operation.UNKNOWN;
-      try {
-         if (oldValue == null) {
-            operation = ConditionalOperations.PUT_IF_ABSENT;
-            returnValue = conditionalCache.putIfAbsent(keyGenerator.generateKey(keyId), newValue);
-         } else {
-            operation = ConditionalOperations.REPLACE;
-            returnValue = conditionalCache.replace(keyGenerator.generateKey(keyId), oldValue, newValue);
-         }
-      } catch (Exception e) {
-         stressor.stats.registerError(TimeService.nanoTime() - startTime, operation);
-         throw e;
+      Request request = stressor.stats.startRequest();
+      if (oldValue == null) {
+         return request.exec(ConditionalOperations.PUT_IF_ABSENT,
+            () -> conditionalCache.putIfAbsent(keyGenerator.generateKey(keyId), newValue));
+      } else {
+         return request.exec(ConditionalOperations.REPLACE,
+            () -> conditionalCache.replace(keyGenerator.generateKey(keyId), oldValue, newValue));
       }
-      long endTime = TimeService.nanoTime();
-      stressor.stats.registerRequest(endTime - startTime, operation);
-      return returnValue;
    }
 
    @Override
    protected boolean checkedRemoveValue(long keyId, SharedLogValue oldValue) throws Exception {
-      long startTime = TimeService.nanoTime();
-      try {
-         boolean returnValue = conditionalCache.remove(keyGenerator.generateKey(keyId), oldValue);
-         long endTime = TimeService.nanoTime();
-         stressor.stats.registerRequest(endTime - startTime, ConditionalOperations.REMOVE);
-         return returnValue;
-      } catch (Exception e) {
-         stressor.stats.registerError(TimeService.nanoTime() - startTime, ConditionalOperations.REMOVE);
-         throw e;
-      }
+      return stressor.stats.startRequest().exec(ConditionalOperations.REMOVE,
+         () -> conditionalCache.remove(keyGenerator.generateKey(keyId), oldValue));
    }
 }

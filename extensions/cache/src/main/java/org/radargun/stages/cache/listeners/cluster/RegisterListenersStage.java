@@ -2,7 +2,6 @@ package org.radargun.stages.cache.listeners.cluster;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
@@ -111,7 +110,9 @@ public class RegisterListenersStage extends AbstractDistStage {
          @Override
          public void created(Object key, Object value) {
             if (sleepTime > 0) Utils.sleep(sleepTime);
-            statistics.registerRequest(getResponseTime(key), CREATED);
+            if (key instanceof TimestampKey) {
+               statistics.message().times(((TimestampKey) key).getTimestamp(), TimeService.currentTimeMillis()).record(CREATED);
+            }
             log.trace("Created " + key + " -> " + value);
          }
       };
@@ -121,7 +122,9 @@ public class RegisterListenersStage extends AbstractDistStage {
          @Override
          public void evicted(Object key, Object value) {
             if (sleepTime > 0) Utils.sleep(sleepTime);
-            statistics.registerRequest(getResponseTime(key), EVICTED);
+            if (key instanceof TimestampKey) {
+               statistics.message().times(((TimestampKey) key).getTimestamp(), TimeService.currentTimeMillis()).record(EVICTED);
+            }
             log.trace("Evicted " + key + " -> " + value);
          }
       };
@@ -131,7 +134,9 @@ public class RegisterListenersStage extends AbstractDistStage {
          @Override
          public void removed(Object key, Object value) {
             if (sleepTime > 0) Utils.sleep(sleepTime);
-            statistics.registerRequest(getResponseTime(key), REMOVED);
+            if (key instanceof TimestampKey) {
+               statistics.message().times(((TimestampKey) key).getTimestamp(), TimeService.currentTimeMillis()).record(REMOVED);
+            }
             log.trace("Removed " + key + " -> " + value);
          }
       };
@@ -141,7 +146,9 @@ public class RegisterListenersStage extends AbstractDistStage {
          @Override
          public void updated(Object key, Object value) {
             if (sleepTime > 0) Utils.sleep(sleepTime);
-            statistics.registerRequest(getResponseTime(key), UPDATED);
+            if (key instanceof TimestampKey) {
+               statistics.message().times(((TimestampKey) key).getTimestamp(), TimeService.currentTimeMillis()).record(UPDATED);
+            }
             log.trace("Updated " + key + " -> " + value);
          }
       };
@@ -151,18 +158,13 @@ public class RegisterListenersStage extends AbstractDistStage {
          @Override
          public void expired(Object key, Object value) {
             if (sleepTime > 0) Utils.sleep(sleepTime);
-            statistics.registerRequest(getResponseTime(key), EXPIRED);
+            if (key instanceof TimestampKey) {
+               statistics.message().times(((TimestampKey) key).getTimestamp(), TimeService.currentTimeMillis()).record(EXPIRED);
+            }
             log.trace("Expired " + key + " -> " + value);
          }
       };
       slaveState.put(EXPIRED.name, expiredListener);
-   }
-
-   private long getResponseTime(Object key) {
-      if (key instanceof TimestampKey) {
-         return (TimeUnit.NANOSECONDS.convert(TimeService.currentTimeMillis() - ((TimestampKey) key).getTimestamp(), TimeUnit.MILLISECONDS));
-      }
-      return 0; //latency of event arrival is not measured
    }
 
    public void registerListeners() {

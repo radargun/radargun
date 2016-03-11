@@ -16,13 +16,13 @@ import org.radargun.stages.cache.RandomDataStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.DataOperationStats;
 import org.radargun.stats.DefaultStatistics;
+import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.MapReducer;
 import org.radargun.traits.MapReducer.Task;
 import org.radargun.utils.KeyValueProperty;
 import org.radargun.utils.TimeConverter;
-import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -242,31 +242,28 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
    }
 
    private DistStageAck executeMapReduceTask(Task<KOut, VOut, R> task, Statistics stats) {
-      long durationNanos;
-      long start;
-
       MapReduceAck ack = new MapReduceAck(slaveState);
       try {
          if (collatorFqn != null) {
-            start = TimeService.nanoTime();
+            Request request = stats.startRequest();
             payloadObject = task.executeWithCollator();
-            durationNanos = TimeService.nanoTime() - start;
-            stats.registerRequest(durationNanos, MapReducer.MAPREDUCE_COLLATOR);
+            // TODO handle exception
+            request.succeeded(MapReducer.MAPREDUCE_COLLATOR);
             log.info("MapReduce task with Collator completed in "
-               + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+               + Utils.prettyPrintTime(request.duration(), TimeUnit.NANOSECONDS));
             ack.setStats(stats);
             if (printResult) {
                log.info("MapReduce result: " + payloadObject.toString());
             }
          } else {
-            start = TimeService.nanoTime();
+            Request request = stats.startRequest();
             payloadMap = task.execute();
-            durationNanos = TimeService.nanoTime() - start;
-            stats.registerRequest(durationNanos, MapReducer.MAPREDUCE);
+            // TODO handle exception
+            request.succeeded(MapReducer.MAPREDUCE);
 
             if (payloadMap == null) {
                if (storeResult) {
-                  log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+                  log.info("MapReduce task completed in " + Utils.prettyPrintTime(request.duration(), TimeUnit.NANOSECONDS));
 
                   MapReduceResult<KOut, VOut, R> mapReduceResult = (MapReduceResult) slaveState.get(MAPREDUCE_RESULT_KEY);
                   int totalSize = 0;
@@ -296,7 +293,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
                   ack.error("executeMapReduceTask() returned null");
                }
             } else {
-               log.info("MapReduce task completed in " + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+               log.info("MapReduce task completed in " + Utils.prettyPrintTime(request.duration(), TimeUnit.NANOSECONDS));
                log.info("Result map contains '" + payloadMap.keySet().size() + "' keys.");
                ack.setNumberOfResultKeys(payloadMap.keySet().size());
                ack.setStats(stats);

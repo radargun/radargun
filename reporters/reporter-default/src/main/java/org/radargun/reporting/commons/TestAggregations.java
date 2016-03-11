@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.radargun.config.Cluster;
 import org.radargun.logging.Log;
@@ -72,44 +74,31 @@ public class TestAggregations {
    }
 
    private void addIteration(Report.Test test, List<Aggregation> iterations, Report.TestIteration it) {
-      Statistics totalStats = null;
-      int totalThreads = 0;
+      AtomicInteger totalThreads = new AtomicInteger();
       List<Statistics> nodeStats = new ArrayList<>();
       List<Integer> nodeThreads = new ArrayList<>();
-      for (Map.Entry<Integer, List<Statistics>> entry : it.getStatistics()) {
-         int slaveIndex = entry.getKey();
-         List<Statistics> list = entry.getValue();
+      Optional<Statistics> totalStats = it.getStatistics().stream()
+         .map(entry -> {
+            int slaveIndex = entry.getKey();
+            List<Statistics> list = entry.getValue();
+            totalThreads.addAndGet(list.size());
+            return list.stream().reduce(Statistics.MERGE).map(ns -> {
+               while (nodeStats.size() <= slaveIndex) {
+                  nodeStats.add(null);
+                  nodeThreads.add(0);
+               }
+               nodeStats.set(slaveIndex, ns);
+               nodeThreads.set(slaveIndex, list.size());
+               return ns;
+            });
+         })
+         .filter(Optional::isPresent).map(Optional::get).reduce(Statistics.MERGE);
 
-         Statistics ns = null;
-         for (Statistics s : list) {
-            if (ns == null) {
-               ns = s.copy();
-            } else {
-               ns.merge(s);
-            }
-         }
-
-         if (ns != null) {
-            while (nodeStats.size() <= slaveIndex) {
-               nodeStats.add(null);
-               nodeThreads.add(0);
-            }
-            nodeStats.set(slaveIndex, ns);
-            nodeThreads.set(slaveIndex, list.size());
-
-            if (totalStats == null) {
-               totalStats = ns.copy();
-            } else {
-               totalStats.merge(ns);
-            }
-         }
-         totalThreads += list.size();
-      }
-      if (totalStats == null) {
+      if (!totalStats.isPresent()) {
          log.warn("There are no stats for this iteration");
       } else {
-         iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats, totalThreads, it));
-         for (Map.Entry<String, OperationStats> op : totalStats.getOperationsStats().entrySet()) {
+         iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats.get(), totalThreads.get(), it));
+         for (Map.Entry<String, OperationStats> op : totalStats.get().getOperationsStats().entrySet()) {
             if (!op.getValue().isEmpty()) operations.add(op.getKey());
          }
       }

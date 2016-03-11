@@ -19,11 +19,11 @@ import org.radargun.stages.test.legacy.LegacyStressor;
 import org.radargun.stages.test.legacy.LegacyTestStage;
 import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.state.SlaveState;
+import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Iterable;
-import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -194,7 +194,7 @@ public class IterateStage extends LegacyTestStage {
          }
          int nextFailures = 0;
          long elements = 0;
-         long loopStart = TimeService.nanoTime();
+         Request request = stressor.getStats().startRequest();
          while (!failed) {
             try {
                if (!(boolean) stressor.makeRequest(new HasNext(iterator))) break;
@@ -229,7 +229,7 @@ public class IterateStage extends LegacyTestStage {
             log.error("Failed to close the iterator", e);
             failed = true;
          }
-         stressor.getStats().registerRequest(TimeService.nanoTime() - loopStart, Iterable.FULL_LOOP);
+         request.succeeded(Iterable.FULL_LOOP);
       }
    }
 

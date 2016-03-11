@@ -39,7 +39,34 @@ public class AllRecordingOperationStats implements OperationStats {
    }
 
    @Override
-   public void registerRequest(long responseTime) {
+   public void record(Request request) {
+      ensureCapacity();
+      responseTimes[pos++] = request.duration();
+      if (!request.isSuccessful()) {
+         errors++;
+      }
+   }
+
+   @Override
+   public void record(Message message) {
+      if (message.isValid()) {
+         ensureCapacity();
+         responseTimes[pos++] = message.totalTime();
+      } else {
+         errors++;
+      }
+   }
+
+   @Override
+   public void record(RequestSet requestSet) {
+      ensureCapacity();
+      responseTimes[pos++] = requestSet.sumDurations();
+      if (!requestSet.isSuccessful()) {
+         errors++;
+      }
+   }
+
+   public void ensureCapacity() {
       if (pos >= responseTimes.length) {
          int newCapacity = Math.min(responseTimes.length << 1, MAX_CAPACITY);
          if (newCapacity <= responseTimes.length) {
@@ -50,13 +77,6 @@ public class AllRecordingOperationStats implements OperationStats {
          System.arraycopy(responseTimes, 0, temp, 0, responseTimes.length);
          responseTimes = temp;
       }
-      responseTimes[pos++] = responseTime;
-   }
-
-   @Override
-   public void registerError(long responseTime) {
-      registerRequest(responseTime);
-      errors++;
    }
 
    @Override

@@ -143,51 +143,46 @@ public class PerfrepoReporter implements Reporter {
 
    private void addIteration(TestExecutionBuilder testExecutionBuilder, Report.TestIteration iteration) {
       // merge statistics & aggregate mrds
-      Statistics aggregatedStatistics = null;
       Map<MetricNameMapping, List<Double>> mrdMapping = new HashMap<>();
       for (MetricNameMapping mapping : metricNameMapping) {
          if (mapping.computeMRD) {
-            mrdMapping.put(mapping, new ArrayList<Double>());
+            mrdMapping.put(mapping, new ArrayList<>());
          }
       }
-      for (Map.Entry<Integer, List<Statistics>> slaveStats : iteration.getStatistics()) {
-         Statistics statistics = mergeStatistics(slaveStats.getValue());
-         if (statistics != null) {
-            if (aggregatedStatistics == null) {
-               aggregatedStatistics = statistics.copy();
-            } else {
-               aggregatedStatistics.merge(statistics);
-            }
-            for (Map.Entry<MetricNameMapping, List<Double>> entry : mrdMapping.entrySet()) {
-               MetricNameMapping mapping = entry.getKey();
-               long duration = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
-               OperationStats operationStats = statistics.getOperationsStats().get(mapping.operation);
-               double value = mapping.representation.getValue(operationStats, duration);
-               entry.getValue().add(value);
-            }
-         }
-      }
-      if (aggregatedStatistics != null) {
-         long duration = TimeUnit.MILLISECONDS.toNanos(aggregatedStatistics.getEnd() - aggregatedStatistics.getBegin());
-         String iterationsName = iteration.test.iterationsName == null ? "Iteration" : iteration.test.iterationsName;
-         String iterationValue = iteration.getValue() == null ? String.valueOf(iteration.id) : iteration.getValue();
-         for (MetricNameMapping mapping : metricNameMapping) {
-            OperationStats operationStats = aggregatedStatistics.getOperationsStats().get(mapping.operation);
-            if (operationStats == null) {
-               log.warn("No operation " + mapping.operation + " reported!");
-               continue;
-            }
-            if (mapping.computeMRD) {
-               List<Double> mrds = mrdMapping.get(mapping);
-               if (!mrds.isEmpty()) {
-                  testExecutionBuilder.value(mapping.to, StatsUtils.calculateMrd(mrds), iterationsName, iterationValue);
+      iteration.getStatistics().stream().map(slaveStats -> slaveStats.getValue().stream().reduce(Statistics.MERGE)
+         .map(statistics -> addRepresentationValues(mrdMapping, statistics)))
+         .filter(Optional::isPresent).map(Optional::get).reduce(Statistics.MERGE).ifPresent(aggregatedStatistics -> {
+            long duration = TimeUnit.MILLISECONDS.toNanos(aggregatedStatistics.getEnd() - aggregatedStatistics.getBegin());
+            String iterationsName = iteration.test.iterationsName == null ? "Iteration" : iteration.test.iterationsName;
+            String iterationValue = iteration.getValue() == null ? String.valueOf(iteration.id) : iteration.getValue();
+            for (MetricNameMapping mapping : metricNameMapping) {
+               OperationStats operationStats = aggregatedStatistics.getOperationsStats().get(mapping.operation);
+               if (operationStats == null) {
+                  log.warn("No operation " + mapping.operation + " reported!");
+                  continue;
                }
-            } else {
-               double value = mapping.representation.getValue(operationStats, duration);
-               testExecutionBuilder.value(mapping.to, value, iterationsName, iterationValue);
+               if (mapping.computeMRD) {
+                  List<Double> mrds = mrdMapping.get(mapping);
+                  if (!mrds.isEmpty()) {
+                     testExecutionBuilder.value(mapping.to, StatsUtils.calculateMrd(mrds), iterationsName, iterationValue);
+                  }
+               } else {
+                  double value = mapping.representation.getValue(operationStats, duration);
+                  testExecutionBuilder.value(mapping.to, value, iterationsName, iterationValue);
+               }
             }
-         }
+         });
+   }
+
+   private Statistics addRepresentationValues(Map<MetricNameMapping, List<Double>> mrdMapping, Statistics statistics) {
+      for (Map.Entry<MetricNameMapping, List<Double>> entry : mrdMapping.entrySet()) {
+         MetricNameMapping mapping = entry.getKey();
+         long duration = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
+         OperationStats operationStats = statistics.getOperationsStats().get(mapping.operation);
+         double value = mapping.representation.getValue(operationStats, duration);
+         entry.getValue().add(value);
       }
+      return statistics;
    }
 
    private void addConfigsAndUpload(TestExecutionBuilder testExecutionBuilder, Report report, Report.Test test, PerfRepoClient perfRepoClient) {
@@ -256,18 +251,6 @@ public class PerfrepoReporter implements Reporter {
             testExecutionBuilder.parameter(resultPrefix + "." + slaveResult.getKey(), slaveResult.getValue().value);
          }
       }
-   }
-
-   private Statistics mergeStatistics(List<Statistics> statisticsList) {
-      Statistics summary = null;
-      for (Statistics statistics : statisticsList) {
-         if (summary == null) {
-            summary = statistics.copy();
-         } else {
-            summary.merge(statistics);
-         }
-      }
-      return summary;
    }
 
    private void addNormalizedConfigs(Report report, TestExecutionBuilder testExecutionBuilder) {
