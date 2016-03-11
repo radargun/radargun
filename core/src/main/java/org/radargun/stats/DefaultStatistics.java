@@ -1,9 +1,7 @@
 package org.radargun.stats;
 
 import java.lang.reflect.Array;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.radargun.Operation;
@@ -31,18 +29,6 @@ public class DefaultStatistics extends IntervalStatistics {
       this.prototype = prototype;
    }
 
-   public static Statistics merge(Collection<Statistics> set) {
-      if (set.size() == 0) {
-         return null;
-      }
-      Iterator<Statistics> elems = set.iterator();
-      Statistics res = elems.next().copy();
-      while (elems.hasNext()) {
-         res.merge(elems.next());
-      }
-      return res;
-   }
-
    protected OperationStats createOperationStats(int operationId) {
       return prototype.newInstance();
    }
@@ -62,17 +48,24 @@ public class DefaultStatistics extends IntervalStatistics {
    }
 
    @Override
-   public void registerRequest(long responseTime, Operation operation) {
+   public void record(Request request, Operation operation) {
       ensure(operation.id);
       OperationStats stats = operationStats[operation.id];
-      stats.registerRequest(responseTime);
+      stats.record(request);
    }
 
    @Override
-   public void registerError(long responseTime, Operation operation) {
+   public void record(Message message, Operation operation) {
       ensure(operation.id);
       OperationStats stats = operationStats[operation.id];
-      stats.registerError(responseTime);
+      stats.record(message);
+   }
+
+   @Override
+   public void record(RequestSet requestSet, Operation operation) {
+      ensure(operation.id);
+      OperationStats stats = operationStats[operation.id];
+      stats.record(requestSet);
    }
 
    private void ensure(int operationId) {

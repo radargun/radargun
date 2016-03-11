@@ -18,12 +18,12 @@ import org.radargun.stages.cache.RandomDataStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.DataOperationStats;
 import org.radargun.stats.DefaultStatistics;
+import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Streamable;
-import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -154,7 +154,7 @@ public class StreamStage extends AbstractDistStage {
       configureStreamTask();
 
       StreamStageAck ack = new StreamStageAck(slaveState);
-      start = TimeService.nanoTime();
+      Request request = stats.startRequest();
       try {
 
          if (parallelStream) {
@@ -163,10 +163,9 @@ public class StreamStage extends AbstractDistStage {
             streamTaskResult = function.apply(streamable.stream(cacheName));
          }
 
-         durationNanos = TimeService.nanoTime() - start;
-         stats.registerRequest(durationNanos, Streamable.STREAMABLE);
+         request.succeeded(Streamable.STREAMABLE);
          log.info("Stream task completed in "
-            + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+            + Utils.prettyPrintTime(request.duration(), TimeUnit.NANOSECONDS));
 
          long resultCount = function.getResultCount();
 
@@ -182,8 +181,7 @@ public class StreamStage extends AbstractDistStage {
             }
          }
       } catch (Exception e) {
-         durationNanos = TimeService.nanoTime() - start;
-         stats.registerError(durationNanos, Streamable.STREAMABLE);
+         request.failed(Streamable.STREAMABLE);
          ack.error("executeStreamTask() threw an exception", e);
          log.error("executeStreamTask() returned an exception", e);
       }

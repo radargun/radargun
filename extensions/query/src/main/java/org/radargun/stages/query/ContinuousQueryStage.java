@@ -4,9 +4,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.radargun.DistStageAck;
+import org.radargun.Operation;
 import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyDelegate;
@@ -147,14 +147,23 @@ public class ContinuousQueryStage extends AbstractDistStage {
 
          @Override
          public void onEntryJoined(Object key, Object value) {
-            statistics.get(statsKey).registerRequest(getResponseTime(key), ContinuousQuery.ENTRY_JOINED);
+            record(key, ContinuousQuery.ENTRY_JOINED);
             log.trace("Entry joined " + key + " -> " + value);
          }
 
          @Override
          public void onEntryLeft(Object key) {
-            statistics.get(statsKey).registerRequest(getResponseTime(key), ContinuousQuery.ENTRY_LEFT);
+            record(key, ContinuousQuery.ENTRY_LEFT);
             log.trace("Entry left " + key);
+         }
+
+         private void record(Object key, Operation operation) {
+            if (key instanceof Timestamped) {
+               SynchronizedStatistics stats = statistics.get(statsKey);
+               stats.message()
+                     .times(((Timestamped) key).getTimestamp(), TimeService.currentTimeMillis())
+                     .record(operation);
+            }
          }
       };
 
@@ -175,13 +184,6 @@ public class ContinuousQueryStage extends AbstractDistStage {
          ContinuousQuery.ListenerReference ref = listeners.remove(testName);
          continuousQueryTrait.removeContinuousQuery(cacheName, ref);
       }
-   }
-
-   private long getResponseTime(Object key) {
-      if (key instanceof Timestamped) {
-         return (TimeUnit.MILLISECONDS.toNanos(TimeService.currentTimeMillis() - ((Timestamped) key).getTimestamp()));
-      }
-      return 0; //latency of event arrival is not measured
    }
 
    private static class ContinuousQueryAck extends DistStageAck {

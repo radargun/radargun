@@ -68,21 +68,40 @@ public class DefaultOperationStats implements OperationStats {
    }
 
    @Override
-   public void registerRequest(long responseTime) {
-      requests++;
-      responseTimeMax = Math.max(responseTimeMax, responseTime);
-      responseTimeSum += responseTime;
-      // see http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm
-      double delta = (double) responseTime - responseTimeMean;
-      responseTimeMean += delta / (double) requests;
-      responseTimeM2 += delta * ((double) responseTime - responseTimeMean);
+   public void record(Request request) {
+      record(request.duration());
+      if (!request.isSuccessful()) {
+         errors++;
+      }
    }
 
    @Override
-   public void registerError(long responseTime) {
-      registerRequest(responseTime);
-      errors++;
+   public void record(Message message) {
+      if (message.isValid()) {
+         record(message.totalTime());
+      } else {
+         errors++;
+      }
    }
+
+   @Override
+   public void record(RequestSet requestSet) {
+      record(requestSet.sumDurations());
+      if (!requestSet.isSuccessful()) {
+         errors++;
+      }
+   }
+
+   public void record(long duration) {
+      requests++;
+      responseTimeMax = Math.max(responseTimeMax, duration);
+      responseTimeSum += duration;
+      // see http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm
+      double delta = (double) duration - responseTimeMean;
+      responseTimeMean += delta/(double) requests;
+      responseTimeM2 += delta * ((double) duration - responseTimeMean);
+   }
+
 
    public BoxAndWhiskers getBoxAndWhiskers() {
       if (requests < 2) {

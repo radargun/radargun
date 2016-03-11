@@ -8,9 +8,10 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.test.Blackhole;
 import org.radargun.stages.test.Invocation;
+import org.radargun.stats.Request;
+import org.radargun.stats.RequestSet;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.Transactional;
-import org.radargun.utils.TimeService;
 
 /**
  * Each stressor operates according to its {@link OperationLogic logic} - the instance is private to each thread.
@@ -34,7 +35,7 @@ public class LegacyStressor extends Thread {
 
    private boolean useTransactions;
    private int txRemainingOperations = 0;
-   private long transactionDuration = 0;
+   private RequestSet requests;
    private Transactional.Transaction ongoingTx;
    private Statistics stats;
    private boolean started = false;
@@ -132,24 +133,25 @@ public class LegacyStressor extends Thread {
          try {
             ongoingTx = stage.transactional.getTransaction();
             logic.transactionStarted();
-            startTxTime = startTransaction();
-            transactionDuration = startTxTime;
+            if (recording()) {
+               requests = stats.requestSet();
+            }
+            Request beginRequest = startTransaction();
+            if (requests != null && beginRequest != null) {
+               requests.add(beginRequest);
+            }
             txRemainingOperations = stage.transactionSize;
-            if (recording()) stats.registerRequest(startTxTime, Transactional.BEGIN);
          } catch (TransactionException e) {
-            if (recording()) stats.registerError(e.getOperationDuration(), Transactional.BEGIN);
             throw new OperationLogic.RequestException(e);
          }
       }
 
       T result = null;
-      boolean successful = true;
       Exception exception = null;
-      long start = TimeService.nanoTime();
-      long operationDuration;
+      Request request = recording() ? stats.startRequest() : null;
       try {
          result = invocation.invoke();
-         operationDuration = TimeService.nanoTime() - start;
+         succeeded(request, invocation.operation());
          // make sure that the return value cannot be optimized away
          // however, we can't be 100% sure about reordering without
          // volatile writes/reads here
@@ -158,23 +160,17 @@ public class LegacyStressor extends Thread {
             txRemainingOperations--;
          }
       } catch (Exception e) {
-         operationDuration = TimeService.nanoTime() - start;
+         failed(request, invocation.operation());
          log.warn("Error in request", e);
-         successful = false;
          txRemainingOperations = 0;
          exception = e;
       }
-      transactionDuration += operationDuration;
+      if (requests != null && request != null) {
+         requests.add(request);
+      }
 
       if (useTransactions && txRemainingOperations <= 0) {
          endTransactionAndRegisterStats(stage.isSingleTxType() ? invocation.txOperation() : null);
-      }
-      if (recording()) {
-         if (successful) {
-            stats.registerRequest(operationDuration, invocation.operation());
-         } else {
-            stats.registerError(operationDuration, invocation.operation());
-         }
       }
       if (exception != null) {
          throw new OperationLogic.RequestException(exception);
@@ -182,36 +178,53 @@ public class LegacyStressor extends Thread {
       return result;
    }
 
+   public <T> void succeeded(Request request, Operation operation) {
+      if (request != null) {
+         if (recording()) {
+            request.succeeded(operation);
+         } else {
+            request.discard();
+         }
+      }
+   }
+
+   public <T> void failed(Request request, Operation operation) {
+      if (request != null) {
+         if (recording()) {
+            request.failed(operation);
+         } else {
+            request.discard();
+         }
+      }
+   }
+
    private void endTransactionAndRegisterStats(Operation singleTxOperation) {
-      long start = TimeService.nanoTime();
+      Request commitRequest = recording() ? stats.startRequest() : null;
       try {
          if (stage.commitTransactions) {
             ongoingTx.commit();
          } else {
             ongoingTx.rollback();
          }
-         long endTxTime = TimeService.nanoTime() - start;
-         transactionDuration += endTxTime;
-         if (recording()) {
-            stats.registerRequest(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
-            stats.registerRequest(transactionDuration, Transactional.DURATION);
-            if (singleTxOperation != null) {
-               stats.registerRequest(transactionDuration, singleTxOperation);
-            }
-         }
+         succeeded(commitRequest, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
       } catch (Exception e) {
-         long endTxTime = TimeService.nanoTime() - start;
-         if (recording()) {
-            stats.registerError(endTxTime, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
-            stats.registerError(transactionDuration + endTxTime, Transactional.DURATION);
-            if (singleTxOperation != null) {
-               stats.registerError(transactionDuration, singleTxOperation);
-            }
-         }
+         failed(commitRequest, stage.commitTransactions ? Transactional.COMMIT : Transactional.ROLLBACK);
          if (logTransactionExceptions) {
             log.error("Failed to end transaction", e);
          }
       } finally {
+         if (requests != null) {
+            requests.add(commitRequest);
+            if (recording()) {
+               requests.finished(commitRequest.isSuccessful(), Transactional.DURATION);
+               if (singleTxOperation != null) {
+                  requests.finished(commitRequest.isSuccessful(), singleTxOperation);
+               }
+            } else {
+               requests.discard();
+            }
+            requests = null;
+         }
          clearTransaction();
       }
    }
@@ -249,28 +262,33 @@ public class LegacyStressor extends Thread {
       return useTransactions;
    }
 
-   private long startTransaction() throws TransactionException {
-      long start = TimeService.nanoTime();
+   private Request startTransaction() throws TransactionException {
+      Request request = recording() ? stats.startRequest() : null;
       try {
          ongoingTx.begin();
+         if (request != null) {
+            request.succeeded(Transactional.BEGIN);
+         }
+         return request;
       } catch (Exception e) {
-         long time = TimeService.nanoTime() - start;
+         if (request != null) {
+            request.failed(Transactional.BEGIN);
+         }
          log.error("Failed to start transaction", e);
-         throw new TransactionException(time, e);
+         throw new TransactionException(request, e);
       }
-      return TimeService.nanoTime() - start;
    }
 
    private class TransactionException extends Exception {
-      private final long operationDuration;
+      private final Request request;
 
-      public TransactionException(long duration, Exception cause) {
+      public TransactionException(Request request, Exception cause) {
          super(cause);
-         this.operationDuration = duration;
+         this.request = request;
       }
 
-      public long getOperationDuration() {
-         return operationDuration;
+      public Request getRequest() {
+         return request;
       }
    }
 }

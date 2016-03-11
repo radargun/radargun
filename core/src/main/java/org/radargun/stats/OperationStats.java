@@ -32,16 +32,19 @@ public interface OperationStats extends Serializable {
    void merge(OperationStats other);
 
    /**
-    * Register response latency of successful operation.
-    * @param responseTime
+    * @param request
     */
-   void registerRequest(long responseTime);
+   void record(Request request);
 
    /**
-    * Register response latency of failed operation.
-    * @param responseTime
+    * @param message
     */
-   void registerError(long responseTime);
+   void record(Message message);
+
+   /**
+    * @param requestSet
+    */
+   void record(RequestSet requestSet);
 
    /**
     * Convert the internal state into requested representation.

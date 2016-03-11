@@ -6,9 +6,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.stats.Request;
+import org.radargun.stats.RequestSet;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.Transactional;
-import org.radargun.utils.TimeService;
 
 /**
  * Thread that generates the load in {@link TestStage}, created in {@link TestSetupStage}
@@ -29,7 +30,7 @@ public class Stressor extends Thread {
    private ConversationSelector selector;
    private Statistics stats;
 
-   private long transactionDuration = 0;
+   private RequestSet requests;
    private boolean logRequestExceptions;
    private boolean logTransactionExceptions;
 
@@ -112,30 +113,28 @@ public class Stressor extends Thread {
       T result = null;
       boolean successful = true;
       Exception exception = null;
-      long start = TimeService.nanoTime();
-      long operationDuration;
+      Request request = stats != null ? stats.startRequest() : null;
       try {
          result = invocation.invoke();
-         operationDuration = TimeService.nanoTime() - start;
          // make sure that the return value cannot be optimized away
          // however, we can't be 100% sure about reordering without
          // volatile writes/reads here
          Blackhole.consume(result);
       } catch (Exception e) {
-         operationDuration = TimeService.nanoTime() - start;
          if (logRequestExceptions) {
             log.warn("Error in request", e);
          }
          successful = false;
          exception = e;
       }
-      transactionDuration += operationDuration;
-
-      if (recording()) {
+      if (request != null) {
          if (successful) {
-            stats.registerRequest(operationDuration, invocation.operation());
+            request.succeeded(invocation.operation());
          } else {
-            stats.registerError(operationDuration, invocation.operation());
+            request.failed(invocation.operation());
+         }
+         if (requests != null) {
+            requests.add(request);
          }
       }
       if (exception != null) {
@@ -145,16 +144,17 @@ public class Stressor extends Thread {
    }
 
    public void startTransaction(Transactional.Transaction transaction) {
-      long start = TimeService.nanoTime();
+      Request request =  stats != null ? stats.startRequest() : null;
       try {
          transaction.begin();
-         long time = TimeService.nanoTime() - start;
-         transactionDuration = time;
-         if (recording()) stats.registerRequest(time, Transactional.BEGIN);
+         if (stats != null) {
+            request.succeeded(Transactional.BEGIN);
+            requests = stats.requestSet();
+            requests.add(request);
+         }
       } catch (Exception e) {
-         long time = TimeService.nanoTime() - start;
          log.error("Failed to start transaction", e);
-         if (recording()) stats.registerError(time, Transactional.BEGIN);
+         if (request != null) request.failed(Transactional.BEGIN);
          throw e;
       }
    }
@@ -168,34 +168,39 @@ public class Stressor extends Thread {
    }
 
    private void endTransaction(Transactional.Transaction transaction, boolean commit, Operation txOperation) {
-      long start = TimeService.nanoTime();
+      Request request = stats != null ? stats.startRequest() : null;
       try {
          if (commit) {
             transaction.commit();
          } else {
             transaction.rollback();
          }
-         long endTxTime = TimeService.nanoTime() - start;
-         transactionDuration += endTxTime;
-         if (recording()) {
-            stats.registerRequest(endTxTime, commit ? Transactional.COMMIT : Transactional.ROLLBACK);
-            stats.registerRequest(transactionDuration, Transactional.DURATION);
+         if (request != null) {
+            request.succeeded(commit ? Transactional.COMMIT : Transactional.ROLLBACK);
+         }
+         if (requests != null) {
+            requests.add(request);
+            requests.succeeded(Transactional.DURATION);
             if (txOperation != null) {
-               stats.registerRequest(transactionDuration, txOperation);
+               requests.succeeded(txOperation);
             }
          }
       } catch (Exception e) {
-         long endTxTime = TimeService.nanoTime() - start;
-         if (recording()) {
-            stats.registerError(endTxTime, commit ? Transactional.COMMIT : Transactional.ROLLBACK);
-            stats.registerError(transactionDuration + endTxTime, Transactional.DURATION);
+         if (request != null) {
+            request.failed(commit ? Transactional.COMMIT : Transactional.ROLLBACK);
+         }
+         if (requests != null) {
+            requests.add(request);
+            requests.failed(Transactional.DURATION);
             if (txOperation != null) {
-               stats.registerError(transactionDuration, txOperation);
+               requests.failed(txOperation);
             }
          }
          if (logTransactionExceptions) {
             log.error("Failed to end transaction", e);
          }
+      } finally {
+         requests = null;
       }
    }
 

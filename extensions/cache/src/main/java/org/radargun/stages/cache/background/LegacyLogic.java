@@ -6,10 +6,11 @@ import java.util.Random;
 import org.radargun.Operation;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.Range;
+import org.radargun.stats.Request;
+import org.radargun.stats.RequestSet;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.Transactional;
-import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -34,7 +35,7 @@ class LegacyLogic extends AbstractLogic {
    private volatile long currentKey;
    private int remainingTxOps;
    private boolean loaded;
-   private long transactionStart;
+   private RequestSet transactionalRequests;
    private ValueGenerator valueGenerator;
 
    LegacyLogic(BackgroundOpsManager manager, Range range, List<Range> deadSlavesRanges, boolean loaded) {
@@ -117,52 +118,57 @@ class LegacyLogic extends AbstractLogic {
             currentKey = keyRangeStart;
          }
          if (transactionSize > 0 && remainingTxOps == transactionSize) {
-            try {
-               ongoingTx = manager.newTransaction();
-               basicCache = ongoingTx.wrap(nonTxBasicCache);
-               conditionalCache = ongoingTx.wrap(nonTxConditionalCache);
-               transactionStart = TimeService.nanoTime();
-               ongoingTx.begin();
-               stressor.stats.registerRequest(TimeService.nanoTime() - transactionStart, Transactional.BEGIN);
-            } catch (Exception e) {
-               stressor.stats.registerError(TimeService.nanoTime() - transactionStart, Transactional.BEGIN);
-               throw e;
-            }
+            ongoingTx = manager.newTransaction();
+            basicCache = ongoingTx.wrap(nonTxBasicCache);
+            conditionalCache = ongoingTx.wrap(nonTxConditionalCache);
+            Request beginRequest = stressor.stats.startRequest();
+            beginRequest.exec(Transactional.BEGIN, () -> ongoingTx.begin());
+            transactionalRequests = stressor.stats.requestSet();
+            transactionalRequests.add(beginRequest);
          }
-         startTime = TimeService.nanoTime();
-         Object result;
-         if (operation == BasicOperations.GET) {
-            result = basicCache.get(key);
-            if (result == null) operation = GET_NULL;
-         } else if (operation == BasicOperations.PUT) {
-            int entrySize = manager.getLegacyLogicConfiguration().getEntrySize();
-            Object value = valueGenerator.generateValue(key, entrySize, rand);
-            if (putWithReplace) {
-               conditionalCache.replace(key, value);
+         Request request = stressor.stats.startRequest();
+         try {
+            Object result;
+            if (operation == BasicOperations.GET) {
+               result = basicCache.get(key);
+               if (result == null) operation = GET_NULL;
+            } else if (operation == BasicOperations.PUT) {
+               int entrySize = manager.getLegacyLogicConfiguration().getEntrySize();
+               Object value = valueGenerator.generateValue(key, entrySize, rand);
+               if (putWithReplace) {
+                  conditionalCache.replace(key, value);
+               } else {
+                  basicCache.put(key, value);
+               }
+            } else if (operation == BasicOperations.REMOVE) {
+               basicCache.remove(key);
             } else {
-               basicCache.put(key, value);
+               throw new IllegalArgumentException();
             }
-         } else if (operation == BasicOperations.REMOVE) {
-            basicCache.remove(key);
-         } else {
-            throw new IllegalArgumentException();
+            request.succeeded(operation);
+         } catch (Exception e) {
+            request.failed(operation);
+            throw e;
+         } finally {
+            if (transactionalRequests != null) {
+               transactionalRequests.add(request);
+            }
          }
-         stressor.stats.registerRequest(TimeService.nanoTime() - startTime, operation);
          if (transactionSize > 0) {
             remainingTxOps--;
             if (remainingTxOps == 0) {
-               long commitStart = TimeService.nanoTime();
+               Request commitRequest = stressor.stats.startRequest();
                try {
                   ongoingTx.commit();
-                  long commitEnd = TimeService.nanoTime();
-                  stressor.stats.registerRequest(commitEnd - commitStart, Transactional.COMMIT);
-                  stressor.stats.registerRequest(commitEnd - transactionStart, Transactional.DURATION);
+                  commitRequest.succeeded(Transactional.COMMIT);
                } catch (Exception e) {
-                  long commitEnd = TimeService.nanoTime();
-                  stressor.stats.registerError(commitEnd - commitStart, Transactional.COMMIT);
-                  stressor.stats.registerError(commitEnd - transactionStart, Transactional.DURATION);
+                  commitRequest.succeeded(Transactional.COMMIT);
                   throw e;
                } finally {
+                  if (transactionalRequests != null) {
+                     transactionalRequests.add(commitRequest);
+                     transactionalRequests.finished(commitRequest.isSuccessful(), Transactional.DURATION);
+                  }
                   txCleanup();
                }
                remainingTxOps = transactionSize;
@@ -187,7 +193,6 @@ class LegacyLogic extends AbstractLogic {
             }
             remainingTxOps = transactionSize;
          }
-         stressor.stats.registerError(startTime <= 0 ? 0 : TimeService.nanoTime() - startTime, operation);
       }
    }
 

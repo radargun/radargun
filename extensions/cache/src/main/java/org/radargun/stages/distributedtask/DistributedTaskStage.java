@@ -21,13 +21,13 @@ import org.radargun.stages.cache.RandomDataStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.DataOperationStats;
 import org.radargun.stats.DefaultStatistics;
+import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.DistributedTaskExecutor;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.KeyValueProperty;
-import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
@@ -142,7 +142,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
          log.info("--------------------");
          List<T> resultList = new ArrayList<T>();
 
-         long start = TimeService.nanoTime();
+         Request request = stats.startRequest();
          List<Future<T>> futureList = task.execute();
          if (futureList == null) {
             ack.error("No future objects returned from executing the distributed task.");
@@ -157,11 +157,10 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
                }
             }
          }
-         long durationNanos = TimeService.nanoTime() - start;
-         stats.registerRequest(durationNanos, DistributedTaskExecutor.EXECUTE);
+         request.succeeded(DistributedTaskExecutor.EXECUTE);
 
          log.info("Distributed Execution task completed in "
-            + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
+            + Utils.prettyPrintTime(request.duration(), TimeUnit.NANOSECONDS));
          log.infof("%d nodes were used. %d entries on this node", clustered.getMembers().size(), cacheInformation
             .getCache(null).getLocallyStoredSize());
          log.info("Distributed execution results:");

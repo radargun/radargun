@@ -80,7 +80,7 @@ public class CsvReporter implements Reporter {
                }
                Statistics nodeSummary = processRow(it, columns, rows, slaveStats);
                if (computeTotal) {
-                  if (aggregated == null) aggregated = nodeSummary;
+                  if (aggregated == null) aggregated = nodeSummary.copy();
                   else aggregated.merge(nodeSummary);
                }
             }
@@ -137,16 +137,9 @@ public class CsvReporter implements Reporter {
 
    private Statistics processRow(int it, Set<String> columns, List<Map<String, String>> rows, Map.Entry<Integer, List<Statistics>> slaveStats) {
       // this reporter is merging statistics from all threads on each node
-      Statistics summary = null;
-      for (Statistics other : slaveStats.getValue()) {
-         if (other == null) continue;
-         if (summary == null) {
-            summary = other.copy();
-         } else {
-            summary.merge(other);
-         }
-      }
-      Map<String, OperationStats> operationStats = summary.getOperationsStats();
+      Statistics summary = slaveStats.getValue().stream().filter(o -> o != null).reduce(Statistics.MERGE)
+         .orElseThrow(() -> new IllegalStateException("No statistics!"));
+      Map<String,OperationStats> operationStats = summary.getOperationsStats();
       Map<String, String> rowData = new HashMap<String, String>();
       rows.add(rowData);
       for (Map.Entry<String, OperationStats> os : operationStats.entrySet()) {

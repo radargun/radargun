@@ -80,14 +80,28 @@ public final class HistogramOperationStats implements OperationStats {
    }
 
    @Override
-   public void registerRequest(long responseTime) {
-      histogram.recordValue(responseTime);
+   public void record(Request request) {
+      histogram.recordValue(request.duration());
+      if (!request.isSuccessful()) {
+         errors++;
+      }
    }
 
    @Override
-   public void registerError(long responseTime) {
-      histogram.recordValue(responseTime);
-      errors++;
+   public void record(Message message) {
+      if (message.isValid()) {
+         histogram.recordValue(message.totalTime());
+      } else {
+         errors++;
+      }
+   }
+
+   @Override
+   public void record(RequestSet requestSet) {
+      histogram.recordValue(requestSet.sumDurations());
+      if (!requestSet.isSuccessful()) {
+         errors++;
+      }
    }
 
    @Override

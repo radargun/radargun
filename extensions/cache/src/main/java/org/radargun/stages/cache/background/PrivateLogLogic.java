@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.radargun.Operation;
 import org.radargun.stages.helpers.Range;
+import org.radargun.stats.Request;
 import org.radargun.traits.BasicOperations;
 import org.radargun.utils.TimeService;
 
@@ -192,82 +193,62 @@ class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
       if (removed != null) {
          return null;
       }
-      Object prevValue;
-      long startTime = TimeService.nanoTime();
-      try {
-         prevValue = basicCache.get(keyGenerator.generateKey(keyId));
-      } catch (Exception e) {
-         stressor.stats.registerError(TimeService.nanoTime() - startTime, BasicOperations.GET);
-         throw e;
-      }
-      long endTime = TimeService.nanoTime();
-      if (prevValue != null && !(prevValue instanceof PrivateLogValue)) {
-         stressor.stats.registerError(endTime - startTime, BasicOperations.GET);
-         log.error("Value is not an instance of PrivateLogValue: " + prevValue);
-         throw new IllegalStateException();
-      } else {
-         stressor.stats.registerRequest(endTime - startTime, prevValue == null ? GET_NULL : BasicOperations.GET);
-         return (PrivateLogValue) prevValue;
-      }
+      return (PrivateLogValue) stressor.stats.startRequest().exec(BasicOperations.GET,
+         () ->  basicCache.get(keyGenerator.generateKey(keyId)),
+         prevValue -> {
+            if (prevValue != null && !(prevValue instanceof PrivateLogValue)) {
+               log.error("Value is not an instance of PrivateLogValue: " + prevValue);
+               throw new IllegalStateException();
+            } else {
+               return true;
+            }
+         });
    }
 
    @Override
    protected boolean checkedRemoveValue(long keyId, PrivateLogValue expectedValue) throws Exception {
-      Object prevValue;
-      long startTime = TimeService.nanoTime();
-      try {
+      Request request = stressor.stats.startRequest();
+      request.exec(BasicOperations.GET_AND_REMOVE,
          // Note: with Infinspan, the returned value is sometimes unreliable anyway
-         prevValue = basicCache.getAndRemove(keyGenerator.generateKey(keyId));
-      } catch (Exception e) {
-         stressor.stats.registerError(TimeService.nanoTime() - startTime, BasicOperations.REMOVE);
-         throw e;
-      }
-      long endTime = TimeService.nanoTime();
-      boolean successful = false;
-      if (prevValue != null) {
-         if (!(prevValue instanceof PrivateLogValue)) {
-            log.errorf("Value is not an instance of PrivateLogValue: %s.", prevValue);
-         } else if (!prevValue.equals(expectedValue)) {
-            log.errorf("Value is not the expected one: expected %s, found %s.", expectedValue, prevValue);
-            // As the transaction can be committed on TX coordinator & fail on other participating nodes, it can lead to
-            // exception being thrown on coordinator. For this reason an entry might not be present on the coordinator
-            // (has been removed), or its value can differ from the expected one. As this might cause false test
-            // failures, 'LogLogicConfiguration.checkDelayedRemoveExpectedValue' can be set to ignore expected value comparison.
-            if (!manager.getLogLogicConfiguration().isCheckDelayedRemoveExpectedValue()) {
-               log.trace("'LogLogicConfiguration.checkDelayedRemoveExpectedValue' set to false, ignoring check");
-               successful = true;
+         () -> basicCache.getAndRemove(keyGenerator.generateKey(keyId)),
+         prevValue -> {
+            if (prevValue != null) {
+               if (!(prevValue instanceof PrivateLogValue)) {
+                  log.errorf("Value is not an instance of PrivateLogValue: %s.", prevValue);
+               } else if (!prevValue.equals(expectedValue)) {
+                  log.errorf("Value is not the expected one: expected %s, found %s.", expectedValue, prevValue);
+                  // As the transaction can be committed on TX coordinator & fail on other participating nodes, it can lead to
+                  // exception being thrown on coordinator. For this reason an entry might not be present on the coordinator
+                  // (has been removed), or its value can differ from the expected one. As this might cause false test
+                  // failures, 'LogLogicConfiguration.checkDelayedRemoveExpectedValue' can be set to ignore expected value comparison.
+                  if (!manager.getLogLogicConfiguration().isCheckDelayedRemoveExpectedValue()) {
+                     log.trace("'LogLogicConfiguration.checkDelayedRemoveExpectedValue' set to false, ignoring check");
+                     return true;
+                  }
+               } else {
+                  return true;
+               }
+            } else if (expectedValue == null) {
+               return true;
+            } else {
+               log.errorf("Expected to remove %s but found %s.", expectedValue, prevValue);
+               if (!manager.getLogLogicConfiguration().isCheckDelayedRemoveExpectedValue()) {
+                  log.trace("'LogLogicConfiguration.checkDelayedRemoveExpectedValue' set to false, ignoring check");
+                  return true;
+               }
             }
-         } else {
-            successful = true;
-         }
-      } else if (expectedValue == null) {
-         successful = true;
-      } else {
-         log.errorf("Expected to remove %s but found %s.", expectedValue, prevValue);
-         if (!manager.getLogLogicConfiguration().isCheckDelayedRemoveExpectedValue()) {
-            log.trace("'LogLogicConfiguration.checkDelayedRemoveExpectedValue' set to false, ignoring check");
-            successful = true;
-         }
-      }
-      if (successful) {
-         stressor.stats.registerRequest(endTime - startTime, BasicOperations.REMOVE);
+            return false;
+         });
+      if (request.isSuccessful()) {
          return true;
       } else {
-         stressor.stats.registerError(endTime - startTime, BasicOperations.REMOVE);
          throw new IllegalStateException();
       }
    }
 
    private void checkedPutValue(long keyId, PrivateLogValue value) throws Exception {
-      long startTime = TimeService.nanoTime();
-      try {
-         basicCache.put(keyGenerator.generateKey(keyId), value);
-      } catch (Exception e) {
-         stressor.stats.registerError(TimeService.nanoTime() - startTime, BasicOperations.PUT);
-         throw e;
-      }
-      long endTime = TimeService.nanoTime();
-      stressor.stats.registerRequest(endTime - startTime, BasicOperations.PUT);
+      stressor.stats.startRequest().exec(BasicOperations.PUT,
+         () -> basicCache.put(keyGenerator.generateKey(keyId), value));
    }
 
    protected static class OperationTimestampPair {

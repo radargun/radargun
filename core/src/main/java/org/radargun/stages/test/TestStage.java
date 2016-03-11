@@ -72,11 +72,7 @@ public class TestStage extends BaseTestStage {
       destroy();
 
       if (statistics != null && mergeThreadStats) {
-         Statistics merged = null;
-         for (Statistics s : statistics) {
-            if (merged == null) merged = s.copy();
-            else merged.merge(s);
-         }
+         Statistics merged = statistics.stream().reduce(Statistics.MERGE).orElse(null);
          return newStatisticsAck(Collections.singletonList(merged), failed);
       } else {
          return newStatisticsAck(statistics, failed);
@@ -93,9 +89,11 @@ public class TestStage extends BaseTestStage {
 
       MinMax.Int usedThreads = new MinMax.Int();
       Map<Integer, Report.SlaveResult> slaveResults = new HashMap<Integer, Report.SlaveResult>();
-      Statistics aggregated = null;
       boolean failed = false;
-      for (StatisticsAck ack : instancesOf(acks, StatisticsAck.class)) {
+      List<StatisticsAck> statisticsAcks = instancesOf(acks, StatisticsAck.class);
+      Statistics aggregated = statisticsAcks.stream().filter(ack -> ack.statistics != null)
+         .flatMap(ack -> ack.statistics.stream()).reduce(null, Statistics.MERGE);
+      for (StatisticsAck ack : statisticsAcks) {
          if (test != null) {
             // TODO: this looks like we could get same iteration value for all iterations reported
             String iterationValue = resolveIterationValue();
@@ -104,15 +102,6 @@ public class TestStage extends BaseTestStage {
             }
             if (ack.statistics != null) {
                test.addStatistics(testIteration, ack.getSlaveIndex(), ack.statistics);
-            }
-         }
-         if (ack.statistics != null) {
-            for (Statistics s : ack.statistics) {
-               if (aggregated == null) {
-                  aggregated = s.copy();
-               } else {
-                  aggregated.merge(s);
-               }
             }
          }
          usedThreads.add(ack.usedThreads);

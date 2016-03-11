@@ -2,6 +2,7 @@ package org.radargun.stats;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.function.BinaryOperator;
 
 import org.radargun.Operation;
 import org.radargun.utils.ReflexiveConverters;
@@ -12,6 +13,8 @@ import org.radargun.utils.ReflexiveConverters;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface Statistics extends Serializable {
+   BinaryOperator<Statistics> MERGE = (s1, s2) -> s1 == null ? s2 : (s2 == null ? s1 : s1.with(s2));
+
    /**
     * Mark this moment as start of the measurement.
     * No operations should be recorded before this call.
@@ -30,18 +33,51 @@ public interface Statistics extends Serializable {
    void reset();
 
    /**
-    * Register response latency in nanoseconds of successful operation.
-    * @param responseTime
-    * @param operation
+    * This method should be called just before the benchmarked operation. When the operation finishes,
+    * either {@link Request#succeeded(Operation)}, {@link Request#failed(Operation)} or {@link Request#discard()}
+    * (in case that the request should not be accounted anyhow) must be called. Implementations can
+    * track requests and report unfinished (leaked) Requests.
     */
-   void registerRequest(long responseTime, Operation operation);
+   default Request startRequest() {
+      return new Request(this);
+   }
 
    /**
-    * Register response latency in nanoseconds of failed operation.
-    * @param responseTime
+    * Create an object for tracking non-rpc-like operations.
+    */
+   default Message message() {
+      return new Message(this);
+   }
+
+   default RequestSet requestSet() {
+      return new RequestSet(this);
+   }
+
+   /**
+    * Should be called only from {@link Request#succeeded(Operation)} and {@link Request#failed(Operation)}.
+    *
+    * @param request
     * @param operation
     */
-   void registerError(long responseTime, Operation operation);
+   void record(Request request, Operation operation);
+
+   /**
+    * Should be called only from {@link Message#record(Operation)}.
+    * @param message
+    * @param operation
+    */
+   void record(Message message, Operation operation);
+
+   /**
+    * Should be called only from {@link RequestSet#succeeded(Operation)}.
+    * @param requestSet
+    * @param operation
+    */
+   void record(RequestSet requestSet, Operation operation);
+
+   default void discard(Request request) {}
+   default void discard(Message request) {}
+   default void discard(RequestSet request) {}
 
    /**
     * Create new instance of the same class.
@@ -58,6 +94,19 @@ public interface Statistics extends Serializable {
     * @param otherStats Must be of the same class as this instance.
     */
    void merge(Statistics otherStats);
+
+   /**
+    * Creates new statistics instance with <code>this</code> and the <code>otherStats</code> merged,
+    * without mutating this instance.
+    *
+    * @param otherStats
+    * @return
+    */
+   default Statistics with(Statistics otherStats) {
+      Statistics s = copy();
+      s.merge(otherStats);
+      return s;
+   }
 
    /**
     * @return Timestamp of the measurement start, in epoch milliseconds.
@@ -85,7 +134,7 @@ public interface Statistics extends Serializable {
     */
    <T> T[] getRepresentations(Class<T> clazz, Object... args);
 
-   public static class Converter extends ReflexiveConverters.ObjectConverter {
+   class Converter extends ReflexiveConverters.ObjectConverter {
       public Converter() {
          super(Statistics.class);
       }

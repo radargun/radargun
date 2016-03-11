@@ -120,9 +120,11 @@ public abstract class LegacyTestStage extends BaseTestStage {
       Report.Test test = getTest(amendTest);
       testIteration = test == null ? 0 : test.getIterations().size();
       // we cannot use aggregated = createStatistics() since with PeriodicStatistics the merge would fail
-      Statistics aggregated = null;
       int threads = 0;
-      for (StatisticsAck ack : instancesOf(acks, StatisticsAck.class)) {
+      List<StatisticsAck> statisticsAcks = instancesOf(acks, StatisticsAck.class);
+      Statistics aggregated = statisticsAcks.stream().filter(ack -> ack.iterations != null)
+            .flatMap(ack -> ack.iterations.stream().flatMap(s -> s.stream())).reduce(null, Statistics.MERGE);
+      for (StatisticsAck ack : statisticsAcks) {
          if (ack.iterations != null) {
             int i = getTestIteration();
             for (List<Statistics> threadStats : ack.iterations) {
@@ -135,13 +137,6 @@ public abstract class LegacyTestStage extends BaseTestStage {
                   test.addStatistics(i++, ack.getSlaveIndex(), threadStats);
                }
                threads = Math.max(threads, threadStats.size());
-               for (Statistics s : threadStats) {
-                  if (aggregated == null) {
-                     aggregated = s.copy();
-                  } else {
-                     aggregated.merge(s);
-                  }
-               }
             }
          } else {
             log.trace("No statistics received from slave: " + ack.getSlaveIndex());
@@ -259,7 +254,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
       for (T result : results) {
          if (result instanceof IterationData) {
             int iteration = 0;
-            for (IterationData.Iteration<T> it : ((IterationData<T>) result).getIterations()) {
+            for (IterationData.Iteration<? extends T> it : ((IterationData<T>) result).getIterations()) {
                while (iteration >= all.size()) {
                   all.add(new ArrayList<T>(results.size()));
                }

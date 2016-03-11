@@ -6,11 +6,14 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.powermock.modules.testng.PowerMockTestCase;
 import org.radargun.Operation;
+import org.radargun.stats.Request;
+import org.radargun.stats.RequestSet;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.Transactional;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,11 +39,13 @@ public class StressorTest extends PowerMockTestCase {
 
    private final List<InvocationOnMock> unexpectedInvocations = Collections.synchronizedList(new ArrayList<>());
    private final Answer unexpectedAnswer = invocation -> {
-      if (invocation.getMethod().getName().equals("finalize")) {
-         invocation.callRealMethod();
+      switch (invocation.getMethod().getName()) {
+         case "finalize":
+         case "toString":
+            return invocation.callRealMethod();
       }
       unexpectedInvocations.add(invocation);
-      throw new IllegalStateException();
+      throw new IllegalStateException(invocation.getMethod().getName() + " " + Arrays.asList(invocation.getArguments()));
    };
    private volatile Statistics statistics = null;
    private volatile Conversation conversation;
@@ -88,7 +93,7 @@ public class StressorTest extends PowerMockTestCase {
          CountDownLatch reportStatisticsLatch = this.reportStatisticsLatch;
          if (reportStatisticsLatch == null) {
             unexpectedInvocations.add(invocation);
-            throw new IllegalStateException();
+            throw new IllegalStateException(invocation.getMethod().getName() + " " + Arrays.asList(invocation.getArguments()));
          } else {
             assertEquals(invocation.getArguments()[0], statistics);
             reportStatisticsLatch.countDown();
@@ -113,7 +118,7 @@ public class StressorTest extends PowerMockTestCase {
       conversation = stressor -> runConversation(stressor, tx, rampUpLatch, new Foo(), new Bar());
 
       // wait until 10 conversations are invoked
-      assertTrue(rampUpLatch.await(10, TimeUnit.SECONDS));
+      assertTrue(rampUpLatch.await(10000, TimeUnit.SECONDS));
       assertTrue(unexpectedInvocations.isEmpty(), unexpectedInvocations.toString());
 
       Statistics statistics = mock(Statistics.class, defaultSettings());
@@ -122,27 +127,30 @@ public class StressorTest extends PowerMockTestCase {
       ConcurrentMap<Operation, Long> requests = new ConcurrentHashMap<>();
       ConcurrentMap<Operation, Long> errors = new ConcurrentHashMap<>();
       doAnswer(invocation -> {
-         begins.incrementAndGet();
-         return null;
+          begins.incrementAndGet();
+          return null;
       }).when(statistics).begin();
       doAnswer(invocation -> {
-         ends.incrementAndGet();
-         return null;
+          ends.incrementAndGet();
+          return null;
       }).when(statistics).end();
-      doAnswer(invocation -> incrementOps(requests, invocation)).when(statistics).registerRequest(Matchers.anyLong(), Matchers.any(Operation.class));
-      doAnswer(invocation -> incrementOps(errors, invocation)).when(statistics).registerError(Matchers.anyLong(), Matchers.any(Operation.class));
-      doReturn("").when(statistics).toString();
+      doAnswer(invocation -> new Request(statistics)).when(statistics).startRequest();
+      doAnswer(invocation -> new RequestSet(statistics)).when(statistics).requestSet();
+      doAnswer(invocation -> incrementOps(((Request)invocation.getArguments()[0]).isSuccessful() ? requests : errors, invocation))
+            .when(statistics).record(Matchers.any(Request.class), Matchers.any(Operation.class));
+      doAnswer(invocation -> incrementOps(((RequestSet)invocation.getArguments()[0]).isSuccessful() ? requests : errors, invocation))
+            .when(statistics).record(Matchers.any(RequestSet.class), Matchers.any(Operation.class));
       this.statistics = statistics;
 
       // switch to steady state
       CountDownLatch testLatch = new CountDownLatch(10);
       createStatisticsLatch = new CountDownLatch(1);
       steadyState = true;
-      createStatisticsLatch.await(10, TimeUnit.SECONDS);
+      createStatisticsLatch.await(10000, TimeUnit.SECONDS);
       conversation = stressor -> runConversation(stressor, tx, testLatch, new Foo(), new Bar());
 
       // check after 10 operations in ready state
-      assertTrue(testLatch.await(10, TimeUnit.SECONDS));
+      assertTrue(testLatch.await(10000, TimeUnit.SECONDS));
       Long foo = requests.get(FOO);
       Long bar = requests.get(BAR);
       Long txs = requests.get(TX);
@@ -163,7 +171,7 @@ public class StressorTest extends PowerMockTestCase {
       CountDownLatch failingLatch = new CountDownLatch(10);
       conversation = stressor -> runConversation(stressor, tx, failingLatch, new Foo(), new Fault());
 
-      assertTrue(failingLatch.await(10, TimeUnit.SECONDS));
+      assertTrue(failingLatch.await(10000, TimeUnit.SECONDS));
       foo = requests.get(FOO);
       bar = requests.get(BAR);
       txs = requests.get(TX);
@@ -182,7 +190,7 @@ public class StressorTest extends PowerMockTestCase {
       steadyState = false;
 
       // wait for statistics to be reported
-      assertTrue(reportStatisticsLatch.await(10, TimeUnit.SECONDS));
+      assertTrue(reportStatisticsLatch.await(10000, TimeUnit.SECONDS));
       assertEquals(begins.get(), 1);
       assertEquals(ends.get(), 1);
       assertTrue(unexpectedInvocations.isEmpty(), unexpectedInvocations.toString());
