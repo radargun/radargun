@@ -9,7 +9,6 @@ import org.radargun.config.Stage;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.test.AbstractConversation;
-import org.radargun.stages.test.Conversation;
 import org.radargun.stages.test.Stressor;
 import org.radargun.stages.test.TestSetupStage;
 import org.radargun.traits.ConditionalOperations;

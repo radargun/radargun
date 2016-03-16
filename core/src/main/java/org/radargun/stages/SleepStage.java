@@ -15,7 +15,7 @@ import org.radargun.utils.TimeConverter;
 public class SleepStage extends AbstractMasterStage {
 
    @Property(optional = false, converter = TimeConverter.class, doc = "Sleep duration.")
-   private long time;
+   public long time;
 
    public StageResult execute() {
       log.trace("Sleeping " + time + " ms");

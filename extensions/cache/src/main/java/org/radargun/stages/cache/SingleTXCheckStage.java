@@ -23,16 +23,16 @@ public class SingleTXCheckStage extends AbstractDistStage {
    private static final Pattern txValue = Pattern.compile("txValue(\\d*)@(\\d*-\\d*)");
 
    @Property(doc = "Indices of slaves which should have committed the transaction (others rolled back). Default is all committed.")
-   private Set<Integer> commitSlave;
+   public Set<Integer> commitSlave;
 
    @Property(doc = "Indices of threads which should have committed the transaction (others rolled back). Default is all committed.")
-   private Set<Integer> commitThread;
+   public Set<Integer> commitThread;
 
    @Property(doc = "Expected size of the transcation.")
-   private int transactionSize = 20;
+   public int transactionSize = 20;
 
    @Property(doc = "If this is set to true, REMOVE operation should have been executed. Default is false.")
-   private boolean deleted = false;
+   public boolean deleted = false;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    private BasicOperations basicOperations;

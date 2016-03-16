@@ -16,33 +16,33 @@ import org.radargun.utils.TimeService;
 @Stage(doc = "In this stage we setup target parameters for future test. The stage performs ramp-up, starting all needed threads.")
 public abstract class TestSetupStage extends AbstractDistStage {
    @Property(doc = "Name of the test as used for reporting. Default is 'Test'.")
-   protected String testName = "Test";
+   public String testName = "Test";
 
    @Property(doc = "Minimum time for the ramp-up. Default is 0.", converter = TimeConverter.class)
-   private long rampUpMinDuration = 0;
+   public long rampUpMinDuration = 0;
 
    @Property(doc = "Maximum time for the ramp-up. If the number of threads does not stabilize until this limit " +
          "consider the test failed. Default is unlimited.", converter = TimeConverter.class)
-   private long rampUpMaxDuration = 0;
+   public long rampUpMaxDuration = 0;
 
    @Property(doc = "How long does the test need to have constant number of threads in order to execute " +
          "the transition from ramp-up to steady-state. Default is 1 minute.", converter = TimeConverter.class)
-   private long rampUpMinSteadyPeriod = 60000;
+   public long rampUpMinSteadyPeriod = 60000;
 
    @Property(doc = "Minimum number of threads waiting for next operation during ramp-up. Default is 4.")
-   private int rampUpMinWaitingThreads = 4;
+   public int rampUpMinWaitingThreads = 4;
 
    @Property(doc = "Number of threads started at the beginning. Default is 1.")
-   private int minThreads = 1;
+   public int minThreads = 1;
 
    @Property(doc = "Maximum number of executing threads. Default is 128.")
-   private int maxThreads = 128;
+   public int maxThreads = 128;
 
    @Property(doc = "Minimum delay between creating another thread. Default is 20 ms.", converter = TimeConverter.class)
-   private long minThreadCreationDelay = 20;
+   public long minThreadCreationDelay = 20;
 
    @Property(doc = "Whether an error from transaction commit/rollback should be logged as error. Default is true.")
-   protected boolean logTransactionExceptions = true;
+   public boolean logTransactionExceptions = true;
 
    protected RunningTest runningTest;
 

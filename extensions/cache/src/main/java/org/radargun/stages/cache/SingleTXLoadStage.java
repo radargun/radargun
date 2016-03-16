@@ -7,11 +7,11 @@ import java.util.Set;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.utils.TimeConverter;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
+import org.radargun.utils.TimeConverter;
 
 /**
  * Performs single transaction in multiple threads on multiple slaves.
@@ -23,22 +23,22 @@ public class SingleTXLoadStage extends AbstractDistStage {
 
    @Property(converter = TimeConverter.class, doc = "The enforced duration of the transaction. If > 0 the threads " +
          "will sleep for duration/transactionSize after each request. Default is 0.")
-   private long duration = 0;
+   public long duration = 0;
 
    @Property(doc = "Number of threads that should execute the transaction. Default is 1.")
-   private int threads = 1;
+   public int threads = 1;
 
    @Property(doc = "Indices of slaves which should commit the transaction (others will rollback). Default is all commit.")
-   private Set<Integer> commitSlave; // null == all commit
+   public Set<Integer> commitSlave; // null == all commit
 
    @Property(doc = "Indices of threads which should commit the transaction (others will rollback). Default is all commit.")
-   private Set<Integer> commitThread; // null == all commit
+   public Set<Integer> commitThread; // null == all commit
 
    @Property(doc = "Number of request in the transaction. Default is 20.")
-   private int transactionSize = 20;
+   public int transactionSize = 20;
 
    @Property(doc = "The threads by default do the PUT request, if this is set to true they will do REMOVE. Default is false.")
-   private boolean delete;
+   public boolean delete;
 
    @InjectTrait
    private BasicOperations basicOperations;

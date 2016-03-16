@@ -19,28 +19,28 @@ import org.radargun.utils.TimeConverter;
 @Stage(doc = "Base for tests.")
 public abstract class BaseTestStage extends AbstractDistStage {
    @Property(doc = "Name of the test as used for reporting. Default is 'Test'.")
-   protected String testName = "Test";
+   public String testName = "Test";
 
    @Property(doc = "By default, each stage creates a new test. If this property is set to true," +
          "results are amended to existing test (as iterations). Default is false.")
-   protected boolean amendTest = false;
+   public boolean amendTest = false;
 
    @Property(converter = TimeConverter.class, doc = "Benchmark duration.", optional = false)
-   protected long duration;
+   public long duration;
 
    @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'default' statistics " +
          "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
-   protected Statistics statisticsPrototype = new DefaultStatistics();
+   public Statistics statisticsPrototype = new DefaultStatistics();
 
    @Property(doc = "Property, which value will be used to identify individual iterations (e.g. num-threads).")
-   protected String iterationProperty;
+   public String iterationProperty;
 
    @Property(doc = "If this performance condition was not satisfied during this test, the current repeat will be exited. Default is none.",
       complexConverter = PerformanceCondition.Converter.class)
-   protected PerformanceCondition repeatCondition;
+   public PerformanceCondition repeatCondition;
 
    @Property(doc = "Merge statistics from all threads on single node to one record, instead of storing them all in-memory. Default is false.")
-   protected boolean mergeThreadStats = false;
+   public boolean mergeThreadStats = false;
 
    protected int testIteration; // first iteration we should use for setting the statistics
 

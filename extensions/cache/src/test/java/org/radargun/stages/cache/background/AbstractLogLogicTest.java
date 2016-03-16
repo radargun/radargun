@@ -6,8 +6,9 @@ import org.radargun.logging.Log;
 import org.radargun.stages.helpers.Range;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
+import org.radargun.util.CacheTestUtils;
+import org.radargun.util.CacheTraitRepository;
 import org.radargun.util.ReflectionUtils;
-import org.radargun.util.TestUtils;
 import org.testng.annotations.Test;
 
 import java.util.HashMap;
@@ -16,7 +17,6 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.mockito.Mockito.*;
-import static org.radargun.util.ReflectionUtils.*;
 import static org.testng.Assert.*;
 
 /**
@@ -26,7 +26,7 @@ import static org.testng.Assert.*;
 public class AbstractLogLogicTest {
 
    public void testInit() throws NoSuchFieldException, IllegalAccessException {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       AbstractLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       cache.put(LogChecker.lastOperationKey(logic.stressor.id), new LogChecker.LastOperation(10, 123));
@@ -38,7 +38,7 @@ public class AbstractLogLogicTest {
    }
 
    public void testInvoke() throws NoSuchFieldException, IllegalAccessException, InterruptedException {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       AbstractLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
       logic.keySelectorRandom = mock(Random.class);
 
@@ -55,7 +55,7 @@ public class AbstractLogLogicTest {
    }
 
    public void testInvokeOperationFailures() throws NoSuchFieldException, IllegalAccessException, InterruptedException {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       AbstractLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
       logic.keySelectorRandom = mock(Random.class);
 
@@ -68,7 +68,7 @@ public class AbstractLogLogicTest {
    }
 
    public void testInvokeTxFailures() throws NoSuchFieldException, IllegalAccessException, InterruptedException {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogLogicConfiguration llc = new LogLogicConfiguration();
       llc.maxTransactionAttempts = 2;
       AbstractLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), llc, cache);
@@ -90,7 +90,7 @@ public class AbstractLogLogicTest {
    }
 
    public void testWriteStressorLastOperation() throws NoSuchFieldException, IllegalAccessException {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       AbstractLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
       logic.keySelectorRandom = mock(Random.class);
       ReflectionUtils.setClassProperty(Random.class, logic.keySelectorRandom, "seed", new AtomicLong(123));
@@ -106,7 +106,7 @@ public class AbstractLogLogicTest {
    }
 
    public void testAfterCommitFailures() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogLogicConfiguration llc = new LogLogicConfiguration();
       llc.maxDelayedRemoveAttempts = 2;
       AbstractLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), llc, cache);
@@ -115,7 +115,7 @@ public class AbstractLogLogicTest {
       logic.delayedRemoves = delayedRemoves;
 
       doNothing().when(logic).startTransaction();
-      Mockito.doThrow(TestUtils.TestException.class).when(logic).checkedRemoveValue(anyLong(), anyObject());
+      Mockito.doThrow(CacheTestUtils.TestException.class).when(logic).checkedRemoveValue(anyLong(), anyObject());
 
       logic.afterCommit();
 
@@ -123,7 +123,7 @@ public class AbstractLogLogicTest {
    }
 
    public void testGetCheckedOperationPresentInCache() throws NoSuchFieldException, IllegalAccessException, StressorException, BreakTxRequest {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       AbstractLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       Cluster cluster = new Cluster();
@@ -137,7 +137,7 @@ public class AbstractLogLogicTest {
    }
 
    public void testGetCheckedOperationNotPresentInCache() throws NoSuchFieldException, IllegalAccessException, StressorException, BreakTxRequest {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       AbstractLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       Cluster cluster = new Cluster();
@@ -148,7 +148,7 @@ public class AbstractLogLogicTest {
    }
 
    public void testGetCheckedOperationIgnoreDeadCheckers() throws NoSuchFieldException, IllegalAccessException, StressorException, BreakTxRequest {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogLogicConfiguration llc = new LogLogicConfiguration();
       llc.ignoreDeadCheckers = true;
       GeneralConfiguration gc = new GeneralConfiguration();
@@ -173,7 +173,7 @@ public class AbstractLogLogicTest {
    }
 
    public void testGetCheckedOperationIgnoreDeadCheckersInitial1() throws NoSuchFieldException, IllegalAccessException, StressorException, BreakTxRequest {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogLogicConfiguration llc = new LogLogicConfiguration();
       llc.ignoreDeadCheckers = true;
       GeneralConfiguration gc = new GeneralConfiguration();
@@ -207,7 +207,7 @@ public class AbstractLogLogicTest {
       ReflectionUtils.setClassProperty(AbstractLogLogic.class, logic, "keyRange", new Range(0, 1));
       ReflectionUtils.setClassProperty(AbstractLogic.class, logic, "manager", manager);
       ReflectionUtils.setClassProperty(AbstractLogic.class, logic, "log", mock(Log.class));
-      ReflectionUtils.setClassProperty(AbstractLogic.class, logic, "keyGenerator", new TestUtils.SimpleStringKeyGenerator());
+      ReflectionUtils.setClassProperty(AbstractLogic.class, logic, "keyGenerator", new CacheTestUtils.SimpleStringKeyGenerator());
       ReflectionUtils.setClassProperty(AbstractLogic.class, logic, "transactionSize", gc.transactionSize);
       new Stressor(manager, logic, 0);
       return logic;

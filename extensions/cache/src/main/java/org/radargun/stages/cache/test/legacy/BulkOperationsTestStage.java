@@ -12,11 +12,11 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.cache.test.CacheInvocations;
 import org.radargun.stages.test.Invocation;
+import org.radargun.stages.test.legacy.LegacyStressor;
 import org.radargun.stages.test.legacy.LegacyTestStage;
+import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.stages.test.legacy.OperationSelector;
 import org.radargun.stages.test.legacy.RatioOperationSelector;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.InjectTrait;
 

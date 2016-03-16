@@ -4,8 +4,9 @@ import org.radargun.logging.Log;
 import org.radargun.stages.helpers.Range;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
+import org.radargun.util.CacheTestUtils;
+import org.radargun.util.CacheTraitRepository;
 import org.radargun.util.ReflectionUtils;
-import org.radargun.util.TestUtils;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ import static org.testng.Assert.*;
 public class LogCheckerTest {
 
    public void testRunContainsOp() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
@@ -50,7 +51,7 @@ public class LogCheckerTest {
    }
 
    public void testRunContainsOpLogCheckerKey() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
@@ -66,7 +67,7 @@ public class LogCheckerTest {
    }
 
    public void testRunDoesntContainOp() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
@@ -94,7 +95,7 @@ public class LogCheckerTest {
    }
 
    public void testRunDoesntContainOpConfirmationHigher() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
@@ -125,7 +126,7 @@ public class LogCheckerTest {
    }
 
    public void testRunDoesntContainOpConfirmationLower() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
@@ -155,7 +156,7 @@ public class LogCheckerTest {
    }
 
    public void testRunDoesntContainOpConfirmationUnsuccessful() throws Exception {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
@@ -188,7 +189,7 @@ public class LogCheckerTest {
    }
 
    public void testCheckIgnoreRecord() throws NoSuchFieldException, IllegalAccessException {
-      BasicOperations.Cache cache = new TestUtils.BasicOperationsCache();
+      BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogLogicConfiguration llc = new LogLogicConfiguration();
       llc.ignoreDeadCheckers = true;
       LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), llc, cache);
@@ -221,7 +222,7 @@ public class LogCheckerTest {
       ReflectionUtils.setClassProperty(LogChecker.class, logChecker, "basicCache", manager.getBasicCache());
       ReflectionUtils.setClassProperty(LogChecker.class, logChecker, "stressorRecordPool", pool);
       ReflectionUtils.setClassProperty(LogChecker.class, logChecker, "log", mock(Log.class));
-      ReflectionUtils.setClassProperty(LogChecker.class, logChecker, "keyGenerator", new TestUtils.SimpleStringKeyGenerator());
+      ReflectionUtils.setClassProperty(LogChecker.class, logChecker, "keyGenerator", new CacheTestUtils.SimpleStringKeyGenerator());
       ReflectionUtils.setClassProperty(LogChecker.class, logChecker, "logLogicConfiguration", llc);
       return logChecker;
    }

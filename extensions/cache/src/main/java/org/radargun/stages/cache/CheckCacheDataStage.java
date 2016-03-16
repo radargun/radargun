@@ -34,76 +34,76 @@ import org.radargun.traits.InjectTrait;
 public class CheckCacheDataStage extends AbstractDistStage {
 
    @Property(optional = false, doc = "Number of entries with key in form specified by the last used key generator, in the cache.")
-   private long numEntries;
+   public long numEntries;
 
    @Property(doc = "Index of key of the first entry. This number will be multiplied by slaveIndex. Default is 0. Has precedence over 'first-entry-offset'.")
-   private long firstEntryOffsetSlaveIndex = 0;
+   public long firstEntryOffsetSlaveIndex = 0;
 
    @Property(doc = "Index of key of the first entry.")
-   private long firstEntryOffset = 0;
+   public long firstEntryOffset = 0;
 
    @Property(doc = "Number of entries that will be checked in each step. Default is 1.")
-   private long checkEntryCount = 1;
+   public long checkEntryCount = 1;
 
    @Property(doc = "Number of entries stepped in each step. Default is 1.")
-   private long stepEntryCount = 1;
+   public long stepEntryCount = 1;
 
    @Property(optional = false, doc = "Number of bytes carried in single entry.")
-   protected int entrySize;
+   public int entrySize;
 
    @Property(doc = "Entries that do not have the expected form but occur in the cluster. This string specifies " +
          "a polynomial in number of slaves: 1,2,3 with 4 slaves would result in 1 + 2*4 + 3*4*4 = 57 extra entries." +
          "Defaults to 0.")
-   private String extraEntries;
+   public String extraEntries;
 
    @Property(doc = "Number of thread per node which check data validity. Default is 1.")
-   private int checkThreads = 1;
+   public int checkThreads = 1;
 
    @Property(doc = "Usually the test checks that sum of local nodes = numOwners * numEntries + extraEntries." +
          "This option disables such behaviour. Default is false.")
-   private boolean ignoreSum = false;
+   public boolean ignoreSum = false;
 
    @Property(doc = "If true, the entries are not retrieved, this stage only checks that the sum of entries from local nodes is correct. Default is false.")
-   private boolean sizeOnly = false;
+   public boolean sizeOnly = false;
 
    @Property(doc = "Hint how many slaves are currently alive - if set to > 0 then the query for number of entries in " +
          "this cache is postponed until the cache appears to be fully replicated. By default this is disabled.")
-   private int liveSlavesHint = -1;
+   public int liveSlavesHint = -1;
 
    @Property(doc = "If set to true, we are checking that the data are NOT in the cluster anymore. Default is false.")
-   private boolean deleted = false;
+   public boolean deleted = false;
 
    @Property(doc = "Number of queries after which a DEBUG log message is printed. Default is 10000.")
-   private int logChecksCount = 10000;
+   public int logChecksCount = 10000;
 
    @Property(doc = "If the GET request results in null response, call wrapper-specific functions to show debug info. " +
          "Default is false.")
-   private boolean debugNull = false;
+   public boolean debugNull = false;
 
    @Property(doc = "If entry is null, fail immediately. Default is false.")
-   private boolean failOnNull = false;
+   public boolean failOnNull = false;
 
    @Property(doc = "If the cache wrapper supports persistent storage and this is set to true, the check " +
          "will be executed only against in-memory data. Default is false.")
-   private boolean memoryOnly = false;
+   public boolean memoryOnly = false;
 
    @Property(doc = "Generator of keys (transforms key ID into key object). By default the generator is retrieved from slave state.",
          complexConverter = KeyGenerator.ComplexConverter.class)
-   protected KeyGenerator keyGenerator = null;
+   public KeyGenerator keyGenerator = null;
 
    @Property(doc = "Generator of values. By default the generator is retrieved from slave state.",
          complexConverter = ValueGenerator.ComplexConverter.class)
-   protected ValueGenerator valueGenerator = null;
+   public ValueGenerator valueGenerator = null;
 
    // TODO: better names, even when these are kind of hacks
    @Property(doc = "Check whether the sum of subparts sizes is the same as local size. Default is false.")
-   private boolean checkSubpartsSumLocal = false;
+   public boolean checkSubpartsSumLocal = false;
 
    @Property(doc = "Check whether the same subparts from each cache have the same size. Default is false.")
-   private boolean checkSubpartsEqual = false;
+   public boolean checkSubpartsEqual = false;
 
    @Property(doc = "Check that number of non-zero subparts is equal to number of replicas. Default is false.")
-   private boolean checkSubpartsAreReplicas = false;
+   public boolean checkSubpartsAreReplicas = false;
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected BasicOperations basicOperations;

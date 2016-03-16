@@ -1,15 +1,15 @@
 package org.radargun.stages.cache.generators;
 
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 /**
  * @author Matej Cimbora

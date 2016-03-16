@@ -1,5 +1,7 @@
 package org.radargun.stages.cache.test.legacy;
 
+import java.util.Random;
+
 import org.radargun.Operation;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
@@ -14,8 +16,6 @@ import org.radargun.stages.test.legacy.RatioOperationSelector;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.TemporalOperations;
-
-import java.util.Random;
 
 /**
  * @author Martin Gencur &lt;mgencur@redhat.com&gt;
