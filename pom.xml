@@ -40,6 +40,7 @@
       <plugins.coherence/>
       <plugins.process />
       <plugins.spark />
+      <plugins.resteasy-http />
       <plugins.spymemcached />
       <reporter.default />
       <reporter.perfrepo />
@@ -298,6 +299,20 @@
          </properties>
       </profile>
       <profile>
+         <id>resteasy-http</id>
+         <activation>
+            <property>
+               <name>!no-resteasy-http</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/resteasy-http</module>
+         </modules>
+         <properties>
+            <resteasy-http>resteasy-http</resteasy-http>
+         </properties>
+      </profile>
+      <profile>
          <id>spymemcached</id>
          <activation>
             <property>
@@ -498,7 +513,7 @@
                         </path>
 
                         <echo message="Packaging plugins: " />
-                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.http},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdk18},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.http},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdk18},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>
