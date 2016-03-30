@@ -31,6 +31,10 @@
       <url>https://github.com/radargun/radargun/issues</url>
    </issueManagement>
 
+   <properties>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+   </properties>
+
    <developers>
       <developer>
          <name>Mircea Markus</name>
