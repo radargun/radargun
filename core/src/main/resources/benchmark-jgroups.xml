@@ -22,7 +22,7 @@
    </configurations>
 
    <!-- Sequence of stages executed on the cluster -->
-   <scenario>
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0">
       <!-- Start services on all nodes -->
       <service-start/>
       <!-- Run JGroups probe wrapper & execute multiple queries in one batch -->
@@ -42,6 +42,6 @@
             <query value="jmx"/>
          </queries>
       </j-groups-probe>
-   </scenario>
+   </rg:scenario>
 
 </benchmark>
