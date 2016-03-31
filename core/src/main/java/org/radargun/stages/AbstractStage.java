@@ -31,6 +31,10 @@ public abstract class AbstractStage implements org.radargun.Stage {
       return acks.stream().filter(clazz::isInstance).map(clazz::cast).collect(Collectors.toList());
    }
 
+   protected static <T extends DistStageAck> List<T> instancesOf(Collection<? extends DistStageAck> acks, Class<T> clazz) {
+      return acks.stream().filter(clazz::isInstance).map(clazz::cast).collect(Collectors.toList());
+   }
+
    public String getName() {
       return StageHelper.getStageName(getClass());
    }

@@ -44,6 +44,9 @@ public abstract class TestSetupStage extends AbstractDistStage {
    @Property(doc = "Whether an error from invocation should be logged as error. Default is true.")
    protected boolean logRequestExceptions = true;
 
+   @Property(doc = "Whether an error from invocation should be logged as error. Default is true.")
+   protected boolean logRequestExceptions = true;
+
    @Property(doc = "Whether an error from transaction commit/rollback should be logged as error. Default is true.")
    public boolean logTransactionExceptions = true;
 
