@@ -13,6 +13,7 @@ import javax.management.remote.JMXServiceURL;
 
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
+
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -26,7 +27,7 @@ public class JavaProcessService extends ProcessService {
    private final Log log = LogFactory.getLog(getClass());
 
    private static final String CONNECTOR_ADDRESS =
-      "com.sun.management.jmxremote.localConnectorAddress";
+         "com.sun.management.jmxremote.localConnectorAddress";
 
    @Property(doc = "Connect to the process and retrieve JMX connection. Default is true.")
    protected boolean jmxConnectionEnabled = true;
@@ -71,8 +72,8 @@ public class JavaProcessService extends ProcessService {
                String connectorAddress = vm.getAgentProperties().getProperty(CONNECTOR_ADDRESS);
                if (connectorAddress == null) {
                   String agent = vm.getSystemProperties().getProperty("java.home") +
-                     File.separator + "lib" + File.separator +
-                     "management-agent.jar";
+                        File.separator + "lib" + File.separator +
+                        "management-agent.jar";
                   try {
                      vm.loadAgent(agent);
                      connectorAddress = vm.getAgentProperties().getProperty(CONNECTOR_ADDRESS);
@@ -97,20 +98,25 @@ public class JavaProcessService extends ProcessService {
    }
 
    public String getJavaPIDs() {
-      ProcessBuilder pb = new ProcessBuilder().command(Arrays.asList(getCommandPrefix() + "jvms" + getCommandSuffix(), tag));
-      pb.redirectError(ProcessBuilder.Redirect.INHERIT);
-      pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
-      try {
-         Process process = pb.start();
-         StringBuilder sb = new StringBuilder();
-         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) sb.append(line);
+      if (getPid() != null) {
+         ProcessBuilder pb = new ProcessBuilder()
+               .command(Arrays.asList(getCommandPrefix() + "jvms" + getCommandSuffix(), getPid()));
+         pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+         pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
+         try {
+            Process process = pb.start();
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+               String line;
+               while ((line = reader.readLine()) != null)
+                  sb.append(line);
+            }
+            return sb.toString().split(" ")[0];
+         } catch (IOException e) {
+            log.error("Failed to read JVM PIDs", e);
+            return null;
          }
-         return sb.toString().trim();
-      } catch (IOException e) {
-         log.error("Failed to read JVM PIDs", e);
-         return null;
       }
+      return null;
    }
 }

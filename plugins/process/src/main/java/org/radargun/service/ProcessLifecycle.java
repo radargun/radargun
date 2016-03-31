@@ -5,11 +5,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -25,17 +27,17 @@ import org.radargun.utils.TimeService;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class ProcessLifecycle implements Lifecycle, Killable {
+public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Killable {
+
    protected final Log log = LogFactory.getLog(getClass());
-   protected final ProcessService service;
+   protected final T service;
    protected ProcessOutputReader outputReader, errorReader;
 
    private final CopyOnWriteArrayList<Listener> listeners = new CopyOnWriteArrayList<>();
    private String prefix;
    private String extension;
 
-
-   public ProcessLifecycle(ProcessService service) {
+   public ProcessLifecycle(T service) {
       this.service = service;
       prefix = service.getCommandPrefix();
       extension = service.getCommandSuffix();
@@ -82,11 +84,12 @@ public class ProcessLifecycle implements Lifecycle, Killable {
       }
       try {
          fireBeforeStop(false);
-         final Process process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "kill" + extension, service.getCommandTag())).start();
+         final Process process = new ProcessBuilder().inheritIO()
+               .command(Arrays.asList(prefix + "kill" + extension, service.getPid())).start();
          return new Runnable() {
             @Override
             public void run() {
-               for (; ; ) {
+               for (;;) {
                   try {
                      process.waitFor();
                   } catch (InterruptedException e) {
@@ -118,8 +121,6 @@ public class ProcessLifecycle implements Lifecycle, Killable {
 
    protected void startInternal() {
       List<String> command = new ArrayList<String>();
-      command.add(prefix + "start" + extension);
-      command.add(service.getCommandTag());
       command.addAll(service.getCommand());
       Map<String, String> env = service.getEnvironment();
       log.info("Environment:\n" + env);
@@ -142,12 +143,38 @@ public class ProcessLifecycle implements Lifecycle, Killable {
       }
       try {
          Process process = pb.start();
+         service.setPid(getProcessId(process));
          if (inputWriter != null) inputWriter.setStream(process.getOutputStream());
          if (outputReader != null) outputReader.setStream(process.getInputStream());
          if (errorReader != null) errorReader.setStream(process.getErrorStream());
       } catch (IOException e) {
          log.error("Failed to start", e);
       }
+   }
+
+   private static String getProcessId(Process process) {
+      Class<?> clazz = process.getClass();
+      try {
+         if (clazz.getName().equals("java.lang.UNIXProcess")) {
+            Field pidField = clazz.getDeclaredField("pid");
+            pidField.setAccessible(true);
+            Object value = pidField.get(process);
+            if (value instanceof Integer) {
+               return ((Integer) value).toString();
+            }
+         } else {
+            throw new IllegalArgumentException("Only unix is supported as OS.");
+         }
+      } catch (SecurityException sx) {
+         sx.printStackTrace();
+      } catch (NoSuchFieldException e) {
+         e.printStackTrace();
+      } catch (IllegalArgumentException e) {
+         e.printStackTrace();
+      } catch (IllegalAccessException e) {
+         e.printStackTrace();
+      }
+      return null;
    }
 
    @Override
@@ -161,6 +188,8 @@ public class ProcessLifecycle implements Lifecycle, Killable {
          stopInternal();
       } finally {
          fireAfterStop(true);
+         outputReader.interrupt();
+         errorReader.interrupt();
       }
    }
 
@@ -169,9 +198,9 @@ public class ProcessLifecycle implements Lifecycle, Killable {
          long startTime = TimeService.currentTimeMillis();
          for (; ; ) {
             String command = service.stopTimeout < 0 || TimeService.currentTimeMillis() < startTime + service.stopTimeout ? "stop" : "kill";
-            Process process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + command + extension, service.getCommandTag())).start();
+            Process process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + command + extension, service.getPid())).start();
             try {
-               process.waitFor();
+               process.waitFor(service.stopTimeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                log.trace("Interrupted waiting for stop", e);
             }
@@ -184,25 +213,24 @@ public class ProcessLifecycle implements Lifecycle, Killable {
 
    @Override
    public boolean isRunning() {
-      Process process = null;
-      try {
-         process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + "running" + extension, service.getCommandTag())).start();
-         int exitValue = process.waitFor();
-         return exitValue == 0;
-      } catch (IOException e) {
-         log.error("Cannot determine if running", e);
-         return false;
-      } catch (InterruptedException e) {
-         log.error("Script interrupted", e);
-         if (process != null) {
+      if (service.getPid() != null) {
+         Process process = null;
+         try {
+            process = new ProcessBuilder().command("ps", "-ef", service.getPid()).start();
+            return process.waitFor() == 0;
+         } catch (IOException e) {
+            log.error("Cannot determine if process '" + service.getPid() + "' is running", e);
+            return false;
+         } catch (InterruptedException e) {
+            log.error("Script interrupted", e);
             try {
                return process.exitValue() == 0;
             } catch (IllegalThreadStateException itse) {
                return true;
             }
          }
-         return true;
       }
+      return false;
    }
 
    protected synchronized StreamReader getOutputReader() {
@@ -251,9 +279,11 @@ public class ProcessLifecycle implements Lifecycle, Killable {
       void consume(String line);
    }
 
-   protected class ProcessOutputReader extends Thread implements StreamReader {
-      private BufferedReader reader;
-      private LineConsumer consumer;
+   protected static class ProcessOutputReader extends Thread implements StreamReader {
+
+      protected final Log log = LogFactory.getLog(getClass());
+      protected BufferedReader reader;
+      protected LineConsumer consumer;
 
       public ProcessOutputReader(LineConsumer consumer) {
          this.consumer = consumer;
@@ -262,14 +292,16 @@ public class ProcessLifecycle implements Lifecycle, Killable {
       @Override
       public void setStream(InputStream stream) {
          this.reader = new BufferedReader(new InputStreamReader(stream));
-         this.start();
+         if (!isAlive()) {
+            this.start();
+         }
       }
 
       @Override
       public void run() {
          String line;
          try {
-            while ((line = reader.readLine()) != null) {
+            while (!isInterrupted() && (line = reader.readLine()) != null) {
                consumer.consume(line);
             }
          } catch (IOException e) {
@@ -278,7 +310,7 @@ public class ProcessLifecycle implements Lifecycle, Killable {
             try {
                reader.close();
             } catch (IOException e) {
-               log.error("Failed to close", e);
+               log.error("Failed to close reader", e);
             }
          }
       }
@@ -345,21 +377,15 @@ public class ProcessLifecycle implements Lifecycle, Killable {
 
    public interface Listener {
       void beforeStart();
-
       void afterStart();
-
       void beforeStop(boolean graceful);
-
       void afterStop(boolean graceful);
    }
 
    public static class ListenerAdapter implements Listener {
       public void beforeStart() {}
-
       public void afterStart() {}
-
       public void beforeStop(boolean graceful) {}
-
       public void afterStop(boolean graceful) {}
    }
 }
