@@ -39,6 +39,7 @@
       <plugins.jdg/>
       <plugins.coherence/>
       <plugins.process />
+      <plugins.resteasy-http />
       <plugins.spymemcached />
       <reporter.default />
       <reporter.perfrepo />
@@ -320,6 +321,20 @@
          </properties>
       </profile>
       <profile>
+         <id>resteasy-http</id>
+         <activation>
+            <property>
+               <name>!no-resteasy-http</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/resteasy-http</module>
+         </modules>
+         <properties>
+            <plugins.resteasy-http>resteasy-http</plugins.resteasy-http>
+         </properties>
+      </profile>
+      <profile>
          <id>spymemcached</id>
          <activation>
             <property>
@@ -521,7 +536,7 @@
 
                         <echo message="Packaging plugins: " />
                         <!-- Note: JCache needs to be here for schema generation, although it can't be used on its own -->
-                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>

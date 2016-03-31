@@ -27,7 +27,7 @@
             </server>
          </setup>
          <!-- Configuration for the HotRod client -->
-         <setup group="client" plugin="infinispan60">
+         <setup group="client" plugin="infinispan80">
             <hotrod xmlns="urn:radargun:plugins:infinispan80:3.0">
                <!-- Clients are not paired with servers automatically - we have to explicitly provide the address -->
                <servers>127.0.0.1:11222</servers>
@@ -50,6 +50,29 @@
             </client>
          </setup>
       </config>
+
+      <config name="Infinispan 8.0 - REST">
+         <!-- Configuration for the server group -->
+         <setup group="server" plugin="infinispan80">
+         <!-- Configuration for the server group - this is identical to HotRod -->
+            <server xmlns="urn:radargun:plugins:infinispan80:3.0" file="server.xml" jmx-domain="jboss.datagrid-infinispan">
+               <args>-DudpGroup=224.0.0.1</args>
+               <home>${env.ISPN_HOME}</home>
+            </server>
+         </setup>
+         <!-- Configuration for the REST client -->
+         <setup group="client" plugin="resteasy-http">
+            <rest-client xmlns="urn:radargun:plugins:resteasy-http:3.0">
+               <!-- Clients are not paired with servers automatically - we have to explicitly provide the address -->
+               <servers>127.0.0.1:8080</servers>
+               <!-- Infinispan REST server requires a user -->
+               <username>rest</username>
+               <password>R3dH@t13</password>
+            </rest-client>
+         </setup>
+      </config>
+
+
    </configurations>
 
    <init/>
