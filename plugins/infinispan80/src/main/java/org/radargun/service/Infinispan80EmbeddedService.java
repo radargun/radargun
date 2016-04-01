@@ -14,8 +14,8 @@ import java.util.concurrent.ForkJoinPool;
 public class Infinispan80EmbeddedService extends Infinispan70EmbeddedService {
 
    @ProvidesTrait
-   public InfinispanEmbeddedContinuousQuery createContinuousQuery() {
-      return new InfinispanEmbeddedContinuousQuery(this);
+   public Infinispan80EmbeddedContinuousQuery createContinuousQuery() {
+      return new Infinispan80EmbeddedContinuousQuery(this);
    }
 
    @Destroy

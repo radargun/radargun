@@ -65,7 +65,7 @@
 
        <dependency>
            <groupId>org.radargun</groupId>
-           <artifactId>plugin-infinispan80</artifactId>
+           <artifactId>plugin-infinispan81</artifactId>
            <version>${project.version}</version>
        </dependency>
 

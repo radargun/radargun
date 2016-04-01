@@ -7,13 +7,13 @@ import org.radargun.traits.Query;
 /**
  * @author Vojtech Juranek &lt;vjuranek@redhat.com&gt;
  */
-public class InfinispanEmbeddedContinuousQuery implements ContinuousQuery {
+public class Infinispan80EmbeddedContinuousQuery implements ContinuousQuery {
 
     protected final InfinispanEmbeddedService service;
     private org.infinispan.query.continuous.ContinuousQuery<Object, Object> cq;
     private IspnContinuousQueryListener ispnCqListener;
 
-    public InfinispanEmbeddedContinuousQuery(InfinispanEmbeddedService service) {
+    public Infinispan80EmbeddedContinuousQuery(InfinispanEmbeddedService service) {
         this.service = service;
     }
 
@@ -36,7 +36,7 @@ public class InfinispanEmbeddedContinuousQuery implements ContinuousQuery {
         return service.getCache(cacheName);
     }
 
-    public static class IspnContinuousQueryListener implements org.infinispan.query.continuous.ContinuousQueryListener {
+    public static class IspnContinuousQueryListener implements org.infinispan.query.continuous.ContinuousQueryResultListener {
 
         private final ContinuousQueryListener cqListener;
 
