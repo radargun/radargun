@@ -48,7 +48,8 @@ public class Slave extends SlaveBase {
             break;
          } else if (object instanceof RemoteSlaveConnection.Restart) {
             UUID nextUuid = UUID.randomUUID();
-            Configuration.Setup setup = configuration.getSetup(cluster.getGroup(slaveIndex).name);
+            // At this point, slaveIndex == -1 so get index from state
+            Configuration.Setup setup = configuration.getSetup(cluster.getGroup(state.getSlaveIndex()).name);
             VmArgs vmArgs = new VmArgs();
             PropertyHelper.setPropertiesFromDefinitions(vmArgs, setup.getVmArgs(), getCurrentExtras(configuration, cluster));
             HashMap<String, String> envs = new HashMap<>();
