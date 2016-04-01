@@ -10,9 +10,9 @@ import org.radargun.traits.ProvidesTrait;
 public class JDG66EmbeddedService extends JDG64EmbeddedService {
    protected static final String SERVICE_DESCRIPTION = "Service hosting JDG in embedded (library) mode.";
 
-   @ProvidesTrait
-   public InfinispanEmbeddedContinuousQuery createContinuousQuery() {
-      return new InfinispanEmbeddedContinuousQuery(this);
-   }
+    @ProvidesTrait
+    public Infinispan81EmbeddedContinuousQuery createContinuousQuery() {
+        return new Infinispan81EmbeddedContinuousQuery(this);
+    }
 
 }
