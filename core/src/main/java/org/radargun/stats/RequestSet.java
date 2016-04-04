@@ -47,6 +47,10 @@ public final class RequestSet {
       return sumDurations;
    }
 
+   public long getBegin() {
+      return begin;
+   }
+
    public long durationSpan() {
       return end - begin;
    }
