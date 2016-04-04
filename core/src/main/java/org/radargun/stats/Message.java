@@ -27,6 +27,10 @@ public final class Message {
       return this;
    }
 
+   public long getSendStartTime() {
+      return sendStartTime;
+   }
+
    public void record(Operation operation) {
       statistics.record(this, operation);
    }

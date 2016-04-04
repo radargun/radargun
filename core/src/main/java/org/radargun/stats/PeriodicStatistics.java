@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.radargun.Operation;
 import org.radargun.config.DefinitionElement;
@@ -28,6 +29,7 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationD
    private long period;
 
    private final List<IterationData.Iteration<Statistics>> buckets;
+   private long beginNanos = Long.MAX_VALUE;
 
    public PeriodicStatistics() {
       this.buckets = new ArrayList<>();
@@ -48,9 +50,8 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationD
       }
    }
 
-   private Statistics getCurrentBucket() {
-      long currentTime = TimeService.currentTimeMillis();
-      int bucket = (int) ((currentTime - getBegin()) / period);
+   private Statistics getCurrentBucket(long millis) {
+      int bucket = (int) (millis / period);
       while (buckets.size() <= bucket) {
          Statistics bucketStats = prototype.copy();
          if (bucketStats instanceof IntervalStatistics) {
@@ -65,17 +66,17 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationD
 
    @Override
    public void record(Request request, Operation operation) {
-      getCurrentBucket().record(request, operation);
+      getCurrentBucket(TimeUnit.NANOSECONDS.toMillis(request.getRequestStartTime() - beginNanos)).record(request, operation);
    }
 
    @Override
    public void record(Message message, Operation operation) {
-      getCurrentBucket().record(message, operation);
+      getCurrentBucket(message.getSendStartTime() - getBegin()).record(message, operation);
    }
 
    @Override
    public void record(RequestSet requestSet, Operation operation) {
-      getCurrentBucket().record(requestSet, operation);
+      getCurrentBucket(TimeUnit.NANOSECONDS.toMillis(requestSet.getBegin() - getBegin())).record(requestSet, operation);
    }
 
    @Override
@@ -86,6 +87,12 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationD
    @Override
    public void reset() {
       buckets.clear();
+   }
+
+   @Override
+   public void begin() {
+      super.begin();
+      beginNanos = TimeService.nanoTime();
    }
 
    @Override
