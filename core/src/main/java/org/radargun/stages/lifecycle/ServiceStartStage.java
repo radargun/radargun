@@ -41,10 +41,11 @@ public class ServiceStartStage extends AbstractServiceStartStage {
    @Property(doc = "Collect configuration files and properties for the service, and pass those to reporters. Default is true.")
    private boolean dumpConfig = true;
 
-   @Property(doc = "The number of slaves that should be up after all slaves are started. Applicable only with "
-      + "validateCluster=true. Default is all slaves in the cluster where this stage will be executed (in the "
-      + "same site in case of multi-site configuration).")
-   private Integer expectNumSlaves = -1;
+   @Property(doc = "The number of members that should be up after all services are started. Applicable only with "
+         + "validateCluster=true. Default is all members in the group where this stage will be executed. (If no "
+         + "groups are configured, then this is equal to all members of the cluster.) If multiple groups are"
+         + "specified in the benchmark, then the size of each group will considered separately.")
+   private Integer expectNumSlaves;
 
    @Property(doc = "Set of slaves that should be reachable to the newly spawned slaves (see Partitionable feature for details). Default is all slaves.")
    private Set<Integer> reachable = null;
@@ -74,9 +75,11 @@ public class ServiceStartStage extends AbstractServiceStartStage {
       log.info("Ack master's StartCluster stage. Local address is: " + slaveState.getLocalAddress()
          + ". This slave's index is: " + slaveState.getSlaveIndex());
 
-      // If no value of expectNumSlaves is supplied, then use the slaves where the stage is executing as a default
-      if (expectNumSlaves == -1) {
-         expectNumSlaves = getExecutingSlaves().size();
+      // If no value of expectNumSlaves is supplied, then use the slave's group size as the default
+      if (expectNumSlaves == null) {
+         Set<Integer> group = slaveState.getCluster().getSlaves(slaveState.getGroupName());
+         group.retainAll(getExecutingSlaves());
+         expectNumSlaves = group.size();
       }
 
       try {
