@@ -266,9 +266,10 @@
             <module>plugins/infinispan72</module>
             <module>plugins/infinispan80</module>
             <module>plugins/infinispan81</module>
+            <module>plugins/infinispan82</module>
          </modules>
          <properties>
-            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81</plugins.infinispan>
+            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81,infinispan82</plugins.infinispan>
          </properties>
       </profile>
       <profile>
@@ -301,9 +302,10 @@
             <module>plugins/jdg64</module>
             <module>plugins/jdg65</module>
             <module>plugins/jdg66</module>
+            <module>plugins/jdg70</module>
          </modules>
          <properties>
-            <plugins.jdg>jdg60,jdg61,jdg62,jdg63,jdg64,jdg65,jdg66</plugins.jdg>
+            <plugins.jdg>jdg60,jdg61,jdg62,jdg63,jdg64,jdg65,jdg66,jdg70</plugins.jdg>
          </properties>
       </profile>
       <profile>
