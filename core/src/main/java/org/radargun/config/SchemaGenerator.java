@@ -124,6 +124,9 @@ public abstract class SchemaGenerator {
          }
          fullName = new XmlType(typeName);
       } else {
+         if (PropertyHelper.getProperties(clazz, false, true, false).isEmpty()) {
+            return null;
+         }
          fullName = new XmlType(requireImport(coords.namespace), typeName);
       }
       generatedTypes.put(typeName, fullName);
