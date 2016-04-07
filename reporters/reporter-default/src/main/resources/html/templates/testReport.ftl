@@ -96,7 +96,7 @@
             <#else>
                <#assign suffix = "" />
             </#if>
-         <@graphs operation=operation suffix=suffix/>
+            <@graphs operation=operation suffix=suffix/>
          </#list>
       <#else>
          <#assign suffix = "" />
@@ -208,37 +208,13 @@
 <#macro graphs operation suffix>
 
    <table class="graphTable">
-      <#if testReport.getGeneratedCharts()?seq_contains("mean_dev")>
-         <#local img_mean = testReport.generateImageName(operation, suffix, "mean_dev.png")/>
+      <#list testReport.getGeneratedCharts(operation) as chart>
+         <#local img = testReport.generateImageName(operation, suffix, chart.name + ".png")/>
          <th>
-            Response time mean <br/>
-            <img src="${img_mean}" alt="${operation}">
+            ${chart.title}<br/>
+            <img src="${img}" alt="${operation}">
          </th>
-      </#if>
-
-      <#if testReport.getGeneratedCharts()?seq_contains("throughput_gross")>
-         <#local img_throughput = testReport.generateImageName(operation, suffix, "throughput_gross.png")/>
-         <th>
-            Gross operation throughput <br/>
-            <img src="${img_throughput}" alt="${operation}">
-         </th>
-      </#if>
-
-      <#if testReport.getGeneratedCharts()?seq_contains("throughput_net")>
-         <#local img_throughput = testReport.generateImageName(operation, suffix, "throughput_net.png")/>
-         <th>
-            Net operation throughput <br/>
-            <img src="${img_throughput}" alt="${operation}">
-         </th>
-      </#if>
-
-      <#if testReport.getGeneratedCharts()?seq_contains("data_throughput")>
-         <#local img_data_throughput = testReport.generateImageName(operation, suffix, "data_throughput.png")/>
-         <th>
-            Data throughput mean <br/>
-            <img src="${img_data_throughput}" alt="${operation}">
-         </th>
-      </#if>
+      </#list>
    </table>
 
 </#macro>
@@ -247,13 +223,10 @@
 
    <#if statistics?has_content>
       <#local period = testReport.period(statistics)!0 />
-      <#local operationStats = testReport.operationStats(statistics,operation)! />
    </#if>
 
-   <#if operationStats?has_content>
-      <#local defaultOutcome = operationStats.getRepresentation(testReport.defaultOutcomeClass())! />
-      <#local meanAndDev = operationStats.getRepresentation(testReport.meanAndDevClass())! />
-   </#if>
+   <#local defaultOutcome = statistics.getRepresentation(operation, testReport.defaultOutcomeClass())! />
+   <#local meanAndDev = statistics.getRepresentation(operation, testReport.meanAndDevClass())! />
 
    <#local rowClass = testReport.rowClass(aggregation.anySuspect(operation)) />
    <#if defaultOutcome?? && defaultOutcome?has_content>
@@ -283,9 +256,7 @@
    </#if>
    <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.OPERATION_THROUGHPUT)>
 
-      <#if operationStats?has_content>
-         <#local operationThroughput = operationStats.getRepresentation(testReport.operationThroughputClass(), period)! />
-      </#if>
+      <#local operationThroughput = statistics.getRepresentation(operation, testReport.operationThroughputClass(), period)! />
 
       <#if operationThroughput?has_content>
          <td class="${rowClass} rowStyle">
@@ -301,9 +272,7 @@
    </#if>
 
    <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.DATA_THROUGHPUT)>
-      <#if operationStats?has_content>
-         <#local dataThroughput = operationStats.getRepresentation(testReport.dataThroughputClass())! />
-      </#if>
+      <#local dataThroughput = statistics.getRepresentation(operation, testReport.dataThroughputClass())! />
       <#if dataThroughput?has_content>
          <td class="${rowClass} rowStyle">
             ${testReport.formatDataThroughput(dataThroughput.minThroughput)} - min
@@ -327,9 +296,7 @@
 
    <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.PERCENTILES)>
       <#list testReport.configuration.percentiles as percentile >
-         <#if operationStats?has_content>
-            <#local p = (operationStats.getRepresentation(testReport.percentileClass(), percentile?double))! />
-         </#if>
+         <#local p = (statistics.getRepresentation(operation, testReport.percentileClass(), percentile?double))! />
 
          <#if p?has_content>
             <td class="${rowClass} rowStyle">
@@ -342,27 +309,21 @@
    </#if>
 
    <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.HISTOGRAM)>
-      <#if operationStats?has_content>
-         <#local histogram = testReport.getHistogramName(operationStats, operation, report.getConfiguration().name,
+      <#local histogram = testReport.getHistogramName(statistics, operation, report.getConfiguration().name,
          report.getCluster().getClusterIndex(), aggregation.iteration.id, node, operationData.getPresentedStatistics()) />
 
-         <#local percentileGraph = testReport.getPercentileChartName(operationStats, operation, report.getConfiguration().name,
+      <#local percentileGraph = testReport.getPercentileChartName(statistics, operation, report.getConfiguration().name,
          report.getCluster().getClusterIndex(), aggregation.iteration.id, node, operationData.getPresentedStatistics()) />
 
-         <#if histogram?has_content && percentileGraph?has_content>
-            <td class="${rowClass} rowStyle">
-               <a href="${histogram}">histogram</a> <br>
-               <a href="${percentileGraph}">percentiles</a>
-            </td>
-         <#else >
-            <td class="${rowClass} rowStyle">
-               none
-            </td>
-         </#if>
-      <#else>
-         <td class="rowStyle"">
+      <#if histogram?has_content && percentileGraph?has_content>
+         <td class="${rowClass} rowStyle">
+            <a href="${histogram}">histogram</a> <br>
+            <a href="${percentileGraph}">percentiles</a>
+         </td>
+      <#else >
+         <td class="${rowClass} rowStyle">
             none
          </td>
-      </#if>
+     </#if>
    </#if>
 </#macro>

@@ -10,7 +10,6 @@ import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DefaultOutcome;
 import org.radargun.stats.representation.OperationThroughput;
@@ -90,10 +89,8 @@ public abstract class PerformanceCondition {
 
       @Override
       public boolean evaluate(Statistics statistics) {
-         OperationStats stats = statistics.getOperationsStats().get(on);
-         if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
-         DefaultOutcome outcome = stats.getRepresentation(DefaultOutcome.class);
-         if (outcome == null) throw new IllegalStateException("Cannot determine mean from " + stats);
+         DefaultOutcome outcome = statistics.getRepresentation(on, DefaultOutcome.class);
+         if (outcome == null) throw new IllegalStateException("Cannot determine mean from " + statistics);
          log.info("Mean is " + Utils.prettyPrintTime((long) outcome.responseTimeMean, TimeUnit.NANOSECONDS) + PropertyHelper.toString(this));
          if (below != null) return outcome.responseTimeMean < below;
          if (over != null) return outcome.responseTimeMean > over;
@@ -116,12 +113,10 @@ public abstract class PerformanceCondition {
 
       @Override
       public boolean evaluate(Statistics statistics) {
-         OperationStats stats = statistics.getOperationsStats().get(on);
-         if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
-         org.radargun.stats.representation.OperationThroughput throughput = stats.getRepresentation(
+         org.radargun.stats.representation.OperationThroughput throughput = statistics.getRepresentation(on,
             org.radargun.stats.representation.OperationThroughput.class,
             TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin()));
-         if (throughput == null) throw new IllegalStateException("Cannot determine throughput from " + stats);
+         if (throughput == null) throw new IllegalStateException("Cannot determine throughput from " + statistics);
          log.info(getClass().getSimpleName() + " is " + getThroughput(throughput) + " ops/s " + PropertyHelper.toString(this));
          if (below != null) return getThroughput(throughput) < below;
          if (over != null) return getThroughput(throughput) > over;
@@ -161,10 +156,8 @@ public abstract class PerformanceCondition {
 
       @Override
       public boolean evaluate(Statistics statistics) {
-         OperationStats stats = statistics.getOperationsStats().get(on);
-         if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
-         DefaultOutcome outcome = stats.getRepresentation(DefaultOutcome.class);
-         if (outcome == null) throw new IllegalStateException("Cannot determine request count from " + stats);
+         DefaultOutcome outcome = statistics.getRepresentation(on, DefaultOutcome.class);
+         if (outcome == null) throw new IllegalStateException("Cannot determine request count from " + statistics);
          log.info("Executed " + outcome.requests + " reqs " + PropertyHelper.toString(this));
          if (below != null) return outcome.requests < below;
          if (over != null) return outcome.requests > over;
@@ -199,10 +192,8 @@ public abstract class PerformanceCondition {
 
       @Override
       public boolean evaluate(Statistics statistics) {
-         OperationStats stats = statistics.getOperationsStats().get(on);
-         if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
-         DefaultOutcome outcome = stats.getRepresentation(DefaultOutcome.class);
-         if (outcome == null) throw new IllegalStateException("Cannot determine error count from " + stats);
+         DefaultOutcome outcome = statistics.getRepresentation(on, DefaultOutcome.class);
+         if (outcome == null) throw new IllegalStateException("Cannot determine error count from " + statistics);
          log.info("Encountered " + outcome.errors + " errors " + PropertyHelper.toString(this));
          if (totalBelow != null) return outcome.errors < totalBelow;
          if (totalOver != null) return outcome.errors > totalOver;
@@ -232,11 +223,9 @@ public abstract class PerformanceCondition {
 
       @Override
       public boolean evaluate(Statistics statistics) {
-         OperationStats stats = statistics.getOperationsStats().get(on);
-         if (stats == null) throw new IllegalStateException("No statistics for operation " + on);
          org.radargun.stats.representation.Percentile percentile
-            = stats.getRepresentation(org.radargun.stats.representation.Percentile.class, value);
-         if (percentile == null) throw new IllegalStateException("Cannot determine percentile from " + stats);
+            = statistics.getRepresentation(on, org.radargun.stats.representation.Percentile.class, value);
+         if (percentile == null) throw new IllegalStateException("Cannot determine percentile from " + statistics);
          log.info("Response time is " + Utils.prettyPrintTime((long) percentile.responseTimeMax, TimeUnit.NANOSECONDS) + PropertyHelper.toString(this));
          if (below != null) return percentile.responseTimeMax < below;
          if (over != null) return percentile.responseTimeMax > over;

@@ -2,14 +2,14 @@ package org.radargun.stats.representation;
 
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
-import org.radargun.stats.OperationStats;
+import org.radargun.stats.Statistics;
 import org.radargun.utils.Utils;
 
 /**
  * Representation used for retrieving value with certain percentile of occurence,
  * e.g. for data set 1, 1, 1, 2, 3 and percentile = 60 the responseTimeMax should be 1
  * (as 60 % of the data set are <= 1) and for percentile 70 it is 2.
- * It is expected that when calling {@link org.radargun.stats.OperationStats#getRepresentation(Class, Object...)}
+ * It is expected that when calling {@link org.radargun.stats.OperationStats#getRepresentation(Class, Statistics, Object...)}
  * with Percentile as the class argument, first argument is double value between 0 and 1 (inclusive).
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -33,9 +33,9 @@ public class Percentile {
       protected double value;
 
       @Override
-      public double getValue(OperationStats stats, long duration) {
-         Percentile percentile = stats.getRepresentation(Percentile.class, value);
-         if (percentile == null) throw new IllegalArgumentException("Cannot retrieve percentile from " + stats);
+      public double getValue(Statistics statistics, String operation, long duration) {
+         Percentile percentile = statistics.getRepresentation(operation, Percentile.class, value);
+         if (percentile == null) throw new IllegalArgumentException("Cannot retrieve percentile from " + operation);
          return percentile.responseTimeMax;
       }
    }

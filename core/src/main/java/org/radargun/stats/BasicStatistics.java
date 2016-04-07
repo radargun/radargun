@@ -1,8 +1,8 @@
 package org.radargun.stats;
 
-import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.radargun.Operation;
 import org.radargun.config.DefinitionElement;
@@ -13,19 +13,19 @@ import org.radargun.config.Property;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@DefinitionElement(name = "default", doc = "Statistics with the same implementation of operation statistics.")
-public class DefaultStatistics extends IntervalStatistics {
+@DefinitionElement(name = "basic", doc = "Statistics with fixed memory footprint for each operation statistics.")
+public class BasicStatistics extends IntervalStatistics {
    private static final OperationStats[] EMPTY_ARRAY = new OperationStats[0];
    private transient OperationStats[] operationStats = EMPTY_ARRAY;
    private Map<String, OperationStats> operationStatsMap = new HashMap<String, OperationStats>();
 
    @Property(name = "operationStats", doc = "Operation statistics prototype.", complexConverter = OperationStats.Converter.class)
-   protected OperationStats prototype = new DefaultOperationStats();
+   protected OperationStats prototype = new BasicOperationStats();
 
-   public DefaultStatistics() {
+   public BasicStatistics() {
    }
 
-   public DefaultStatistics(OperationStats prototype) {
+   public BasicStatistics(OperationStats prototype) {
       this.prototype = prototype;
    }
 
@@ -34,7 +34,7 @@ public class DefaultStatistics extends IntervalStatistics {
    }
 
    public Statistics newInstance() {
-      return new DefaultStatistics(prototype);
+      return new BasicStatistics(prototype);
    }
 
    @Override
@@ -83,7 +83,7 @@ public class DefaultStatistics extends IntervalStatistics {
 
    @Override
    public Statistics copy() {
-      DefaultStatistics copy = (DefaultStatistics) newInstance();
+      BasicStatistics copy = (BasicStatistics) newInstance();
       copy.merge(this);
       return copy;
    }
@@ -97,10 +97,10 @@ public class DefaultStatistics extends IntervalStatistics {
     */
    @Override
    public void merge(Statistics otherStats) {
-      if (!(otherStats instanceof DefaultStatistics))
+      if (!(otherStats instanceof BasicStatistics))
          throw new IllegalArgumentException(otherStats.getClass().getName());
       super.merge(otherStats);
-      DefaultStatistics stats = (DefaultStatistics) otherStats;
+      BasicStatistics stats = (BasicStatistics) otherStats;
       if (operationStats == null) {
          // after deserialization
          operationStats = EMPTY_ARRAY;
@@ -132,22 +132,23 @@ public class DefaultStatistics extends IntervalStatistics {
    }
 
    @Override
-   public Map<String, OperationStats> getOperationsStats() {
-      return operationStatsMap;
+   public Set<String> getOperations() {
+      return operationStatsMap.keySet();
    }
 
    @Override
-   public <T> T[] getRepresentations(Class<T> clazz, Object... args) {
-      T[] representations = (T[]) Array.newInstance(clazz, operationStats.length);
-      for (int i = 0; i < operationStats.length; ++i) {
-         OperationStats operationStats = this.operationStats[i];
-         if (operationStats != null) {
-            representations[i] = operationStats.getRepresentation(clazz, args);
-         } else {
-            representations[i] = prototype.getRepresentation(clazz, args);
-         }
+   public OperationStats getOperationStats(String operation) {
+      return operationStatsMap.get(operation);
+   }
+
+   @Override
+   public <T> T getRepresentation(String operationName, Class<T> clazz, Object... args) {
+      OperationStats operationStats = operationStatsMap.get(operationName);
+      if (operationStats != null) {
+         return operationStats.getRepresentation(clazz, this, args);
+      } else {
+         return prototype.getRepresentation(clazz, this, args);
       }
-      return representations;
    }
 
    @Override

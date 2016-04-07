@@ -2,7 +2,7 @@ package org.radargun.stages.cache.background;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.stats.DefaultOperationStats;
+import org.radargun.stats.BasicOperationStats;
 import org.radargun.stats.SynchronizedStatistics;
 
 /**
@@ -22,7 +22,7 @@ class Stressor extends Thread {
    protected final int id;
    private final Logic logic;
    private final long delayBetweenRequests;
-   protected final SynchronizedStatistics stats = new SynchronizedStatistics(new DefaultOperationStats());
+   protected final SynchronizedStatistics stats = new SynchronizedStatistics(new BasicOperationStats());
 
    private volatile boolean terminate = false;
 

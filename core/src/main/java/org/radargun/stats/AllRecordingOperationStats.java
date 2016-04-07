@@ -107,12 +107,12 @@ public class AllRecordingOperationStats implements OperationStats {
 
    @SuppressWarnings("unchecked")
    @Override
-   public <T> T getRepresentation(Class<T> clazz, Object... args) {
+   public <T> T getRepresentation(Class<T> clazz, Statistics ownerStatistics, Object... args) {
       long requests = full ? responseTimes.length : pos;
       if (clazz == DefaultOutcome.class) {
          return (T) new DefaultOutcome(requests, errors, getMeanDuration(), getMaxDuration());
       } else if (clazz == OperationThroughput.class) {
-         return (T) OperationThroughput.compute(requests, errors, args);
+         return (T) OperationThroughput.compute(requests, errors, ownerStatistics);
       } else if (clazz == Percentile.class) {
          double percentile = Percentile.getPercentile(args);
          int size = full ? responseTimes.length : pos;

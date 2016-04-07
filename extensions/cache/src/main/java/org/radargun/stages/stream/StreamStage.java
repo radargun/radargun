@@ -16,8 +16,8 @@ import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.cache.RandomDataStage;
 import org.radargun.state.SlaveState;
+import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.DataOperationStats;
-import org.radargun.stats.DefaultStatistics;
 import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.CacheInformation;
@@ -58,7 +58,7 @@ public class StreamStage extends AbstractDistStage {
 
    @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'dataOperation' statistics " +
       "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
-   protected Statistics statisticsPrototype = new DefaultStatistics(new DataOperationStats());
+   protected Statistics statisticsPrototype = new BasicStatistics(new DataOperationStats());
 
    @InjectTrait
    private Streamable streamable;
@@ -88,7 +88,7 @@ public class StreamStage extends AbstractDistStage {
 
       for (StreamStageAck ack : instancesOf(acks, StreamStageAck.class)) {
          if (ack.stats != null) {
-            DataOperationStats opStats = (DataOperationStats) ack.stats.getOperationsStats().get(Streamable.STREAMABLE.name);
+            DataOperationStats opStats = (DataOperationStats) ack.stats.getOperationStats(Streamable.STREAMABLE.name);
 
             opStats.setTotalBytes((Long) masterState.get(totalBytesKey));
             test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));

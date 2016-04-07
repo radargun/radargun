@@ -3,8 +3,7 @@ package org.radargun.stats.representation;
 import java.util.concurrent.TimeUnit;
 
 import org.radargun.config.DefinitionElement;
-import org.radargun.stats.OperationStats;
-import org.radargun.utils.Utils;
+import org.radargun.stats.Statistics;
 
 /**
  * Number of operations per second. May be imprecise if the merged periods are not identical.
@@ -26,25 +25,19 @@ public class OperationThroughput {
       this.net = net;
    }
 
-   public static OperationThroughput compute(long requests, long errors, Object[] args) {
-      long duration = getDuration(args);
+   public static OperationThroughput compute(long requests, long errors, Statistics ownerStatistics) {
+      long duration = ownerStatistics.getEnd() - ownerStatistics.getBegin();
       if (duration == 0) return null;
-      return new OperationThroughput(TimeUnit.SECONDS.toNanos(1) * (double) requests / duration,
-         TimeUnit.SECONDS.toNanos(1) * (double) (requests - errors) / duration);
-   }
-
-   public static long getDuration(Object[] args) {
-      long duration = Utils.getArg(args, 0, Long.class);
-      if (duration < 0) throw new IllegalArgumentException(String.valueOf(duration));
-      return duration;
+      return new OperationThroughput(TimeUnit.SECONDS.toMillis(1) * (double) requests / duration,
+         TimeUnit.SECONDS.toMillis(1) * (double) (requests - errors) / duration);
    }
 
    @DefinitionElement(name = "throughput-gross", doc = "Retrieve gross throughput (counting errors)")
    public static class GrossThroughput extends RepresentationType {
       @Override
-      public double getValue(OperationStats stats, long duration) {
-         OperationThroughput throughput = stats.getRepresentation(OperationThroughput.class, duration);
-         if (throughput == null) throw new IllegalArgumentException("Cannot retrieve throughput from " + stats);
+      public double getValue(Statistics statistics, String operation, long duration) {
+         OperationThroughput throughput = statistics.getRepresentation(operation, OperationThroughput.class, duration);
+         if (throughput == null) throw new IllegalArgumentException("Cannot retrieve throughput from " + operation);
          return throughput.gross;
       }
    }
@@ -52,10 +45,20 @@ public class OperationThroughput {
    @DefinitionElement(name = "throughput-net", doc = "Retrieve net throughput (not counting errors).")
    public static class NetThroughput extends RepresentationType {
       @Override
-      public double getValue(OperationStats stats, long duration) {
-         OperationThroughput throughput = stats.getRepresentation(OperationThroughput.class, duration);
-         if (throughput == null) throw new IllegalArgumentException("Cannot retrieve throughput from " + stats);
+      public double getValue(Statistics statistics, String operation, long duration) {
+         OperationThroughput throughput = statistics.getRepresentation(operation, OperationThroughput.class, duration);
+         if (throughput == null) throw new IllegalArgumentException("Cannot retrieve throughput from " + operation);
          return throughput.net;
+      }
+   }
+
+   public static class Series extends AbstractSeries<OperationThroughput> {
+      static {
+         AbstractSeries.register(Series.class, OperationThroughput.class);
+      }
+
+      public Series(long startTime, long period, OperationThroughput[] samples) {
+         super(startTime, period, samples);
       }
    }
 }

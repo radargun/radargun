@@ -13,7 +13,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.RepresentationType;
 import org.radargun.utils.Utils;
@@ -64,7 +63,7 @@ public class AnalyzeTestStage extends AbstractDistStage {
       double min = Double.MAX_VALUE, max = -Double.MAX_VALUE, sum = 0;
       Group minGroup = null, maxGroup = null;
       for (Group g : groups) {
-         double value = statisticsType.getValue(g.stats, g.duration);
+         double value = statisticsType.getValue(g.statistics, operation, g.duration);
          log.tracef("iteration %d, node %d, thread %d: %d threads, duration %s -> value %f",
             g.origin.iteration, g.origin.node, g.origin.thread, g.threads,
             Utils.prettyPrintTime(g.duration, TimeUnit.NANOSECONDS), value);
@@ -147,21 +146,21 @@ public class AnalyzeTestStage extends AbstractDistStage {
                   }
                }
                for (Statistics s : entry.getValue()) {
-                  groups.add(new Group(s.getOperationsStats().get(operation), 1, duration(s), new Origin(iteration, entry.getKey(), threadCounter)));
+                  groups.add(new Group(s, 1, duration(s), new Origin(iteration, entry.getKey(), threadCounter)));
                }
             }
             break;
          case GROUP_BY_NODE:
             for (Map.Entry<Integer, List<Statistics>> entry : statistics) {
                entry.getValue().stream().reduce(Statistics.MERGE).map(aggregation ->
-                  groups.add(new Group(aggregation.getOperationsStats().get(operation), entry.getValue().size(), duration(aggregation), new Origin(iteration, entry.getKey(), -1)))
+                  groups.add(new Group(aggregation, entry.getValue().size(), duration(aggregation), new Origin(iteration, entry.getKey(), -1)))
                );
             }
             break;
          case GROUP_ALL:
             int threads = statistics.stream().mapToInt(e -> e.getValue().size()).sum();
             statistics.stream().flatMap(e -> e.getValue().stream()).reduce(Statistics.MERGE).map(aggregation ->
-               groups.add(new Group(aggregation.getOperationsStats().get(operation), threads, duration(aggregation), new Origin(iteration, -1, -1)))
+               groups.add(new Group(aggregation, threads, duration(aggregation), new Origin(iteration, -1, -1)))
             );
             break;
          default:
@@ -180,13 +179,13 @@ public class AnalyzeTestStage extends AbstractDistStage {
    }
 
    protected static class Group {
-      public final OperationStats stats;
+      public final Statistics statistics;
       public final int threads;
       public final long duration;
       public final Origin origin;
 
-      public Group(OperationStats stats, int threads, long duration, Origin origin) {
-         this.stats = stats;
+      public Group(Statistics statistics, int threads, long duration, Origin origin) {
+         this.statistics = statistics;
          this.threads = threads;
          this.duration = duration;
          this.origin = origin;

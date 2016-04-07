@@ -1,7 +1,7 @@
 package org.radargun.reporting.html;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,9 +37,9 @@ public class TestReportDocument extends ReportDocument {
          reportAggregationMap = testAggregations.byReports();
          subCategory = null;
       }
-      ComparisonChart chart = createComparisonChart(testAggregations.iterationsName, rangeAxisLabel);
+      ComparisonChart chart = createComparisonChart(testAggregations.iterationsName, rangeAxisLabel, chartType);
       if (!addToChart(chart, subCategory, operation, chartType, reportAggregationMap)) {
-         chart = null;
+         return null;
       }
       return chart;
    }
@@ -73,9 +73,7 @@ public class TestReportDocument extends ReportDocument {
 
    // This returns list so that it is compatible with Combined report document
    public List<TestAggregations> getTestAggregations() {
-      List<TestAggregations> aggregations = new ArrayList<>();
-      aggregations.add(testAggregations);
-      return aggregations;
+      return Collections.singletonList(testAggregations);
    }
 
    public String getSingleTestName(int i) {

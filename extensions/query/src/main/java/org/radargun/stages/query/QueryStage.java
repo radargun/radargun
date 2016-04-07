@@ -70,8 +70,8 @@ public class QueryStage extends LegacyTestStage {
    protected static class QueryAck extends StatisticsAck {
       private final QueryBase.Data data;
 
-      public QueryAck(SlaveState slaveState, List<List<Statistics>> iterations, QueryBase.Data data) {
-         super(slaveState, iterations);
+      public QueryAck(SlaveState slaveState, List<Statistics> statistics, QueryBase.Data data) {
+         super(slaveState, statistics);
          this.data = data;
       }
    }

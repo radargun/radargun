@@ -1,7 +1,7 @@
 package org.radargun.stats.representation;
 
 import org.radargun.config.PropertyHelper;
-import org.radargun.stats.OperationStats;
+import org.radargun.stats.Statistics;
 import org.radargun.utils.ReflexiveConverters;
 
 /**
@@ -11,7 +11,7 @@ import org.radargun.utils.ReflexiveConverters;
  */
 public abstract class RepresentationType {
 
-   public abstract double getValue(OperationStats stats, long duration);
+   public abstract double getValue(Statistics statistics, String operation, long duration);
 
    @Override
    public String toString() {

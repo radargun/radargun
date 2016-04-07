@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.stream.IntStream;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -42,12 +43,13 @@ public class LineChart extends ComparisonChart {
    protected JFreeChart createChart() {
       JFreeChart chart = ChartFactory.createXYLineChart(null, domainLabel, rangeLabel,
          dataset, PlotOrientation.VERTICAL, true, false, false);
-      DeviationRenderer renderer = new DeviationRenderer();
+      boolean drawShapes = IntStream.range(0, dataset.getSeriesCount()).map(dataset::getItemCount).max().orElse(0) < 10;
+      DeviationRenderer renderer = new DeviationRenderer(true, drawShapes);
       renderer.setAlpha(0.2f);
       chart.getXYPlot().setRenderer(renderer);
-      CategorizedAxis domainAxis = new CategorizedAxis();
-      domainAxis.setLabel(domainLabel);
-      chart.getXYPlot().setDomainAxis(domainAxis);
+//      CategorizedAxis domainAxis = new CategorizedAxis();
+//      domainAxis.setLabel(domainLabel);
+//      chart.getXYPlot().setDomainAxis(domainAxis);
       if (upperRange > 0) {
          chart.getXYPlot().getRangeAxis().setRange(0, upperRange * 1.1);
       }

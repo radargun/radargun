@@ -11,6 +11,14 @@ public abstract class IntervalStatistics implements Statistics {
    private long beginTime = Long.MAX_VALUE;
    private long endTime = Long.MIN_VALUE;
 
+   protected IntervalStatistics() {
+   }
+
+   protected IntervalStatistics(Statistics other) {
+      beginTime = other.getBegin();
+      endTime = other.getEnd();
+   }
+
    @Override
    public void begin() {
       beginTime = TimeService.currentTimeMillis();

@@ -11,8 +11,8 @@ import org.radargun.stats.representation.OperationThroughput;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@DefinitionElement(name = "default", doc = "Operations statistics with fixed memory footprint.")
-public class DefaultOperationStats implements OperationStats {
+@DefinitionElement(name = "basic", doc = "Operations statistics with fixed memory footprint.")
+public class BasicOperationStats implements OperationStats {
    private static final double INVERSE_NORMAL_95 = 1.96;
    private static final double INVERSE_NORMAL_50 = 0.67448;
    private long requests;
@@ -23,13 +23,13 @@ public class DefaultOperationStats implements OperationStats {
    private long errors;
 
    @Override
-   public DefaultOperationStats newInstance() {
-      return new DefaultOperationStats();
+   public BasicOperationStats newInstance() {
+      return new BasicOperationStats();
    }
 
    @Override
-   public DefaultOperationStats copy() {
-      DefaultOperationStats copy = newInstance();
+   public BasicOperationStats copy() {
+      BasicOperationStats copy = newInstance();
       copy.requests = requests;
       copy.responseTimeMax = responseTimeMax;
       copy.responseTimeSum = responseTimeSum;
@@ -41,8 +41,8 @@ public class DefaultOperationStats implements OperationStats {
 
    @Override
    public void merge(OperationStats o) {
-      if (!(o instanceof DefaultOperationStats)) throw new IllegalArgumentException(o.toString());
-      DefaultOperationStats other = (DefaultOperationStats) o;
+      if (!(o instanceof BasicOperationStats)) throw new IllegalArgumentException(o.toString());
+      BasicOperationStats other = (BasicOperationStats) o;
       responseTimeM2 = mergeM2(responseTimeMean, responseTimeM2, requests, other.responseTimeMean, other.responseTimeM2, other.requests);
       responseTimeMean = mergeMean(responseTimeMean, requests, other.responseTimeMean, other.requests);
       requests += other.requests;
@@ -119,13 +119,13 @@ public class DefaultOperationStats implements OperationStats {
    }
 
    @Override
-   public <T> T getRepresentation(Class<T> clazz, Object... args) {
+   public <T> T getRepresentation(Class<T> clazz, Statistics ownerStatistics, Object... args) {
       if (clazz == DefaultOutcome.class) {
          return (T) new DefaultOutcome(requests, errors, responseTimeMean, responseTimeMax);
       } else if (clazz == MeanAndDev.class) {
          return (T) getMeanAndDev();
       } else if (clazz == OperationThroughput.class) {
-         return (T) OperationThroughput.compute(requests, errors, args);
+         return (T) OperationThroughput.compute(requests, errors, ownerStatistics);
       } else if (clazz == BoxAndWhiskers.class) {
          return (T) getBoxAndWhiskers();
       } else {

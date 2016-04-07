@@ -14,8 +14,8 @@ import org.radargun.config.Cluster;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
-import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
+import org.radargun.stats.representation.DefaultOutcome;
 
 /**
  * Perform aggregations and holds them
@@ -98,8 +98,9 @@ public class TestAggregations {
          log.warn("There are no stats for this iteration");
       } else {
          iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats.get(), totalThreads.get(), it));
-         for (Map.Entry<String, OperationStats> op : totalStats.get().getOperationsStats().entrySet()) {
-            if (!op.getValue().isEmpty()) operations.add(op.getKey());
+         for (String operation : totalStats.get().getOperations()) {
+            DefaultOutcome defaultOutcome = totalStats.get().getRepresentation(operation, DefaultOutcome.class);
+            if (defaultOutcome == null || defaultOutcome.requests > 0) operations.add(operation);
          }
       }
 

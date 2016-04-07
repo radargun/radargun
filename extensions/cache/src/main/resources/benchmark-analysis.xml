@@ -12,9 +12,9 @@
 
    <!-- List of configurations of the services -->
    <configurations>
-      <config name="Infinispan 6.0 - distributed">
-         <setup plugin="infinispan60">
-            <embedded xmlns="urn:radargun:plugins:infinispan60:3.0" file="dist-sync.xml" />
+      <config name="Infinispan 8.0 - distributed">
+         <setup plugin="infinispan80">
+            <embedded xmlns="urn:radargun:plugins:infinispan80:3.0" file="dist-sync.xml" />
          </setup>
       </config>
    </configurations>
@@ -56,12 +56,12 @@
       <l:basic-operations-test test-name="on-max-throughput"
                              duration="${test.long.duration:1m}" total-threads="#{ 10 * ${top.iteration} + 10 }">
          <statistics>
-            <default>
+            <basic>
                <operation-stats>
-                  <default/>
+                  <basic/>
                   <histogram />
                </operation-stats>
-            </default>
+            </basic>
          </statistics>
          <l:key-selector>
             <l:colliding-keys num-entries="10000"/>

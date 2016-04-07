@@ -41,7 +41,7 @@ public class CombinedReportDocument extends ReportDocument {
    @Override
    protected ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, ChartType chartType) {
       String iterationsName = testAggregations.stream().map(ta -> ta.iterationsName).collect(concatOrDefault(null));
-      ComparisonChart chart = createComparisonChart(iterationsName, rangeAxisLabel);
+      ComparisonChart chart = createComparisonChart(iterationsName, rangeAxisLabel, chartType);
       for (TestAggregations ta : testAggregations) {
          String subCategory;
          Map<Report, List<Aggregation>> reportAggregationMap;

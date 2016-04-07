@@ -3,7 +3,6 @@ package org.radargun.reporting.commons;
 import java.util.List;
 
 import org.radargun.reporting.Report;
-import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DefaultOutcome;
 
@@ -44,13 +43,8 @@ public class Aggregation {
       if (node >= nodeStats.size() || (ns = nodeStats.get(node)) == null) {
          return false;
       }
-      OperationStats nos = ns.getOperationsStats().get(operation);
-      OperationStats tos = totalStats.getOperationsStats().get(operation);
-      if (nos == null) {
-         return tos != null;
-      }
-      DefaultOutcome ndo = nos.getRepresentation(DefaultOutcome.class);
-      DefaultOutcome tdo = tos.getRepresentation(DefaultOutcome.class);
+      DefaultOutcome ndo = ns.getRepresentation(operation, DefaultOutcome.class);
+      DefaultOutcome tdo = totalStats.getRepresentation(operation, DefaultOutcome.class);
       if (ndo == null) {
          return tdo != null;
       }
@@ -63,13 +57,10 @@ public class Aggregation {
       int slaveStatsCount = 0;
       for (Statistics ns : nodeStats) {
          if (ns == null) continue;
-         OperationStats operationStats = ns.getOperationsStats().get(operation);
-         if (operationStats != null) {
-            DefaultOutcome defaultOutcome = operationStats.getRepresentation(DefaultOutcome.class);
-            if (defaultOutcome != null) {
-               requests += defaultOutcome.requests;
-               slaveStatsCount++;
-            }
+         DefaultOutcome defaultOutcome = ns.getRepresentation(operation, DefaultOutcome.class);
+         if (defaultOutcome != null) {
+            requests += defaultOutcome.requests;
+            slaveStatsCount++;
          }
       }
       return slaveStatsCount > 0 ? requests / slaveStatsCount : 0;

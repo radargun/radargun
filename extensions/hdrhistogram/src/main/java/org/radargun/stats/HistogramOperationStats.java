@@ -53,6 +53,12 @@ public final class HistogramOperationStats implements OperationStats {
       histogram = new org.HdrHistogram.Histogram(maxValue, digits);
    }
 
+   public void init(long maxValue, int digits) {
+      this.maxValue = maxValue;
+      this.digits = digits;
+      init();
+   }
+
    @Override
    public OperationStats newInstance() {
       HistogramOperationStats newInstance = new HistogramOperationStats();
@@ -105,14 +111,14 @@ public final class HistogramOperationStats implements OperationStats {
    }
 
    @Override
-   public <T> T getRepresentation(Class<T> clazz, Object... args) {
+   public <T> T getRepresentation(Class<T> clazz, Statistics ownerStatistics, Object... args) {
       AbstractHistogram histogram = getHistogram();
       if (clazz == DefaultOutcome.class) {
          return (T) new DefaultOutcome(histogram.getTotalCount(), errors, histogram.getMean(), histogram.getMaxValue());
       } else if (clazz == MeanAndDev.class) {
          return (T) new MeanAndDev(histogram.getMean(), histogram.getStdDeviation());
       } else if (clazz == OperationThroughput.class) {
-         return (T) OperationThroughput.compute(histogram.getTotalCount(), errors, args);
+         return (T) OperationThroughput.compute(histogram.getTotalCount(), errors, ownerStatistics);
       } else if (clazz == Percentile.class) {
          double percentile = Percentile.getPercentile(args);
          return (T) new Percentile(histogram.getValueAtPercentile(percentile));
