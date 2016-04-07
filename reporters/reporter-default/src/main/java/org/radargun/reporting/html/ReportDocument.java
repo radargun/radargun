@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -14,13 +15,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.commons.Aggregation;
-import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DataThroughput;
 import org.radargun.stats.representation.DefaultOutcome;
@@ -42,7 +43,7 @@ public abstract class ReportDocument extends HtmlDocument {
 
    private int elementCounter = 0;
    private List<Future> chartTaskFutures = new ArrayList<>();
-   private List<String> generatedCharts = new ArrayList<>();
+   private Map<String, List<ChartDescription>> generatedCharts = new HashMap<>();
 
    protected final int maxConfigurations;
    protected final int maxIterations;
@@ -61,45 +62,43 @@ public abstract class ReportDocument extends HtmlDocument {
       this.configuration = configuration;
    }
 
-   public String createHistogramAndPercentileChart(Statistics statistics, final String operation, final String configurationName, int cluster, int iteration,
+   public void createHistogramAndPercentileChart(Statistics statistics, final String operation, final String configurationName, int cluster, int iteration,
                                                    String node, Collection<StatisticType> presentedStatistics) {
 
-      OperationStats operationStats = null;
-      if (statistics != null) {
-         operationStats = statistics.getOperationsStats().get(operation);
+      if (!presentedStatistics.contains(StatisticType.HISTOGRAM)) {
+         return;
       }
-
-      String resultFileName = "";
-      if (presentedStatistics.contains(StatisticType.HISTOGRAM)) {
-         final Histogram histogram = operationStats == null ? null : operationStats.getRepresentation(Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
-         if (histogram != null) {
-            final String histogramFilename = getHistogramName(operationStats, operation, configurationName, cluster, iteration, node, presentedStatistics);
-            chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
-               @Override
-               public Void call() throws Exception {
-                  log.debug("Generating histogram " + histogramFilename);
-                  HistogramChart chart = new HistogramChart().setData(operation, histogram);
-                  chart.setWidth(configuration.histogramWidth).setHeight(configuration.histogramHeight);
-                  chart.save(directory + File.separator + histogramFilename);
-                  return null;
-               }
-            }));
-
-            final Histogram fullHistogram = operationStats.getRepresentation(Histogram.class);
-            final String percentilesFilename = getPercentileChartName(operationStats, operation, configurationName, cluster, iteration, node, presentedStatistics);
-            chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
-               @Override
-               public Void call() throws Exception {
-                  log.debug("Generating percentiles " + percentilesFilename);
-                  PercentilesChart chart = new PercentilesChart().addSeries(configurationName, fullHistogram);
-                  chart.setWidth(configuration.histogramWidth).setHeight(configuration.histogramHeight);
-                  chart.save(directory + File.separator + percentilesFilename);
-                  return null;
-               }
-            }));
+      final Histogram histogram = statistics.getRepresentation(operation, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
+      if (histogram == null) {
+         return;
+      }
+      if (!LongStream.of(histogram.counts).anyMatch(count -> count > 0)) {
+         return;
+      }
+      final String histogramFilename = getHistogramName(statistics, operation, configurationName, cluster, iteration, node, presentedStatistics);
+      chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
+         @Override
+         public Void call() throws Exception {
+            log.debug("Generating histogram " + histogramFilename);
+            HistogramChart chart = new HistogramChart().setData(operation, histogram);
+            chart.setWidth(configuration.histogramWidth).setHeight(configuration.histogramHeight);
+            chart.save(directory + File.separator + histogramFilename);
+            return null;
          }
-      }
-      return resultFileName;
+      }));
+
+      final Histogram fullHistogram = statistics.getRepresentation(operation, Histogram.class);
+      final String percentilesFilename = getPercentileChartName(statistics, operation, configurationName, cluster, iteration, node, presentedStatistics);
+      chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
+         @Override
+         public Void call() throws Exception {
+            log.debug("Generating percentiles " + percentilesFilename);
+            PercentilesChart chart = new PercentilesChart().addSeries(configurationName, fullHistogram);
+            chart.setWidth(configuration.histogramWidth).setHeight(configuration.histogramHeight);
+            chart.save(directory + File.separator + percentilesFilename);
+            return null;
+         }
+      }));
    }
 
    protected boolean createChart(String filename, int clusterSize, String operation, String rangeAxisLabel,
@@ -114,13 +113,13 @@ public abstract class ReportDocument extends HtmlDocument {
       return false;
    }
 
-   protected ComparisonChart createComparisonChart(String iterationsName, String rangeAxisLabel) {
+   protected ComparisonChart createComparisonChart(String iterationsName, String rangeAxisLabel, ChartType chartType) {
       ComparisonChart chart;
       // We've simplified the rule: when we have more iterations, it's always line chart,
       // with tests/sizes included in the categoryName and iterations on domain axis.
       // When there's only one iteration, we put cluster sizes on domain axis but use bar chart.
-      if (maxIterations > 1) {
-         chart = new LineChart(iterationsName != null ? iterationsName : "Iteration", rangeAxisLabel);
+      if (maxIterations > 1 || chartType.requiresLineChart) {
+         chart = new LineChart(iterationsName != null ? iterationsName : chartType.defaultDomainLabel, rangeAxisLabel);
       } else {
          chart = new BarChart("Cluster size", rangeAxisLabel);
       }
@@ -132,10 +131,6 @@ public abstract class ReportDocument extends HtmlDocument {
       Map<String, List<Report>> byConfiguration = reportAggregationMap.keySet().stream().collect(Collectors.groupingBy(report -> report.getConfiguration().name));
       for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
          for (Aggregation aggregation : entry.getValue()) {
-            OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
-            if (operationStats == null)
-               return false;
-
             String categoryName = entry.getKey().getConfiguration().name;
             if (subCategory != null) {
                categoryName = String.format("%s, %s", categoryName, subCategory);
@@ -147,41 +142,81 @@ public abstract class ReportDocument extends HtmlDocument {
 
             double subCategoryNumeric;
             String subCategoryValue;
+            String seriesCategoryName;
             if (maxIterations > 1) {
                subCategoryNumeric = aggregation.iteration.id;
                subCategoryValue = aggregation.iteration.getValue() != null ? aggregation.iteration.getValue() : String.valueOf(aggregation.iteration.id);
+               seriesCategoryName = categoryName + ", Iteration " + subCategoryValue;
             } else {
                subCategoryNumeric = entry.getKey().getCluster().getSize();
                subCategoryValue = String.format("Size %.0f", subCategoryNumeric);
+               seriesCategoryName = categoryName;
             }
             switch (chartType) {
                case MEAN_AND_DEV: {
-                  MeanAndDev meanAndDev = operationStats.getRepresentation(MeanAndDev.class);
+                  MeanAndDev meanAndDev = aggregation.totalStats.getRepresentation(operation, MeanAndDev.class);
                   if (meanAndDev == null) return false;
                   chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), categoryName, subCategoryNumeric,
                      subCategoryValue);
                   break;
                }
                case OPERATION_THROUGHPUT_GROSS: {
-                  OperationThroughput throughput = operationStats.getRepresentation(OperationThroughput.class,
-                     TimeUnit.MILLISECONDS.toNanos(aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin()));
+                  OperationThroughput throughput = aggregation.totalStats.getRepresentation(operation, OperationThroughput.class);
                   if (throughput == null) return false;
                   chart.addValue(throughput.gross, 0, categoryName, subCategoryNumeric, subCategoryValue);
                   break;
                }
                case OPERATION_THROUGHPUT_NET: {
-                  OperationThroughput throughput = operationStats.getRepresentation(OperationThroughput.class,
-                     TimeUnit.MILLISECONDS.toNanos(aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin()));
+                  OperationThroughput throughput = aggregation.totalStats.getRepresentation(operation, OperationThroughput.class);
                   if (throughput == null) return false;
                   chart.addValue(throughput.net, 0, categoryName, subCategoryNumeric, subCategoryValue);
                   break;
                }
                case DATA_THROUGHPUT: {
-                  DataThroughput dataThroughput = operationStats.getRepresentation(DataThroughput.class,
-                     aggregation.totalThreads, aggregation.totalStats.getEnd() - aggregation.totalStats.getBegin());
+                  DataThroughput dataThroughput = aggregation.totalStats.getRepresentation(operation, DataThroughput.class);
                   if (dataThroughput == null) return false;
                   chart.addValue(dataThroughput.meanThroughput / (1024.0 * 1024.0), dataThroughput.deviation
                      / (1024.0 * 1024.0), categoryName, subCategoryNumeric, subCategoryValue);
+                  break;
+               }
+               case MEAN_AND_DEV_SERIES: {
+                  MeanAndDev.Series series = aggregation.totalStats.getRepresentation(operation, MeanAndDev.Series.class);
+                  if (series == null) return false;
+                  int sample = 0;
+                  for (MeanAndDev meanAndDev : series.samples) {
+                     chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), seriesCategoryName, sample++,
+                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                  }
+                  break;
+               }
+               case REQUESTS_SERIES: {
+                  DefaultOutcome.Series series = aggregation.totalStats.getRepresentation(operation, DefaultOutcome.Series.class);
+                  if (series == null) return false;
+                  int sample = 0;
+                  for (DefaultOutcome defaultOutcome : series.samples) {
+                     chart.addValue(defaultOutcome.requests, 0, seriesCategoryName, sample++,
+                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                  }
+                  break;
+               }
+               case OPERATION_THROUGHPUT_GROSS_SERIES: {
+                  OperationThroughput.Series series = aggregation.totalStats.getRepresentation(operation, OperationThroughput.Series.class);
+                  if (series == null) return false;
+                  int sample = 0;
+                  for (OperationThroughput defaultOutcome : series.samples) {
+                     chart.addValue(defaultOutcome.gross, 0, seriesCategoryName, sample++,
+                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                  }
+                  break;
+               }
+               case OPERATION_THROUGHPUT_NET_SERIES: {
+                  OperationThroughput.Series series = aggregation.totalStats.getRepresentation(operation, OperationThroughput.Series.class);
+                  if (series == null) return false;
+                  int sample = 0;
+                  for (OperationThroughput defaultOutcome : series.samples) {
+                     chart.addValue(defaultOutcome.net, 0, seriesCategoryName, sample++,
+                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                  }
                   break;
                }
             }
@@ -213,33 +248,34 @@ public abstract class ReportDocument extends HtmlDocument {
    }
 
    protected static boolean hasRepresentation(final String operation, Map<Report, List<Aggregation>> reportAggregationMap, final Class<?> representationClass, final Object... representationArgs) {
-      return reportAggregationMap.values().stream().anyMatch(as -> as != null && as.stream().anyMatch(aggregation -> {
-         if (aggregation == null) return false;
-         OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
-         return operationStats != null && operationStats.getRepresentation(representationClass, representationArgs) != null;
-      }));
+      return reportAggregationMap.values().stream().anyMatch(as -> as != null && as.stream().anyMatch(aggregation ->
+         aggregation != null && aggregation.totalStats.getRepresentation(operation, representationClass, representationArgs) != null
+      ));
    }
 
    public void createCharts(String operation, int clusterSize) throws IOException {
       String suffix = clusterSize > 0 ? "_" + clusterSize : "";
       String directory = this.directory.endsWith(File.separator) ? this.directory : this.directory + File.separator;
 
-      if (createChart(
-         String.format("%s%s%s_%s%s_mean_dev.png", directory, File.separator, testName, operation, suffix),
-         clusterSize, operation, "Response time (ms)", ChartType.MEAN_AND_DEV))
-         generatedCharts.add("mean_dev");
-      if (createChart(
-         String.format("%s%s%s_%s%s_throughput_gross.png", directory, File.separator, testName, operation, suffix),
-         clusterSize, operation, "Operations/sec", ChartType.OPERATION_THROUGHPUT_GROSS))
-         generatedCharts.add("throughput_gross");
-      if (createChart(
-         String.format("%s%s%s_%s%s_throughput_net.png", directory, File.separator, testName, operation, suffix),
-         clusterSize, operation, "Operations/sec", ChartType.OPERATION_THROUGHPUT_NET))
-         generatedCharts.add("throughput_net");
-      if (createChart(
-         String.format("%s%s%s_%s%s_data_throughput.png", directory, File.separator, testName, operation, suffix),
-         clusterSize, operation, "MB/sec", ChartType.DATA_THROUGHPUT))
-         generatedCharts.add("data_throughput");
+      List<ChartDescription> charts = generatedCharts.get(operation);
+      if (charts == null) {
+         generatedCharts.put(operation, charts = new ArrayList<>());
+      }
+      for (ChartDescription cd : new ChartDescription[] {
+         new ChartDescription(ChartType.MEAN_AND_DEV, "mean_dev", "Response time mean", "Response time (ms)"),
+         new ChartDescription(ChartType.OPERATION_THROUGHPUT_GROSS, "throughput_gross", "Gross operation throughput", "Operations/sec"),
+         new ChartDescription(ChartType.OPERATION_THROUGHPUT_NET, "throughput_net", "Net operation throughput", "Operations/sec"),
+         new ChartDescription(ChartType.DATA_THROUGHPUT, "data_throughput", "Data throughput mean", "MB/sec"),
+         new ChartDescription(ChartType.MEAN_AND_DEV_SERIES, "mean_dev_series", "Response time over time", "Response time (ms)"),
+         new ChartDescription(ChartType.REQUESTS_SERIES, "requests_series", "Requests progression", "Number of requests"),
+         new ChartDescription(ChartType.OPERATION_THROUGHPUT_GROSS_SERIES, "throughput_gross_series", "Operation throughput (gross) over time", "Operations/sec"),
+         new ChartDescription(ChartType.OPERATION_THROUGHPUT_NET_SERIES, "throughput_net_series", "Operation throughput (net) over time", "Operations/sec"),
+      }) {
+         if (createChart(String.format("%s%s%s_%s%s_%s.png", directory, File.separator, testName, operation, suffix, cd.name),
+            clusterSize, operation, cd.yLabel, cd.type)) {
+            charts.add(cd);
+         }
+      }
    }
 
    // generating Histogram and Percentile Graphs
@@ -356,15 +392,15 @@ public abstract class ReportDocument extends HtmlDocument {
 
    }
 
-   public List<String> getGeneratedCharts() {
-      return generatedCharts;
+   public List<ChartDescription> getGeneratedCharts(String operation) {
+      return generatedCharts.getOrDefault(operation, Collections.emptyList());
    }
 
-   public String getHistogramName(OperationStats operationStats, final String operation, String configurationName, int cluster, int iteration,
+   public String getHistogramName(Statistics statistics, final String operation, String configurationName, int cluster, int iteration,
                                   String node, Collection<StatisticType> presentedStatistics) {
       String resultFileName = "";
       if (presentedStatistics.contains(StatisticType.HISTOGRAM)) {
-         final Histogram histogram = operationStats == null ? null : operationStats.getRepresentation(Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
+         final Histogram histogram = statistics.getRepresentation(operation, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
          if (histogram == null) {
             return resultFileName;
          } else {
@@ -374,11 +410,11 @@ public abstract class ReportDocument extends HtmlDocument {
       return resultFileName;
    }
 
-   public String getPercentileChartName(OperationStats operationStats, final String operation, String configurationName, int cluster, int iteration,
+   public String getPercentileChartName(Statistics statistics, final String operation, String configurationName, int cluster, int iteration,
                                         String node, Collection<StatisticType> presentedStatistics) {
       String resultFileName = "";
       if (presentedStatistics.contains(StatisticType.HISTOGRAM)) {
-         final Histogram histogram = operationStats == null ? null : operationStats.getRepresentation(Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
+         final Histogram histogram = statistics.getRepresentation(operation, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
          if (histogram == null) {
             return resultFileName;
          } else {
@@ -386,14 +422,6 @@ public abstract class ReportDocument extends HtmlDocument {
          }
       }
       return resultFileName;
-   }
-
-   public OperationStats operationStats(Statistics statistics, String operation) {
-      OperationStats operationStats = null;
-      if (statistics != null) {
-         operationStats = statistics.getOperationsStats().get(operation);
-      }
-      return operationStats;
    }
 
    public long period(Statistics statistics) {
@@ -474,7 +502,7 @@ public abstract class ReportDocument extends HtmlDocument {
       if (hasRepresentation(operation, reportAggregationMap, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile)) {
          presentedStatistics.add(StatisticType.HISTOGRAM);
       }
-      if (hasRepresentation(operation, reportAggregationMap, OperationThroughput.class, 1L)) {
+      if (hasRepresentation(operation, reportAggregationMap, OperationThroughput.class)) {
          presentedStatistics.add(StatisticType.OPERATION_THROUGHPUT);
       }
       if (hasRepresentation(operation, reportAggregationMap, DataThroughput.class, 100L, 100L, 100L, 100.0)) {
@@ -524,7 +552,36 @@ public abstract class ReportDocument extends HtmlDocument {
    }
 
    protected enum ChartType {
-      MEAN_AND_DEV, OPERATION_THROUGHPUT_NET, OPERATION_THROUGHPUT_GROSS, DATA_THROUGHPUT
+      MEAN_AND_DEV(false, "Iteration"),
+      OPERATION_THROUGHPUT_NET(false, "Iteration"),
+      OPERATION_THROUGHPUT_GROSS(false, "Iteration"),
+      DATA_THROUGHPUT(false, "Iteration"),
+      MEAN_AND_DEV_SERIES(true, "Time (seconds)"),
+      REQUESTS_SERIES(true, "Time (seconds)"),
+      OPERATION_THROUGHPUT_NET_SERIES(true, "Time (seconds)"),
+      OPERATION_THROUGHPUT_GROSS_SERIES(true, "Time (seconds)");
+
+      private final boolean requiresLineChart;
+      private final String defaultDomainLabel;
+
+      ChartType(boolean requiresLineChart, String defaultDomainLabel) {
+         this.requiresLineChart = requiresLineChart;
+         this.defaultDomainLabel = defaultDomainLabel;
+      }
+   }
+
+   public static class ChartDescription {
+      public final ChartType type;
+      public final String name;
+      public final String title;
+      public final String yLabel;
+
+      public ChartDescription(ChartType type, String name, String title, String yLabel) {
+         this.type = type;
+         this.name = name;
+         this.title = title;
+         this.yLabel = yLabel;
+      }
    }
 
    public static class Configuration {

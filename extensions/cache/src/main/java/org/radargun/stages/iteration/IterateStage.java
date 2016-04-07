@@ -72,16 +72,9 @@ public class IterateStage extends LegacyTestStage {
 
    @Override
    protected DistStageAck newStatisticsAck(List<LegacyStressor> stressors) {
-      List<List<IterationResult>> results = gatherResults(stressors, new IterationResultRetriever());
-      if (results.size() != 1) {
-         throw new IllegalArgumentException("Expected single iteration: " + results);
-      }
-      List<IterationResult> resultList = results.get(0);
-      long totalSize = -1;
-      if (info != null) {
-         totalSize = info.getCache(containerName).getTotalSize();
-      }
-      return new IterationAck(slaveState, resultList, totalSize);
+      List<IterationResult> results = gatherResults(stressors, new IterationResultRetriever());
+      return new IterationAck(slaveState, results,
+         info != null ? info.getCache(containerName).getTotalSize() : -1);
    }
 
    @Override
@@ -344,11 +337,11 @@ public class IterateStage extends LegacyTestStage {
       }
 
       @Override
-      public void mergeResult(IterationResult into, IterationResult that) {
-         into.stats.merge(that.stats);
-         into.minElements = Math.min(into.minElements, that.minElements);
-         that.maxElements = Math.max(that.maxElements, that.maxElements);
-         into.failed = into.failed || that.failed;
+      public IterationResult merge(IterationResult result1, IterationResult result2) {
+         return new IterationResult(Statistics.MERGE.apply(result1.stats, result2.stats),
+            Math.min(result1.minElements, result2.minElements),
+            Math.max(result1.maxElements, result2.maxElements),
+            result1.failed || result2.failed);
       }
    }
 }

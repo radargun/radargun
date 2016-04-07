@@ -10,8 +10,7 @@ import org.radargun.reporting.Report;
 import org.radargun.reporting.Timeline;
 import org.radargun.stats.AllRecordingOperationStats;
 import org.radargun.stats.DataOperationStats;
-import org.radargun.stats.DefaultStatistics;
-import org.radargun.stats.OperationStats;
+import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
 import org.radargun.utils.TimeService;
@@ -69,24 +68,24 @@ public class CsvReporterTest {
          Operation operation2 = Operation.register("op2");
          Operation operation3 = Operation.register("op3");
 
-         DefaultStatistics defaultStatistics1 = new DefaultStatistics(new AllRecordingOperationStats());
-         defaultStatistics1.setBegin(0);
-         fakeRequest(defaultStatistics1, 10, operation1);
-         fakeRequest(defaultStatistics1, 20, operation1);
-         fakeRequest(defaultStatistics1, 30, operation1);
-         fakeRequest(defaultStatistics1, 100, operation2);
-         fakeRequest(defaultStatistics1, 200, operation2);
-         fakeRequest(defaultStatistics1, 300, operation3);
-         fakeRequestError(defaultStatistics1, 300,operation3);
-         defaultStatistics1.setEnd(1001);
+         BasicStatistics basicStatistics1 = new BasicStatistics(new AllRecordingOperationStats());
+         basicStatistics1.setBegin(0);
+         fakeRequest(basicStatistics1, 10, operation1);
+         fakeRequest(basicStatistics1, 20, operation1);
+         fakeRequest(basicStatistics1, 30, operation1);
+         fakeRequest(basicStatistics1, 100, operation2);
+         fakeRequest(basicStatistics1, 200, operation2);
+         fakeRequest(basicStatistics1, 300, operation3);
+         fakeRequestError(basicStatistics1, 300,operation3);
+         basicStatistics1.setEnd(1001);
 
          DataOperationStats dos = new DataOperationStats();
-         DefaultStatistics defaultStatistics2 = new DefaultStatistics();
-         defaultStatistics2.setBegin(0);
-         fakeRequest(defaultStatistics2, 100, operation1);
-         fakeRequest(defaultStatistics2, 200, operation1);
+         BasicStatistics basicStatistics2 = new BasicStatistics();
+         basicStatistics2.setBegin(0);
+         fakeRequest(basicStatistics2, 100, operation1);
+         fakeRequest(basicStatistics2, 200, operation1);
          dos.setTotalBytes(200l);
-         defaultStatistics2.setEnd(1001);
+         basicStatistics2.setEnd(1001);
 
          Report report1 = new Report(configuration1, cluster1);
          report1.addStage("stage1");
@@ -97,10 +96,10 @@ public class CsvReporterTest {
          slaveResults.put(1, new Report.SlaveResult("20", false));
          test1.addResult(0, new Report.TestResult("test1", slaveResults, "30", false));
          test1.addResult(1, new Report.TestResult("test1", slaveResults, "30", false));
-         test1.addStatistics(0, 0, Arrays.asList((Statistics) defaultStatistics1));
-         test1.addStatistics(0, 1, Arrays.asList((Statistics) defaultStatistics1));
-         test1.addStatistics(1, 0, Arrays.asList((Statistics) defaultStatistics1));
-         test1.addStatistics(1, 1, Arrays.asList((Statistics) defaultStatistics1));
+         test1.addStatistics(0, 0, Arrays.asList((Statistics) basicStatistics1));
+         test1.addStatistics(0, 1, Arrays.asList((Statistics) basicStatistics1));
+         test1.addStatistics(1, 0, Arrays.asList((Statistics) basicStatistics1));
+         test1.addStatistics(1, 1, Arrays.asList((Statistics) basicStatistics1));
          report1.addTimelines(Arrays.asList(timeline1, timeline2));
 
          Report report2 = new Report(configuration1, cluster2);
@@ -113,12 +112,12 @@ public class CsvReporterTest {
          slaveResults.put(2, new Report.SlaveResult("30", false));
          test2.addResult(0, new Report.TestResult("test1", slaveResults, "60", false));
          test2.addResult(1, new Report.TestResult("test1", slaveResults, "60", false));
-         test2.addStatistics(0, 0, Arrays.asList((Statistics) defaultStatistics1));
-         test2.addStatistics(0, 1, Arrays.asList((Statistics) defaultStatistics1));
-         test2.addStatistics(0, 2, Arrays.asList((Statistics) defaultStatistics1));
-         test2.addStatistics(1, 0, Arrays.asList((Statistics) defaultStatistics1));
-         test2.addStatistics(1, 1, Arrays.asList((Statistics) defaultStatistics1));
-         test2.addStatistics(1, 2, Arrays.asList((Statistics) defaultStatistics1));
+         test2.addStatistics(0, 0, Arrays.asList((Statistics) basicStatistics1));
+         test2.addStatistics(0, 1, Arrays.asList((Statistics) basicStatistics1));
+         test2.addStatistics(0, 2, Arrays.asList((Statistics) basicStatistics1));
+         test2.addStatistics(1, 0, Arrays.asList((Statistics) basicStatistics1));
+         test2.addStatistics(1, 1, Arrays.asList((Statistics) basicStatistics1));
+         test2.addStatistics(1, 2, Arrays.asList((Statistics) basicStatistics1));
          report2.addTimelines(Arrays.asList(timeline1, timeline2, timeline3));
 
          CsvReporter csvReporter = new CsvReporter();
@@ -186,14 +185,14 @@ public class CsvReporterTest {
       }
    }
 
-   private void fakeRequest(DefaultStatistics stats, long duration, Operation operation) {
+   private void fakeRequest(BasicStatistics stats, long duration, Operation operation) {
       PowerMockito.when(TimeService.nanoTime()).thenReturn(0L);
       Request request = stats.startRequest();
       PowerMockito.when(TimeService.nanoTime()).thenReturn(duration);
       request.succeeded(operation);
    }
 
-   private void fakeRequestError(DefaultStatistics stats, long duration, Operation operation) {
+   private void fakeRequestError(BasicStatistics stats, long duration, Operation operation) {
       PowerMockito.when(TimeService.nanoTime()).thenReturn(0L);
       Request request = stats.startRequest();
       PowerMockito.when(TimeService.nanoTime()).thenReturn(duration);

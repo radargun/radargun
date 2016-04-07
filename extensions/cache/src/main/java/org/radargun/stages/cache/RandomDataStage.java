@@ -18,8 +18,8 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
-import org.radargun.stats.DefaultOperationStats;
-import org.radargun.stats.DefaultStatistics;
+import org.radargun.stats.BasicOperationStats;
+import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.BasicOperations;
@@ -124,7 +124,7 @@ public class RandomDataStage extends AbstractDistStage {
 
    @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'default' statistics " +
       "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
-   private Statistics statisticsPrototype = new DefaultStatistics(new DefaultOperationStats());
+   private Statistics statisticsPrototype = new BasicStatistics(new BasicOperationStats());
 
    @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected BasicOperations basicOperations;

@@ -15,22 +15,22 @@
 
    <!-- List of configurations of the services -->
    <configurations>
-      <config name="Infinispan 5.2 - distributed">
+      <config name="Infinispan 7.2 - distributed">
          <!-- All slaves use the same configuration -->
-         <setup plugin="infinispan52">
+         <setup plugin="infinispan72">
             <!-- You can set JVM arguments for slaves here. -->
             <vm-args>
                <memory max="4G" />
             </vm-args>
-            <embedded xmlns="urn:radargun:plugins:infinispan52:3.0" file="dist-sync.xml"/>
+            <embedded xmlns="urn:radargun:plugins:infinispan72:3.0" file="dist-sync.xml"/>
          </setup>
       </config>
-      <config name="Infinispan 6.0 - distributed">
-         <setup plugin="infinispan60">
+      <config name="Infinispan 8.0 - distributed">
+         <setup plugin="infinispan80">
             <vm-args>
                <memory max="4G" />
             </vm-args>
-            <embedded xmlns="urn:radargun:plugins:infinispan60:3.0" file="dist-sync.xml"/>
+            <embedded xmlns="urn:radargun:plugins:infinispan80:3.0" file="dist-sync.xml"/>
          </setup>
       </config>
    </configurations>
@@ -69,12 +69,7 @@
          <l:basic-operations-test test-name="stress-test" amend-test="true"
                                 duration="${test.duration:1m}" num-threads-per-node="#{${threads}.get(${repeat.counter})}">
             <statistics>
-               <default>
-                  <operation-stats>
-                     <default />
-                     <histogram />
-                  </operation-stats>
-               </default>
+               <common period="1s"/>
             </statistics>
             <l:key-selector>
                <l:concurrent-keys total-entries="#{${entries}.get(${repeat.counter})}"/>

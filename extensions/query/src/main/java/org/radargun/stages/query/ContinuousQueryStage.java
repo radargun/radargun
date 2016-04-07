@@ -14,7 +14,7 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
-import org.radargun.stats.DefaultOperationStats;
+import org.radargun.stats.BasicOperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.SynchronizedStatistics;
 import org.radargun.traits.ContinuousQuery;
@@ -70,7 +70,7 @@ public class ContinuousQueryStage extends AbstractDistStage {
          slaveState.put(statsKey, statistics);
       }
       if (!statistics.containsKey(statsKey)) {
-         statistics.put(statsKey, new SynchronizedStatistics(new DefaultOperationStats()));
+         statistics.put(statsKey, new SynchronizedStatistics(new BasicOperationStats()));
       } else if (resetStats) {
          statistics.get(statsKey).reset();
       }

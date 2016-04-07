@@ -14,8 +14,8 @@ import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.cache.RandomDataStage;
 import org.radargun.state.SlaveState;
+import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.DataOperationStats;
-import org.radargun.stats.DefaultStatistics;
 import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
@@ -128,11 +128,9 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
 
       for (MapReduceAck ack : instancesOf(acks, MapReduceAck.class)) {
          if (ack.stats != null) {
-            DataOperationStats opStats;
-            if (ack.stats.getOperationsStats().containsKey(MapReducer.MAPREDUCE.name)) {
-               opStats = (DataOperationStats) ack.stats.getOperationsStats().get(MapReducer.MAPREDUCE.name);
-            } else {
-               opStats = (DataOperationStats) ack.stats.getOperationsStats().get(MapReducer.MAPREDUCE_COLLATOR.name);
+            DataOperationStats opStats = (DataOperationStats) ack.stats.getOperationStats(MapReducer.MAPREDUCE.name);
+            if (opStats == null) {
+               opStats = (DataOperationStats) ack.stats.getOperationStats(MapReducer.MAPREDUCE_COLLATOR.name);
             }
             opStats.setTotalBytes((Long) masterState.get(totalBytesKey));
             test.addStatistics(testIteration, ack.getSlaveIndex(), Collections.singletonList(ack.stats));
@@ -163,7 +161,7 @@ public class MapReduceStage<KOut, VOut, R> extends AbstractDistStage {
       Map<KOut, VOut> prevPayloadMap = null;
       R prevPayloadObject = null;
 
-      Statistics stats = new DefaultStatistics(new DataOperationStats());
+      Statistics stats = new BasicStatistics(new DataOperationStats());
       Task<KOut, VOut, R> mrTask = configureMapReduceTask();
 
       stats.begin();

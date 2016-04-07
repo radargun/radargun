@@ -1,7 +1,7 @@
 package org.radargun.stats;
 
 import java.io.Serializable;
-import java.util.Map;
+import java.util.Set;
 import java.util.function.BinaryOperator;
 
 import org.radargun.Operation;
@@ -119,20 +119,25 @@ public interface Statistics extends Serializable {
    long getEnd();
 
    /**
-    * Operation names should be identical on all nodes, as oposed to operations IDs which can differ.
-    * @return Map of operations stats keyed by operations names.
+    * @return Names of all operations registered in these statistics.
     */
-   Map<String, OperationStats> getOperationsStats();
-
-   /* Util method, execute only on the same node */
+   Set<String> getOperations();
 
    /**
-    * Get particular representation of each operation stats, in array with operation IDs as indices.
+    * @param operation
+    * @return Instance of operations stats given operation is writing to.
+    */
+   OperationStats getOperationStats(String operation);
+
+   /**
+    * Get particular representation.
+    *
+    * @param operation
     * @param clazz
     * @param args
     * @return
     */
-   <T> T[] getRepresentations(Class<T> clazz, Object... args);
+   <T> T getRepresentation(String operation, Class<T> clazz, Object... args);
 
    class Converter extends ReflexiveConverters.ObjectConverter {
       public Converter() {

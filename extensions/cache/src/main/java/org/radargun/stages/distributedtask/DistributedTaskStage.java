@@ -19,8 +19,8 @@ import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.cache.RandomDataStage;
 import org.radargun.state.SlaveState;
+import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.DataOperationStats;
-import org.radargun.stats.DefaultStatistics;
 import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.CacheInformation;
@@ -93,7 +93,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
 
       for (DistributedTaskAck ack : instancesOf(acks, DistributedTaskAck.class)) {
          if (ack.stats != null) {
-            DataOperationStats opStats = (DataOperationStats) ack.stats.getOperationsStats().get(DistributedTaskExecutor.EXECUTE.name);
+            DataOperationStats opStats = (DataOperationStats) ack.stats.getOperationStats(DistributedTaskExecutor.EXECUTE.name);
             opStats.setTotalBytes((Long) masterState.get(totalBytesKey));
             durationsResult.put(ack.getSlaveIndex(), new Report.SlaveResult(opStats.getResponseTimes(), false));
             test.addResult(testIteration, new Report.TestResult("Callable durations", durationsResult, "", false));
@@ -123,7 +123,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
 
    private DistStageAck executeTask() {
       DistributedTaskAck ack = new DistributedTaskAck(slaveState);
-      Statistics stats = new DefaultStatistics(new DataOperationStats());
+      Statistics stats = new BasicStatistics(new DataOperationStats());
 
       stats.begin();
       for (int i = 0; i < numExecutions; i++) {

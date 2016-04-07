@@ -8,8 +8,8 @@ import org.radargun.config.DefinitionElement;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@DefinitionElement(name = "synchronized", doc = "Default statistics that support concurrent access.")
-public class SynchronizedStatistics extends DefaultStatistics {
+@DefinitionElement(name = "synchronized", doc = "Basic statistics that support concurrent access.")
+public class SynchronizedStatistics extends BasicStatistics {
 
    protected boolean snapshot = false;
 

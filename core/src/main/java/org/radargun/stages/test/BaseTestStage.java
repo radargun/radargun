@@ -9,7 +9,7 @@ import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.stats.DefaultStatistics;
+import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.Statistics;
 import org.radargun.utils.TimeConverter;
 
@@ -30,7 +30,7 @@ public abstract class BaseTestStage extends AbstractDistStage {
 
    @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'default' statistics " +
       "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
-   public Statistics statisticsPrototype = new DefaultStatistics();
+   public Statistics statisticsPrototype = new BasicStatistics();
 
    @Property(doc = "Property, which value will be used to identify individual iterations (e.g. num-threads).")
    public String iterationProperty;

@@ -19,7 +19,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
-import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.StatsUtils;
 import org.radargun.stats.representation.RepresentationType;
@@ -156,18 +155,13 @@ public class PerfrepoReporter implements Reporter {
             String iterationsName = iteration.test.iterationsName == null ? "Iteration" : iteration.test.iterationsName;
             String iterationValue = iteration.getValue() == null ? String.valueOf(iteration.id) : iteration.getValue();
             for (MetricNameMapping mapping : metricNameMapping) {
-               OperationStats operationStats = aggregatedStatistics.getOperationsStats().get(mapping.operation);
-               if (operationStats == null) {
-                  log.warn("No operation " + mapping.operation + " reported!");
-                  continue;
-               }
                if (mapping.computeMRD) {
                   List<Double> mrds = mrdMapping.get(mapping);
                   if (!mrds.isEmpty()) {
                      testExecutionBuilder.value(mapping.to, StatsUtils.calculateMrd(mrds), iterationsName, iterationValue);
                   }
                } else {
-                  double value = mapping.representation.getValue(operationStats, duration);
+                  double value = mapping.representation.getValue(aggregatedStatistics, mapping.operation, duration);
                   testExecutionBuilder.value(mapping.to, value, iterationsName, iterationValue);
                }
             }
@@ -178,8 +172,7 @@ public class PerfrepoReporter implements Reporter {
       for (Map.Entry<MetricNameMapping, List<Double>> entry : mrdMapping.entrySet()) {
          MetricNameMapping mapping = entry.getKey();
          long duration = TimeUnit.MILLISECONDS.toNanos(statistics.getEnd() - statistics.getBegin());
-         OperationStats operationStats = statistics.getOperationsStats().get(mapping.operation);
-         double value = mapping.representation.getValue(operationStats, duration);
+         double value = mapping.representation.getValue(statistics, mapping.operation, duration);
          entry.getValue().add(value);
       }
       return statistics;

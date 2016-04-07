@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -14,7 +13,6 @@ import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
 import org.radargun.state.ServiceListenerAdapter;
 import org.radargun.state.SlaveState;
-import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.OperationThroughput;
 import org.radargun.utils.TimeService;
@@ -135,10 +133,10 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
             }
          } else {
             Statistics aggregated = stats.stream().reduce(Statistics.MERGE).orElseThrow(() -> new IllegalStateException("No statistics!"));
-            for (Map.Entry<String, OperationStats> entry : aggregated.getOperationsStats().entrySet()) {
-               OperationThroughput throughput = entry.getValue().getRepresentation(OperationThroughput.class, TimeUnit.MILLISECONDS.toNanos(aggregated.getEnd() - aggregated.getBegin()));
-               if (throughput != null && (throughput.gross != 0 || timeline.getValues(entry.getKey() + " Throughput") != null)) {
-                  timeline.addValue(entry.getKey() + " Throughput", new Timeline.Value(now, throughput.gross));
+            for (String operation : aggregated.getOperations()) {
+               OperationThroughput throughput = aggregated.getRepresentation(operation, OperationThroughput.class);
+               if (throughput != null && (throughput.gross != 0 || timeline.getValues(operation + " Throughput") != null)) {
+                  timeline.addValue(operation + " Throughput", new Timeline.Value(now, throughput.gross));
                }
             }
          }

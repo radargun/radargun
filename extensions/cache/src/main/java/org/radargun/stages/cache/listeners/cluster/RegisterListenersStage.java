@@ -11,7 +11,7 @@ import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.cache.generators.TimestampKeyGenerator.TimestampKey;
 import org.radargun.state.SlaveState;
-import org.radargun.stats.DefaultOperationStats;
+import org.radargun.stats.BasicOperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.SynchronizedStatistics;
 import org.radargun.traits.CacheListeners;
@@ -60,7 +60,7 @@ public class RegisterListenersStage extends AbstractDistStage {
 
       statistics = (SynchronizedStatistics) slaveState.get(statsKey);
       if (statistics == null) {
-         statistics = new SynchronizedStatistics(new DefaultOperationStats());
+         statistics = new SynchronizedStatistics(new BasicOperationStats());
          slaveState.put(statsKey, statistics);
       } else if (resetStats) {
          statistics.reset();

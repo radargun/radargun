@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Property;
@@ -15,7 +14,6 @@ import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
 import org.radargun.reporting.Timeline;
-import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DataThroughput;
 import org.radargun.stats.representation.DefaultOutcome;
@@ -85,11 +83,10 @@ public class CsvReporter implements Reporter {
                }
             }
             if (computeTotal && aggregated != null) {
-               Map<String, OperationStats> operationStats = aggregated.getOperationsStats();
                Map<String, String> rowData = new HashMap<String, String>();
                rows.add(rowData);
-               for (Map.Entry<String, OperationStats> os : operationStats.entrySet()) {
-                  addRepresentations(aggregated, rowData, os.getKey(), os.getValue());
+               for (String operation : aggregated.getOperations()) {
+                  addRepresentations(aggregated, rowData, aggregated, operation);
                }
                columns.addAll(rowData.keySet());
 
@@ -139,11 +136,10 @@ public class CsvReporter implements Reporter {
       // this reporter is merging statistics from all threads on each node
       Statistics summary = slaveStats.getValue().stream().filter(o -> o != null).reduce(Statistics.MERGE)
          .orElseThrow(() -> new IllegalStateException("No statistics!"));
-      Map<String,OperationStats> operationStats = summary.getOperationsStats();
       Map<String, String> rowData = new HashMap<String, String>();
       rows.add(rowData);
-      for (Map.Entry<String, OperationStats> os : operationStats.entrySet()) {
-         addRepresentations(summary, rowData, os.getKey(), os.getValue());
+      for (String operation : summary.getOperations()) {
+         addRepresentations(summary, rowData, summary, operation);
       }
       columns.addAll(rowData.keySet());
 
@@ -154,9 +150,9 @@ public class CsvReporter implements Reporter {
       return summary;
    }
 
-   private void addRepresentations(Statistics summary, Map<String, String> rowData, String operationName, OperationStats os) {
+   private void addRepresentations(Statistics summary, Map<String, String> rowData, Statistics statistics, String operationName) {
       //Map.Entry<Integer, List<Statistics>> slaveStats = ; Map.Entry<String, OperationStats> os = ;
-      DefaultOutcome defaultOutcome = os.getRepresentation(DefaultOutcome.class);
+      DefaultOutcome defaultOutcome = statistics.getRepresentation(operationName, DefaultOutcome.class);
       if (defaultOutcome != null) {
          if (defaultOutcome.requests == 0) return;
          rowData.put(operationName + ".Requests", String.valueOf(defaultOutcome.requests));
@@ -164,23 +160,23 @@ public class CsvReporter implements Reporter {
          rowData.put(operationName + ".ResponseTimeMax", String.valueOf(defaultOutcome.responseTimeMax));
          rowData.put(operationName + ".ResponseTimeMean", String.valueOf(round(defaultOutcome.responseTimeMean, 2)));
       }
-      OperationThroughput throughput = os.getRepresentation(OperationThroughput.class, TimeUnit.MILLISECONDS.toNanos(summary.getEnd() - summary.getBegin()));
+      OperationThroughput throughput = statistics.getRepresentation(operationName, OperationThroughput.class);
       if (throughput != null) {
          rowData.put(operationName + ".ThroughputGross", String.valueOf(round(throughput.gross, 1)));
          rowData.put(operationName + ".ThroughputNet", String.valueOf(round(throughput.net, 1)));
       }
       for (double percentile : percentiles) {
-         Percentile result = os.getRepresentation(Percentile.class, percentile);
+         Percentile result = statistics.getRepresentation(operationName, Percentile.class, percentile);
          if (result != null) {
             rowData.put(operationName + ".RTM_" + percentile, String.valueOf(round(result.responseTimeMax, 2)));
          }
       }
-      MeanAndDev meanAndDev = os.getRepresentation(MeanAndDev.class);
+      MeanAndDev meanAndDev = statistics.getRepresentation(operationName, MeanAndDev.class);
       if (meanAndDev != null) {
          rowData.put(operationName + ".ResponseTimeMean", String.valueOf(round(meanAndDev.mean, 2)));
          rowData.put(operationName + ".ResponseTimeDeviation", String.valueOf(round(meanAndDev.dev, 2)));
       }
-      DataThroughput dataThroughput = os.getRepresentation(DataThroughput.class);
+      DataThroughput dataThroughput = statistics.getRepresentation(operationName, DataThroughput.class);
       if (dataThroughput != null) {
          rowData.put(operationName + ".DataThrouputMin", String.valueOf(round(dataThroughput.minThroughput, 1)));
          rowData.put(operationName + ".DataThrouputMax", String.valueOf(round(dataThroughput.maxThroughput, 1)));

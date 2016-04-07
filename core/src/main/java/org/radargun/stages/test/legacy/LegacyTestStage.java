@@ -1,9 +1,11 @@
 package org.radargun.stages.test.legacy;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
@@ -12,7 +14,6 @@ import org.radargun.config.Init;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.reporting.IterationData;
 import org.radargun.reporting.Report;
 import org.radargun.stages.test.BaseTestStage;
 import org.radargun.stages.test.TransactionMode;
@@ -120,23 +121,17 @@ public abstract class LegacyTestStage extends BaseTestStage {
       Report.Test test = getTest(amendTest);
       testIteration = test == null ? 0 : test.getIterations().size();
       // we cannot use aggregated = createStatistics() since with PeriodicStatistics the merge would fail
-      int threads = 0;
       List<StatisticsAck> statisticsAcks = instancesOf(acks, StatisticsAck.class);
-      Statistics aggregated = statisticsAcks.stream().filter(ack -> ack.iterations != null)
-            .flatMap(ack -> ack.iterations.stream().flatMap(s -> s.stream())).reduce(null, Statistics.MERGE);
+      Statistics aggregated = statisticsAcks.stream().flatMap(ack -> ack.statistics.stream()).reduce(null, Statistics.MERGE);
       for (StatisticsAck ack : statisticsAcks) {
-         if (ack.iterations != null) {
-            int i = getTestIteration();
-            for (List<Statistics> threadStats : ack.iterations) {
-               if (test != null) {
-                  // TODO: this looks like we could get same iteration value for all iterations reported
-                  String iterationValue = resolveIterationValue();
-                  if (iterationValue != null) {
-                     test.setIterationValue(i, iterationValue);
-                  }
-                  test.addStatistics(i++, ack.getSlaveIndex(), threadStats);
+         if (ack.statistics != null) {
+            if (test != null) {
+               int testIteration = getTestIteration();
+               String iterationValue = resolveIterationValue();
+               if (iterationValue != null) {
+                  test.setIterationValue(testIteration, iterationValue);
                }
-               threads = Math.max(threads, threadStats.size());
+               test.addStatistics(testIteration, ack.getSlaveIndex(), ack.statistics);
             }
          } else {
             log.trace("No statistics received from slave: " + ack.getSlaveIndex());
@@ -235,47 +230,21 @@ public abstract class LegacyTestStage extends BaseTestStage {
    }
 
    protected DistStageAck newStatisticsAck(List<LegacyStressor> stressors) {
-      List<List<Statistics>> results = gatherResults(stressors, new StatisticsResultRetriever());
+      List<Statistics> results = gatherResults(stressors, new StatisticsResultRetriever());
       return new StatisticsAck(slaveState, results);
    }
 
-   protected <T> List<List<T>> gatherResults(List<LegacyStressor> stressors, ResultRetriever<T> retriever) {
-      List<T> results = new ArrayList<>(stressors.size());
-      for (LegacyStressor stressor : stressors) {
-         T result = retriever.getResult(stressor);
-         if (result != null) { // stressor could have crashed during initialization
-            results.add(result);
-         }
-      }
-
-      List<List<T>> all = new ArrayList<>();
-      all.add(new ArrayList<T>());
-      /* expand the iteration statistics into iterations */
-      for (T result : results) {
-         if (result instanceof IterationData) {
-            int iteration = 0;
-            for (IterationData.Iteration<? extends T> it : ((IterationData<T>) result).getIterations()) {
-               while (iteration >= all.size()) {
-                  all.add(new ArrayList<T>(results.size()));
-               }
-               addResult(all.get(iteration++), it.data, retriever);
-            }
-         } else {
-            addResult(all.get(0), result, retriever);
-         }
-      }
-      return all;
-   }
-
-   private <T> void addResult(List<T> results, T result, ResultRetriever<T> retriever) {
+   protected <T> List<T> gatherResults(List<LegacyStressor> stressors, ResultRetriever<T> retriever) {
       if (mergeThreadStats) {
-         if (results.isEmpty()) {
-            results.add(result);
-         } else {
-            retriever.mergeResult(results.get(0), result);
-         }
+         return stressors.stream()
+            .map(retriever::getResult)
+            .reduce(retriever::merge)
+            .map(Collections::singletonList).orElse(Collections.emptyList());
       } else {
-         results.add(result);
+         return stressors.stream()
+            .map(retriever::getResult)
+            .filter(r -> r != null)
+            .collect(Collectors.toList());
       }
    }
 
@@ -357,7 +326,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
    protected interface ResultRetriever<T> {
       T getResult(LegacyStressor stressor);
 
-      void mergeResult(T into, T that);
+      T merge(T stats1, T stats2);
    }
 
    protected static class StatisticsResultRetriever implements ResultRetriever<Statistics> {
@@ -369,8 +338,8 @@ public abstract class LegacyTestStage extends BaseTestStage {
       }
 
       @Override
-      public void mergeResult(Statistics into, Statistics that) {
-         into.merge(that);
+      public Statistics merge(Statistics stats1, Statistics stats2) {
+         return Statistics.MERGE.apply(stats1, stats2);
       }
    }
 
@@ -384,11 +353,11 @@ public abstract class LegacyTestStage extends BaseTestStage {
    }
 
    protected static class StatisticsAck extends DistStageAck {
-      public final List<List<Statistics>> iterations;
+      public final List<Statistics> statistics;
 
-      public StatisticsAck(SlaveState slaveState, List<List<Statistics>> iterations) {
+      public StatisticsAck(SlaveState slaveState, List<Statistics> statistics) {
          super(slaveState);
-         this.iterations = iterations;
+         this.statistics = statistics;
       }
    }
 }

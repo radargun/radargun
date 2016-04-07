@@ -1,7 +1,7 @@
 package org.radargun.stats.representation;
 
 import org.radargun.config.DefinitionElement;
-import org.radargun.stats.OperationStats;
+import org.radargun.stats.Statistics;
 
 /**
  * Representation holding of successful/unsuccessful requests, mean and max response time.
@@ -30,10 +30,10 @@ public class DefaultOutcome {
    @DefinitionElement(name = "requests", doc = "Retrieve number of operations executed.")
    public static class Requests extends RepresentationType {
       @Override
-      public double getValue(OperationStats stats, long duration) {
-         DefaultOutcome defaultOutcome = stats.getRepresentation(DefaultOutcome.class);
+      public double getValue(Statistics statistics, String operation, long duration) {
+         DefaultOutcome defaultOutcome = statistics.getRepresentation(operation, DefaultOutcome.class);
          if (defaultOutcome == null)
-            throw new IllegalArgumentException("Cannot retrieve number of requests from " + stats);
+            throw new IllegalArgumentException("Cannot retrieve number of requests from " + operation);
          return defaultOutcome.requests;
       }
    }
@@ -41,10 +41,10 @@ public class DefaultOutcome {
    @DefinitionElement(name = "errors", doc = "Retrieve number of failed operations.")
    public static class Errors extends RepresentationType {
       @Override
-      public double getValue(OperationStats stats, long duration) {
-         DefaultOutcome defaultOutcome = stats.getRepresentation(DefaultOutcome.class);
+      public double getValue(Statistics statistics, String operation, long duration) {
+         DefaultOutcome defaultOutcome = statistics.getRepresentation(operation, DefaultOutcome.class);
          if (defaultOutcome == null)
-            throw new IllegalArgumentException("Cannot retrieve number of failed requests from " + stats);
+            throw new IllegalArgumentException("Cannot retrieve number of failed requests from " + operation);
          return defaultOutcome.errors;
       }
    }
@@ -54,11 +54,21 @@ public class DefaultOutcome {
    @DefinitionElement(name = "response-time-max", doc = "Retrieve maximum response time.")
    public static class ResponseTimeMax extends RepresentationType {
       @Override
-      public double getValue(OperationStats stats, long duration) {
-         DefaultOutcome defaultOutcome = stats.getRepresentation(DefaultOutcome.class);
+      public double getValue(Statistics statistics, String operation, long duration) {
+         DefaultOutcome defaultOutcome = statistics.getRepresentation(operation, DefaultOutcome.class);
          if (defaultOutcome == null)
-            throw new IllegalArgumentException("Cannot retrieve response time maximum of requests from " + stats);
+            throw new IllegalArgumentException("Cannot retrieve response time maximum of requests from " + operation);
          return defaultOutcome.responseTimeMax;
+      }
+   }
+
+   public static class Series extends AbstractSeries<DefaultOutcome> {
+      static {
+         AbstractSeries.register(Series.class, DefaultOutcome.class);
+      }
+
+      public Series(long startTime, long period, DefaultOutcome[] samples) {
+         super(startTime, period, samples);
       }
    }
 }

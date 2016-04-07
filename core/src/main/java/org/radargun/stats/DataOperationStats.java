@@ -58,14 +58,14 @@ public class DataOperationStats extends AllRecordingOperationStats {
 
    @SuppressWarnings("unchecked")
    @Override
-   public <T> T getRepresentation(Class<T> clazz, Object... args) {
+   public <T> T getRepresentation(Class<T> clazz, Statistics ownerStatistics, Object... args) {
       if (clazz == DataThroughput.class) {
          return (T) DataThroughput.compute(totalBytes, responseTimes, full ? responseTimes.length : pos);
       } else if (clazz == Histogram.class) {
          //TODO: Find out why this causes an "IllegalArgumentException: Range(double, double): require lower <= upper" error
          return null;
       } else {
-         return super.getRepresentation(clazz, args);
+         return super.getRepresentation(clazz, ownerStatistics, args);
       }
    }
 

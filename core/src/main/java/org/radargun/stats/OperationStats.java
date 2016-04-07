@@ -12,6 +12,9 @@ import org.radargun.utils.ReflexiveConverters;
 /**
  * Records request for single operation and converts the data stored into requested representation.
  *
+ * Ideally this class should be package-private, though, the need to modify the stats externally
+ * (in {@link DataOperationStats}) exposes them (through {@link Statistics#getOperationStats(String)}.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface OperationStats extends Serializable {
@@ -49,10 +52,11 @@ public interface OperationStats extends Serializable {
    /**
     * Convert the internal state into requested representation.
     * @param clazz
+    * @param ownerStatistics
     * @param args
     * @return The representation, or null if this class is not capable of requested conversion.
     */
-   <T> T getRepresentation(Class<T> clazz, Object... args);
+   <T> T getRepresentation(Class<T> clazz, Statistics ownerStatistics, Object... args);
 
    /**
     * @return True if no request was recorded.

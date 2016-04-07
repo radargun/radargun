@@ -10,8 +10,8 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
-import org.radargun.stats.DefaultOperationStats;
-import org.radargun.stats.DefaultStatistics;
+import org.radargun.stats.BasicOperationStats;
+import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Queryable;
@@ -34,7 +34,7 @@ public class ReindexStage extends AbstractDistStage {
 
    @Override
    public DistStageAck executeOnSlave() {
-      Statistics stats = new DefaultStatistics(new DefaultOperationStats());
+      Statistics stats = new BasicStatistics(new BasicOperationStats());
       stats.begin();
       stats.startRequest().exec(Queryable.REINDEX, () -> queryable.reindex(container));
       stats.end();
