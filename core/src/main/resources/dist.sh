@@ -23,6 +23,9 @@ PLUGIN_PATHS=""
 PLUGIN_CONFIGS=""
 REPORTER_PATHS=""
 OUT_DIR=""
+EXTRA_JAVA_OPTS=""
+EXTRA_JAVA_OPTS_MASTER=""
+EXTRA_JAVA_OPTS_SLAVES=""
 
 help_and_exit() {
   wrappedecho "Usage: "
@@ -49,6 +52,10 @@ help_and_exit() {
   wrappedecho "   --debug-suspend Wait for the debugger to connect on given slave/master."
   wrappedecho ""
   wrappedecho "   -J              Add Java options to both master and slaves."
+  wrappedecho ""
+  wrappedecho "   -Jm             Add Java option to master."
+  wrappedecho ""
+  wrappedecho "   -Js             Add Java option to all slaves."
   wrappedecho ""
   wrappedecho "   --add-plugin    Path to custom plugin directory. Can be specified multiple times."
   wrappedecho ""
@@ -122,6 +129,14 @@ do
       EXTRA_JAVA_OPTS="${EXTRA_JAVA_OPTS} ${2}"
       shift
       ;;
+    "-Jm")
+      EXTRA_JAVA_OPTS_MASTER="${EXTRA_JAVA_OPTS_MASTER} ${2}"
+      shift
+      ;;
+    "-Js")
+      EXTRA_JAVA_OPTS_SLAVES="${EXTRA_JAVA_OPTS_SLAVES} ${2}"
+      shift
+      ;;
     "--wait")
       WAITF="true"
       ;;
@@ -160,7 +175,7 @@ fi
 if [ ! -z $OUT_DIR ]; then
    OUT_CMD="-o $OUT_DIR/master.log"
 fi
-${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD} ${OUT_CMD} -J "${EXTRA_JAVA_OPTS}" ${REPORTER_PATHS} -w &
+${RADARGUN_HOME}/bin/master.sh -s ${SLAVE_COUNT} -m ${MASTER} -c ${CONFIG} ${DEBUG_CMD} ${OUT_CMD} -J "${EXTRA_JAVA_OPTS} ${EXTRA_JAVA_OPTS_MASTER}" ${REPORTER_PATHS} -w &
 MASTER_SH_PID=$!
 #### Sleep for a few seconds so master can open its port
 
@@ -169,7 +184,7 @@ MASTER_SH_PID=$!
 INDEX=0
 for slave in $SLAVES; do
   CMD="source ~/.bash_profile ; cd $WORKING_DIR"
-  CMD="$CMD ; ${RADARGUN_HOME}/bin/slave.sh -m ${MASTER} -n $slave -i $INDEX -J \"$EXTRA_JAVA_OPTS\" ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
+  CMD="$CMD ; ${RADARGUN_HOME}/bin/slave.sh -m ${MASTER} -n $slave -i $INDEX -J \"$EXTRA_JAVA_OPTS $EXTRA_JAVA_OPTS_SLAVES\" ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
   if [ ! -z $DEBUG ]; then
      CMD="$CMD -d $slave:$DEBUG"
   fi
