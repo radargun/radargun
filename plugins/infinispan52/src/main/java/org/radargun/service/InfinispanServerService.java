@@ -92,12 +92,20 @@ public class InfinispanServerService extends JavaProcessService {
          URL resource = getClass().getResource("/" + file);
          Path filesystemFile = FileSystems.getDefault().getPath(file);
          Path target = FileSystems.getDefault().getPath(home, "standalone", "configuration", "radargun-" + ServiceHelper.getSlaveIndex() + ".xml");
-
+         
          if (resource != null) {
             try (InputStream is = resource.openStream()) {
+               log.info("Found " + file + " as a resource");
                Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
             }
          } else if (filesystemFile.toFile().exists()) {
+            log.info("Found " + file + " in plugin directory");
+            Files.copy(filesystemFile, target, StandardCopyOption.REPLACE_EXISTING);
+         } else if (FileSystems.getDefault().getPath(home, "standalone", "configuration", file).toFile().exists()) {
+            log.info("Found " + file + " in server configuration directory");
+            filesystemFile = FileSystems.getDefault().getPath(home, "standalone", "configuration", file);
+            // Set the file variable to the full path to the file to satisfy AbstractConfigurationProvider
+            file = filesystemFile.toString();
             Files.copy(filesystemFile, target, StandardCopyOption.REPLACE_EXISTING);
          } else {
             throw new FileNotFoundException("File " + file + " not found neither as resource not in filesystem.");
