@@ -11,6 +11,7 @@ export RADARGUN_HOME
 CONFIG=""
 SERIALIZED_DIR=""
 DEBUG=""
+DEBUG_SUSPEND="n"
 REPORTER_PATHS=""
 
 help_and_exit() {
@@ -22,6 +23,8 @@ help_and_exit() {
   wrappedecho "   -s              Directory with the serialized data."
   wrappedecho ""
   wrappedecho "   -d              Debug master on given port."
+  wrappedecho ""
+  wrappedecho "   --debug-suspend Wait for the debugger to connect."
   wrappedecho ""
   wrappedecho "   -J              Add custom Java options."
   wrappedecho ""
@@ -45,6 +48,9 @@ do
     "-d")
       DEBUG=$2
       shift
+      ;;
+    "--debug-suspend")
+      DEBUG_SUSPEND="y"
       ;;
     "-s")
       SERIALIZED_DIR=$2;
@@ -74,7 +80,7 @@ set_env
 CP="$CP:$RADARGUN_HOME/reporters/reporter-default/*"
 
 if [ "x${DEBUG}" != "x" ]; then
-  JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG}"
+  JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND},address=${DEBUG}"
 fi
 
 RUN_CMD="${JAVA} ${JVM_OPTS} -classpath $CP org.radargun.reporting.serialized.SerializedReporter $CONFIG $SERIALIZED_DIR ${REPORTER_PATHS}"

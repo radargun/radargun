@@ -13,6 +13,7 @@ SLAVE_COUNT_ARG=""
 TAILF=false
 RADARGUN_MASTER_PID=""
 DEBUG=""
+DEBUG_SUSPEND="n"
 PLUGIN_PATHS=""
 PLUGIN_CONFIGS=""
 REPORTER_PATHS=""
@@ -39,6 +40,8 @@ help_and_exit() {
   wrappedecho "   -m              MASTER host[:port]. An optional override to override the host/port defaults that the master listens on."
   wrappedecho ""
   wrappedecho "   -d              Debug master on given port."
+  wrappedecho ""
+  wrappedecho "   --debug-suspend Wait for the debugger to connect."
   wrappedecho ""
   wrappedecho "   -J              Add custom Java options."
   wrappedecho ""
@@ -110,6 +113,9 @@ do
       DEBUG=$2
       shift
       ;;
+    "--debug-suspend")
+      DEBUG_SUSPEND="y"
+      ;;
     "-h")
       help_and_exit
       ;;
@@ -161,7 +167,7 @@ if [ "x${MASTER}" != "x" ]; then
 fi
 
 if [ "x${DEBUG}" != "x" ]; then
-  JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG}"
+  JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND},address=${DEBUG}"
 fi
 
 RUN_CMD="${JAVA} ${JVM_OPTS} -classpath $CP ${D_VARS} $SLAVE_COUNT_ARG org.radargun.LaunchMaster --config ${CONFIG} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS} ${REPORTER_PATHS}"

@@ -15,6 +15,7 @@ REMOTE_CMD='ssh -q -o "StrictHostKeyChecking false"'
 MASTER=`hostname`
 SLAVES=""
 DEBUG=""
+DEBUG_SUSPEND=""
 SLAVE_COUNT=0
 TAILF=false
 WAITF=false
@@ -25,7 +26,7 @@ OUT_DIR=""
 
 help_and_exit() {
   wrappedecho "Usage: "
-  wrappedecho '  $ dist.sh [-c config_file] [-u ssh_user] [-w WORKING DIRECTORY] [-m MASTER_IP[:PORT]] [-d port] SLAVE...'
+  wrappedecho '  $ dist.sh [-c config_file] [-u ssh_user] [-w WORKING DIRECTORY] [-m MASTER_IP[:PORT]] [-d port [--debug-suspend master|SLAVE]*] SLAVE...'
   wrappedecho ""
   wrappedecho "e.g."
   wrappedecho "  $ dist.sh node1 node2 node3 node4"
@@ -44,6 +45,8 @@ help_and_exit() {
   wrappedecho "   -t              After starting the benchmark it will run 'tail -f' on the master node's log file."
   wrappedecho ""
   wrappedecho "   -d              Open debugging port on each node."
+  wrappedecho ""
+  wrappedecho "   --debug-suspend Wait for the debugger to connect on given slave/master."
   wrappedecho ""
   wrappedecho "   -J              Add Java options to both master and slaves."
   wrappedecho ""
@@ -94,6 +97,10 @@ do
       ;;
     "-d")
       DEBUG=$2
+      shift
+      ;;
+    "--debug-suspend")
+      DEBUG_SUSPEND="$DEBUG_SUSPEND $2"
       shift
       ;;
     "-h")
@@ -147,6 +154,9 @@ DEBUG_CMD=""
 if [ ! -z $DEBUG ]; then
    DEBUG_CMD="-d localhost:$DEBUG"
 fi
+if echo $DEBUG_SUSPEND | grep -e "\bmaster\b"; then
+   DEBUG_CMD="${DEBUG_CMD} --debug-suspend"
+fi
 if [ ! -z $OUT_DIR ]; then
    OUT_CMD="-o $OUT_DIR/master.log"
 fi
@@ -162,6 +172,9 @@ for slave in $SLAVES; do
   CMD="$CMD ; ${RADARGUN_HOME}/bin/slave.sh -m ${MASTER} -n $slave -i $INDEX -J \"$EXTRA_JAVA_OPTS\" ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
   if [ ! -z $DEBUG ]; then
      CMD="$CMD -d $slave:$DEBUG"
+  fi
+  if echo $DEBUG_SUSPEND | grep -e "\b${slave}\b"; then
+     CMD="$CMD --debug-suspend"
   fi
   if [ ! -z $OUT_DIR ]; then
      CMD="$CMD -o $OUT_DIR/slave_${slave}.log"

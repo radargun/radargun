@@ -13,6 +13,7 @@ MASTER_HOST=""
 MASTER_PORT=""
 SLAVE_INDEX=""
 DEBUG=""
+DEBUG_SUSPEND="n"
 LOG4J_PREFIX=`hostname`-$RANDOM
 PLUGIN_PATHS=""
 PLUGIN_CONFIGS=""
@@ -40,7 +41,7 @@ MASTER=${MASTER_HOST}:${MASTER_PORT}
 
 help_and_exit() {
   echo "Usage: "
-  echo '  $ slave.sh [-m host:port] [-p log4j_file_prefix] [-i slaveIndex] [-d [host:]port] [-J "-Dopt1 -Dopt2"]'
+  echo '  $ slave.sh [-m host:port] [-p log4j_file_prefix] [-i slaveIndex] [-d [host:]port [--debug-suspend]] [-J "-Dopt1 -Dopt2"]'
   echo ""
   echo "   -m              Master host and port. Optional, defaults to ${MASTER}. (this value is taken from ./conf/benchmark-dist.xml)."
   echo ""
@@ -49,6 +50,8 @@ help_and_exit() {
   echo "   -i              Index of this slave. Optional."
   echo ""
   echo "   -d              Debug address. Optional."
+  echo ""
+  echo "   --debug-suspend Wait for the debugger to connect. Optional."
   echo ""
   echo "   -J              Add custom Java options."
   echo ""
@@ -88,6 +91,9 @@ do
     "-d")
       DEBUG=$2
       shift
+      ;;
+    "--debug-suspend")
+      DEBUG_SUSPEND="y"
       ;;
     "-t")
       TAILF=true
@@ -151,7 +157,7 @@ if [ -n "$BIND_ADDRESS" ]; then
 fi
 
 if [ "x$DEBUG" != "x" ]; then
-   JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG}"
+   JVM_OPTS="${JVM_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=${DEBUG_SUSPEND},address=${DEBUG}"
 fi
 RUN_CMD="${JAVA} ${JVM_OPTS} ${D_VARS} -classpath $CP org.radargun.Slave ${CONF} ${PLUGIN_PATHS} ${PLUGIN_CONFIGS}"
 
