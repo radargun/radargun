@@ -58,23 +58,27 @@ public class Cluster implements Serializable, Comparable<Cluster> {
    }
 
    public Group getGroup(int slaveIndex) {
-      int index = slaveIndex;
-      for (Group g : groups) {
-         if (index < g.size) {
-            return g;
+      if (slaveIndex != -1) {
+         int index = slaveIndex;
+         for (Group g : groups) {
+            if (index < g.size) {
+               return g;
+            }
+            index -= g.size;
          }
-         index -= g.size;
       }
       throw new IllegalStateException("Slave index is " + slaveIndex + ", cluster is " + toString());
    }
 
    public int getIndexInGroup(int slaveIndex) {
-      int index = slaveIndex;
-      for (Group g : groups) {
-         if (index < g.size) {
-            return index;
+      if (slaveIndex != -1) {
+         int index = slaveIndex;
+         for (Group g : groups) {
+            if (index < g.size) {
+               return index;
+            }
+            index -= g.size;
          }
-         index -= g.size;
       }
       throw new IllegalStateException("Slave index is " + slaveIndex + ", cluster is " + toString());
    }

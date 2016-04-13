@@ -68,15 +68,17 @@ public abstract class SlaveBase {
                initException = e;
             }
             if (initException != null) {
-               response = new DistStageAck(state).error("Stage initialization has failed", initException);
+               response = new DistStageAck(state).error("Stage '" + stage.getName() + "' initialization has failed",
+                     initException);
             } else if (!stage.shouldExecute()) {
-               log.info("Stage should not be executed");
+               log.info("Stage '" + stage.getName() + "' should not be executed");
                response = new DistStageAck(state);
             } else if (result == TraitHelper.InjectResult.SKIP) {
-               log.info("Stage was skipped because it was missing some traits");
+               log.info("Stage '" + stage.getName() + "' was skipped because it was missing some traits");
                response = new DistStageAck(state);
             } else if (result == TraitHelper.InjectResult.FAILURE) {
-               String message = "The stage was not executed because it missed some mandatory traits.";
+               String message = "The stage '" + stage.getName()
+                     + "' was not executed because it missed some mandatory traits.";
                log.error(message);
                response = new DistStageAck(state).error(message, null);
             } else {

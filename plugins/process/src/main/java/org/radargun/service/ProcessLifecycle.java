@@ -36,6 +36,7 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
    private final CopyOnWriteArrayList<Listener> listeners = new CopyOnWriteArrayList<>();
    private String prefix;
    private String extension;
+   private Process process;
 
    public ProcessLifecycle(T service) {
       this.service = service;
@@ -142,7 +143,7 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
          pb.redirectError(ProcessBuilder.Redirect.INHERIT);
       }
       try {
-         Process process = pb.start();
+         process = pb.start();
          service.setPid(getProcessId(process));
          if (inputWriter != null) inputWriter.setStream(process.getOutputStream());
          if (outputReader != null) outputReader.setStream(process.getInputStream());
@@ -213,26 +214,12 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
 
    @Override
    public boolean isRunning() {
-      if (service.getPid() != null) {
-         Process process = null;
-         try {
-            process = new ProcessBuilder().command("ps", "-ef", service.getPid()).start();
-            return process.waitFor() == 0;
-         } catch (IOException e) {
-            log.error("Cannot determine if process '" + service.getPid() + "' is running", e);
-            return false;
-         } catch (InterruptedException e) {
-            log.error("Script interrupted", e);
-            {
-               try {
-                  return process.exitValue() == 0;
-               } catch (IllegalThreadStateException itse) {
-                  return true;
-               }
-            }
-         }
+      boolean result = getServiceChildPIDs().length() != 0;
+      if (process != null) {
+         // Service is running until the service and child PIDs don't exist
+         result = result || process.isAlive();
       }
-      return false;
+      return result;
    }
 
    protected synchronized StreamReader getOutputReader() {
@@ -389,5 +376,30 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
       public void afterStart() {}
       public void beforeStop(boolean graceful) {}
       public void afterStop(boolean graceful) {}
+   }
+   
+   /*
+    * Return a list of the children PIDs for the service
+    */
+   private String getServiceChildPIDs() {
+      if (service.getPid() != null) {
+         ProcessBuilder pb = new ProcessBuilder().command("pgrep", "-P", service.getPid());
+         pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+         pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
+         try {
+            Process process = pb.start();
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+               String line;
+               while ((line = reader.readLine()) != null)
+                  sb.append(line);
+            }
+            return sb.toString().split(" ")[0].trim();
+         } catch (IOException e) {
+            log.error("Failed to read service child PIDs", e);
+            return "";
+         }
+      }
+      return "";
    }
 }
