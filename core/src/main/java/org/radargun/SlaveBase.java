@@ -44,7 +44,7 @@ public abstract class SlaveBase {
          log.info("Service is " + service.getClass().getSimpleName() + PropertyHelper.toString(service));
          traits = TraitHelper.retrieve(service);
          state.setTraits(traits);
-         for (; ; ) {
+         for (;;) {
             int stageId = getNextStageId();
             Map<String, Object> masterData = getNextMasterData();
             for (Map.Entry<String, Object> entry : masterData.entrySet()) {
@@ -64,19 +64,21 @@ public abstract class SlaveBase {
                InitHelper.init(stage);
                stage.initOnSlave(state);
             } catch (Exception e) {
-               log.error("Stage initialization has failed", e);
+               log.error("Stage '" + stage.getName() + "' initialization has failed", e);
                initException = e;
             }
             if (initException != null) {
-               response = new DistStageAck(state).error("Stage initialization has failed", initException);
+               response = new DistStageAck(state).error("Stage '" + stage.getName() + "' initialization has failed",
+                     initException);
             } else if (!stage.shouldExecute()) {
-               log.info("Stage should not be executed");
+               log.info("Stage '" + stage.getName() + "' should not be executed");
                response = new DistStageAck(state);
             } else if (result == TraitHelper.InjectResult.SKIP) {
-               log.info("Stage was skipped because it was missing some traits");
+               log.info("Stage '" + stage.getName() + "' was skipped because it was missing some traits");
                response = new DistStageAck(state);
             } else if (result == TraitHelper.InjectResult.FAILURE) {
-               String message = "The stage was not executed because it missed some mandatory traits.";
+               String message = "The stage '" + stage.getName()
+                     + "' was not executed because it missed some mandatory traits.";
                log.error(message);
                response = new DistStageAck(state).error(message, null);
             } else {
@@ -123,7 +125,8 @@ public abstract class SlaveBase {
       DistStageAck response = null;
       try {
          Map<String, String> extras = getCurrentExtras(configuration, cluster);
-         ScenarioCleanupStage stage = (ScenarioCleanupStage) scenario.getStage(scenario.getStageCount() - 1, state, extras, null);
+         ScenarioCleanupStage stage = (ScenarioCleanupStage) scenario.getStage(scenario.getStageCount() - 1, state,
+               extras, null);
          InitHelper.init(stage);
          stage.initOnSlave(state);
          log.info("Starting stage " + (log.isDebugEnabled() ? stage.toString() : stage.getName()));
