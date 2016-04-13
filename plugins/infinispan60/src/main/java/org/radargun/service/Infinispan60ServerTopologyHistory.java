@@ -216,8 +216,10 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
                String.format(JMX_CACHE_COMPONENT, service.jmxDomain, JMX_CACHE_IMPL), JMX_CACHE_AVAILABILITY);
          for (Map.Entry<String, Object> entry : cacheAttributes.entrySet()) {
             status = statusMap.get(entry.getKey());
-            status.prevCacheAvailability = CacheAvailability.valueOf(entry.getValue().toString());
-            statusMap.put(entry.getKey(), status);
+            if (status != null) {
+               status.prevCacheAvailability = CacheAvailability.valueOf(entry.getValue().toString());
+               statusMap.put(entry.getKey(), status);
+            }
          }
       } catch (Exception e) {
          log.error("Failed to retrieve data from JMX", e);
