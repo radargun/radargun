@@ -37,6 +37,7 @@
       <plugins.infinispan/>
       <plugins.jdk18/>
       <plugins.jdg/>
+      <plugins.jdg70/>
       <plugins.coherence/>
       <plugins.process />
       <plugins.spark />
@@ -244,10 +245,11 @@
          <modules>
             <module>plugins/infinispan80</module>
             <module>plugins/infinispan81</module>
+            <module>plugins/infinispan82</module>
             <module>plugins/spark</module>
          </modules>
          <properties>
-            <plugins.jdk18>infinispan80,infinispan81,spark</plugins.jdk18>
+            <plugins.jdk18>infinispan80,infinispan81,infinispan82,spark</plugins.jdk18>
          </properties>
       </profile>
       <profile>
@@ -285,6 +287,23 @@
             <plugins.jdg>jdg60,jdg61,jdg62,jdg63,jdg64,jdg65,jdg66</plugins.jdg>
          </properties>
       </profile>
+
+      <!-- Profile for JDG 7. Requires log4j2 to be defined as well. -->
+      <profile>
+         <id>jdg70</id>
+         <activation>
+            <property>
+               <name>jdg70</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/jdg70</module>
+         </modules>
+         <properties>
+            <plugins.jdg70>jdg70</plugins.jdg70>
+         </properties>
+      </profile>
+
       <profile>
          <id>process</id>
          <activation>
@@ -514,7 +533,7 @@
                         </path>
 
                         <echo message="Packaging plugins: " />
-                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.http},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdk18},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.ehcache},${plugins.hazelcast},${plugins.http},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdk18},${plugins.jdg},${plugins.jdg70},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>
