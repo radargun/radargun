@@ -29,8 +29,7 @@
             </property>
          </activation>
          <properties>
-<!--             <version.infinispan>8.3.0.Final-redhat-1</version.infinispan> -->
-            <version.infinispan>8.3.0.ER2-redhat-1</version.infinispan>
+            <version.infinispan>8.3.0.Final-redhat-1</version.infinispan>
          </properties>
       </profile>
       <profile>
