@@ -37,6 +37,7 @@
       <plugins.jgroups/>
       <plugins.infinispan/>
       <plugins.jdg/>
+      <plugins.jdg70/>
       <plugins.coherence/>
       <plugins.process />
       <plugins.resteasy-http />
@@ -302,12 +303,27 @@
             <module>plugins/jdg64</module>
             <module>plugins/jdg65</module>
             <module>plugins/jdg66</module>
+         </modules>
+         <properties>
+            <plugins.jdg>jdg60,jdg61,jdg62,jdg63,jdg64,jdg65,jdg66</plugins.jdg>
+         </properties>
+      </profile>
+
+      <profile>
+         <id>jdg70</id>
+         <activation>
+            <property>
+               <name>jdg70</name>
+            </property>
+         </activation>
+         <modules>
             <module>plugins/jdg70</module>
          </modules>
          <properties>
-            <plugins.jdg>jdg60,jdg61,jdg62,jdg63,jdg64,jdg65,jdg66,jdg70</plugins.jdg>
+            <plugins.jdg70>jdg70</plugins.jdg70>
          </properties>
       </profile>
+
       <profile>
          <id>process</id>
          <activation>
@@ -538,7 +554,7 @@
 
                         <echo message="Packaging plugins: " />
                         <!-- Note: JCache needs to be here for schema generation, although it can't be used on its own -->
-                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.jdg70},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>
