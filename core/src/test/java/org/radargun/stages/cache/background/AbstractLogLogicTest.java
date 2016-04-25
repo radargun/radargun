@@ -194,7 +194,9 @@ public class AbstractLogLogicTest {
          throw new IllegalArgumentException("All configuration parameters need to be specified");
       }
       llc.enabled = true;
-      BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(new SlaveState(), "test");
+      SlaveState slaveState = new SlaveState();
+      slaveState.setSlaveIndex(0);
+      BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(slaveState, "test");
       setClassProperty(BackgroundOpsManager.class, manager, "generalConfiguration", gc);
       setClassProperty(BackgroundOpsManager.class, manager, "legacyLogicConfiguration", lc);
       setClassProperty(BackgroundOpsManager.class, manager, "logLogicConfiguration", llc);
