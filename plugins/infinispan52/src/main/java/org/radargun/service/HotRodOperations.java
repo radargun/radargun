@@ -2,7 +2,6 @@ package org.radargun.service;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.VersionedValue;
-import org.infinispan.util.concurrent.NotifyingFuture;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.BasicOperations;
@@ -33,25 +32,48 @@ public class HotRodOperations implements BasicOperations, BulkOperations, Condit
 
    @Override
    public <K, V> HotRodCache<K, V> getCache(String cacheName) {
+      RemoteCache<K, V> noReturn;
+      RemoteCache<K, V> forceReturn;
+
       if (cacheName == null) {
          cacheName = service.cacheName;
       }
       if (cacheName == null) {
-         return new HotRodCache<>((RemoteCache<K,V>) service.managerNoReturn.getCache(false), (RemoteCache<K,V>) service.managerForceReturn.getCache(true));
+         noReturn = service.managerNoReturn.getCache(false);
+         forceReturn = service.managerForceReturn.getCache(true);
       } else {
-         return new HotRodCache<>((RemoteCache<K,V>) service.managerNoReturn.getCache(cacheName, false), (RemoteCache<K,V>) service.managerForceReturn.getCache(cacheName, true));
+         noReturn = service.managerNoReturn.getCache(cacheName, false);
+         forceReturn = service.managerForceReturn.getCache(cacheName, true);
+      }
+
+      if (noReturn == null && forceReturn == null) {
+         throw new IllegalStateException("Could not retrieve remote cache: " + cacheName);
+      } else {
+         return new HotRodCache<>(noReturn, forceReturn);
       }
    }
 
    @Override
    public <K, V> BulkOperations.Cache<K, V> getCache(String cacheName, boolean preferAsync) {
+      RemoteCache<K, V> noReturn;
+      RemoteCache<K, V> forceReturn;
+
       if (cacheName == null) {
          cacheName = service.cacheName;
       }
+
       if (cacheName == null) {
-         return new HotRodBulkOperationsCache<>((RemoteCache<K,V>) service.managerNoReturn.getCache(false), (RemoteCache<K,V>) service.managerForceReturn.getCache(true), preferAsync);
+         noReturn = service.managerNoReturn.getCache(false);
+         forceReturn = service.managerForceReturn.getCache(true);
       } else {
-         return new HotRodBulkOperationsCache<>((RemoteCache<K,V>) service.managerNoReturn.getCache(cacheName, false), (RemoteCache<K,V>) service.managerForceReturn.getCache(cacheName, true), preferAsync);
+         noReturn = service.managerNoReturn.getCache(cacheName, false);
+         forceReturn = service.managerForceReturn.getCache(cacheName, true);
+      }
+
+      if (noReturn == null && forceReturn == null) {
+         throw new IllegalStateException("Could not retrieve remote cache: " + cacheName);
+      } else {
+         return new HotRodBulkOperationsCache<>(noReturn, forceReturn, preferAsync);
       }
    }
 
