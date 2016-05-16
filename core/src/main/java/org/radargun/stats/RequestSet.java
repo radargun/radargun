@@ -26,8 +26,8 @@ public final class RequestSet {
    }
 
    public void finished(boolean successful, Operation operation) {
-      statistics.record(this, operation);
       this.successful = successful;
+      statistics.record(this, operation);
    }
 
    public void succeeded(Operation operation) {
