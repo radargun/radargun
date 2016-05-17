@@ -10,9 +10,6 @@
 # ETH0_IP=`/sbin/ifconfig eth0 | grep inet | sed -e 's/^\s*//' -e 's/Bcast.*//' -e 's/inet addr://'`
 
 BIND_ADDRESS=${MY_BIND_ADDRESS}
-JG_FLAGS="-Dresolve.dns=false -Djgroups.timer.num_threads=4"
-JVM_OPTS="$JVM_OPTS -server -Xmx1024M -Xms1024M"
-JVM_OPTS="$JVM_OPTS $JG_FLAGS"
 JPROFILER_HOME=${HOME}/jprofiler6
 JPROFILER_CFG_ID=103
 
