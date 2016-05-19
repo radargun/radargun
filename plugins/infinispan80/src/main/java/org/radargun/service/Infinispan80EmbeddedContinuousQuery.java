@@ -9,49 +9,50 @@ import org.radargun.traits.Query;
  */
 public class Infinispan80EmbeddedContinuousQuery implements ContinuousQuery {
 
-    protected final InfinispanEmbeddedService service;
-    private org.infinispan.query.continuous.ContinuousQuery<Object, Object> cq;
-    private IspnContinuousQueryListener ispnCqListener;
+   protected final InfinispanEmbeddedService service;
+   private org.infinispan.query.continuous.ContinuousQuery<Object, Object> cq;
+   private IspnContinuousQueryListener ispnCqListener;
 
-    public Infinispan80EmbeddedContinuousQuery(InfinispanEmbeddedService service) {
-        this.service = service;
-    }
+   public Infinispan80EmbeddedContinuousQuery(InfinispanEmbeddedService service) {
+      this.service = service;
+   }
 
-    @Override
-    public void createContinuousQuery(String cacheName, Query query, ContinuousQueryListener cqListener) {
-        AbstractInfinispanQueryable.QueryImpl ispnQuery = (AbstractInfinispanQueryable.QueryImpl) query;
-        cq = new org.infinispan.query.continuous.ContinuousQuery<Object, Object>(getCache(cacheName));
-        ispnCqListener = new IspnContinuousQueryListener(cqListener);
-        cq.addContinuousQueryListener(ispnQuery.getDelegatingQuery(), ispnCqListener);
-    }
+   @Override
+   public void createContinuousQuery(String cacheName, Query query, ContinuousQueryListener cqListener) {
+      AbstractInfinispanQueryable.QueryImpl ispnQuery = (AbstractInfinispanQueryable.QueryImpl) query;
+      cq = new org.infinispan.query.continuous.ContinuousQuery<Object, Object>(getCache(cacheName));
+      ispnCqListener = new IspnContinuousQueryListener(cqListener);
+      cq.addContinuousQueryListener(ispnQuery.getDelegatingQuery(), ispnCqListener);
+   }
 
-    @Override
-    public void removeContinuousQuery(String cacheName, Object cqListener) {
-        if (cq != null && ispnCqListener != null) {
-            cq.removeContinuousQueryListener(ispnCqListener);
-        }
-    }
+   @Override
+   public void removeContinuousQuery(String cacheName, Object cqListener) {
+      if (cq != null && ispnCqListener != null) {
+         cq.removeContinuousQueryListener(ispnCqListener);
+      }
+   }
 
-    protected Cache<Object, Object> getCache(String cacheName) {
-        return service.getCache(cacheName);
-    }
+   protected Cache<Object, Object> getCache(String cacheName) {
+      return service.getCache(cacheName);
+   }
 
-    public static class IspnContinuousQueryListener implements org.infinispan.query.continuous.ContinuousQueryResultListener {
+   public static class IspnContinuousQueryListener
+         implements org.infinispan.query.continuous.ContinuousQueryResultListener {
 
-        private final ContinuousQueryListener cqListener;
+      private final ContinuousQueryListener cqListener;
 
-        public IspnContinuousQueryListener(ContinuousQueryListener cqListener) {
-            this.cqListener = cqListener;
-        }
+      public IspnContinuousQueryListener(ContinuousQueryListener cqListener) {
+         this.cqListener = cqListener;
+      }
 
-        @Override
-        public void resultJoining(Object key, Object value) {
-            cqListener.onEntryJoined(key, value);
-        }
+      @Override
+      public void resultJoining(Object key, Object value) {
+         cqListener.onEntryJoined(key, value);
+      }
 
-        @Override
-        public void resultLeaving(Object key) {
-            cqListener.onEntryLeft(key);
-        }
-    }
+      @Override
+      public void resultLeaving(Object key) {
+         cqListener.onEntryLeft(key);
+      }
+   }
 }
