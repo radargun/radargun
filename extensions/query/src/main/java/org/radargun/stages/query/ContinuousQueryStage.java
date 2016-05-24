@@ -142,7 +142,7 @@ public class ContinuousQueryStage extends AbstractDistStage {
       Query query = builder.build();
       slaveState.put(ContinuousQuery.QUERY, query);
 
-      ContinuousQuery.ContinuousQueryListener cqListener = new ContinuousQuery.ContinuousQueryListener() {
+      ContinuousQuery.Listener cqListener = new ContinuousQuery.Listener() {
          private final String statsKey = mergeCq ? CQ_TEST_NAME + ".Stats" : testName + ".Stats";
 
          @Override
@@ -158,24 +158,22 @@ public class ContinuousQueryStage extends AbstractDistStage {
          }
       };
 
-      Map<String, ContinuousQuery.ContinuousQueryListener> listeners = (Map<String, ContinuousQuery.ContinuousQueryListener>) slaveState
+      Map<String, ContinuousQuery.ListenerReference> listeners = (Map<String, ContinuousQuery.ListenerReference>) slaveState
          .get(ContinuousQuery.LISTENERS);
       if (listeners == null) {
          listeners = new HashMap<>();
          slaveState.put(ContinuousQuery.LISTENERS, listeners);
       }
-      listeners.put(testName, cqListener);
-
-      continuousQueryTrait.createContinuousQuery(cacheName, query, cqListener);
+      ContinuousQuery.ListenerReference ref = continuousQueryTrait.createContinuousQuery(cacheName, query, cqListener);
+      listeners.put(testName, ref);
    }
 
    public void unregisterCQ(SlaveState slaveState) {
-      Map<String, ContinuousQuery.ContinuousQueryListener> listeners = (Map<String, ContinuousQuery.ContinuousQueryListener>) slaveState
+      Map<String, ContinuousQuery.ListenerReference> listeners = (Map<String, ContinuousQuery.ListenerReference>) slaveState
          .get(ContinuousQuery.LISTENERS);
       if (listeners != null && listeners.containsKey(testName)) {
-         ContinuousQuery.ContinuousQueryListener cqListener = listeners.get(testName);
-         listeners.remove(testName);
-         continuousQueryTrait.removeContinuousQuery(cacheName, cqListener);
+         ContinuousQuery.ListenerReference ref = listeners.remove(testName);
+         continuousQueryTrait.removeContinuousQuery(cacheName, ref);
       }
    }
 
