@@ -11,14 +11,19 @@ public interface ContinuousQuery {
    public final Operation ENTRY_JOINED = Operation.register(TRAIT + ".EntryJoined");
    public final Operation ENTRY_LEFT = Operation.register(TRAIT + ".EntryLeft");
 
-   void createContinuousQuery(String cacheName, Query query, ContinuousQueryListener cqListener);
+   ListenerReference createContinuousQuery(String cacheName, Query query, Listener cqListener);
 
-   void removeContinuousQuery(String cacheName, Object cqListener);
+   void removeContinuousQuery(String cacheName, ListenerReference listenerReference);
 
-   interface ContinuousQueryListener<K, V> {
+   interface Listener<K, V> {
       void onEntryJoined(K key, V value);
 
       void onEntryLeft(K key);
    }
+
+   /**
+    * Marker interface for implementation-specific data.
+    */
+   interface ListenerReference {}
 
 }

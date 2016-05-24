@@ -20,12 +20,12 @@ public class HazelcastContinuousQuery implements ContinuousQuery {
    }
 
    @Override
-   public void createContinuousQuery(String mapName, Query query, ContinuousQueryListener cqListener) {
+   public ListenerReference createContinuousQuery(String mapName, Query query, Listener cqListener) {
       hazelcastCQListenerId = getMap(mapName).addEntryListener(new HazelcastContinuousQueryListener(cqListener), ((HazelcastQuery) query).getPredicate(), true);
    }
 
    @Override
-   public void removeContinuousQuery(String mapName, Object cqListener) {
+   public void removeContinuousQuery(String mapName, ListenerReference listenerReference) {
       if (hazelcastCQListenerId != null) {
          getMap(mapName).removeEntryListener(hazelcastCQListenerId);
       }
@@ -37,9 +37,9 @@ public class HazelcastContinuousQuery implements ContinuousQuery {
 
    public static class HazelcastContinuousQueryListener implements EntryListener {
 
-      private final ContinuousQueryListener cqListener;
+      private final Listener cqListener;
 
-      public HazelcastContinuousQueryListener(ContinuousQueryListener cqListener) {
+      public HazelcastContinuousQueryListener(Listener cqListener) {
          this.cqListener = cqListener;
       }
 

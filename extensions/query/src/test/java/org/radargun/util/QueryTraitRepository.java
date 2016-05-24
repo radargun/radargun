@@ -188,20 +188,29 @@ public class QueryTraitRepository extends CoreTraitRepository {
 
    public static class ContinuousQuery implements org.radargun.traits.ContinuousQuery {
 
-      private Map<String, ContinuousQueryListener> cacheCqMap = new HashMap<>();
+      private Map<String, Listener> cacheCqMap = new HashMap<>();
 
       @Override
-      public void createContinuousQuery(String cacheName, org.radargun.traits.Query query, org.radargun.traits.ContinuousQuery.ContinuousQueryListener cqListener) {
+      public ListenerReference createContinuousQuery(String cacheName, org.radargun.traits.Query query, Listener cqListener) {
          cacheCqMap.put(cacheName, cqListener);
+         return new QueryTraitRepository.ListenerReference(cqListener);
       }
 
       @Override
-      public void removeContinuousQuery(String cacheName, Object cqListener) {
-         cacheCqMap.remove(cacheName, cqListener);
+      public void removeContinuousQuery(String cacheName, ContinuousQuery.ListenerReference listenerReference) {
+         cacheCqMap.remove(cacheName, ((QueryTraitRepository.ListenerReference) listenerReference).listener);
       }
 
-      public Map<String, ContinuousQueryListener> getCacheCqMap() {
+      public Map<String, Listener> getCacheCqMap() {
          return Collections.unmodifiableMap(cacheCqMap);
+      }
+   }
+
+   private static class ListenerReference implements org.radargun.traits.ContinuousQuery.ListenerReference {
+      private final ContinuousQuery.Listener listener;
+
+      private ListenerReference(org.radargun.traits.ContinuousQuery.Listener listener) {
+         this.listener = listener;
       }
    }
 }
