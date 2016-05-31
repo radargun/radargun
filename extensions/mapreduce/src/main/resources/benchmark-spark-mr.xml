@@ -35,14 +35,13 @@
             <driver xmlns="urn:radargun:plugins:spark:3.0">
                <host>localhost.localdomain</host>
                <port>7077</port>
-               <source-class>org.radargun.service.demo.ispn.WordCountSource</source-class>
-               <source-properties>
-                  <property key="setHotrodServer" value="${hotrodServer:127.0.0.1}" />
-                  <property key="setHotrodPort" value="${hotrodPort:11322}" />
-               </source-properties>
                <properties>
                   <property key="spark.serializer" value="org.apache.spark.serializer.KryoSerializer"/>
                </properties>
+               <map-reduce-source-properties>
+                  <property key="setHotrodServer" value="${hotrodServer:127.0.0.1}" />
+                  <property key="setHotrodPort" value="${hotrodPort:11322}" />
+               </map-reduce-source-properties>
             </driver>
          </setup>
          <!-- Configuration for the ISPN server group-->
@@ -87,6 +86,7 @@
 
       <!-- Execute a Map/Reduce task that counts the words the number of time a word appears in the cache values  -->
       <mapreduce:map-reduce groups="driver"
+                  source-name="org.radargun.service.demo.ispn.WordCountSource"
                   mapper-fqn="org.radargun.service.demo.ispn.WordCountMapper"
                   reducer-fqn="org.radargun.service.demo.ispn.WordCountReducer"
                   print-result="true"

@@ -19,15 +19,6 @@ import org.radargun.utils.Utils;
 @Service(doc = "Class encapsulating Apache Spark driver")
 public class SparkDriverService {
 
-   @Property(doc = "Source class providing JavaRDD. Default is null.")
-   protected String sourceClass;
-
-   @Property(doc = "A list of key-value pairs in the form of " +
-         "methodName:methodParameter;methodName1:methodParameter1' that allows" +
-         " invoking a method on the Source Object. The method" +
-         " must be public and take a String parameter. The default is null.", complexConverter = KeyValueProperty.KeyValuePairListConverter.class)
-   protected List<KeyValueProperty> sourceProperties;
-
    @Property(doc = "Name of the host where master node is deployed. Default is localhost.")
    protected String host = "localhost";
 
@@ -39,6 +30,12 @@ public class SparkDriverService {
 
    @Property(doc = "Custom properties passed to JavaSparkContext. Default is null", complexConverter = KeyValueProperty.KeyValuePairListConverter.class)
    protected List<KeyValueProperty> properties;
+
+   @Property(doc = "A list of key-value pairs in the form of " +
+      "methodName:methodParameter;methodName1:methodParameter1' that allows" +
+      " invoking a method on the Source Object. The method" +
+      " must be public and take a String parameter. The default is null.", complexConverter = KeyValueProperty.KeyValuePairListConverter.class)
+   protected List<KeyValueProperty> mapReduceSourceProperties;
 
    protected JavaSparkContext sparkContext;
 

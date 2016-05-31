@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Matej Cimbora
@@ -28,18 +27,8 @@ public class MapReduceTraitRepository extends CoreTraitRepository {
       }
 
       @Override
-      public Builder builder(String cacheName) {
+      public Builder builder() {
          return new Builder(cache);
-      }
-
-      @Override
-      public boolean supportsResultCacheName() {
-         return true;
-      }
-
-      @Override
-      public boolean supportsIntermediateSharedCache() {
-         return true;
       }
 
       @Override
@@ -52,11 +41,6 @@ public class MapReduceTraitRepository extends CoreTraitRepository {
          return true;
       }
 
-      @Override
-      public boolean supportsDistributedReducePhase() {
-         return true;
-      }
-
       private static class Builder implements org.radargun.traits.MapReducer.Builder {
 
          private ConcurrentHashMap cache;
@@ -66,22 +50,12 @@ public class MapReduceTraitRepository extends CoreTraitRepository {
          }
 
          @Override
-         public org.radargun.traits.MapReducer.Builder distributedReducePhase(boolean distributedReducePhase) {
+         public Builder timeout(long timeout) {
             return this;
          }
 
          @Override
-         public org.radargun.traits.MapReducer.Builder useIntermediateSharedCache(boolean useIntermediateSharedCache) {
-            return this;
-         }
-
-         @Override
-         public org.radargun.traits.MapReducer.Builder timeout(long timeout, TimeUnit unit) {
-            return this;
-         }
-
-         @Override
-         public org.radargun.traits.MapReducer.Builder resultCacheName(String resultCacheName) {
+         public org.radargun.traits.MapReducer.Builder source(String source) {
             return this;
          }
 
@@ -91,22 +65,22 @@ public class MapReduceTraitRepository extends CoreTraitRepository {
          }
 
          @Override
-         public org.radargun.traits.MapReducer.Builder collator(String collatorFqn, Map collatorParameters) {
+         public Builder collator(String collatorFqn, Collection collatorParameters) {
             return this;
          }
 
          @Override
-         public org.radargun.traits.MapReducer.Builder combiner(String combinerFqn, Map combinerParameters) {
+         public Builder combiner(String combinerFqn, Collection combinerParameters) {
             return this;
          }
 
          @Override
-         public org.radargun.traits.MapReducer.Builder reducer(String reducerFqn, Map reducerParameters) {
+         public Builder reducer(String reducerFqn, Collection reducerParameters) {
             return this;
          }
 
          @Override
-         public org.radargun.traits.MapReducer.Builder mapper(String mapperFqn, Map mapperParameters) {
+         public Builder mapper(String mapperFqn, Collection mapperParameters) {
             return this;
          }
       }

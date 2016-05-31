@@ -328,7 +328,7 @@ public class RandomDataStage extends AbstractDistStage {
                            + Utils.prettyPrintTime(durationNanos, TimeUnit.NANOSECONDS));
                      }
                      success = true;
-                     counter = 0;
+                     counter = -1;
                      map.clear();
                      break;
                   } catch (Exception e) {

@@ -2,9 +2,9 @@ package org.radargun.service;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -13,6 +13,7 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import org.radargun.traits.MapReducer;
+import org.radargun.utils.KeyValueProperty;
 import org.radargun.utils.Utils;
 
 /**
@@ -27,18 +28,8 @@ public class SparkMapReduce implements MapReducer, Serializable {
    }
 
    @Override
-   public Builder builder(String cacheName) {
+   public Builder builder() {
       return new Builder(this);
-   }
-
-   @Override
-   public boolean supportsResultCacheName() {
-      return false;
-   }
-
-   @Override
-   public boolean supportsIntermediateSharedCache() {
-      return false;
    }
 
    @Override
@@ -51,12 +42,7 @@ public class SparkMapReduce implements MapReducer, Serializable {
       return false;
    }
 
-   @Override
-   public boolean supportsDistributedReducePhase() {
-      return false;
-   }
-
-   public static class Builder implements MapReducer.Builder {
+   public static class Builder<KOut, VOut, R> implements MapReducer.Builder<KOut, VOut, R> {
 
       private SparkMapReduce sparkMapReduce;
 
@@ -69,34 +55,24 @@ public class SparkMapReduce implements MapReducer, Serializable {
       }
 
       @Override
-      public MapReducer.Builder distributedReducePhase(boolean distributedReducePhase) {
-         throw new UnsupportedOperationException("Distributed reduce phase not supported");
-      }
-
-      @Override
-      public MapReducer.Builder useIntermediateSharedCache(boolean useIntermediateSharedCache) {
-         throw new UnsupportedOperationException("Intermediate shared cache not supported");
-      }
-
-      @Override
-      public MapReducer.Builder timeout(long timeout, TimeUnit unit) {
+      public MapReducer.Builder timeout(long timeout) {
          throw new UnsupportedOperationException("Timeout not supported");
       }
 
       @Override
-      public MapReducer.Builder resultCacheName(String resultCacheName) {
-         throw new UnsupportedOperationException("Result cache name not supported");
+      public MapReducer.Builder source(String source) {
+         try {
+            this.source = Utils.instantiate(source);
+         } catch (Exception e) {
+            throw new IllegalArgumentException("Could not instantiate RDD source class: " + source, e);
+         }
+         Utils.invokeMethodWithProperties(this.source, sparkMapReduce.sparkDriverService.mapReduceSourceProperties);
+         return this;
       }
 
       @Override
       public MapReducer.Task build() {
          final SparkDriverService sparkDriverService = sparkMapReduce.sparkDriverService;
-         try {
-            source = Utils.instantiate(sparkDriverService.sourceClass);
-            source = Utils.invokeMethodWithProperties(source, sparkDriverService.sourceProperties);
-         } catch (Exception e) {
-            throw new IllegalArgumentException("Could not instantiate RDD source class: " + sparkDriverService.sourceClass, e);
-         }
          if (mapper instanceof SparkMapper) {
             return new MapReduceTask((SparkMapper) mapper, (SparkReducer) reducer, (SparkJavaRDDSource) source, sparkDriverService.sparkContext);
          } else if (mapper instanceof SparkPairMapper) {
@@ -108,20 +84,20 @@ public class SparkMapReduce implements MapReducer, Serializable {
       }
 
       @Override
-      public MapReducer.Builder collator(String collatorFqn, Map collatorParameters) {
+      public MapReducer.Builder collator(String collatorFqn, Collection<KeyValueProperty> collatorParameters) {
          throw new UnsupportedOperationException("Collator not supported");
       }
 
       @Override
-      public MapReducer.Builder combiner(String combinerFqn, Map combinerParameters) {
+      public MapReducer.Builder combiner(String combinerFqn, Collection<KeyValueProperty> combinerParameters) {
          throw new UnsupportedOperationException("Combiner not supported");
       }
 
       @Override
-      public MapReducer.Builder reducer(String reducerFqn, Map reducerParameters) {
+      public MapReducer.Builder reducer(String reducerFqn, Collection<KeyValueProperty> reducerParameters) {
          try {
             reducer = Utils.instantiate(reducerFqn);
-            Utils.invokeMethodWithString(reducer, reducerParameters);
+            Utils.invokeMethodWithProperties(reducer, reducerParameters);
          } catch (Exception e) {
             throw new IllegalArgumentException("Could not instantiate Reducer class: " + reducerFqn, e);
          }
@@ -129,10 +105,10 @@ public class SparkMapReduce implements MapReducer, Serializable {
       }
 
       @Override
-      public MapReducer.Builder mapper(String mapperFqn, Map mapperParameters) {
+      public MapReducer.Builder mapper(String mapperFqn, Collection<KeyValueProperty> mapperParameters) {
          try {
             mapper = Utils.instantiate(mapperFqn);
-            Utils.invokeMethodWithString(mapper, mapperParameters);
+            Utils.invokeMethodWithProperties(mapper, mapperParameters);
          } catch (Exception e) {
             throw new IllegalArgumentException("Could not instantiate Mapper class: " + mapperFqn, e);
          }
