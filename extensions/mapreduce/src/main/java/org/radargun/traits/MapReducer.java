@@ -1,13 +1,19 @@
 package org.radargun.traits;
 
+import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.radargun.Operation;
+import org.radargun.utils.KeyValueProperty;
 
 /*
  * TODO: create documentation how M/R tasks should work at all; now we use Infinispan model
  * as this is the only implementation, but we should generalize it here (as it's far from obvious).
+ *
+ * Preferred design: Avoid the need to use plugin-specific classes (e.g. org.infinispan.demo.mapreduce.WordCountMapperEmitPerValue,
+ * org.radargun.service.demo.ispn.WordCountMapper). This makes scenario definition with multiple plugins clumsy to use.
+ * Instead, provide single problem definition (e.g. org.radargun.xxx.WordCountMapper for word count example), which will use high-level api (HLA)
+ * provided by RadarGun. It'll be up to plugins to provide mapping of HLA to product-specific constructs.
  */
 @Trait(doc = "Provides interface for executing Map/Reduce tasks")
 public interface MapReducer<KOut, VOut, R> {
@@ -18,53 +24,21 @@ public interface MapReducer<KOut, VOut, R> {
    interface Builder<KOut, VOut, R> {
       /**
        *
-       * This boolean determines if the Reduce phase of the MapReduceTask is distributed
-       *
-       * @param distributedReducePhase
-       *           if true this task will use distributed reduce phase execution
-       * @return this builder instance
-       * @throws {@link java.lang.UnsupportedOperationException} if {@link #supportsDistributedReducePhase()} returns false
-       */
-      Builder<KOut, VOut, R> distributedReducePhase(boolean distributedReducePhase);
-
-      /**
-       *
-       * This boolean determines if intermediate results of the MapReduceTask are shared
-       *
-       * @param useIntermediateSharedCache
-       *           if true this tasks will share intermediate value cache with other executing
-       *           MapReduceTasks on the grid. Otherwise, if false, this task will use its own
-       *           dedicated cache for intermediate values
-       * @return this builder instance
-       * @throws {@link java.lang.UnsupportedOperationException} if {@link #supportsIntermediateSharedCache()} returns false
-       */
-      Builder<KOut, VOut, R> useIntermediateSharedCache(boolean useIntermediateSharedCache);
-
-      /**
-       *
-       * Set a timeout for the communication between the nodes during a Map Reduce task. Setting this
+       * Set a timeout (ms) for the communication between the nodes during a Map Reduce task. Setting this
        * value to zero or less than zero means to wait forever.
        *
        * @param timeout
        *           the value of the timeout
-       * @param unit
-       *           the unit of the timeout value
-       * @return this builder instance
        * @throws {@link java.lang.UnsupportedOperationException} if {@link #supportsTimeout()} returns false
        */
-      Builder<KOut, VOut, R> timeout(long timeout, TimeUnit unit);
-
+      Builder<KOut, VOut, R> timeout(long timeout);
 
       /**
-       *
-       * Set the name of the result cache. If the service supports it, then the results of the
-       * <code>executeMapReduceTask</code> mthod will be stored in this cache.
-       *
-       * @param resultCacheName
+       * @param source
+       *           Name of the source to execute map-reduce task on. Interpretation is implementation-specific.
        * @return this builder instance
-       * @throws {@link java.lang.UnsupportedOperationException} if {@link #supportsResultCacheName()} returns false
        */
-      Builder<KOut, VOut, R> resultCacheName(String resultCacheName);
+      Builder<KOut, VOut, R> source(String source);
 
       /**
        * @param mapperFqn
@@ -74,7 +48,7 @@ public interface MapReducer<KOut, VOut, R> {
        *           parameters for the Mapper object
        * @return this builder instance
        */
-      Builder<KOut, VOut, R> mapper(String mapperFqn, Map<String, String> mapperParameters);
+      Builder<KOut, VOut, R> mapper(String mapperFqn, Collection<KeyValueProperty> mapperParameters);
 
       /**
        * @param reducerFqn
@@ -85,7 +59,7 @@ public interface MapReducer<KOut, VOut, R> {
        *           parameters for the Reducer object
        * @return this builder instance
        */
-      Builder<KOut, VOut, R> reducer(String reducerFqn, Map<String, String> reducerParameters);
+      Builder<KOut, VOut, R> reducer(String reducerFqn, Collection<KeyValueProperty> reducerParameters);
 
       /**
        *
@@ -99,7 +73,7 @@ public interface MapReducer<KOut, VOut, R> {
        * @return this builder instance
        * @throws {@link java.lang.UnsupportedOperationException} if {@link #supportsCombiner()} returns false
        */
-      Builder<KOut, VOut, R> combiner(String combinerFqn, Map<String, String> combinerParameters);
+      Builder<KOut, VOut, R> combiner(String combinerFqn, Collection<KeyValueProperty> combinerParameters);
 
       /**
        *
@@ -111,7 +85,7 @@ public interface MapReducer<KOut, VOut, R> {
        * @param collatorParameters
        *           parameters for the Collator object
        */
-      Builder<KOut, VOut, R> collator(String collatorFqn, Map<String, String> collatorParameters);
+      Builder<KOut, VOut, R> collator(String collatorFqn, Collection<KeyValueProperty> collatorParameters);
 
       /**
        * @return The task to be executed
@@ -139,21 +113,10 @@ public interface MapReducer<KOut, VOut, R> {
    }
 
    /**
-    * Create a new builder that will start a task on given cache.
-    * @param cacheName
+    * Create a new builder.
     * @return the builder instance
     */
-   Builder<KOut, VOut, R> builder(String cacheName);
-
-   /**
-    * @return <code>true</code> if the trait supports setting the result cache name, else <code>false</code>
-    */
-   boolean supportsResultCacheName();
-
-   /**
-    * @return <code>true</code> if the trait supports intermediate cache, else <code>false</code>
-    */
-   boolean supportsIntermediateSharedCache();
+   Builder<KOut, VOut, R> builder();
 
    /**
     * @return <code>true</code> if the trait supports using combiner, else <code>false</code>
@@ -164,10 +127,5 @@ public interface MapReducer<KOut, VOut, R> {
     * @return <code>true</code> if the trait supports setting the timeout, else <code>false</code>
     */
    boolean supportsTimeout();
-
-   /**
-    * @return <code>true</code> if the trait supports distributed reduce, else <code>false</code>
-    */
-   boolean supportsDistributedReducePhase();
 
 }

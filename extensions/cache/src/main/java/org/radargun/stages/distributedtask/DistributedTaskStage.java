@@ -1,6 +1,7 @@
 package org.radargun.stages.distributedtask;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,7 @@ import org.radargun.traits.CacheInformation;
 import org.radargun.traits.Clustered;
 import org.radargun.traits.DistributedTaskExecutor;
 import org.radargun.traits.InjectTrait;
+import org.radargun.utils.KeyValueProperty;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
@@ -45,10 +47,11 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
       + "java.util.concurrent.Callable implementation to execute.")
    public String callable;
 
-   @Property(doc = "A String in the form of "
+   @Property(doc = "A list of key-value pairs in the form of "
       + "'methodName:methodParameter;methodName1:methodParameter1' that allows"
-      + " invoking a method on the callable. The method must be public and take a String parameter. Default is none.")
-   public String callableParams;
+      + " invoking a method on the callable. The method must be public and take a String parameter. Default is none.",
+      complexConverter = KeyValueProperty.KeyValuePairListConverter.class)
+   public Collection<KeyValueProperty> callableParams;
 
    @Property(doc = "The name of the execution policy. The default is default policy of the service.")
    public String executionPolicy;
@@ -125,7 +128,7 @@ public class DistributedTaskStage<K, V, T> extends AbstractDistStage {
       stats.begin();
       for (int i = 0; i < numExecutions; i++) {
          Callable<T> callable = Utils.instantiate(this.callable);
-         callable = Utils.invokeMethodWithString(callable, Utils.parseParams(callableParams));
+         callable = Utils.invokeMethodWithProperties(callable, callableParams);
 
          DistributedTaskExecutor.Builder<T> builder = executor.builder(null).callable(callable);
          if (executionPolicy != null)

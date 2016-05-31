@@ -12,7 +12,9 @@
     <configurations>
         <config name="Infinispan 7.0 - distributed">
             <setup plugin="infinispan70">
-                <embedded xmlns="urn:radargun:plugins:infinispan70:3.0" file="dist-sync.xml"/>
+                <embedded xmlns="urn:radargun:plugins:infinispan70:3.0" file="dist-sync.xml"
+                map-reduce-distributed-reduce-phase="true"
+                map-reduce-use-intermediate-shared-cache="true"/>
             </setup>
         </config>
     </configurations>
@@ -33,22 +35,22 @@
                 string-data="true"
                 limit-word-count="true"
                 share-words="true"
-                max-word-count="${max_word_count:100}"/>
+                max-word-count="${max_word_count:100}"
+                bucket="testCache"
+        />
 
         <!-- Execute a Map/Reduce task that counts the words the number of time a word appears in the cache values  -->
         <mapreduce:map-reduce
+                source-name="testCache"
                 mapper-fqn="org.infinispan.demo.mapreduce.WordCountMapperEmitPerValue"
                 reducer-fqn="org.infinispan.demo.mapreduce.WordCountReducer"
                 combiner-fqn="org.infinispan.demo.mapreduce.WordCountReducer"
                 print-result="${print_results:true}"
-                distribute-reduce-phase="true"
-                use-intermediate-shared-cache="true"
                 timeout="60000"
                 num-executions="${num_executions:5}"
-                cache-name="testCache"
-                store-result-in-cache="${store_in_cache:false}"
                 slaves="0"
-        />
+        >
+        </mapreduce:map-reduce>
 
         <!-- Stop services on all nodes -->
         <service-stop />

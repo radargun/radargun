@@ -221,24 +221,18 @@ public class HotRodOperations implements BasicOperations, BulkOperations, Condit
       public Map<K, V> getAll(Set<K> keys) {
          if (trace) log.tracef("GET_ALL cache=%s keys=%s", forceReturn.getName(), keys);
          Map<K, V> result = new HashMap<>(keys.size());
-         if (preferAsync) {
-            Map<K, Future<V>> futureMap = new HashMap<>(keys.size());
-            for (K key : keys) {
-               futureMap.put(key, forceReturn.getAsync(key));
-            }
-            for (Map.Entry<K, Future<V>> entry : futureMap.entrySet()) {
-               try {
-                  V value = entry.getValue().get();
-                  if (value != null) {
-                     result.put(entry.getKey(), value);
-                  }
-               } catch (Exception e) {
-                  throw new RuntimeException(e);
+         Map<K, Future<V>> futureMap = new HashMap<>(keys.size());
+         for (K key : keys) {
+            futureMap.put(key, forceReturn.getAsync(key));
+         }
+         for (Map.Entry<K, Future<V>> entry : futureMap.entrySet()) {
+            try {
+               V value = entry.getValue().get();
+               if (value != null) {
+                  result.put(entry.getKey(), value);
                }
-            }
-         } else {
-            for (K key : keys) {
-               result.put(key, forceReturn.get(key));
+            } catch (Exception e) {
+               throw new RuntimeException(e);
             }
          }
          return result;
@@ -248,7 +242,17 @@ public class HotRodOperations implements BasicOperations, BulkOperations, Condit
       public void putAll(Map<K, V> entries) {
          if (trace) log.tracef("PUT_ALL cache=%s keys=%s", noReturn.getName(), entries);
          if (preferAsync) {
-            noReturn.putAllAsync(entries);
+            Map<K, Future<V>> futures = new HashMap<K, Future<V>>(entries.size());
+            for (Map.Entry<K, V> entry : entries.entrySet()) {
+               futures.put(entry.getKey(), noReturn.putAsync(entry.getKey(), entry.getValue()));
+            }
+            for (Map.Entry<K, Future<V>> entry : futures.entrySet()) {
+               try {
+                  entry.getValue().get();
+               } catch (Exception e) {
+                  throw new RuntimeException(e);
+               }
+            }
          } else {
             noReturn.putAll(entries);
          }
