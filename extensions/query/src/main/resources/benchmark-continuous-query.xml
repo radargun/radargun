@@ -3,15 +3,20 @@
     <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
 
     <clusters>
-        <scale from="1" to="2">
+        <scale from="2" to="2">
             <cluster/>
         </scale>
     </clusters>
 
     <configurations>
-        <config name="ContinuousQuery">
+        <config name="ContinuousQuery80">
             <setup plugin="infinispan80">
                 <default xmlns="urn:radargun:plugins:infinispan80:3.0" file="query.xml"/>
+            </setup>
+        </config>
+        <config name="ContinuousQuery90">
+            <setup plugin="infinispan90">
+                <default xmlns="urn:radargun:plugins:infinispan90:3.0" file="query.xml"/>
             </setup>
         </config>
     </configurations>
@@ -41,15 +46,15 @@
         <!-- Insert various items into the cache, some of them should match the query  -->
         <basic-operations-test-setup xmlns="urn:radargun:stages:cache:3.0"
                                      test-name="stress-test"
-                                     num-entries="10000">
+                                     num-entries="1000">
             <key-generator>
                 <timestamp/>
             </key-generator>
             <value-generator>
                 <sentence file="${org.radargun.query.dictionary:/test-data/animals.txt}"/>
             </value-generator>
-            <put interval="1" invocations="2"/>
-            <remove interval="1" invocations="1"/>
+            <put interval="20" invocations="2"/>
+            <remove interval="10" invocations="1"/>
         </basic-operations-test-setup>
         <test test-name="stress-test" amend-test="true" finish="false" duration="1m">
             <statistics>
