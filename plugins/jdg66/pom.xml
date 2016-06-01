@@ -29,7 +29,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>6.4.0.Final-redhat-1</version.infinispan>
+            <version.infinispan>6.4.0.Final-redhat-4</version.infinispan>
          </properties>
       </profile>
       <profile>
