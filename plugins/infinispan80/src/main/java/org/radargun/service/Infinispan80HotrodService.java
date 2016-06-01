@@ -2,6 +2,7 @@ package org.radargun.service;
 
 import org.infinispan.protostream.SerializationContext;
 import org.radargun.Service;
+import org.radargun.traits.ContinuousQuery;
 import org.radargun.traits.ProvidesTrait;
 
 /**
@@ -16,7 +17,7 @@ public class Infinispan80HotrodService extends Infinispan71HotrodService {
    }
 
    @ProvidesTrait
-   public InfinispanHotrodContinuousQuery createContinuousQuery() {
+   public ContinuousQuery createContinuousQuery() {
       return new InfinispanHotrodContinuousQuery(this);
    }
 
