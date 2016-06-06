@@ -4,6 +4,7 @@ import com.hazelcast.core.EntryEvent;
 import com.hazelcast.core.EntryListener;
 import com.hazelcast.core.IMap;
 import com.hazelcast.core.MapEvent;
+
 import org.radargun.traits.ContinuousQuery;
 import org.radargun.traits.Query;
 
@@ -21,12 +22,14 @@ public class HazelcastContinuousQuery implements ContinuousQuery {
 
    @Override
    public ListenerReference createContinuousQuery(String mapName, Query query, Listener cqListener) {
-      hazelcastCQListenerId = getMap(mapName).addEntryListener(new HazelcastContinuousQueryListener(cqListener), ((HazelcastQuery) query).getPredicate(), true);
+      EntryListener entryListener = new HazelcastContinuousQueryListener(cqListener);
+      hazelcastCQListenerId = getMap(mapName).addEntryListener(entryListener, ((HazelcastQuery) query).getPredicate(), true);
+      return new ListenerReference(cqListener, entryListener, hazelcastCQListenerId);
    }
 
    @Override
-   public void removeContinuousQuery(String mapName, ListenerReference listenerReference) {
-      if (hazelcastCQListenerId != null) {
+   public void removeContinuousQuery(String mapName, ContinuousQuery.ListenerReference listenerReference) {
+      if (((HazelcastContinuousQuery.ListenerReference)listenerReference).listenerId != null) {
          getMap(mapName).removeEntryListener(hazelcastCQListenerId);
       }
    }
@@ -70,6 +73,19 @@ public class HazelcastContinuousQuery implements ContinuousQuery {
 
       @Override
       public void mapEvicted(MapEvent mapEvent) {
+      }
+   }
+   
+   private static class ListenerReference implements ContinuousQuery.ListenerReference {
+      private final Listener listener;
+      private final EntryListener entryListener;
+      private final String listenerId;
+      
+
+      private ListenerReference(Listener listener, EntryListener entryListener, String listenerId) {
+         this.listener = listener;
+         this.entryListener = entryListener;
+         this.listenerId = listenerId;
       }
    }
 }

@@ -18,30 +18,29 @@ public class JDGHotrodContinuousQuery implements ContinuousQuery {
    }
 
    @Override
-   public void createContinuousQuery(String cacheName, Query query, ContinuousQueryListener cqListener) {
+   public ListenerReference createContinuousQuery(String cacheName, Query query, ContinuousQuery.Listener cqListener) {
       AbstractInfinispanQueryable.QueryImpl ispnQuery = (AbstractInfinispanQueryable.QueryImpl) query;
-      HotRodContinuousQueryListener ispnCqListener = new HotRodContinuousQueryListener(cqListener);
-      clientListener = ClientEvents.addContinuousQueryListener(getRemoteCache(cacheName), ispnCqListener,
-            ispnQuery.getDelegatingQuery());
+      Listener ispnCqListener = new Listener(cqListener);
+      Object clientListener = ClientEvents.addContinuousQueryListener(getRemoteCache(cacheName), ispnCqListener, ispnQuery.getDelegatingQuery());
+      return new ListenerReference(clientListener);
    }
 
    @Override
-   public void removeContinuousQuery(String cacheName, Object cqListener) {
-      if (clientListener != null) {
-         getRemoteCache(cacheName).removeClientListener(cqListener);
-      }
+   public void removeContinuousQuery(String cacheName, ContinuousQuery.ListenerReference listenerReference) {
+      ListenerReference ref = (ListenerReference) listenerReference;
+      getRemoteCache(cacheName).removeClientListener(ref.clientListener);
    }
 
    protected RemoteCache getRemoteCache(String cacheName) {
       return cacheName == null ? service.managerNoReturn.getCache() : service.managerNoReturn.getCache(cacheName);
    }
 
-   public static class HotRodContinuousQueryListener
+   public static class Listener
          implements org.infinispan.client.hotrod.event.ContinuousQueryListener {
 
-      private final ContinuousQueryListener cqListener;
+      private final ContinuousQuery.Listener cqListener;
 
-      public HotRodContinuousQueryListener(ContinuousQueryListener cqListener) {
+      public Listener(ContinuousQuery.Listener cqListener) {
          this.cqListener = cqListener;
       }
 
@@ -53,6 +52,14 @@ public class JDGHotrodContinuousQuery implements ContinuousQuery {
       @Override
       public void resultLeaving(Object key) {
          cqListener.onEntryLeft(key);
+      }
+   }
+   
+   private static class ListenerReference implements ContinuousQuery.ListenerReference {
+      private final Object clientListener;
+
+      private ListenerReference(Object clientListener) {
+         this.clientListener = clientListener;
       }
    }
 }
