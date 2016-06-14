@@ -68,6 +68,11 @@ public interface Statistics extends Serializable {
    String getOperationsGroup(Operation operation);
 
    /**
+    * @return Map all registered groups and their corresponding operations
+    */
+   Map<String, Set<Operation>> getGroupOperationsMap();
+
+   /**
     * Add the measurements collected into another instance to this instance.
     * @param otherStats Must be of the same class as this instance.
     */

@@ -1,32 +1,21 @@
 package org.radargun.stages.cache.test;
 
-import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.radargun.DistStageAck;
 import org.radargun.StageResult;
-import org.radargun.config.Converter;
-import org.radargun.config.DefinitionElement;
 import org.radargun.config.Property;
-import org.radargun.config.PropertyHelper;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.test.OperationLogic;
 import org.radargun.stages.test.Stressor;
-import org.radargun.stages.test.TestStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
-import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
-import org.radargun.utils.NumberConverter;
-import org.radargun.utils.ObjectConverter;
 import org.radargun.utils.Projections;
-import org.radargun.utils.ReflexiveConverters;
 
 /**
  * Executes Queries using Infinispan-Query API against the cache.
@@ -83,7 +72,7 @@ public class QueryStage extends AbstractQueryStage {
       public final int queryResultSize;
 
       public QueryAck(SlaveState slaveState, List<List<Statistics>> iterations, int queryResultSize) {
-         super(slaveState, iterations);
+         super(slaveState, iterations, null);
          this.queryResultSize = queryResultSize;
       }
    }

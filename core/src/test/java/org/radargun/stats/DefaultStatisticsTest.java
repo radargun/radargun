@@ -89,40 +89,4 @@ public class DefaultStatisticsTest {
       Assert.assertTrue(operationStatsForGroups.containsKey("testGroup2"));
    }
 
-   public void testMergeStats() {
-      DefaultStatistics statistics1 = new DefaultStatistics(new DefaultOperationStats());
-      Operation operation1 = Operation.register("testOp1");
-
-      statistics1.registerOperationsGroup("testGroup1", new HashSet<>(Arrays.asList(operation1)));
-      statistics1.registerRequest(1, operation1);
-
-      DefaultStatistics statistics2 = new DefaultStatistics(new DefaultOperationStats());
-      Operation operation2 = Operation.register("testOp2");
-
-      statistics2.registerOperationsGroup("testGroup2", new HashSet<>(Arrays.asList(operation2)));
-      statistics2.registerRequest(2, operation2);
-
-      Map<String, OperationStats> operationStatsForGroups1 = statistics1.getOperationStatsForGroups();
-      Assert.assertNotNull(operationStatsForGroups1);
-      Assert.assertEquals(operationStatsForGroups1.size(), 1);
-
-      statistics1.merge(statistics2);
-
-      operationStatsForGroups1 = statistics1.getOperationStatsForGroups();
-      Assert.assertNotNull(operationStatsForGroups1);
-      Assert.assertEquals(operationStatsForGroups1.size(), 2);
-
-      DefaultStatistics statistics3 = new DefaultStatistics(new DefaultOperationStats());
-      Operation operation3 = Operation.register("testOp3");
-
-      // the same group with different op
-      statistics3.registerOperationsGroup("testGroup2", new HashSet<>(Arrays.asList(operation3)));
-      statistics3.registerRequest(3, operation3);
-
-      statistics1.merge(statistics3);
-
-      operationStatsForGroups1 = statistics1.getOperationStatsForGroups();
-      Assert.assertNotNull(operationStatsForGroups1);
-      Assert.assertEquals(operationStatsForGroups1.size(), 2);
-   }
 }

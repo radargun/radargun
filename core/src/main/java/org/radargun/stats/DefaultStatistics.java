@@ -1,13 +1,9 @@
 package org.radargun.stats;
 
 import java.lang.reflect.Array;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,6 +26,11 @@ public class DefaultStatistics extends IntervalStatistics {
 
    @Property(name = "operationStats", doc = "Operation statistics prototype.", complexConverter = OperationStats.Converter.class)
    protected OperationStats prototype = new DefaultOperationStats();
+
+   @Override
+   public Map<String, Set<Operation>> getGroupOperationsMap() {
+      return groupOperationsMap;
+   }
 
    public static Statistics merge(Collection<Statistics> set) {
       if (set.size() == 0) {
@@ -146,20 +147,6 @@ public class DefaultStatistics extends IntervalStatistics {
          for (int i = 0; i < stats.operationStats.length; ++i) {
             operationStats[i].merge(stats.operationStats[i]);
          }
-      }
-      for (Map.Entry<String, Set<Operation>> entryOtherStats : ((DefaultStatistics) otherStats).groupOperationsMap.entrySet()) {
-         if (!groupOperationsMap.containsKey(entryOtherStats.getKey())) {
-            groupOperationsMap.put(entryOtherStats.getKey(), new HashSet<Operation>());
-         }
-         groupOperationsMap.get(entryOtherStats.getKey()).addAll(entryOtherStats.getValue());
-      }
-      for (Map.Entry<Operation, String> entryOtherStats : ((DefaultStatistics) otherStats).operationGroupMap.entrySet()) {
-         String groupThisStats = operationGroupMap.get(entryOtherStats.getKey());
-         if (groupThisStats != null && !groupThisStats.equals(entryOtherStats.getValue())) {
-            throw new IllegalStateException(String.format("Operation %s was already registered with different group %s, expected %s",
-                                                          entryOtherStats.getKey(), entryOtherStats.getValue(), groupThisStats));
-         }
-         operationGroupMap.put(entryOtherStats.getKey(), entryOtherStats.getValue());
       }
    }
 

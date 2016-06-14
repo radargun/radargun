@@ -126,6 +126,11 @@ public class PeriodicStatistics extends IntervalStatistics implements IterationD
    }
 
    @Override
+   public Map<String, Set<Operation>> getGroupOperationsMap() {
+      return prototype.getGroupOperationsMap();
+   }
+
+   @Override
    public Map<String, OperationStats> getOperationStatsForGroups() {
       throw new UnsupportedOperationException();
    }

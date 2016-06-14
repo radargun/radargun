@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 
+import org.radargun.Operation;
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
 import org.radargun.config.Definition;
@@ -130,10 +131,19 @@ public class Report implements Comparable<Report>, Serializable {
       public final String name;
       public final String iterationsName;
       private ArrayList<TestIteration> iterations = new ArrayList<TestIteration>();
+      private Map<String, Set<Operation>> groupOperationsMap;
 
       private Test(String name, String iterationsName) {
          this.name = name;
          this.iterationsName = iterationsName;
+      }
+
+      public void setGroupOperationsMap(Map<String, Set<Operation>> groupOperationsMap) {
+         this.groupOperationsMap = groupOperationsMap;
+      }
+
+      public Map<String, Set<Operation>> getGroupOperationsMap() {
+         return groupOperationsMap;
       }
 
       /**

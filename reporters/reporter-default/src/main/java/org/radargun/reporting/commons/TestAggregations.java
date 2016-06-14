@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.radargun.Operation;
 import org.radargun.config.Cluster;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -109,6 +110,11 @@ public class TestAggregations {
       if (totalStats == null) {
          log.warn("There are no stats for this iteration");
       } else {
+         if (test.getGroupOperationsMap() != null) {
+            for (Map.Entry<String, Set<Operation>> op : test.getGroupOperationsMap().entrySet()) {
+               totalStats.registerOperationsGroup(op.getKey(), op.getValue());
+            }
+         }
          iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats, totalThreads, it));
          for (Map.Entry<String, OperationStats> op : totalStats.getOperationsStats().entrySet()) {
             if (!op.getValue().isEmpty()) operations.add(op.getKey());
