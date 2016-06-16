@@ -196,6 +196,7 @@ public class AbstractLogLogicTest {
       }
       llc.enabled = true;
       BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(new SlaveState(), "test");
+      manager.getSlaveState().setSlaveIndex(0);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "generalConfiguration", gc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "legacyLogicConfiguration", lc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "logLogicConfiguration", llc);

@@ -6,32 +6,29 @@ package org.radargun;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public final class StageResult {
+public enum StageResult {
    /**
     * Continue with next stage (this stage was successful).
     */
-   public static final StageResult SUCCESS = new StageResult();
+   SUCCESS,
    /**
     * Fail current scenario (this stage was not successful).
     */
-   public static final StageResult FAIL = new StageResult();
+   FAIL,
    /**
     * Fail current scenario and do not execute scenarios with any further configurations.
     */
-   public static final StageResult EXIT = new StageResult();
+   EXIT,
 
    /**
     * Break the innermost repeat
     */
-   public static final StageResult BREAK = new StageResult();
+   BREAK,
 
    /**
     * Continue with the next cycle of the innermost repeat
     */
-   public static final StageResult CONTINUE = new StageResult();
-
-   private StageResult() {
-   }
+   CONTINUE;
 
    public boolean isError() {
       return this == FAIL || this == EXIT;
