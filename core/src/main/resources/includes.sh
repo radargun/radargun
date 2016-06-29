@@ -9,6 +9,8 @@
 #
 # as a "side effect", the snippet also sets the RADARGUN_HOME environment variable.
 
+command -v pgrep >/dev/null 2>&1 || { echo >&2 "This script requires pgrep, but it's not installed.  Aborting."; exit 1; }
+
 welcome() {
   SCRIPTNAME=`basename ${0}`
   echo "=== Radargun: ${SCRIPTNAME} ==="
@@ -93,4 +95,38 @@ get_port() {
 get_host() {
   HOST_PORT=$1
   HOST=`echo $HOST_PORT | sed -e 's/:.*$//g' -e 's/^\s*//g'`
+}
+
+tail_log() {
+   #
+   # Bash log tailer
+   # Param 1 - log file
+   # Param 2 - String in the log file. When it is found, the tail process is killed
+   #
+
+   tail -f ${1} | while true
+   do
+      # Read from stdin with a 10 min timeout
+      IFS= read -r -t 600 -u 0
+      if (($? == 0))
+      then
+         echo "${REPLY}"
+         if [[ "${REPLY}" =~ ${2} ]]
+         then
+             kill -9 `pgrep -P $$ tail`
+             break
+         fi
+
+      fi
+      # Timeout occurred
+      if (($? > 128))
+      then
+         # Kill tail if no java process spawned from the shell script is found
+         if ! pgrep -P $$ java
+         then
+            kill -9 `pgrep -P $$ tail`
+         fi
+      fi
+   done
+   return 0
 }

@@ -184,8 +184,8 @@ echo "Master's PID is $RADARGUN_MASTER_PID running on ${HOST_NAME}"
 echo $RADARGUN_MASTER_PID > master.pid
 if [ $TAILF == "true" ]
 then
-  touch radargun.log
-  tail -f radargun.log --pid $RADARGUN_MASTER_PID
+  touch ${OUT_FILE}
+  tail_log ${OUT_FILE} "Master process is being shutdown"
 fi
 
 if [ $WAIT == "true" ]
@@ -195,4 +195,3 @@ then
   echo "Master $RADARGUN_MASTER_PID finished with value $EXIT_VALUE"
   exit $EXIT_VALUE
 fi
-
