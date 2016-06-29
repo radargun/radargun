@@ -14,11 +14,16 @@ import java.util.regex.Pattern;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
+import org.radargun.utils.NumberConverter;
 import org.radargun.utils.ReflexiveConverters;
 import org.radargun.utils.SizeConverter;
 
 /**
- * Holds VM arguments configuration.
+ * Holds VM arguments configuration. Options descriptions are here:
+ * http://docs.oracle.com/javase/8/docs/technotes/tools/unix/java.html All options are here:
+ * http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/tip/src/share/vm/runtime/globals.hpp Another
+ * good resource:
+ * http://stas-blogspot.blogspot.com/2011/07/most-complete-list-of-xx-options-for.html
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -26,7 +31,10 @@ public class VmArgs implements Serializable {
    private static final Log log = LogFactory.getLog(VmArgs.class);
 
    @Property(doc = "Ignore all VM arguments passed to slave and use only those specified here. Default is false.")
-   private boolean ignoreDefault = false;
+   private Boolean ignoreDefault = false;
+
+   @Property(doc = "Print all VM arguments. Default is false.")
+   private Boolean printFlagsFinal = false;
 
    @PropertyDelegate(prefix = "memory.")
    private Memory memory = new Memory();
@@ -43,16 +51,17 @@ public class VmArgs implements Serializable {
    @PropertyDelegate(prefix = "class-loading.")
    private ClassLoading classLoading = new ClassLoading();
 
-   @Property(name="unlock-diagnostic-vm-options", doc = "Unlock diagnostic VM options. Some other VM options may trigger this automically.")
+   @Property(name = "unlock-diagnostic-vm-options", doc = "Unlock diagnostic VM options. Some other VM options may trigger this automically.")
    private Boolean unlockDiagnosticVMOptions;
 
-   // TODO: add more properties
+   @Property(name = "unlock-experimental-vm-options", doc = "Unlock Experimental VM options.")
+   private Boolean unlockExperimentalVMOptions = false;
 
    @Property(doc = "Properties (-Dfoo=bar)", complexConverter = Prop.Converter.class)
-   private List<Prop> properties = Collections.EMPTY_LIST;
+   private List<Prop> properties = Collections.emptyList();
 
    @Property(doc = "Custom arguments.", complexConverter = Custom.Converter.class)
-   private List<Custom> customArguments = Collections.EMPTY_LIST;
+   private List<Custom> customArguments = Collections.emptyList();
 
    public List<String> getVmArgs(Collection<String> defaultVmArgs) {
       List<String> vmArgs = ignoreDefault ? new LinkedList<String>() : new LinkedList<>(defaultVmArgs);
@@ -79,6 +88,12 @@ public class VmArgs implements Serializable {
       if (unlockDiagnosticVMOptions != null) {
          set(vmArgs, "UnlockDiagnosticVMOptions", unlockDiagnosticVMOptions);
       }
+      if (unlockExperimentalVMOptions) {
+         set(vmArgs, "UnlockExperimentalVMOptions", unlockExperimentalVMOptions);
+      }
+      if (printFlagsFinal) {
+         set(vmArgs, "PrintFlagsFinal", printFlagsFinal);
+      }
       for (Path path : properties) {
          try {
             Object value = path.get(this);
@@ -99,7 +114,7 @@ public class VmArgs implements Serializable {
    }
 
    private static void replace(List<String> args, String prefix, String value) {
-      for (Iterator<String> it = args.iterator(); it.hasNext(); ) {
+      for (Iterator<String> it = args.iterator(); it.hasNext();) {
          String arg = it.next();
          if (arg.startsWith(prefix)) {
             it.remove();
@@ -110,7 +125,7 @@ public class VmArgs implements Serializable {
 
    private static void set(List<String> args, String option, boolean on) {
       Pattern pattern = Pattern.compile("-XX:." + option);
-      for (Iterator<String> it = args.iterator(); it.hasNext(); ) {
+      for (Iterator<String> it = args.iterator(); it.hasNext();) {
          String arg = it.next();
          if (pattern.matcher(arg).matches()) {
             it.remove();
@@ -120,12 +135,14 @@ public class VmArgs implements Serializable {
    }
 
    private static void ensureArg(Collection<String> args, String arg) {
-      if (!args.contains(arg)) args.add(arg);
+      if (!args.contains(arg))
+         args.add(arg);
    }
 
    @Retention(RetentionPolicy.RUNTIME)
    @Target(ElementType.FIELD)
-   private @interface RequireDiagnostic {}
+   private @interface RequireDiagnostic {
+   }
 
    public interface VmArg extends Serializable {
       /* Override arguments */
@@ -139,10 +156,37 @@ public class VmArgs implements Serializable {
       @Property(doc = "Min memory", converter = SizeConverter.class)
       private Long min;
 
+      @Property(doc = "Initial size of the young generation", converter = SizeConverter.class)
+      private Long newSize;
+
+      @Property(doc = "Maximum size of the young generation", converter = SizeConverter.class)
+      private Long maxNewSize;
+
+      @Property(doc = "Thread stack size", converter = SizeConverter.class)
+      private Long threadStackSize;
+
+      @Property(doc = "Sets the ratio between young and old generation sizes", converter = NumberConverter.class)
+      private Integer newRatio;
+
+      @Property(doc = "Enables the use of large page memory.")
+      private Boolean useLargePages;
+
       @Override
       public void setArgs(List<String> args) {
-         if (min != null) replace(args, "-Xms", String.valueOf(min));
-         if (max != null) replace(args, "-Xmx", String.valueOf(max));
+         if (min != null)
+            replace(args, "-Xms", String.valueOf(min));
+         if (max != null)
+            replace(args, "-Xmx", String.valueOf(max));
+         if (newSize != null)
+            replace(args, "-XX:NewSize=", String.valueOf(newSize));
+         if (maxNewSize != null)
+            replace(args, "-XX:MaxNewSize=", String.valueOf(maxNewSize));
+         if (threadStackSize != null)
+            replace(args, "-Xss", String.valueOf(threadStackSize));
+         if (newRatio != null)
+            replace(args, "-XX:NewRatio=", String.valueOf(newRatio));
+         if (useLargePages != null)
+            set(args, "UseLargePages", useLargePages);
       }
    }
 
@@ -158,10 +202,13 @@ public class VmArgs implements Serializable {
 
       @Override
       public void setArgs(List<String> args) {
-         if (!enabled) return;
+         if (!enabled)
+            return;
          StringBuilder recordingParams = new StringBuilder("=compress=false,delay=10s,duration=24h");
-         if (filename != null) recordingParams.append(",filename=").append(filename);
-         if (settings != null) recordingParams.append(",settings=").append(settings);
+         if (filename != null)
+            recordingParams.append(",filename=").append(filename);
+         if (settings != null)
+            recordingParams.append(",settings=").append(settings);
          ensureArg(args, "-XX:+UnlockCommercialFeatures");
          ensureArg(args, "-XX:+FlightRecorder");
          replace(args, "-XX:StartFlightRecording", recordingParams.toString());
@@ -170,7 +217,7 @@ public class VmArgs implements Serializable {
 
    @DefinitionElement(name = "custom", doc = "Custom argument to VM.")
    private static class Custom implements VmArg {
-      @Property(doc = "Argument as pasted on command-line")
+      @Property(doc = "Argument as pasted on command-line", optional = false)
       private String arg;
 
       @Override
@@ -181,30 +228,110 @@ public class VmArgs implements Serializable {
 
       private static class Converter extends ReflexiveConverters.ListConverter {
          public Converter() {
-            super(new Class[] {Custom.class});
+            super(new Class[] { Custom.class });
          }
       }
    }
 
    private class Gc implements VmArg {
       @Property(doc = "Verbose GC log.")
-      Boolean printGc;
+      private Boolean printGc;
 
       @Property(doc = "Print more information about the GC.")
-      Boolean printGcDetails;
+      private Boolean printGcDetails;
 
       @Property(doc = "Print timestamps of the GC.")
-      Boolean printGcTimestamps;
+      private Boolean printGcTimestamps;
 
       @Property(doc = "Log file")
-      String logFile;
+      private String logFile;
+
+      @Property(doc = "Enables the use of the parallel scavenge garbage collector (also known "
+            + "as the throughput collector) to improve the performance of your application by "
+            + "leveraging multiple processors.")
+      private Boolean useParallelGC;
+
+      @Property(doc = "Sets the number of threads used for parallel garbage collection in the "
+            + "young and old generations.", converter = NumberConverter.class)
+      private Integer parallelGCThreads;
+
+      @Property(doc = "Enables the use of the parallel garbage collector for full GCs.")
+      private Boolean useParallelOldGC;
+
+      @Property(doc = "Enables the use of the CMS garbage collector for the old generation.")
+      private Boolean useConcMarkSweepGC;
+
+      @Property(doc = "Enables the use of the garbage-first (G1) garbage collector.")
+      private Boolean useG1GC;
+
+      @Property(doc = "Enables the option that disables processing of calls to System.gc().")
+      private Boolean disableExplicitGC;
+
+      @Property(doc = "Sets the percentage of the heap occupancy (0 to 100) at which to start "
+            + "a concurrent GC cycle.", converter = NumberConverter.class)
+      private Integer initiatingHeapOccupancyPercent;
+
+      @Property(doc = "Sets a target for the maximum GC pause time (in milliseconds).", converter = NumberConverter.class)
+      private Integer maxGCPauseMillis;
+
+      @Property(doc = "Sets the time interval over which GC pauses totaling up to "
+            + "MaxGCPauseMillis may take place:", converter = NumberConverter.class)
+      private Integer gcPauseIntervalMillis;
+
+      @Property(doc = "Enables Java heap optimization.")
+      private Boolean aggressiveHeap;
+
+      @Property(doc = "Enables the use of aggressive performance optimization features, "
+            + "which are expected to become default in upcoming releases.")
+      private Boolean aggressiveOpts;
+
+      @Property(doc = "Enables scavenging attempts before the CMS remark step.")
+      private Boolean cmsScavengeBeforeRemark;
+
+      @Property(doc = "Sets the percentage (0 to 100) of the value specified by "
+            + "-XX:MinHeapFreeRatio that is allocated before a CMS collection cycle "
+            + "commences.", converter = NumberConverter.class)
+      private Integer cmsTriggerRatio;
+
+      @Property(doc = "Adaptive size policy application time to GC time ratio", converter = NumberConverter.class)
+      private Integer gcTimeRatio;
 
       @Override
       public void setArgs(List<String> args) {
-         if (printGc != null) set(args, "PrintGC", printGc);
-         if (printGcDetails != null) set(args, "PrintGCDetails", printGcDetails);
-         if (printGcTimestamps != null) set(args, "PrintGCTimeStamps", printGcTimestamps);
-         if (logFile != null) replace(args, "-Xloggc:", logFile);
+         if (printGc != null)
+            set(args, "PrintGC", printGc);
+         if (printGcDetails != null)
+            set(args, "PrintGCDetails", printGcDetails);
+         if (printGcTimestamps != null)
+            set(args, "PrintGCTimeStamps", printGcTimestamps);
+         if (logFile != null)
+            replace(args, "-Xloggc:", logFile);
+         if (useParallelGC != null)
+            set(args, "UseParallelGC", useParallelGC);
+         if (useParallelOldGC != null)
+            set(args, "UseParallelOldGC", useParallelOldGC);
+         if (parallelGCThreads != null)
+            replace(args, "-XX:ParallelGCThreads=", String.valueOf(parallelGCThreads));
+         if (useConcMarkSweepGC != null)
+            set(args, "UseConcMarkSweepGC", useConcMarkSweepGC);
+         if (useG1GC != null)
+            set(args, "UseG1GC", useG1GC);
+         if (disableExplicitGC != null)
+            set(args, "DisableExplicitGC", disableExplicitGC);
+         if (initiatingHeapOccupancyPercent != null)
+            replace(args, "-XX:InitiatingHeapOccupancyPercent=", String.valueOf(initiatingHeapOccupancyPercent));
+         if (maxGCPauseMillis != null)
+            replace(args, "-XX:MaxGCPauseMillis=", String.valueOf(maxGCPauseMillis));
+         if (gcPauseIntervalMillis != null)
+            replace(args, "-XX:GCPauseIntervalMillis=", String.valueOf(gcPauseIntervalMillis));
+         if (aggressiveHeap != null)
+            set(args, "AggressiveHeap", aggressiveHeap);
+         if (aggressiveOpts != null)
+            set(args, "AggressiveOpts", aggressiveOpts);
+         if (cmsScavengeBeforeRemark != null)
+            set(args, "CMSScavengeBeforeRemark", cmsScavengeBeforeRemark);
+         if (cmsTriggerRatio != null)
+            replace(args, "-XX:CMSTriggerRatio=", String.valueOf(cmsTriggerRatio));
       }
    }
 
@@ -218,69 +345,85 @@ public class VmArgs implements Serializable {
 
       public static class Converter extends ReflexiveConverters.ListConverter {
          public Converter() {
-            super(new Class[] {Prop.class});
+            super(new Class[] { Prop.class });
          }
       }
    }
 
    private class Jit implements VmArg {
       @Property(doc = "Preserve frame pointers in compiled code.")
-      Boolean preserveFramePointer;
+      private Boolean preserveFramePointer;
 
       @Property(doc = "Print compilation.")
-      Boolean printCompilation;
+      private Boolean printCompilation;
 
       @RequireDiagnostic
       @Property(doc = "Print generated assembly code.")
-      Boolean printAssembly;
+      private Boolean printAssembly;
 
       @RequireDiagnostic
       @Property(doc = "Print method inlining")
-      Boolean printInlining;
+      private Boolean printInlining;
 
       @RequireDiagnostic
       @Property(doc = "Log compilation.")
-      Boolean logCompilation;
+      private Boolean logCompilation;
 
       @RequireDiagnostic
       @Property(doc = "Log file for log-compilation")
-      String logFile;
+      private String logFile;
 
       @Property(doc = "Maximum size of method bytecode to consider for inlining.")
-      Integer freqInlineSize;
+      private Integer freqInlineSize;
 
       @Property(doc = "Maximum size of method bytecode for automatic inlining.")
-      Integer maxInlineSize;
+      private Integer maxInlineSize;
 
       @Property(doc = "Maximum number of method calls that can be inlined.")
-      Integer maxInlineLevel;
+      private Integer maxInlineLevel;
 
       @Property(doc = "Inline a previously compiled method only if its generated native code size is less than this")
-      Integer inlineSmallCode;
+      private Integer inlineSmallCode;
+
+      @Property(doc = "Controls the use of tiered compilation")
+      private Boolean tieredCompilation;
 
       @Override
       public void setArgs(List<String> args) {
-         if (preserveFramePointer != null) set(args, "PreserveFramePointer", preserveFramePointer);
-         if (printCompilation != null) set(args, "PrintCompilation", printCompilation);
-         if (printAssembly != null) set(args, "PrintAssembly", printAssembly);
-         if (printInlining != null) set(args, "PrintInlining", printInlining);
-         if (logCompilation != null) set(args, "LogCompilation", logCompilation);
-         if (logFile != null) replace(args, "-XX:LogFile=", logFile);
-         if (freqInlineSize != null) replace(args, "-XX:FreqInlineSize=", freqInlineSize.toString());
-         if (maxInlineSize != null) replace(args, "-XX:MaxInlineSize=", maxInlineSize.toString());
-         if (maxInlineLevel != null) replace(args, "-XX:MaxInlineLevel=", maxInlineLevel.toString());
-         if (inlineSmallCode != null) replace(args, "-XX:InlineSmallCode=", inlineSmallCode.toString());
+         if (preserveFramePointer != null)
+            set(args, "PreserveFramePointer", preserveFramePointer);
+         if (printCompilation != null)
+            set(args, "PrintCompilation", printCompilation);
+         if (printAssembly != null)
+            set(args, "PrintAssembly", printAssembly);
+         if (printInlining != null)
+            set(args, "PrintInlining", printInlining);
+         if (logCompilation != null)
+            set(args, "LogCompilation", logCompilation);
+         if (logFile != null)
+            replace(args, "-XX:LogFile=", logFile);
+         if (freqInlineSize != null)
+            replace(args, "-XX:FreqInlineSize=", freqInlineSize.toString());
+         if (maxInlineSize != null)
+            replace(args, "-XX:MaxInlineSize=", maxInlineSize.toString());
+         if (maxInlineLevel != null)
+            replace(args, "-XX:MaxInlineLevel=", maxInlineLevel.toString());
+         if (inlineSmallCode != null)
+            replace(args, "-XX:InlineSmallCode=", inlineSmallCode.toString());
+         if (tieredCompilation != null)
+            set(args, "TieredCompilation", tieredCompilation);
       }
    }
 
    private class ClassLoading implements VmArg {
       @RequireDiagnostic
       @Property(doc = "Trace class loading")
-      Boolean traceClassLoading;
+      private Boolean traceClassLoading;
 
       @Override
       public void setArgs(List<String> args) {
-         if (traceClassLoading != null) set(args, "TraceClassLoading", traceClassLoading);
+         if (traceClassLoading != null)
+            set(args, "TraceClassLoading", traceClassLoading);
       }
    }
 }

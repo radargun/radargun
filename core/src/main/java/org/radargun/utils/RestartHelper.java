@@ -19,6 +19,7 @@ import org.radargun.Directories;
 import org.radargun.Slave;
 import org.radargun.config.Evaluator;
 import org.radargun.config.VmArgs;
+import org.radargun.logging.LogFactory;
 
 /**
  * This utility will start another process after certain lock (args[0]) is released.
@@ -26,6 +27,7 @@ import org.radargun.config.VmArgs;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class RestartHelper {
+
 
    private RestartHelper() {}
 
@@ -105,6 +107,8 @@ public final class RestartHelper {
       for (String vmArg : defaultVmArgs) {
          command.add(ArgsHolder.DEFAULT_VM_ARG).add(vmArg);
       }
+
+      LogFactory.getLog(RestartHelper.class).info("VM start command = " + command.build().toString());
       processBuilder.command(command.build());
       processBuilder.environment().putAll(envs);
       processBuilder.start();
