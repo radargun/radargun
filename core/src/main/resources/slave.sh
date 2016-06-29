@@ -175,7 +175,8 @@ echo "... done! Slave process started on host ${HOSTNAME}! Slave PID is ${SLAVE_
 echo ""
 if [ $TAILF == "true" ]
 then
-  tail -f stdout_slave_${LOG4J_PREFIX}.out --pid $SLAVE_PID
+  touch ${OUT_FILE}
+  tail_log ${OUT_FILE} "Master shutdown\!|Slave process: unexpected shutdown\!|Communication with master failed"
 fi
 
 if [ $WAIT == "true" ]
