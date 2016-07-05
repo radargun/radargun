@@ -103,7 +103,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
          nonTxCache = basicOperations.getCache(cacheName);
          if (useTransactions(cacheName)) {
-            cache = new Delegates.BasicOperationsCache();
+            cache = new Delegates.BasicOperationsCache<>();
          } else {
             cache = nonTxCache;
          }
@@ -117,7 +117,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
 
       @Override
       public void transactionEnded() {
-         ((Delegates.BasicOperationsCache) cache).setDelegate(stressor.wrap(null));
+         ((Delegates.BasicOperationsCache) cache).setDelegate(null);
       }
 
       @Override

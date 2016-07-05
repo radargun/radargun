@@ -221,8 +221,8 @@ public class LegacyStressor extends Thread {
    }
 
    private void clearTransaction() {
-      ongoingTx = null;
       logic.transactionEnded();
+      ongoingTx = null;
    }
 
    public int getThreadIndex() {
