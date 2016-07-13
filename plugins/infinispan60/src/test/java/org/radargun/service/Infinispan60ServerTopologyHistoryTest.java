@@ -1,6 +1,5 @@
 package org.radargun.service;
 
-import org.radargun.traits.TopologyHistory;
 import org.testng.annotations.Test;
 
 import javax.management.MBeanServerConnection;

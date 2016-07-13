@@ -2,6 +2,9 @@ package org.radargun.utils;
 
 import java.io.Serializable;
 import java.lang.reflect.Type;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,24 +15,25 @@ import org.radargun.config.Converter;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ *
  */
 public final class Fuzzy<T extends Serializable> implements Serializable {
    private Serializable[] values;
-   private double[] probability;
+   private BigDecimal[] probabilities;
 
-   private Fuzzy(Serializable[] values, double[] probability) {
+   private Fuzzy(Serializable[] values, BigDecimal[] probabilities) {
       this.values = values;
-      this.probability = probability;
+      this.probabilities = probabilities;
    }
 
-   public static <T extends Serializable> Fuzzy<T> always(T singleValue) {
-      return new Fuzzy<T>(new Serializable[] {singleValue}, new double[] {1.0});
+   public static <T extends Serializable> Fuzzy<T> uniform(T value) {
+      return new Fuzzy<T>(new Serializable[] {value}, new BigDecimal[] { new BigDecimal(1.0)});
    }
 
    public T next(Random random) {
-      if (probability.length == 1) return (T) values[0];
+      if (probabilities.length == 1) return (T) values[0];
       double x = random.nextDouble();
-      int index = Arrays.binarySearch(probability, x);
+      int index = Arrays.binarySearch(probabilities, x);
       if (index < 0) {
          index = -index - 1;
       } else {
@@ -38,10 +42,10 @@ public final class Fuzzy<T extends Serializable> implements Serializable {
       return (T) values[index];
    }
 
-   public Map<T, Double> getProbabilityMap() {
-      HashMap<T, Double> map = new HashMap<T, Double>();
+   public Map<T, BigDecimal> getProbabilityMap() {
+      Map<T, BigDecimal> map = new HashMap<T, BigDecimal>();
       for (int i = 0; i < values.length; ++i) {
-         map.put((T) values[i], probability[i]);
+         map.put((T) values[i], probabilities[i]);
       }
       return map;
    }
@@ -51,7 +55,8 @@ public final class Fuzzy<T extends Serializable> implements Serializable {
       StringBuilder sb = new StringBuilder("[");
       for (int i = 0; i < values.length; ++i) {
          if (i != 0) sb.append(", ");
-         sb.append(String.format("%.1f%%: ", (probability[i] - (i == 0 ? .0 : probability[i - 1])) * 100));
+         BigDecimal previousProbability = (i == 0 ? BigDecimal.ZERO : probabilities[i - 1]);
+         sb.append(String.format("%.1f%%: ", probabilities[i].subtract(previousProbability).multiply(BigDecimal.valueOf(100))));
          sb.append(values[i]);
       }
       return sb.append("]").toString();
@@ -59,49 +64,60 @@ public final class Fuzzy<T extends Serializable> implements Serializable {
 
    public static class Builder<T extends Serializable> {
       private ArrayList<T> weightedValues = new ArrayList<T>();
-      private ArrayList<Double> weights = new ArrayList<Double>();
+      private ArrayList<BigDecimal> weights = new ArrayList<BigDecimal>();
       private ArrayList<T> fixedValues = new ArrayList<T>();
-      private ArrayList<Double> probabilities = new ArrayList<Double>();
+      private ArrayList<BigDecimal> probabilities = new ArrayList<BigDecimal>();
 
-      public Builder addWeighted(T value, double weight) {
-         if (weight <= 0) throw new IllegalArgumentException();
+      public Builder addWeighted(T value, BigDecimal weight) {
+         //less then 0
+         if (weight.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException();
          weightedValues.add(value);
          weights.add(weight);
          return this;
       }
 
-      public Builder addFixed(T value, double probability) {
-         if (probability <= 0 || probability > 1) throw new IllegalArgumentException();
+      public Builder addFixed(T value, BigDecimal probability) {
+         if (!isValid(probability)) throw new IllegalArgumentException();
          fixedValues.add(value);
          probabilities.add(probability);
          return this;
       }
 
+      private boolean isValid(BigDecimal probability) {
+         //smaller than 0 or greater than 1
+         if (probability.compareTo(BigDecimal.ZERO) <= 0 || probability.compareTo(BigDecimal.ONE) == 1)
+            return false;
+         else
+            return true;
+      }
+
       public Fuzzy<T> create() {
          if (weightedValues.size() + fixedValues.size() == 0) throw new IllegalStateException();
-         double sumWeight = 0;
-         for (Double w : this.weights) {
-            sumWeight += w;
+         BigDecimal sumWeight = BigDecimal.ZERO;
+         for (BigDecimal w : this.weights) {
+            sumWeight = sumWeight.add(w);
          }
-         double[] cumulativeProbability = new double[this.probabilities.size() + this.weights.size()];
+         BigDecimal[] cumulativeProbability = new BigDecimal[this.probabilities.size() + this.weights.size()];
          int i = 0;
-         double cumulatedProbability = 0;
-         for (Double p : this.probabilities) {
-            cumulatedProbability += p;
+         BigDecimal cumulatedProbability = BigDecimal.ZERO;
+         for (BigDecimal p : this.probabilities) {
+            cumulatedProbability = cumulatedProbability.add(p);
             cumulativeProbability[i++] = cumulatedProbability;
          }
-         if (cumulatedProbability > 1
-            || (cumulatedProbability == 1 && weights.size() > 0)
-            || (cumulatedProbability < 0.99999 && weights.size() == 0)) {
+         if (cumulatedProbability.compareTo(BigDecimal.ONE) == 1 //bigger than 1
+            || (cumulatedProbability.compareTo(BigDecimal.ONE) == 0 && weights.size() > 0) //equal to one
+            || (cumulatedProbability.compareTo(BigDecimal.ONE) == -1 && weights.size() == 0)) { //less than one
             throw new IllegalStateException("Probability: " + cumulatedProbability);
          }
-         double cumulatedWeight = 0;
-         for (Double w : this.weights) {
-            cumulatedWeight += w;
-            cumulativeProbability[i++] = (1 - cumulatedProbability) * cumulatedWeight / sumWeight;
+         BigDecimal cumulatedWeight = BigDecimal.ZERO;
+         MathContext mc = new MathContext(2, RoundingMode.HALF_UP); //required for division
+         for (BigDecimal w : this.weights) {
+            cumulatedWeight = cumulatedWeight.add(w);
+            BigDecimal currentCumulativeProbability = (BigDecimal.ONE.subtract(cumulatedProbability)).multiply(cumulatedWeight).divide(sumWeight, mc);
+            BigDecimal previousCumulativeProbability = (i == 0 ? BigDecimal.ZERO : cumulativeProbability[i - 1]);
+            cumulativeProbability[i++] = previousCumulativeProbability.add(currentCumulativeProbability);
          }
-         // we can't trust doubles
-         cumulativeProbability[cumulativeProbability.length - 1] = 1.0;
+         cumulativeProbability[cumulativeProbability.length - 1] = new BigDecimal(1.0);
          ArrayList<T> values = new ArrayList<T>(fixedValues.size() + weightedValues.size());
          values.addAll(fixedValues);
          values.addAll(weightedValues);
@@ -121,14 +137,14 @@ public final class Fuzzy<T extends Serializable> implements Serializable {
          for (String part : parts) {
             int colon = part.indexOf(':');
             if (colon < 0) {
-               builder.addWeighted(parse(part.trim()), 1.0);
+               builder.addWeighted(parse(part.trim()), BigDecimal.ONE);
             } else {
                int percent = part.indexOf('%');
                if (percent >= 0 && percent < colon) {
-                  double probability = Double.parseDouble(part.substring(0, percent).trim()) / 100;
+                  BigDecimal probability = new BigDecimal(part.substring(0, percent).trim()).divide(BigDecimal.valueOf(100));
                   builder.addFixed(parse(part.substring(colon + 1).trim()), probability);
                } else {
-                  double weight = Double.parseDouble(part.substring(0, colon).trim());
+                  BigDecimal weight = new BigDecimal(part.substring(0, colon).trim());
                   builder.addWeighted(parse(part.substring(colon + 1).trim()), weight);
                }
             }

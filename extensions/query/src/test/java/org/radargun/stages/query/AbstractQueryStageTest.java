@@ -1,6 +1,5 @@
 package org.radargun.stages.query;
 
-import org.radargun.stages.query.OrderBy;
 import org.radargun.util.ReflectionUtils;
 import org.testng.annotations.Test;
 
