@@ -34,7 +34,7 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
    protected long keyIdOffset = 0;
 
    @Property(doc = "Size of the value in bytes. Default is 1000.", converter = Fuzzy.IntegerConverter.class)
-   protected Fuzzy<Integer> entrySize = Fuzzy.always(1000);
+   protected Fuzzy<Integer> entrySize = Fuzzy.uniform(1000);
 
    @Property(doc = "Generator of keys (transforms key ID into key object). Default is 'string'.",
       complexConverter = KeyGenerator.ComplexConverter.class)

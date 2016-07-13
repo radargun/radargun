@@ -1,5 +1,6 @@
 package org.radargun.stages.cache.test.legacy;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -82,19 +83,19 @@ public class KeyExpirationTestStage extends CacheTestStage {
          super.init(stressor);
          nextKeyIndex = stressor.getGlobalThreadIndex();
          double averageSize = 0;
-         Map<Integer, Double> probabilityMap = entrySize.getProbabilityMap();
+         Map<Integer, BigDecimal> probabilityMap = entrySize.getProbabilityMap();
          long entries;
          if (numBytesPerThread > 0) {
-            for (Map.Entry<Integer, Double> entry : probabilityMap.entrySet()) {
-               averageSize += entry.getValue() * entry.getKey();
+            for (Map.Entry<Integer, BigDecimal> entry : probabilityMap.entrySet()) {
+               averageSize += entry.getValue().doubleValue() + entry.getKey();
             }
             entries = (long) (numBytesPerThread / averageSize);
          } else {
             entries = numEntriesPerThread;
          }
          long expectedMax = 0;
-         for (Map.Entry<Integer, Double> entry : probabilityMap.entrySet()) {
-            long valuesForSize = (long) (entries * entry.getValue());
+         for (Map.Entry<Integer, BigDecimal> entry : probabilityMap.entrySet()) {
+            long valuesForSize = (long) (entries * entry.getValue().doubleValue());
             expectedMax += valuesForSize * entry.getKey();
             loadForSize.put(entry.getKey(), new Load(valuesForSize));
          }
