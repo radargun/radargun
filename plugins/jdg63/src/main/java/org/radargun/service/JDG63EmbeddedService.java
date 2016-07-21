@@ -18,12 +18,6 @@ public class JDG63EmbeddedService extends Infinispan60EmbeddedService {
    protected static final String SERVICE_DESCRIPTION = "Service hosting JDG in embedded (library) mode.";
 
    @Override
-   @ProvidesTrait
-   public Infinispan70MapReduce createMapReduce() {
-      return new Infinispan70MapReduce(this);
-   }
-
-   @Override
    protected ConfigurationBuilderHolder createConfiguration(String configFile) throws FileNotFoundException {
       ClassLoader classLoader = getClass().getClassLoader();
       try (InputStream input = new FileLookup().lookupFileStrict(configFile, classLoader)) {

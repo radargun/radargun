@@ -36,8 +36,8 @@
       <plugins.jbosscache/>
       <plugins.jgroups/>
       <plugins.infinispan/>
+      <plugins.jdg-early/>
       <plugins.jdg/>
-      <plugins.jdg70/>
       <plugins.coherence/>
       <plugins.process />
       <plugins.resteasy-http />
@@ -305,6 +305,24 @@
             <plugins.coherence>coherence3,coherence12</plugins.coherence>
          </properties>
       </profile>
+
+      <!-- JDG versions 6.0.0 to 6.2.0 were not released to external Maven repo -->
+      <profile>
+         <id>jdg-early</id>
+         <activation>
+            <property>
+               <name>jdg-early</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/jdg60</module>
+            <module>plugins/jdg61</module>
+            <module>plugins/jdg62</module>
+         </modules>
+         <properties>
+            <plugins.jdg-early>jdg60,jdg61,jdg62</plugins.jdg-early>
+         </properties>
+      </profile>
       <profile>
          <id>jdg</id>
          <activation>
@@ -313,31 +331,14 @@
             </property>
          </activation>
          <modules>
-            <module>plugins/jdg60</module>
-            <module>plugins/jdg61</module>
-            <module>plugins/jdg62</module>
             <module>plugins/jdg63</module>
             <module>plugins/jdg64</module>
             <module>plugins/jdg65</module>
             <module>plugins/jdg66</module>
-         </modules>
-         <properties>
-            <plugins.jdg>jdg60,jdg61,jdg62,jdg63,jdg64,jdg65,jdg66</plugins.jdg>
-         </properties>
-      </profile>
-
-      <profile>
-         <id>jdg70</id>
-         <activation>
-            <property>
-               <name>jdg70</name>
-            </property>
-         </activation>
-         <modules>
             <module>plugins/jdg70</module>
          </modules>
          <properties>
-            <plugins.jdg70>jdg70</plugins.jdg70>
+            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70</plugins.jdg>
          </properties>
       </profile>
 
@@ -585,7 +586,7 @@
 
                         <echo message="Packaging plugins: " />
                         <!-- Note: JCache needs to be here for schema generation, although it can't be used on its own -->
-                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.jdg70},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spark},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg-early},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>
