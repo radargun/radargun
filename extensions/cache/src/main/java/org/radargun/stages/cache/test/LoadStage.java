@@ -16,7 +16,8 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
-import org.radargun.utils.Fuzzy;
+import org.radargun.utils.FuzzyEntrySize;
+import org.radargun.utils.FuzzyEntrySize.FuzzyConverter;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
@@ -33,8 +34,8 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
    @Property(doc = "Initial key ID used for numbering the keys. Default is 0.")
    protected long keyIdOffset = 0;
 
-   @Property(doc = "Size of the value in bytes. Default is 1000.", converter = Fuzzy.IntegerConverter.class)
-   protected Fuzzy<Integer> entrySize = Fuzzy.uniform(1000);
+   @Property(doc = "Size of the value in bytes. Default is 1000.", converter = FuzzyConverter.class)
+   protected FuzzyEntrySize entrySize = FuzzyEntrySize.uniformEntrySize(1000);
 
    @Property(doc = "The number of threads that should load the entries on one slave. Default is 10.")
    protected int numThreads = 10;

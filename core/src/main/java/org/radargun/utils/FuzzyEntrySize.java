@@ -11,27 +11,35 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import org.radargun.config.Converter;
-
 /**
+ * Maintains variable size for entries. Each size is given a certain probability
+ * that defines how often this entry size will be used in a test.
+ *
+ * This class is related to entry-size attribute in the benchmark file.
+ * Example:
+ *
+ *    entry-size="10%: 10, 20%: 100, 40%: 1000, 20%: 10000, 10%: 100000"
+ *
+ * See FuzzyConverterTest for more examples.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  *
  */
-public final class Fuzzy<T extends Serializable> implements Serializable {
-   private Serializable[] values;
+public final class FuzzyEntrySize implements Serializable {
+   private Integer[] values;
    private BigDecimal[] probabilities;
 
-   private Fuzzy(Serializable[] values, BigDecimal[] probabilities) {
+   private FuzzyEntrySize(Integer[] values, BigDecimal[] probabilities) {
       this.values = values;
       this.probabilities = probabilities;
    }
 
-   public static <T extends Serializable> Fuzzy<T> uniform(T value) {
-      return new Fuzzy<T>(new Serializable[] {value}, new BigDecimal[] { new BigDecimal(1.0)});
+   public static FuzzyEntrySize uniformEntrySize(Integer entrySize) {
+      return new FuzzyEntrySize(new Integer[] {entrySize}, new BigDecimal[] { new BigDecimal(1.0)});
    }
 
-   public T next(Random random) {
-      if (probabilities.length == 1) return (T) values[0];
+   public Integer next(Random random) {
+      if (probabilities.length == 1) return values[0];
       double x = random.nextDouble();
       int index = Arrays.binarySearch(probabilities, x);
       if (index < 0) {
@@ -39,13 +47,13 @@ public final class Fuzzy<T extends Serializable> implements Serializable {
       } else {
          index = index + 1;
       }
-      return (T) values[index];
+      return values[index];
    }
 
-   public Map<T, BigDecimal> getProbabilityMap() {
-      Map<T, BigDecimal> map = new HashMap<T, BigDecimal>();
+   public Map<Integer, BigDecimal> getProbabilityMap() {
+      Map<Integer, BigDecimal> map = new HashMap<Integer, BigDecimal>();
       for (int i = 0; i < values.length; ++i) {
-         map.put((T) values[i], probabilities[i]);
+         map.put(values[i], probabilities[i]);
       }
       return map;
    }
@@ -62,23 +70,23 @@ public final class Fuzzy<T extends Serializable> implements Serializable {
       return sb.append("]").toString();
    }
 
-   public static class Builder<T extends Serializable> {
-      private ArrayList<T> weightedValues = new ArrayList<T>();
+   public static class Builder {
+      private ArrayList<Integer> weightedValues = new ArrayList<>();
       private ArrayList<BigDecimal> weights = new ArrayList<BigDecimal>();
-      private ArrayList<T> fixedValues = new ArrayList<T>();
+      private ArrayList<Integer> fixedValues = new ArrayList<>();
       private ArrayList<BigDecimal> probabilities = new ArrayList<BigDecimal>();
 
-      public Builder addWeighted(T value, BigDecimal weight) {
+      public Builder addWeighted(Integer entrySize, BigDecimal weight) {
          //less then 0
          if (weight.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException();
-         weightedValues.add(value);
+         weightedValues.add(entrySize);
          weights.add(weight);
          return this;
       }
 
-      public Builder addFixed(T value, BigDecimal probability) {
+      public Builder addFixed(Integer entrySize, BigDecimal probability) {
          if (!isValid(probability)) throw new IllegalArgumentException();
-         fixedValues.add(value);
+         fixedValues.add(entrySize);
          probabilities.add(probability);
          return this;
       }
@@ -91,7 +99,7 @@ public final class Fuzzy<T extends Serializable> implements Serializable {
             return true;
       }
 
-      public Fuzzy<T> create() {
+      public FuzzyEntrySize create() {
          if (weightedValues.size() + fixedValues.size() == 0) throw new IllegalStateException();
          BigDecimal sumWeight = BigDecimal.ZERO;
          for (BigDecimal w : this.weights) {
@@ -118,66 +126,52 @@ public final class Fuzzy<T extends Serializable> implements Serializable {
             cumulativeProbability[i++] = previousCumulativeProbability.add(currentCumulativeProbability);
          }
          cumulativeProbability[cumulativeProbability.length - 1] = new BigDecimal(1.0);
-         ArrayList<T> values = new ArrayList<T>(fixedValues.size() + weightedValues.size());
+         ArrayList<Integer> values = new ArrayList<>(fixedValues.size() + weightedValues.size());
          values.addAll(fixedValues);
          values.addAll(weightedValues);
-         return new Fuzzy<T>(values.toArray(new Serializable[values.size()]), cumulativeProbability);
+         return new FuzzyEntrySize(values.toArray(new Integer[values.size()]), cumulativeProbability);
       }
    }
 
-   private abstract static class FuzzyConverter<T extends Serializable> implements Converter<Fuzzy<T>> {
+   public static class FuzzyConverter implements org.radargun.config.Converter<FuzzyEntrySize> {
       @Override
-      public Fuzzy<T> convert(String string, Type type) {
+      public FuzzyEntrySize convert(String string, Type type) {
          string = string.trim();
          if (string.startsWith("[") && string.endsWith("]")) {
             string = string.substring(1, string.length() - 1);
          }
          String[] parts = string.split(",", 0);
-         Builder<T> builder = new Builder<T>();
+         Builder builder = new Builder();
          for (String part : parts) {
             int colon = part.indexOf(':');
             if (colon < 0) {
-               builder.addWeighted(parse(part.trim()), BigDecimal.ONE);
+               builder.addWeighted(Integer.parseInt(part.trim()), BigDecimal.ONE);
             } else {
                int percent = part.indexOf('%');
                if (percent >= 0 && percent < colon) {
                   BigDecimal probability = new BigDecimal(part.substring(0, percent).trim()).divide(BigDecimal.valueOf(100));
-                  builder.addFixed(parse(part.substring(colon + 1).trim()), probability);
+                  builder.addFixed(Integer.parseInt(part.substring(colon + 1).trim()), probability);
                } else {
                   BigDecimal weight = new BigDecimal(part.substring(0, colon).trim());
-                  builder.addWeighted(parse(part.substring(colon + 1).trim()), weight);
+                  builder.addWeighted(Integer.parseInt(part.substring(colon + 1).trim()), weight);
                }
             }
          }
          return builder.create();
       }
 
-      @Override
-      public String convertToString(Fuzzy<T> value) {
-         if (value == null) return "null";
-         else return value.toString();
-      }
-
-      @Override
       public String allowedPattern(Type type) {
          return "\\s*([0-9.]+(\\.[0-9]*)?\\s*%?\\s*:\\s*)?" + getPattern()
             + "\\s*(,\\s*([0-9.]+(\\.[0-9]*)?\\s*%?\\s*:\\s*)?" + getPattern() + "\\s*)*";
       }
 
-      protected abstract T parse(String string);
-
-      protected abstract String getPattern();
-   }
-
-   public static class IntegerConverter extends FuzzyConverter<Integer> {
-      @Override
-      protected Integer parse(String string) {
-         return Integer.parseInt(string);
-      }
-
-      @Override
       protected String getPattern() {
          return "[0-9]+";
+      }
+
+      public String convertToString(FuzzyEntrySize value) {
+         if (value == null) return "null";
+         else return value.toString();
       }
    }
 }
