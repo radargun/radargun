@@ -106,8 +106,8 @@ tail_log() {
 
    tail -f ${1} | while true
    do
-      # Read from stdin with a 10 min timeout
-      IFS= read -r -t 600 -u 0
+      # Read output from pipe with a 10 min timeout
+      IFS= read -r -t 600
       if (($? == 0))
       then
          echo "${REPLY}"
@@ -116,15 +116,12 @@ tail_log() {
              kill -9 `pgrep -P $$ tail`
              break
          fi
-
-      fi
-      # Timeout occurred
-      if (($? > 128))
-      then
+      else
          # Kill tail if no java process spawned from the shell script is found
          if ! pgrep -P $$ java
          then
             kill -9 `pgrep -P $$ tail`
+            break
          fi
       fi
    done

@@ -185,7 +185,7 @@ echo $RADARGUN_MASTER_PID > master.pid
 if [ $TAILF == "true" ]
 then
   touch ${OUT_FILE}
-  tail_log ${OUT_FILE} "Master process is being shutdown"
+  tail_log ${OUT_FILE} "Master process is being shutdown|All reporters have been executed, exiting|Master process: unexpected shutdown\!"
 fi
 
 if [ $WAIT == "true" ]
