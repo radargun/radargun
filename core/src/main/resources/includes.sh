@@ -102,12 +102,13 @@ tail_log() {
    # Bash log tailer
    # Param 1 - log file
    # Param 2 - String in the log file. When it is found, the tail process is killed
+   # Param 3 - The string in 'ps -ef' to search for. If it doesn't exist, then exit.
    #
 
    tail -f ${1} | while true
    do
       # Read from stdin with a 10 min timeout
-      IFS= read -r -t 600 -u 0
+      IFS= read -r -u 0 -t 600
       if (($? == 0))
       then
          echo "${REPLY}"
@@ -116,15 +117,12 @@ tail_log() {
              kill -9 `pgrep -P $$ tail`
              break
          fi
-
-      fi
-      # Timeout occurred
-      if (($? > 128))
-      then
+      else
          # Kill tail if no java process spawned from the shell script is found
-         if ! pgrep -P $$ java
+         if ! (ps -ef | grep "${3}" &>/dev/null)
          then
             kill -9 `pgrep -P $$ tail`
+            break
          fi
       fi
    done

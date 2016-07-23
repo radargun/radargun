@@ -176,7 +176,7 @@ echo ""
 if [ $TAILF == "true" ]
 then
   touch ${OUT_FILE}
-  tail_log ${OUT_FILE} "Master shutdown\!|Slave process: unexpected shutdown\!|Communication with master failed"
+  tail_log ${OUT_FILE} "Master shutdown\!|Slave process: unexpected shutdown\!|Communication with master failed" ${LOG4J_PREFIX}
 fi
 
 if [ $WAIT == "true" ]
