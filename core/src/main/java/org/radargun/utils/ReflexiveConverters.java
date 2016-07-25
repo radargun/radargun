@@ -41,13 +41,11 @@ public class ReflexiveConverters {
       }
 
       protected <T> Base(Class<T> implementedClass) {
-         ClasspathScanner.scanClasspath(implementedClass, DefinitionElement.class, "org.radargun.", clazz -> {
+         ClasspathScanner.scanClasspath(implementedClass, DefinitionElement.class, "org.radargun", clazz -> {
             DefinitionElement de = clazz.getAnnotation(DefinitionElement.class);
-            if (this.classes.containsKey(de.name())) {
-               throw new IllegalArgumentException("Trying to register " + clazz.getName() + " as '" + de.name()
-                  + "' but this is already used by " + this.classes.get(de.name()));
+            if (!this.classes.containsKey(de.name())) {
+               classes.put(de.name(), clazz);
             }
-            classes.put(de.name(), clazz);
          });
       }
 
