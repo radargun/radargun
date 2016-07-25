@@ -2,7 +2,7 @@ package org.radargun.service;
 
 import java.util.concurrent.TimeUnit;
 
-import org.infinispan.Cache;
+import org.radargun.traits.MapReducer;
 
 public class Infinispan53MapReduce<KIn, VIn, KOut, VOut, R> extends Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> {
 
@@ -12,30 +12,24 @@ public class Infinispan53MapReduce<KIn, VIn, KOut, VOut, R> extends Infinispan52
 
    protected class Builder extends Infinispan52MapReduce<KIn, VIn, KOut, VOut, R>.Builder {
       protected long timeout;
-      protected TimeUnit unit;
-
-      public Builder(Cache<KIn, VIn> cache) {
-         super(cache);
-      }
 
       @Override
-      public Builder timeout(long timeout, TimeUnit unit) {
+      public Builder timeout(long timeout) {
          this.timeout = timeout;
-         this.unit = unit;
          return this;
       }
 
       @Override
       public Task build() {
          Task task = super.build();
-         task.mapReduceTask.timeout(timeout, unit);
+         task.mapReduceTask.timeout(timeout, TimeUnit.MILLISECONDS);
          return task;
       }
    }
 
    @Override
-   protected Builder builder(Cache<KIn, VIn> cache) {
-      return new Builder(cache);
+   public MapReducer.Builder<KOut, VOut, R> builder() {
+      return new Builder();
    }
 
    @Override

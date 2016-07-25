@@ -120,4 +120,16 @@ public class InfinispanHotrodService implements Lifecycle, InternalsExposition {
    @Override
    public void resetCustomStatistics(String type) {
    }
+
+   public String getCacheName() {
+      return cacheName;
+   }
+
+   public RemoteCacheManager getManagerNoReturn() {
+      return managerNoReturn;
+   }
+
+   public RemoteCacheManager getManagerForceReturn() {
+      return managerForceReturn;
+   }
 }

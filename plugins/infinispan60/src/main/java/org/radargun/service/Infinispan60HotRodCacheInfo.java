@@ -33,7 +33,6 @@ public class Infinispan60HotRodCacheInfo implements CacheInformation {
    @Override
    public Cache getCache(String cacheName) {
       if (cacheName == null) {
-         RemoteCache cache = service.managerForceReturn.getCache();
          return new Cache(service.managerForceReturn.getCache(true));
       } else {
          return new Cache(service.managerForceReturn.getCache(cacheName, true));

@@ -8,10 +8,9 @@ import org.radargun.utils.TimeService;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class InfinispanServerLifecycle extends ProcessLifecycle {
+public class InfinispanServerLifecycle extends ProcessLifecycle<InfinispanServerService> {
    private boolean serverStarted;
    private boolean serverStopped;
-   private final InfinispanServerService service;
    private static final Pattern START_OK = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started in.*");
    private static final Pattern START_ERROR = Pattern.compile(".*\\[org\\.jboss\\.as\\].*started \\(with errors\\) in.*");
    private static final Pattern STOPPED = Pattern.compile(".*\\[org\\.jboss\\.as\\].*stopped in.*");
@@ -20,7 +19,6 @@ public class InfinispanServerLifecycle extends ProcessLifecycle {
 
    public InfinispanServerLifecycle(final InfinispanServerService service) {
       super(service);
-      this.service = service;
    }
 
    @Override

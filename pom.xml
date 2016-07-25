@@ -41,6 +41,7 @@
       <plugins.coherence/>
       <plugins.process />
       <plugins.resteasy-http />
+      <plugins.spark />
       <plugins.spymemcached />
       <reporter.default />
       <reporter.perfrepo />
@@ -49,6 +50,7 @@
       <extension.example-extension />
       <extension.hdrhistogram />
       <extension.jpa />
+      <extension.mapreduce />
    </properties>
 
    <profiles>
@@ -124,6 +126,21 @@
          </modules>
          <properties>
             <extension.jpa>jpa</extension.jpa>
+         </properties>
+      </profile>
+      <profile>
+         <id>mapreduce</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+            <property>
+               <name>!no-mapreduce</name>
+            </property>
+         </activation>
+         <modules>
+            <module>extensions/mapreduce</module>
+         </modules>
+         <properties>
+            <extension.mapreduce>mapreduce</extension.mapreduce>
          </properties>
       </profile>
       <!-- Reporters -->
@@ -353,6 +370,20 @@
          </properties>
       </profile>
       <profile>
+         <id>spark</id>
+         <activation>
+            <property>
+               <name>!no-spark</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/spark</module>
+         </modules>
+         <properties>
+            <plugins.spark>spark</plugins.spark>
+         </properties>
+      </profile>
+      <profile>
          <id>spymemcached</id>
          <activation>
             <property>
@@ -388,7 +419,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
-            <version>1.7</version>
+            <version>1.8</version>
             <executions>
                <execution>
                   <id>prepare_distribution</id>
@@ -474,7 +505,7 @@
                            </sequential>
                         </macrodef>
 
-                        <ac:for list="${extension.cache},${extension.query},${extension.example-extension},${extension.hdrhistogram},${extension.jpa}" param="extension">
+                        <ac:for list="${extension.cache},${extension.query},${extension.example-extension},${extension.hdrhistogram},${extension.jpa},${extension.mapreduce}" param="extension">
                            <sequential>
                               <package-extension extension="@{extension}" build-dir="extensions/@{extension}/target/distribution/radargun-@{extension}-bin/radargun-@{extension}"/>
                            </sequential>
@@ -554,7 +585,7 @@
 
                         <echo message="Packaging plugins: " />
                         <!-- Note: JCache needs to be here for schema generation, although it can't be used on its own -->
-                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.jdg70},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg},${plugins.jdg70},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spark},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>

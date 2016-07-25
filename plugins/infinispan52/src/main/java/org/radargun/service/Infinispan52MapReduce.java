@@ -1,10 +1,11 @@
 package org.radargun.service;
 
-import java.util.Map;
+import java.util.Collection;
 
-import org.infinispan.Cache;
 import org.infinispan.distexec.mapreduce.MapReduceTask;
 import org.infinispan.distexec.mapreduce.Reducer;
+import org.radargun.traits.MapReducer;
+import org.radargun.utils.KeyValueProperty;
 import org.radargun.utils.Utils;
 
 public class Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> extends InfinispanMapReduce<KIn, VIn, KOut, VOut, R> {
@@ -14,31 +15,13 @@ public class Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> extends InfinispanMa
    }
 
    protected class Builder extends InfinispanMapReduce<KIn, VIn, KOut, VOut, R>.Builder {
-      protected boolean distributedReducePhase;
-      protected boolean useIntermediateSharedCache;
       protected Reducer<KOut, VOut> combiner;
 
-      public Builder(Cache<KIn, VIn> cache) {
-         super(cache);
-      }
-
       @Override
-      public Builder distributedReducePhase(boolean distributedReducePhase) {
-         this.distributedReducePhase = distributedReducePhase;
-         return this;
-      }
-
-      @Override
-      public Builder useIntermediateSharedCache(boolean useIntermediateSharedCache) {
-         this.useIntermediateSharedCache = useIntermediateSharedCache;
-         return this;
-      }
-
-      @Override
-      public Builder combiner(String combinerFqn, Map<String, String> combinerParameters) {
+      public Builder combiner(String combinerFqn, Collection<KeyValueProperty> combinerParameters) {
          try {
             combiner = Utils.instantiate(combinerFqn);
-            Utils.invokeMethodWithString(combiner, combinerParameters);
+            Utils.invokeMethodWithProperties(combiner, combinerParameters);
          } catch (Exception e) {
             throw (new IllegalArgumentException("Could not instantiate Combiner class: " + combinerFqn, e));
          }
@@ -47,26 +30,17 @@ public class Infinispan52MapReduce<KIn, VIn, KOut, VOut, R> extends InfinispanMa
 
       @Override
       public Task build() {
+         Infinispan52EmbeddedService embeddedService = (Infinispan52EmbeddedService) service;
          MapReduceTask<KIn, VIn, KOut, VOut> mapReduceTask
-            = new MapReduceTask<KIn, VIn, KOut, VOut>(cache, distributedReducePhase, useIntermediateSharedCache);
+            = new MapReduceTask<KIn, VIn, KOut, VOut>(cache, embeddedService.mapReduceDistributedReducePhase, embeddedService.mapReduceUseIntermediateSharedCache);
          mapReduceTask.mappedWith(mapper).reducedWith(reducer).combinedWith(combiner);
          return new Task(mapReduceTask, collator);
       }
    }
 
    @Override
-   protected Builder builder(Cache<KIn, VIn> cache) {
-      return new Builder(cache);
-   }
-
-   @Override
-   public boolean supportsIntermediateSharedCache() {
-      return true;
-   }
-
-   @Override
-   public boolean supportsDistributedReducePhase() {
-      return true;
+   public MapReducer.Builder<KOut, VOut, R> builder() {
+      return new Builder();
    }
 
    @Override

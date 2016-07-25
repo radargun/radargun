@@ -33,13 +33,6 @@ public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
       }
    }
 
-   @SuppressWarnings("rawtypes")
-   @Override
-   @ProvidesTrait
-   public Infinispan70MapReduce createMapReduce() {
-      return new Infinispan70MapReduce(this);
-   }
-
    @Override
    @ProvidesTrait
    public InfinispanCacheInfo createCacheInformation() {

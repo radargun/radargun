@@ -16,6 +16,7 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.util.FileLookupFactory;
 import org.radargun.Service;
 import org.radargun.config.Init;
+import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
 
 /**
@@ -24,6 +25,12 @@ import org.radargun.traits.ProvidesTrait;
  */
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
 public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
+
+   @Property(doc = "mapReduceDistributedReducePhase")
+   protected boolean mapReduceDistributedReducePhase;
+
+   @Property(doc = "mapReduceUseIntermediateSharedCache")
+   protected boolean mapReduceUseIntermediateSharedCache;
 
    protected InfinispanDistributedTask distributedTaskExecutor;
 
