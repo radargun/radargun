@@ -14,8 +14,39 @@ import java.util.Random;
 import org.radargun.config.Converter;
 
 /**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ * Represents <a href="https://en.wikipedia.org/wiki/Probability_mass_function">probability mass function</a>,
+ * a random variable providing values from given set with defined (different) probabilities.
+ * <p>
+ * The {@link Builder} allows to configure the values either using fixed probabilities (given value
+ * will be returned with e.g. 10% probability) or using weighting (if one value is added with weight 2
+ * while others with weight 1, this value will be returned twice as often).
+ * <p>
+ * If fixed probabilities and weights are combined, the probability of weighted values is computed from
+ * 1 - (sum of fixed probabilities).
+ * <p>
+ * Example:
+ * <pre>
+ * {@code new Builder().addFixed(1, 0.2).addFixed(2, 0.3).addWeighted(3, 1).addWeighted(4, 4),build() }
+ * </pre>
  *
+ * will return a random variable that will return values with following probabilities:
+ * <table>
+ * <tr><td> 1 </td><td> 20% </td></tr>
+ * <tr><td> 2 </td><td> 30% </td></tr>
+ * <tr><td> 3 </td><td> 10% </td></tr>
+ * <tr><td> 4 </td><td> 40% </td></tr>
+ * </table>
+ *
+ * The {@link IntegerConverter} provides a convenient way to use this as a property (specialized for integer values),
+ * the previous example would be configured as:
+ *
+ * <pre>
+ * {@code fuzzy-property="20%: 1, 30%: 2, 1: 3, 4: 4"}
+ * </pre>
+ * <p>
+ * Note that if the weight is not specified, it defaults to one.
+ *
+ * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class Fuzzy<T extends Serializable> implements Serializable {
    private Serializable[] values;
