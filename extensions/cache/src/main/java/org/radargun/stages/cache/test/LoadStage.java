@@ -36,9 +36,6 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
    @Property(doc = "Size of the value in bytes. Default is 1000.", converter = Fuzzy.IntegerConverter.class)
    protected Fuzzy<Integer> entrySize = Fuzzy.always(1000);
 
-   @Property(doc = "The number of threads that should load the entries on one slave. Default is 10.")
-   protected int numThreads = 10;
-
    @Property(doc = "Generator of keys (transforms key ID into key object). Default is 'string'.",
       complexConverter = KeyGenerator.ComplexConverter.class)
    protected KeyGenerator keyGenerator = new StringKeyGenerator();
@@ -56,10 +53,6 @@ public class LoadStage extends org.radargun.stages.test.LoadStage {
 
    @Property(doc = "If set to true, the entries are removed instead of being inserted. Default is false.")
    private boolean remove = false;
-
-   @Property(doc = "Seed used for initialization of random generators - with same seed (and other arguments)," +
-      " the stage guarantees same entries added to the cache. By default the seed is not set.")
-   protected Long seed;
 
    @Property(doc = "Specifies if the requests should be explicitly wrapped in transactions. " +
       "Options are NEVER, ALWAYS and IF_TRANSACTIONAL: transactions are used only if " +
