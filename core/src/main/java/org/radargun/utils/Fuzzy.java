@@ -115,11 +115,8 @@ public final class Fuzzy<T extends Serializable> implements Serializable {
       }
 
       private boolean isValid(BigDecimal probability) {
-         //smaller than 0 or greater than 1
-         if (probability.compareTo(BigDecimal.ZERO) <= 0 || probability.compareTo(BigDecimal.ONE) == 1)
-            return false;
-         else
-            return true;
+         // greater than 0 but smaller or equal to 1
+         return probability.compareTo(BigDecimal.ZERO) == 1 && probability.compareTo(BigDecimal.ONE) != 1;
       }
 
       public Fuzzy<T> create() {
