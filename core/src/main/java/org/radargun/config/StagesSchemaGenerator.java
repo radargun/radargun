@@ -72,10 +72,10 @@ public class StagesSchemaGenerator extends SchemaGenerator {
       // We have to ensure that all definition elements are defined in given namespace in case these would
       // be referenced from another namespace
       Map<String, List<Class<?>>> definitions = new HashMap<>();
-      ClasspathScanner.scanClasspath(Object.class, DefinitionElement.class, "org.radargun",
+      ClasspathScanner.scanClasspath(null, DefinitionElement.class, "org.radargun",
          clazz -> indexClass(definitions, clazz));
       Set<String> allNamespaces = new HashSet<>(definitions.keySet());
-      ClasspathScanner.scanClasspath(Object.class, EnsureInSchema.class, "org.radargun",
+      ClasspathScanner.scanClasspath(null, EnsureInSchema.class, "org.radargun",
          clazz -> indexClass(definitions, clazz));
       allNamespaces.addAll(StageHelper.getStages().keySet());
       for (String namespace : allNamespaces) {
