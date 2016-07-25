@@ -1,0 +1,43 @@
+<!-- RadarGun 3.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <clusters>
+      <cluster size="2" />
+   </clusters>
+
+   <configurations>
+      <config name="Infinispan 8.0">
+         <setup plugin="infinispan80">
+            <embedded xmlns="urn:radargun:plugins:infinispan80:3.0" file="dist-sync.xml"/>
+         </setup>
+      </config>
+   </configurations>
+
+   <!-- This benchmark shows how to configure statistics in a legacy test -->
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0"
+                xmlns:l="urn:radargun:stages:legacy:3.0">
+      <service-start />
+
+      <cache:load num-entries="2000"/>
+
+      <l:basic-operations-test test-name="common-stats" num-threads-per-node="10" duration="${warmup.duration:60s}">
+         <statistics>
+            <!-- This is a template that combines basic, periodic and histogram stats -->
+            <common />
+         </statistics>
+         <l:key-selector>
+            <l:concurrent-keys num-entries-per-thread="100" />
+         </l:key-selector>
+      </l:basic-operations-test>
+   </rg:scenario>
+
+   <reports>
+      <!-- Produce HTML statistics report -->
+      <reporter type="html" />
+   </reports>
+
+</benchmark>
