@@ -6,10 +6,11 @@ import java.util.Map;
 import org.radargun.Operation;
 import org.radargun.utils.KeyValueProperty;
 
-/*
- * TODO: create documentation how M/R tasks should work at all; now we use Infinispan model
- * as this is the only implementation, but we should generalize it here (as it's far from obvious).
- *
+/**
+ * <b>WARNING</b>: This API does not follow RadarGun principles for creating apple-to-apple comparisons
+ * of different M/R implementations, as it requires custom test logic for each implementation.
+ * Therefore, the API is about to change in the future.
+ * <p>
  * Preferred design: Avoid the need to use plugin-specific classes (e.g. org.infinispan.demo.mapreduce.WordCountMapperEmitPerValue,
  * org.radargun.service.demo.ispn.WordCountMapper). This makes scenario definition with multiple plugins clumsy to use.
  * Instead, provide single problem definition (e.g. org.radargun.xxx.WordCountMapper for word count example), which will use high-level api (HLA)
