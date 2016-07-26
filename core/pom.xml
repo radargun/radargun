@@ -24,6 +24,11 @@
          <version>1.0.1.GA</version>
       </dependency>
       <dependency>
+         <groupId>io.github.lukehutch</groupId>
+         <artifactId>fast-classpath-scanner</artifactId>
+         <version>1.91.6</version>
+      </dependency>
+      <dependency>
          <groupId>log4j</groupId>
          <artifactId>log4j</artifactId>
          <version>${version.log4j}</version>
