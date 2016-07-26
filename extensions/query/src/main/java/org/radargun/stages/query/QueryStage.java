@@ -39,7 +39,7 @@ public class QueryStage extends LegacyTestStage {
 
    @Override
    public OperationLogic getLogic() {
-      boolean useTxs = useTransactions == TransactionMode.ALWAYS ? true : useTransactions == TransactionMode.NEVER ? false : transactional != null;
+      boolean useTxs = useTransactions == TransactionMode.ALWAYS ? true : useTransactions == TransactionMode.NEVER ? false : useTransactions(null);
       return new QueryLogic(base, queryable, useTxs);
    }
 
