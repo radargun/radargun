@@ -28,9 +28,9 @@ public final class ClasspathScanner {
       
       FastClasspathScanner fcs;
       if (requirePackage != null) {
-         fcs = new FastClasspathScanner(requirePackage, superClass.getName());
+         fcs = new FastClasspathScanner(requirePackage);
       } else {
-         fcs = new FastClasspathScanner(superClass.getName());
+         fcs = new FastClasspathScanner();
       }
       
       List<String> matches = fcs.scan()
@@ -39,6 +39,9 @@ public final class ClasspathScanner {
          Class<?> clazz;
          try {
             clazz = Class.forName(className);
+            if (superClass != null && !superClass.isAssignableFrom(clazz)) {
+               continue;
+            }
             consumer.accept((Class<? extends TClass>) clazz);
          } catch (Throwable e) {
             // static ctor can throw non-wrapped error
