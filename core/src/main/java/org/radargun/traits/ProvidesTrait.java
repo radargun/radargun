@@ -8,8 +8,6 @@ import java.lang.annotation.Target;
 /**
  * After the Service is started, all methods tagged be this annotation are called
  * and respective Traits are injected into Stages.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

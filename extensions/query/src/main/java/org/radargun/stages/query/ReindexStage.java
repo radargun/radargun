@@ -18,8 +18,6 @@ import org.radargun.traits.Queryable;
 
 /**
  * Just runs reindex.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Runs Queryable.reindex()")
 public class ReindexStage extends AbstractDistStage {

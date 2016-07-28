@@ -13,8 +13,6 @@ import org.radargun.stages.AbstractDistStage;
 
 /**
  * This stage is meant for debugging. Changes log priorities. Beware that some code can cache the is{LogLevel}Enabled().
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Debugging stage: changes log priorities")
 public class SetLogLevelStage extends AbstractDistStage {

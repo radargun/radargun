@@ -11,8 +11,6 @@ import org.radargun.stats.representation.Histogram;
 
 /**
  * Writes bar plot with time (in nanoseconds) on logarithmic X-axis and percents on Y-axis
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class HistogramChart extends Chart {
    private double left;

@@ -10,8 +10,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Definition of one cluster
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Cluster implements Serializable, Comparable<Cluster> {
    private static final AtomicInteger INDEX_GENERATOR = new AtomicInteger(0);

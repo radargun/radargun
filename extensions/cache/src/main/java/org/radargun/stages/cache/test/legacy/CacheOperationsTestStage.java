@@ -7,9 +7,6 @@ import org.radargun.stages.test.legacy.LegacyStressor;
 import org.radargun.stages.test.legacy.LegacyTestStage;
 import org.radargun.utils.ReflexiveConverters;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "Common ancestor for all xOperationsTestStages")
 public abstract class CacheOperationsTestStage extends CacheTestStage {

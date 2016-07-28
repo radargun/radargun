@@ -8,8 +8,6 @@ import org.radargun.stages.cache.generators.ValueGenerator;
 
 /**
  * Configuration specific to {@link LegacyLogic}
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class LegacyLogicConfiguration {
    @Property(doc = "Size of value used in the entry. Default is 1024 bytes.")

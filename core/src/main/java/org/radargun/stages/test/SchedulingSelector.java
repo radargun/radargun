@@ -10,8 +10,6 @@ import org.radargun.utils.TimeService;
 
 /**
  * Based on provided frequency, returns matching invocation from {@link #next()} or blocks the thread calling it.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class SchedulingSelector<T> {
    private final int[] invocations;

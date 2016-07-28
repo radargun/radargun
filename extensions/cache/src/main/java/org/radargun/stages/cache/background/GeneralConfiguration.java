@@ -5,8 +5,6 @@ import org.radargun.utils.TimeConverter;
 
 /**
  * Configuration options shared by all background stressor logics
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class GeneralConfiguration {
    @Property(doc = "Ratio of PUT requests. Default is 1.")

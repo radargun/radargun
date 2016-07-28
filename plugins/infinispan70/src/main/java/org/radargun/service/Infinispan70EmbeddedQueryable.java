@@ -5,8 +5,6 @@ import org.radargun.traits.Query;
 
 /**
  * Supports non-indexed queries.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Infinispan70EmbeddedQueryable extends InfinispanEmbeddedQueryable {
    public Infinispan70EmbeddedQueryable(Infinispan52EmbeddedService service) {

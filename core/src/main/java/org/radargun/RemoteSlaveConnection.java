@@ -28,8 +28,6 @@ import org.radargun.utils.TimeService;
 
 /**
  * Connection to slaves in different JVMs
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class RemoteSlaveConnection {
 

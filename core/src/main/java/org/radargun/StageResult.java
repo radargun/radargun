@@ -3,8 +3,6 @@ package org.radargun;
 /**
  * Return value from {@link org.radargun.MasterStage} or {@link org.radargun.DistStage}, that should signal
  * which stage should follow.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public enum StageResult {
    /**

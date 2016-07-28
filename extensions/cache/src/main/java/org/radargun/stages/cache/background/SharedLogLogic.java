@@ -13,8 +13,6 @@ import org.radargun.traits.ConditionalOperations;
  * This logic operates on {@link SharedLogValue shared log values}
  * and requires {@link ConditionalOperations} on the cache.
  * With this setup, multiple stressors can change one log value concurrently.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 class SharedLogLogic extends AbstractLogLogic<SharedLogValue> {
 

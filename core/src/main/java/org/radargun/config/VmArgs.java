@@ -24,8 +24,6 @@ import org.radargun.utils.SizeConverter;
  * http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/tip/src/share/vm/runtime/globals.hpp Another
  * good resource:
  * http://stas-blogspot.blogspot.com/2011/07/most-complete-list-of-xx-options-for.html
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class VmArgs implements Serializable {
    private static final Log log = LogFactory.getLog(VmArgs.class);

@@ -11,9 +11,6 @@ import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.TimeService;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class QueryLogic extends OperationLogic {
    protected final QueryBase queryBase;
    protected final Log log = LogFactory.getLog(getClass());

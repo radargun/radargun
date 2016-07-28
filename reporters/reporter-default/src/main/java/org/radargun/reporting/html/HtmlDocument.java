@@ -4,8 +4,6 @@ import java.io.File;
 
 /**
  * Base class for formatting HTML file.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class HtmlDocument {
    protected final String directory;

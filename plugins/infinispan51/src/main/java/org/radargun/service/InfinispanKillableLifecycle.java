@@ -15,13 +15,11 @@ import org.radargun.traits.Killable;
 import org.radargun.utils.TimeService;
 
 /**
- *
  * InfinispanEmbeddedService that can kill the cache manager by cutting JGroups communication and is able to
  * perform explicit locking.
  *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * @author Ondrej Nevelik &lt;onevelik@redhat.com&gt;
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InfinispanKillableLifecycle extends InfinispanLifecycle implements Killable {
 

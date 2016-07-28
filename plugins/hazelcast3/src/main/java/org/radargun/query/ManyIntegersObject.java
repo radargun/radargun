@@ -4,8 +4,6 @@ import java.io.Serializable;
 
 /**
  * Object storing multiple numbers (used for multi-index query)
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ManyIntegersObject implements Serializable {
    private int int0;

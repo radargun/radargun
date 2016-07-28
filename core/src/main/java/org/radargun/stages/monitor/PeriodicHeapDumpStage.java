@@ -17,8 +17,6 @@ import org.radargun.utils.Utils;
 
 /**
  * // TODO: Allow heap dumps of remote (server) process, too.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Periodically generates heap dumps.")
 public class PeriodicHeapDumpStage extends AbstractDistStage {

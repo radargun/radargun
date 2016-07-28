@@ -14,8 +14,6 @@ import org.radargun.utils.ArgsHolder;
 
 /**
  * Abstracts connection to the master node from slave side.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class RemoteMasterConnection {
    private static Log log = LogFactory.getLog(RemoteMasterConnection.class);

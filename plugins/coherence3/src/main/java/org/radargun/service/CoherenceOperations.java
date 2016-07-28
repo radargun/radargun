@@ -13,9 +13,6 @@ import org.radargun.processors.ValueConditionalPut;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class CoherenceOperations implements BasicOperations, ConditionalOperations {
    protected static final Log log = LogFactory.getLog(CoherenceOperations.class);
    protected static final boolean trace = log.isTraceEnabled();

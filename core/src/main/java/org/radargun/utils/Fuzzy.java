@@ -45,8 +45,6 @@ import org.radargun.config.Converter;
  * </pre>
  * <p>
  * Note that if the weight is not specified, it defaults to one.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class Fuzzy<T extends Serializable> implements Serializable {
    private Serializable[] values;

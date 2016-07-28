@@ -7,12 +7,10 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.utils.TimeConverter;
 
 /**
- *
  * Will simulate a node stop on specified nodes. If the used Service does not provide Killable trait
  * it will always stop the node gracefully.
  *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Stops or kills (simulates node crash) one or more nodes.")
 public class ServiceStopStage extends AbstractDistStage {

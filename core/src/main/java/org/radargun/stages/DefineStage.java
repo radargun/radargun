@@ -7,9 +7,6 @@ import org.radargun.StageResult;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Use for setting certain value")
 public class DefineStage extends AbstractDistStage {
    @Property(doc = "Name of the variable that should be set.", optional = false)

@@ -7,7 +7,6 @@ import org.infinispan.Cache;
 import org.infinispan.distexec.DistributedCallable;
 
 /**
- *
  * A distributed callable class used to get the total size of the cache based on the cache size on
  * each node in the cluster.
  *

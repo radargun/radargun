@@ -16,8 +16,6 @@ import org.radargun.utils.TimeConverter;
 
 /**
  * Stage checking the write skew detection in transactional caches.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Stage checking the write skew detection in transactional caches.")
 public class WriteSkewCheckStage extends CheckStage {

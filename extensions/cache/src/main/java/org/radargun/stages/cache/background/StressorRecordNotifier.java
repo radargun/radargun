@@ -11,7 +11,6 @@ import org.radargun.traits.CacheListeners;
  * Listener handling {@link org.radargun.stages.cache.background.StressorRecord} notifications.
  *
  * @author Matej Cimbora
- * @author Radim Vansa
  */
 public class StressorRecordNotifier implements CacheListeners.UpdatedListener, CacheListeners.CreatedListener {
 

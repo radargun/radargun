@@ -17,7 +17,6 @@ import org.radargun.utils.TimeService;
  * Component responsible for starting/stopping background stressors and checkers.
  *
  * @author Matej Cimbora
- * @author Radim Vansa
  */
 public class ThreadManager {
 

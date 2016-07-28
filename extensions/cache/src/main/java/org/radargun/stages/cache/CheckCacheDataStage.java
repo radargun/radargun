@@ -27,9 +27,6 @@ import org.radargun.traits.Debugable;
 import org.radargun.traits.InMemoryBasicOperations;
 import org.radargun.traits.InjectTrait;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Stage for checking presence or absence of data entered in other stages.")
 public class CheckCacheDataStage extends AbstractDistStage {
 

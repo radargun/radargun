@@ -11,8 +11,6 @@ import org.jfree.ui.TextAnchor;
 
 /**
  * Helper for charts, axes etc..
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class ChartsHelper {
 

@@ -17,8 +17,6 @@ import org.radargun.utils.ReflexiveConverters;
 /**
  * Definition elements that formulate the condition that should be
  * used in {@link org.radargun.traits.Query.Builder}.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class Condition {
    public abstract void apply(Query.Builder builder);

@@ -12,9 +12,6 @@ import org.radargun.traits.LocalBasicOperations;
 import org.radargun.traits.LocalConditionalOperations;
 import org.radargun.traits.TemporalOperations;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class InfinispanOperations implements BasicOperations, ConditionalOperations, LocalBasicOperations, LocalConditionalOperations, TemporalOperations {
 
    protected final InfinispanEmbeddedService service;

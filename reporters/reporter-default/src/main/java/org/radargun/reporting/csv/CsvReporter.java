@@ -24,8 +24,6 @@ import org.radargun.utils.Utils;
 
 /**
  * Reporter producing CSV files.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class CsvReporter implements Reporter {
 

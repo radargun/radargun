@@ -6,8 +6,6 @@ import org.radargun.config.DefinitionElement;
 
 /**
  * Generates sentence made up from words in the dictionary.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @DefinitionElement(name = "sentence", doc = "Generates text-objects with string from randomly picked words.")
 public class SentenceGenerator extends DictionaryTextObjectGenerator {

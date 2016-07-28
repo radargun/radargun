@@ -8,9 +8,6 @@ import org.infinispan.notifications.cachelistener.event.DataRehashedEvent;
 import org.infinispan.notifications.cachelistener.event.TopologyChangedEvent;
 import org.radargun.traits.TopologyHistory;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class InfinispanTopologyHistory extends AbstractTopologyHistory {
    protected final Infinispan51EmbeddedService service;
 

@@ -4,8 +4,6 @@ import org.radargun.Operation;
 
 /**
  * Partially taken from JSR-107 Cache
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Trait(doc = "Operations that are executed depending on the current value in the cache")
 public interface ConditionalOperations {

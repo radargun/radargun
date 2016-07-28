@@ -8,8 +8,6 @@ import java.lang.annotation.Target;
 
 /**
  * Used to document enum values.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

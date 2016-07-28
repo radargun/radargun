@@ -20,7 +20,6 @@ import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
 
 /**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)

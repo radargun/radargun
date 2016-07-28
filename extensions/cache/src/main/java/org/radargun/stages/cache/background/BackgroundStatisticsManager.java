@@ -21,7 +21,6 @@ import org.radargun.utils.TimeService;
  * Coordinator for collecting statistics from background stressor threads started by {@link org.radargun.stages.cache.background.BackgroundOpsManager}.
  *
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
 
@@ -146,10 +145,8 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
    }
 
    /**
-    *
     * Used for fetching cache size. If the size can't be fetched during one stat iteration, value 0
     * will be used.
-    *
     */
    private class SizeThread extends Thread {
       private boolean getSize = true;

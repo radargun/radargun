@@ -5,9 +5,6 @@ import java.util.Random;
 
 import org.testng.annotations.Test;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class LineChartTest {
    @Test
    public void test() {

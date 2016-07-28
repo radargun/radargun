@@ -13,9 +13,6 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.Table;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Stop Statistics and return collected statistics to master.")
 public class BackgroundStatisticsStopStage extends AbstractDistStage {
    @Property(doc = "Name of the background operations. Default is '" + BackgroundOpsManager.DEFAULT + "'.")

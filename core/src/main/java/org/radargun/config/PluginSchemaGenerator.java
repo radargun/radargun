@@ -11,8 +11,6 @@ import org.radargun.utils.ArgsHolder;
 
 /**
  * Generates schemas for reporters
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class PluginSchemaGenerator extends SchemaGenerator {
    protected static final String NAMESPACE_ROOT = "urn:radargun:plugins:";

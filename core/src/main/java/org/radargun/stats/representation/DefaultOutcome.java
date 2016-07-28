@@ -5,8 +5,6 @@ import org.radargun.stats.Statistics;
 
 /**
  * Representation holding of successful/unsuccessful requests, mean and max response time.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class DefaultOutcome {
    public final long requests;

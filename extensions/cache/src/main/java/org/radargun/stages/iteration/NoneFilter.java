@@ -6,8 +6,6 @@ import org.radargun.traits.Iterable;
 
 /**
  * Rejects all entries.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NoneFilter implements Iterable.Filter, Serializable {
    @Override

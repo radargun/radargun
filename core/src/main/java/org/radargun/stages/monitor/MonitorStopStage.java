@@ -6,7 +6,6 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.sysmonitor.Monitors;
 
 /**
- *
  * Stop collecting JVM statistics on each slave node and return collected statistics to the master node.
  *
  * @author Alan Field &lt;afield@redhat.com&gt;

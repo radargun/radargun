@@ -29,7 +29,6 @@ import org.radargun.stages.cache.generators.KeyGenerator;
  * &lt;plugin-specific class="org.radargun.service.KeyAffinityStringKeyGenerator"
  *                     params="keyBufferSize:1000;cache=testCache" /&gt;
  * to use this generator in test.
- *
  */
 public class KeyAffinityStringKeyGenerator implements KeyGenerator {
 

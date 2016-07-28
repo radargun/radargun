@@ -17,8 +17,6 @@ import org.radargun.utils.Utils;
  * This stage is the last stage that gets {@link org.radargun.traits.Trait Traits} injected
  * and which is ran in the {@link org.radargun.Slave.ScenarioRunner} thread.
  * It should destroy the service - afterwards, no more references to service should be held.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is automatically inserted after the last stage in each scenario.")
 public class ScenarioDestroyStage extends InternalDistStage {

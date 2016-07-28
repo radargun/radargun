@@ -4,9 +4,6 @@ import java.lang.reflect.Type;
 
 import org.radargun.config.Converter;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class SizeConverter implements Converter<Long> {
    private static final int KILO = 1024;
    private static final int MEGA = 1024 * 1024;

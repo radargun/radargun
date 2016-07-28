@@ -13,11 +13,9 @@ import org.radargun.logging.LogFactory;
 import org.radargun.utils.TimeService;
 
 /**
- *
  * JMXClusterValidator for Oracle Coherence
  *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- *
  */
 public class CoherenceJMXClusterValidator implements JMXClusterValidator {
    private static final Log log = LogFactory.getLog(CoherenceJMXClusterValidator.class);

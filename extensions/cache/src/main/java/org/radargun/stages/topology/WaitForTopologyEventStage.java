@@ -14,9 +14,6 @@ import org.radargun.utils.TimeService;
 import static org.radargun.traits.TopologyHistory.Event.EventType;
 import static org.radargun.traits.TopologyHistory.HistoryType;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Waits until some event occurs. Note that the initial rehash is not recorded in this manner, " +
    "therefore waiting for that will result in timeout.")
 public class WaitForTopologyEventStage extends AbstractDistStage {

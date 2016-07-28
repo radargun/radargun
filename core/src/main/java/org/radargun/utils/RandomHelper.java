@@ -5,8 +5,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Helper to create random strings of A-Z characters.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class RandomHelper {
 

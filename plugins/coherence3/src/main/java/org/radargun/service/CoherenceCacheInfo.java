@@ -19,9 +19,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.CacheInformation;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class CoherenceCacheInfo implements CacheInformation {
    private static final Log log = LogFactory.getLog(Coherence3Service.class);
    private static final String CACHE_JMX_NAME_TEMPLATE = "Coherence:type=Cache,service=%s,name=%s,nodeId=%d,tier=back";

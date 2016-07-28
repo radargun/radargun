@@ -16,8 +16,6 @@ import org.radargun.utils.TimeConverter;
 
 /**
  * Stage for testing guaranties of isolation levels.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Stage for testing guaranties of isolation levels.")
 public class IsolationLevelCheckStage extends CheckStage {

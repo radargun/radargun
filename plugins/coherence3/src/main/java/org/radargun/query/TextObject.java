@@ -9,8 +9,6 @@ import com.tangosol.io.pof.PortableObject;
 
 /**
  * Simple object containing one string. See {@link org.radargun.stages.cache.generators.TextObjectGenerator}
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TextObject implements Serializable, PortableObject {
    private String text;

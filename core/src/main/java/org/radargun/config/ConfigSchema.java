@@ -2,8 +2,6 @@ package org.radargun.config;
 
 /**
  * Constants shared between {@link DomConfigParser} and {@link SchemaGenerator}
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 interface ConfigSchema {
    String ATTR_BIND_ADDRESS = "bindAddress";

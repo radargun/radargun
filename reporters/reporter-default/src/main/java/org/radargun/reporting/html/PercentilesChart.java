@@ -11,8 +11,6 @@ import org.radargun.stats.representation.Histogram;
 
 /**
  * Chart showing inverse form of the histogram with focus on higher percentiles
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class PercentilesChart extends Chart {
    private XYSeriesCollection dataset = new XYSeriesCollection();

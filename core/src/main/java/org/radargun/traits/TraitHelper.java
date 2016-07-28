@@ -10,8 +10,6 @@ import java.util.Set;
 
 /**
  * Helper class for dealing with traits.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class TraitHelper {
    public enum InjectResult {

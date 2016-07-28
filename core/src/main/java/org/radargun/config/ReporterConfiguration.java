@@ -8,8 +8,6 @@ import java.util.Map;
 
 /**
  * Structure holding information parsed from the benchmark configuration file.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ReporterConfiguration {
    public final String type;

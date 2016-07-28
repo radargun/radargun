@@ -8,9 +8,6 @@ import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.AbstractMasterStage;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Adds custom result to given test")
 public class AddResultStage extends AbstractMasterStage {
    @Property(doc = "Name of the test.", optional = false)

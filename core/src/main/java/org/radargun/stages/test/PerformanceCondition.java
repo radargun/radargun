@@ -17,9 +17,6 @@ import org.radargun.utils.NanoTimeConverter;
 import org.radargun.utils.ReflexiveConverters;
 import org.radargun.utils.Utils;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public abstract class PerformanceCondition {
    private static final Log log = LogFactory.getLog(PerformanceCondition.class);
 

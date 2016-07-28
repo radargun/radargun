@@ -3,9 +3,6 @@ package org.radargun.jpa.entities;
 import java.io.Serializable;
 import javax.persistence.Embeddable;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Embeddable
 public class EmbeddableId implements Serializable {
    public String firstPart;

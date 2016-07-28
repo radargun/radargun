@@ -26,7 +26,6 @@ import org.radargun.utils.TimeService;
  * //TODO: more polishing to make this class agnostic to implemented logic (just pass configuration)
  *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class BackgroundOpsManager extends ServiceListenerAdapter {
    /**

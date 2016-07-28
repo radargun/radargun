@@ -50,7 +50,6 @@ public final class Range {
    }
 
    /**
-    *
     * Returns pair [startKey, endKey] that specifies a subrange { startKey, ..., endKey-1 } of key
     * range { 0, 1, ..., numKeys-1 } divideRange divides the keyset evenly to numParts parts with
     * difference of part lengths being max 1.

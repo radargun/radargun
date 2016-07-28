@@ -4,8 +4,6 @@ import java.text.DecimalFormat;
 
 /**
  * Computes min/max.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class MinMax {
    public static class Long {

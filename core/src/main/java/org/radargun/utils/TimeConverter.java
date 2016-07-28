@@ -6,8 +6,6 @@ import org.radargun.config.Converter;
 
 /**
  * Converts string with time suffix into milliseconds
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TimeConverter implements Converter<Long> {
    @Override

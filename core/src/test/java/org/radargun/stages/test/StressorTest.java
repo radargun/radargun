@@ -28,9 +28,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class StressorTest extends PowerMockTestCase {
    static Operation FOO = Operation.register("FOO");
    static Operation BAR = Operation.register("BAR");

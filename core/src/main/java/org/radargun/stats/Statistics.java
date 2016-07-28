@@ -9,8 +9,6 @@ import org.radargun.utils.ReflexiveConverters;
 
 /**
  * Collects and provides statistics of operations executed against the service.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface Statistics extends Serializable {
    BinaryOperator<Statistics> MERGE = (s1, s2) -> s1 == null ? s2 : (s2 == null ? s1 : s1.with(s2));

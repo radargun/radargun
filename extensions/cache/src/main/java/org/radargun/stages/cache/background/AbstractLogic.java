@@ -11,8 +11,6 @@ import org.radargun.traits.Transactional;
 
 /**
  * Common operations for all logic types.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class AbstractLogic implements Logic {
 

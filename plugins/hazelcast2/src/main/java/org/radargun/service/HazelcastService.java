@@ -25,10 +25,8 @@ import org.radargun.traits.ProvidesTrait;
 import org.radargun.traits.Transactional;
 
 /**
- *
  * An implementation of CacheWrapper that uses Hazelcast instance as an underlying implementation.
  * @author Martin Gencur
- *
  */
 @Service(doc = "Hazelcast")
 public class HazelcastService implements Lifecycle, Clustered {

@@ -5,8 +5,6 @@ import java.util.Date;
 
 /**
  * Log with level fixed to INFO, writing to stdout.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class StdOutLog implements Log {
    private final String className;

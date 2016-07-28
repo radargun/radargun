@@ -34,7 +34,7 @@ import org.radargun.utils.Utils;
 /**
  * Shows results of the tests executed in the benchmark. Also creates the image files displayed in this HTML document.
  *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+
  * @since 2.0
  */
 // TODO: reduce max report size in order to not overload browser with huge tables

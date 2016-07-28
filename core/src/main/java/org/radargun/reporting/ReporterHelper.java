@@ -25,8 +25,6 @@ import org.radargun.utils.Utils;
  * Helper class creating reporters (in their own classloaders).
  * Each reporter module (directory) should contain JAR with file plugin.properties.
  * This file lists all reporter as reporter./reporter type/ /reporter class/
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class ReporterHelper {
    private static final String REPORTER_PREFIX = "reporter.";

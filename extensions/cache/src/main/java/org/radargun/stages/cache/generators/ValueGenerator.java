@@ -6,8 +6,6 @@ import org.radargun.utils.ReflexiveConverters;
 
 /**
  * Factory class which generates the values used for stress testing
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface ValueGenerator {
    String VALUE_GENERATOR = "VALUE_GENERATOR";

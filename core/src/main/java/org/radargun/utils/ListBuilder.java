@@ -5,8 +5,6 @@ import java.util.List;
 
 /**
  * Simple class to allow fluent API on list
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ListBuilder<T> {
    private List<T> list;

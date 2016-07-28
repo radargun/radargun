@@ -23,8 +23,6 @@ import org.radargun.logging.LogFactory;
 
 /**
  * This utility will start another process after certain lock (args[0]) is released.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class RestartHelper {
 

@@ -12,9 +12,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
 /**
- * 
  * Helper for listing classes on classpath.
- *
  */
 public final class ClasspathScanner {
    private static final Log log = LogFactory.getLog(ClasspathScanner.class);
@@ -24,7 +22,6 @@ public final class ClasspathScanner {
 
    @SuppressWarnings("unchecked")
    /**
-    * 
     * Scan the classpath for classes with the specified annotations
     * 
     * @param superClass restrict the search to annotations that are subclasses of this class, or <code>null</code> to search all classes

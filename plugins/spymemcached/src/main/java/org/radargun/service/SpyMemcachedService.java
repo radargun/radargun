@@ -24,9 +24,6 @@ import org.radargun.traits.Lifecycle;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.TimeConverter;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Service(doc = "SpyMemcached client")
 public class SpyMemcachedService implements Lifecycle {
    private static final Log log = LogFactory.getLog(SpyMemcachedService.class);

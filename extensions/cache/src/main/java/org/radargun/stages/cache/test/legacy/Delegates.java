@@ -8,9 +8,6 @@ import org.radargun.traits.BulkOperations;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.TemporalOperations;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class Delegates {
 
    public static class BasicOperationsCache<K, V> implements BasicOperations.Cache<K, V> {

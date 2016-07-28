@@ -9,8 +9,6 @@ import org.radargun.utils.TimeService;
 /**
  * Tracks time for RPC-like operations, possibly asynchronous (TODO).
  * @see Message for tracking messages with different origin and destination.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class Request {
    private final Statistics statistics;

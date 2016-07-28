@@ -3,9 +3,6 @@ package org.radargun.service;
 import org.jboss.cache.Fqn;
 import org.radargun.traits.BasicOperations;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class JBossCache2Operations implements BasicOperations {
    protected final JBossCache2Service service;
 

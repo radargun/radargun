@@ -6,8 +6,6 @@ package org.radargun.stages.test;
  * It's up to conversation to define think-time between invocation
  * of operations.
  * Interrupts should be handled by throwing {@link InterruptedException}.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface Conversation {
    /**

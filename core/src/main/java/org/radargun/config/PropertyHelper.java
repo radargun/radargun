@@ -19,8 +19,6 @@ import org.radargun.utils.MapEntry;
 
 /**
  * Helper for retrieving properties from the class
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class PropertyHelper {
 

@@ -17,9 +17,6 @@ import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.RepresentationType;
 import org.radargun.utils.Utils;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Analyzes results of already executed test.")
 public class AnalyzeTestStage extends AbstractDistStage {
    @Property(doc = "Name of the test whose result should be analyzed.", optional = false)

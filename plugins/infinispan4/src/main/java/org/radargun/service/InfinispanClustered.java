@@ -14,9 +14,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Clustered;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Listener
 public class InfinispanClustered implements Clustered {
 

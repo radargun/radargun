@@ -30,9 +30,6 @@ import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 import org.radargun.utils.Projections;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class CoherenceQueryable implements Queryable {
    protected final Coherence3Service service;
 

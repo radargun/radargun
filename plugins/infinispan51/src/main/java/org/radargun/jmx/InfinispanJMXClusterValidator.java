@@ -12,11 +12,9 @@ import org.radargun.logging.LogFactory;
 import org.radargun.utils.TimeService;
 
 /**
- *
  * JMXClusterValidator for Infinispan
  *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- *
  */
 public class InfinispanJMXClusterValidator implements JMXClusterValidator {
    private static final Log log = LogFactory.getLog(InfinispanJMXClusterValidator.class);

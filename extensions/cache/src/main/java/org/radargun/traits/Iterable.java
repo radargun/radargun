@@ -8,8 +8,6 @@ import org.radargun.Operation;
 
 /**
  * Allows to iterate through the whole container.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Trait(doc = "Provides way to iterate through all entries.")
 public interface Iterable {

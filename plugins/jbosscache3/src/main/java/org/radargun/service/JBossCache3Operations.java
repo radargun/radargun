@@ -5,9 +5,6 @@ import java.util.Map;
 import org.jboss.cache.util.Caches;
 import org.radargun.traits.BasicOperations;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class JBossCache3Operations extends JBossCache2Operations {
    protected final boolean flatCache;
 

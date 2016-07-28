@@ -10,8 +10,6 @@ import java.lang.annotation.Target;
  * Method annotated with this annotation should perform object cleanup.
  * The destroy methods in superclasses are called after methods in subclasses.
  * If a class has multiple destroy methods, the order in which these are called is not defined.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

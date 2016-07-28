@@ -12,9 +12,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.BulkOperations;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class InfinispanBulkOperations implements BulkOperations {
    protected final Log log = LogFactory.getLog(InfinispanBulkOperations.class);
    protected final boolean trace = log.isTraceEnabled();

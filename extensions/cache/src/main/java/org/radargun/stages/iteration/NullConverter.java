@@ -6,8 +6,6 @@ import org.radargun.traits.Iterable;
 
 /**
  * Converts anything to null
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NullConverter implements Iterable.Converter, Serializable {
    @Override

@@ -144,7 +144,6 @@ public class RandomDataStage extends AbstractDistStage {
    private HashMap<String, Integer> wordCount = new HashMap<String, Integer>();
 
    /**
-    *
     * Fills a multi-dimensional array with randomly generated words. The first dimension of the
     * array is based on the length of the word in characters, and runs from 1 to maxWordLength.
     * Dividing the wordCount by maxWordLength determines how many words of each length are
@@ -419,7 +418,6 @@ public class RandomDataStage extends AbstractDistStage {
    }
 
    /**
-    *
     * Randomly selects a random length word based on the words array defined above
     *
     * @param maxLength
@@ -444,7 +442,6 @@ public class RandomDataStage extends AbstractDistStage {
    }
 
    /**
-    *
     * Generates a random length "word" by randomly selecting single and multi-byte characters
     *
     * @param maxLength

@@ -23,7 +23,6 @@ import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
 /**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)

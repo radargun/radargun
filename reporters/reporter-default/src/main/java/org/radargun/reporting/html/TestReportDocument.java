@@ -13,8 +13,6 @@ import org.radargun.reporting.commons.TestAggregations;
 /**
  * Shows results of the tests executed in the benchmark.
  * Also creates the image files displayed in this HTML document.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 // TODO: reduce max report size in order to not overload browser with huge tables
 public class TestReportDocument extends ReportDocument {

@@ -2,9 +2,6 @@ package org.radargun.logging;
 
 import java.io.Serializable;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public interface Log extends Serializable {
 
    void trace(String message);

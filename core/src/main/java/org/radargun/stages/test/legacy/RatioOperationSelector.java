@@ -7,8 +7,6 @@ import org.radargun.utils.Selector;
 
 /**
  * Ratio-based selector of operations
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class RatioOperationSelector extends Selector<Operation> implements OperationSelector {
 

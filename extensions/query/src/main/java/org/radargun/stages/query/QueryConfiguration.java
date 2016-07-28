@@ -4,11 +4,6 @@ import java.util.List;
 
 import org.radargun.config.Property;
 
-/**
- *
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class QueryConfiguration {
    @Property(name = "class", deprecatedName = "queryObjectClass", optional = false,
       doc = "Full class name of the object that should be queried. Mandatory.")

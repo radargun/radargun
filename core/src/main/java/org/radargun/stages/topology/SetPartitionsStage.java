@@ -16,8 +16,6 @@ import org.radargun.traits.Partitionable;
 
 /**
  * Stage that partitions the cluster into several parts that cannot communicate
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Partitions the cluster into several parts that cannot communicate.")
 public class SetPartitionsStage extends AbstractDistStage {

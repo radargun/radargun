@@ -12,8 +12,6 @@ import org.radargun.stats.representation.Percentile;
 
 /**
  * This class remembers all requests as these came, storing them in memory.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @DefinitionElement(name = "all", doc = "Operation statistics recording all requests' response times.")
 public class AllRecordingOperationStats implements OperationStats {
@@ -28,7 +26,6 @@ public class AllRecordingOperationStats implements OperationStats {
    protected long errors;
 
    /**
-    *
     * Factory method to use in the copy method
     *
     * @return a new AllRecordingOperationStats instance

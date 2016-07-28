@@ -7,8 +7,6 @@ import com.hazelcast.core.TransactionalMap;
 /**
  * Functionally same as {@link HazelcastOperations} but the interfaces have changed a bit
  * and in order to support transactions we have to adapt.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Hazelcast3Operations extends HazelcastOperations {
 

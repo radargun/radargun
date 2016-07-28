@@ -7,8 +7,6 @@ import org.radargun.Operation;
 
 /**
  * Synchronizes the request executions in order to start all the requests in parallel.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class SynchronousOperationSelector implements OperationSelector {
    private final OperationSelector delegate;

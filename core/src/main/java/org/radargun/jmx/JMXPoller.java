@@ -21,11 +21,9 @@ import org.radargun.logging.LogFactory;
 import org.radargun.utils.TimeService;
 
 /**
- *
  * Periodically polls for values exposed via JMX on multiple nodes.
  *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- *
  */
 public abstract class JMXPoller implements NotificationListener {
    public static final String DEFAULT_SERVICE_URL_TEMPLATE = "service:jmx:rmi:///jndi/rmi://%s:%d/jmxrmi";
@@ -49,7 +47,6 @@ public abstract class JMXPoller implements NotificationListener {
    }
 
    /**
-    *
     * Create a new JMXPoller.
     *
     * @param jmxEndpoints

@@ -2,9 +2,6 @@ package org.radargun.service;
 
 import org.infinispan.AdvancedCache;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class Infinispan51Transactional extends InfinispanTransactional {
    protected final Infinispan51EmbeddedService service;
 

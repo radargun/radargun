@@ -9,9 +9,6 @@ import org.radargun.config.PropertyHelper;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @DefinitionElement(name = "custom", doc = "Creates keys of specified class, using single long arg constructor.")
 public class CustomKeyGenerator implements KeyGenerator {
    protected static Log log = LogFactory.getLog(TextObjectGenerator.class);

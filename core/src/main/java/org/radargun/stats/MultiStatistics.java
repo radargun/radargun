@@ -7,9 +7,6 @@ import java.util.stream.Stream;
 
 import org.radargun.Operation;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public abstract class MultiStatistics implements Statistics {
    protected final Statistics[] internal;
 

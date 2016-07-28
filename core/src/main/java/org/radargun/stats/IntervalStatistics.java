@@ -4,8 +4,6 @@ import org.radargun.utils.TimeService;
 
 /**
  * Base class holding just the begin-end timestamps.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class IntervalStatistics implements Statistics {
    private long beginTime = Long.MAX_VALUE;

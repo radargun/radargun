@@ -9,7 +9,7 @@ import org.radargun.stats.representation.DefaultOutcome;
 /**
  * Aggregates statistics information from test
  *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+
  * @author Vitalii Chepeliuk &lt;vchepeli@redhat.com&gt;
  * @since 2.0
  */

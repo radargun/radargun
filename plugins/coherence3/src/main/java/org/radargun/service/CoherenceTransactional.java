@@ -9,9 +9,6 @@ import com.tangosol.coherence.transaction.DefaultConnectionFactory;
 import com.tangosol.net.NamedCache;
 import org.radargun.traits.Transactional;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class CoherenceTransactional implements Transactional {
    protected final Coherence3Service service;
    protected volatile ConnectionFactory connectionFactory;

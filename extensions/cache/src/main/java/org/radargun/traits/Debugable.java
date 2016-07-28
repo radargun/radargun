@@ -2,8 +2,6 @@ package org.radargun.traits;
 
 /**
  * Feature for wrappers supporting debug info output.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Trait(doc = "Access to internal information about keys and the whole cache.")
 public interface Debugable {

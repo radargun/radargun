@@ -2,8 +2,6 @@ package org.radargun.stages.test.legacy;
 
 /**
  * Limits the duration of test.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface Completion {
    void start();

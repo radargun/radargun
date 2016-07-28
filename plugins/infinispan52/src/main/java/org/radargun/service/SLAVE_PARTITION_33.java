@@ -6,8 +6,6 @@ import org.radargun.protocols.SLAVE_PARTITION;
 
 /**
  * SLAVE_PARTITION adapted for JGroups 3.3.x
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class SLAVE_PARTITION_33 extends SLAVE_PARTITION {
    @Override

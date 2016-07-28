@@ -21,8 +21,6 @@ import org.radargun.reporting.Report;
 /**
  * The main document in HTML report.
  * Shows benchmark configuration and links to timeline & test results.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class IndexDocument extends HtmlDocument {
    private static final Log log = LogFactory.getLog(IndexDocument.class);

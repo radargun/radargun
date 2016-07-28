@@ -10,9 +10,6 @@ import java.util.List;
 
 import static org.testng.Assert.*;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Test
 public class InitDestroyTest {
    public static class A {

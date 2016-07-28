@@ -23,9 +23,6 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Test
 @PowerMockIgnore({"javax.management.*"})
 @PrepareForTest(TimeService.class)

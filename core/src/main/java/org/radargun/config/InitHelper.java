@@ -8,9 +8,6 @@ import java.util.LinkedList;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public final class InitHelper {
 
    private static final Log log = LogFactory.getLog(InitHelper.class);

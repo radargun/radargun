@@ -17,9 +17,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.CacheInformation;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class Infinispan52CacheInfo extends InfinispanCacheInfo {
    private final Log log = LogFactory.getLog(this.getClass());
 

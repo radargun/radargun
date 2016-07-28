@@ -6,9 +6,6 @@ import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.utils.TimeConverter;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Starts collection of statistics from background threads and cache size.")
 public class BackgroundStatisticsStartStage extends AbstractDistStage {
    @Property(doc = "Name of the background operations. Default is '" + BackgroundOpsManager.DEFAULT + "'.")

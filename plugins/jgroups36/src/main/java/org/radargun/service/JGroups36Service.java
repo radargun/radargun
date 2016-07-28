@@ -39,7 +39,7 @@ import org.radargun.utils.Utils;
  *   the backup(s) (minus self).
  *
  *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+
  * @author Bela Ban
  */
 @Service(doc = "JGroupsService faking cache operations")

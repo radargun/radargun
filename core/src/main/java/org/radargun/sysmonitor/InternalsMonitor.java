@@ -8,8 +8,6 @@ import org.radargun.utils.TimeService;
 
 /**
  * Retrieves data from {@link org.radargun.traits.InternalsExposition} and places them into timeline
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InternalsMonitor implements Monitor {
    private final InternalsExposition internalsExposition;

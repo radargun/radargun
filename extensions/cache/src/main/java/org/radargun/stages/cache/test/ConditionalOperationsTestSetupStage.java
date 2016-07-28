@@ -14,9 +14,6 @@ import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio" +
    "- this operation is executed anytime the selected key does not have value.")
 public class ConditionalOperationsTestSetupStage extends CacheTestSetupStage {

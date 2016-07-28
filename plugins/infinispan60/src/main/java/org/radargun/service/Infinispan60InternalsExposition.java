@@ -19,8 +19,6 @@ import org.radargun.traits.InternalsExposition;
 
 /**
  * Exposes thread states
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Infinispan60InternalsExposition implements InternalsExposition {
    protected static final Log log = LogFactory.getLog(Infinispan60InternalsExposition.class);

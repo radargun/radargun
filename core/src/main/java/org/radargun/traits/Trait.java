@@ -8,8 +8,6 @@ import java.lang.annotation.Target;
 
 /**
  * Denotes that this interface holds a trait. Trait is a set of methods provided by Service, and consumed in Stage.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

@@ -4,8 +4,6 @@ import org.radargun.Operation;
 
 /**
  * Partially taken from JSR-107 Cache specification
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Trait(doc = "The most basic operations on cache.")
 public interface BasicOperations {

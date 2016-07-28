@@ -20,9 +20,6 @@ import org.radargun.stages.test.legacy.RatioOperationSelector;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.InjectTrait;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "Executes operations from BulkOperations trait.")
 public class BulkOperationsTestStage extends CacheOperationsTestStage {

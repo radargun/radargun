@@ -6,7 +6,6 @@ import static org.testng.Assert.assertEquals;
 
 /**
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Test
 public class EvaluatorTest {

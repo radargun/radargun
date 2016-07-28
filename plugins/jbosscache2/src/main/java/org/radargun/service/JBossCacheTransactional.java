@@ -3,9 +3,6 @@ package org.radargun.service;
 import org.jboss.cache.transaction.DummyTransactionManager;
 import org.radargun.traits.Transactional;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class JBossCacheTransactional implements Transactional {
    @Override
    public Configuration getConfiguration(String resource) {

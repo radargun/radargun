@@ -12,8 +12,6 @@ import org.radargun.stages.AbstractDistStage;
 
 /**
  * Stage for invoking operations on JProfiler. Remember to set up JVM args: "-agentpath:/path/to/libjprofilerti.so=offline,id=100,config=/path/to/configuration.xml"
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Stage for invoking operations on JProfiler.\nRemember to set up JVM args: "
    + "\"-agentpath:/path/to/libjprofilerti.so=offline,id=100,config=/path/to/configuration.xml\"")

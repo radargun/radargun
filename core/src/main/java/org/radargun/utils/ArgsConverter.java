@@ -11,8 +11,6 @@ import org.radargun.logging.LogFactory;
 /**
  * Tokenizes the arguments into list, parsing text in apostrophes.
  * Apostrophes cannot be escaped.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ArgsConverter implements Converter<List<String>> {
    private static Log log = LogFactory.getLog(ArgsConverter.class);

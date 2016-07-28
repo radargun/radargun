@@ -5,9 +5,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.InternalDistStage;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(internal = true, doc = "Parent class for repeat-related stages.")
 public abstract class RepeatStage extends InternalDistStage {
    public static final String REPEAT_NAMES = "REPEAT_NAMES";

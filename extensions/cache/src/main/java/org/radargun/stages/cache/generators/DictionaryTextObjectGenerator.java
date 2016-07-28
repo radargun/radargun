@@ -6,8 +6,6 @@ import org.radargun.utils.Utils;
 
 /**
  * Base for generators that load set of words
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class DictionaryTextObjectGenerator extends TextObjectGenerator {
    @Property(doc = "File with words (one word per line).")

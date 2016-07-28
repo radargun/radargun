@@ -22,8 +22,6 @@ import org.radargun.utils.NanoTimeConverter;
 /**
  * Keeps several buckets for response time ranges and stores number of requests falling into this range.
  * Does not differentiate between successful and error requests.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @DefinitionElement(name = "histogram", doc = "Stores data required for producing histogram or percentiles.")
 public final class HistogramOperationStats implements OperationStats {

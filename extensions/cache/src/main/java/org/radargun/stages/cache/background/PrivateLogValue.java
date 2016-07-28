@@ -5,8 +5,6 @@ import java.util.Arrays;
 
 /**
  * Log value that is written by single stressor - keeps its ID.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class PrivateLogValue implements Serializable {
    private final int threadId;

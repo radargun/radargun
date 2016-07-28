@@ -18,8 +18,6 @@ import org.radargun.config.*;
  * is chosen according to element name as specified in {@link org.radargun.config.DefinitionElement#name()}
  * on one of the classes passed in the constructor, or classes implementing class passed to the contructor.
  * In the latter case, all JARs in lib/ are scanned for these implementations annotated with DefinitionElement
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ReflexiveConverters {
 

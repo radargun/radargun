@@ -11,9 +11,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.utils.ArgsConverter;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Stage that allows you to execute generic command on the slave machine.")
 public class CommandStage extends AbstractDistStage {
    @Property(doc = "Command that should be executed. No default, but must be provided unless 'var' is set.")

@@ -456,7 +456,6 @@ public class Utils {
    }
 
    /**
-    *
     * Invoke a public method with a String argument on an Object
     *
     * @param object

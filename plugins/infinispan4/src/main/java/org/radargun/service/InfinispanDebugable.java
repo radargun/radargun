@@ -14,9 +14,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Debugable;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class InfinispanDebugable implements Debugable {
 
    protected final Log log = LogFactory.getLog(getClass());

@@ -2,8 +2,6 @@ package org.radargun.state;
 
 /**
  * Listener called on master node
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface MasterListener {
    void beforeConfiguration();

@@ -8,8 +8,6 @@ import java.lang.annotation.Target;
 
 /**
  * Marks types that can be instantiated as a service
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

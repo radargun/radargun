@@ -1,22 +1,13 @@
 package org.radargun.jpa.entities;
 
-import org.radargun.stag
-s.cach.generators.JpaValueGener
-   tor;
-
-   mport javax.persistence.Col
-   mn;
-   im ort javax.persistence.Emb
-   dded;
-   mport javax.persisten
-
-   .Entit;
-import javax.persistence.Id;
 import java.util.Random;
+import javax.persistence.Column;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
+import org.radargun.stages.cache.generators.JpaValueGenerator;
+
 @Entity
 public class EmbeddedContentEntity extends JpaValueGenerator.JpaValue {
    @Id

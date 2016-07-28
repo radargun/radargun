@@ -11,9 +11,6 @@ import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @DefinitionElement(name = "jpa", doc = "Instantiates JPA entities. The constructor for the entities must match to the generateValue() method.")
 public class JpaValueGenerator implements ValueGenerator {
    protected static Log log = LogFactory.getLog(JpaValueGenerator.class);

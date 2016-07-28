@@ -5,8 +5,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Abstract generic representation that contains time-framed series of representations.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class AbstractSeries<T> {
    private static final Map<Class<? extends AbstractSeries>, Class<?>> representations = new ConcurrentHashMap<>();

@@ -11,8 +11,6 @@ import org.radargun.utils.Utils;
  * (as 60 % of the data set are <= 1) and for percentile 70 it is 2.
  * It is expected that when calling {@link org.radargun.stats.OperationStats#getRepresentation(Class, Statistics, Object...)}
  * with Percentile as the class argument, first argument is double value between 0 and 1 (inclusive).
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Percentile {
    public final double responseTimeMax;

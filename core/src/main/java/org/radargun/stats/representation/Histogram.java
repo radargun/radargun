@@ -4,8 +4,6 @@ import org.radargun.utils.Utils;
 
 /**
  * Representation holding buckets (time range) with number of results belonging to this bucket.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class Histogram {
    public final long[] ranges;

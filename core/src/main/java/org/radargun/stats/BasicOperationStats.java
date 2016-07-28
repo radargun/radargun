@@ -8,8 +8,6 @@ import org.radargun.stats.representation.OperationThroughput;
 
 /**
  * Underlying statistical data gathered for single operation type.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @DefinitionElement(name = "basic", doc = "Operations statistics with fixed memory footprint.")
 public class BasicOperationStats implements OperationStats {

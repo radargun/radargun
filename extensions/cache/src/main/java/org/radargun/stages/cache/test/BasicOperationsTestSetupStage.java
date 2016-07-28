@@ -13,9 +13,6 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Test using BasicOperations")
 public class BasicOperationsTestSetupStage extends CacheTestSetupStage {
 

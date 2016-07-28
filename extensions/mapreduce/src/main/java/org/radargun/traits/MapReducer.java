@@ -24,7 +24,6 @@ public interface MapReducer<KOut, VOut, R> {
 
    interface Builder<KOut, VOut, R> {
       /**
-       *
        * Set a timeout (ms) for the communication between the nodes during a Map Reduce task. Setting this
        * value to zero or less than zero means to wait forever.
        *
@@ -63,7 +62,6 @@ public interface MapReducer<KOut, VOut, R> {
       Builder<KOut, VOut, R> reducer(String reducerFqn, Collection<KeyValueProperty> reducerParameters);
 
       /**
-       *
        * Specifies a Reducer class to be used with the MapReduceTask during the combine phase
        *
        * @param combinerFqn
@@ -77,7 +75,6 @@ public interface MapReducer<KOut, VOut, R> {
       Builder<KOut, VOut, R> combiner(String combinerFqn, Collection<KeyValueProperty> combinerParameters);
 
       /**
-       *
        * Set the specified collator on the supplied MapTask
        *
        * @param collatorFqn
@@ -96,7 +93,6 @@ public interface MapReducer<KOut, VOut, R> {
 
    interface Task<KOut, VOut, R> {
       /**
-       *
        * Execute the MapTask against all of the keys in the cache
        *
        * @return a Map where each key is an output key and value is reduced value for that output
@@ -105,7 +101,6 @@ public interface MapReducer<KOut, VOut, R> {
       Map<KOut, VOut> execute();
 
       /**
-       *
        * Execute the MapTask against all of the keys in the cache and use a Collator on the results
        *
        * @return the collated result object

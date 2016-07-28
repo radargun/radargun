@@ -12,8 +12,6 @@ import org.radargun.utils.Utils;
  * Divides key space used by {@link org.radargun.stages.cache.background.Stressor}s into multiple segments, corresponding
  * to key range defined by {@link org.radargun.stages.cache.background.AbstractLogLogic} implementations.
  * Furthermore, it keeps track of currently processed key and operation performed by {@link org.radargun.stages.cache.background.LogChecker}.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class StressorRecord {
 

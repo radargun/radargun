@@ -17,8 +17,6 @@ import org.w3c.dom.Element;
  * <p/>
  * This file is expected to be run from command-line, or rather
  * build script.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class BenchmarkSchemaGenerator extends SchemaGenerator implements ConfigSchema {
    protected static final String NAMESPACE = "urn:radargun:benchmark:" + Version.SCHEMA_VERSION;

@@ -5,9 +5,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Stops stressor threads and cleans-up after multi-iteration test stages.")
 public class FinishTestStage extends AbstractDistStage {
    @Property(doc = "Name of the test as used for reporting. Default is 'Test'.")

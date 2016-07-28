@@ -8,9 +8,6 @@ import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;
 import org.radargun.traits.CacheInformation;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class InfinispanCacheInfo implements CacheInformation {
    protected final InfinispanEmbeddedService service;
 

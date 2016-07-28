@@ -9,8 +9,6 @@ import com.tangosol.io.pof.PortableObject;
 
 /**
  * Object storing multiple numbers (used for multi-index query)
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ManyIntegersObject implements Serializable, PortableObject {
    private int int0;

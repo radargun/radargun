@@ -8,8 +8,6 @@ import org.infinispan.persistence.keymappers.TwoWayKey2StringMapper;
 /**
  * Hackish generic implementation - keeps all objects in a map for reverse mapping.
  * Requires that the key was stored before it is read from cachestore - no preloading!
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ObjectToStringMapper implements TwoWayKey2StringMapper {
 

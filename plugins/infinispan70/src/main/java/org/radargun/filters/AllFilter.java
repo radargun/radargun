@@ -7,8 +7,6 @@ import org.infinispan.metadata.Metadata;
 
 /**
  * Accepts anything.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class AllFilter<K, V> implements KeyValueFilter<K, V>, Serializable {
    public static final AllFilter INSTANCE = new AllFilter();

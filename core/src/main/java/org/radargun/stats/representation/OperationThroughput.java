@@ -7,8 +7,6 @@ import org.radargun.stats.Statistics;
 
 /**
  * Number of operations per second. May be imprecise if the merged periods are not identical.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class OperationThroughput {
    /**

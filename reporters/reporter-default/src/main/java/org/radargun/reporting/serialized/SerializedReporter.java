@@ -27,8 +27,6 @@ import org.radargun.reporting.ReporterHelper;
 
 /**
  * Serializes all data from the report to disc, in order to create reports in the future.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class SerializedReporter implements Reporter {
    private static final Log log = LogFactory.getLog(SerializedReporter.class);

@@ -7,8 +7,6 @@ import com.tangosol.util.processor.ConditionalRemove;
 
 /**
  * Conditional remove returning boolean return value according to the JSR-107 spec.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class BooleanConditionalRemove extends ConditionalRemove {
    public BooleanConditionalRemove() {

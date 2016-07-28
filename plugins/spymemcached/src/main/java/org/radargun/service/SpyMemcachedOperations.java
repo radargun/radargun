@@ -13,8 +13,6 @@ import org.radargun.traits.ConditionalOperations;
  * through the Memcached protocol, using SpyMemcached implementation.
  * The memcached CAS operation is used to implement some of the operations,
  * therefore, some operations may require multiple actual calls.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class SpyMemcachedOperations implements BasicOperations, ConditionalOperations {
    private final SpyMemcachedService service;

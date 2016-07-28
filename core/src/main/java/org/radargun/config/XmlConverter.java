@@ -15,8 +15,6 @@ import java.lang.reflect.Type;
  * </setup>
  *
  * where external-configuration is a String property with {@link Property#complexConverter()} set to {@link XmlConverter}.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class XmlConverter implements ComplexConverter<String> {
    @Override

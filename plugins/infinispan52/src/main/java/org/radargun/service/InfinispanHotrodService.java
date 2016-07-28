@@ -17,9 +17,6 @@ import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.ProvidesTrait;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Service(doc = InfinispanHotrodService.SERVICE_DESCRIPTION)
 public class InfinispanHotrodService implements Lifecycle, InternalsExposition {
    protected static final Log log = LogFactory.getLog(InfinispanHotrodService.class);

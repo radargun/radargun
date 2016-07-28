@@ -11,8 +11,6 @@ import org.radargun.traits.Queryable;
 
 /**
  * Provides implementation of querying suited to Infinispan DSL Queries
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class AbstractInfinispanQueryable implements Queryable {
    protected static class QueryBuilderImpl implements Query.Builder {

@@ -9,8 +9,6 @@ import org.radargun.utils.ReflexiveConverters;
 
 /**
  * The policy for selecting caches in test
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class CacheSelector implements Serializable {
    public static final String CACHE_SELECTOR = "CACHE_SELECTOR";

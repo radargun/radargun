@@ -8,8 +8,6 @@ import java.util.Map;
 
 /**
  * Describes one configuration of one product-config unit
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Configuration implements Serializable {
    public static final String DEFAULT_SERVICE = "default";

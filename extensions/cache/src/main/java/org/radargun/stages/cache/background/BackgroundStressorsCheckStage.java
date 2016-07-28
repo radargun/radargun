@@ -5,9 +5,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Stage that checks the progress in background stressors and fails if something went wrong.")
 public class BackgroundStressorsCheckStage extends AbstractDistStage {
    @Property(doc = "Name of the background operations. By default, all instances are checked.")

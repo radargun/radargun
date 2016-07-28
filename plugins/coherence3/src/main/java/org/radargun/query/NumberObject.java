@@ -9,8 +9,6 @@ import com.tangosol.io.pof.PortableObject;
 
 /**
  * Object to be queried containing numbers
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NumberObject implements Serializable, PortableObject {
    private int integerValue;

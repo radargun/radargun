@@ -11,8 +11,6 @@ import org.radargun.stages.AbstractDistStage;
 
 /**
  * Common base for stages that start slaves.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Parent class for stages handling service start.")
 public abstract class AbstractServiceStartStage extends AbstractDistStage {
