@@ -18,8 +18,6 @@ import org.radargun.traits.Transactional;
  * After finishing the {@linkplain OperationLogic#init(LegacyStressor) init phase}, all stressors synchronously
  * execute logic's {@link OperationLogic#run(org.radargun.Operation) run} method until
  * the {@link Completion#moreToRun()} returns false.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class LegacyStressor extends Thread {
    private static Log log = LogFactory.getLog(LegacyStressor.class);

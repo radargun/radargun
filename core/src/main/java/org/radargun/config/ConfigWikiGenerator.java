@@ -7,8 +7,6 @@ import org.radargun.Stage;
 
 /**
  * This is used to generate the stages/properties with GitHub wiki markup
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class ConfigWikiGenerator {
 

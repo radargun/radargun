@@ -7,8 +7,6 @@ import org.radargun.Operation;
 
 /**
  * Partially taken from JSR-107 Cache
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Trait(doc = "Operations using multiple key-value pairs.")
 public interface BulkOperations {

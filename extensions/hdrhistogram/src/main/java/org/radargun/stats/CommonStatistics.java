@@ -8,9 +8,6 @@ import org.radargun.config.Property;
 import org.radargun.utils.NanoTimeConverter;
 import org.radargun.utils.TimeConverter;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @DefinitionElement(name = "common", doc = "Sampled basic statistics with histogram for the whole duration.")
 public class CommonStatistics extends MultiStatistics {
    @Property(doc = "Duration of one sample in stats. Defaults to 1 second.", converter = TimeConverter.class)

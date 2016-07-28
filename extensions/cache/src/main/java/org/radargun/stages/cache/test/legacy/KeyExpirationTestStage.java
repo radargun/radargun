@@ -22,9 +22,6 @@ import org.radargun.utils.SizeConverter;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "During execution, keys expire (entries are removed from the cache) and new keys are used.")
 public class KeyExpirationTestStage extends CacheTestStage {
@@ -67,10 +64,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
       return new Logic();
    }
 
-   /**
-    * @author Radim Vansa &lt;rvansa@redhat.com&gt;
-    */
-   protected class Logic extends OperationLogic {
+      protected class Logic extends OperationLogic {
       private long minRemoveTimestamp = Long.MAX_VALUE;
       private int minRemoveSize = 0;
       private HashMap<Integer, Load> loadForSize = new HashMap<>();

@@ -16,7 +16,6 @@ import org.infinispan.configuration.global.GlobalConfiguration;
  * ConfigDumpHelper that uses Infinispan 6.0's own property dumping mechanism.
  *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- *
  */
 public class ConfigDumpHelper60 extends ConfigDumpHelper {
 

@@ -2,8 +2,6 @@ package org.radargun.stages.cache.background;
 
 /**
  * The class with business logic of the background stressor.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 interface Logic {
    /**

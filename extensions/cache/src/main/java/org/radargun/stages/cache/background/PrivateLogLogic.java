@@ -14,8 +14,6 @@ import org.radargun.utils.TimeService;
 /**
  * This logic operates on {@link PrivateLogValue private log values} using only {@link BasicOperations},
  * specifically put, get and remove operations. Private log values are written to by single thread.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 class PrivateLogLogic extends AbstractLogLogic<PrivateLogValue> {
 

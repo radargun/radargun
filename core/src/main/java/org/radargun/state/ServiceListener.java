@@ -1,8 +1,5 @@
 package org.radargun.state;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public interface ServiceListener {
 
    /**

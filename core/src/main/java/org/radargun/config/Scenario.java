@@ -17,8 +17,6 @@ import org.radargun.utils.Utils;
 
 /**
  * List of stages in order in which these should be executed.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Scenario implements Serializable {
    private List<StageDescription> stages = new ArrayList<>();

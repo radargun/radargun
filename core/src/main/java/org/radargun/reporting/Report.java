@@ -13,8 +13,6 @@ import org.radargun.stats.Statistics;
 
 /**
  * Data collected during scenarion on one configuration
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Report implements Comparable<Report>, Serializable {
 

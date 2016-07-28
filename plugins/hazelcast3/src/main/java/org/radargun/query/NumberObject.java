@@ -4,8 +4,6 @@ import java.io.Serializable;
 
 /**
  * Object to be queried containing numbers
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NumberObject implements Serializable {
    private int integerValue;

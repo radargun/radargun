@@ -7,8 +7,6 @@ import org.radargun.config.Property;
 
 /**
  * Random configuration values.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface RandomValue<T> {
    T nextValue(Random random);

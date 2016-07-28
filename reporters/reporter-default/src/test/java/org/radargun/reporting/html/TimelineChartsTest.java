@@ -13,8 +13,6 @@ import org.testng.annotations.Test;
 
 /**
  * Writes a basic {@link TimelineDocument} with few charts.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class TimelineChartsTest {
 

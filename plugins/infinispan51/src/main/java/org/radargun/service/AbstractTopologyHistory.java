@@ -11,9 +11,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.TopologyHistory;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public abstract class AbstractTopologyHistory implements TopologyHistory {
    protected final Log log = LogFactory.getLog(getClass());
    protected final Map<String, List<Event>> topologyChanges = new HashMap<>();

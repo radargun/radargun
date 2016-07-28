@@ -12,8 +12,6 @@ import org.radargun.stats.SynchronizedStatistics;
  * @See org.radargun.stages.cache.background.LegacyLogic
  * @See org.radargun.stages.cache.background.PrivateLogLogic
  * @See org.radargun.stages.cache.background.SharedLogLogic
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 class Stressor extends Thread {
 

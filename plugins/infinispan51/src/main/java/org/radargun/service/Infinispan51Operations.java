@@ -8,9 +8,6 @@ import org.infinispan.context.Flag;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InMemoryBasicOperations;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class Infinispan51Operations extends InfinispanOperations implements InMemoryBasicOperations {
    protected final Infinispan51EmbeddedService service;
 

@@ -3,9 +3,6 @@ package org.radargun.logging;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public final class Log4j2Log implements Log {
    private transient Logger logger;
    private Class<?> clazz;

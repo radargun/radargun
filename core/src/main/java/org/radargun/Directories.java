@@ -4,9 +4,6 @@ import java.io.File;
 
 import org.radargun.utils.Utils;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public final class Directories {
    public static final File ROOT_DIR;
    public static final File LIB_DIR;

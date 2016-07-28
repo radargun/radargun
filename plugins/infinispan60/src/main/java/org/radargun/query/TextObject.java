@@ -11,8 +11,6 @@ import org.infinispan.protostream.MessageMarshaller;
 
 /**
  * Simple object containing one string. See {@link org.radargun.stages.cache.generators.TextObjectGenerator}
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Indexed
 public class TextObject implements Serializable {

@@ -18,9 +18,6 @@ import org.radargun.traits.BulkOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Executes operations from BulkOperations trait.")
 public class BulkOperationsTestSetupStage extends CacheTestSetupStage {
    @Property(doc = "Number of keys inserted/retrieved within one operation. Default is 10.")

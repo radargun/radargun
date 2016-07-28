@@ -2,8 +2,6 @@ package org.radargun.logging;
 
 /**
  * Common wrapper for any logging system used for logging.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class LogFactory {
 

@@ -5,8 +5,6 @@ import java.util.Map;
 
 /**
  * Trivial implementation of {@link java.util.Map.Entry} interface.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class MapEntry<K, V> implements Map.Entry<K, V>, Serializable {
    private final K key;

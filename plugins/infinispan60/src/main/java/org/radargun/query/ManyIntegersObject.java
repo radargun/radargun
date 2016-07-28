@@ -12,8 +12,6 @@ import org.infinispan.protostream.MessageMarshaller;
 
 /**
  * Object storing multiple numbers (used for multi-index query)
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Indexed
 public class ManyIntegersObject implements Serializable {

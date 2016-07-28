@@ -5,8 +5,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Abstraction of any operation executed through traits. Each operation
  * has ID (this may differ on different nodes) and name (that should be unique).
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class Operation {
    private static int nextId = 1;

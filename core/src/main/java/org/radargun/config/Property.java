@@ -4,8 +4,6 @@ import java.lang.annotation.*;
 
 /**
  * This setter should be exposed as XML attribute (stage property)
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

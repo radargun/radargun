@@ -3,9 +3,6 @@ package org.radargun.service;
 import org.infinispan.AdvancedCache;
 import org.radargun.traits.CacheInformation;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class Infinispan53CacheInfo extends Infinispan52CacheInfo {
    public Infinispan53CacheInfo(InfinispanEmbeddedService service) {
       super(service);

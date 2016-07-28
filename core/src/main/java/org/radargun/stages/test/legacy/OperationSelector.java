@@ -4,9 +4,6 @@ import java.util.Random;
 
 import org.radargun.Operation;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public interface OperationSelector {
 
    OperationSelector DUMMY = new OperationSelector() {

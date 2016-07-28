@@ -25,8 +25,6 @@ import org.radargun.logging.LogFactory;
 /**
  * Generic listener is registered only once for each cache, then it multiplexes the events to the
  * RadarGun listeners. The listener registration is not expected to survive cache manager restarts.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InfinispanCacheListeners extends
    AbstractInfinispanListeners {

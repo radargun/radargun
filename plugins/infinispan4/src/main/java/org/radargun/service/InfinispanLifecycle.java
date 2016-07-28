@@ -8,9 +8,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Lifecycle;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class InfinispanLifecycle implements Lifecycle {
    enum State {
       STOPPED,

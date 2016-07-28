@@ -12,9 +12,6 @@ import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Fuzzy;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "Benchmark where several client threads access cache limited by time or number of requests.")
 public abstract class CacheTestStage extends LegacyTestStage {

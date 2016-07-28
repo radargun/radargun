@@ -4,8 +4,6 @@ import java.util.Collection;
 
 /**
  * Complex converter based on {@link DefinitionElement}
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface DefinitionElementConverter<T> extends ComplexConverter<T> {
    /**

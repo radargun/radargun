@@ -7,9 +7,6 @@ import java.util.*;
 import org.radargun.utils.Utils;
 import org.w3c.dom.Element;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class StagesSchemaGenerator extends SchemaGenerator {
    private final Collection<Class<? extends org.radargun.Stage>> stages;
    private final Collection<Class<?>> extraClasses;

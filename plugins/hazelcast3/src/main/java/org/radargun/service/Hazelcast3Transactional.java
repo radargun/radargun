@@ -9,8 +9,6 @@ import org.radargun.traits.Transactional;
 
 /**
  * Provides transactional operations for Hazelcast
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Hazelcast3Transactional implements Transactional {
    protected final Hazelcast3Service service;

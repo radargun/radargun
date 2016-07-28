@@ -12,8 +12,6 @@ import org.radargun.logging.LogFactory;
 
 /**
  * Generates the {@link org.radargun.query.ManyIntegersObject} instances
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @DefinitionElement(name = "many-integers", doc = "Generates objects with specified number of integers.")
 public class ManyIntegersObjectGenerator implements ValueGenerator {

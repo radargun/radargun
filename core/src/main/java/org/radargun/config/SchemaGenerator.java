@@ -23,8 +23,6 @@ import org.w3c.dom.Node;
 
 /**
  * Base class for generators of schemas.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class SchemaGenerator {
 

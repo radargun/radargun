@@ -18,8 +18,6 @@ import org.radargun.traits.TemporalOperations;
 /**
  * Implementation of the {@link BasicOperations} and {@link ConditionalOperations}
  * through the HotRod protocol.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class HotRodOperations implements BasicOperations, BulkOperations, ConditionalOperations, TemporalOperations {
    protected static final Log log = LogFactory.getLog(HotRodOperations.class);

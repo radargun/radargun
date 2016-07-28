@@ -4,9 +4,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class OrderBy {
    public final String attribute;
    public final boolean asc;

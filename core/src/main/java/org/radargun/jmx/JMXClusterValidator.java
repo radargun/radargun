@@ -10,7 +10,6 @@ import java.util.List;
  */
 public interface JMXClusterValidator {
    /**
-    *
     * Initialises the validator instance.
     *
     * @param slaveAddresses
@@ -27,7 +26,6 @@ public interface JMXClusterValidator {
    void init(List<InetSocketAddress> slaveAddresses, long jmxConnectionTimeout, String prop1, String prop2, String prop3);
 
    /**
-    *
     * Block until the cluster is formed.
     *
     * @param slaveIndices

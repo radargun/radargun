@@ -16,7 +16,7 @@ import org.radargun.utils.Utils;
 /**
  * Original background stressors logic which loads all entries into cache and then overwrites them.
  *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
 class LegacyLogic extends AbstractLogic {

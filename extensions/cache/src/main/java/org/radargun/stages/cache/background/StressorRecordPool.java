@@ -12,8 +12,6 @@ import org.radargun.logging.LogFactory;
 /**
  * A pool of {@link org.radargun.stages.cache.background.StressorRecord}s. Used by log checkers to ensure all stressor
  * records are handled in a fair way (once a stressor record is chcecked, it is returned to the pool in a FIFO fashion).
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class StressorRecordPool {
 

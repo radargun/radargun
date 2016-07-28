@@ -6,8 +6,6 @@ import org.radargun.utils.ReflexiveConverters;
 
 /**
  * Base and converters for representation values defined through configuration.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class RepresentationType {
 

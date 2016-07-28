@@ -13,8 +13,6 @@ import org.radargun.utils.Utils;
 
 /**
  * Helper class, the only function is instantiating and initializing the service.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class ServiceHelper {
    private static final Log log = LogFactory.getLog(ServiceHelper.class);

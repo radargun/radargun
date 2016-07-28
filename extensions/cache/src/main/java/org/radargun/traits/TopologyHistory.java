@@ -7,8 +7,6 @@ import java.util.List;
 
 /**
  * The wrapper should be aware of the current topology and its history
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Trait(doc = "Information about recent network topology changes.")
 // TODO: topology and hash are not truly generic - make the histories generic

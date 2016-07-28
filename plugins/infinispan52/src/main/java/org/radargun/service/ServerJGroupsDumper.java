@@ -16,8 +16,6 @@ import org.radargun.logging.LogFactory;
 
 /**
  * Dumps JGroups information retrieved through JMX to log. Use for debug purposes only.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ServerJGroupsDumper implements Runnable {
    protected static final String CLUSTER_NAME = "cluster_name";

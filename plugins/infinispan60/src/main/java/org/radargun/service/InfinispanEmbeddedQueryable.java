@@ -8,8 +8,6 @@ import org.radargun.traits.Query;
 
 /**
  * Queryable implementation for embedded mode.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InfinispanEmbeddedQueryable extends AbstractInfinispanQueryable {
    protected Infinispan52EmbeddedService service;

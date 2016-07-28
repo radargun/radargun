@@ -9,8 +9,6 @@ import org.infinispan.metadata.Metadata;
  * Converts anything to null.
  * Don't mistake with {@link org.radargun.stages.iteration.NullConverter} that implements RadarGun interface
  * while this one implements Infinispan interface.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NullConverter implements Converter, Serializable {
    public static final NullConverter INSTANCE = new NullConverter();

@@ -13,9 +13,6 @@ import org.radargun.stats.BasicStatistics;
 import org.radargun.stats.Statistics;
 import org.radargun.utils.TimeConverter;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Base for tests.")
 public abstract class BaseTestStage extends AbstractDistStage {
    @Property(doc = "Name of the test as used for reporting. Default is 'Test'.")

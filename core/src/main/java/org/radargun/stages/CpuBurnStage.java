@@ -6,9 +6,6 @@ import org.radargun.config.Stage;
 import org.radargun.stages.test.Blackhole;
 import org.radargun.state.ServiceListenerAdapter;
 
-/**
- * @author Radim Vansa &ltrvansa@redhat.com&gt;
- */
 @Stage(doc = "Burns CPU time in several threads to simulate CPU intensive app.")
 public class CpuBurnStage extends AbstractDistStage {
    @Property(doc = "Number of threads burning CPU.")

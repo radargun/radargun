@@ -9,9 +9,6 @@ import com.hazelcast.core.IMap;
 import com.hazelcast.core.Instance;
 import org.radargun.traits.CacheInformation;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class HazelcastCacheInfo implements CacheInformation {
    protected final HazelcastService service;
 

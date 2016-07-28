@@ -12,9 +12,6 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.ConditionalOperations;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class EHCacheOperations implements BasicOperations, ConditionalOperations, BulkOperations {
 
    protected final EHCacheService service;

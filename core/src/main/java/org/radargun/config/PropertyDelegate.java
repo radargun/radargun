@@ -8,8 +8,6 @@ import java.lang.annotation.Target;
 
 /**
  * Delegates property as set up to different instance.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

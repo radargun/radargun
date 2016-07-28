@@ -17,7 +17,6 @@ import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.utils.TimeConverter;
 
 /**
- *
  * Starts collecting JVM statistics locally on each slave node. {@link org.radargun.sysmonitor.Monitors}
  *
  * @author Alan Field &lt;afield@redhat.com&gt;

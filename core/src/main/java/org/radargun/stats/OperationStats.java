@@ -14,8 +14,6 @@ import org.radargun.utils.ReflexiveConverters;
  *
  * Ideally this class should be package-private, though, the need to modify the stats externally
  * (in {@link DataOperationStats}) exposes them (through {@link Statistics#getOperationStats(String)}.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface OperationStats extends Serializable {
    /**

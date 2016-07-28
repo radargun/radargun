@@ -26,9 +26,6 @@ import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Iterable;
 import org.radargun.utils.Utils;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Iterates through all entries.")
 public class IterateStage extends LegacyTestStage {
    @Property(doc = "Full class name of the filter used to iterate through entries. Default is none (accept all).")

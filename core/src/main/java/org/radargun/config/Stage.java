@@ -4,8 +4,6 @@ import java.lang.annotation.*;
 
 /**
  * This is a benchmark stage
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

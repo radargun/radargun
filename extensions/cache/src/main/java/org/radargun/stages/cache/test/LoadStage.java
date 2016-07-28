@@ -21,9 +21,6 @@ import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Loads data into the cache using specified generators.")
 public class LoadStage extends org.radargun.stages.test.LoadStage {
 

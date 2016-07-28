@@ -7,8 +7,6 @@ import java.lang.annotation.Target;
 
 /**
  * Defines the target namespace for this class when generating elements in XML schema.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE) // TODO: allow package level annotation?

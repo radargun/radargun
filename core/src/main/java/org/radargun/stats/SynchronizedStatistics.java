@@ -5,8 +5,6 @@ import org.radargun.config.DefinitionElement;
 
 /**
  * Wrapper over DefaultStatistics that provides synchronized access and sealing.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @DefinitionElement(name = "synchronized", doc = "Basic statistics that support concurrent access.")
 public class SynchronizedStatistics extends BasicStatistics {

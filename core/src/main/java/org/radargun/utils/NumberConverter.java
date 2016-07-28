@@ -8,8 +8,6 @@ import org.radargun.config.Converter;
 
 /**
  * Converts numbers to instance of correct type (according to the prefix).
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NumberConverter implements Converter<Number> {
    private static final Pattern INT_PATTERN = Pattern.compile("int (.*)");

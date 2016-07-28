@@ -13,8 +13,6 @@ import org.radargun.utils.TimeConverter;
 
 /**
  * The stage start and kills some nodes concurrently (without waiting for each other).
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "The stage start and stops some nodes concurrently (without waiting for each other).")
 public class ParallelStartStopStage extends AbstractServiceStartStage {

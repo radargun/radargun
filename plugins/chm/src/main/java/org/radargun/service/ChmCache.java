@@ -8,9 +8,6 @@ import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
 import org.radargun.traits.ConditionalOperations;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class ChmCache implements BasicOperations.Cache, ConditionalOperations.Cache, CacheInformation.Cache {
    private final ConcurrentHashMap chm = new ConcurrentHashMap();
    private final String name;

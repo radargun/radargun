@@ -8,8 +8,6 @@ import org.radargun.config.Stage;
 
 /**
  * This should just redirect us to the beginning of the loop.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is added at the end of each repeat.")
 public class RepeatContinueStage extends RepeatStage {

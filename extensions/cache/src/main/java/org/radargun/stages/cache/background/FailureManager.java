@@ -11,7 +11,6 @@ import org.radargun.utils.TimeService;
  * Manager class holding failures occurring during test run.
  *
  * @author Matej Cimbora
- * @author Radim Vansa
  */
 public class FailureManager {
 

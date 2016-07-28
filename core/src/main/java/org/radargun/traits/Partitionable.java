@@ -2,9 +2,6 @@ package org.radargun.traits;
 
 import java.util.Set;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Trait(doc = "Allows the wrapper to simulate partition split.")
 public interface Partitionable {
    /**

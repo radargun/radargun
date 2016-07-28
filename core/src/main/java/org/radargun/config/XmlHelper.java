@@ -4,8 +4,6 @@ import java.util.Locale;
 
 /**
  * Regrettably, conversion is not always reversible: "ASDFooBar" -> "asd-foo-bar" -> "AsdFooBar"
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class XmlHelper {
 

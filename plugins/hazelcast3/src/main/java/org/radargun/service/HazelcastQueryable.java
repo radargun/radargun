@@ -10,9 +10,6 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class HazelcastQueryable implements Queryable {
    private static final Log log = LogFactory.getLog(HazelcastQueryable.class);
    protected final Hazelcast3Service service;

@@ -20,9 +20,6 @@ import org.radargun.traits.ConfigurationProvider;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.Utils;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Service(doc = "JGroupsService faking cache operations")
 public class JGroups35Service extends JGroupsService {
    @Override

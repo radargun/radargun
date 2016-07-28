@@ -7,9 +7,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Transactional;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class InfinispanTransactional implements Transactional {
    protected static final Log log = LogFactory.getLog(InfinispanTransactional.class);
    protected static final boolean trace = log.isTraceEnabled();

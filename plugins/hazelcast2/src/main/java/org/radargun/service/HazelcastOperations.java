@@ -6,9 +6,6 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class HazelcastOperations implements BasicOperations, ConditionalOperations {
    protected static final Log log = LogFactory.getLog(HazelcastOperations.class);
    protected static final boolean trace = log.isTraceEnabled();

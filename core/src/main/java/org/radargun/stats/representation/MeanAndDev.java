@@ -5,8 +5,6 @@ import org.radargun.stats.Statistics;
 
 /**
  * Mean and standard deviation.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class MeanAndDev {
    public final double mean;

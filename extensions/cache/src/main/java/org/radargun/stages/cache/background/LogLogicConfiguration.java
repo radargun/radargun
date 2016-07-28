@@ -5,8 +5,6 @@ import org.radargun.utils.TimeConverter;
 
 /**
  * Configuration specific to {@link PrivateLogLogic} or {@link SharedLogLogic}
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class LogLogicConfiguration {
    @Property(doc = "Use values which trace all operation on these keys. Therefore, they're always growing. Default is false.")

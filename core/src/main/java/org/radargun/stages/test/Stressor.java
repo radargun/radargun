@@ -18,8 +18,6 @@ import org.radargun.traits.Transactional;
  * During execution, the thread queries {@link ConversationSelector} for the next
  * {@link Conversation} and then executes it's {@link Conversation#run(Stressor)} method
  * which in turn calls {@link #makeRequest(Invocation)} with certain {@link Invocation}.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Stressor extends Thread {
    private static Log log = LogFactory.getLog(Stressor.class);

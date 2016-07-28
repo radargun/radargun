@@ -7,8 +7,6 @@ import org.radargun.config.Converter;
 
 /**
  * Converts string in format number (ns|us|ms|s|m) into number of nanoseconds.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NanoTimeConverter implements Converter<Long> {
    @Override

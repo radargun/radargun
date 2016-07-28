@@ -10,8 +10,6 @@ import org.radargun.config.Property;
 
 /**
  * Implements the Statistics interface using provided {@link OperationStats}.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @DefinitionElement(name = "basic", doc = "Statistics with fixed memory footprint for each operation statistics.")
 public class BasicStatistics extends IntervalStatistics {
@@ -89,11 +87,9 @@ public class BasicStatistics extends IntervalStatistics {
    }
 
    /**
-    *
     * Merge otherStats to this. leaves otherStats unchanged.
     *
     * @param otherStats
-    *
     */
    @Override
    public void merge(Statistics otherStats) {

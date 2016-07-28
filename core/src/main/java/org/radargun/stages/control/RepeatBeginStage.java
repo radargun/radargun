@@ -10,9 +10,6 @@ import org.radargun.config.Stage;
 import org.radargun.state.MasterListener;
 import org.radargun.state.StateBase;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is added at the beginning of each repeat.",
    label = @Label(prefix = "repeat", suffix = "begin"))
 public class RepeatBeginStage extends RepeatStage {

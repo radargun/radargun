@@ -31,8 +31,6 @@ import static org.radargun.stages.cache.background.LogChecker.LastOperation;
  * seed of the Random and the stressor can load it.
  * Similar situation happens when the transaction is rolled back. We have to remember
  * the seeds before the transaction in order to be able to repeat it.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 abstract class AbstractLogLogic<ValueType> extends AbstractLogic {
 

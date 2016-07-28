@@ -11,8 +11,6 @@ import org.radargun.utils.TimeService;
 
 /**
  * Events that should be presented in report
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Timeline implements Serializable, Comparable<Timeline> {
 

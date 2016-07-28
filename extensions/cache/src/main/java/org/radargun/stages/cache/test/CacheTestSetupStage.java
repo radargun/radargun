@@ -16,9 +16,6 @@ import org.radargun.traits.InjectTrait;
 import org.radargun.traits.Transactional;
 import org.radargun.utils.Fuzzy;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Benchmark where several client threads access cache limited by time or number of requests.")
 public abstract class CacheTestSetupStage extends TestSetupStage {
 

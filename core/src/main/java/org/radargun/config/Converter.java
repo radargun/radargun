@@ -4,8 +4,6 @@ import java.lang.reflect.Type;
 
 /**
  * Converts string representation of an object into the object, and back.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface Converter<T> {
    String ANY_MULTI_LINE = "(.|\n|\r)*";

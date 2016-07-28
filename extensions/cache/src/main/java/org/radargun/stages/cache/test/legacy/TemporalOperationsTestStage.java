@@ -21,7 +21,6 @@ import org.radargun.traits.TemporalOperations;
  * @author Martin Gencur &lt;mgencur@redhat.com&gt;
  *
  * This stage allows for testing operations that have lifespan or maxIdle attributes set.
- *
  */
 @Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "Test using TemporalOperations")

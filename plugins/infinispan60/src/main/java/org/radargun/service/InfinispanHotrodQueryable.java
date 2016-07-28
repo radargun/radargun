@@ -19,9 +19,6 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.Query;
 import org.radargun.utils.Utils;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class InfinispanHotrodQueryable extends AbstractInfinispanQueryable {
    private static final String REMOTING_JMX_SERVICE_URL_TEMPLATE = "service:jmx:remoting-jmx://%s:%d";
    protected static final Log log = LogFactory.getLog(InfinispanHotrodQueryable.class);

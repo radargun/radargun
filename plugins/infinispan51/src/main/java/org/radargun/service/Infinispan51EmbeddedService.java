@@ -21,9 +21,6 @@ import org.radargun.config.Property;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.TimeConverter;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Service(doc = InfinispanEmbeddedService.SERVICE_DESCRIPTION)
 public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
    @Property(doc = "Explicitely lock each modification. Default is false.")

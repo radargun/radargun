@@ -12,7 +12,6 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.CacheInformation;
 
 /**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
 public class Infinispan70CacheInfo extends Infinispan53CacheInfo {

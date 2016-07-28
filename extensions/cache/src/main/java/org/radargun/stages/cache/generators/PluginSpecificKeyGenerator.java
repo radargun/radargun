@@ -8,9 +8,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.utils.Utils;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @DefinitionElement(name = "plugin-specific", doc = "Wraps key generator that is specific to current plugin")
 public class PluginSpecificKeyGenerator implements KeyGenerator {
    private static final Log log = LogFactory.getLog(PluginSpecificKeyGenerator.class);

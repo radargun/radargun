@@ -9,9 +9,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.stages.cache.generators.JpaValueGenerator;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Entity
 public class BasicEntity extends JpaValueGenerator.JpaValue {
 

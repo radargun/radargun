@@ -15,8 +15,6 @@ import org.radargun.utils.TimeConverter;
 
 /**
  * Performs single transaction in multiple threads on multiple slaves.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Performs single transaction with requests on key0 .. keyN in multiple threads on multiple slaves.")
 public class SingleTXLoadStage extends AbstractDistStage {

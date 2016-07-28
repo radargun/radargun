@@ -14,8 +14,6 @@ import org.radargun.state.SlaveState;
 /**
  * This stage contains copy-paste of some convenience methods from {@link org.radargun.stages.AbstractDistStage}
  * - we have decided to simplify the hierarchy and not include two abstract dist stages.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Base for internal stages", internal = true)
 public abstract class InternalDistStage extends AbstractStage implements DistStage {

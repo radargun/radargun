@@ -23,7 +23,6 @@ import org.radargun.logging.LogFactory;
  * Extracts configuration to properties. Valid for caches since 5.2
  *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- *
  */
 public class ConfigDumpHelper {
 
@@ -108,7 +107,6 @@ public class ConfigDumpHelper {
    }
 
    /**
-    *
     * This is a generic method for reflection copied from PropertyFormatter from Infinispan 6.0
     *
     * @param obj

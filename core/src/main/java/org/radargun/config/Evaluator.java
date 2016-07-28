@@ -23,8 +23,6 @@ import org.radargun.utils.Tokenizer;
  * #{ 1..3,5 } -> 1,2,3,5
  * #{ ( ${x} + 5 ) * 6 } with -Dx=2 -> 42
  * foo${y}bar with -Dy=goo -> foogoobar
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class Evaluator {
    private static final Log log = LogFactory.getLog(Evaluator.class);

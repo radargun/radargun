@@ -8,9 +8,6 @@ import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.stages.test.legacy.LegacyTestStage;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class CollidingKeysSelector implements KeySelector {
    private final Random random;
    private final long numEntries;

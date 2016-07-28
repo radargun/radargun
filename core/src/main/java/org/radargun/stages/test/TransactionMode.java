@@ -4,8 +4,6 @@ import org.radargun.traits.Transactional;
 
 /**
  * Defines whether transactions should be used when working with this service.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public enum TransactionMode {
    NEVER,

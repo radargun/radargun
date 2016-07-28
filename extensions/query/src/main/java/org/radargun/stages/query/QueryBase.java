@@ -18,8 +18,6 @@ import org.radargun.utils.MinMax;
 
 /**
  * Logic for creating the query builders and retrieving query results.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class QueryBase {
    private static final Log log = LogFactory.getLog(QueryBase.class);

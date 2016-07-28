@@ -14,8 +14,6 @@ import org.radargun.traits.TemporalOperations;
  * Provides {@link org.radargun.stages.test.Invocation} implementations for operations from traits
  * {@link org.radargun.traits.BasicOperations}, {@link org.radargun.traits.ConditionalOperations},
  * and {@link org.radargun.traits.BulkOperations}.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class CacheInvocations {
    public static final class Get<K, V> implements Invocation<V> {

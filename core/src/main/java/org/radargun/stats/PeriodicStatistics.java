@@ -19,8 +19,6 @@ import org.radargun.utils.TimeService;
  * Keeps a series of {@link Statistics} instances and records the requests according to current timestamp.
  *
  * Useful when the request response time is expected to change during the test execution.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @DefinitionElement(name = "periodic", doc = "Periodically switches the statistics where the operation is recorded.")
 public class PeriodicStatistics extends IntervalStatistics {

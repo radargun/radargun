@@ -20,9 +20,6 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.traits.ProvidesTrait;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class JavaProcessService extends ProcessService {
    private final Log log = LogFactory.getLog(getClass());
 

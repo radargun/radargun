@@ -7,8 +7,6 @@ import org.radargun.utils.Utils;
 
 /**
  * Instantiates stages based on annotations
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class StageHelper {
    private static Map<String, SortedMap<String, Class<? extends org.radargun.Stage>>> stagesByNamespace = new HashMap<>();

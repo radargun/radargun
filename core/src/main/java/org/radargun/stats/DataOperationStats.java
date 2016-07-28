@@ -17,7 +17,6 @@ public class DataOperationStats extends AllRecordingOperationStats {
    }
 
    /**
-    *
     * Set the amount of data processed in the operation to calculate DataThrouput
     *
     * @param totalBytes

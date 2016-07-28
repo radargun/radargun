@@ -11,9 +11,6 @@ import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Test
 public class DefaultConverterTest {
    private static DefaultConverter INSTANCE = new DefaultConverter();

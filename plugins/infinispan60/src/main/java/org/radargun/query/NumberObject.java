@@ -13,8 +13,6 @@ import org.infinispan.protostream.MessageMarshaller;
 
 /**
  * Object to be queried containing numbers
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Indexed
 public class NumberObject implements Serializable {

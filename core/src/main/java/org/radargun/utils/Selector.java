@@ -6,8 +6,6 @@ import java.util.Arrays;
 
 /**
  * Select between multiple weighted options
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Selector<T> {
    public final int[] ratios;

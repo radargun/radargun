@@ -8,8 +8,6 @@ import org.radargun.traits.JmxConnectionProvider;
 
 /**
  * UNIX-only: checks number of open descriptors in given process
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class OpenFilesMonitor extends JmxMonitor {
    private static final String OPEN_FILES = "Open files";

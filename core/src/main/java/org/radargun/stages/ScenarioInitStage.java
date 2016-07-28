@@ -11,9 +11,6 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.utils.Utils;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is automatically inserted before the beginning of scenario.")
 public final class ScenarioInitStage extends AbstractDistStage {
    static final String INITIAL_FREE_MEMORY = "INITIAL_FREE_MEMORY";

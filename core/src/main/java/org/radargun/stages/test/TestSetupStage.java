@@ -10,9 +10,6 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "In this stage we setup target parameters for future test. The stage performs ramp-up, starting all needed threads.")
 public abstract class TestSetupStage extends AbstractDistStage {
    @Property(doc = "Name of the test as used for reporting. Default is 'Test'.")

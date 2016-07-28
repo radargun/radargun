@@ -7,8 +7,6 @@ import org.radargun.Operation;
 /**
  * Tracks time for operations with different origin and destination nodes.
  * The time can be tracked only using wall-clock time.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class Message {
    private final Statistics statistics;

@@ -35,8 +35,6 @@ import org.radargun.reporting.commons.TestAggregations;
 /**
  * Reporter presenting the statistics and timelines in form of directory
  * with several linked HTML pages and image files displayed on those pages.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class HtmlReporter implements Reporter {
    private static final Log log = LogFactory.getLog(HtmlReporter.class);

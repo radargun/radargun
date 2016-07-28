@@ -7,9 +7,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Trait(doc = "Information about clustered nodes.")
 public interface Clustered {
    /**

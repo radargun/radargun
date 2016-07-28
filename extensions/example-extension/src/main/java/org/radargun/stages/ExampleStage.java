@@ -9,9 +9,6 @@ import org.radargun.config.Stage;
 import org.radargun.state.SlaveState;
 import org.radargun.utils.TimeConverter;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Example stage in different module")
 public class ExampleStage extends AbstractDistStage {
 

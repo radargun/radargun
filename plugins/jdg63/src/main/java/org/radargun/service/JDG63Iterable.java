@@ -11,8 +11,6 @@ import org.infinispan.iteration.EntryIterable;
 
 /**
  * Infinispan and JDG are only partially binary compatible
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class JDG63Iterable extends InfinispanIterable {
    public JDG63Iterable(InfinispanEmbeddedService service) {

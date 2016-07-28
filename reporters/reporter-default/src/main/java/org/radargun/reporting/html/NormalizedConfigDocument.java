@@ -6,8 +6,6 @@ import org.radargun.config.Cluster;
 
 /**
  * Presents normalized properties from service configuration.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class NormalizedConfigDocument extends HtmlDocument {
    private SortedMap<String, SortedMap<Integer, String>> properties = new TreeMap<>();

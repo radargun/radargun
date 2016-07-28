@@ -18,8 +18,6 @@ import org.radargun.logging.LogFactory;
  *    public String getText() { ... }
  * }
  * {@code}
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class TextObjectGenerator implements ValueGenerator {
    protected static Log log = LogFactory.getLog(TextObjectGenerator.class);

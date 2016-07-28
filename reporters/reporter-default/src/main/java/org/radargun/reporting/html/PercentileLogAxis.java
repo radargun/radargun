@@ -19,8 +19,6 @@ import org.jfree.ui.TextAnchor;
 
 /**
  * Inverse logarithmic axis 0 .. limit < 100
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 class PercentileLogAxis extends ValueAxis {
 

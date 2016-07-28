@@ -15,8 +15,6 @@ import org.radargun.Operation;
  * is called.
  *
  * TODO: start/stop behaviour?
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Trait(doc = "Allows to listen for events on the cache.")
 public interface CacheListeners {

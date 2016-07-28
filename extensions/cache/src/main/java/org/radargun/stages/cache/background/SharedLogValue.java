@@ -7,8 +7,6 @@ import java.util.Map;
 
 /**
  * Log value that can be written by multiple stressors.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class SharedLogValue implements Serializable {
    private final int[] threadIds;

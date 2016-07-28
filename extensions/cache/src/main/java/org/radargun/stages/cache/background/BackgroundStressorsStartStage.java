@@ -8,11 +8,9 @@ import org.radargun.stages.AbstractDistStage;
 import org.radargun.stages.helpers.CacheSelector;
 
 /**
- *
  * Create BackgroundStressors and store them to SlaveState. Optionally start stressor or stat threads.
  *
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Starts background stressor threads.")
 public class BackgroundStressorsStartStage extends AbstractDistStage {

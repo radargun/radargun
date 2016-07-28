@@ -20,8 +20,6 @@ import org.radargun.utils.Utils;
 
 /**
  * Snapshots JGroups status every 10 seconds, printing the information into log.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class JGroupsDumper extends Thread {
    private static final Log log = LogFactory.getLog(JGroupsDumper.class);

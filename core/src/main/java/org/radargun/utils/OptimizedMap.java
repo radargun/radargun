@@ -9,8 +9,6 @@ import java.util.Set;
 /**
  * Map optimized for holding single or none entry, but allowing more entries
  * by delegating the operations to inner map.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class OptimizedMap<K, V> implements Map<K, V>, Serializable {
    private enum Type {

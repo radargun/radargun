@@ -12,9 +12,6 @@ import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.utils.TimeConverter;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Manages thread for data loading")
 public abstract class LoadStage extends AbstractDistStage {
    @Property(doc = "Number of loaded entries after which a log entry should be written. Default is 10000.")

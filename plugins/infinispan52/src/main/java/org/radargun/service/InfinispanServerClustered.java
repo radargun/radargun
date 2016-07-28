@@ -11,9 +11,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Clustered;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class InfinispanServerClustered implements Clustered {
    protected final Log log = LogFactory.getLog(getClass());
    protected final InfinispanServerService service;

@@ -24,8 +24,6 @@ import org.radargun.utils.TimeService;
  * full process tree, that's why we delegate the start/stop/kill
  * handling to OS-specific scripts.
  * So far, only Unix scripts are implemented.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Killable {
 

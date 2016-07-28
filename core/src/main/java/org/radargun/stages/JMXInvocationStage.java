@@ -23,7 +23,6 @@ import org.radargun.traits.JmxConnectionProvider;
 import org.radargun.utils.PrimitiveValue;
 
 /**
- *
  * See example configurations in the benchmark-xsite-jmx.xml file.
  *
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;

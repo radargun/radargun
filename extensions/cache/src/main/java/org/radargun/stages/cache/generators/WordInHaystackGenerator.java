@@ -6,8 +6,6 @@ import org.radargun.config.DefinitionElement;
 
 /**
  * Surrounds the word with nonsense. Use for wildcard queries.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @DefinitionElement(name = "word-in-haystack", doc = "Generates text-objects with string with single randomly picked word surrounded by another characters.")
 public class WordInHaystackGenerator extends DictionaryTextObjectGenerator {

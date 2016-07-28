@@ -17,8 +17,6 @@ import static org.radargun.traits.TopologyHistory.HistoryType;
 
 /**
  * Controls which topology events have (not) happened recently
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Controls which topology events have (not) happened recently")
 public class CheckTopologyStage extends AbstractDistStage {

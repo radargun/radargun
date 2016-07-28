@@ -10,8 +10,6 @@ import org.jfree.chart.JFreeChart;
 
 /**
  * Base for charts
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class Chart {
    protected static final Paint[] DEFAULT_PAINTS = ChartColor.createDefaultPaintArray();

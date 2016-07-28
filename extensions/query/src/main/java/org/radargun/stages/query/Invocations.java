@@ -5,9 +5,6 @@ import org.radargun.stages.test.Invocation;
 import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class Invocations {
    public static final class Query implements Invocation<org.radargun.traits.Query.Result> {
       protected static final Operation TX = Queryable.QUERY.derive("TX");

@@ -10,9 +10,6 @@ import org.radargun.config.Label;
 import org.radargun.config.Stage;
 import org.radargun.state.StateBase;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(internal = true, doc = "DO NOT USE DIRECTLY. This stage is added at the end of each repeat.",
    label = @Label(prefix = "repeat", suffix = "end"))
 public class RepeatEndStage extends RepeatStage {

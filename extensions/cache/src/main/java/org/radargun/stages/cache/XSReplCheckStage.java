@@ -12,8 +12,6 @@ import org.radargun.traits.Debugable;
 
 /**
  * Checks loaded data for their validity.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Checks loaded data for validity. Useful for testing cross-site replication.")
 public class XSReplCheckStage extends CheckCacheDataStage {

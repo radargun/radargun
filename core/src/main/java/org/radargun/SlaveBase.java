@@ -18,8 +18,6 @@ import org.radargun.utils.TimeService;
 
 /**
  * Base class for both standalone slave and slave integrated in master node (local cluster).
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class SlaveBase {
    protected final Log log = LogFactory.getLog(getClass());

@@ -5,8 +5,6 @@ import org.radargun.Operation;
 /**
  * Represent an operation that the {@link LegacyStressor}
  * should execute and record its duration.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface Invocation<T> {
    /**

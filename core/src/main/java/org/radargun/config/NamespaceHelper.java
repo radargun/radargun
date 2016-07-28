@@ -10,8 +10,6 @@ import org.radargun.utils.Utils;
 
 /**
  * Helper code for namespace-relate stuff.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class NamespaceHelper {
    private static Map<String, String> namespaceToJarMajorMinor = new HashMap<>();

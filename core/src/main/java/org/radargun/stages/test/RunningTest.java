@@ -21,8 +21,6 @@ import org.radargun.utils.Utils;
  * and stored in {@link org.radargun.state.SlaveState} for the duration of the test, which usually
  * spans several stages (on or more pairs of {@link TestSetupStage} and {@link TestStage} and possibly
  * {@link FinishTestStage}).
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class RunningTest extends ServiceListenerAdapter {
    private final Log log = LogFactory.getLog(RunningTest.class);
@@ -246,8 +244,6 @@ public class RunningTest extends ServiceListenerAdapter {
    /**
     * Wraps scheduling selector and monitors number of active threads; when the number of waiting threads drop below
     * actual threshold, spawns another thread.
-    *
-    * @author Radim Vansa &lt;rvansa@redhat.com&gt;
     */
    class ThreadPoolingSelector implements ConversationSelector {
       private final SchedulingSelector<Conversation> schedulingSelector;

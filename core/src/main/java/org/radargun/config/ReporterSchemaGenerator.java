@@ -10,8 +10,6 @@ import org.radargun.reporting.ReporterHelper;
 
 /**
  * Generates schemas for reporters
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class ReporterSchemaGenerator extends SchemaGenerator {
    protected static final String NAMESPACE_ROOT = "urn:radargun:reporters:";

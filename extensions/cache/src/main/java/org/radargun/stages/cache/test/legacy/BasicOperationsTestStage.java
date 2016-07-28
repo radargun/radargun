@@ -16,9 +16,6 @@ import org.radargun.stages.test.legacy.RatioOperationSelector;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "Test using BasicOperations")
 public class BasicOperationsTestStage extends CacheOperationsTestStage {

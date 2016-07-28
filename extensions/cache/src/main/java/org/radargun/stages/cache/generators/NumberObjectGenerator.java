@@ -22,8 +22,6 @@ import org.radargun.logging.LogFactory;
  *    public double getDouble() { ... }
  * }
  * {@code}
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @DefinitionElement(name = "number-object", doc = "Generates objects with integer and double values.")
 public class NumberObjectGenerator implements ValueGenerator {

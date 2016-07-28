@@ -2,9 +2,6 @@ package org.radargun.stats;
 
 import org.radargun.Operation;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public final class RequestSet {
    private final Statistics statistics;
    private long begin = Long.MAX_VALUE;

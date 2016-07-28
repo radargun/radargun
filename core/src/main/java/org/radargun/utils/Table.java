@@ -11,8 +11,6 @@ import java.util.Set;
 
 /**
  * Random-accessible table iterable over both rows and columns
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class Table<TRowKey, TColumnKey, TValue> {
    private List<List<TValue>> data = new ArrayList<List<TValue>>();

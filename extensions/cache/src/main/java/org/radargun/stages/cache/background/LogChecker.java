@@ -28,8 +28,6 @@ import org.radargun.utils.Utils;
  *
  * @see org.radargun.stages.cache.background.AbstractLogLogic
  * @see org.radargun.stages.cache.background.Stressor
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class LogChecker extends Thread {
    protected static final Log log = LogFactory.getLog(LogChecker.class);

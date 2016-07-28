@@ -21,9 +21,6 @@ import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.ArgsConverter;
 import org.radargun.utils.TimeConverter;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Service(doc = "Generic process control")
 public class ProcessService {
 

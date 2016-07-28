@@ -2,9 +2,6 @@ package org.radargun.traits;
 
 import org.radargun.Operation;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Trait(doc = "Trait providing transactional operations.")
 public interface Transactional {
    String TRAIT = Transactional.class.getSimpleName();

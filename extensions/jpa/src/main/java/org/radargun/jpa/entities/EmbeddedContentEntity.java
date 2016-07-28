@@ -8,9 +8,6 @@ import javax.persistence.Id;
 
 import org.radargun.stages.cache.generators.JpaValueGenerator;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Entity
 public class EmbeddedContentEntity extends JpaValueGenerator.JpaValue {
    @Id

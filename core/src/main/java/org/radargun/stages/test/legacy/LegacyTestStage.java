@@ -25,9 +25,6 @@ import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Namespace(LegacyTestStage.NAMESPACE)
 @Stage(doc = "Base for test spawning several threads and benchmark of operations executed in those.")
 public abstract class LegacyTestStage extends BaseTestStage {

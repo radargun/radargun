@@ -8,8 +8,6 @@ import org.radargun.stages.AbstractDistStage;
 
 /**
  * Abstract stage that handles error messages from multiple threads
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Parent class for check stages.")
 public abstract class CheckStage extends AbstractDistStage {

@@ -18,8 +18,6 @@ import org.radargun.traits.Iterable;
 
 /**
  * Implements iteration through all entries in cache.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class InfinispanIterable implements Iterable {
    protected static final Log log = LogFactory.getLog(Iterable.class);

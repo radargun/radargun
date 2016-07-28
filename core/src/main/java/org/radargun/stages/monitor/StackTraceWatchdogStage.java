@@ -16,10 +16,7 @@ import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 
 /**
- *
  * Periodically check for all thread stack traces and print them out.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Debug usage only. Periodically check for all thread stack traces and print them out.")
 public class StackTraceWatchdogStage extends AbstractDistStage {

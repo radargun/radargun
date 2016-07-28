@@ -14,8 +14,6 @@ import org.jfree.ui.TextAnchor;
 
 /**
  * Logarithmic axis that shows time
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 class LogTimeAxis extends LogAxis {
 

@@ -2,8 +2,6 @@ package org.radargun.stages.cache.background;
 
 /**
  * Checker used for {@link org.radargun.stages.cache.background.PrivateLogValue non-shared log values}
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public class PrivateLogChecker extends LogChecker {
 

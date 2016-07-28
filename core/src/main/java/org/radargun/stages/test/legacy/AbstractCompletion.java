@@ -4,9 +4,6 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.utils.TimeService;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public abstract class AbstractCompletion implements Completion {
    protected static final String PROGRESS_STRING = "Number of operations executed by this thread: %d. Elapsed time: %s. Remaining: %s. Total: %s.";
    protected static final Log log = LogFactory.getLog(Completion.class);

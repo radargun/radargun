@@ -5,9 +5,6 @@ import java.util.regex.Pattern;
 
 import org.radargun.utils.TimeService;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class InfinispanServerLifecycle extends ProcessLifecycle<InfinispanServerService> {
    private boolean serverStarted;
    private boolean serverStopped;

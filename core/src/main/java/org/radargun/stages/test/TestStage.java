@@ -15,9 +15,6 @@ import org.radargun.stats.Statistics;
 import org.radargun.utils.MinMax;
 import org.radargun.utils.TimeService;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 @Stage(doc = "Stage representing steady-state of the test. Test load should not change for the duration of steady-state.")
 public class TestStage extends BaseTestStage {
 

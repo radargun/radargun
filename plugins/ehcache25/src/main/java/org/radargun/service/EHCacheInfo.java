@@ -8,9 +8,6 @@ import java.util.Map;
 import net.sf.ehcache.Ehcache;
 import org.radargun.traits.CacheInformation;
 
-/**
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
- */
 public class EHCacheInfo implements CacheInformation {
    protected final EHCacheService service;
 

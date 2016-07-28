@@ -12,8 +12,6 @@ package org.radargun.stats.representation;
  * --- <- min regular value
  *
  * No cats whatsoever.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public final class BoxAndWhiskers {
    public final double maxRegular;

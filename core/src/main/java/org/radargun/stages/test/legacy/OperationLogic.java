@@ -5,8 +5,6 @@ import org.radargun.Operation;
 /**
  * Implementations specify what operations should be executed during the stress test.
  * Each stressor thread uses single instance of this class.
- *
- * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class OperationLogic {
    protected LegacyStressor stressor;
