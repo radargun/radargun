@@ -1,10 +1,8 @@
 package org.radargun.jpa.entities;
 
-import javax.persistence.Col
-mn;
-   im ort javax.persistence.Emb
-   ddable
 import java.io.Serializable;
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;

@@ -1,12 +1,9 @@
 package org.radargun.jpa.entities;
 
-import javax.persistence
-Column
-import javax.persistence
-Embedd dId;
-import javax.persistence
-Entity
 import java.util.Random;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
 
 import org.radargun.stages.cache.generators.JpaValueGenerator;
 
