@@ -14,8 +14,8 @@
          </setup>
       </config>
       <config name="Hazelcast 3">
-         <setup plugin="hazelcast3">
-            <hazelcast xmlns="urn:radargun:plugins:hazelcast3:3.0" file="dist-sync.xml"/>
+         <setup plugin="hazelcast36">
+            <hazelcast xmlns="urn:radargun:plugins:hazelcast36:3.0" file="dist-sync.xml"/>
          </setup>
       </config>
       <config name="Infinispan 7.0">

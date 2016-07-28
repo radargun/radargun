@@ -211,10 +211,11 @@
          </activation>
          <modules>
             <module>plugins/hazelcast2</module>
-            <module>plugins/hazelcast3</module>
+            <module>plugins/hazelcast36</module>
+            <module>plugins/hazelcast37</module>
          </modules>
          <properties>
-            <plugins.hazelcast>hazelcast2,hazelcast3</plugins.hazelcast>
+            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37</plugins.hazelcast>
          </properties>
       </profile>
       <profile>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.0.xsd"
+<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.6.xsd"
            xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
@@ -23,8 +23,9 @@
     </network>
 
     <executor-service>
-        <pool-size>16</pool-size>
-        <queue-capacity>0</queue-capacity>
+        <core-pool-size>16</core-pool-size>
+        <max-pool-size>64</max-pool-size>
+        <keep-alive-seconds>60</keep-alive-seconds>
     </executor-service>
 
     <map name="default">
@@ -36,6 +37,7 @@
         <max-size policy="PER_PARTITION">0</max-size>
         <eviction-percentage>25</eviction-percentage>
         <merge-policy>hz.ADD_NEW_ENTRY</merge-policy>
+        <in-memory-format>OBJECT</in-memory-format>
     </map>
 
 </hazelcast>

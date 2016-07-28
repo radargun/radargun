@@ -17,20 +17,20 @@ import org.radargun.utils.ReflexiveConverters;
  * @author Maido Kaara
  */
 @Service(doc = "Hazelcast")
-public class Hazelcast3Service extends HazelcastService {
+public class Hazelcast36Service extends HazelcastService {
    @Property(doc = "Indices that should be build.", complexConverter = IndexConverter.class)
    protected List<Index> indices = Collections.EMPTY_LIST;
 
    @ProvidesTrait
    @Override
    public Transactional createTransactional() {
-      return new Hazelcast3Transactional(this);
+      return new Hazelcast36Transactional(this);
    }
 
    @ProvidesTrait
    @Override
    public HazelcastOperations createOperations() {
-      return new Hazelcast3Operations(this);
+      return new Hazelcast36Operations(this);
    }
 
    @ProvidesTrait

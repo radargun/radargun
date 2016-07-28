@@ -17,9 +17,9 @@
                      cache-name="testCache" />
          </setup>
       </config>
-      <config name="JCache (Hazelcast 3.4.x) - local">
-         <setup plugin="hazelcast3">
-            <jcache xmlns="urn:radargun:plugins:hazelcast3:3.0"
+      <config name="JCache (Hazelcast 3.6.x) - local">
+         <setup plugin="hazelcast36">
+            <jcache xmlns="urn:radargun:plugins:hazelcast36:3.0"
                     cache-name="testCache" />
          </setup>
       </config>
