@@ -13,10 +13,10 @@ import org.radargun.traits.Query;
  */
 public class HazelcastContinuousQuery implements ContinuousQuery {
 
-   protected final Hazelcast3Service service;
+   protected final Hazelcast36Service service;
    private String hazelcastCQListenerId;
 
-   public HazelcastContinuousQuery(Hazelcast3Service service) {
+   public HazelcastContinuousQuery(Hazelcast36Service service) {
       this.service = service;
    }
 

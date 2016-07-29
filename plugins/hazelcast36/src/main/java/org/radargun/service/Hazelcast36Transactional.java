@@ -12,12 +12,12 @@ import org.radargun.traits.Transactional;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Hazelcast3Transactional implements Transactional {
-   protected final Hazelcast3Service service;
-   private static final Log log = LogFactory.getLog(Hazelcast3Transactional.class);
+public class Hazelcast36Transactional implements Transactional {
+   protected final Hazelcast36Service service;
+   private static final Log log = LogFactory.getLog(Hazelcast36Transactional.class);
    private static final boolean trace = log.isTraceEnabled();
 
-   public Hazelcast3Transactional(Hazelcast3Service service) {
+   public Hazelcast36Transactional(Hazelcast36Service service) {
       this.service = service;
    }
 
@@ -47,9 +47,9 @@ public class Hazelcast3Transactional implements Transactional {
          if (!started) begin();
          if (resource instanceof DistributedObject) {
             return (T) transactionContext.getMap(((DistributedObject) resource).getName());
-         } else if (resource instanceof Hazelcast3Operations.Cache) {
-            String cacheName = ((Hazelcast3Operations.Cache) resource).map.getName();
-            return (T) new Hazelcast3Operations.Cache(transactionContext.getMap(cacheName));
+         } else if (resource instanceof Hazelcast36Operations.Cache) {
+            String cacheName = ((Hazelcast36Operations.Cache) resource).map.getName();
+            return (T) new Hazelcast36Operations.Cache(transactionContext.getMap(cacheName));
          } else if (resource instanceof HazelcastQuery.Context) {
             String cacheName = ((HazelcastQuery.Context) resource).map.getName();
             return (T) new HazelcastQuery.Context(transactionContext.getMap(cacheName));

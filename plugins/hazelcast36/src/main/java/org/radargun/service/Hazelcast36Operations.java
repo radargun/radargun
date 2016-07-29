@@ -10,9 +10,9 @@ import com.hazelcast.core.TransactionalMap;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class Hazelcast3Operations extends HazelcastOperations {
+public class Hazelcast36Operations extends HazelcastOperations {
 
-   public Hazelcast3Operations(Hazelcast3Service service) {
+   public Hazelcast36Operations(Hazelcast36Service service) {
       super(service);
    }
 
