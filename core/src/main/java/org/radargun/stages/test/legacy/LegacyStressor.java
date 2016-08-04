@@ -128,7 +128,6 @@ public class LegacyStressor extends Thread {
    }
 
    public <T> T makeRequest(Invocation<T> invocation, boolean countForTx) throws OperationLogic.RequestException {
-      long startTxTime = 0;
       if (useTransactions && txRemainingOperations <= 0) {
          try {
             ongoingTx = stage.transactional.getTransaction();
@@ -165,7 +164,7 @@ public class LegacyStressor extends Thread {
          txRemainingOperations = 0;
          exception = e;
       }
-      if (requests != null && request != null) {
+      if (requests != null && request != null && recording()) {
          requests.add(request);
       }
 
@@ -214,8 +213,8 @@ public class LegacyStressor extends Thread {
          }
       } finally {
          if (requests != null) {
-            requests.add(commitRequest);
             if (recording()) {
+               requests.add(commitRequest);
                requests.finished(commitRequest.isSuccessful(), Transactional.DURATION);
                if (singleTxOperation != null) {
                   requests.finished(commitRequest.isSuccessful(), singleTxOperation);
