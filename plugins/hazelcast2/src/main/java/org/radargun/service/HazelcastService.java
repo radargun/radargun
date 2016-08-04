@@ -45,6 +45,9 @@ public class HazelcastService implements Lifecycle, Clustered {
    @Property(name = "cache", doc = "Name of the map ~ cache", deprecatedName = "map")
    protected String mapName = "default";
 
+   @Property(name = "useTransactions", doc = "Whether the service should use transactions. Default is false.")
+   protected boolean useTransactions = false;
+
    @ProvidesTrait
    public HazelcastService getSelf() {
       return this;

@@ -1,6 +1,7 @@
 package org.radargun.service;
 
 import org.radargun.traits.Transactional;
+import org.radargun.traits.Transactional.Configuration;
 
 /**
  * Provides transactional operations for Hazelcast
@@ -16,7 +17,12 @@ public class HazelcastTransactional implements Transactional {
 
    @Override
    public Configuration getConfiguration(String cacheName) {
-      return Configuration.TRANSACTIONS_ENABLED;
+      if (service.useTransactions) {
+         return Configuration.TRANSACTIONAL;
+      } else {
+         // Use transactions, if the stage requests it
+         return Configuration.TRANSACTIONS_ENABLED;
+      }
    }
 
    @Override
