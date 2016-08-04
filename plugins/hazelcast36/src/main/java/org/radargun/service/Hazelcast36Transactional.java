@@ -23,7 +23,12 @@ public class Hazelcast36Transactional implements Transactional {
 
    @Override
    public Configuration getConfiguration(String cache) {
-      return Configuration.TRANSACTIONS_ENABLED;
+      if (service.useTransactions) {
+         return Configuration.TRANSACTIONAL;
+      } else {
+         // Use transactions, if the stage requests it
+         return Configuration.TRANSACTIONS_ENABLED;
+      }
    }
 
    @Override
