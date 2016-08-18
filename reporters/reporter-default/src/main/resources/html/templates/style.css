@@ -18,6 +18,7 @@
 
 .collapse {
     visibility: collapse;
+    display:none;
 }
 
 .visible {

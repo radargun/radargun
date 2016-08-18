@@ -210,10 +210,17 @@
    <table class="graphTable">
       <#list testReport.getGeneratedCharts(operation) as chart>
          <#local img = testReport.generateImageName(operation, suffix, chart.name + ".png")/>
+         <#if chart?counter%2==1>
+         <tr>
+         </#if>
          <th>
+             <br/>
             ${chart.title}<br/>
             <img src="${img}" alt="${operation}">
          </th>
+         <#if chart?counter%2==0>
+         </tr>
+         </#if>
       </#list>
    </table>
 
@@ -229,29 +236,36 @@
    <#local meanAndDev = statistics.getRepresentation(operation, testReport.meanAndDevClass())! />
 
    <#local rowClass = testReport.rowClass(aggregation.anySuspect(operation)) />
+   
+   <#if rowClass=="highlight">
+      <#local tooltip = "Node(s) significantly deviate from average result">
+   <#else>
+      <#local tooltip = "">
+   </#if>
+   
    <#if defaultOutcome?? && defaultOutcome?has_content>
-      <td class="${rowClass} firstCellStyle">
+      <td class="${rowClass} firstCellStyle" title="${tooltip}">
          ${defaultOutcome.requests}
       </td>
-      <td class="${rowClass} rowStyle">
+      <td class="${rowClass} rowStyle" title="${tooltip}">
          ${defaultOutcome.errors}
       </td>
    <#else >
-      <td class="${rowClass} firstCellStyle"/>
-      <td class="${rowClass} rowStyle"/>
+      <td class="${rowClass} firstCellStyle" title="${tooltip}"/>
+      <td class="${rowClass} rowStyle" title="${tooltip}"/>
    </#if>
 
    <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.MEAN_AND_DEV)>
       <#if meanAndDev?has_content>
-         <td class="${rowClass} rowStyle">
+         <td class="${rowClass} rowStyle" title="${tooltip}">
             ${testReport.formatTime(meanAndDev.mean)}
          </td>
-         <td class="${rowClass} rowStyle">
+         <td class="${rowClass} rowStyle" title="${tooltip}">
             ${testReport.formatTime(meanAndDev.dev)}
          </td>
       <#else >
-         <td class="${rowClass} rowStyle"/>
-         <td class="${rowClass} rowStyle"/>
+         <td class="${rowClass} rowStyle" title="${tooltip}"/>
+         <td class="${rowClass} rowStyle" title="${tooltip}"/>
       </#if>
    </#if>
    <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.OPERATION_THROUGHPUT)>
@@ -259,38 +273,38 @@
       <#local operationThroughput = statistics.getRepresentation(operation, testReport.operationThroughputClass(), period)! />
 
       <#if operationThroughput?has_content>
-         <td class="${rowClass} rowStyle">
+         <td class="${rowClass} rowStyle" title="${tooltip}">
             ${testReport.formatOperationThroughput(operationThroughput.gross)}
          </td>
-         <td class="${rowClass} rowStyle">
+         <td class="${rowClass} rowStyle" title="${tooltip}">
             ${testReport.formatOperationThroughput(operationThroughput.net)}
          </td>
       <#else >
-         <td class="${rowClass} rowStyle"/>
-         <td class="${rowClass} rowStyle"/>
+         <td class="${rowClass} rowStyle" title="${tooltip}"/>
+         <td class="${rowClass} rowStyle" title="${tooltip}"/>
       </#if>
    </#if>
 
    <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.DATA_THROUGHPUT)>
       <#local dataThroughput = statistics.getRepresentation(operation, testReport.dataThroughputClass())! />
       <#if dataThroughput?has_content>
-         <td class="${rowClass} rowStyle">
+         <td class="${rowClass} rowStyle" title="${tooltip}">
             ${testReport.formatDataThroughput(dataThroughput.minThroughput)} - min
          </td>
-         <td class="${rowClass} rowStyle">
+         <td class="${rowClass} rowStyle" title="${tooltip}">
             ${testReport.formatDataThroughput(dataThroughput.maxThroughput)} - max
          </td>
-         <td class="${rowClass} rowStyle">
+         <td class="${rowClass} rowStyle" title="${tooltip}">
             ${testReport.formatDataThroughput(dataThroughput.meanThroughput)} - mean
          </td>
-         <td class="${rowClass} rowStyle">
+         <td class="${rowClass} rowStyle" title="${tooltip}">
             ${testReport.formatDataThroughput(dataThroughput.deviation)} - std. dev
          </td>
       <#else >
-         <td class="${rowClass} rowStyle"/>
-         <td class="${rowClass} rowStyle"/>
-         <td class="${rowClass} rowStyle"/>
-         <td class="${rowClass} rowStyle"/>
+         <td class="${rowClass} rowStyle" title="${tooltip}"/>
+         <td class="${rowClass} rowStyle" title="${tooltip}"/>
+         <td class="${rowClass} rowStyle" title="${tooltip}"/>
+         <td class="${rowClass} rowStyle" title="${tooltip}"/>
       </#if>
    </#if>
 
@@ -299,11 +313,11 @@
          <#local p = (statistics.getRepresentation(operation, testReport.percentileClass(), percentile?double))! />
 
          <#if p?has_content>
-            <td class="${rowClass} rowStyle">
+            <td class="${rowClass} rowStyle" title="${tooltip}">
                ${testReport.formatTime(p.responseTimeMax)}
             </td>
          <#else >
-            <td class="${rowClass} rowStyle"/>
+            <td class="${rowClass} rowStyle" title="${tooltip}"/>
          </#if>
       </#list>
    </#if>
@@ -316,12 +330,12 @@
          report.getCluster().getClusterIndex(), aggregation.iteration.id, node, operationData.getPresentedStatistics()) />
 
       <#if histogram?has_content && percentileGraph?has_content>
-         <td class="${rowClass} rowStyle">
+         <td class="${rowClass} rowStyle" title="${tooltip}">
             <a href="${histogram}">histogram</a> <br>
             <a href="${percentileGraph}">percentiles</a>
          </td>
       <#else >
-         <td class="${rowClass} rowStyle">
+         <td class="${rowClass} rowStyle" title="${tooltip}">
             none
          </td>
      </#if>
