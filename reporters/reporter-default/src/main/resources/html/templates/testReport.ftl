@@ -9,11 +9,13 @@
 <body>
    <h1>Test ${testReport.getTestName()}</h1>
    <#assign StatisticType=enums["org.radargun.reporting.html.ReportDocument$StatisticType"] />
+   
+   <#assign hiddenCounter = 0>
 
    <#assign aggregationsList = testReport.getTestAggregations()>
    <#list  aggregationsList as aggregations>
       <#list aggregations.results()?keys as aggregationKey>
-         <h2> ${aggregationKey} </h2>
+         <h2>${aggregationKey} </h2>
          <table>
             <#assign results = aggregations.results()[aggregationKey]/>
             <#if (testReport.maxIterations > 1)>
@@ -21,7 +23,7 @@
                    <th colspan="2">&nbsp</th>
                    <#assign entry = (results?api.entrySet()?first)! />
                    <#list 0..(testReport.maxIterations -1) as iteration>
-                      <#if entry?has_content>
+                      <#if entry?has_content && entry.getValue()?size gt iteration>
                          <#assign testResult = entry.getValue()[iteration]/>
                          <#assign iterationName = (testResult.getIteration().test.iterationsName)!/>
                          <#if iterationName?has_content && testResult?has_content>
@@ -102,6 +104,8 @@
          <#assign suffix = "" />
          <@graphs operation=operation suffix=suffix/>
       </#if>
+      
+      <br>
 
       <#assign aggregationsList = testReport.getTestAggregations()>
       <#assign i = 0 />
@@ -109,20 +113,9 @@
       <table>
          <#assign operationData = testReport.getOperationData(operation, aggregations.byReports())>
          <#assign numberOfColumns = testReport.numberOfColumns(operationData.getPresentedStatistics()) />
-
-         <#if (testReport.getMaxIterations() > 1)>
-            <tr>
-               <th colspan="2">&nbsp</th>
-               <#list operationData.getIterationValues() as iterationValue>
-                  <th colspan=${numberOfColumns}> ${iterationValue}</th>
-               </#list>
-            </tr>
-         </#if>
-
+         
          <tr>
-            <th colspan="2"> Configuration ${testReport.getSingleTestName(i)}</th>
-            <#assign i = i + 1 />
-            <#list 0 .. (testReport.getMaxIterations() - 1) as i >
+            <th colspan="4"> Configuration ${testReport.getSingleTestName(i)}</th>
                <th>requests</th>
                <th>errors</th>
                <th>mean</th>
@@ -145,62 +138,80 @@
                <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.HISTOGRAM) >
                   <th>histograms</th>
                </#if>
-
-            </#list>
          </tr>
 
          <#assign reportAggregationMap = aggregations.byReports() />
          <#list reportAggregationMap?keys as report>
+         
+         	<#assign hiddenCounter++>
 
             <#assign aggregs = reportAggregationMap?api.get(report) />
             <#assign nodeCount = aggregs?first.nodeStats?size!0 />
             <#assign expandableRowsCount = testReport.calculateExpandableRows(aggregs, nodeCount) />
+            
+            <#assign threadCount = 0/>
+            
+            <#if testReport.configuration.generateThreadStats>
+            	<#list 0..nodeCount-1 as node>
+            		<#assign threadCount = threadCount + testReport.getMaxThreads(aggregs, node)/>
+            	</#list>
+            </#if>  
 
+             <#assign rowspan = aggregs?size />
+             
+                                
+            <#if testReport.configuration.generateNodeStats>
+            	<#assign rowspan = rowspan + aggregs?size*nodeCount />
+            </#if>
+            
+            <#if testReport.configuration.generateThreadStats>
+            	<#assign rowspan = rowspan + nodeCount*threadCount/>
+            </#if>
+            
             <tr>
-               <th onClick="${library.expandableRows(expandableRowsCount, testReport.elementCounter)}" class="onClick">
-                  ${report.getConfiguration().name}
-               </th>
-               <th>
-                  ${report.getCluster()}
-               </th>
-               <#list aggregs as aggregation>
+              	<th rowspan= ${rowspan} onClick="switch_visibility_by_class('h_${hiddenCounter}')" class="onClick">
+            	<img class="h_${hiddenCounter} visible" src="ic_arrow_drop_down_black_24dp.png">
+            	<img class="h_${hiddenCounter} collapse" src="ic_arrow_drop_up_black_24dp.png">
+            	</th>
+            	<th rowspan= ${rowspan} >${report.getConfiguration().name}</th>
+               	<th rowspan= ${rowspan} >${report.getCluster()}</th>            
+            
+			<#list aggregs as aggregation>
+
+               <th>Itteration ${aggregation?counter-1}</th>
+               
                   <@writeRepresentations statistics=aggregation.totalStats report=report aggregation=aggregation
                   node="total" operation=operation/>
-               </#list>
-            </tr
-
-            <#if testReport.configuration.generateNodeStats>
-               </tr>
-               <#list 0..(nodeCount -1) as node>
-                  <tr id="e${testReport.getElementCounter()}" class="collapse">
-                     <th colspan="2">node${node}</th>
-                     ${testReport.incElementCounter()}
-                     <#list aggregs as aggregation>
-                        <#assign statistics = testReport.getStatistics(aggregation, node)! />
+             
+             	<#if testReport.configuration.generateNodeStats>
+             	<#list 0..nodeCount-1 as node>
+             	<tr class="h_${hiddenCounter} collapse">
+             	<th>Node ${node}</th>
+             	<#assign statistics = testReport.getStatistics(aggregation, node)! />
                         <@writeRepresentations statistics=statistics report=report aggregation=aggregation
                         node= "node${node}" operation=operation/>
-                     </#list>
-                  </tr>
-                  <#if testReport.configuration.generateThreadStats>
+             	</tr>
+             	<#if testReport.configuration.generateThreadStats>
                      <#assign maxThreads = testReport.getMaxThreads(aggregs, node) />
                      <#list 0..(maxThreads -1) as thread>
-                        <tr id="e${testReport.getElementCounter()}" class="collapse">
-                           <th colspan="2">thread ${node}_${thread}</th>
+                        <tr class="h_${hiddenCounter} collapse">
+                           <th>thread ${node}_${thread}</th>
                            ${testReport.incElementCounter()}
-                           <#list aggregs as aggregation >
-                              <#assign threadStats = (testReport.getThreadStatistics(aggregation, node, thread))! />
-                              <@writeRepresentations statistics=threadStats report=report aggregation=aggregation
-                              node="thread${node}_${thread}" operation=operation/>
-                           </#list>
+                           <#assign threadStats = (testReport.getThreadStatistics(aggregation, node, thread))! />
+                           <@writeRepresentations statistics=threadStats report=report aggregation=aggregation
+                           node="thread${node}_${thread}" operation=operation/>
                         </tr>
                      </#list>
                   </#if>
-               </#list>
-            </#if>
+             	</#list>
+             	</#if>   
+            </tr>
+            </#list>
          </#list>
          </tr>
       </table>
       </#list>
+	</tr>
    </#list>
 </body>
 </html>

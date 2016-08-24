@@ -9,7 +9,7 @@
 <#function expandableRows rowCount elementCounter>
    <#local result = "" />
    <#list 0 .. (rowCount - 1) as count>
-      <#local result = result + "switch_visibility('e" + (elementCounter + count) + "'); " />
+      <#local result = result + "'e" + (elementCounter + count) + "', " />
    </#list>
    <#return result />
 </#function>

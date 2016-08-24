@@ -18,11 +18,18 @@
 
 .collapse {
     visibility: collapse;
-    display:none;
+    line-height: 0;
+    padding: 0;
+    border: none;
+}
+
+img.collapse {
+	display:none;
 }
 
 .visible {
     visibility: visible;
+    color: rgb(0, 77, 0);
 }
 
 .none {
@@ -73,16 +80,22 @@ table {
     border: 1px solid gray;
 }
 
+tr {
+	padding: 2px;
+	border: 1px solid gray;
+}
+
 td {
-    border: 1px solid gray;
-    padding: 2px;
+    border: inherit;
+    padding: inherit;
 }
 
 th {
-    border: 1px solid gray;
-    padding: 2px;
+    border: inherit;
+    padding: inherit;
 
     border-left-color: black;
     border-left-width: 2px;
     text-align: center;
+    vertical-align: top;
 }
