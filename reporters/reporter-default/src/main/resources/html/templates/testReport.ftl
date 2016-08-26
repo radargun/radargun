@@ -7,11 +7,11 @@
     <#import "lib/library.ftl" as library />
 </head>
 <body>
-   <h1>Test ${testReport.getTestName()}</h1>
-   <#assign StatisticType=enums["org.radargun.reporting.html.ReportDocument$StatisticType"] />
+	<h1>Test ${testReport.getTestName()}</h1>
+	<#assign StatisticType=enums["org.radargun.reporting.html.ReportDocument$StatisticType"] />
    
-   <#-- counter from creating unique classes for hidden rows -->
-   <#assign hiddenCounter = 0>
+	<#-- counter from creating unique classes for hidden rows -->
+	<#assign hiddenCounter = 0>
 
 	<#list  testReport.getTestAggregations() as aggregations>
 		<#list aggregations.results()?keys as aggregationKey>
@@ -51,9 +51,9 @@
 					</#if>
 				
 					<tr>              			
-						<th rowspan= ${nodeCount+1} onClick="switch_visibility_by_class('h_${hiddenCounter}')" class="onClick">
-            				<img class="h_${hiddenCounter} visible" src="ic_arrow_drop_down_black_24dp.png">
-            				<img class="h_${hiddenCounter} collapse" src="ic_arrow_drop_up_black_24dp.png">
+						<th rowspan= ${nodeCount+1} onClick="switch_class_by_class('h_${hiddenCounter}','expanded','collapsed')" class="onClick">
+            				<img class="h_${hiddenCounter} expanded" src="ic_arrow_drop_down_black_24dp.png">
+            				<img class="h_${hiddenCounter} collapsed" src="ic_arrow_drop_up_black_24dp.png">
             			</th>
 						<th>${report.getConfiguration().name}</th>
 						<th>${report.getCluster()}</th>
@@ -66,7 +66,7 @@
 					</tr>
 					<#if testReport.configuration.generateNodeStats>
 						<#list 0 .. (nodeCount - 1) as node>
-							<tr class="h_${hiddenCounter} collapse">
+							<tr class="h_${hiddenCounter} collapsed">
 								<th/>
 								<th> node${node}</th>
 								${testReport.incElementCounter()}
@@ -170,9 +170,9 @@
             		</#if>
             
             		<tr>
-              			<th rowspan= ${rowspan} onClick="switch_visibility_by_class('h_${hiddenCounter}')" class="onClick">
-            				<img class="h_${hiddenCounter} visible" src="ic_arrow_drop_down_black_24dp.png">
-            				<img class="h_${hiddenCounter} collapse" src="ic_arrow_drop_up_black_24dp.png">
+              			<th rowspan= ${rowspan} onClick="switch_class_by_class('h_${hiddenCounter}','expanded','collapsed')" class="onClick">
+            				<img class="h_${hiddenCounter} expanded" src="ic_arrow_drop_down_black_24dp.png">
+            				<img class="h_${hiddenCounter} collapsed" src="ic_arrow_drop_up_black_24dp.png">
             			</th>
 		            	<th rowspan= ${rowspan} >${report.getConfiguration().name}</th>
                			<th rowspan= ${rowspan} >${report.getCluster()}</th>            
@@ -200,7 +200,7 @@
                				<#-- write node totals -->
              				<#if testReport.configuration.generateNodeStats>
              					<#list 0..nodeCount-1 as node>
-             						<tr class="h_${hiddenCounter} collapse">
+             						<tr class="h_${hiddenCounter} collapsed">
              						<th>Node ${node}</th>
              	 					<#if aggregation?? && aggregation != "">
              	    					<#assign statistics = testReport.getStatistics(aggregation, node)! />
@@ -212,7 +212,7 @@
              						<#if testReport.configuration.generateThreadStats>
                     					<#assign maxThreads = testReport.getMaxThreads(aggregs, node) />
 			                     		<#list 0..(maxThreads -1) as thread>
-                        					<tr class="h_${hiddenCounter} collapse">
+                        					<tr class="h_${hiddenCounter} collapsed">
                            					<th>thread ${node}_${thread}</th>
                            					${testReport.incElementCounter()}
 											<#if aggregation?? && aggregation != "">
@@ -233,6 +233,7 @@
       		</table>
 		</#list>
 	</#list>
+	
 </body>
 </html>
 

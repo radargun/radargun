@@ -14,16 +14,15 @@ function switch_visibility() {
 	}
 }
 
-function switch_visibility_by_class(class_name) {
+function switch_class_by_class(class_name, swap1, swap2) {
 	var elements = document.getElementsByClassName(class_name);
 	for (var i = 0; i < elements.length; i++) {
-
-		if (elements[i].classList.contains('collapse')) {
-			elements[i].classList.remove('collapse');
-			elements[i].classList.add('visible');
-		} else {
-			elements[i].classList.remove('visible');
-			elements[i].classList.add('collapse');
+		if (elements[i].classList.contains(swap1)) {
+			elements[i].classList.remove(swap1);
+			elements[i].classList.add(swap2);
+		} else if (elements[i].classList.contains(swap2)) {
+			elements[i].classList.remove(swap2);
+			elements[i].classList.add(swap1);
 		}
 	}
 }
