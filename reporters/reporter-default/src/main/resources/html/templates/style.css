@@ -16,20 +16,20 @@
     text-align: right;
 }
 
-.collapse {
+.expanded {
+    visibility: visible;
+    color: rgb(0, 77, 0);
+}
+
+.collapsed {
     visibility: collapse;
     line-height: 0;
     padding: 0;
     border: none;
 }
 
-img.collapse {
+img.collapsed {
 	display:none;
-}
-
-.visible {
-    visibility: visible;
-    color: rgb(0, 77, 0);
 }
 
 .none {
