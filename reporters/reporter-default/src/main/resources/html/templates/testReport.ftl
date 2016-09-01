@@ -3,7 +3,6 @@
     <title>${testReport.getTitle()}</title>
     <script></script>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
     <#import "lib/library.ftl" as library />
 </head>
 <body>
@@ -115,7 +114,42 @@
       		<table>
          		<#assign operationData = testReport.getOperationData(operation, aggregations.byReports())>
          		<#assign numberOfColumns = testReport.numberOfColumns(operationData.getPresentedStatistics()) />
-         
+         		<colgroup>
+         			<col/>
+         			<col/>         			
+         			<col/>
+         			<col/>         		
+         		</colgroup>
+         		<colgroup>
+         			<col/>
+         			<col/>
+         			<col/>
+         			<col/>
+         		</colgroup>
+         		<colgroup>
+         		
+         		<#if operationData.getPresentedStatistics()?seq_contains(StatisticType.OPERATION_THROUGHPUT) >
+            	   	<col id="t_put">
+            	   	<col id="t_put_with_errors" class="visible">
+               	</#if>
+         		
+         		
+	            <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.DATA_THROUGHPUT) >
+    	           	<col id="data throughput">
+        	    </#if>
+
+            	<#if operationData.getPresentedStatistics()?seq_contains(StatisticType.PERCENTILES) >
+                	<#list testReport.configuration.percentiles as percentile>
+                   		<col id="RTM at ${percentile} %">
+                  	</#list>
+        	   	</#if>
+
+   	         	<#if operationData.getPresentedStatistics()?seq_contains(StatisticType.HISTOGRAM) >
+        	       	<col id="histograms">
+            	</#if>
+            	
+            	</colgroup>
+         		
          		<tr>
             		<th colspan="4"> Configuration ${testReport.getSingleTestName(i)}</th>
 	               	<th>requests</th>
@@ -124,8 +158,8 @@
             	   	<th>std.dev</th>
 	
     	           	<#if operationData.getPresentedStatistics()?seq_contains(StatisticType.OPERATION_THROUGHPUT) >
-        	        	<th>gross operation throughput</th>
-            	    	<th>net operation throughput</th>
+            	    	<th>Troughput</th>
+            	    	<th>Troughput w/ errors</th>
                		</#if>
 	               	<#if operationData.getPresentedStatistics()?seq_contains(StatisticType.DATA_THROUGHPUT) >
     	            	<th colspan="4">data throughput</th>
@@ -195,6 +229,10 @@
                				<#if aggregation?? && aggregation != "">
                					<@writeRepresentations statistics=aggregation.totalStats report=report aggregation=aggregation
                 					node="total" operation=operation/>
+                			<#else>
+                				<#list 1..numberOfColumns as colNum>
+                					<td/>
+                				</#list>
                				</#if>
                
                				<#-- write node totals -->
@@ -206,6 +244,10 @@
              	    					<#assign statistics = testReport.getStatistics(aggregation, node)! />
                     					<@writeRepresentations statistics=statistics report=report aggregation=aggregation
                         					node= "node${node}" operation=operation/>
+                        			<#else>
+                						<#list 1..numberOfColumns as colNum>
+                							<td/>
+                						</#list>
                         			</#if>
              	
              						<#-- write thread totals -->
@@ -219,6 +261,10 @@
                             					<#assign threadStats = (testReport.getThreadStatistics(aggregation, node, thread))! />
                            						<@writeRepresentations statistics=threadStats report=report aggregation=aggregation
                            							node="thread${node}_${thread}" operation=operation/>
+                           					<#else>
+                								<#list 1..numberOfColumns as colNum>
+                									<td/>
+                								</#list>
                            					</#if>
                         					</tr>
                      					</#list>
@@ -279,7 +325,7 @@
       <td class="${rowClass} firstCellStyle" title="${tooltip}">
          ${defaultOutcome.requests}
       </td>
-      <td class="${rowClass} rowStyle" title="${tooltip}">
+      <td class="${rowClass} rowStyle errorData" title="${tooltip}">
          ${defaultOutcome.errors}
       </td>
    <#else >
@@ -306,10 +352,10 @@
 
       <#if operationThroughput?has_content>
          <td class="${rowClass} rowStyle" title="${tooltip}">
-            ${testReport.formatOperationThroughput(operationThroughput.gross)}
+            ${testReport.formatOperationThroughput(operationThroughput.net)}
          </td>
          <td class="${rowClass} rowStyle" title="${tooltip}">
-            ${testReport.formatOperationThroughput(operationThroughput.net)}
+            ${testReport.formatOperationThroughput(operationThroughput.gross)}
          </td>
       <#else >
          <td class="${rowClass} rowStyle" title="${tooltip}"/>
@@ -373,3 +419,5 @@
      </#if>
    </#if>
 </#macro>
+
+<script src="script.js"></script>
