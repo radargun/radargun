@@ -1,3 +1,14 @@
+hide_troughputs();
+
+function hide_troughputs(){
+    var dataCells = document.getElementsByClassName("errorData");
+    for (var i = 0; i < dataCells.length; i++) {
+            if (dataCells[i].innerText!="" && dataCells[i].innerText!="0"){
+                    console.log(dataCells[i].parent);
+            }
+    }
+}
+
 function switch_visibility() {
 	for (var i = 0; i < arguments.length; i++) {
 		var element = document.getElementById(arguments[i]);
