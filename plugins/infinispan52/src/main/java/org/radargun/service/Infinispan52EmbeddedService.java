@@ -41,6 +41,12 @@ public class Infinispan52EmbeddedService extends Infinispan51EmbeddedService {
 
    @ProvidesTrait
    @Override
+   public InfinispanOperations createBasicOperations() {
+      return new Infinispan52Operations(this);
+   }
+
+   @ProvidesTrait
+   @Override
    public Infinispan52MapReduce createMapReduce() {
       return new Infinispan52MapReduce(this);
    }

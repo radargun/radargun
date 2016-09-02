@@ -65,7 +65,7 @@ public class Infinispan51EmbeddedService extends InfinispanEmbeddedService {
 
    @ProvidesTrait
    @Override
-   public Infinispan51Operations createBasicOperations() {
+   public InfinispanOperations createBasicOperations() {
       return new Infinispan51Operations(this);
    }
 
