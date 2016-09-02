@@ -207,8 +207,10 @@ public class HtmlReporter implements Reporter {
       index.prepareServiceConfigs(reports);
 
       try {
-         copyResources("style.css");
-         copyResources("script.js");
+         copyResources("html/templates/", "style.css");
+         copyResources("html/templates/", "script.js");
+         copyResources("html/icons/", "ic_arrow_drop_down_black_24dp.png");
+         copyResources("html/icons/", "ic_arrow_drop_up_black_24dp.png");
       } catch (IOException e) {
          log.error("Failed to copy resources", e);
       }
@@ -256,14 +258,15 @@ public class HtmlReporter implements Reporter {
 
    /**
     * Copies files from resources to targetDir destination
-    * This is used to copy css and js files to target dir
+    * This is used to copy css, js  and icon files to target dir
     *
+    * @param path to file
     * @param file to be copied
     * @throws IOException if file can not be copied
     */
-   private void copyResources(String file) throws IOException {
+   private void copyResources(String path, String file) throws IOException {
       ClassLoader classLoader = getClass().getClassLoader();
-      try (InputStream source = classLoader.getResourceAsStream("html/templates/" + file)) {
+      try (InputStream source = classLoader.getResourceAsStream(path + file)) {
          File destination = new File(targetDir + File.separator + file);
          Files.copy(source, destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
       } catch (Exception e) {
