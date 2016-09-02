@@ -337,10 +337,11 @@
             <module>plugins/jdg64</module>
             <module>plugins/jdg65</module>
             <module>plugins/jdg66</module>
+            <module>plugins/jdg661</module>
             <module>plugins/jdg70</module>
          </modules>
          <properties>
-            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70</plugins.jdg>
+            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg661,jdg70</plugins.jdg>
          </properties>
       </profile>
 
