@@ -56,18 +56,33 @@
             			</th>
 						<th>${report.getConfiguration().name}</th>
 						<th>${report.getCluster()}</th>
+						
+						<#assign dataCount = 0>
+						
 						<#list results?api.get(report) as result>
 							<#assign rowClass = testReport.rowClass(result.suspicious) />
 							<td class="${rowClass}">
 								${result.aggregatedValue}
 							</td>
+							<#assign dataCount = dataCount + 1 >
 						</#list>
+						
+						<#-- Fill remaining cells because CSS -->
+						<#if dataCount!=(testReport.maxIterations)>
+							<#list dataCount..(testReport.maxIterations - 1)  as colNum>
+                				<td/>
+                			</#list>
+                		</#if>
+						
 					</tr>
 					<#if testReport.configuration.generateNodeStats>
 						<#list 0 .. (nodeCount - 1) as node>
 							<tr class="h_${hiddenCounter} collapsed">
 								<th/>
 								<th> node${node}</th>
+								
+								<#assign dataCount = 0>
+								
 								${testReport.incElementCounter()}
 								<#list results?api.get(report) as result>
 									<#assign slaveResult = (result.slaveResults?api.get(node))! />
@@ -77,9 +92,18 @@
 											${slaveResult.value}
 										</td>
 									<#else >
-										<td></td>
+										<td/>
 									</#if>
+									
+									<#assign dataCount = dataCount + 1>
 								</#list>
+								
+								<#-- Fill remaining cells because CSS -->	
+								<#if dataCount!=(testReport.maxIterations)>
+									<#list dataCount..(testReport.maxIterations - 1)  as colNum>
+                						<td/>
+                					</#list>
+                				</#if>
 							</tr>
 						</#list>
 					</#if>
@@ -114,23 +138,20 @@
       		<table>
          		<#assign operationData = testReport.getOperationData(operation, aggregations.byReports())>
          		<#assign numberOfColumns = testReport.numberOfColumns(operationData.getPresentedStatistics()) />
-         		<colgroup>
+         		
          			<col/>
          			<col/>         			
          			<col/>
          			<col/>         		
-         		</colgroup>
-         		<colgroup>
+
          			<col/>
          			<col/>
          			<col/>
          			<col/>
-         		</colgroup>
-         		<colgroup>
          		
          		<#if operationData.getPresentedStatistics()?seq_contains(StatisticType.OPERATION_THROUGHPUT) >
-            	   	<col id="t_put">
-            	   	<col id="t_put_with_errors" class="visible">
+            	   	<col/>
+            	   	<col class="tPut_with_errors collapsed"/>
                	</#if>
          		
          		
@@ -147,8 +168,6 @@
    	         	<#if operationData.getPresentedStatistics()?seq_contains(StatisticType.HISTOGRAM) >
         	       	<col id="histograms">
             	</#if>
-            	
-            	</colgroup>
          		
          		<tr>
             		<th colspan="4"> Configuration ${testReport.getSingleTestName(i)}</th>
@@ -230,6 +249,7 @@
                					<@writeRepresentations statistics=aggregation.totalStats report=report aggregation=aggregation
                 					node="total" operation=operation/>
                 			<#else>
+                				<#-- Fill cells because CSS -->
                 				<#list 1..numberOfColumns as colNum>
                 					<td/>
                 				</#list>
@@ -245,6 +265,7 @@
                     					<@writeRepresentations statistics=statistics report=report aggregation=aggregation
                         					node= "node${node}" operation=operation/>
                         			<#else>
+                        				<#-- Fill cells because CSS -->
                 						<#list 1..numberOfColumns as colNum>
                 							<td/>
                 						</#list>
@@ -262,6 +283,7 @@
                            						<@writeRepresentations statistics=threadStats report=report aggregation=aggregation
                            							node="thread${node}_${thread}" operation=operation/>
                            					<#else>
+                           						<#-- Fill cells because CSS -->
                 								<#list 1..numberOfColumns as colNum>
                 									<td/>
                 								</#list>

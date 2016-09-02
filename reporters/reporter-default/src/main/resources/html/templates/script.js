@@ -1,30 +1,21 @@
-hide_troughputs();
+show_throughputs_w_errors();
 
-function hide_troughputs(){
+/* Shows throughput with errors column in tables which have any errors */ 
+function show_throughputs_w_errors(){
     var dataCells = document.getElementsByClassName("errorData");
     for (var i = 0; i < dataCells.length; i++) {
-            if (dataCells[i].innerText!="" && dataCells[i].innerText!="0"){
-                    console.log(dataCells[i].parent);
-            }
+    	if (dataCells[i].innerText!="" && dataCells[i].innerText!="0"){
+    		var tPutWErrorsColumn = dataCells[i].parentElement.parentElement.parentElement.getElementsByClassName("tPut_with_errors");
+    		if (tPutWErrorsColumn[0]!=null && tPutWErrorsColumn[0].classList.contains('collapsed')) {
+    			console.log(tPutWErrorsColumn[0]);
+    			tPutWErrorsColumn[0].classList.remove('collapsed');
+    			tPutWErrorsColumn[0].classList.add('expanded');
+    		}
+    	}
     }
 }
 
-function switch_visibility() {
-	for (var i = 0; i < arguments.length; i++) {
-		var element = document.getElementById(arguments[i]);
-		if (element == null)
-			return;
-
-		if (element.classList.contains('collapse')) {
-			element.classList.remove('collapse');
-			element.classList.add('visible');
-		} else {
-			element.classList.remove('visible');
-			element.classList.add('collapse');
-		}
-	}
-}
-
+/* On elements with a particular class swap between other two */
 function switch_class_by_class(class_name, swap1, swap2) {
 	var elements = document.getElementsByClassName(class_name);
 	for (var i = 0; i < elements.length; i++) {
