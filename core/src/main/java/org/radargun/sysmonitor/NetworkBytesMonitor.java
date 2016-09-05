@@ -5,7 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.math.BigDecimal;
+import java.util.concurrent.TimeUnit;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -29,7 +29,8 @@ public class NetworkBytesMonitor implements Monitor {
    private final Timeline timeline;
    private String iface;
    private int valueIndex = -1;
-   private BigDecimal initialValue;
+   private long previousValue;
+   private long previousTime;
 
    private NetworkBytesMonitor(String iface, int valueIndex, Timeline timeline) {
       this.timeline = timeline;
@@ -52,14 +53,17 @@ public class NetworkBytesMonitor implements Monitor {
             while (line != null) {
                line = line.trim();
                if (line.startsWith(iface)) {
+                  long now = System.currentTimeMillis();
                   String[] vals = line.split(":")[1].trim().split("\\s+");
-                  // Start monitoring from zero and then increase
-                  if (initialValue == null) {
-                     initialValue = new BigDecimal(vals[valueIndex]);
+                  if (previousValue == 0) {
                      timeline.addValue(getCategory(), new Timeline.Value(0));
                   } else {
-                     timeline.addValue(getCategory(), new Timeline.Value(new BigDecimal(vals[valueIndex]).subtract(initialValue)));
+                     long bytesSinceLastTime = Long.valueOf(vals[valueIndex]) - previousValue;
+                     long trafficPerSecond = bytesSinceLastTime * TimeUnit.SECONDS.toMillis(1) / (now - previousTime);
+                     timeline.addValue(getCategory(), new Timeline.Value(trafficPerSecond));
                   }
+                  previousValue = Long.valueOf(vals[valueIndex]);
+                  previousTime = now;
                   break;
                }
                line = br.readLine();
@@ -75,7 +79,7 @@ public class NetworkBytesMonitor implements Monitor {
    }
 
    private String getCategory() {
-      return String.format("Network %s on %s", valueIndex == TRANSMIT_BYTES_INDEX ? "TX" : "RX", iface);
+      return String.format("Network %s on %s [bytes per second]", valueIndex == TRANSMIT_BYTES_INDEX ? "TX" : "RX", iface);
    }
 
    @Override
