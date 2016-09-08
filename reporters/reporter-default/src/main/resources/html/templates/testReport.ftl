@@ -177,8 +177,8 @@
             	   	<th>std.dev</th>
 	
     	           	<#if operationData.getPresentedStatistics()?seq_contains(StatisticType.OPERATION_THROUGHPUT) >
-            	    	<th>Troughput</th>
-            	    	<th>Troughput w/ errors</th>
+            	    	<th>Throughput</th>
+            	    	<th>Throughput w/ errors</th>
                		</#if>
 	               	<#if operationData.getPresentedStatistics()?seq_contains(StatisticType.DATA_THROUGHPUT) >
     	            	<th colspan="4">data throughput</th>
