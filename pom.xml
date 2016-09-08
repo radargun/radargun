@@ -753,6 +753,7 @@
                   <generateGitPropertiesFile>true</generateGitPropertiesFile>
                   <generateGitPropertiesFilename>${distribution.artifact}/bin/git.properties</generateGitPropertiesFilename>
                   <skipPoms>false</skipPoms>
+                  <failOnNoGitDirectory>false</failOnNoGitDirectory>
                   <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
               </configuration>
           </plugin>
