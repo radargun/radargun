@@ -328,6 +328,10 @@
 
 <#macro writeRepresentations statistics report aggregation node operation>
 
+   <#if !statistics?has_content>
+      <#return>
+   </#if>
+
    <#if statistics?has_content>
       <#local period = testReport.period(statistics)!0 />
    </#if>

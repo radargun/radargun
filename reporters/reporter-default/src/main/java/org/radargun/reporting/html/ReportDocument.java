@@ -65,7 +65,7 @@ public abstract class ReportDocument extends HtmlDocument {
    public void createHistogramAndPercentileChart(Statistics statistics, final String operation, final String configurationName, int cluster, int iteration,
                                                    String node, Collection<StatisticType> presentedStatistics) {
 
-      if (!presentedStatistics.contains(StatisticType.HISTOGRAM)) {
+      if (statistics == null || !presentedStatistics.contains(StatisticType.HISTOGRAM)) {
          return;
       }
       final Histogram histogram = statistics.getRepresentation(operation, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
