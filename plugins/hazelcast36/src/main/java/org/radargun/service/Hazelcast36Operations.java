@@ -12,6 +12,9 @@ import com.hazelcast.core.TransactionalMap;
  */
 public class Hazelcast36Operations extends HazelcastOperations {
 
+   public Hazelcast36Operations() {
+   }
+
    public Hazelcast36Operations(Hazelcast36Service service) {
       super(service);
    }
