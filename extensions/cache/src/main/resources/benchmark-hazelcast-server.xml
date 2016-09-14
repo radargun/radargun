@@ -1,0 +1,64 @@
+<!-- This test shows example comparison between three products -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+    <clusters>
+        <cluster size="2">
+            <group name="server" size="1"/>
+            <group name="client" size="1"/>
+        </cluster>
+    </clusters>
+
+    <configurations>
+        <config name="Hazelcast 37 client-server">
+            <setup group="server" plugin="hazelcast37">
+                <hazelcast xmlns="urn:radargun:plugins:hazelcast37:3.0" file="dist-sync.xml"/>
+            </setup>
+
+            <setup group="client" plugin="hazelcast37">
+                <hazelcast-client xmlns="urn:radargun:plugins:hazelcast37:3.0">
+                <!--Address of one server is enough to connect to the cluster, but it's recommended to specify all of them-->
+                    <servers>127.0.0.1:5701</servers>
+                </hazelcast-client>
+            </setup>
+
+        </config>
+
+    </configurations>
+
+    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                 xmlns="urn:radargun:stages:core:3.0"
+                 xmlns:cache="urn:radargun:stages:cache:3.0"
+                 xmlns:l="urn:radargun:stages:legacy:3.0">
+        <jvm-monitor-start/>
+        <service-start groups="server"/>
+        <service-start groups="client"/>
+
+        <cache:load groups="client" num-entries="1000"/>
+
+        <l:basic-operations-test groups="client" test-name="warmup" num-threads-per-node="10"
+                                 duration="${warmup.duration:12s}">
+            <l:key-selector>
+                <l:concurrent-keys total-entries="1000"/>
+            </l:key-selector>
+        </l:basic-operations-test>
+
+        <l:basic-operations-test groups="client" test-name="stress-test" duration="${test.duration:18s}" num-threads-per-node="5">
+            <l:key-selector>
+                <l:concurrent-keys total-entries="1000"/>
+            </l:key-selector>
+            <statistics>
+                <common/>
+            </statistics>
+        </l:basic-operations-test>
+
+        <service-stop/>
+    </rg:scenario>
+    <cleanup check-threads="false"/>
+
+    <reports>
+        <reporter type="csv"/>
+        <reporter type="html"/>
+    </reports>
+
+</benchmark>

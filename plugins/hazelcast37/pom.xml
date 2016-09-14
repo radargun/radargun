@@ -36,6 +36,11 @@
          <optional>true</optional>
       </dependency>
       <dependency>
+         <groupId>com.hazelcast</groupId>
+         <artifactId>hazelcast-client</artifactId>
+         <version>${version.hazelcast}</version>
+      </dependency>
+      <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>plugin-hazelcast36</artifactId>
          <version>${project.version}</version>

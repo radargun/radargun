@@ -13,7 +13,10 @@ public class HazelcastOperations implements BasicOperations, ConditionalOperatio
    protected static final Log log = LogFactory.getLog(HazelcastOperations.class);
    protected static final boolean trace = log.isTraceEnabled();
 
-   protected final HazelcastService service;
+   protected HazelcastService service = null;
+
+   public HazelcastOperations() {
+   }
 
    public HazelcastOperations(HazelcastService service) {
       this.service = service;
