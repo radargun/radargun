@@ -63,7 +63,7 @@ public final class Fuzzy<T extends Serializable> implements Serializable {
 
    public T next(Random random) {
       if (probabilities.length == 1) return (T) values[0];
-      double x = random.nextDouble();
+      BigDecimal x = BigDecimal.valueOf(random.nextDouble());
       int index = Arrays.binarySearch(probabilities, x);
       if (index < 0) {
          index = -index - 1;
