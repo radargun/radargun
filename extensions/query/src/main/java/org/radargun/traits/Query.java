@@ -14,11 +14,6 @@ public interface Query {
     */
    Result execute(Context context);
 
-   enum SortOrder {
-      ASCENDING,
-      DESCENDING
-   }
-
    enum AggregationFunction {
       NONE,
       COUNT,
@@ -75,7 +70,7 @@ public interface Query {
 
       Builder any(Builder... subqueries);
 
-      Builder orderBy(SelectExpression selectExpression, SortOrder order);
+      Builder orderBy(SelectExpression selectExpression);
 
       Builder projection(SelectExpression... selectExpressions);
 
@@ -102,6 +97,10 @@ public interface Query {
 
       public SelectExpression(String attribute, AggregationFunction function) {
          this(attribute, function, true);
+      }
+
+      public SelectExpression(String attribute, boolean asc) {
+         this(attribute, AggregationFunction.NONE, asc);
       }
 
       public SelectExpression(String attribute, AggregationFunction function, boolean asc) {

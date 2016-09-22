@@ -121,7 +121,7 @@ public class QueryTraitRepository extends CoreTraitRepository {
          }
 
          @Override
-         public Query.Builder orderBy(org.radargun.traits.Query.SelectExpression selectExpression, org.radargun.traits.Query.SortOrder order) {
+         public Query.Builder orderBy(org.radargun.traits.Query.SelectExpression selectExpression) {
             return this;
          }
 
