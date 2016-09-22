@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2013 Red Hat, Inc. and/or its affiliates.
+  ~
+  ~ This is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU Lesser General Public License as
+  ~ published by the Free Software Foundation; either version 2.1 of
+  ~ the License, or (at your option) any later version.
+  ~
+  ~ This software is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  ~ Lesser General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public
+  ~ License along with this library; if not, write to the Free Software
+  ~ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+  ~ 02110-1301 USA
+  -->
+
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:infinispan:config:9.0 http://www.infinispan.org/schemas/infinispan-config-9.0.xsd"
+        xmlns="urn:infinispan:config:9.0">
+
+    <cache-container name="default" default-cache="default">
+        <transport lock-timeout="60000" cluster="default"/>
+        <jmx duplicate-domains="true">
+            <property name="enabled">true</property>
+        </jmx>
+        <local-cache  name="default"/>
+
+        <distributed-cache name="dist_indexless" owners="2">
+            <transaction mode="NONE"/>
+        </distributed-cache>
+    </cache-container>
+
+</infinispan>

@@ -114,33 +114,13 @@ public class ContinuousQueryStage extends AbstractDistStage {
    }
 
    private void registerCQ(SlaveState slaveState) {
-      Class<?> clazz;
-      try {
-         clazz = slaveState.getClass().getClassLoader().loadClass(query.clazz);
-      } catch (ClassNotFoundException e) {
-         throw new IllegalArgumentException("Cannot load class " + query.clazz, e);
+      if ((query.projectionAggregated != null && !query.projectionAggregated.isEmpty()) ||
+            (query.groupBy != null && query.groupBy.length != 0) ||
+            (query.orderByAggregatedColumns != null && !query.orderByAggregatedColumns.isEmpty())) {
+         throw new IllegalStateException("Aggregations are not supported in continuous queries!");
       }
-
-      Query.Builder builder = queryable.getBuilder(null, clazz);
-      for (Condition condition : query.conditions) {
-         condition.apply(builder);
-      }
-      if (query.orderBy != null) {
-         for (OrderBy se : query.orderBy) {
-            builder.orderBy(se.attribute, se.asc ? Query.SortOrder.ASCENDING : Query.SortOrder.DESCENDING);
-         }
-      }
-      if (query.projection != null) {
-         builder.projection(query.projection);
-      }
-      if (query.offset >= 0) {
-         builder.offset(query.offset);
-      }
-      if (query.limit >= 0) {
-         builder.limit(query.limit);
-      }
-      Query query = builder.build();
-      slaveState.put(ContinuousQuery.QUERY, query);
+      Query q = QueryBase.constructBuilder(queryable, query).build();
+      slaveState.put(ContinuousQuery.QUERY, q);
 
       ContinuousQuery.Listener cqListener = new ContinuousQuery.Listener() {
          private final String statsKey = mergeCq ? CQ_TEST_NAME + ".Stats" : testName + ".Stats";
@@ -173,7 +153,7 @@ public class ContinuousQueryStage extends AbstractDistStage {
          listeners = new HashMap<>();
          slaveState.put(ContinuousQuery.LISTENERS, listeners);
       }
-      ContinuousQuery.ListenerReference ref = continuousQueryTrait.createContinuousQuery(cacheName, query, cqListener);
+      ContinuousQuery.ListenerReference ref = continuousQueryTrait.createContinuousQuery(cacheName, q, cqListener);
       listeners.put(testName, ref);
    }
 

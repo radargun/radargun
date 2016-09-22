@@ -19,6 +19,15 @@ public interface Query {
       DESCENDING
    }
 
+   enum AggregationFunction {
+      NONE,
+      COUNT,
+      SUM,
+      AVG,
+      MIN,
+      MAX;
+   }
+
    /**
     * Data retrieved by the query
     */
@@ -39,40 +48,66 @@ public interface Query {
 
    /**
     * The instance should be reusable, but not thread-safe.
+    * Conditions defined after groupBy call are meant to be part of the HAVING clause.
     */
    interface Builder {
       Builder subquery();
 
-      Builder eq(String attribute, Object value);
+      Builder eq(SelectExpression selectExpression, Object value);
 
-      Builder lt(String attribute, Object value);
+      Builder lt(SelectExpression selectExpression, Object value);
 
-      Builder le(String attribute, Object value);
+      Builder le(SelectExpression selectExpression, Object value);
 
-      Builder gt(String attribute, Object value);
+      Builder gt(SelectExpression selectExpression, Object value);
 
-      Builder ge(String attribute, Object value);
+      Builder ge(SelectExpression selectExpression, Object value);
 
-      Builder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive);
+      Builder between(SelectExpression selectExpression, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive);
 
-      Builder isNull(String attribute);
+      Builder isNull(SelectExpression selectExpression);
 
-      Builder like(String attribute, String pattern);
+      Builder like(SelectExpression selectExpression, String pattern);
 
-      Builder contains(String attribute, Object value);
-
+      Builder contains(SelectExpression selectExpression, Object value);
+      
       Builder not(Builder subquery);
 
       Builder any(Builder... subqueries);
 
-      Builder orderBy(String attribute, SortOrder order);
+      Builder orderBy(SelectExpression selectExpression, SortOrder order);
 
-      Builder projection(String... attribute);
+      Builder projection(SelectExpression... selectExpressions);
+
+      Builder groupBy(String[] attribute);
 
       Builder offset(long offset);
 
       Builder limit(long limit);
 
       Query build();
+   }
+
+   /**
+    * Used to represent aggregated attributes and also order by expressions
+    */
+   class SelectExpression {
+      public String attribute;
+      public AggregationFunction function;
+      public boolean asc;
+
+      public SelectExpression(String attribute) {
+         this(attribute, AggregationFunction.NONE, true);
+      }
+
+      public SelectExpression(String attribute, AggregationFunction function) {
+         this(attribute, function, true);
+      }
+
+      public SelectExpression(String attribute, AggregationFunction function, boolean asc) {
+         this.attribute = attribute;
+         this.function = function;
+         this.asc = asc;
+      }
    }
 }

@@ -21,6 +21,10 @@ import org.radargun.utils.ReflexiveConverters;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class Condition {
+
+   protected static final Class<? extends SelectExpressionElement>[] SELECT_EXPRESSIONS = new Class[]{Attribute.class, Count.class, Sum.class, Avg.class, Min.class, Max.class};
+   protected static final Class<? extends OrderedSelectExpressionElement>[]  ORDERED_SELECT_EXPRESSIONS = new Class[] {OrderedAttribute.class, OrderedCount.class, OrderedSum.class, OrderedAvg.class, OrderedMin.class, OrderedMax.class};
+
    public abstract void apply(Query.Builder builder);
 
    public String toString() {
@@ -28,8 +32,29 @@ public abstract class Condition {
    }
 
    public abstract static class PathCondition extends Condition {
-      @Property(doc = "Target path (field on the queried object or path through embedded objects)", optional = false)
+      @Property(doc = "Target path (field on the queried object or path through embedded objects)")
       public String path;
+
+      @Property(doc = "Target path, can be aggregated.", complexConverter = SelectExpressionConverter.class)
+      public SelectExpressionElement aggregatedPath;
+
+      Query.SelectExpression resolvedPath;
+
+      public void apply(Query.Builder builder) {
+         if (path != null) {
+            resolvedPath = new Query.SelectExpression(path);
+         }
+         if (aggregatedPath != null) {
+            resolvedPath = aggregatedPath.toSelectExpression();
+         }
+         if (path != null && aggregatedPath != null) {
+            throw new IllegalStateException("Condition can only have a single target path!");
+         }
+         if (resolvedPath == null) {
+            throw new IllegalStateException("You need to specify a target path for the condition!");
+         }
+      }
+
    }
 
    @DefinitionElement(name = "eq", doc = "Target is equal to value")
@@ -48,7 +73,8 @@ public abstract class Condition {
 
       @Override
       public void apply(Query.Builder builder) {
-         builder.eq(path, value != null ? value : random.nextValue(ThreadLocalRandom.current()));
+         super.apply(builder);
+         builder.eq(resolvedPath, value != null ? value : random.nextValue(ThreadLocalRandom.current()));
       }
    }
 
@@ -74,7 +100,8 @@ public abstract class Condition {
    public static class Lt extends PathNumberCondition {
       @Override
       public void apply(Query.Builder builder) {
-         builder.lt(path, getValue());
+         super.apply(builder);
+         builder.lt(resolvedPath, getValue());
       }
    }
 
@@ -82,7 +109,8 @@ public abstract class Condition {
    public static class Le extends PathNumberCondition {
       @Override
       public void apply(Query.Builder builder) {
-         builder.le(path, getValue());
+         super.apply(builder);
+         builder.le(resolvedPath, getValue());
       }
    }
 
@@ -90,7 +118,8 @@ public abstract class Condition {
    public static class Gt extends PathNumberCondition {
       @Override
       public void apply(Query.Builder builder) {
-         builder.gt(path, getValue());
+         super.apply(builder);
+         builder.gt(resolvedPath, getValue());
       }
    }
 
@@ -98,7 +127,8 @@ public abstract class Condition {
    public static class Ge extends PathNumberCondition {
       @Override
       public void apply(Query.Builder builder) {
-         builder.ge(path, getValue());
+         super.apply(builder);
+         builder.ge(resolvedPath, getValue());
       }
    }
 
@@ -136,9 +166,10 @@ public abstract class Condition {
 
       @Override
       public void apply(Query.Builder builder) {
+         super.apply(builder);
          Number lowerBound = this.lowerBound != null ? this.lowerBound : randomLowerBound.nextValue(ThreadLocalRandom.current());
          Number upperBound = this.upperBound != null ? this.upperBound : randomUpperBound.nextValue(ThreadLocalRandom.current());
-         builder.between(path, lowerBound, lowerInclusive, upperBound, upperInclusive);
+         builder.between(resolvedPath, lowerBound, lowerInclusive, upperBound, upperInclusive);
       }
    }
 
@@ -158,7 +189,8 @@ public abstract class Condition {
 
       @Override
       public void apply(Query.Builder builder) {
-         builder.like(path, value != null ? value : random.nextValue(ThreadLocalRandom.current()));
+         super.apply(builder);
+         builder.like(resolvedPath, value != null ? value : random.nextValue(ThreadLocalRandom.current()));
       }
    }
 
@@ -178,7 +210,8 @@ public abstract class Condition {
 
       @Override
       public void apply(Query.Builder builder) {
-         builder.contains(path, value != null ? value : random.nextValue(ThreadLocalRandom.current()));
+         super.apply(builder);
+         builder.contains(resolvedPath, value != null ? value : random.nextValue(ThreadLocalRandom.current()));
       }
    }
 
@@ -186,7 +219,8 @@ public abstract class Condition {
    public static class IsNull extends PathCondition {
       @Override
       public void apply(Query.Builder builder) {
-         builder.isNull(path);
+         super.apply(builder);
+         builder.isNull(resolvedPath);
       }
    }
 
@@ -223,7 +257,7 @@ public abstract class Condition {
       }
    }
 
-   @DefinitionElement(name = "all", doc = "All inner conditions are false", resolveType = DefinitionElement.ResolveType.PASS_BY_DEFINITION)
+   @DefinitionElement(name = "all", doc = "All inner conditions are true", resolveType = DefinitionElement.ResolveType.PASS_BY_DEFINITION)
    public static class All extends Condition {
       @Property(name = "", doc = "Inner conditions", complexConverter = ConditionConverter.class)
       public final List<Condition> subs = new ArrayList<>();
@@ -233,6 +267,137 @@ public abstract class Condition {
          for (Condition sub : subs) {
             sub.apply(builder);
          }
+      }
+   }
+
+   protected abstract static class SelectExpressionElement {
+      @Property(doc = "Target path (field on the queried object or path through embedded objects)", optional = false)
+      public String path;
+
+      public abstract Query.SelectExpression toSelectExpression();
+
+      public String toString() {
+         return PropertyHelper.getDefinitionElementName(getClass()) + PropertyHelper.toString(this);
+      }
+   }
+
+   @DefinitionElement(name = "attribute", doc = "Simple attribute projection, with no aggregation function.")
+   protected static class Attribute extends SelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.NONE);
+      }
+   }
+
+   @DefinitionElement(name = "count", doc = "Count aggregation.")
+   protected static class Count extends SelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.COUNT);
+      }
+   }
+
+   @DefinitionElement(name = "sum", doc = "Sum aggregation.")
+   protected static class Sum extends SelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.SUM);
+      }
+   }
+
+   @DefinitionElement(name = "avg", doc = "Average aggregation.")
+   protected static class Avg extends SelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.AVG);
+      }
+   }
+
+   @DefinitionElement(name = "min", doc = "Minimum aggregation.")
+   protected static class Min extends SelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.MIN);
+      }
+   }
+
+   @DefinitionElement(name = "max", doc = "Max aggregation.")
+   protected static class Max extends SelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.MAX);
+      }
+   }
+
+   protected abstract static class OrderedSelectExpressionElement extends SelectExpressionElement {
+      @Property(doc = "Whether the column should be ordered in ascending order. Default is true, and false means descending.")
+      protected boolean asc = true;
+      public abstract Query.SelectExpression toSelectExpression();
+   }
+
+   @DefinitionElement(name = "attribute", doc = "Simple attribute projection, with no aggregation function.")
+   protected static class OrderedAttribute extends OrderedSelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.NONE, asc);
+      }
+   }
+
+   @DefinitionElement(name = "count", doc = "Count aggregation.")
+   protected static class OrderedCount extends OrderedSelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.COUNT, asc);
+      }
+   }
+
+   @DefinitionElement(name = "sum", doc = "Sum aggregation.")
+   protected static class OrderedSum extends OrderedSelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.SUM, asc);
+      }
+   }
+
+   @DefinitionElement(name = "avg", doc = "Average aggregation.")
+   protected static class OrderedAvg extends OrderedSelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.AVG, asc);
+      }
+   }
+
+   @DefinitionElement(name = "min", doc = "Minimum aggregation.")
+   protected static class OrderedMin extends OrderedSelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.MIN, asc);
+      }
+   }
+
+   @DefinitionElement(name = "max", doc = "Max aggregation.")
+   protected static class OrderedMax extends OrderedSelectExpressionElement {
+      @Override
+      public Query.SelectExpression toSelectExpression() {
+         return new Query.SelectExpression(path, Query.AggregationFunction.MAX, asc);
+      }
+   }
+
+   protected static class ProjectionConverter extends ReflexiveConverters.ListConverter {
+      public ProjectionConverter() {
+         super(SELECT_EXPRESSIONS);
+      }
+   }
+
+   protected static class SelectExpressionConverter extends ReflexiveConverters.ObjectConverter {
+      public SelectExpressionConverter() {
+         super(SELECT_EXPRESSIONS);
+      }
+   }
+
+   protected static class AggregatedSortConverter extends ReflexiveConverters.ListConverter {
+      public AggregatedSortConverter() {
+         super(ORDERED_SELECT_EXPRESSIONS);
       }
    }
 

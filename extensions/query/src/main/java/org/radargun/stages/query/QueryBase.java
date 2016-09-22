@@ -42,34 +42,63 @@ public class QueryBase {
       if (queryable == null) {
          return; // called from master, ignore
       }
+      builders = new Query.Builder[numQueries];
+      for (int i = 0; i < numQueries; ++i) {
+         builders[i] = constructBuilder(queryable, query);
+      }
+   }
+
+   public static Query.Builder constructBuilder(Queryable queryable, QueryConfiguration query) {
       Class<?> clazz;
       try {
          clazz = Class.forName(query.clazz);
       } catch (ClassNotFoundException e) {
          throw new IllegalArgumentException("Cannot load class " + query.clazz, e);
       }
-      builders = new Query.Builder[numQueries];
-      for (int i = 0; i < numQueries; ++i) {
-         Query.Builder builder = queryable.getBuilder(null, clazz);
+      Query.Builder builder = queryable.getBuilder(null, clazz);
+      if (query.conditions != null) {
          for (Condition condition : query.conditions) {
             condition.apply(builder);
          }
-         if (query.orderBy != null) {
-            for (OrderBy se : query.orderBy) {
-               builder.orderBy(se.attribute, se.asc ? Query.SortOrder.ASCENDING : Query.SortOrder.DESCENDING);
+      }
+      if (query.orderBy != null) {
+         for (OrderBy ob : query.orderBy) {
+            builder.orderBy(new Query.SelectExpression(ob.attribute), ob.asc ? Query.SortOrder.ASCENDING : Query.SortOrder.DESCENDING);
+         }
+      } else if (query.orderByAggregatedColumns != null) {
+         for (Condition.OrderedSelectExpressionElement orderByAggregatedColumn : query.orderByAggregatedColumns) {
+            builder.orderBy(orderByAggregatedColumn.toSelectExpression(), orderByAggregatedColumn.toSelectExpression().asc ?
+                  Query.SortOrder.ASCENDING : Query.SortOrder.DESCENDING);
+         }
+      }
+      if (query.projection != null) {
+         Query.SelectExpression[] projections = new Query.SelectExpression[query.projection.length];
+         for (int i = 0; i < query.projection.length; i++) {
+            projections[i] = new Query.SelectExpression(query.projection[i]);
+         }
+         builder.projection(projections);
+      } else if (query.projectionAggregated != null && !query.projectionAggregated.isEmpty()) {
+         Query.SelectExpression[] projections = new Query.SelectExpression[query.projectionAggregated.size()];
+         for (int i = 0; i < query.projectionAggregated.size(); i++) {
+            projections[i] = query.projectionAggregated.get(i).toSelectExpression();
+         }
+         builder.projection(projections);
+      }
+      if (query.groupBy != null) {
+         builder.groupBy(query.groupBy);
+         if (query.having != null) {
+            for (Condition condition : query.having) {
+               condition.apply(builder);
             }
          }
-         if (query.projection != null) {
-            builder.projection(query.projection);
-         }
-         if (query.offset >= 0) {
-            builder.offset(query.offset);
-         }
-         if (query.limit >= 0) {
-            builder.limit(query.limit);
-         }
-         builders[i] = builder;
       }
+      if (query.offset >= 0) {
+         builder.offset(query.offset);
+      }
+      if (query.limit >= 0) {
+         builder.limit(query.limit);
+      }
+      return builder;
    }
 
    public QueryBase.Data createQueryData(InternalsExposition internalsExposition) {

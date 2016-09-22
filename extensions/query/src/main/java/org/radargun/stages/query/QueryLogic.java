@@ -56,6 +56,7 @@ public class QueryLogic extends OperationLogic {
    public void run(Operation ignored) throws RequestException {
       int randomQueryNumber = stressor.getRandom().nextInt(queryBase.getNumQueries());
       Query query = queryBase.builders[randomQueryNumber].build();
+
       Query.Result queryResult;
       context = queryable.createContext(null);
       long start = TimeService.nanoTime();

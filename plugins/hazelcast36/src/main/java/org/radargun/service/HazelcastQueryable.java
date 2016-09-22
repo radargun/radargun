@@ -11,7 +11,13 @@ import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 
 /**
+ * Hazelcast has a limited support for aggregations - only a single aggregation can be executed per query, without any grouping,
+ * and because of an existing bug, also without filtering:
+ * http://stackoverflow.com/questions/29481508/hazelcast-aggregations-api-results-in-classcastexception-with-predicates
+ * Additionaly, indexes are not used in aggregations.
+ *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
+ * @author Jakub Markos &lt;jmarkos@redhat.com&gt;
  */
 public class HazelcastQueryable implements Queryable {
    private static final Log log = LogFactory.getLog(HazelcastQueryable.class);
@@ -23,7 +29,7 @@ public class HazelcastQueryable implements Queryable {
 
    @Override
    public Query.Builder getBuilder(String mapName, Class<?> clazz) {
-      return new HazelcastQueryBuilder();
+      return new HazelcastQueryBuilder(clazz);
    }
 
    @Override
@@ -37,18 +43,20 @@ public class HazelcastQueryable implements Queryable {
    }
 
    private static class HazelcastQueryBuilder implements Query.Builder {
+      private final Class<?> clazz;
       private Predicate predicate;
       private Comparator comparator;
       private int limit = -1;
       private int offset = 0;
-      private String[] projection;
+      private Query.SelectExpression[] projection;
 
-      private HazelcastQueryBuilder() {
+      private HazelcastQueryBuilder(Class<?> clazz) {
+         this.clazz = clazz;
       }
 
       @Override
       public Query.Builder subquery() {
-         return new HazelcastQueryBuilder();
+         return new HazelcastQueryBuilder(clazz);
       }
 
       private void implicitAnd(Predicate p) {
@@ -60,57 +68,57 @@ public class HazelcastQueryable implements Queryable {
       }
 
       @Override
-      public Query.Builder eq(String attribute, Object value) {
-         implicitAnd(Predicates.equal(attribute, (Comparable) value));
+      public Query.Builder eq(Query.SelectExpression selectExpression, Object value) {
+         implicitAnd(Predicates.equal(selectExpression.attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public Query.Builder lt(String attribute, Object value) {
-         implicitAnd(Predicates.lessThan(attribute, (Comparable) value));
+      public Query.Builder lt(Query.SelectExpression selectExpression, Object value) {
+         implicitAnd(Predicates.lessThan(selectExpression.attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public Query.Builder le(String attribute, Object value) {
-         implicitAnd(Predicates.lessEqual(attribute, (Comparable) value));
+      public Query.Builder le(Query.SelectExpression selectExpression, Object value) {
+         implicitAnd(Predicates.lessEqual(selectExpression.attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public Query.Builder gt(String attribute, Object value) {
-         implicitAnd(Predicates.greaterThan(attribute, (Comparable) value));
+      public Query.Builder gt(Query.SelectExpression selectExpression, Object value) {
+         implicitAnd(Predicates.greaterThan(selectExpression.attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public Query.Builder ge(String attribute, Object value) {
-         implicitAnd(Predicates.greaterEqual(attribute, (Comparable) value));
+      public Query.Builder ge(Query.SelectExpression selectExpression, Object value) {
+         implicitAnd(Predicates.greaterEqual(selectExpression.attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public Query.Builder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
+      public Query.Builder between(Query.SelectExpression selectExpression, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
          if (!lowerInclusive || !upperInclusive)
             throw new IllegalArgumentException("Hazelcast supports only inclusive bounds");
-         implicitAnd(Predicates.between(attribute, (Comparable) lowerBound, (Comparable) upperBound));
+         implicitAnd(Predicates.between(selectExpression.attribute, (Comparable) lowerBound, (Comparable) upperBound));
          return this;
       }
 
       @Override
-      public Query.Builder isNull(String attribute) {
-         implicitAnd(Predicates.equal(attribute, null));
+      public Query.Builder isNull(Query.SelectExpression selectExpression) {
+         implicitAnd(Predicates.equal(selectExpression.attribute, null));
          return this;
       }
 
       @Override
-      public Query.Builder like(String attribute, String pattern) {
-         implicitAnd(Predicates.like(attribute, pattern));
+      public Query.Builder like(Query.SelectExpression selectExpression, String pattern) {
+         implicitAnd(Predicates.like(selectExpression.attribute, pattern));
          return this;
       }
 
       @Override
-      public Query.Builder contains(String attribute, Object value) {
+      public Query.Builder contains(Query.SelectExpression selectExpression, Object value) {
          throw new UnsupportedOperationException();
       }
 
@@ -135,20 +143,29 @@ public class HazelcastQueryable implements Queryable {
       }
 
       @Override
-      public Query.Builder orderBy(String attribute, Query.SortOrder order) {
+      public Query.Builder orderBy(Query.SelectExpression selectExpression, Query.SortOrder order) {
          if (order == Query.SortOrder.DESCENDING) {
-            comparator = new HazelcastQuery.InverseComparator(attribute);
+            comparator = new HazelcastQuery.InverseComparator(selectExpression.attribute);
          } else {
-            comparator = new HazelcastQuery.RegularComparator(attribute);
+            comparator = new HazelcastQuery.RegularComparator(selectExpression.attribute);
          }
          return this;
       }
 
       @Override
-      public Query.Builder projection(String... attributes) {
+      public Query.Builder projection(Query.SelectExpression... selectExpressions) {
          log.warn("Projection is emulated; no native support for projection.");
-         this.projection = attributes;
+         for (Query.SelectExpression selectExpression : selectExpressions) {
+            if (selectExpression.function != Query.AggregationFunction.NONE && selectExpressions.length != 1)
+               throw new RuntimeException("Hazelcast only supports a single aggregation per query!");
+         }
+         this.projection = selectExpressions;
          return this;
+      }
+
+      @Override
+      public Query.Builder groupBy(String[] attribute) {
+         throw new UnsupportedOperationException();
       }
 
       @Override
@@ -166,6 +183,9 @@ public class HazelcastQueryable implements Queryable {
 
       @Override
       public Query build() {
+         if (projection != null && projection.length == 1 && projection[0].function != Query.AggregationFunction.NONE) {
+            return new HazelcastAggregationQuery(clazz, predicate, projection[0]);
+         }
          Predicate finalPredicate;
          if (comparator == null) {
             if (limit < 0) finalPredicate = predicate;
@@ -174,7 +194,11 @@ public class HazelcastQueryable implements Queryable {
             if (limit < 0) finalPredicate = new PagingPredicate(predicate, comparator, Integer.MAX_VALUE);
             else finalPredicate = new PagingPredicate(predicate, comparator, limit);
          }
-         return new HazelcastQuery(finalPredicate, offset, projection);
+         String[] stringProjection = new String[projection.length];
+         for (int i = 0; i < projection.length; i++) {
+            stringProjection[i] = projection[i].attribute;
+         }
+         return new HazelcastQuery(finalPredicate, offset, stringProjection);
       }
    }
 

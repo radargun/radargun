@@ -15,4 +15,10 @@ public class JDG66EmbeddedService extends JDG64EmbeddedService {
       return new JDG66EmbeddedContinuousQuery(this);
    }
 
+   @ProvidesTrait
+   public InfinispanEmbeddedQueryable createQueryable() {
+      return new JDG66EmbeddedQueryable(this);
+   }
+
+
 }
