@@ -20,6 +20,7 @@ public final class Request {
 //   private long responseStartedTime;
    private long responseCompleteTime = Long.MIN_VALUE;
    private boolean successful = true;
+   private boolean discarded = false;
 
    public Request(Statistics statistics) {
       this.statistics = statistics;
@@ -84,6 +85,7 @@ public final class Request {
    }
 
    public void discard() {
+      this.discarded = true;
       statistics.discard(this);
    }
 
@@ -92,7 +94,7 @@ public final class Request {
    }
 
    public boolean isFinished() {
-      return responseCompleteTime > Long.MIN_VALUE;
+      return discarded || responseCompleteTime > Long.MIN_VALUE;
    }
 
    public long getRequestStartTime() {

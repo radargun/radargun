@@ -213,7 +213,7 @@ public class LegacyStressor extends Thread {
             log.error("Failed to end transaction", e);
          }
       } finally {
-         if (requests != null) {
+         if (requests != null && commitRequest != null) {
             requests.add(commitRequest);
             if (recording()) {
                requests.finished(commitRequest.isSuccessful(), Transactional.DURATION);
