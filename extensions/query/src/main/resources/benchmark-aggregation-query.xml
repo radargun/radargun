@@ -1,0 +1,65 @@
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+    <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+
+    <clusters>
+        <scale from="1" to="1">
+            <cluster/>
+        </scale>
+    </clusters>
+
+    <configurations>
+        <config name="Infinispan90">
+            <setup plugin="infinispan90">
+                <default xmlns="urn:radargun:plugins:infinispan90:3.0" file="query-aggregations.xml" cache="dist_indexless"/>
+            </setup>
+        </config>
+    </configurations>
+
+    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                 xmlns:cache="urn:radargun:stages:cache:3.0"
+                 xmlns="urn:radargun:stages:core:3.0">
+        <service-start />
+
+        <cache:load seed="1" num-entries="5000" num-threads="10" entry-size="0" max-load-attempts="50" use-transactions="NEVER">
+            <cache:value-generator>
+                <cache:number-object int-min="0" int-max="20" double-min="0" double-max="20"/>
+            </cache:value-generator>
+        </cache:load>
+
+        <!-- SELECT sum(doubleValue) FROM NumberObject WHERE integerValue<10000 AND doubleValue>18
+              GROUP BY integerValue HAVING sum(doubleValue)>500 ORDER BY sum(doubleValue) -->
+        <query xmlns="urn:radargun:stages:query:3.0"
+               test-name="globalSum"
+               duration="30s"
+               group-by="integerValue"
+               num-threads-per-node="10"
+               query-object-class="org.radargun.query.NumberObject">
+            <projection-aggregated>
+                <sum path="doubleValue"/>
+            </projection-aggregated>
+            <conditions>
+                <lt path="integerValue" value="10000"/>
+                <gt path="doubleValue" value="18"/>
+            </conditions>
+            <having>
+                <gt value="500">
+                    <aggregated-path>
+                        <sum path="doubleValue"/>
+                    </aggregated-path>
+                </gt>
+            </having>
+            <order-by-aggregated-columns>
+                <sum path="doubleValue"/>
+            </order-by-aggregated-columns>
+        </query>
+
+    </rg:scenario>
+
+    <reports>
+        <reporter type="html"/>
+        <reporter type="csv"/>
+        <reporter type="serialized"/>
+    </reports>
+
+</benchmark>

@@ -84,6 +84,13 @@
 
       <dependency>
          <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-query-dsl</artifactId>
+         <version>${version.infinispan}</version>
+         <optional>true</optional>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
          <artifactId>infinispan-cachestore-jdbc</artifactId>
          <version>${version.infinispan}</version>
          <optional>true</optional>
@@ -126,7 +133,21 @@
 
    </dependencies>
 
-   <profiles>
+   <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+               <source>1.8</source>
+               <target>1.8</target>
+            </configuration>
+         </plugin>
+      </plugins>
+   </build>
+
+
+    <profiles>
       <profile>
          <id>infinispan80-infinispan-version-default</id>
          <activation>

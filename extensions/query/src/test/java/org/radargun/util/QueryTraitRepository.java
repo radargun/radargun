@@ -1,5 +1,7 @@
 package org.radargun.util;
 
+import org.radargun.traits.Query;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -64,47 +66,47 @@ public class QueryTraitRepository extends CoreTraitRepository {
          }
 
          @Override
-         public Query.Builder eq(String attribute, Object value) {
+         public Query.Builder eq(org.radargun.traits.Query.SelectExpression selectExpression, Object value) {
             return this;
          }
 
          @Override
-         public Query.Builder lt(String attribute, Object value) {
+         public Query.Builder lt(org.radargun.traits.Query.SelectExpression selectExpression, Object value) {
             return this;
          }
 
          @Override
-         public Query.Builder le(String attribute, Object value) {
+         public Query.Builder le(org.radargun.traits.Query.SelectExpression selectExpression, Object value) {
             return this;
          }
 
          @Override
-         public Query.Builder gt(String attribute, Object value) {
+         public Query.Builder gt(org.radargun.traits.Query.SelectExpression selectExpression, Object value) {
             return this;
          }
 
          @Override
-         public Query.Builder ge(String attribute, Object value) {
+         public Query.Builder ge(org.radargun.traits.Query.SelectExpression selectExpression, Object value) {
             return this;
          }
 
          @Override
-         public Query.Builder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
+         public Query.Builder between(org.radargun.traits.Query.SelectExpression selectExpression, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
             return this;
          }
 
          @Override
-         public Query.Builder isNull(String attribute) {
+         public Query.Builder isNull(org.radargun.traits.Query.SelectExpression selectExpression) {
             return this;
          }
 
          @Override
-         public Query.Builder like(String attribute, String pattern) {
+         public Query.Builder like(org.radargun.traits.Query.SelectExpression selectExpression, String pattern) {
             return this;
          }
 
          @Override
-         public Query.Builder contains(String attribute, Object value) {
+         public Query.Builder contains(org.radargun.traits.Query.SelectExpression selectExpression, Object value) {
             return this;
          }
 
@@ -119,12 +121,17 @@ public class QueryTraitRepository extends CoreTraitRepository {
          }
 
          @Override
-         public Query.Builder orderBy(String attribute, Query.SortOrder order) {
+         public Query.Builder orderBy(org.radargun.traits.Query.SelectExpression selectExpression, org.radargun.traits.Query.SortOrder order) {
             return this;
          }
 
          @Override
-         public Query.Builder projection(String... attribute) {
+         public Query.Builder projection(org.radargun.traits.Query.SelectExpression... selectExpressions) {
+            return this;
+         }
+
+         @Override
+         public Query.Builder groupBy(String[] attribute) {
             return this;
          }
 

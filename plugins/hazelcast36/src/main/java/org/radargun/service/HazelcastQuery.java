@@ -1,6 +1,9 @@
 package org.radargun.service;
 
+import java.io.Externalizable;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -159,12 +162,15 @@ public class HazelcastQuery implements Query {
       }
    }
 
-   private interface Accessor {
+   public interface Accessor {
       Object get(Object o);
+      Class<?> getReturnType();
    }
 
-   private static class FieldAccessor implements Accessor {
-      private final Field f;
+   public static class FieldAccessor implements Accessor, Externalizable {
+      public Field f;
+
+      public FieldAccessor() {}
 
       private FieldAccessor(Field f) {
          this.f = f;
@@ -179,10 +185,33 @@ public class HazelcastQuery implements Query {
             throw new RuntimeException(e);
          }
       }
+
+      @Override
+      public Class<?> getReturnType() {
+         return f.getType();
+      }
+
+      @Override
+      public void writeExternal(ObjectOutput objectOutput) throws IOException {
+         objectOutput.writeObject(f.getDeclaringClass());
+         objectOutput.writeObject(f.getName());
+      }
+
+      @Override
+      public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
+         try {
+            f = ((Class) objectInput.readObject()).getDeclaredField((String) objectInput.readObject());
+            f.setAccessible(true);
+         } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+         }
+      }
    }
 
-   private static class MethodAccessor implements Accessor {
-      private final Method m;
+   public static class MethodAccessor implements Accessor, Externalizable {
+      public Method m;
+
+      public MethodAccessor() {}
 
       private MethodAccessor(Method m) {
          this.m = m;
@@ -197,10 +226,33 @@ public class HazelcastQuery implements Query {
             throw new RuntimeException(e);
          }
       }
+
+      @Override
+      public Class<?> getReturnType() {
+         return m.getReturnType();
+      }
+
+      @Override
+      public void writeExternal(ObjectOutput objectOutput) throws IOException {
+         objectOutput.writeObject(m.getDeclaringClass());
+         objectOutput.writeObject(m.getName());
+      }
+
+      @Override
+      public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
+         try {
+            m = ((Class) objectInput.readObject()).getDeclaredMethod((String) objectInput.readObject());
+            m.setAccessible(true);
+         } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+         }
+      }
    }
 
-   private static class ChainedAccessor implements Accessor {
-      private final List<Accessor> accessors;
+   public static class ChainedAccessor implements Accessor, Externalizable {
+      public List<Accessor> accessors;
+
+      public ChainedAccessor() {}
 
       public ChainedAccessor(List<Accessor> list) {
          this.accessors = list;
@@ -212,6 +264,21 @@ public class HazelcastQuery implements Query {
             o = a.get(o);
          }
          return o;
+      }
+
+      @Override
+      public Class<?> getReturnType() {
+         return accessors.get(accessors.size() - 1).getReturnType();
+      }
+
+      @Override
+      public void writeExternal(ObjectOutput objectOutput) throws IOException {
+         objectOutput.writeObject(accessors);
+      }
+
+      @Override
+      public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
+         accessors = (List<Accessor>) objectInput.readObject();
       }
    }
 
