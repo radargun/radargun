@@ -84,9 +84,9 @@ public class Infinispan80EmbeddedQueryable extends Infinispan70EmbeddedQueryable
       }
 
       @Override
-      public Query.Builder orderBy(Query.SelectExpression selectExpression, Query.SortOrder order) {
+      public Query.Builder orderBy(Query.SelectExpression selectExpression) {
          if (builder == null) throw new IllegalArgumentException("You have to call orderBy() on root query builder!");
-         builder.orderBy(attributeToExpression(selectExpression), order == Query.SortOrder.ASCENDING ?
+         builder.orderBy(attributeToExpression(selectExpression), selectExpression.asc ?
                org.infinispan.query.dsl.SortOrder.ASC : org.infinispan.query.dsl.SortOrder.DESC);
          return this;
       }

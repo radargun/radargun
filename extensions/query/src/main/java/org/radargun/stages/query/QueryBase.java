@@ -63,12 +63,11 @@ public class QueryBase {
       }
       if (query.orderBy != null) {
          for (OrderBy ob : query.orderBy) {
-            builder.orderBy(new Query.SelectExpression(ob.attribute), ob.asc ? Query.SortOrder.ASCENDING : Query.SortOrder.DESCENDING);
+            builder.orderBy(new Query.SelectExpression(ob.attribute, ob.asc));
          }
       } else if (query.orderByAggregatedColumns != null) {
          for (Condition.OrderedSelectExpressionElement orderByAggregatedColumn : query.orderByAggregatedColumns) {
-            builder.orderBy(orderByAggregatedColumn.toSelectExpression(), orderByAggregatedColumn.toSelectExpression().asc ?
-                  Query.SortOrder.ASCENDING : Query.SortOrder.DESCENDING);
+            builder.orderBy(orderByAggregatedColumn.toSelectExpression());
          }
       }
       if (query.projection != null) {
