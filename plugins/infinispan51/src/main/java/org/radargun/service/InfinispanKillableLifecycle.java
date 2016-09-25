@@ -3,7 +3,6 @@ package org.radargun.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.remoting.transport.Address;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.JChannel;
@@ -29,6 +28,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
 
    private KillRequest killState = KillRequest.NO_REQUEST;
    private Object killSync = new Object();
+   protected JGroupsTransport transport;
 
    public InfinispanKillableLifecycle(Infinispan51EmbeddedService service) {
       super(service);
@@ -159,7 +159,6 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
          list.add(parentChannel);
          return list;
       }
-      JGroupsTransport transport;
       while (service.cacheManager == null) {
          if (TimeService.currentTimeMillis() > deadline) {
             return list;
@@ -177,7 +176,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
       }
       if (!hasClustered) return list;
       for (; ; ) {
-         transport = (JGroupsTransport) ((DefaultCacheManager) service.cacheManager).getTransport();
+         transport = getTransport();
          if (transport != null) break;
          if (TimeService.currentTimeMillis() > deadline) {
             return list;
@@ -187,7 +186,7 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
       }
       JChannel channel;
       for (; ; ) {
-         channel = (JChannel) transport.getChannel();
+         channel = getTransportChannels();
          if (channel != null && channel.getName() != null && channel.isOpen()) break;
          if (TimeService.currentTimeMillis() > deadline) {
             return list;
@@ -197,6 +196,13 @@ public class InfinispanKillableLifecycle extends InfinispanLifecycle implements 
       }
       list.add(channel);
       return list;
+   }
+
+   protected JGroupsTransport getTransport(){
+      return (JGroupsTransport) service.cacheManager.getTransport();
+   }
+   protected JChannel getTransportChannels(){
+      return (JChannel) transport.getChannel();
    }
 
    protected void startDiscarding() throws InterruptedException {

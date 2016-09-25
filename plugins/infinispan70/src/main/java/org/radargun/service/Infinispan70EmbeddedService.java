@@ -15,6 +15,8 @@ public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
    @Property(doc = "Enable diagnostics port for service probing (true/false/null). Default is null - use settings from ISPN configuration.")
    protected Boolean enableDiagnostics;
 
+   protected JGroupsTransport transport;
+
    @Override
    protected void startCaches() throws Exception {
       super.startCaches();
@@ -22,15 +24,19 @@ public class Infinispan70EmbeddedService extends Infinispan60EmbeddedService {
    }
 
    protected void setDiagnostics() {
-      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
-      TP transportprotocol = (TP) transport.getChannel().getProtocolStack().findProtocol(TP.class);
+      TP transportProtocol = getTransportProtocol();
       if (Boolean.TRUE.equals(enableDiagnostics)) {
-         transportprotocol.enableDiagnostics();
+         transportProtocol.enableDiagnostics();
          log.debug("Enabling diagnostics in the transport protocol");
       } else if (Boolean.FALSE.equals(enableDiagnostics)) {
-         transportprotocol.disableDiagnostics();
+         transportProtocol.disableDiagnostics();
          log.debug("Disabling diagnostics in the transport protocol");
       }
+   }
+
+   protected TP getTransportProtocol() {
+      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
+      return (TP) transport.getChannel().getProtocolStack().findProtocol(TP.class);
    }
 
    @Override
