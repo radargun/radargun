@@ -43,6 +43,7 @@
       <plugins.resteasy-http />
       <plugins.spark />
       <plugins.spymemcached />
+      <plugins.tomcat/>
       <reporter.default />
       <reporter.perfrepo />
       <extension.cache />
@@ -415,6 +416,20 @@
             <plugins.jcache>jcache</plugins.jcache>
          </properties>
       </profile>
+      <profile>
+         <id>tomcat</id>
+         <activation>
+            <property>
+               <name>!no-tomcat</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/tomcat8</module>
+         </modules>
+         <properties>
+            <plugins.tomcat>tomcat8</plugins.tomcat>
+         </properties>
+      </profile>
    </profiles>
 
    <build>
@@ -588,7 +603,7 @@
 
                         <echo message="Packaging plugins: " />
                         <!-- Note: JCache needs to be here for schema generation, although it can't be used on its own -->
-                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg-early},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg-early},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>
