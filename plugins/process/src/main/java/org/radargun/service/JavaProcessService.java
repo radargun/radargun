@@ -37,7 +37,10 @@ public class JavaProcessService extends ProcessService {
       try {
          Class.forName("com.sun.tools.attach.AttachNotSupportedException");
       } catch (ClassNotFoundException e) {
-         log.warn("Cannot load JDK classes from JAVA_HOME/lib/tools.jar. Please make sure that tools.jar is on the classpath.");
+         log.warn("Cannot load JDK classes from JAVA_HOME/lib/tools.jar. " +
+                  "Please make sure that tools.jar is on the classpath by " +
+                  "adding the following entry to plugin.properties:\n\n" +
+                  "classpath ${env.JAVA_HOME}/lib/tools.jar\n");
          String classPath = System.getProperty("java.class.path");
          if (classPath.contains("tools.jar")) {
             Optional<String> tools = Arrays.asList(classPath.split(File.pathSeparator)).stream().filter(s -> s.contains("tools.jar")).findFirst();
