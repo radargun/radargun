@@ -19,6 +19,7 @@ import org.radargun.config.Destroy;
 import org.radargun.config.Property;
 import org.radargun.traits.InternalsExposition;
 import org.radargun.traits.ProvidesTrait;
+import org.radargun.utils.TimeConverter;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
 
@@ -31,6 +32,9 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
 
    @Property(doc = "Start thread periodically dumping JGroups state. Use for debug purposes. Default is false.")
    private boolean jgroupsDumperEnabled = false;
+
+   @Property(doc = "Applicable when jgroupsDumperEnabled == true, sets how often the statistics are recorded, the default is 10 seconds", converter = TimeConverter.class)
+   private long jgroupsDumperInterval = 10000;
 
    @Property(doc = "Enables presentation of internal state of Infinispan. Use for debugging and monitoring purposes. Default is false.")
    protected boolean internalsExpositionEnabled = false;
@@ -100,7 +104,7 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
                   // JGroups are not initialized, wait
                   scheduledExecutor.schedule(this, 1, TimeUnit.SECONDS);
                } else {
-                  jgroupsDumper = new JGroupsDumper(transport.getChannel().getProtocolStack());
+                  jgroupsDumper = new JGroupsDumper(transport.getChannel().getProtocolStack(), jgroupsDumperInterval);
                   jgroupsDumper.start();
                }
             }

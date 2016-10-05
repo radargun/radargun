@@ -27,14 +27,16 @@ public class JGroupsDumper extends Thread {
    private static final Log log = LogFactory.getLog(JGroupsDumper.class);
    private final ProtocolStack stack;
    private static final List<ProtocolDumper> dumpers = new ArrayList<ProtocolDumper>();
+   private final long interval;
 
    static {
       dumpers.add(new UNICAST3Dumper());
       dumpers.add(new TPDumper());
    }
 
-   public JGroupsDumper(ProtocolStack protocols) {
+   public JGroupsDumper(ProtocolStack protocols, long interval) {
       super("JGroupsDumper");
+      this.interval = interval;
       setDaemon(true);
       stack = protocols;
    }
@@ -62,7 +64,7 @@ public class JGroupsDumper extends Thread {
             prot = prot.getDownProtocol();
          } while (prot != null);
          try {
-            Thread.sleep(10000);
+            Thread.sleep(interval);
          } catch (InterruptedException e) {
             break;
          }
