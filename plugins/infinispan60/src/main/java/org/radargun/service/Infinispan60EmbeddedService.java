@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import org.infinispan.commons.util.FileLookupFactory;
 import org.infinispan.commons.util.concurrent.jdk8backported.ForkJoinPool;
 import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
@@ -31,15 +30,15 @@ import org.radargun.utils.Utils;
 public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
 
    @Property(doc = "Start thread periodically dumping JGroups state. Use for debug purposes. Default is false.")
-   private boolean jgroupsDumperEnabled = false;
+   protected boolean jgroupsDumperEnabled = false;
 
    @Property(doc = "Applicable when jgroupsDumperEnabled == true, sets how often the statistics are recorded, the default is 10 seconds", converter = TimeConverter.class)
-   private long jgroupsDumperInterval = 10000;
+   protected long jgroupsDumperInterval = 10000;
 
    @Property(doc = "Enables presentation of internal state of Infinispan. Use for debugging and monitoring purposes. Default is false.")
    protected boolean internalsExpositionEnabled = false;
 
-   private JGroupsDumper jgroupsDumper;
+   protected JGroupsDumper jgroupsDumper;
    protected ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
 
    @ProvidesTrait
@@ -99,16 +98,20 @@ public class Infinispan60EmbeddedService extends Infinispan53EmbeddedService {
          scheduledExecutor.schedule(new Runnable() {
             @Override
             public void run() {
-               JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
-               if (transport == null || transport.getChannel() == null || !transport.getChannel().isOpen()) {
-                  // JGroups are not initialized, wait
-                  scheduledExecutor.schedule(this, 1, TimeUnit.SECONDS);
-               } else {
-                  jgroupsDumper = new JGroupsDumper(transport.getChannel().getProtocolStack(), jgroupsDumperInterval);
-                  jgroupsDumper.start();
-               }
+               startJGroupsDumper(this);
             }
          }, 0, TimeUnit.MILLISECONDS);
+      }
+   }
+
+   protected void startJGroupsDumper(Runnable thread) {
+      JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
+      if (transport == null || transport.getChannel() == null || !transport.getChannel().isOpen()) {
+         // JGroups are not initialized, wait
+         scheduledExecutor.schedule(thread, 1, TimeUnit.SECONDS);
+      } else {
+         jgroupsDumper = new JGroupsDumper(transport.getChannel().getProtocolStack(), jgroupsDumperInterval);
+         jgroupsDumper.start();
       }
    }
 
