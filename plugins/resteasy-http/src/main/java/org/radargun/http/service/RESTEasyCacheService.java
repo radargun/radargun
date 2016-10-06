@@ -1,4 +1,4 @@
-package org.radargun.service;
+package org.radargun.http.service;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -25,9 +25,9 @@ import org.radargun.utils.TimeConverter;
  * 
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
-@Service(doc = "RestEasy REST client")
-public class RESTEasyHTTPService implements Lifecycle {
-   private static final Log log = LogFactory.getLog(RESTEasyHTTPService.class);
+@Service(doc = "RestEasy REST client for Cache")
+public class RESTEasyCacheService implements Lifecycle {
+   private static final Log log = LogFactory.getLog(RESTEasyCacheService.class);
    private ResteasyClient httpClient = null;
 
    @Property(doc = "The default path on the server for the REST service. Defaults to 'rest'.")
@@ -64,8 +64,8 @@ public class RESTEasyHTTPService implements Lifecycle {
    protected AtomicInteger nextIndex = new AtomicInteger(0);
 
    @ProvidesTrait
-   public RESTEasyHTTPOperations createOperations() {
-      return new RESTEasyHTTPOperations(this);
+   public RESTEasyCacheOperations createOperations() {
+      return new RESTEasyCacheOperations(this);
    }
 
    @ProvidesTrait

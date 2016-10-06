@@ -19,9 +19,9 @@
          <scope>provided</scope>
       </dependency>
       <dependency>
-         <groupId>org.jboss.resteasy</groupId>
-         <artifactId>resteasy-client</artifactId>
-         <version>3.0.16.Final</version>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-rest</artifactId>
+         <version>${project.version}</version>
       </dependency>
    </dependencies>
 
