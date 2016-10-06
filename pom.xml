@@ -52,6 +52,7 @@
       <extension.hdrhistogram />
       <extension.jpa />
       <extension.mapreduce />
+      <extension.rest />
    </properties>
 
    <profiles>
@@ -142,6 +143,21 @@
          </modules>
          <properties>
             <extension.mapreduce>mapreduce</extension.mapreduce>
+         </properties>
+      </profile>
+      <profile>
+         <id>rest</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+            <property>
+               <name>!no-rest</name>
+            </property>
+         </activation>
+         <modules>
+            <module>extensions/rest</module>
+         </modules>
+         <properties>
+            <extension.rest>rest</extension.rest>
          </properties>
       </profile>
       <!-- Reporters -->
@@ -523,7 +539,7 @@
                            </sequential>
                         </macrodef>
 
-                        <ac:for list="${extension.cache},${extension.query},${extension.example-extension},${extension.hdrhistogram},${extension.jpa},${extension.mapreduce}" param="extension">
+                        <ac:for list="${extension.cache},${extension.query},${extension.example-extension},${extension.hdrhistogram},${extension.jpa},${extension.mapreduce},${extension.rest}" param="extension">
                            <sequential>
                               <package-extension extension="@{extension}" build-dir="extensions/@{extension}/target/distribution/radargun-@{extension}-bin/radargun-@{extension}"/>
                            </sequential>

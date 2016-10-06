@@ -1,4 +1,4 @@
-package org.radargun.service;
+package org.radargun.http.service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,11 +28,11 @@ import org.radargun.traits.BasicOperations;
  *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
-public class RESTEasyHTTPOperations implements BasicOperations {
-   private static final Log log = LogFactory.getLog(RESTEasyHTTPOperations.class);
-   private final RESTEasyHTTPService service;
+public class RESTEasyCacheOperations implements BasicOperations {
+   private static final Log log = LogFactory.getLog(RESTEasyCacheOperations.class);
+   private final RESTEasyCacheService service;
 
-   public RESTEasyHTTPOperations(RESTEasyHTTPService service) {
+   public RESTEasyCacheOperations(RESTEasyCacheService service) {
       this.service = service;
    }
 
@@ -65,14 +65,14 @@ public class RESTEasyHTTPOperations implements BasicOperations {
                      .buildGet();
                response = get.invoke();
                if (response.getStatus() == Status.NOT_FOUND.getStatusCode()) {
-                  log.warn("RESTEasyHTTPOperations.getInternal::Key: " + key + " does not exist in cache: "
+                  log.warn("RESTEasyCacheOperations.getInternal::Key: " + key + " does not exist in cache: "
                         + service.cacheName);
                } else {
                   eTag = response.getEntityTag();
                   value = decodeByteArray(response.readEntity(byte[].class));
                }
             } catch (Exception e) {
-               throw new RuntimeException("RESTEasyHTTPOperations::get request threw exception: " + target, e);
+               throw new RuntimeException("RESTEasyCacheOperations::get request threw exception: " + target, e);
             } finally {
                if (response != null) {
                   response.close();
@@ -105,7 +105,7 @@ public class RESTEasyHTTPOperations implements BasicOperations {
             if (response.getStatus() == Status.NOT_FOUND.getStatusCode()) {
                return false;
             }
-            throw new RuntimeException("RESTEasyHTTPOperations.containsKey::Unexpected HttpStatus: "
+            throw new RuntimeException("RESTEasyCacheOperations.containsKey::Unexpected HttpStatus: "
                   + response.getStatus() + " " + response.getStatusInfo().getReasonPhrase() + " for request " + target);
          }
          return false;
@@ -132,7 +132,7 @@ public class RESTEasyHTTPOperations implements BasicOperations {
                response.close();
                if (status != Status.OK.getStatusCode() && status != Status.CREATED.getStatusCode()
                      && status != Status.NO_CONTENT.getStatusCode()) {
-                  throw new RuntimeException("RESTEasyHTTPOperations.put::Unexpected HttpStatus: " + status + " "
+                  throw new RuntimeException("RESTEasyCacheOperations.put::Unexpected HttpStatus: " + status + " "
                         + reason + " for request " + target);
                }
             } catch (IOException e) {
@@ -214,7 +214,7 @@ public class RESTEasyHTTPOperations implements BasicOperations {
             if (status == Status.NOT_FOUND.getStatusCode()) {
                return false;
             }
-            throw new RuntimeException("RESTEasyHTTPOperations.doDelete::Unexpected HttpStatus: " + status + " "
+            throw new RuntimeException("RESTEasyCacheOperations.doDelete::Unexpected HttpStatus: " + status + " "
                   + reason + " for request " + target);
          }
          return false;
