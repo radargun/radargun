@@ -76,7 +76,8 @@ public class RESTEasyOperations implements RESTOperations {
       }
 
       private String buildApplicationUrl() {
-         InetSocketAddress node = service.nextServer();
+         InetSocketAddress node = service.pickServer();
+         log.info("Node:" + node);
          StringBuilder s = new StringBuilder("http://");
          if (service.getUsername() != null) {
             try {
