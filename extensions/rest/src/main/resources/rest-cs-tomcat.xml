@@ -1,0 +1,69 @@
+<!-- RadarGun 3.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+
+   <clusters>
+      <cluster>
+         <group name="servers" size="1"/>
+         <group name="clients" size="1"/>
+      </cluster>
+   </clusters>
+
+   <configurations>
+      <config name="JDG 7.1 - REST">
+         <setup group="servers" plugin="${productName:tomcat8}">
+            <tomcat xmlns="urn:radargun:plugins:tomcat8:3.0" file="${server.config:server.xml}">
+                <!-- path to tomcat server -->
+               <catalina-home>$CATALINA_HOME</catalina-home>
+               <!-- user and password for the user with manager-script role defined in tomcat-users.xml -->
+               <user>tomcat</user>
+               <pass>tomcat</pass>
+            </tomcat>
+         </setup>
+         <setup group="clients" plugin="resteasy-http">
+             <rest-client-stateful xmlns="urn:radargun:plugins:resteasy-http:3.0">
+                 <servers>127.0.0.1:8080</servers>
+                 <!-- When more clients are created each one will choose server 0 to communicate with. -->
+                 <servers-load-balance>100%: 0</servers-load-balance>
+                 <!-- The context path of Web application under test -->
+                 <context-path>/clusterbench/session</context-path>
+             </rest-client-stateful>
+         </setup>
+      </config>
+     
+   </configurations>
+
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0"
+                xmlns:l="urn:radargun:stages:legacy:3.0">
+
+      <service-start groups="servers"/>
+      <service-start groups="clients" validate-cluster="false" />
+
+      <jvm-monitor-start />
+     
+      <l:rest-operations-test test-name="clusterbench" 
+                                                duration="10s" 
+                                                num-threads-per-node="1" 
+                                                delay-between-requests="200">
+      </l:rest-operations-test>
+      
+      <jvm-monitor-stop /> 
+      
+   </rg:scenario>
+
+   <reports>
+     <reporter type="serialized">
+       <serialized xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/serialized" />
+     </reporter>
+     <reporter type="csv">
+       <csv xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/csv" />
+     </reporter>
+     <reporter type="html">
+       <html xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/html" />
+     </reporter>
+   </reports>
+
+</benchmark>
