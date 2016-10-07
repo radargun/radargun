@@ -2,6 +2,8 @@ package org.radargun.http.service;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
@@ -15,6 +17,7 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.ProvidesTrait;
+import org.radargun.utils.Fuzzy;
 import org.radargun.utils.RESTAddressListConverter;
 import org.radargun.utils.TimeConverter;
 
@@ -41,6 +44,14 @@ public class RESTEasyService implements Lifecycle {
    @Property(doc = "Semicolon-separated list of server addresses.", converter = RESTAddressListConverter.class)
    protected List<InetSocketAddress> servers;
 
+   @Property(doc = "Ratio between the number of connections to individual servers. " +
+                   "Servers from the 'servers' list are indexed from 0. When the client " +
+                   "is first created it will choose a server to communicate with according " +
+                   "to this load balancing setting. The client will keep communicating with " +
+                   "this single server until redirected.", converter = Fuzzy.IntegerConverter.class)
+   //By default clients only connect to server 0. Example for two servers with equal load: "50%:0,50%:1"
+   protected Fuzzy<Integer> serversLoadBalance = Fuzzy.uniform(0);
+
    @Property(doc = "Timeout for socket. Default is 30 seconds.", converter = TimeConverter.class)
    protected long socketTimeout = 30000;
 
@@ -53,8 +64,7 @@ public class RESTEasyService implements Lifecycle {
    @Property(doc = "The number of connections to pool per url. Default is equal to <code>maxConnections</code>.")
    protected int maxConnectionsPerHost = 0;
 
-   // Used to load balance requests across servers
-   protected AtomicInteger nextIndex = new AtomicInteger(0);
+   private Random random;
 
    @ProvidesTrait
    public RESTEasyOperations createOperations() {
@@ -68,6 +78,8 @@ public class RESTEasyService implements Lifecycle {
 
    @Override
    public synchronized void start() {
+      checkValidLoadBalancingSettings();
+      random = ThreadLocalRandom.current();
       if (httpClient != null) {
          log.warn("Service already started");
          return;
@@ -83,6 +95,14 @@ public class RESTEasyService implements Lifecycle {
          httpClient.register(auth);
       }
 
+   }
+
+   private void checkValidLoadBalancingSettings() {
+      for (Integer serverIndex: serversLoadBalance.getProbabilityMap().keySet()) {
+         if (serverIndex >= servers.size())
+            throw new IllegalStateException("Load balancing settings for the REST client include server index " +
+               "which is not in the server list: " + serverIndex);
+      }
    }
 
    public String getContentType() {
@@ -123,8 +143,8 @@ public class RESTEasyService implements Lifecycle {
    /**
     * @return InetSocketAddress of the next server to use.
     */
-   public InetSocketAddress nextServer() {
-      return servers.get((nextIndex.getAndIncrement() & Integer.MAX_VALUE) % servers.size());
+   public InetSocketAddress pickServer() {
+      return servers.get(serversLoadBalance.next(random));
    }
 
 }
