@@ -33,6 +33,7 @@ public class LegacyStressor extends Thread {
    private final OperationSelector operationSelector;
    private final Completion completion;
    private final boolean logTransactionExceptions;
+   private long delayBetweenRequests;
 
    private boolean useTransactions;
    private int txRemainingOperations = 0;
@@ -42,8 +43,7 @@ public class LegacyStressor extends Thread {
    private boolean started = false;
    private CountDownLatch threadCountDown;
 
-   public LegacyStressor(LegacyTestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex,
-         boolean logTransactionExceptions, CountDownLatch threadCountDown) {
+   public LegacyStressor(LegacyTestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, boolean logTransactionExceptions, CountDownLatch threadCountDown, long delayBetweenRequests) {
       super("Stressor-" + threadIndex);
       this.stage = stage;
       this.threadIndex = threadIndex;
@@ -54,6 +54,7 @@ public class LegacyStressor extends Thread {
       this.operationSelector = stage.getOperationSelector();
       this.logTransactionExceptions = logTransactionExceptions;
       this.threadCountDown = threadCountDown;
+      this.delayBetweenRequests = delayBetweenRequests;
    }
 
    private boolean recording() {
@@ -101,8 +102,13 @@ public class LegacyStressor extends Thread {
                Operation operation = operationSelector.next(random);
                try {
                   logic.run(operation);
+                  if (delayBetweenRequests > 0)
+                    sleep(delayBetweenRequests);
                } catch (OperationLogic.RequestException e) {
                   // the exception was already logged in makeRequest
+               } catch (InterruptedException e) {
+                  log.trace("Stressor interrupted.", e);
+                  interrupt();
                }
             }
          }
@@ -116,8 +122,13 @@ public class LegacyStressor extends Thread {
             if (!completion.moreToRun()) break;
             try {
                logic.run(operation);
+               if (delayBetweenRequests > 0)
+                  sleep(delayBetweenRequests);
             } catch (OperationLogic.RequestException e) {
                // the exception was already logged in makeRequest
+            } catch (InterruptedException e) {
+               log.trace("Stressor interrupted.", e);
+               interrupt();
             }
             i++;
             completion.logProgress(i);

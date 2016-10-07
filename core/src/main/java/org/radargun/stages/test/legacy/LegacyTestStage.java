@@ -61,6 +61,9 @@ public abstract class LegacyTestStage extends BaseTestStage {
    @Property(doc = "Delay to let all threads start executing operations. Default is 0.", converter = TimeConverter.class)
    public long rampUp = 0;
 
+   @Property(converter = TimeConverter.class, doc = "Time between consecutive requests of one stressor thread. Default is 0.")
+   protected long delayBetweenRequests = 0;
+
    @Property(doc = "Whether an error from transaction commit/rollback should be logged as error. Default is true.")
    public boolean logTransactionExceptions = true;
 
@@ -235,7 +238,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
 
       List<LegacyStressor> stressors = new ArrayList<>();
       for (int threadIndex = stressors.size(); threadIndex < myNumThreads; threadIndex++) {
-         LegacyStressor stressor = new LegacyStressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, logTransactionExceptions, threadCountDown);
+         LegacyStressor stressor = new LegacyStressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, logTransactionExceptions, threadCountDown, delayBetweenRequests);
          stressors.add(stressor);
          stressor.start();
       }
