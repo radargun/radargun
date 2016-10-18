@@ -160,12 +160,6 @@ public abstract class ReportDocument extends HtmlDocument {
                      subCategoryValue);
                   break;
                }
-               case OPERATION_THROUGHPUT_GROSS: {
-                  OperationThroughput throughput = aggregation.totalStats.getRepresentation(operation, OperationThroughput.class);
-                  if (throughput == null) return false;
-                  chart.addValue(throughput.gross, 0, categoryName, subCategoryNumeric, subCategoryValue);
-                  break;
-               }
                case OPERATION_THROUGHPUT_NET: {
                   OperationThroughput throughput = aggregation.totalStats.getRepresentation(operation, OperationThroughput.class);
                   if (throughput == null) return false;
@@ -263,7 +257,6 @@ public abstract class ReportDocument extends HtmlDocument {
       }
       for (ChartDescription cd : new ChartDescription[] {
          new ChartDescription(ChartType.MEAN_AND_DEV, "mean_dev", "Response time mean", "Response time (ms)"),
-         new ChartDescription(ChartType.OPERATION_THROUGHPUT_GROSS, "throughput_gross", "Gross operation throughput", "Operations/sec"),
          new ChartDescription(ChartType.OPERATION_THROUGHPUT_NET, "throughput_net", "Net operation throughput", "Operations/sec"),
          new ChartDescription(ChartType.DATA_THROUGHPUT, "data_throughput", "Data throughput mean", "MB/sec"),
          new ChartDescription(ChartType.MEAN_AND_DEV_SERIES, "mean_dev_series", "Response time over time", "Response time (ms)"),
@@ -554,7 +547,6 @@ public abstract class ReportDocument extends HtmlDocument {
    protected enum ChartType {
       MEAN_AND_DEV(false, "Iteration"),
       OPERATION_THROUGHPUT_NET(false, "Iteration"),
-      OPERATION_THROUGHPUT_GROSS(false, "Iteration"),
       DATA_THROUGHPUT(false, "Iteration"),
       MEAN_AND_DEV_SERIES(true, "Time (seconds)"),
       REQUESTS_SERIES(true, "Time (seconds)"),

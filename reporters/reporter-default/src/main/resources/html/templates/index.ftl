@@ -102,11 +102,11 @@
                      <#if property.definition??>
                         <li>
                            <b>${property.name} = ${property.value}</b>
-                           <small class="onClick" id="showdef${propertyCounter}"
-                                 onclick="switch_visibility('showdef${propertyCounter}'); switch_visibility('def${propertyCounter}');">show definition</small>
+                           <small class="def${propertyCounter} onClick expanded"
+                                 onclick="switch_class_by_class('def${propertyCounter}','expanded','collapsed');">show definition</small>
 
-                            <span id="def${propertyCounter}" class="collapse"><small class="onClick"
-                               onClick="switch_visibility('showdef${propertyCounter}'); switch_visibility('def${propertyCounter}');">hide definition:</small>
+                            <span class="def${propertyCounter} collapsed"><small class="onClick"
+                               onClick="switch_class_by_class('def${propertyCounter}','expanded','collapsed');">hide definition:</small>
                                ${property.getDefinition()}
                             </span>
                         </li>
