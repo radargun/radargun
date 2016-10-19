@@ -60,7 +60,7 @@ help_and_exit() {
   wrappedecho "   -h              Displays this help screen"
   wrappedecho ""
 
-  exit 0
+  exit 1
 }
 
 

@@ -67,7 +67,7 @@ help_and_exit() {
   echo ""
   echo "   -h              Displays this help screen"
   echo ""
-  exit 0
+  exit 1
 }
 
 welcome "This script is used to launch the local slave process."
