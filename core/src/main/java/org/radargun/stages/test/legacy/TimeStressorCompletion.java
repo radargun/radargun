@@ -12,6 +12,7 @@ import org.radargun.utils.Utils;
  */
 public class TimeStressorCompletion extends AbstractCompletion {
 
+   protected static final String PROGRESS_STRING = "Number of operations executed by this thread: %d. Elapsed time: %s. Remaining: %s. Total: %s.";
    private volatile long lastPrint = -1;
    private final long duration;
    private final long logFrequency = TimeUnit.SECONDS.toNanos(20);

@@ -151,7 +151,10 @@ public abstract class LegacyTestStage extends BaseTestStage {
       completion.setCompletionHandler(new Runnable() {
          @Override
          public void run() {
-            finished = true;
+            //Stop collecting statistics for duration-based tests
+            if (duration > 0) {
+               finished = true;
+            }
             finishCountDown.countDown();
          }
       });
@@ -201,6 +204,14 @@ public abstract class LegacyTestStage extends BaseTestStage {
 
    protected Completion createCompletion() {
       Completion completion = new TimeStressorCompletion(duration);
+      if (numOperations > 0) {
+         long countPerNode = numOperations / getExecutingSlaves().size();
+         long modCountPerNode = numOperations % getExecutingSlaves().size();
+         if (this.getExecutingSlaveIndex() + 1 <= modCountPerNode) {
+            countPerNode++;
+         }
+         completion = new CountStressorCompletion(countPerNode);
+      }
       return completion;
    }
 
