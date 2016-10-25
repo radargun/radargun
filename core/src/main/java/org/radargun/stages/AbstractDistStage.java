@@ -67,6 +67,19 @@ public abstract class AbstractDistStage extends AbstractStage implements DistSta
       boolean execBySlave = slaves == null || slaves.contains(slaveState.getSlaveIndex());
       boolean execByGroup = groups == null || groups.contains(slaveState.getGroupName());
       boolean execByRole = roles == null || RoleHelper.hasAnyRole(slaveState, roles);
+      //Issue 425
+      if (groups != null) {
+         StateBase state = masterState != null ? masterState : slaveState;
+         if (state.getCluster() == null) {
+            throw new IllegalStateException(String.format("Cluster has not been set in %s yet.", state));
+         }
+         for (String groupName : groups) {
+            if (!state.getCluster().groupExists(groupName)) {
+               throw new IllegalStateException(
+                     String.format("Group '%s' does not exist in benchmark configuration.", groupName));
+            }
+         }
+      }
       return execBySlave && execByGroup && execByRole;
    }
 
