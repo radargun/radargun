@@ -77,6 +77,17 @@ public class Cluster implements Serializable, Comparable<Cluster> {
       }
       throw new IllegalStateException("Slave index is " + slaveIndex + ", cluster is " + toString());
    }
+   
+   public boolean groupExists(String groupName) {
+      boolean result = false;
+      for (Group group : groups) {
+         if (group.name.equals(groupName)) {
+            result = true;
+            break;
+         }
+      }
+      return result;
+   }
 
    public int getClusterIndex() {
       return index;
