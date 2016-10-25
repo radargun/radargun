@@ -25,8 +25,11 @@ public abstract class BaseTestStage extends AbstractDistStage {
       "results are amended to existing test (as iterations). Default is false.")
    public boolean amendTest = false;
 
-   @Property(converter = TimeConverter.class, doc = "Benchmark duration.", optional = false)
-   public long duration;
+   @Property(converter = TimeConverter.class, doc = "Benchmark duration. You have to set either this or 'totalNumOperations'.")
+   public long duration = 0;
+
+   @Property(doc = "The total number of operations to perform during the test. You have to set either this or 'duration'.")
+   public long numOperations = 0;
 
    @Property(name = "statistics", doc = "Type of gathered statistics. Default are the 'default' statistics " +
       "(fixed size memory footprint for each operation).", complexConverter = Statistics.Converter.class)
@@ -46,8 +49,14 @@ public abstract class BaseTestStage extends AbstractDistStage {
 
    @Init
    public void check() {
-      if (duration <= 0) {
+      if ((duration > 0 && numOperations > 0) || (duration == 0 && numOperations == 0)) {
+         throw new IllegalArgumentException("Set either the test duration or totalNumOperations.");
+      }
+      if (duration < 0) {
          throw new IllegalArgumentException("Test duration must be positive.");
+      }
+      if (numOperations < 0) {
+         throw new IllegalArgumentException("Test totalNumOperations must be positive. " + numOperations);
       }
    }
 
