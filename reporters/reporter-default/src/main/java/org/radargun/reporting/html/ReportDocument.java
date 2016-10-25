@@ -257,12 +257,11 @@ public abstract class ReportDocument extends HtmlDocument {
       }
       for (ChartDescription cd : new ChartDescription[] {
          new ChartDescription(ChartType.MEAN_AND_DEV, "mean_dev", "Response time mean", "Response time (ms)"),
-         new ChartDescription(ChartType.OPERATION_THROUGHPUT_NET, "throughput_net", "Net operation throughput", "Operations/sec"),
+         new ChartDescription(ChartType.OPERATION_THROUGHPUT_NET, "throughput_net", "Operation throughput", "Operations/sec"),
          new ChartDescription(ChartType.DATA_THROUGHPUT, "data_throughput", "Data throughput mean", "MB/sec"),
          new ChartDescription(ChartType.MEAN_AND_DEV_SERIES, "mean_dev_series", "Response time over time", "Response time (ms)"),
          new ChartDescription(ChartType.REQUESTS_SERIES, "requests_series", "Requests progression", "Number of requests"),
-         new ChartDescription(ChartType.OPERATION_THROUGHPUT_GROSS_SERIES, "throughput_gross_series", "Operation throughput (gross) over time", "Operations/sec"),
-         new ChartDescription(ChartType.OPERATION_THROUGHPUT_NET_SERIES, "throughput_net_series", "Operation throughput (net) over time", "Operations/sec"),
+         new ChartDescription(ChartType.OPERATION_THROUGHPUT_NET_SERIES, "throughput_net_series", "Operation throughput over time", "Operations/sec"),
       }) {
          if (createChart(String.format("%s%s%s_%s%s_%s.png", directory, File.separator, testName, operation, suffix, cd.name),
             clusterSize, operation, cd.yLabel, cd.type)) {
