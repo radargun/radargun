@@ -1,6 +1,7 @@
 package org.radargun.stages.test.legacy;
 
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.radargun.Operation;
@@ -39,8 +40,10 @@ public class LegacyStressor extends Thread {
    private Transactional.Transaction ongoingTx;
    private Statistics stats;
    private boolean started = false;
+   private CountDownLatch threadCountDown;
 
-   public LegacyStressor(LegacyTestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, boolean logTransactionExceptions) {
+   public LegacyStressor(LegacyTestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex,
+         boolean logTransactionExceptions, CountDownLatch threadCountDown) {
       super("Stressor-" + threadIndex);
       this.stage = stage;
       this.threadIndex = threadIndex;
@@ -50,10 +53,11 @@ public class LegacyStressor extends Thread {
       this.completion = stage.getCompletion();
       this.operationSelector = stage.getOperationSelector();
       this.logTransactionExceptions = logTransactionExceptions;
+      this.threadCountDown = threadCountDown;
    }
 
    private boolean recording() {
-      return started && !stage.isFinished();
+      return this.started && !stage.isFinished();
    }
 
    @Override
@@ -76,6 +80,7 @@ public class LegacyStressor extends Thread {
    }
 
    private void runInternal() {
+      boolean counted = false;
       try {
          // the operation selector needs to be started before any #next() call
          operationSelector.start();
@@ -87,18 +92,23 @@ public class LegacyStressor extends Thread {
                if (ongoingTx != null) {
                   endTransactionAndRegisterStats(null);
                }
-               stats.begin();
-               this.started = started;
                break;
-            }
-            Operation operation = operationSelector.next(random);
-            try {
-               logic.run(operation);
-            } catch (OperationLogic.RequestException e) {
-               // the exception was already logged in makeRequest
+            } else {
+               if (!counted) {
+                  threadCountDown.countDown();
+                  counted = true;
+               }
+               Operation operation = operationSelector.next(random);
+               try {
+                  logic.run(operation);
+               } catch (OperationLogic.RequestException e) {
+                  // the exception was already logged in makeRequest
+               }
             }
          }
 
+         stats.begin();
+         this.started = true;
          completion.start();
          int i = 0;
          while (!stage.isTerminated()) {

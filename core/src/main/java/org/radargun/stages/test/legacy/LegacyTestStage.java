@@ -169,7 +169,9 @@ public abstract class LegacyTestStage extends BaseTestStage {
             throw new IllegalStateException("Interrupted during ramp-up.", e);
          }
       }
+
       started = true;
+
       try {
          if (timeout > 0) {
             long waitTime = getWaitTime(startTime);
@@ -203,16 +205,16 @@ public abstract class LegacyTestStage extends BaseTestStage {
    }
 
    protected Completion createCompletion() {
-      Completion completion = new TimeStressorCompletion(duration);
       if (numOperations > 0) {
          long countPerNode = numOperations / getExecutingSlaves().size();
          long modCountPerNode = numOperations % getExecutingSlaves().size();
-         if (this.getExecutingSlaveIndex() + 1 <= modCountPerNode) {
+         if (getExecutingSlaveIndex() + 1 <= modCountPerNode) {
             countPerNode++;
          }
-         completion = new CountStressorCompletion(countPerNode);
+         return new CountStressorCompletion(countPerNode);
+      } else {
+         return new TimeStressorCompletion(duration);
       }
-      return completion;
    }
 
    protected OperationSelector createOperationSelector() {
@@ -229,12 +231,18 @@ public abstract class LegacyTestStage extends BaseTestStage {
    protected List<LegacyStressor> startStressors() {
       int myFirstThread = getFirstThreadOn(slaveState.getSlaveIndex());
       int myNumThreads = getNumThreadsOn(slaveState.getSlaveIndex());
+      CountDownLatch threadCountDown = new CountDownLatch(myNumThreads);
 
       List<LegacyStressor> stressors = new ArrayList<>();
       for (int threadIndex = stressors.size(); threadIndex < myNumThreads; threadIndex++) {
-         LegacyStressor stressor = new LegacyStressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, logTransactionExceptions);
+         LegacyStressor stressor = new LegacyStressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, logTransactionExceptions, threadCountDown);
          stressors.add(stressor);
          stressor.start();
+      }
+      try {
+         threadCountDown.await();
+      } catch (InterruptedException e) {
+         //FIXME implement me
       }
       log.info("Started " + stressors.size() + " stressor threads.");
       return stressors;
