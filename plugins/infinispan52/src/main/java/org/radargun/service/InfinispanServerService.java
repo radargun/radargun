@@ -1,5 +1,6 @@
 package org.radargun.service;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,13 +9,20 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 
@@ -44,6 +52,9 @@ public class InfinispanServerService extends JavaProcessService {
 
    @Property(doc = "Home directory for the server")
    private String home;
+
+   @Property(doc = "Server zip. If set, the zip will be extracted to the 'home' directory.")
+   private String serverZip;
 
    @Property(doc = "Java binary used to start the server. Default is system-default.")
    private String java;
@@ -89,6 +100,39 @@ public class InfinispanServerService extends JavaProcessService {
       clustered = new InfinispanServerClustered(this);
 
       try {
+         if (serverZip != null) {
+            Path homePath = FileSystems.getDefault().getPath(home);
+            Utils.deleteDirectory(homePath.toFile());
+            Files.createDirectory(homePath);
+
+            ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(serverZip));
+            ZipEntry nextEntry;
+            while ((nextEntry = zipInputStream.getNextEntry()) != null) {
+               Path entryOutput = homePath.resolve(nextEntry.getName());
+               if (nextEntry.isDirectory()) {
+                  Files.createDirectory(entryOutput);
+               } else {
+                  Files.copy(zipInputStream, entryOutput);
+               }
+               zipInputStream.closeEntry();
+            }
+
+            List<Path> homeContents = Files.list(homePath).collect(Collectors.toList());
+            // move the server files 1 directory up (remove the extra directory)
+            if (homeContents.size() == 1) {
+               Path fromDir = homeContents.get(0);
+               for (Path path : Files.list(fromDir).collect(Collectors.toList())) {
+                  Files.move(path, FileSystems.getDefault().getPath(home, path.getFileName().toString()));
+               }
+               Files.delete(fromDir);
+            }
+            // the extraction erases the executable bits
+            Path scriptPath = FileSystems.getDefault().getPath(home, "bin", getStartScriptPrefix() + (windows ? "bat" : "sh"));
+            Set<PosixFilePermission> permissions = PosixFilePermissions.fromString("rwxr-xr-x");
+            if (Files.getFileAttributeView(scriptPath, PosixFileAttributeView.class) != null) {
+               Files.setPosixFilePermissions(scriptPath, permissions);
+            }
+         }
          URL resource = getClass().getResource("/" + file);
          Path filesystemFile = FileSystems.getDefault().getPath(file);
          Path target = FileSystems.getDefault().getPath(home, "standalone", "configuration", "radargun-" + ServiceHelper.getSlaveIndex() + ".xml");
@@ -111,7 +155,7 @@ public class InfinispanServerService extends JavaProcessService {
             throw new FileNotFoundException("File " + file + " not found neither as resource not in filesystem.");
          }
       } catch (IOException e) {
-         log.error("Failed to copy configuration file", e);
+         log.error("Failed to prepare the server directory", e);
          throw new RuntimeException(e);
       }
       lifecycle.addListener(new ProcessLifecycle.ListenerAdapter() {
