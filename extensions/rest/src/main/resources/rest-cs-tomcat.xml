@@ -24,7 +24,7 @@
          <setup group="clients" plugin="resteasy-http">
              <rest-client-stateful xmlns="urn:radargun:plugins:resteasy-http:3.0">
                  <servers>127.0.0.1:8080</servers>
-                 <!-- When more clients are created each one will choose server 0 to communicate with. -->
+                 <!-- All clients will choose server 0 to communicate with -->
                  <servers-load-balance>100%: 0</servers-load-balance>
                  <!-- The context path of Web application under test -->
                  <context-path>/clusterbench/session</context-path>
@@ -36,7 +36,6 @@
 
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
-                xmlns:cache="urn:radargun:stages:cache:3.0"
                 xmlns:l="urn:radargun:stages:legacy:3.0">
 
       <service-start groups="servers"/>
@@ -44,10 +43,11 @@
 
       <jvm-monitor-start />
      
-      <l:rest-operations-test test-name="clusterbench" 
-                                                duration="10s" 
-                                                num-threads-per-node="1" 
-                                                delay-between-requests="200">
+      <l:rest-operations-test groups="clients"
+                              test-name="clusterbench"
+                              duration="10s"
+                              num-threads-per-node="1"
+                              delay-between-requests="200">
       </l:rest-operations-test>
       
       <jvm-monitor-stop /> 
