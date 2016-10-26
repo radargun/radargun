@@ -3,11 +3,24 @@ package org.radargun.reporting.csv;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.radargun.config.Cluster;
+import org.radargun.config.Converter;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -41,14 +54,18 @@ public class CsvReporter implements Reporter {
    @Property(doc = "Slaves whose results will be ignored.")
    private Set<Integer> ignore;
 
-   @Property(doc = "Separator of columns in the CSV file. Default is ';'")
-   private String separator = ";";
+   @Property(doc = "Separator of columns in the CSV file. Default is ','")
+   private String separator = ",";
 
    @Property(doc = "Compute aggregated statistics from all nodes. Default is true.")
    private boolean computeTotal = true;
 
    @Property(doc = "Compute response times at certain percentiles. Default is 95% and 99%.")
    protected double[] percentiles = new double[] {95d, 99d};
+
+   @Property(doc = "List od comma separated column name regex patterns which should be reordered to the left side, use '\\' to escape the commas if needed", converter = RegexConverter.class)
+   protected List<String> columnOrder = Arrays.asList(".*[Put|Get]\\.Throughput", ".*[Put|Get]\\.ResponseTimeMean",
+         ".*Get.*");
 
    @Override
    public void run(Collection<Report> reports) {
@@ -66,7 +83,7 @@ public class CsvReporter implements Reporter {
          fileWriter = prepareOutputFile(report, test.name, "");
          int it = 0;
          Set<String> columns = new TreeSet<String>();
-         ArrayList<Map<String, String>> rows = new ArrayList();
+         ArrayList<Map<String, String>> rows = new ArrayList<>();
          for (Report.TestIteration iteration : test.getIterations()) {
             Statistics aggregated = null;
             for (Map.Entry<Integer, List<Statistics>> slaveStats : iteration.getStatistics()) {
@@ -78,8 +95,10 @@ public class CsvReporter implements Reporter {
                }
                Statistics nodeSummary = processRow(it, columns, rows, slaveStats);
                if (computeTotal) {
-                  if (aggregated == null) aggregated = nodeSummary.copy();
-                  else aggregated.merge(nodeSummary);
+                  if (aggregated == null)
+                     aggregated = nodeSummary.copy();
+                  else
+                     aggregated.merge(nodeSummary);
                }
             }
             if (computeTotal && aggregated != null) {
@@ -132,7 +151,8 @@ public class CsvReporter implements Reporter {
       return new FileWriter(outputFile);
    }
 
-   private Statistics processRow(int it, Set<String> columns, List<Map<String, String>> rows, Map.Entry<Integer, List<Statistics>> slaveStats) {
+   private Statistics processRow(int it, Set<String> columns, List<Map<String, String>> rows,
+         Map.Entry<Integer, List<Statistics>> slaveStats) {
       // this reporter is merging statistics from all threads on each node
       Statistics summary = slaveStats.getValue().stream().filter(o -> o != null).reduce(Statistics.MERGE)
          .orElseThrow(() -> new IllegalStateException("No statistics!"));
@@ -150,8 +170,8 @@ public class CsvReporter implements Reporter {
       return summary;
    }
 
-   private void addRepresentations(Statistics summary, Map<String, String> rowData, Statistics statistics, String operationName) {
-      //Map.Entry<Integer, List<Statistics>> slaveStats = ; Map.Entry<String, OperationStats> os = ;
+   private void addRepresentations(Statistics summary, Map<String, String> rowData, Statistics statistics,
+         String operationName) {
       DefaultOutcome defaultOutcome = statistics.getRepresentation(operationName, DefaultOutcome.class);
       if (defaultOutcome != null) {
          if (defaultOutcome.requests == 0) return;
@@ -162,8 +182,8 @@ public class CsvReporter implements Reporter {
       }
       OperationThroughput throughput = statistics.getRepresentation(operationName, OperationThroughput.class);
       if (throughput != null) {
-         rowData.put(operationName + ".ThroughputGross", String.valueOf(round(throughput.gross, 1)));
-         rowData.put(operationName + ".ThroughputNet", String.valueOf(round(throughput.net, 1)));
+         rowData.put(operationName + ".ThroughputWithErrors", String.valueOf(round(throughput.gross, 1)));
+         rowData.put(operationName + ".Throughput", String.valueOf(round(throughput.net, 1)));
       }
       for (double percentile : percentiles) {
          Percentile result = statistics.getRepresentation(operationName, Percentile.class, percentile);
@@ -187,18 +207,34 @@ public class CsvReporter implements Reporter {
       }
    }
 
-   private void writeFile(FileWriter fileWriter, Set<String> columns, List<Map<String, String>> rows) throws IOException {
-      List<String> orderedColumns = new ArrayList<String>(Arrays.asList(SLAVE_INDEX, ITERATION, PERIOD, THREAD_COUNT));
+   private void writeFile(FileWriter fileWriter, Set<String> columns, List<Map<String, String>> rows)
+         throws IOException {
+
+      List<String> indexColumns = Arrays.asList(ITERATION, SLAVE_INDEX, PERIOD, THREAD_COUNT);
+
+      List<String> orderedColumns = new ArrayList<String>(indexColumns);
       orderedColumns.addAll(columns);
+
+      List<String> columnOrderList = new ArrayList<String>(indexColumns);
+      columnOrderList.addAll(columnOrder);
+
+      // sorts columns into correct order
+      orderedColumns.sort(new ColumnComparator(columnOrderList));
+
+      // sorts rows into correct order
+      rows.sort(new RowComparator(Arrays.asList(SLAVE_INDEX, ITERATION, PERIOD, THREAD_COUNT)));
+
       for (String column : orderedColumns) {
          fileWriter.write(column);
          fileWriter.write(separator);
       }
+
       fileWriter.write("\n");
       for (Map<String, String> row : rows) {
          for (String column : orderedColumns) {
             String value = row.get(column);
-            if (value != null) fileWriter.write(value);
+            if (value != null)
+               fileWriter.write(value);
             fileWriter.write(separator);
          }
          fileWriter.write("\n");
@@ -241,7 +277,8 @@ public class CsvReporter implements Reporter {
             List<ValueAndSlave> values = new ArrayList<ValueAndSlave>();
             for (Timeline t : report.getTimelines()) {
                List<Timeline.Value> list = t.getValues(valueCategory);
-               if (list == null) continue;
+               if (list == null)
+                  continue;
                for (Timeline.Value v : list) {
                   values.add(new ValueAndSlave(v, t.slaveIndex));
                }
@@ -285,6 +322,97 @@ public class CsvReporter implements Reporter {
    private double round(double number, int places) {
       BigDecimal bigDecimal = new BigDecimal(number).setScale(places, RoundingMode.HALF_UP);
       return bigDecimal.doubleValue();
+   }
+
+   /**
+    * Comparator for sorting rows based on column value
+    * 
+    * @author zhostasa
+    *
+    */
+   private class RowComparator implements Comparator<Map<String, String>> {
+
+      private List<String> comparePriority;
+
+      /**
+       * Instantiates comparator
+       * 
+       * @param comparePriority
+       *           List of columns names to sort by, priority is defined by
+       *           order in list
+       */
+      public RowComparator(List<String> comparePriority) {
+         this.comparePriority = comparePriority;
+      }
+
+      public int compare(Map<String, String> o1, Map<String, String> o2) {
+         for (String compareColumn : comparePriority) {
+            int comp = o1.get(compareColumn).compareTo(o2.get(compareColumn));
+            if (comp != 0)
+               return comp;
+         }
+         return 0;
+      }
+
+   }
+
+   /**
+    * Comparator for sorting columns by matching regex
+    * 
+    * @author zhostasa
+    *
+    */
+   private class ColumnComparator implements Comparator<String> {
+
+      private List<String> compareRegex;
+
+      /**
+       * Instantiates comparator
+       * 
+       * @param compareRegex
+       *           List of regular expressions to sort by, priority is
+       *           determined by order in list
+       */
+      public ColumnComparator(List<String> compareRegex) {
+         this.compareRegex = compareRegex;
+      }
+
+      public int compare(String o1, String o2) {
+
+         for (String regex : compareRegex) {
+            boolean o1Matches = o1.matches(regex);
+            boolean o2Matches = o2.matches(regex);
+            if (o1Matches && !o2Matches)
+               return -1;
+            if (!o1Matches && o2Matches)
+               return 1;
+         }
+         return 0;
+      }
+   }
+
+   /**
+    * A converter for a comma separated list of regular expression arguments,
+    * '\\' is used to escape the commas
+    * 
+    * @author zhostasa
+    *
+    */
+   public static class RegexConverter implements Converter<List<String>> {
+
+      public List<String> convert(String string, Type type) {
+         List<String> newList = Arrays.asList(string.split("(?<!\\\\),"));
+         return newList;
+      }
+
+      public String convertToString(List<String> value) {
+         return value.stream().map(n -> n.replace(",", "\\,")).collect(Collectors.joining(","));
+      }
+
+      public String allowedPattern(Type type) {
+         return ".*";
+      }
+
    }
 
 }
