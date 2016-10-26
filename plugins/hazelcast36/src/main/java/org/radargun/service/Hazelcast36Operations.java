@@ -47,7 +47,7 @@ public class Hazelcast36Operations extends HazelcastOperations {
 
       @Override
       public void put(K key, V value) {
-         map.put(key, value);
+         map.set(key, value);
       }
 
       @Override
