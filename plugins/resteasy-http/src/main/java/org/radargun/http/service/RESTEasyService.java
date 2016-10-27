@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
@@ -26,6 +25,7 @@ import org.radargun.utils.TimeConverter;
  */
 @Service(doc = "RestEasy REST client for general Web applications")
 public class RESTEasyService implements Lifecycle {
+
    private static final Log log = LogFactory.getLog(RESTEasyService.class);
    private ResteasyClient httpClient = null;
 
