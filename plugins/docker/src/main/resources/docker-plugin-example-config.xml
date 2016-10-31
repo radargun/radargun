@@ -1,0 +1,96 @@
+<!-- RadarGun 3.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+
+   <clusters>
+      <cluster>
+         <group name="mod_cluster" size="1" />
+         <group name="tomcat" size="1"/>
+         <group name="clients" size="1"/>
+      </cluster>
+   </clusters>
+
+   <configurations>
+      <config name="Tomcat Web Session Test">
+         <setup group="mod_cluster" plugin="${productName:docker}">
+            <docker xmlns="urn:radargun:plugins:docker:3.0" 
+                            server-uri="${server.uri:unix:///var/run/docker.sock}" 
+                            docker-registry="${docker.registry:https://registry.hub.docker.com}" 
+                            username="${docker.username}"
+                            password="${docker.password}"
+                            container-name="mod_cluster"
+                            image="${image.name:karm/mod_cluster-master-dockerhub}">
+               <!-- Sources for this image can be found at https://github.com/Karm/mod_cluster-dockerhub -->
+               <!-- Ports exposed from the running container. Available for incoming requests. -->
+               <exposed-ports>
+                   80/tcp
+                   6666/tcp
+                   23364/udp
+               </exposed-ports>
+               <!-- Env properties passed to the container during startup -->
+               <env>
+                   MODCLUSTER_ADVERTISE=Off
+                   MODCLUSTER_NET=127.0.0
+                   MODCLUSTER_MANAGER=127.0.0.1
+               </env>
+            </docker>
+         </setup>
+         <setup group="tomcat" plugin="${productName:tomcat8}">
+            <tomcat xmlns="urn:radargun:plugins:tomcat8:3.0" file="${server.config:server.xml}">
+               <!-- path to tomcat server -->
+               <catalina-home>${CATALINA_HOME}</catalina-home>
+               <!-- user and password for the user with manager-script role defined in tomcat-users.xml -->
+               <user>tomcat</user>
+               <pass>tomcat</pass>
+            </tomcat>
+         </setup>
+         <setup group="clients" plugin="resteasy-http">
+             <rest-client-stateful xmlns="urn:radargun:plugins:resteasy-http:3.0">
+                 <servers>127.0.0.1:80</servers>
+                 <!-- All clients will choose server 0 to communicate with -->
+                 <servers-load-balance>100%: 0</servers-load-balance>
+                 <!-- The context path of Web application under test -->
+                 <context-path>/clusterbench/session</context-path>
+             </rest-client-stateful>
+         </setup>
+      </config>
+     
+   </configurations>
+
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:l="urn:radargun:stages:legacy:3.0">
+
+      <service-start groups="mod_cluster"/>
+      <service-start groups="tomcat"/>
+      <service-start groups="clients" validate-cluster="false" />
+
+      <jvm-monitor-start />
+     
+      <sleep time="10000" />
+     
+      <l:rest-operations-test groups="clients"
+                              test-name="clusterbench"
+                              duration="10s"
+                              num-threads-per-node="1"
+                              delay-between-requests="200">
+      </l:rest-operations-test>
+      
+      <jvm-monitor-stop /> 
+      
+   </rg:scenario>
+
+   <reports>
+     <reporter type="serialized">
+       <serialized xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/serialized" />
+     </reporter>
+     <reporter type="csv">
+       <csv xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/csv" />
+     </reporter>
+     <reporter type="html">
+       <html xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/html" />
+     </reporter>
+   </reports>
+
+</benchmark>
