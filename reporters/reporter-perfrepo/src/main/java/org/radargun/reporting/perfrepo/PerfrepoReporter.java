@@ -1,7 +1,9 @@
 package org.radargun.reporting.perfrepo;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
@@ -64,6 +66,8 @@ public class PerfrepoReporter implements Reporter {
    private List<MetricNameMapping> metricNameMapping = new ArrayList<>();
    @Property(doc = "Additional build parameters", converter = KeyValueListConverter.class)
    private Map<String, String> buildParams = new HashMap<>();
+   @Property(doc = "File (in java properties format) from which to load additional build parameters")
+   private String buildParamsFile = null;
    @Property(doc = "Exclude default build parameters from uploaded entity. Parameters specified in 'buildParams' are not excluded. Default is false.")
    private boolean excludeBuildParams = false;
    @Property(doc = "Exclude service configurations from uploaded entity. Default is false.")
@@ -229,6 +233,17 @@ public class PerfrepoReporter implements Reporter {
       if (buildParams != null) {
          for (Map.Entry<String, String> buildParam : buildParams.entrySet()) {
             testExecutionBuilder.parameter(buildParam.getKey(), buildParam.getValue());
+         }
+      }
+      if (buildParamsFile != null) {
+         Properties paramsFromFile = new Properties();
+         try (FileInputStream fileInputStream = new FileInputStream(buildParamsFile)) {
+            paramsFromFile.load(fileInputStream);
+         } catch (IOException e) {
+            log.warn("Error while loading build parameters from file", e);
+         }
+         for (Map.Entry<Object, Object> entry : paramsFromFile.entrySet()) {
+            testExecutionBuilder.parameter((String) entry.getKey(), (String) entry.getValue());
          }
       }
    }
