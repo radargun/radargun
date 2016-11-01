@@ -31,16 +31,17 @@ import static org.testng.Assert.*;
  *
  * @author Roman Macor &lt;rmacor@redhat.com&gt;
  */
-@Test
 @PowerMockIgnore({"javax.management.*"})
 @PrepareForTest(Utils.class)
 @SuppressStaticInitializationFor({"org.radargun.Directories"})
-public abstract class AbstractConfigurationTest extends PowerMockTestCase {
+public class AbstractConfigurationTest extends PowerMockTestCase {
    protected static Log log = LogFactory.getLog(AbstractConfigurationTest.class);
    protected MasterConfig masterConfig;
    protected List<String> resources = new ArrayList<>();
 
-   protected abstract String getBenchmark();
+   protected String getBenchmark() {
+      return null;
+   }
 
    /**
     * Copies resources to the testing directory (such as benchmark file or scenario file)
