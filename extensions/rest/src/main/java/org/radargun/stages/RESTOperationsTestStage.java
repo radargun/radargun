@@ -32,6 +32,13 @@ public class RESTOperationsTestStage extends LegacyTestStage {
    @Property(doc = "Ratio of GET requests. Default is 1 (100%).")
    protected int getRatio = 1;
 
+   /**
+    * Context path is the part of URL after the port. It is appended to http://host:port
+    * in order to create the full URL.
+    */
+   @Property(doc = "The context path for this REST stage. Defaults to empty string.")
+   private String contextPath = "";
+
    @InjectTrait
    protected RESTOperations restOperations;
 
@@ -64,7 +71,7 @@ public class RESTOperationsTestStage extends LegacyTestStage {
       @Override
       public void init(LegacyStressor stressor) {
          super.init(stressor);
-         this.restInvoker = restOperations.getRESTInvoker();
+         this.restInvoker = restOperations.getRESTInvoker(contextPath);
          stressor.setUseTransactions(false);//transactions for HTTP ops do not make sense
       }
 
@@ -74,7 +81,7 @@ public class RESTOperationsTestStage extends LegacyTestStage {
          Invocation invocation;
          if (operation == RESTOperations.GET) {
             List<Cookie> cookies = jsessionid == null ? Collections.EMPTY_LIST : Collections.singletonList(jsessionid);
-            invocation = new RESTOperationInvocations.Get(restInvoker, cookies);
+            invocation = new RESTOperationInvocations.Get(restInvoker, cookies, null);
          } else {
             throw new IllegalArgumentException(operation.name);
          }

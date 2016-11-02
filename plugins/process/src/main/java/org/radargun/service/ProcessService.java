@@ -1,24 +1,20 @@
 package org.radargun.service;
 
 import java.io.File;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.radargun.Directories;
 import org.radargun.Service;
-import org.radargun.config.Converter;
 import org.radargun.config.Property;
-import org.radargun.logging.Log;
-import org.radargun.logging.LogFactory;
 import org.radargun.traits.ProvidesTrait;
 import org.radargun.utils.ArgsConverter;
+import org.radargun.utils.EnvsConverter;
 import org.radargun.utils.TimeConverter;
 
 /**
@@ -120,41 +116,6 @@ public class ProcessService {
 
    public interface OutputListener {
       void run(Matcher matcher);
-   }
-
-   private static class EnvsConverter implements Converter<Map<String, String>> {
-      private static Log log = LogFactory.getLog(EnvsConverter.class);
-
-      @Override
-      public Map<String, String> convert(String string, Type type) {
-         Map<String, String> env = new TreeMap<String, String>();
-         String[] lines = string.split("\n");
-         for (String line : lines) {
-            int eqIndex = line.indexOf('=');
-            if (eqIndex < 0) {
-               if (line.trim().length() > 0) {
-                  log.warn("Cannot parse env " + line);
-               }
-            } else {
-               env.put(line.substring(0, eqIndex).trim(), line.substring(eqIndex + 1).trim());
-            }
-         }
-         return env;
-      }
-
-      @Override
-      public String convertToString(Map<String, String> value) {
-         StringBuilder sb = new StringBuilder();
-         for (Map.Entry<String, String> envVar : value.entrySet()) {
-            sb.append(envVar.getKey()).append('=').append(envVar.getValue()).append('\n');
-         }
-         return sb.toString();
-      }
-
-      @Override
-      public String allowedPattern(Type type) {
-         return Converter.ANY_MULTI_LINE;
-      }
    }
 
    private static class Action {

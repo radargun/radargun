@@ -1,7 +1,6 @@
 package org.radargun.service;
 
 import java.io.BufferedReader;
-import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,9 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 
 import org.radargun.Service;
 import org.radargun.ServiceHelper;
@@ -28,7 +26,6 @@ import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.ProvidesTrait;
-import org.radargun.utils.Base64Coder;
 
 /**
  * A service for starting Tomcat 8 server.
@@ -49,36 +46,28 @@ public class TomcatServerService extends JavaProcessService {
 
    protected final Log log = LogFactory.getLog(getClass());
    protected static final String SERVICE_DESCRIPTION = "Tomcat Server";
-   private static final String JAVA_HOME = "JAVA_HOME";
-   private static final String JAVA_OPTS = "JAVA_OPTS";
    private static final String MANAGER_CHARSET = "utf-8";
 
-   @Property(doc = "Tomcat server home directory.")
+   @Property(doc = "Tomcat server home directory. Default value is commonly used environment variable CATALINA_HOME.")
    private String catalinaHome = System.getenv("CATALINA_HOME");
 
-   @Property(doc = "Tomcat server base directory. Optional when only one instance of Tomcat is running on a single physical node. See http://tomcat.apache.org/tomcat-8.0-doc/RUNNING.txt for more details.")
+   @Property(doc = "Tomcat server base directory. Optional when only one instance of Tomcat is running on a single physical node. See http://tomcat.apache.org/tomcat-8.0-doc/RUNNING.txt for more details. Default value is commonly used environment variable CATALINA_BASE.")
    private String catalinaBase = System.getenv("CATALINA_BASE");
 
-   @Property(doc = "Bind address.")
+   @Property(doc = "Bind address. Default is localhost.")
    private String bindAddress = "localhost";
 
-   @Property(doc = "HTTP port where the target Tomcat server is listening.")
+   @Property(doc = "HTTP port where the target Tomcat server is listening. Default is 8080.")
    private int bindHttpPort = 8080;
 
-   @Property(doc = "Username to be used for managing the server")
+   @Property(doc = "Username to be used for managing the server. Empty by default.")
    private String user;
 
-   @Property(doc = "Password to be used for managing the server")
+   @Property(doc = "Password to be used for managing the server. Empty by default.")
    private String pass;
 
-   @Property(doc = "Remote JMX port. Defaults to 8089.")
+   @Property(doc = "Remote JMX port. Default is 8089.")
    private int remotejmxPort = 8089;
-
-   @Property(doc = "Java used to override JAVA_HOME env variable. Default is ${env.JAVA_HOME}.")
-   private String java = System.getenv(JAVA_HOME);
-
-   @Property(doc = "Extra Java options used. This will override JAVA_OPTS env variable. Default is none.")
-   private String javaOpts;
 
    @Property(doc = "Logging properties file. Default is ${CATALINA_HOME}/conf/logging.properties")
    private String loggingProperties = "logging.properties";
@@ -155,24 +144,6 @@ public class TomcatServerService extends JavaProcessService {
       return cmd;
    }
 
-   @Override
-   public Map<String, String> getEnvironment() {
-      Map<String, String> envs = new HashMap(super.getEnvironment());
-      if (java != null) {
-         if (envs.containsKey(JAVA_HOME)) {
-            log.warn("Overriding " + JAVA_HOME + ": " + envs.get(JAVA_HOME) + " with " + java);
-         }
-         envs.put(JAVA_HOME, java);
-      }
-      if (javaOpts != null) {
-         if (envs.containsKey(JAVA_OPTS)) {
-            log.warn("Overriding " + JAVA_OPTS + ": " + envs.get(JAVA_OPTS) + " with " + javaOpts);
-         }
-         envs.put(JAVA_OPTS, javaOpts);
-      }
-      return envs;
-   }
-
    boolean isTomcatReady() {
       try {
          queryTomcat("/text/list");
@@ -230,10 +201,7 @@ public class TomcatServerService extends JavaProcessService {
          throw new IllegalStateException("The server command (" + command + ") failed with responseCode ("
             + httpResponseCode + ") and responseMessage (" + hconn.getResponseMessage() + ").");
       }
-      BufferedReader reader = null;
-      try {
-         // Process the response message
-         reader = new BufferedReader(new InputStreamReader(hconn.getInputStream(), MANAGER_CHARSET));
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(hconn.getInputStream(), MANAGER_CHARSET))) {
          String line = reader.readLine();
          String contentError = null;
          if (line != null && !line.startsWith("OK -")) {
@@ -245,18 +213,6 @@ public class TomcatServerService extends JavaProcessService {
          if (contentError != null) {
             throw new IllegalStateException("The server command (" + command + ") failed with content (" + contentError + ").");
          }
-      } finally {
-         closeQuietly(reader);
-      }
-   }
-
-   private void closeQuietly(final Closeable closeable) {
-      try {
-         if (closeable != null) {
-            closeable.close();
-         }
-      } catch (IOException ignore) {
-         // ignore
       }
    }
 
@@ -264,9 +220,8 @@ public class TomcatServerService extends JavaProcessService {
       // Set up an authorization header with our credentials
       final String credentials = user + ":" + pass;
       // Encodes the user:password pair as a sequence of ISO-8859-1 bytes.
-      // We'll return the Base64 encoded form of this ISO-8859-1 byte sequence.
       try {
-         return "Basic " + Base64Coder.encodeStringISO88591(credentials);
+         return "Basic " + new String(Base64.getEncoder().encode(credentials.getBytes("ISO-8859-1")));
       } catch (final UnsupportedEncodingException e) {
          throw new RuntimeException(e);
       }
