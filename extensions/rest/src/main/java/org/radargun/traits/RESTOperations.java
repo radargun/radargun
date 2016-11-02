@@ -2,6 +2,7 @@ package org.radargun.traits;
 
 import java.util.List;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MultivaluedMap;
 import org.radargun.Operation;
 import org.radargun.WrappedHttpResponse;
 
@@ -14,9 +15,9 @@ public interface RESTOperations {
 
    Operation GET = Operation.register(TRAIT + ".Get");
 
-   RESTOperationInvoker getRESTInvoker();
+   RESTOperationInvoker getRESTInvoker(String contextPath);
 
    interface RESTOperationInvoker {
-      WrappedHttpResponse get(List<Cookie> cookies);
+      WrappedHttpResponse get(List<Cookie> cookies, MultivaluedMap<String, Object> headers);
    }
 }

@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.management.remote.JMXConnector;
@@ -28,6 +30,15 @@ public class JavaProcessService extends ProcessService {
 
    private static final String CONNECTOR_ADDRESS =
          "com.sun.management.jmxremote.localConnectorAddress";
+
+   protected static final String JAVA_HOME = "JAVA_HOME";
+   protected static final String JAVA_OPTS = "JAVA_OPTS";
+
+   @Property(doc = "Java binary used to start the server. Default is ${env.JAVA_HOME}.")
+   protected String java = System.getenv(JAVA_HOME);
+
+   @Property(doc = "Extra Java options used. Default is none.")
+   protected String javaOpts;
 
    @Property(doc = "Connect to the process and retrieve JMX connection. Default is true.")
    protected boolean jmxConnectionEnabled = true;
@@ -121,5 +132,23 @@ public class JavaProcessService extends ProcessService {
          }
       }
       return null;
+   }
+
+   @Override
+   public Map<String, String> getEnvironment() {
+      Map<String, String> envs = new HashMap(super.getEnvironment());
+      if (java != null) {
+         if (envs.containsKey(JAVA_HOME)) {
+            log.warn("Overwriting " + JAVA_HOME + ": " + envs.get(JAVA_HOME) + " with " + java);
+         }
+         envs.put(JAVA_HOME, java);
+      }
+      if (javaOpts != null) {
+         if (envs.containsKey(JAVA_OPTS)) {
+            log.warn("Overwriting " + JAVA_OPTS + ": " + envs.get(JAVA_OPTS) + " with " + javaOpts);
+         }
+         envs.put(JAVA_OPTS, javaOpts);
+      }
+      return envs;
    }
 }

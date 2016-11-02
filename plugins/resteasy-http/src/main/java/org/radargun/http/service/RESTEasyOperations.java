@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MultivaluedMap;
@@ -28,23 +29,47 @@ public class RESTEasyOperations implements RESTOperations {
       this.service = service;
    }
 
-   public RESTOperationInvoker getRESTInvoker() {
+   public RESTOperationInvoker getRESTInvoker(String contextPath) {
       if (service.isRunning()) {
-         return new HTTPOperationInvokerImpl();
+         return new RESTOperationInvokerImpl(contextPath);
       }
       return null;
    }
 
-   protected class HTTPOperationInvokerImpl implements RESTOperationInvoker {
+   protected class RESTOperationInvokerImpl implements RESTOperationInvoker {
 
       private String uri;
 
-      public HTTPOperationInvokerImpl() {
-         this.uri = buildApplicationUrl();
+      public RESTOperationInvokerImpl(String contextPath) {
+         this.uri = buildApplicationUrl(contextPath);
+      }
+
+      private String buildApplicationUrl(String contextPath) {
+         InetSocketAddress node = pickServer();
+         StringBuilder s = new StringBuilder("http://");
+         if (service.getUsername() != null) {
+            try {
+               s.append(URLEncoder.encode(service.getUsername(), "UTF-8")).append(":")
+                  .append(URLEncoder.encode(service.getPassword(), "UTF-8")).append("@");
+            } catch (UnsupportedEncodingException e) {
+               throw new RuntimeException("Could not encode the supplied username and password", e);
+            }
+         }
+         s.append(node.getHostName()).append(":").append(node.getPort()).append("/");
+         s.append(contextPath);
+         log.info("buildApplicationUrl = " + s.toString());
+         return s.toString();
+      }
+
+      /* There's one server picked for each thread at the beginning. Subsequent requests from this
+      thread go to the same server. */
+      private InetSocketAddress pickServer() {
+         return service.getServers().get(service.getServersLoadBalance().next(new Random()));
       }
 
       @Override
-      public WrappedHttpResponse<String> get(List<Cookie> cookiesToPass) {
+      public WrappedHttpResponse<String> get(List<Cookie> cookiesToPass, MultivaluedMap<String, Object> headersToPass) {
+         //headers not passed to the request in this implementation
          String returnedBody = null;
          Map<String, NewCookie> returnedCookies = null;
          MultivaluedMap<String,Object> returnedHeaders = null;
@@ -73,23 +98,6 @@ public class RESTEasyOperations implements RESTOperations {
             }
          }
          return new WrappedHttpResponse<String>(returnedCookies, returnedHeaders, returnedBody);
-      }
-
-      private String buildApplicationUrl() {
-         InetSocketAddress node = service.pickServer();
-         StringBuilder s = new StringBuilder("http://");
-         if (service.getUsername() != null) {
-            try {
-               s.append(URLEncoder.encode(service.getUsername(), "UTF-8")).append(":")
-                     .append(URLEncoder.encode(service.getPassword(), "UTF-8")).append("@");
-            } catch (UnsupportedEncodingException e) {
-               throw new RuntimeException("Could not encode the supplied username and password", e);
-            }
-         }
-         s.append(node.getHostName()).append(":").append(node.getPort()).append("/");
-         s.append(service.getContextPath());
-         log.info("buildApplicationUrl = " + s.toString());
-         return s.toString();
       }
    }
 }

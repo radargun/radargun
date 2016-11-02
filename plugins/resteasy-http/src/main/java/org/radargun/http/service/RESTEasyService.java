@@ -2,8 +2,6 @@ package org.radargun.http.service;
 
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import org.jboss.resteasy.client.jaxrs.BasicAuthentication;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
@@ -28,9 +26,6 @@ public class RESTEasyService implements Lifecycle {
 
    private static final Log log = LogFactory.getLog(RESTEasyService.class);
    private ResteasyClient httpClient = null;
-
-   @Property(doc = "The default context path on the server for the REST service. Defaults to empty string.")
-   private String contextPath = "";
 
    @Property(doc = "The username to use on an authenticated server. Defaults to null.")
    private String username;
@@ -64,8 +59,6 @@ public class RESTEasyService implements Lifecycle {
    @Property(doc = "The number of connections to pool per url. Default is equal to <code>maxConnections</code>.")
    protected int maxConnectionsPerHost = 0;
 
-   private Random random;
-
    @ProvidesTrait
    public RESTEasyOperations createOperations() {
       return new RESTEasyOperations(this);
@@ -79,7 +72,6 @@ public class RESTEasyService implements Lifecycle {
    @Override
    public synchronized void start() {
       checkValidLoadBalancingSettings();
-      random = ThreadLocalRandom.current();
       if (httpClient != null) {
          log.warn("Service already started");
          return;
@@ -109,10 +101,6 @@ public class RESTEasyService implements Lifecycle {
       return contentType;
    }
 
-   public String getContextPath() {
-      return contextPath;
-   }
-
    public ResteasyClient getHttpClient() {
       return httpClient;
    }
@@ -121,7 +109,16 @@ public class RESTEasyService implements Lifecycle {
       return username;
    }
 
+   public List<InetSocketAddress> getServers() {
+      return servers;
+   }
+
+   public Fuzzy<Integer> getServersLoadBalance() {
+      return serversLoadBalance;
+   }
+
    public String getPassword() {
+
       return password;
    }
 
@@ -139,12 +136,4 @@ public class RESTEasyService implements Lifecycle {
    public synchronized boolean isRunning() {
       return httpClient != null;
    }
-
-   /**
-    * @return InetSocketAddress of the next server to use.
-    */
-   public InetSocketAddress pickServer() {
-      return servers.get(serversLoadBalance.next(random));
-   }
-
 }

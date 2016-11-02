@@ -13,7 +13,6 @@ import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,8 +43,6 @@ import org.radargun.utils.Utils;
 @Service(doc = InfinispanServerService.SERVICE_DESCRIPTION)
 public class InfinispanServerService extends JavaProcessService {
    protected static final String SERVICE_DESCRIPTION = "Service running Infinispan Server";
-   protected static final String JAVA_HOME = "JAVA_HOME";
-   protected static final String JAVA_OPTS = "JAVA_OPTS";
    protected static final String JBOSS_HOME = "JBOSS_HOME";
 
    protected final Log log = LogFactory.getLog(getClass());
@@ -55,12 +52,6 @@ public class InfinispanServerService extends JavaProcessService {
 
    @Property(doc = "Server zip. If set, the zip will be extracted to the 'home' directory.")
    private String serverZip;
-
-   @Property(doc = "Java binary used to start the server. Default is system-default.")
-   private String java;
-
-   @Property(doc = "Extra Java options used. Default is none.")
-   private String javaOpts;
 
    @Property(doc = "Directory for storing logs")
    private String logDir;
@@ -231,19 +222,7 @@ public class InfinispanServerService extends JavaProcessService {
 
    @Override
    public Map<String, String> getEnvironment() {
-      Map<String, String> envs = new HashMap(super.getEnvironment());
-      if (java != null) {
-         if (envs.containsKey(JAVA_HOME)) {
-            log.warn("Overwriting " + JAVA_HOME + ": " + envs.get(JAVA_HOME) + " with " + java);
-         }
-         envs.put(JAVA_HOME, java);
-      }
-      if (javaOpts != null) {
-         if (envs.containsKey(JAVA_OPTS)) {
-            log.warn("Overwriting " + JAVA_OPTS + ": " + envs.get(JAVA_OPTS) + " with " + javaOpts);
-         }
-         envs.put(JAVA_OPTS, javaOpts);
-      }
+      Map<String, String> envs = super.getEnvironment();
       envs.put(JBOSS_HOME, home);
       return envs;
    }

@@ -2,6 +2,7 @@ package org.radargun;
 
 import java.util.List;
 import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MultivaluedMap;
 import org.radargun.stages.test.Invocation;
 import org.radargun.traits.RESTOperations;
 
@@ -17,15 +18,17 @@ public class RESTOperationInvocations {
       private final RESTOperations.RESTOperationInvoker httpInvoker;
       private WrappedHttpResponse returnValue;
       private List<Cookie> cookies;
+      private MultivaluedMap<String, Object> headers;
 
-      public Get(RESTOperations.RESTOperationInvoker httpInvoker, List<Cookie> cookies) {
+      public Get(RESTOperations.RESTOperationInvoker httpInvoker, List<Cookie> cookies, MultivaluedMap<String, Object> headers) {
          this.httpInvoker = httpInvoker;
          this.cookies = cookies;
+         this.headers = headers;
       }
 
       @Override
       public WrappedHttpResponse invoke() {
-         return returnValue = httpInvoker.get(cookies);
+         return returnValue = httpInvoker.get(cookies, headers);
       }
 
       @Override

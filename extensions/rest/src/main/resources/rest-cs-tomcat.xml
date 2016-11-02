@@ -26,8 +26,6 @@
                  <servers>127.0.0.1:8080</servers>
                  <!-- All clients will choose server 0 to communicate with -->
                  <servers-load-balance>100%: 0</servers-load-balance>
-                 <!-- The context path of Web application under test -->
-                 <context-path>/clusterbench/session</context-path>
              </rest-client-stateful>
          </setup>
       </config>
@@ -47,7 +45,8 @@
                               test-name="clusterbench"
                               duration="10s"
                               num-threads-per-node="1"
-                              delay-between-requests="200">
+                              delay-between-requests="200"
+                              context-path="/clusterbench/session">
       </l:rest-operations-test>
       
       <jvm-monitor-stop /> 

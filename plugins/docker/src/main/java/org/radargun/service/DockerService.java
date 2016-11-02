@@ -4,7 +4,9 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.DockerCmdExecFactory;
@@ -23,12 +25,15 @@ import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.github.dockerjava.netty.NettyDockerCmdExecFactory;
 import org.radargun.Service;
 import org.radargun.config.Converter;
+import org.radargun.config.Destroy;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.ProvidesTrait;
+import org.radargun.utils.EnvsConverter;
+import org.radargun.utils.Utils;
 
 /**
  * A service that pulls a Docker image from a remote Docker registry and starts a container based
@@ -47,11 +52,12 @@ public class DockerService implements Lifecycle {
    protected static final String SERVICE_DESCRIPTION = "Docker Service";
    protected static final String DOCKER_HOST_NETWORK_MODE = "host";
 
+   private DockerCmdExecFactory dockerCmdExecFactory;
    private DockerClient dockerClient;
    private String dockerContainerId;
    private boolean started = false;
 
-   @Property(doc = "Uri of docker server.")
+   @Property(doc = "Uri of docker server. Default is unix:///var/run/docker.sock")
    protected String serverUri = "unix:///var/run/docker.sock";
 
    @Property(doc = "Location of docker registry. Default is the official Docker registry.")
@@ -66,11 +72,11 @@ public class DockerService implements Lifecycle {
    @Property(doc = "Image that will be downloaded from Docker registry and used to start a container", optional = false)
    protected String image;
 
-   @Property(doc = "Name of the started Docker container.")
+   @Property(doc = "Name of the started Docker container. Empty by default.", optional = false)
    protected String containerName;
 
    @Property(doc = "Environment variables that will be passed to Docker container during startup. This is equivalent to starting Docker container with -e parameters. Empty by default.", converter = EnvsConverter.class)
-   protected List<String> env = Collections.emptyList();
+   protected Map<String, String> env = Collections.emptyMap();
 
    @Property(doc = "The list of ports exposed by the container. This list should mimic ports exposed from a Docker image through EXPOSE. Empty by default.", converter = PortsConverter.class)
    protected List<ExposedPort> exposedPorts = Collections.emptyList();
@@ -82,14 +88,14 @@ public class DockerService implements Lifecycle {
 
    @Init
    public void init() {
-      dockerClient = configureDockerClient();
+      configureDockerClient();
 
       CreateContainerCmd createCmd = dockerClient.createContainerCmd(image)
          .withName(containerName)
          .withNetworkMode(DOCKER_HOST_NETWORK_MODE)
          .withExposedPorts(exposedPorts)
          .withPublishAllPorts(true)
-         .withEnv(env);
+         .withEnv(env.entrySet().stream().map(e -> new String(e.getKey() + "=" + e.getValue())).collect(Collectors.toList()));
 
       try {
          dockerContainerId = createCmd.exec().getId();
@@ -105,8 +111,8 @@ public class DockerService implements Lifecycle {
       log.infof("Created container %s with id %s", containerName, dockerContainerId);
    }
 
-   private DockerClient configureDockerClient() {
-      DockerCmdExecFactory dockerCmdExecFactory = new NettyDockerCmdExecFactory();
+   private void configureDockerClient() {
+      dockerCmdExecFactory = new NettyDockerCmdExecFactory();
 
       DefaultDockerClientConfig.Builder configBuilder = DefaultDockerClientConfig
          .createDefaultConfigBuilder();
@@ -118,7 +124,7 @@ public class DockerService implements Lifecycle {
          .withRegistryPassword(password)
          .build();
 
-      return DockerClientBuilder.getInstance(dockerClientConfig)
+      dockerClient = DockerClientBuilder.getInstance(dockerClientConfig)
          .withDockerCmdExecFactory(dockerCmdExecFactory)
          .build();
    }
@@ -162,22 +168,17 @@ public class DockerService implements Lifecycle {
       try {
          loggingCallback.awaitCompletion(3, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
-         e.printStackTrace();
+         log.error(e.getMessage());
+         Thread.currentThread().interrupt();
       }
-      log.infof("Container log:\n%s", loggingCallback.toString());
    }
 
    private static class LogCallback extends LogContainerResultCallback {
-      protected final StringBuilder log = new StringBuilder();
+      protected final Log log = LogFactory.getLog(getClass());
 
       @Override
       public void onNext(Frame frame) {
-         log.append(new String(frame.getPayload()));
-      }
-
-      @Override
-      public String toString() {
-         return log.toString();
+         log.info(frame.toString());
       }
    }
 
@@ -188,37 +189,19 @@ public class DockerService implements Lifecycle {
       log.infof("Stopped container with id %s", dockerContainerId);
    }
 
+   @Destroy
+   public void destroy() {
+      Utils.close(dockerCmdExecFactory, dockerClient);
+   }
+
    @Override
    public boolean isRunning() {
       return started;
    }
 
-   private static class EnvsConverter implements Converter<List<String>> {
-      @Override
-      public List<String> convert(String string, Type type) {
-         List<String> env = new ArrayList<>();
-         String[] lines = string.split("\n");
-         for (String line : lines) {
-            env.add(line.trim());
-         }
-         return env;
-      }
-
-      @Override
-      public String convertToString(List<String> envs) {
-         StringBuilder sb = new StringBuilder();
-         for (String envVar : envs) {
-            sb.append(envVar).append('\n');
-         }
-         return sb.toString();
-      }
-
-      @Override
-      public String allowedPattern(Type type) {
-         return Converter.ANY_MULTI_LINE;
-      }
-   }
-
+   /**
+    * Converts a series of "port/(udp|tcp)" definitions to a list of ExposedPort
+    */
    private static class PortsConverter implements Converter<List<ExposedPort>> {
       @Override
       public List<ExposedPort> convert(String string, Type type) {
@@ -226,7 +209,7 @@ public class DockerService implements Lifecycle {
          String[] portSlashProtocolList = string.trim().split("\n");
          for (String portSlashProtocol : portSlashProtocolList) {
             if (portSlashProtocol.split("/").length != 2)
-               throw new IllegalArgumentException("The exposed port must be specified in this format: port/[udp|tcp]");
+               throw new IllegalArgumentException("The exposed port must be specified in this format: port/(udp|tcp)");
             int port = Integer.parseInt(portSlashProtocol.trim().split("/")[0]);
             InternetProtocol protocol = InternetProtocol.parse(portSlashProtocol.trim().split("/")[1]);
             ports.add(new ExposedPort(port, protocol));
@@ -245,7 +228,7 @@ public class DockerService implements Lifecycle {
 
       @Override
       public String allowedPattern(Type type) {
-         return Converter.ANY_MULTI_LINE;
+         return "\\s*([0-9]+/(tcp|udp)\\s*)+"; //matches one or more occurrences of "port/(tcp|udp)"
       }
    }
 }
