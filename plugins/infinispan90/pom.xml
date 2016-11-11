@@ -15,7 +15,7 @@
 
    <properties>
       <version.infinispan>${infinispan.snapshot.version}</version.infinispan>
-      <version.jbossts>4.16.3.Final</version.jbossts>
+      <version.narayanajta>5.0.4.Final</version.narayanajta>
    </properties>
 
    <dependencies>
@@ -56,9 +56,9 @@
       </dependency>
 
        <dependency>
-         <groupId>org.jboss.jbossts</groupId>
-         <artifactId>jbossjta</artifactId>
-         <version>${version.jbossts}</version>
+         <groupId>org.jboss.narayana.jta</groupId>
+         <artifactId>narayana-jta</artifactId>
+         <version>${version.narayanajta}</version>
          <optional>true</optional>
          <exclusions>
             <exclusion>
