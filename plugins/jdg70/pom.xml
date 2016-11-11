@@ -16,7 +16,7 @@
    <properties>
       <version.infinispan>${jdg70.infinispan.version}</version.infinispan>
       <version.infinispan.public>8.2.1.Final</version.infinispan.public>
-      <version.jbossts>4.17.29.Final-redhat-1</version.jbossts>
+      <version.narayanajta>5.2.16.Final-redhat-1</version.narayanajta>
       <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
    </properties>
 
@@ -87,9 +87,9 @@
        </dependency>
 
        <dependency>
-           <groupId>org.jboss.jbossts.jta</groupId>
+           <groupId>org.jboss.narayana.jta</groupId>
            <artifactId>narayana-jta</artifactId>
-           <version>${version.jbossts}</version>
+           <version>${version.narayanajta}</version>
            <optional>true</optional>
            <exclusions>
                <exclusion>
