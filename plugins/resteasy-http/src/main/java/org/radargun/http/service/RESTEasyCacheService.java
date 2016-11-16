@@ -1,6 +1,11 @@
 package org.radargun.http.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,6 +67,11 @@ public class RESTEasyCacheService implements Lifecycle {
 
    // Used to load balance requests across servers
    protected AtomicInteger nextIndex = new AtomicInteger(0);
+
+   @ProvidesTrait
+   public RESTEasyCacheInfo createCacheInfo() {
+      return new RESTEasyCacheInfo(this);
+   }
 
    @ProvidesTrait
    public RESTEasyCacheOperations createOperations() {
@@ -136,4 +146,48 @@ public class RESTEasyCacheService implements Lifecycle {
       return servers.get((nextIndex.getAndIncrement() & Integer.MAX_VALUE) % servers.size());
    }
 
+   String buildUrl(Object key) {
+      StringBuilder str = new StringBuilder(buildCacheUrl(cacheName));
+      if (key != null) {
+         str.append("/").append(key);
+      }
+      log.trace("buildUrl(Object key) = " + str);
+
+      return str.toString();
+   }
+
+   String buildCacheUrl(String cache) {
+      InetSocketAddress node = nextServer();
+      StringBuilder s = new StringBuilder("http://");
+      if (getUsername() != null) {
+         try {
+            s.append(URLEncoder.encode(getUsername(), "UTF-8")).append(":")
+               .append(URLEncoder.encode(getPassword(), "UTF-8")).append("@");
+         } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Could not encode the supplied username and password", e);
+         }
+      }
+      s.append(node.getHostName()).append(":").append(node.getPort()).append("/");
+      if (getRootPath() != null) {
+         s.append(getRootPath()).append("/");
+      }
+      s.append(cache);
+      log.trace("buildCacheUrl(String cache) = " + s.toString());
+      return s.toString();
+   }
+
+   Object decodeByteArray(byte[] bytes) throws IOException, ClassNotFoundException {
+      if (bytes != null) {
+         ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
+         ObjectInputStream ois = new ObjectInputStream(bin);
+         try {
+            return ois.readObject();
+         } finally {
+            if (bin != null) {
+               bin.close();
+            }
+         }
+      }
+      return null;
+   }
 }

@@ -1,13 +1,8 @@
 package org.radargun.http.service;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.InetSocketAddress;
-import java.net.URLEncoder;
 
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.client.Entity;
@@ -58,7 +53,7 @@ public class RESTEasyCacheOperations implements BasicOperations {
          V value = null;
          EntityTag eTag = null;
          if (service.isRunning()) {
-            String target = buildUrl(service.cacheName, key);
+            String target = service.buildUrl(key);
             Response response = null;
             try {
                Invocation get = service.getHttpClient().target(target).request().accept(service.getContentType())
@@ -69,7 +64,7 @@ public class RESTEasyCacheOperations implements BasicOperations {
                         + service.cacheName);
                } else {
                   eTag = response.getEntityTag();
-                  value = decodeByteArray(response.readEntity(byte[].class));
+                  value = (V) service.decodeByteArray(response.readEntity(byte[].class));
                }
             } catch (Exception e) {
                throw new RuntimeException("RESTEasyCacheOperations::get request threw exception: " + target, e);
@@ -96,7 +91,7 @@ public class RESTEasyCacheOperations implements BasicOperations {
       @Override
       public boolean containsKey(K key) {
          if (service.isRunning()) {
-            String target = buildUrl(service.cacheName, key);
+            String target = service.buildUrl(key);
             Response response = null;
             response = service.getHttpClient().target(target).request().build(HttpMethod.HEAD).invoke();
             if (response.getStatus() == Status.OK.getStatusCode()) {
@@ -120,7 +115,7 @@ public class RESTEasyCacheOperations implements BasicOperations {
          if (service.isRunning()) {
             Response response = null;
             try {
-               String target = buildUrl(service.cacheName, key);
+               String target = service.buildUrl(key);
                Builder putBuilder = service.getHttpClient().target(target).request().accept(service.getContentType());
                if (eTag != null) {
                   // If the eTag doesn't match the current value for the key, then the put will fail
@@ -166,11 +161,11 @@ public class RESTEasyCacheOperations implements BasicOperations {
 
       @Override
       public boolean remove(K key) {
-         return doDelete(buildUrl(service.cacheName, key), null);
+         return doDelete(service.buildUrl(key), null);
       }
 
       public boolean remove(K key, EntityTag eTag) {
-         return doDelete(buildUrl(service.cacheName, key), eTag);
+         return doDelete(service.buildUrl(key), eTag);
       }
 
       @Override
@@ -194,7 +189,7 @@ public class RESTEasyCacheOperations implements BasicOperations {
 
       @Override
       public void clear() {
-         doDelete(buildCacheUrl(service.cacheName), null);
+         doDelete(service.buildCacheUrl(service.cacheName), null);
       }
 
       private boolean doDelete(String target, EntityTag eTag) {
@@ -218,48 +213,6 @@ public class RESTEasyCacheOperations implements BasicOperations {
                   + reason + " for request " + target);
          }
          return false;
-      }
-
-      private String buildUrl(String cache, K key) {
-         String s = new StringBuilder(buildCacheUrl(cache)).append("/").append(key).toString();
-         log.trace("buildUrl(String cache, K key) = " + s);
-         return s;
-      }
-
-      private String buildCacheUrl(String cache) {
-         InetSocketAddress node = service.nextServer();
-         StringBuilder s = new StringBuilder("http://");
-         if (service.getUsername() != null) {
-            try {
-               s.append(URLEncoder.encode(service.getUsername(), "UTF-8")).append(":")
-                     .append(URLEncoder.encode(service.getPassword(), "UTF-8")).append("@");
-            } catch (UnsupportedEncodingException e) {
-               throw new RuntimeException("Could not encode the supplied username and password", e);
-            }
-         }
-         s.append(node.getHostName()).append(":").append(node.getPort()).append("/");
-         if (service.getRootPath() != null) {
-            s.append(service.getRootPath()).append("/");
-         }
-         s.append(cache);
-         log.trace("buildCacheUrl(String cache) = " + s.toString());
-         return s.toString();
-      }
-
-      @SuppressWarnings("unchecked")
-      private V decodeByteArray(byte[] bytes) throws IOException, ClassNotFoundException {
-         if (bytes != null) {
-            ByteArrayInputStream bin = new ByteArrayInputStream(bytes);
-            ObjectInputStream ois = new ObjectInputStream(bin);
-            try {
-               return (V) ois.readObject();
-            } finally {
-               if (bin != null) {
-                  bin.close();
-               }
-            }
-         }
-         return null;
       }
 
       private byte[] encodeObject(Object object) throws IOException {
