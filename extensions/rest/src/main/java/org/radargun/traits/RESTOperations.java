@@ -3,8 +3,8 @@ package org.radargun.traits;
 import java.util.List;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import org.radargun.Operation;
-import org.radargun.WrappedHttpResponse;
 
 /**
  * @author Martin Gencur
@@ -18,6 +18,6 @@ public interface RESTOperations {
    RESTOperationInvoker getRESTInvoker(String contextPath);
 
    interface RESTOperationInvoker {
-      WrappedHttpResponse get(List<Cookie> cookies, MultivaluedMap<String, Object> headers);
+      Response get(List<Cookie> cookies, MultivaluedMap<String, Object> headers);
    }
 }

@@ -4,9 +4,9 @@ import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
 import org.radargun.Operation;
 import org.radargun.RESTOperationInvocations;
-import org.radargun.WrappedHttpResponse;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
@@ -77,7 +77,7 @@ public class RESTOperationsTestStage extends LegacyTestStage {
 
       @Override
       public void run(Operation operation) throws RequestException {
-         WrappedHttpResponse<String> response;
+         Response response;
          Invocation invocation;
          if (operation == RESTOperations.GET) {
             List<Cookie> cookies = jsessionid == null ? Collections.EMPTY_LIST : Collections.singletonList(jsessionid);
@@ -85,17 +85,17 @@ public class RESTOperationsTestStage extends LegacyTestStage {
          } else {
             throw new IllegalArgumentException(operation.name);
          }
-         response = stressor.<WrappedHttpResponse>makeRequest(invocation);
+         response = stressor.<Response>makeRequest(invocation);
          validateSession(response);
          isFirstRequest = false;
       }
 
-      private void validateSession(WrappedHttpResponse<String> response) {
+      private void validateSession(Response response) throws RequestException {
          NewCookie newSessionId = response.getCookies().get(JSESSIONID);
          if (newSessionId != null) {
             jsessionid = newSessionId.toCookie();
             if (!isFirstRequest) {
-               log.error("Session lost!");
+               throw new IllegalStateException("Session lost!");
             }
             log.info("New session: " + jsessionid);
          }

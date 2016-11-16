@@ -1,5 +1,6 @@
 package org.radargun.http.service;
 
+import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -9,6 +10,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder.HostnameVerificationPolicy;
 import org.jboss.resteasy.client.jaxrs.engines.URLConnectionEngine;
 import org.radargun.Service;
+import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -36,7 +38,7 @@ public class RESTEasyService implements Lifecycle {
    @Property(doc = "The content type used for put and get operations. Defaults to application/octet-stream.")
    private String contentType = "application/octet-stream";
 
-   @Property(doc = "Semicolon-separated list of server addresses.", converter = RESTAddressListConverter.class)
+   @Property(doc = "Semicolon-separated list of server addresses.", converter = RESTAddressListConverter.class, optional = false)
    protected List<InetSocketAddress> servers;
 
    @Property(doc = "Ratio between the number of connections to individual servers. " +
@@ -44,8 +46,8 @@ public class RESTEasyService implements Lifecycle {
                    "is first created it will choose a server to communicate with according " +
                    "to this load balancing setting. The client will keep communicating with " +
                    "this single server until redirected.", converter = Fuzzy.IntegerConverter.class)
-   //By default clients only connect to server 0. Example for two servers with equal load: "50%:0,50%:1"
-   protected Fuzzy<Integer> serversLoadBalance = Fuzzy.uniform(0);
+   //By default clients are evenly spread across all servers. See {@link #init()}.
+   protected Fuzzy<Integer> serversLoadBalance;
 
    @Property(doc = "Timeout for socket. Default is 30 seconds.", converter = TimeConverter.class)
    protected long socketTimeout = 30000;
@@ -69,9 +71,25 @@ public class RESTEasyService implements Lifecycle {
       return this;
    }
 
+   @Init
+   public void init() {
+      if (serversLoadBalance == null) {
+         Fuzzy.Builder<Integer> builder = new Fuzzy.Builder<>();
+         for (int i=0; i!=servers.size(); i++) {
+            builder.addWeighted(i, BigDecimal.ONE);
+         }
+         serversLoadBalance = builder.create();
+      } else {
+         for (Integer serverIndex: serversLoadBalance.getProbabilityMap().keySet()) {
+            if (serverIndex >= servers.size())
+               throw new IllegalStateException("Load balancing settings for the REST client include server index " +
+                  "which is not in the server list: " + serverIndex);
+         }
+      }
+   }
+
    @Override
    public synchronized void start() {
-      checkValidLoadBalancingSettings();
       if (httpClient != null) {
          log.warn("Service already started");
          return;
@@ -87,14 +105,6 @@ public class RESTEasyService implements Lifecycle {
          httpClient.register(auth);
       }
 
-   }
-
-   private void checkValidLoadBalancingSettings() {
-      for (Integer serverIndex: serversLoadBalance.getProbabilityMap().keySet()) {
-         if (serverIndex >= servers.size())
-            throw new IllegalStateException("Load balancing settings for the REST client include server index " +
-               "which is not in the server list: " + serverIndex);
-      }
    }
 
    public String getContentType() {

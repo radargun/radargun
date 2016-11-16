@@ -26,7 +26,6 @@ import com.github.dockerjava.netty.NettyDockerCmdExecFactory;
 import org.radargun.Service;
 import org.radargun.config.Converter;
 import org.radargun.config.Destroy;
-import org.radargun.config.Init;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -86,8 +85,8 @@ public class DockerService implements Lifecycle {
       return this;
    }
 
-   @Init
-   public void init() {
+   @Override
+   public void start() {
       configureDockerClient();
 
       CreateContainerCmd createCmd = dockerClient.createContainerCmd(image)
@@ -109,6 +108,11 @@ public class DockerService implements Lifecycle {
          dockerContainerId = createCmd.exec().getId();
       }
       log.infof("Created container %s with id %s", containerName, dockerContainerId);
+
+      dockerClient.startContainerCmd(dockerContainerId).exec();
+      started = true;
+      log.infof("Started container with id %s", dockerContainerId);
+      printContainerLog(dockerContainerId);
    }
 
    private void configureDockerClient() {
@@ -147,14 +151,6 @@ public class DockerService implements Lifecycle {
       pullImageCmd.exec(new PullImageResultCallback()).awaitSuccess();
    }
 
-   @Override
-   public void start() {
-      dockerClient.startContainerCmd(dockerContainerId).exec();
-      started = true;
-      log.infof("Started container with id %s", dockerContainerId);
-      printContainerLog(dockerContainerId);
-   }
-
    private void printContainerLog(String containerId) {
       LogCallback loggingCallback = new LogCallback();
 
@@ -173,9 +169,7 @@ public class DockerService implements Lifecycle {
       }
    }
 
-   private static class LogCallback extends LogContainerResultCallback {
-      protected final Log log = LogFactory.getLog(getClass());
-
+   private class LogCallback extends LogContainerResultCallback {
       @Override
       public void onNext(Frame frame) {
          log.info(frame.toString());
