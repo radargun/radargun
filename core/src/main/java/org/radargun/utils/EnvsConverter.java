@@ -38,6 +38,6 @@ public class EnvsConverter implements Converter<Map<String, String>> {
 
    @Override
    public String allowedPattern(Type type) {
-      return Converter.ANY_MULTI_LINE;
+      return "([A-Z_]+[A-Z0-9_]*=.*(\n|\r)*)+";
    }
 }
