@@ -50,6 +50,9 @@ public class ConcurrentKeysSelector implements KeySelector {
          if (numEntriesPerThread > 0) {
             return new ConcurrentKeysSelector(random, numEntriesPerThread * globalThreadId, numEntriesPerThread);
          } else if (totalEntries > 0) {
+            if (totalEntries < totalThreads) {
+               throw new IllegalStateException("Number of total threads cannot be greater than number of total entries.");
+            }
             long offset = totalEntries * globalThreadId / totalThreads;
             long end = totalEntries * (globalThreadId + 1) / totalThreads;
             return new ConcurrentKeysSelector(random, offset, end - offset);
