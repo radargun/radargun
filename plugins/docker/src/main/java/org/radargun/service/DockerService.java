@@ -12,11 +12,13 @@ import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.DockerCmdExecFactory;
 import com.github.dockerjava.api.command.PullImageCmd;
 import com.github.dockerjava.api.exception.ConflictException;
+import com.github.dockerjava.api.exception.DockerClientException;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.exception.NotModifiedException;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.Frame;
 import com.github.dockerjava.api.model.InternetProtocol;
+import com.github.dockerjava.api.model.PullResponseItem;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
@@ -60,7 +62,7 @@ public class DockerService implements Lifecycle {
    protected String serverUri = "unix:///var/run/docker.sock";
 
    @Property(doc = "Location of docker registry. Default is the official Docker registry.")
-   protected String dockerRegistry = "https://registry.hub.docker.com";
+   protected String dockerRegistry = "registry.hub.docker.com";
 
    @Property(doc = "Username to be used to connect to Docker registry. Default is an empty value which can be used ONLY when the image is already available in the local Docker registry.")
    protected String username;
@@ -89,7 +91,8 @@ public class DockerService implements Lifecycle {
    public void start() {
       configureDockerClient();
 
-      CreateContainerCmd createCmd = dockerClient.createContainerCmd(image)
+      String imageName = dockerRegistry + "/" + image;
+      CreateContainerCmd createCmd = dockerClient.createContainerCmd(imageName)
          .withName(containerName)
          .withNetworkMode(DOCKER_HOST_NETWORK_MODE)
          .withExposedPorts(exposedPorts)
@@ -99,8 +102,8 @@ public class DockerService implements Lifecycle {
       try {
          dockerContainerId = createCmd.exec().getId();
       } catch (NotFoundException e) {
-         log.warnf("Docker Image %s is not on localhost and it is going to be automatically pulled.", image);
-         pullImage(image);
+         log.warnf("Docker Image %s is not on localhost and it is going to be automatically pulled.", imageName);
+         pullImage(imageName);
          dockerContainerId = createCmd.exec().getId();
       } catch (ConflictException e) {
          log.warnf("Container name %s is already in use. Container is going to be removed.", containerName);
@@ -145,10 +148,25 @@ public class DockerService implements Lifecycle {
 
    private void pullImage(String imageName) {
       PullImageCmd pullImageCmd = this.dockerClient.pullImageCmd(imageName);
-      if (dockerRegistry != null) {
-         pullImageCmd.withRegistry(dockerRegistry);
-      }
-      pullImageCmd.exec(new PullImageResultCallback()).awaitSuccess();
+      pullImageCmd.exec(new PullImageResultCallback(){
+         boolean success = false;
+
+         public void onNext(PullResponseItem item) {
+            success = success | item.isPullSuccessIndicated();
+            log.trace(item.toString());
+         }
+         public void awaitSuccess() {
+            try {
+               this.awaitCompletion();
+            } catch (InterruptedException ie) {
+               log.error(ie.getMessage());
+               Thread.currentThread().interrupt();
+            }
+            if(!success) {
+               throw new DockerClientException("Could not pull image");
+            }
+         }
+      }).awaitSuccess();
    }
 
    private void printContainerLog(String containerId) {

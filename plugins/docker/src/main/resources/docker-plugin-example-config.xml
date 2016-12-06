@@ -16,7 +16,7 @@
          <setup group="mod_cluster" plugin="${productName:docker}">
             <docker xmlns="urn:radargun:plugins:docker:3.0" 
                             server-uri="${server.uri:unix:///var/run/docker.sock}" 
-                            docker-registry="${docker.registry:https://registry.hub.docker.com}" 
+                            docker-registry="${docker.registry:registry.hub.docker.com}"
                             username="${docker.username}"
                             password="${docker.password}"
                             image="${image.name:karm/mod_cluster-master-dockerhub}" 
