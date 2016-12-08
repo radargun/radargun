@@ -13,7 +13,7 @@
    <name>Hazelcast 3.7.x plugin for RadarGun</name>
 
    <properties>
-      <version.hazelcast>3.7.2</version.hazelcast>
+      <version.hazelcast>3.7.3</version.hazelcast>
    </properties>
 
    <dependencies>
