@@ -1,7 +1,10 @@
 package org.radargun.service;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -136,20 +139,15 @@ public class HazelcastService implements Lifecycle, Clustered {
    }
 
    private InputStream getAsInputStreamFromClassLoader(String filename) {
+      InputStream is = null;
       ClassLoader cl = getClass().getClassLoader();
-      InputStream is;
-      try {
-         is = cl == null ? null : cl.getResourceAsStream(filename);
-      } catch (RuntimeException re) {
-         // could be valid; see ISPN-827
-         is = null;
+      if (cl != null) {
+         is = cl.getResourceAsStream(filename);
       }
       if (is == null) {
          try {
-            // check system class loader
-            is = getClass().getClassLoader().getResourceAsStream(filename);
-         } catch (RuntimeException re) {
-            // could be valid; see ISPN-827
+            return new FileInputStream(FileSystems.getDefault().getPath(filename).toFile());
+         } catch (FileNotFoundException e) {
             is = null;
          }
       }
