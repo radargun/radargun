@@ -124,6 +124,17 @@
          <optional>true</optional>
       </dependency>
 
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-marshaller-kryo</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-marshaller-protostuff</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+
    </dependencies>
 
    <profiles>
