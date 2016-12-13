@@ -61,6 +61,10 @@ public abstract class BaseTestStage extends AbstractDistStage {
    }
 
    protected Report.Test getTest(boolean allowExisting) {
+      return getTest(allowExisting, testName);
+   }
+
+   protected Report.Test getTest(boolean allowExisting, String testName) {
       if (testName == null || testName.isEmpty()) {
          log.warn("No test name - results are not recorded");
          return null;
