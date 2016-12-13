@@ -70,13 +70,18 @@ public abstract class LegacyTestStage extends BaseTestStage {
    @InjectTrait
    protected Transactional transactional;
 
-   private CountDownLatch finishCountDown;
    private Completion completion;
    private OperationSelector operationSelector;
 
    protected volatile boolean started = false;
    protected volatile boolean finished = false;
    protected volatile boolean terminated = false;
+
+   protected StressorsManager stressorsManager;
+
+   public StressorsManager getStressorsManager() {
+      return stressorsManager;
+   }
 
    @Init
    public void init() {
@@ -96,10 +101,11 @@ public abstract class LegacyTestStage extends BaseTestStage {
       try {
          long startNanos = TimeService.nanoTime();
          log.info("Starting test " + testName);
-         List<LegacyStressor> stressors = execute();
+         stressorsManager = setUpAndStartStressors();
+         waitForStressorsToFinish(stressorsManager);
          destroy();
          log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(TimeService.nanoTime() - startNanos));
-         return newStatisticsAck(stressors);
+         return newStatisticsAck(stressorsManager.getStressors());
       } catch (Exception e) {
          return errorResponse("Exception while initializing the test", e);
       }
@@ -118,10 +124,14 @@ public abstract class LegacyTestStage extends BaseTestStage {
    }
 
    public StageResult processAckOnMaster(List<DistStageAck> acks) {
+      return processAckOnMaster(acks, testName);
+   }
+
+   protected StageResult processAckOnMaster(List<DistStageAck> acks, String testNameOverride) {
       StageResult result = super.processAckOnMaster(acks);
       if (result.isError()) return result;
 
-      Report.Test test = getTest(amendTest);
+      Report.Test test = getTest(amendTest, testNameOverride);
       testIteration = test == null ? 0 : test.getIterations().size();
       // we cannot use aggregated = createStatistics() since with PeriodicStatistics the merge would fail
       List<StatisticsAck> statisticsAcks = instancesOf(acks, StatisticsAck.class);
@@ -147,10 +157,10 @@ public abstract class LegacyTestStage extends BaseTestStage {
       }
    }
 
-   public List<LegacyStressor> execute() {
+   protected StressorsManager setUpAndStartStressors() {
       long startTime = TimeService.currentTimeMillis();
       completion = createCompletion();
-      finishCountDown = new CountDownLatch(1);
+      CountDownLatch finishCountDown = new CountDownLatch(1);
       completion.setCompletionHandler(new Runnable() {
          @Override
          public void run() {
@@ -164,6 +174,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
       operationSelector = wrapOperationSelector(createOperationSelector());
 
       List<LegacyStressor> stressors = startStressors();
+      started = true;
 
       if (rampUp > 0) {
          try {
@@ -172,29 +183,30 @@ public abstract class LegacyTestStage extends BaseTestStage {
             throw new IllegalStateException("Interrupted during ramp-up.", e);
          }
       }
+      return new StressorsManager(stressors, startTime, finishCountDown);
+   }
 
-      started = true;
-
+   protected void waitForStressorsToFinish(StressorsManager manager) {
       try {
          if (timeout > 0) {
-            long waitTime = getWaitTime(startTime);
+            long waitTime = getWaitTime(manager.getStartTime());
             if (waitTime <= 0) {
                throw new TestTimeoutException();
             } else {
-               if (!finishCountDown.await(waitTime, TimeUnit.MILLISECONDS)) {
+               if (!manager.getFinishCountDown().await(waitTime, TimeUnit.MILLISECONDS)) {
                   throw new TestTimeoutException();
                }
             }
          } else {
-            finishCountDown.await();
+            manager.getFinishCountDown().await();
          }
       } catch (InterruptedException e) {
          throw new IllegalStateException("Unexpected interruption", e);
       }
-      for (Thread stressorThread : stressors) {
+      for (Thread stressorThread : manager.getStressors()) {
          try {
             if (timeout > 0) {
-               long waitTime = getWaitTime(startTime);
+               long waitTime = getWaitTime(manager.getStartTime());
                if (waitTime <= 0) throw new TestTimeoutException();
                stressorThread.join(waitTime);
             } else {
@@ -204,7 +216,6 @@ public abstract class LegacyTestStage extends BaseTestStage {
             throw new TestTimeoutException(e);
          }
       }
-      return stressors;
    }
 
    protected Completion createCompletion() {
@@ -270,7 +281,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
       }
    }
 
-   private long getWaitTime(long startTime) {
+   protected long getWaitTime(long startTime) {
       return startTime + timeout - TimeService.currentTimeMillis();
    }
 
@@ -324,7 +335,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
 
    public void setTerminated() {
       terminated = true;
-      finishCountDown.countDown();
+      stressorsManager.getFinishCountDown().countDown();
    }
 
    public Completion getCompletion() {
@@ -365,7 +376,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
       }
    }
 
-   private class TestTimeoutException extends RuntimeException {
+   protected class TestTimeoutException extends RuntimeException {
       public TestTimeoutException() {
       }
 

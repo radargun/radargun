@@ -18,7 +18,7 @@ public class TimeStressorCompletion extends AbstractCompletion {
    private final long logFrequency = TimeUnit.SECONDS.toNanos(20);
 
    /**
-    * @param duration Duration of the test in nanoseconds.
+    * @param duration Duration of the test in nanoseconds. When duration is 0 the test will run indefinitely.
     */
    public TimeStressorCompletion(long duration) {
       this.duration = TimeUnit.MILLISECONDS.toNanos(duration);
@@ -26,7 +26,7 @@ public class TimeStressorCompletion extends AbstractCompletion {
 
    @Override
    public boolean moreToRun() {
-      boolean moreToRun = TimeService.nanoTime() < startTime + duration;
+      boolean moreToRun = duration == 0 ? true : TimeService.nanoTime() < startTime + duration;
       if (!moreToRun) {
          runCompletionHandler();
       }
