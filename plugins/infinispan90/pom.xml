@@ -14,7 +14,7 @@
    <name>Infinispan 9.0.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>${infinispan.snapshot.version}</version.infinispan>
+      <version.infinispan>${infinispan90.infinispan.version}</version.infinispan>
       <version.narayanajta>5.0.4.Final</version.narayanajta>
    </properties>
 
@@ -142,7 +142,7 @@
          <id>infinispan90-infinispan-version-default</id>
          <activation>
             <property>
-               <name>!infinispan.snapshot.version</name>
+               <name>!infinispan90.infinispan.version</name>
             </property>
          </activation>
          <properties>
