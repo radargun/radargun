@@ -94,7 +94,7 @@ public class InfinispanServerService extends JavaProcessService {
          if (serverZip != null) {
             Path homePath = FileSystems.getDefault().getPath(home);
             Utils.deleteDirectory(homePath.toFile());
-            Files.createDirectory(homePath);
+            Files.createDirectories(homePath);
 
             ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(serverZip));
             ZipEntry nextEntry;
