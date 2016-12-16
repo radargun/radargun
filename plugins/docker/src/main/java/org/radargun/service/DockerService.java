@@ -61,8 +61,8 @@ public class DockerService implements Lifecycle {
    @Property(doc = "Uri of docker server. Default is unix:///var/run/docker.sock")
    protected String serverUri = "unix:///var/run/docker.sock";
 
-   @Property(doc = "Location of docker registry. Default is the official Docker registry.")
-   protected String dockerRegistry = "registry.hub.docker.com";
+   @Property(doc = "Location of docker registry. Default is empty which means that the image is expected to exist on localhost. Use registry.hub.docker.com when the image is available in the main Docker repository.")
+   protected String dockerRegistry;
 
    @Property(doc = "Username to be used to connect to Docker registry. Default is an empty value which can be used ONLY when the image is already available in the local Docker registry.")
    protected String username;
@@ -91,7 +91,12 @@ public class DockerService implements Lifecycle {
    public void start() {
       configureDockerClient();
 
-      String imageName = dockerRegistry + "/" + image;
+      String imageName;
+      if (dockerRegistry == null || dockerRegistry.isEmpty()) {
+         imageName = image;
+      } else {
+         imageName = dockerRegistry + "/" + image;
+      }
       CreateContainerCmd createCmd = dockerClient.createContainerCmd(imageName)
          .withName(containerName)
          .withNetworkMode(DOCKER_HOST_NETWORK_MODE)
