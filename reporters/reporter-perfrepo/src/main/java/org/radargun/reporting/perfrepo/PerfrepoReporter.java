@@ -78,7 +78,9 @@ public class PerfrepoReporter implements Reporter {
    @Property(doc = "Create separate test execution for each test iteration. Default is false.")
    private boolean separateTestIterations = false;
 
-   @Property(doc = "Which tests should this reporter report. Default is all executed tests.")
+   @Property(doc = "Which configurations should this reporter report. Default is all configurations. Comma separated.")
+   private List<String> configurations;
+   @Property(doc = "Which tests should this reporter report. Default is all executed tests. Comma separated.")
    private List<String> tests;
    private MasterConfig masterConfig;
 
@@ -104,7 +106,9 @@ public class PerfrepoReporter implements Reporter {
          return;
       }
       for (Report report : reports) {
-         reportTests(report);
+         if (configurations == null || configurations.contains(report.getConfiguration().name)) {
+            reportTests(report);
+         }
       }
    }
 
