@@ -6,6 +6,7 @@ package org.radargun.config;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 interface ConfigSchema {
+   String ATTR_BASE = "base";
    String ATTR_BIND_ADDRESS = "bindAddress";
    String ATTR_FROM = "from";
    String ATTR_GROUP = "group";
@@ -38,6 +39,7 @@ interface ConfigSchema {
    String ELEMENT_SCALE = "scale";
    String ELEMENT_SCENARIO = "scenario";
    String ELEMENT_SETUP = "setup";
+   String ELEMENT_TEMPLATE = "template";
    String ELEMENT_VM_ARGS = "vm-args";
    String ELEMENT_VAR = "var";
    String TYPE_SCENARIO = "scenario";

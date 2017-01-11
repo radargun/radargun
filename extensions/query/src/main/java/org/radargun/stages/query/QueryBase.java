@@ -194,6 +194,10 @@ public class QueryBase {
       return numQueries;
    }
 
+   public Query buildQuery(int queryNumber) {
+      return builders[queryNumber].build();
+   }
+
    public static class Data implements Serializable {
       public final int minResultSize;
       public final int maxResultSize;

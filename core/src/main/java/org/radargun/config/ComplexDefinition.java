@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Definition for more complex arguments:
@@ -46,16 +47,15 @@ public class ComplexDefinition implements Definition {
 
    /**
     * When using {@link PropertyHelper#setPropertiesFromDefinitions(Object, java.util.Map, boolean, boolean)}
-    * we don't allow duplicate entry names - that's why this method throws exception when it encounters
-    * duplicity.
+    * we don't allow duplicate entry names.
+    * Due to the way templates are merged, we just overwrite the value in the map by the last entry.
     * @return
     */
    public Map<String, Definition> getAttributeMap() {
       if (attributes == null) return Collections.EMPTY_MAP;
       Map<String, Definition> map = new HashMap<String, Definition>();
       for (Entry entry : attributes) {
-         if (map.put(entry.name, entry.definition) != null)
-            throw new IllegalArgumentException("Duplicit entry: " + entry.name);
+         map.put(entry.name, entry.definition);
       }
       return map;
    }
@@ -90,6 +90,23 @@ public class ComplexDefinition implements Definition {
 
    public String getNamespace() {
       return namespace;
+   }
+
+   @Override
+   public Definition apply(Definition other) {
+      if (other instanceof ComplexDefinition) {
+         ComplexDefinition cd = (ComplexDefinition) other;
+         if (!Objects.equals(namespace, cd.namespace)) {
+            throw new IllegalArgumentException("Namespace for overwritten definition does not match: " + namespace + " vs. " + cd.namespace);
+         }
+         ComplexDefinition nd = new ComplexDefinition();
+         nd.namespace = this.namespace;
+         nd.attributes = new ArrayList<>(this.attributes);
+         nd.attributes.addAll(cd.attributes);
+         return nd;
+      } else {
+         return other;
+      }
    }
 
    public static class Entry implements Serializable {
