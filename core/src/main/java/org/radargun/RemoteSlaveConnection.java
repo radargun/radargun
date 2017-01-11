@@ -24,6 +24,7 @@ import org.radargun.config.Scenario;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
+import org.radargun.utils.SlaveConnectionInfo;
 import org.radargun.utils.TimeService;
 
 /**
@@ -45,6 +46,7 @@ public class RemoteSlaveConnection {
 
    private ServerSocketChannel serverSocketChannel;
    private SlaveRecord[] slaves;
+   private SlaveAddresses slaveAddresses;
 
    private ByteBuffer mcastBuffer;
    private Map<SocketChannel, ByteBuffer> writeBufferMap = new HashMap<SocketChannel, ByteBuffer>();
@@ -59,14 +61,33 @@ public class RemoteSlaveConnection {
    private int port;
 
    private static class SlaveRecord {
-      private int index; // slave id, should be equal to index in slaves field
       private UUID uuid; // key unique for given series of generations of this slave
       private SocketChannel channel;
 
       public SlaveRecord(int index, UUID uuid, SocketChannel channel) {
-         this.index = index;
          this.uuid = uuid;
          this.channel = channel;
+      }
+   }
+
+   /**
+    * Holds information about interfaces and IP addresses of individual slaves.
+    * This information is collected from individual slaves and re-distributed to the other
+    * slaves in the cluster.
+    */
+   public static class SlaveAddresses implements Serializable {
+      public Map<Integer, SlaveConnectionInfo> slaveConnections;
+
+      public SlaveAddresses() {
+         this.slaveConnections = new HashMap<>();
+      }
+
+      public void addSlaveAddresses(int index, SlaveConnectionInfo connectionInfo) {
+         slaveConnections.put(index, connectionInfo);
+      }
+
+      public SlaveConnectionInfo getSlaveAddresses(int index) {
+         return slaveConnections.get(index);
       }
    }
 
@@ -74,6 +95,7 @@ public class RemoteSlaveConnection {
       this.host = host;
       this.port = port > 0 && port < 65536 ? port : DEFAULT_PORT;
       slaves = new SlaveRecord[numSlaves];
+      slaveAddresses = new SlaveAddresses();
       communicationSelector = Selector.open();
       startServerSocket();
    }
@@ -81,6 +103,7 @@ public class RemoteSlaveConnection {
    public void establish() throws IOException {
       discoverySelector = Selector.open();
       serverSocketChannel.register(discoverySelector, SelectionKey.OP_ACCEPT);
+      mcastBuffer = ByteBuffer.allocate(DEFAULT_WRITE_BUFF_CAPACITY);
       int slaveCount = 0;
       long deadline = TimeService.currentTimeMillis() + CONNECT_TIMEOUT;
       while (slaveCount < slaves.length) {
@@ -91,7 +114,6 @@ public class RemoteSlaveConnection {
          log.info("Awaiting registration from " + (slaves.length - slaveCount) + " slaves.");
          slaveCount += connectSlaves(timeout);
       }
-      mcastBuffer = ByteBuffer.allocate(DEFAULT_WRITE_BUFF_CAPACITY);
       log.info("Connection established from " + slaveCount + " slaves.");
    }
 
@@ -142,6 +164,7 @@ public class RemoteSlaveConnection {
          }
          writeInt(socketChannel, slaveIndex);
          writeInt(socketChannel, slaves.length);
+
          slaveCount++;
          channel2Index.put(socketChannel, slaveIndex);
          readBufferMap.put(socketChannel, ByteBuffer.allocate(DEFAULT_READ_BUFF_CAPACITY));
@@ -207,6 +230,21 @@ public class RemoteSlaveConnection {
       mcastObject(new Timeline.Request(), numSlaves);
       flushBuffers(numSlaves);
       return Arrays.asList(responses.toArray(new Timeline[numSlaves]));
+   }
+
+   public void receiveSlaveAddresses() throws IOException {
+      responses.clear();
+      mcastObject(new SlaveConnectionInfo.Request(), slaves.length);
+      flushBuffers(slaves.length);
+      List<SlaveConnectionInfo> connections = Arrays.asList(responses.toArray(new SlaveConnectionInfo[slaves.length]));
+      for (SlaveConnectionInfo connectionInfo : connections) {
+         slaveAddresses.addSlaveAddresses(connectionInfo.getSlaveIndex(), connectionInfo);
+      }
+   }
+
+   public void sendSlaveAddresses() throws IOException {
+      mcastObject(slaveAddresses, slaves.length);
+      flushBuffers(0);
    }
 
    private void flushBuffers(int numResponses) throws IOException {

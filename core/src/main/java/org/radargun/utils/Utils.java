@@ -7,6 +7,8 @@ import java.lang.management.MemoryUsage;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -200,6 +202,16 @@ public class Utils {
          log.warn("Could not get ID of current process", e);
       }
       return 0;
+   }
+
+   public static SlaveConnectionInfo getSlaveConnectionInfo(int slaveIndex) throws SocketException {
+      Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+      SlaveConnectionInfo connection = new SlaveConnectionInfo();
+      for (NetworkInterface netint : Collections.list(nets)) {
+         connection.addAddresses(slaveIndex, netint.getName(), Collections.list(netint.getInetAddresses()));
+         Collections.list(netint.getInetAddresses()).stream().forEach(x -> System.out.println(x.getHostAddress()));
+      }
+      return connection;
    }
 
    public static class JarFilenameFilter implements FilenameFilter {
@@ -634,4 +646,6 @@ public class Utils {
          return findThrowableCauseByClass(t.getCause(), clazz);
       }
    }
+
+
 }

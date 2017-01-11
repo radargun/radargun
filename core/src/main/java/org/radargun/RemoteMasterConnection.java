@@ -79,7 +79,6 @@ public class RemoteMasterConnection {
       }
       buffer.flip();
       while (buffer.hasRemaining()) socketChannel.write(buffer);
-
       return socketChannel.socket().getLocalAddress();
    }
 
@@ -152,13 +151,13 @@ public class RemoteMasterConnection {
 
    /**
     * Send any serializable object to the master node.
-    * @param response
+    * @param obj
     * @param nextUuid UUID of the next generation of slaves, or null if this slave will continue
     * @throws IOException
     */
-   public void sendResponse(Serializable response, UUID nextUuid) throws IOException {
+   public void sendObject(Serializable obj, UUID nextUuid) throws IOException {
       buffer.clear();
-      buffer = SerializationHelper.serializeObjectWithLength(response, buffer);
+      buffer = SerializationHelper.serializeObjectWithLength(obj, buffer);
       if (nextUuid == null) {
          buffer = SerializationHelper.appendLong(0, buffer);
          buffer = SerializationHelper.appendLong(0, buffer);
@@ -166,10 +165,10 @@ public class RemoteMasterConnection {
          buffer = SerializationHelper.appendLong(nextUuid.getMostSignificantBits(), buffer);
          buffer = SerializationHelper.appendLong(nextUuid.getLeastSignificantBits(), buffer);
       }
-      log.trace("Sending response to the master, response has " + buffer.position() + " bytes.");
+      log.trace("Sending a message to the master, message has " + buffer.position() + " bytes.");
       buffer.flip();
       while (buffer.hasRemaining()) socketChannel.write(buffer);
-      log.info("Response successfully sent to the master");
+      log.info("Message successfully sent to the master");
    }
 
    public void release() throws IOException {
