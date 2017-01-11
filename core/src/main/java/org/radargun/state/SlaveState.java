@@ -1,13 +1,16 @@
 package org.radargun.state;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.radargun.RemoteSlaveConnection;
 import org.radargun.config.Cluster;
 import org.radargun.reporting.Timeline;
+import org.radargun.utils.SlaveConnectionInfo;
 
 /**
  * State residing on slave, passed to each's {@link org.radargun.DistStage#initOnSlave(SlaveState)}
@@ -18,10 +21,14 @@ public class SlaveState extends StateBase {
 
    private InetAddress localAddress;
    private int slaveIndex = -1;
+
    private String plugin;
    private String serviceName;
    private Cluster.Group group;
+
+   private RemoteSlaveConnection.SlaveAddresses slaveAddresses;
    private int indexInGroup;
+
    private Map<Class<?>, Object> traits;
    private Timeline timeline;
    private List<ServiceListener> serviceListeners = new CopyOnWriteArrayList<ServiceListener>();
@@ -110,5 +117,14 @@ public class SlaveState extends StateBase {
 
    public Iterable<ServiceListener> getServiceListeners() {
       return Collections.unmodifiableCollection(serviceListeners);
+   }
+
+   public void setSlaveAddresses(RemoteSlaveConnection.SlaveAddresses slaveAddresses) {
+      this.slaveAddresses = slaveAddresses;
+   }
+
+   public SlaveConnectionInfo getSlaveAddresses(Cluster cluster, String groupName, int indexInGroup) {
+      int indexTotal = (Integer) new ArrayList(cluster.getSlaves(groupName)).get(indexInGroup);
+      return slaveAddresses.getSlaveAddresses(indexTotal);
    }
 }

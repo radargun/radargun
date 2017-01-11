@@ -57,6 +57,7 @@ public class Master {
       try {
          connection = new RemoteSlaveConnection(masterConfig.getMaxClusterSize(), masterConfig.getHost(), masterConfig.getPort());
          connection.establish();
+         connection.receiveSlaveAddresses();
          state.setMaxClusterSize(masterConfig.getMaxClusterSize());
          // let's create reporters now to fail soon in case of misconfiguration
          ArrayList<Reporter> reporters = new ArrayList<>();
@@ -78,10 +79,12 @@ public class Master {
                int clusterSize = cluster.getSize();
                log.info("Starting scenario on " + cluster);
                connection.sendCluster(cluster);
+               connection.sendSlaveAddresses();
                connection.sendConfiguration(configuration);
                // here we should restart, therefore, we have to send it again
                connection.restartSlaves(clusterSize);
                connection.sendCluster(cluster);
+               connection.sendSlaveAddresses();
                connection.sendConfiguration(configuration);
                connection.sendScenario(masterConfig.getScenario(), clusterSize);
                state.setCluster(cluster);

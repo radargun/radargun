@@ -304,6 +304,7 @@ public class PropertyHelper {
          ctor.setAccessible(true);
          Converter converter = ctor.newInstance();
          evaluated = Evaluator.parseString(propertyString);
+         log.tracef("Evaluated property %s to %s", propName, evaluated);
          path.set(target, converter.convert(evaluated, path.getTargetGenericType()));
       } catch (InstantiationException e) {
          log.errorf(e, "Cannot instantiate converter %s for setting %s (%s)",

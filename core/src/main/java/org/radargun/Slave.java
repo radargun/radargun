@@ -16,6 +16,7 @@ import org.radargun.config.VmArgs;
 import org.radargun.reporting.Timeline;
 import org.radargun.utils.ArgsHolder;
 import org.radargun.utils.RestartHelper;
+import org.radargun.utils.SlaveConnectionInfo;
 import org.radargun.utils.Utils;
 
 /**
@@ -57,7 +58,7 @@ public class Slave extends SlaveBase {
                envs.put(entry.getKey(), Evaluator.parseString(entry.getValue().toString()));
             }
             RestartHelper.spawnSlave(state.getSlaveIndex(), nextUuid, setup.plugin, vmArgs, envs);
-            connection.sendResponse(null, nextUuid);
+            connection.sendObject(null, nextUuid);
             connection.release();
             ShutDownHook.exit(0);
          } else if (object instanceof Scenario) {
@@ -73,7 +74,11 @@ public class Slave extends SlaveBase {
          } else if (object instanceof Cluster) {
             cluster = (Cluster) object;
          } else if (object instanceof Timeline.Request) {
-            connection.sendResponse(state.getTimeline(), null);
+            connection.sendObject(state.getTimeline(), null);
+         } else if (object instanceof SlaveConnectionInfo.Request) {
+            connection.sendObject(Utils.getSlaveConnectionInfo(state.getSlaveIndex()), null);
+         } else if (object instanceof RemoteSlaveConnection.SlaveAddresses) {
+            state.setSlaveAddresses((RemoteSlaveConnection.SlaveAddresses) object);
          }
       }
       ShutDownHook.exit(0);
@@ -106,7 +111,7 @@ public class Slave extends SlaveBase {
 
    @Override
    protected void sendResponse(DistStageAck response) throws IOException {
-      connection.sendResponse(response, null);
+      connection.sendObject(response, null);
    }
 
    @Override
@@ -120,6 +125,14 @@ public class Slave extends SlaveBase {
       Cluster.Group group = cluster.getGroup(state.getSlaveIndex());
       extras.put(Properties.PROPERTY_GROUP_NAME, group.name);
       extras.put(Properties.PROPERTY_GROUP_SIZE, String.valueOf(group.size));
+      for (Cluster.Group g : cluster.getGroups()) {
+         for(int i = 0; i != g.size; i++){
+            SlaveConnectionInfo ifaces = state.getSlaveAddresses(cluster, g.name, i);
+            for (String s: ifaces.getInterfaceNames()) {
+               extras.put(Properties.PROPERTY_GROUP_PREFIX + g.name + "." + i + "." + s, ifaces.getAddressesAsString(s, ","));
+            }
+         }
+      }
       for (Cluster.Group g : cluster.getGroups()) {
          extras.put(Properties.PROPERTY_GROUP_PREFIX + g.name + Properties.PROPERTY_SIZE_SUFFIX, String.valueOf(group.size));
       }

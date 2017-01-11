@@ -49,4 +49,5 @@ public class MasterState extends StateBase {
    public List<MasterListener> getListeners() {
       return Collections.unmodifiableList(listeners);
    }
+
 }
