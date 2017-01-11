@@ -251,21 +251,46 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       for (int i = 0; i < configs.getLength(); ++i) {
          if (!(configs.item(i) instanceof Element)) continue;
          Element configElement = (Element) configs.item(i);
-         assertName(ELEMENT_CONFIG, configElement);
-         String configName = getAttribute(configElement, ATTR_NAME);
-         Configuration config = new Configuration(configName);
-         NodeList setups = configElement.getChildNodes();
-         for (int j = 0; j < setups.getLength(); ++j) {
-            if (!(setups.item(j) instanceof Element)) continue;
-            Element setupElement = (Element) setups.item(j);
-            assertName(ELEMENT_SETUP, setupElement);
-            String plugin = getAttribute(setupElement, ATTR_PLUGIN);
-            String group = getAttribute(setupElement, ATTR_GROUP, Cluster.DEFAULT_GROUP);
+         if (ELEMENT_CONFIG.equals(configElement.getLocalName())) {
+            String configName = getAttribute(configElement, ATTR_NAME);
+            Configuration config = new Configuration(configName);
+            NodeList setups = configElement.getChildNodes();
+            for (int j = 0; j < setups.getLength(); ++j) {
+               if (!(setups.item(j) instanceof Element)) continue;
+               Element setupElement = (Element) setups.item(j);
+               assertName(ELEMENT_SETUP, setupElement);
+               String plugin = getAttribute(setupElement, ATTR_PLUGIN);
+               String group = getAttribute(setupElement, ATTR_GROUP, Cluster.DEFAULT_GROUP);
+               String base = getAttribute(setupElement, ATTR_BASE, null);
+               Map<String, Definition> propertyDefinitions = Collections.EMPTY_MAP;
+               Map<String, Definition> vmArgs = Collections.EMPTY_MAP;
+               Map<String, Definition> envs = Collections.EMPTY_MAP;
+               String service = Configuration.DEFAULT_SERVICE;
+               NodeList properties = setupElement.getChildNodes();
+               for (int k = 0; k < properties.getLength(); ++k) {
+                  if (!(properties.item(k) instanceof Element)) continue;
+                  Element setupChildElement = (Element) properties.item(k);
+                  if (ELEMENT_VM_ARGS.equals(setupChildElement.getLocalName())) {
+                     vmArgs = parseProperties(setupChildElement, true);
+                  } else if (ELEMENT_ENVIRONMENT.equals(setupChildElement.getLocalName())) {
+                     envs = parseEnvs(setupChildElement);
+                  } else if (setupChildElement.hasAttribute(ATTR_XMLNS)) {
+                     service = setupChildElement.getLocalName();
+                     propertyDefinitions = parseProperties(setupChildElement, true);
+                  } else {
+                     throw notExternal(setupChildElement);
+                  }
+               }
+               config.addSetup(base, group, plugin, service, propertyDefinitions, vmArgs, envs);
+            }
+            masterConfig.addConfig(config);
+         } else if (ELEMENT_TEMPLATE.equals(configElement.getLocalName())) {
+            String name = getAttribute(configElement, ATTR_NAME);
+            String base = getAttribute(configElement, ATTR_BASE, null);
             Map<String, Definition> propertyDefinitions = Collections.EMPTY_MAP;
             Map<String, Definition> vmArgs = Collections.EMPTY_MAP;
             Map<String, Definition> envs = Collections.EMPTY_MAP;
-            String service = Configuration.DEFAULT_SERVICE;
-            NodeList properties = setupElement.getChildNodes();
+            NodeList properties = configElement.getChildNodes();
             for (int k = 0; k < properties.getLength(); ++k) {
                if (!(properties.item(k) instanceof Element)) continue;
                Element setupChildElement = (Element) properties.item(k);
@@ -274,15 +299,15 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
                } else if (ELEMENT_ENVIRONMENT.equals(setupChildElement.getLocalName())) {
                   envs = parseEnvs(setupChildElement);
                } else if (setupChildElement.hasAttribute(ATTR_XMLNS)) {
-                  service = setupChildElement.getLocalName();
                   propertyDefinitions = parseProperties(setupChildElement, true);
                } else {
                   throw notExternal(setupChildElement);
                }
             }
-            config.addSetup(group, plugin, service, propertyDefinitions, vmArgs, envs);
+            masterConfig.addTemplate(name, base, propertyDefinitions, vmArgs, envs);
+         } else {
+            throw unexpected(configElement.getLocalName(), new String[] { ELEMENT_CONFIG, ELEMENT_TEMPLATE });
          }
-         masterConfig.addConfig(config);
       }
    }
 

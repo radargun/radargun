@@ -106,8 +106,20 @@ public class ReflexiveConverters {
       @Override
       public Object convert(ComplexDefinition definition, Type type) {
          List<ComplexDefinition.Entry> attributes = definition.getAttributes();
-         if (attributes.size() != 1) throw new IllegalArgumentException("Single attribute expected");
-         return instantiate(attributes.get(0).name, attributes.get(0).definition);
+         // if we have used templates, there may be multiple attributes with the same name
+         String name = null;
+         Definition def = null;
+         for (ComplexDefinition.Entry attr : attributes) {
+            if (name == null) {
+               name = attr.name;
+               def = attr.definition;
+            } else if (!name.equals(attr.name)) {
+               throw new IllegalArgumentException("Single attribute expected");
+            } else {
+               def = def.apply(attr.definition);
+            }
+         }
+         return instantiate(name, def);
       }
 
       @Override

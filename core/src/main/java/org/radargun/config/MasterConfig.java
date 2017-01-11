@@ -2,8 +2,10 @@ package org.radargun.config;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -18,6 +20,7 @@ public class MasterConfig {
    private final String host;
    private List<Cluster> clusters = new ArrayList<Cluster>();
    private List<Configuration> configurations = new ArrayList<Configuration>();
+   private Map<String, Configuration.SetupBase> templates = new HashMap<>();
    private Scenario scenario;
    private List<ReporterConfiguration> reporters = new ArrayList<ReporterConfiguration>();
 
@@ -36,6 +39,12 @@ public class MasterConfig {
             throw new IllegalArgumentException("Cannot have two configurations named " + config.name);
       }
       configurations.add(config);
+   }
+
+   public void addTemplate(String name, String base, Map<String, Definition> propertyDefinitions, Map<String, Definition> vmArgs, Map<String, Definition> envs) {
+      if (templates.put(name, new Configuration.SetupBase(base, vmArgs, propertyDefinitions, envs)) != null) {
+         throw new IllegalArgumentException("The configuration already contains template '" + name + "'");
+      }
    }
 
    public void setScenario(Scenario scenario) {
@@ -103,5 +112,17 @@ public class MasterConfig {
 
    public byte[] getScenarioBytes() {
       return scenarioBytes;
+   }
+
+   public void applyTemplates() {
+      for (int i = 0; i < configurations.size(); i++) {
+         Configuration configuration = configurations.get(i);
+         Configuration newConfiguration = new Configuration(configuration.name);
+         for (Configuration.Setup setup : configuration.getSetups()) {
+            Configuration.Setup newSetup = setup.applyTemplates(templates);
+            newConfiguration.addSetup(newSetup);
+         }
+         configurations.set(i, newConfiguration);
+      }
    }
 }

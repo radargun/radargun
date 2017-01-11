@@ -30,6 +30,7 @@ public final class LaunchMaster {
       try {
          ConfigParser configParser = ConfigParser.getConfigParser();
          MasterConfig masterConfig = configParser.parseConfig(config);
+         masterConfig.applyTemplates();
          Master master = new Master(masterConfig);
          master.run();
       } catch (Exception e) {
