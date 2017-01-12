@@ -33,13 +33,20 @@
       <plugins.docker/>
       <plugins.jcache/>
       <plugins.ehcache/>
+      <plugins.ehcache-latest/>
       <plugins.hazelcast/>
+      <plugins.hazelcast-latest/>
       <plugins.jbosscache/>
+      <plugins.jbosscache-latest/>
       <plugins.jgroups/>
+      <plugins.jgroups-latest/>
       <plugins.infinispan/>
+      <plugins.infinispan-latest/>
       <plugins.jdg-early/>
       <plugins.jdg/>
+      <plugins.jdg-latest/>
       <plugins.coherence/>
+      <plugins.coherence-latest/>
       <plugins.process />
       <plugins.resteasy-http />
       <plugins.spark />
@@ -217,7 +224,8 @@
             <module>plugins/ehcache26</module>
          </modules>
          <properties>
-            <plugins.ehcache>ehcache25,ehcache26</plugins.ehcache>
+            <plugins.ehcache-latest>ehcache26</plugins.ehcache-latest>
+            <plugins.ehcache>ehcache25,${plugins.hazelcast-latest}</plugins.ehcache>
          </properties>
       </profile>
       <profile>
@@ -233,7 +241,8 @@
             <module>plugins/hazelcast37</module>
          </modules>
          <properties>
-            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37</plugins.hazelcast>
+            <plugins.hazelcast-latest>hazelcast37</plugins.hazelcast-latest>
+            <plugins.hazelcast>hazelcast2,hazelcast36,${plugins.hazelcast-latest}</plugins.hazelcast>
          </properties>
       </profile>
       <profile>
@@ -248,7 +257,8 @@
             <module>plugins/jbosscache3</module>
          </modules>
          <properties>
-            <plugins.jbosscache>jbosscache2,jbosscache3</plugins.jbosscache>
+            <plugins.jbosscache-latest>jbosscache3</plugins.jbosscache-latest>
+            <plugins.jbosscache>jbosscache2,${plugins.jbosscache-latest}</plugins.jbosscache>
          </properties>
       </profile>
       <profile>
@@ -267,7 +277,8 @@
             <module>plugins/jgroups36</module>
          </modules>
          <properties>
-            <plugins.jgroups>jgroups30,jgroups32,jgroups33,jgroups34,jgroups35,jgroups36</plugins.jgroups>
+            <plugins.jgroups-latest>jgroups36</plugins.jgroups-latest>
+            <plugins.jgroups>jgroups30,jgroups32,jgroups33,jgroups34,jgroups35,${plugins.jgroups-latest}</plugins.jgroups>
          </properties>
       </profile>
       <profile>
@@ -307,7 +318,8 @@
             <module>plugins/infinispan90</module>
          </modules>
          <properties>
-            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81,infinispan82,infinispan90</plugins.infinispan>
+            <plugins.infinispan-latest>infinispan90</plugins.infinispan-latest>
+            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81,infinispan82,${plugins.infinispan-latest}</plugins.infinispan>
          </properties>
       </profile>
       <profile>
@@ -322,7 +334,8 @@
             <module>plugins/coherence12</module>
          </modules>
          <properties>
-            <plugins.coherence>coherence3,coherence12</plugins.coherence>
+            <plugins.coherence-latest>coherence12</plugins.coherence-latest>
+            <plugins.coherence>coherence3,${plugins.coherence-latest}</plugins.coherence>
          </properties>
       </profile>
 
@@ -359,7 +372,8 @@
             <module>plugins/jdg71</module>
          </modules>
          <properties>
-            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,jdg71</plugins.jdg>
+            <plugins.jdg-latest>jdg71</plugins.jdg-latest>
+            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,${plugins.jdg-latest}</plugins.jdg>
          </properties>
       </profile>
 
@@ -634,8 +648,19 @@
                         </path>
 
                         <echo message="Packaging plugins: " />
+
+                        <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+                           <isset property="package-latest"/>
+                           <ac:then>
+                                <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache-latest},${plugins.hazelcast-latest},${plugins.jbosscache-latest},${plugins.jgroups-latest},${plugins.infinispan-latest},${plugins.jdg-latest},${plugins.coherence-latest},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker}" />
+                           </ac:then>
+                           <ac:else>
+                              <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg-early},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker}"/>
+                           </ac:else>
+                        </ac:if>
+                        <echo message="Plugin list: ${plugin.list}" />
                         <!-- Note: JCache needs to be here for schema generation, although it can't be used on its own -->
-                        <ac:for list="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg-early},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
+                        <ac:for list="${plugin.list}" param="plugin" xmlns:ac="antlib:net.sf.antcontrib">
                            <sequential>
                               <echo message="Packaging plugin @{plugin}..." />
                               <ac:if>
