@@ -30,7 +30,7 @@
                      <ul>
                         <li>Plugin: ${setup.plugin}</li>
                         <li>Service: ${setup.service}</li>
-                        <#if (indexDocument.getConfigs(report))?size == 0>
+                        <#if (indexDocument.getConfigs(report, setup.group))?size == 0>
                            <#assign fileName = (setup.properties["file"])!" no file" />
                               <li>Configuration file: ${fileName}</li>
 
@@ -38,7 +38,7 @@
                            <li>
                               Configuration files:
                               <ul>
-                                 <#list (indexDocument.getConfigs(report)) as config>
+                                 <#list (indexDocument.getConfigs(report, setup.group)) as config>
                                     <li>
                                        <a href="${getConfigFileName(setup.configuration.name, setup.group, report.cluster.clusterIndex, config.filename)}"> ${config.filename}</a>
                                     </li>

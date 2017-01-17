@@ -26,7 +26,7 @@ import org.radargun.reporting.Report;
  */
 public class IndexDocument extends HtmlDocument {
    private static final Log log = LogFactory.getLog(IndexDocument.class);
-   private Map<Report, Set<OriginalConfig>> configs = new HashMap<>();
+   private Map<Report, Map<String, Set<OriginalConfig>>> configs = new HashMap<>();
    private Set<String> normalized = new HashSet<>();
 
    public IndexDocument(String directory) {
@@ -45,9 +45,9 @@ public class IndexDocument extends HtmlDocument {
       }
    }
 
-   private void addToConfigs(Set<OriginalConfig> configs, int slave, String filename, byte[] content) {
+   private void addToConfigs(Map<String, Set<OriginalConfig>> configs, String group, int slave, String filename, byte[] content) {
       boolean found = false;
-      for (OriginalConfig config : configs) {
+      for (OriginalConfig config : configs.get(group)) {
          if (config.filename.equals(filename) && Arrays.equals(config.content, content)) {
             config.slaves.add(slave);
             found = true;
@@ -55,7 +55,7 @@ public class IndexDocument extends HtmlDocument {
          }
       }
       if (!found) {
-         configs.add(new OriginalConfig(slave, filename, content));
+         configs.get(group).add(new OriginalConfig(slave, filename, content));
       }
    }
 
@@ -66,26 +66,28 @@ public class IndexDocument extends HtmlDocument {
     */
    public void prepareServiceConfigs(Collection<Report> reports) {
       for (Report report : reports) {
+         Map<String, Set<OriginalConfig>> configs = new HashMap<>();
          for (Configuration.Setup setup : report.getConfiguration().getSetups()) {
             Set<Integer> slaves = report.getCluster().getSlaves(setup.group);
-
+            if (configs.get(setup.group) == null) {
+               configs.put(setup.group, new HashSet<>());
+            }
             for (Map.Entry<Integer, Map<String, Properties>> entry : report.getNormalizedServiceConfigs().entrySet()) {
                if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
                   normalized.addAll(entry.getValue().keySet());
                }
             }
 
-            Set<OriginalConfig> configs = new HashSet<>();
             for (Map.Entry<Integer, Map<String, byte[]>> entry : report.getOriginalServiceConfig().entrySet()) {
                if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
                   for (Map.Entry<String, byte[]> file : entry.getValue().entrySet()) {
-                     addToConfigs(configs, entry.getKey(), file.getKey(), file.getValue());
+                     addToConfigs(configs, setup.group, entry.getKey(), file.getKey(), file.getValue());
                   }
                }
             }
             this.configs.put(report, configs);
 
-            for (OriginalConfig config : configs) {
+            for (OriginalConfig config : configs.get(setup.group)) {
                writeConfig(report.getCluster(), setup, config);
             }
          }
@@ -97,8 +99,8 @@ public class IndexDocument extends HtmlDocument {
     * e.g. method getPercentiles() can be used as getPercentiles() or percentiles in template
     */
 
-   public Set<OriginalConfig> getConfigs(Report report) {
-      return configs.get(report);
+   public Set<OriginalConfig> getConfigs(Report report, String groupName) {
+      return configs.get(report).get(groupName);
    }
 
    public String getFilename(String configName, String groupName, Cluster cluster, String config) {
