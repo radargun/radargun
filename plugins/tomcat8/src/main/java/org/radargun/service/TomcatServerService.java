@@ -74,6 +74,11 @@ public class TomcatServerService extends JavaProcessService {
 
    protected TomcatServerLifecycle lifecycle;
 
+   @ProvidesTrait
+   public TomcatConfigurationProvider createTomcatConfigurationProvider() {
+      return new TomcatConfigurationProvider(this);
+   }
+
    @Init
    public void init() {
       if (catalinaBase == null || "".equals(catalinaBase))

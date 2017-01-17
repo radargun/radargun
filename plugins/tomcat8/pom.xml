@@ -19,6 +19,12 @@
    <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
+         <artifactId>radargun-core</artifactId>
+         <version>${project.version}</version>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
          <artifactId>radargun-cache</artifactId>
          <version>${project.version}</version>
          <scope>provided</scope>

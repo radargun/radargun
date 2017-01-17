@@ -647,5 +647,22 @@ public class Utils {
       }
    }
 
+   public static void loadConfigFile(String filename, Map<String, byte[]> configs) {
+      if (filename != null) {
+         InputStream is = null;
+         try {
+            is = Utils.class.getClassLoader().getResourceAsStream(filename);
+            if (is == null) { //not attached as resource - assume the direct path on filesystem
+               is = new FileInputStream(new File(filename));
+            }
+            configs.put(filename, Utils.readAsBytes(is));
+         } catch (Exception e) {
+            log.error("Error while reading configuration file (" + filename + ")", e);
+         } finally {
+            Utils.close(is);
+         }
+      }
+   }
+
 
 }
