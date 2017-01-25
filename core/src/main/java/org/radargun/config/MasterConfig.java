@@ -12,6 +12,8 @@ import java.util.Set;
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
 public class MasterConfig {
+   private byte[] masterConfigBytes;
+   private byte[] scenarioBytes;
    private final int port;
    private final String host;
    private List<Cluster> clusters = new ArrayList<Cluster>();
@@ -85,5 +87,21 @@ public class MasterConfig {
          }
       }
       return plugins;
+   }
+
+   public void setMasterConfigBytes(byte[] configBytes) {
+      this.masterConfigBytes = configBytes;
+   }
+
+   public byte[] getMasterConfigBytes() {
+      return masterConfigBytes;
+   }
+
+   public void setScenarioBytes(byte[] scenarioBytes) {
+      this.scenarioBytes = scenarioBytes;
+   }
+
+   public byte[] getScenarioBytes() {
+      return scenarioBytes;
    }
 }

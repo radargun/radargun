@@ -128,7 +128,7 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
             // add zero for all operations we've already reported
             for (Timeline.Category valueCategory : timeline.getValueCategories()) {
                if (valueCategory.getName().endsWith(" Throughput")) {
-                  timeline.addValue(valueCategory, new Timeline.Value(now));
+                  timeline.addValue(valueCategory, new Timeline.Value(now, 0));
                }
             }
          } else {

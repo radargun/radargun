@@ -36,6 +36,13 @@
          </ul>
    </#if>
    <h2>Configurations</h2>
+      RadarGun benchmark file: <a href="master-config.xml">link</a> <br/>
+      <#assign isExternalScenario = indexDocument.isExternalScenario() />
+      <#if isExternalScenario>
+         Scenario loaded from: <a href="scenario-file.xml">link</a>
+      </#if>
+      <br/><br/>
+
       The benchmark was executed on following configurations and cluster sizes: <br/>
    <ul>
       <#list reporter.reports as report>

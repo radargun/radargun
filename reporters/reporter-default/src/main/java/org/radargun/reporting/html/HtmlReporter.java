@@ -24,6 +24,7 @@ import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import freemarker.template.TemplateModelException;
 import org.radargun.config.Configuration;
+import org.radargun.config.MasterConfig;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyDelegate;
 import org.radargun.logging.Log;
@@ -59,7 +60,7 @@ public class HtmlReporter implements Reporter {
    private Collection<Report> reports;
 
    @Override
-   public void run(Collection<Report> reports) {
+   public void run(MasterConfig masterConfig, Collection<Report> reports) {
       this.reports = reports;
       Set<String> allTests = new LinkedHashSet<>();
       Set<String> combinedTests = new LinkedHashSet<>();
@@ -70,7 +71,7 @@ public class HtmlReporter implements Reporter {
 
       this.allTests = allTests;
 
-      writeIndexDocument(reports);
+      writeIndexDocument(masterConfig, reports);
       writeTimelineDocuments(reports, Timeline.Category.Type.CUSTOM);
       writeTimelineDocuments(reports, Timeline.Category.Type.SYSMONITOR);
       writeTestReportDocuments(combinedTests, testsByName);
@@ -204,9 +205,10 @@ public class HtmlReporter implements Reporter {
       }
    }
 
-   private void writeIndexDocument(Collection<Report> reports) {
+   private void writeIndexDocument(MasterConfig masterConfig, Collection<Report> reports) {
       IndexDocument index = new IndexDocument(targetDir);
       index.createReportDirectory();
+      index.writeMasterConfig(masterConfig);
       index.prepareServiceConfigs(reports);
 
       try {
