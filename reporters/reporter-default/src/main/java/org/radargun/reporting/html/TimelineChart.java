@@ -70,19 +70,20 @@ public class TimelineChart {
       this.paint = paint;
    }
 
-   public void setEvents(List<? extends Timeline.Event> events, int slaveIndex, long startTimestamp, long endTimestamp, double lowerBound, double upperBound) {
+   public void setEvents(List<? extends Object> events, int slaveIndex, long startTimestamp, long endTimestamp, double lowerBound, double upperBound) {
       int paintIndex = slaveIndex % DEFAULT_PAINTS.length;
       if (paintIndex < 0) paintIndex += DEFAULT_PAINTS.length;
       paint = DEFAULT_PAINTS[paintIndex];
       this.startTimestamp = startTimestamp;
       this.endTimestamp = endTimestamp + (startTimestamp == endTimestamp ? 1 : 0);
+
       TimeSeries series = new TimeSeries("Slave " + slaveIndex);
       TimeSeriesCollection dataset = new TimeSeriesCollection(series, GMT);
       chart = ChartFactory.createTimeSeriesChart(null, "Time from start", null, dataset, false, false, false);
       chart.setBackgroundPaint(new Color(0, 0, 0, 0));
+
       XYPlot plot = chart.getXYPlot();
       plot.getRenderer().setSeriesPaint(0, paint);
-      //plot.getRenderer().setSeriesShape(0, shape);
       plot.setBackgroundAlpha(0);
       plot.setDomainGridlinesVisible(false);
       plot.setDomainZeroBaselineVisible(true);
@@ -93,19 +94,19 @@ public class TimelineChart {
       Number[] maxValues = new Number[MAX_EVENT_VALUES];
       long[] minTimestamps = new long[MAX_EVENT_VALUES];
       long[] maxTimestamps = new long[MAX_EVENT_VALUES];
-      //long lastTimestamp = Long.MIN_VALUE;
-      for (Timeline.Event event : events) {
+
+      for (Object event : events) {
          if (event instanceof Timeline.Value) {
-            if (event.timestamp > this.endTimestamp) {
-               throw new IllegalStateException(String.format("Current timestamp %d is bigger then end timestamp %d", event.timestamp, this.endTimestamp));
-            }
             Timeline.Value value = (Timeline.Value) event;
-            int bucket = (int) ((event.timestamp - startTimestamp) * (MAX_EVENT_VALUES-1) / (this.endTimestamp - startTimestamp));
+            if (value.timestamp > this.endTimestamp) {
+               throw new IllegalStateException(String.format("Current timestamp %d is bigger then end timestamp %d", value.timestamp, this.endTimestamp));
+            }
+            int bucket = (int) ((value.timestamp - startTimestamp) * (MAX_EVENT_VALUES-1) / (this.endTimestamp - startTimestamp));
             if (minValues[bucket] == null) {
                minValues[bucket] = value.value;
                maxValues[bucket] = value.value;
-               minTimestamps[bucket] = event.timestamp;
-               maxTimestamps[bucket] = event.timestamp;
+               minTimestamps[bucket] = value.timestamp;
+               maxTimestamps[bucket] = value.timestamp;
             } else {
                if (minValues[bucket].doubleValue() > value.value.doubleValue()) {
                   minValues[bucket] = value.value;
@@ -113,26 +114,28 @@ public class TimelineChart {
                if (maxValues[bucket].doubleValue() < value.value.doubleValue()) {
                   maxValues[bucket] = value.value;
                }
-               minTimestamps[bucket] = Math.min(minTimestamps[bucket], event.timestamp);
-               maxTimestamps[bucket] = Math.max(maxTimestamps[bucket], event.timestamp);
+               minTimestamps[bucket] = Math.min(minTimestamps[bucket], value.timestamp);
+               maxTimestamps[bucket] = Math.max(maxTimestamps[bucket], value.timestamp);
             }
          } else if (event instanceof Timeline.IntervalEvent) {
             Timeline.IntervalEvent intervalEvent = (Timeline.IntervalEvent) event;
-            IntervalMarker marker = new IntervalMarker(event.timestamp - startTimestamp, event.timestamp + intervalEvent.duration - startTimestamp, paint, stroke, paint, stroke, 0.3f);
+            IntervalMarker marker = new IntervalMarker(intervalEvent.timestamp - startTimestamp, intervalEvent.timestamp + intervalEvent.duration - startTimestamp, paint, stroke, paint, stroke, 0.3f);
             marker.setLabel(intervalEvent.description);
             marker.setLabelAnchor(RectangleAnchor.BOTTOM);
             marker.setLabelTextAnchor(TextAnchor.BOTTOM_CENTER);
             marker.setLabelOffset(new RectangleInsets(0, 0, (slaveIndex + 1) * LABEL_OFFSET, 0));
             plot.addDomainMarker(marker);
          } else if (event instanceof Timeline.TextEvent) {
-            ValueMarker marker = new ValueMarker(event.timestamp - startTimestamp, paint, stroke);
-            marker.setLabel(((Timeline.TextEvent) event).text);
+            Timeline.TextEvent textEvent = (Timeline.TextEvent) event;
+            ValueMarker marker = new ValueMarker(textEvent.timestamp - startTimestamp, paint, stroke);
+            marker.setLabel(textEvent.text);
             marker.setLabelAnchor(RectangleAnchor.BOTTOM_LEFT);
             marker.setLabelTextAnchor(TextAnchor.BOTTOM_LEFT);
             marker.setLabelOffset(new RectangleInsets(0, 0, (slaveIndex + 1) * LABEL_OFFSET, 0));
             plot.addDomainMarker(marker);
          }
       }
+
       for (int bucket = 0; bucket < MAX_EVENT_VALUES; ++bucket) {
          if (minValues[bucket] == null) continue;
          series.addOrUpdate(time(minTimestamps[bucket] - startTimestamp), minValues[bucket]);

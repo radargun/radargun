@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.radargun.utils.TimeService;
 
@@ -17,8 +19,10 @@ import org.radargun.utils.TimeService;
 public class Timeline implements Serializable, Comparable<Timeline> {
 
    public final int slaveIndex;
-   private Map<String, List<Event>> events = new HashMap<String, List<Event>>();
-   private Map<String, List<Value>> values = new HashMap<String, List<Value>>();
+   /* Events plotted on all charts as marker events. */
+   private Map<String, List<MarkerEvent>> events = new HashMap<>();
+   /* Values plotted in separate charts */
+   private Map<Category, List<Value>> values = new HashMap<>();
    private long firstTimestamp = Long.MAX_VALUE;
    private long lastTimestamp = Long.MIN_VALUE;
 
@@ -26,52 +30,112 @@ public class Timeline implements Serializable, Comparable<Timeline> {
       this.slaveIndex = slaveIndex;
    }
 
-   public void addEvent(String category, IntervalEvent e) {
-      addEvent(category, (Event) e);
-   }
-
-   public void addEvent(String category, TextEvent e) {
-      addEvent(category, (Event) e);
-   }
-
-   private synchronized void addEvent(String category, Event e) {
-      List<Event> cat = events.get(category);
+   public synchronized void addEvent(String category, MarkerEvent e) {
+      List<MarkerEvent> cat = events.get(category);
       if (cat == null) {
-         cat = new ArrayList<Event>();
+         cat = new ArrayList<>();
          events.put(category, cat);
       }
       cat.add(e);
       updateTimestamps(e);
    }
 
-   public synchronized void addValue(String category, Value e) {
+   public synchronized void addValue(Category category, Value e) {
       List<Value> cat = values.get(category);
       if (cat == null) {
-         cat = new ArrayList<Value>();
+         cat = new ArrayList<>();
          values.put(category, cat);
       }
       cat.add(e);
       updateTimestamps(e);
    }
 
-   private void updateTimestamps(Event e) {
+   public synchronized boolean containsValuesOfType(Category.Type type) {
+      return values.keySet().stream().anyMatch(e -> e.getType().equals(type));
+   }
+
+   public static class Category implements Serializable, Comparable<Category> {
+      private final String name;
+      private final Type type;
+
+      @Override
+      public int compareTo(Category o) {
+         return this.getName().compareTo(o.getName());
+      }
+
+      public enum Type {
+         /* All events related to system resources (CPU, memory, network, etc.) */
+         SYSMONITOR,
+         /* Any other type of events, e.g. recording values in background stages */
+         CUSTOM
+      }
+
+      public static Category sysCategory(String name) {
+         return new Category(name, Type.SYSMONITOR);
+      }
+
+      public static Category customCategory(String name) {
+         return new Category(name, Type.CUSTOM);
+      }
+
+      private Category(String name, Type type) {
+         Objects.nonNull(name);
+         Objects.nonNull(type);
+         this.name = name;
+         this.type = type;
+      }
+
+      public String getName() {
+         return name;
+      }
+
+      public Type getType() {
+         return type;
+      }
+
+      @Override
+      public boolean equals(Object o) {
+         if (this == o) return true;
+         if (o == null || getClass() != o.getClass()) return false;
+
+         Category category = (Category) o;
+
+         if (!name.equals(category.name)) return false;
+         return type == category.type;
+
+      }
+
+      @Override
+      public int hashCode() {
+         int result = name.hashCode();
+         result = 31 * result + type.hashCode();
+         return result;
+      }
+   }
+
+   private void updateTimestamps(MarkerEvent e) {
       firstTimestamp = Math.min(firstTimestamp, e.getStarted());
       lastTimestamp = Math.max(lastTimestamp, e.getEnded());
+   }
+
+   private void updateTimestamps(Value v) {
+      firstTimestamp = Math.min(firstTimestamp, v.getStarted());
+      lastTimestamp = Math.max(lastTimestamp, v.getEnded());
    }
 
    public synchronized Set<String> getEventCategories() {
       return events.keySet();
    }
 
-   public synchronized Set<String> getValueCategories() {
+   public synchronized Set<Category> getValueCategories() {
       return values.keySet();
    }
 
-   public synchronized List<Event> getEvents(String category) {
+   public synchronized List<MarkerEvent> getEvents(String category) {
       return events.get(category);
    }
 
-   public synchronized List<Value> getValues(String category) {
+   public synchronized List<Value> getValues(Category category) {
       return values.get(category);
    }
 
@@ -88,22 +152,33 @@ public class Timeline implements Serializable, Comparable<Timeline> {
       return Integer.compare(slaveIndex, o.slaveIndex);
    }
 
+
    /**
-    * Generic event in timeline
+    * A single value in the chart in time, such as CPU utilization. The value is reported
+    * in a single chart dedicated for this type of values.
     */
-   public abstract static class Event implements Serializable, Comparable<Event> {
+   public static class Value implements Serializable, Comparable<MarkerEvent> {
+      public final Number value;
       public final long timestamp;
 
-      protected Event(long timestamp) {
+      public Value(long timestamp, Number value) {
          this.timestamp = timestamp;
+         this.value = value;
       }
 
-      protected Event() {
-         this(TimeService.currentTimeMillis());
+      public Value(Number value) {
+         this.timestamp = TimeService.currentTimeMillis();
+         this.value = value;
       }
 
       @Override
-      public int compareTo(Event o) {
+      public String toString() {
+         // doubles require %f, integers %d -> we use %s
+         return String.format("Value{timestamp=%d, value=%s}", timestamp, value);
+      }
+
+      @Override
+      public int compareTo(MarkerEvent o) {
          return Long.compare(timestamp, o.timestamp);
       }
 
@@ -117,31 +192,37 @@ public class Timeline implements Serializable, Comparable<Timeline> {
    }
 
    /**
-    * Event that presents a sequence of changing values, such as CPU utilization
+    * Generic event in timeline
     */
-   public static class Value extends Event {
-      public final Number value;
+   public abstract static class MarkerEvent implements Serializable, Comparable<MarkerEvent> {
+      public final long timestamp;
 
-      public Value(long timestamp, Number value) {
-         super(timestamp);
-         this.value = value;
+      protected MarkerEvent(long timestamp) {
+         this.timestamp = timestamp;
       }
 
-      public Value(Number value) {
-         this.value = value;
+      protected MarkerEvent() {
+         this(TimeService.currentTimeMillis());
       }
 
       @Override
-      public String toString() {
-         // doubles require %f, integers %d -> we use %s
-         return String.format("Value{timestamp=%d, value=%s}", timestamp, value);
+      public int compareTo(MarkerEvent o) {
+         return Long.compare(timestamp, o.timestamp);
+      }
+
+      public long getStarted() {
+         return timestamp;
+      }
+
+      public long getEnded() {
+         return timestamp;
       }
    }
 
    /**
     * Occurence of this event is not a value in any series, such as slave crash.
     */
-   public static class TextEvent extends Event {
+   public static class TextEvent extends MarkerEvent {
       public final String text;
 
       public TextEvent(long timestamp, String text) {
@@ -160,9 +241,9 @@ public class Timeline implements Serializable, Comparable<Timeline> {
    }
 
    /**
-    * Event representing some continuous operation taking place for some period of time
+    * MarkerEvent representing some continuous operation taking place for some period of time
     */
-   public static class IntervalEvent extends Event {
+   public static class IntervalEvent extends MarkerEvent {
       public final String description;
       public final long duration; // milliseconds
 

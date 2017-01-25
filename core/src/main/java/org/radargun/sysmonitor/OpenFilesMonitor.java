@@ -32,7 +32,7 @@ public class OpenFilesMonitor extends JmxMonitor {
          Long openFiles = (Long) connection.getAttribute(osBean.getObjectName(), OPEN_FILE_DESCRIPTOR_COUNT);
          Long maxOpenFiles = (Long) connection.getAttribute(osBean.getObjectName(), MAX_FILE_DESCRIPTOR_COUNT);
          if (openFiles != null) {
-            timeline.addValue(OPEN_FILES, new Timeline.Value(openFiles));
+            timeline.addValue(Timeline.Category.sysCategory(OPEN_FILES), new Timeline.Value(openFiles));
          }
          log.tracef("Open files: open=%s, max=%s", openFiles, maxOpenFiles);
       } catch (Exception e) {
@@ -43,13 +43,13 @@ public class OpenFilesMonitor extends JmxMonitor {
    @Override
    public synchronized void start() {
       super.start();
-      timeline.addValue(OPEN_FILES, new Timeline.Value(0));
+      timeline.addValue(Timeline.Category.sysCategory(OPEN_FILES), new Timeline.Value(0));
    }
 
    @Override
    public synchronized void stop() {
       super.stop();
-      timeline.addValue(OPEN_FILES, new Timeline.Value(0));
+      timeline.addValue(Timeline.Category.sysCategory(OPEN_FILES), new Timeline.Value(0));
    }
 }
 

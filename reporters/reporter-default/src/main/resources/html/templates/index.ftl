@@ -16,6 +16,25 @@
          </li>
       </#list>
    </ul>
+   <h2>Resource utilization</h2>
+      <ul>
+         <#list reporter.reports as report>
+            <li>
+               <a href="SYSMONITOR_timeline_${report.configuration.name}_${report.cluster.clusterIndex}.html">${report.configuration.name} on ${report.cluster}</a>
+            </li>
+         </#list>
+      </ul>
+   <#assign printCustomValues = reporter.hasReportsWithValuesOfType(categoryType) />
+   <#if printCustomValues>
+      <h2>Other timeline charts</h2>
+         <ul>
+            <#list reporter.reports as report>
+               <li>
+                  <a href="CUSTOM_timeline_${report.configuration.name}_${report.cluster.clusterIndex}.html">${report.configuration.name} on ${report.cluster}</a>
+               </li>
+            </#list>
+         </ul>
+   </#if>
    <h2>Configurations</h2>
       The benchmark was executed on following configurations and cluster sizes: <br/>
    <ul>
@@ -120,14 +139,6 @@
             </li>
          </#list>
       </#if>
-   </ul>
-   <h2>Timelines</h2>
-   <ul>
-      <#list reporter.reports as report>
-         <li>
-            <a href="timeline_${report.configuration.name}_${report.cluster.clusterIndex}.html">${report.configuration.name} on ${report.cluster}</a>
-         </li>
-      </#list>
    </ul>
    <hr/>
    Generated on ${.now} by RadarGun
