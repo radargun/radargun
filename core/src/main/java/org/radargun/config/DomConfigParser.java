@@ -20,6 +20,7 @@ import org.radargun.stages.ScenarioInitStage;
 import org.radargun.stages.control.RepeatBeginStage;
 import org.radargun.stages.control.RepeatContinueStage;
 import org.radargun.stages.control.RepeatEndStage;
+import org.radargun.utils.Utils;
 import org.w3c.dom.*;
 
 /**
@@ -50,6 +51,9 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
       } else {
          masterConfig = new MasterConfig(0, null);
       }
+      Map<String, byte[]> configurations = new HashMap<>();
+      Utils.loadConfigFile(config, configurations);
+      masterConfig.setMasterConfigBytes(configurations.get(config));
       parseClusters(masterConfig, (Element) childNodes.item(index));
       index = nextElement(childNodes, index + 1);
       parseConfigurations(masterConfig, (Element) childNodes.item(index));
@@ -66,7 +70,10 @@ public class DomConfigParser extends ConfigParser implements ConfigSchema {
 
       Element scenarioElement;
       if (((Element) childNodes.item(index)).hasAttribute(ATTR_URL)) {
-         scenarioElement = loadScenario(((Element) childNodes.item(index)).getAttribute(ATTR_URL));
+         String url = ((Element) childNodes.item(index)).getAttribute(ATTR_URL);
+         scenarioElement = loadScenario(url);
+         Utils.loadConfigFile(url, configurations);
+         masterConfig.setScenarioBytes(configurations.get(url));
       } else {
          scenarioElement = (Element) childNodes.item(index);
       }

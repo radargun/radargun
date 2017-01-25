@@ -5,9 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.radargun.utils.TimeService;
 
@@ -50,13 +48,18 @@ public class Timeline implements Serializable, Comparable<Timeline> {
       updateTimestamps(e);
    }
 
-   public synchronized boolean containsValuesOfType(Category.Type type) {
+   public boolean containsValuesOfType(Category.Type type) {
       return values.keySet().stream().anyMatch(e -> e.getType().equals(type));
    }
 
    public static class Category implements Serializable, Comparable<Category> {
       private final String name;
       private final Type type;
+
+      private Category(String name, Type type) {
+         this.name = name;
+         this.type = type;
+      }
 
       @Override
       public int compareTo(Category o) {
@@ -76,13 +79,6 @@ public class Timeline implements Serializable, Comparable<Timeline> {
 
       public static Category customCategory(String name) {
          return new Category(name, Type.CUSTOM);
-      }
-
-      private Category(String name, Type type) {
-         Objects.nonNull(name);
-         Objects.nonNull(type);
-         this.name = name;
-         this.type = type;
       }
 
       public String getName() {

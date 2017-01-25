@@ -123,7 +123,7 @@ public class CsvReporterTest {
          CsvReporter csvReporter = new CsvReporter();
          Utils.setField(CsvReporter.class, "targetDir", csvReporter, tempDirectory.toString());
 
-         csvReporter.run(Arrays.asList(report1, report2));
+         csvReporter.run(null, Arrays.asList(report1, report2));
 
          List<String> lines = Files.readAllLines(Paths.get(tempDirectory.toString(), "test1_conf1_default_2.csv"));
          // header (1 line) + 2 iterations (4 lines) + summary (2 lines)

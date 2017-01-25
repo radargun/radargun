@@ -66,8 +66,8 @@ public class TimelineDocument extends HtmlDocument {
             double min = Long.MAX_VALUE, max = Long.MIN_VALUE;
             for (Timeline.Value value : values) {
                double d = value.value.doubleValue();
-                  max = Math.max(max, d);
-                  min = Math.min(min, d);
+               max = Math.max(max, d);
+               min = Math.min(min, d);
             }
             if (min <= max) {
                Double prevMin = minValues.get(category);
@@ -107,8 +107,10 @@ public class TimelineDocument extends HtmlDocument {
    }
 
    public Map<Timeline.Category, Integer> getValueCategoriesOfType(String categoryType) {
-      return valueCategories.entrySet().stream().filter(e -> e.getKey().getType().toString().equals(categoryType)).collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue(), (v1,v2) ->{ throw new RuntimeException(String.format("Duplicate key for values %s and %s", v1, v2));},
-         TreeMap::new));
+      return valueCategories.entrySet().stream().filter(e -> e.getKey().getType().toString().equals(categoryType)).collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue(), (v1,v2) ->
+      {
+         throw new RuntimeException(String.format("Duplicate key for values %s and %s", v1, v2));
+      }, TreeMap::new));
    }
 
    public void createTestCharts() {

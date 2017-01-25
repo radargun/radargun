@@ -37,7 +37,7 @@ public class SerializedReporter implements Reporter {
    protected String targetDir = "results" + File.separator + "serialized";
 
    @Override
-   public void run(Collection<Report> reports) {
+   public void run(MasterConfig masterConfig, Collection<Report> reports) {
       File dir = new File(targetDir);
       if (!dir.exists()) {
          dir.mkdirs();
@@ -99,7 +99,7 @@ public class SerializedReporter implements Reporter {
             try {
                reporter = ReporterHelper.createReporter(rc.type, rcr.getProperties());
                if (reporter instanceof SerializedReporter) continue;
-               reporter.run(reports);
+               reporter.run(config, reports);
             } catch (Exception e) {
                System.err.println("Failed to run reporter " + rc.type);
                e.printStackTrace();

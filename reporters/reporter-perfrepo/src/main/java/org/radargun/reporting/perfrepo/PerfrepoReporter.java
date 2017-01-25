@@ -15,6 +15,7 @@ import org.perfrepo.model.builder.TestExecutionBuilder;
 import org.radargun.config.Configuration;
 import org.radargun.config.DefinitionElement;
 import org.radargun.config.Init;
+import org.radargun.config.MasterConfig;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
 import org.radargun.logging.Log;
@@ -79,6 +80,7 @@ public class PerfrepoReporter implements Reporter {
 
    @Property(doc = "Which tests should this reporter report. Default is all executed tests.")
    private List<String> tests;
+   private MasterConfig masterConfig;
 
    @Init
    public void validate() {
@@ -91,7 +93,8 @@ public class PerfrepoReporter implements Reporter {
    }
 
    @Override
-   public void run(Collection<Report> reports) {
+   public void run(MasterConfig masterConfig, Collection<Report> reports) {
+      this.masterConfig = masterConfig;
       if (perfRepoAuth == null) {
          log.error("perfRepoAuth parameter has to be set");
          return;
@@ -303,6 +306,17 @@ public class PerfrepoReporter implements Reporter {
                   zos.closeEntry();
                   contentExists = true;
                }
+            }
+         }
+         if (masterConfig != null) {
+            zos.putNextEntry(new ZipEntry("master_config.xml"));
+            zos.write(masterConfig.getMasterConfigBytes());
+            zos.closeEntry();
+            contentExists = true;
+            if (masterConfig.getScenarioBytes() != null) {
+               zos.putNextEntry(new ZipEntry("master_scenario.xml"));
+               zos.write(masterConfig.getScenarioBytes());
+               zos.closeEntry();
             }
          }
          zos.finish();
