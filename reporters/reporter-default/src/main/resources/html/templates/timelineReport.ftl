@@ -8,15 +8,15 @@
 <body>
    <h1> ${timelineDocument.title} Timeline</h1>
    <table class="graphTable floatLeft">
-      <#list timelineDocument.getValueCategories()?keys as key>
+      <#list timelineDocument.getValueCategoriesOfType(categoryType)?keys as key>
          <#assign valueCategory = key />
-         <#assign valueCategoryId = timelineDocument.getValueCategories()[key] />
+         <#assign valueCategoryId = timelineDocument.getValueCategoriesOfType(categoryType)?api.get(key) />
 
          <#assign relativeDomainFile = "domain_${timelineDocument.getConfigName()}_relative.png" />
          <#assign absoluteDomainFile = "domain_${timelineDocument.getConfigName()}_absolute.png" />
 
          <tr>
-            <th colspan="2"> ${valueCategory} </th>
+            <th colspan="2"> ${valueCategory.getName()} </th>
          </tr>
          <#assign rangeFile = timelineDocument.range(valueCategory, valueCategoryId) />
          <tr>
