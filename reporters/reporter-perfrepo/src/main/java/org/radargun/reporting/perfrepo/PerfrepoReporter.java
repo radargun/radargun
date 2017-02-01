@@ -295,8 +295,12 @@ public class PerfrepoReporter implements Reporter {
          return;
       }
       File file = null;
-      try (FileOutputStream fos = new FileOutputStream(file); ZipOutputStream zos = new ZipOutputStream(fos)) {
+      try {
          file = File.createTempFile("configs", ".zip");
+      } catch (IOException e) {
+         log.error("Error while creating a temporary file", e);
+      }
+      try (FileOutputStream fos = new FileOutputStream(file); ZipOutputStream zos = new ZipOutputStream(fos)) {
          if (executionId == null) {
             log.debug("No execution ID, attachment not uploaded");
             return;
