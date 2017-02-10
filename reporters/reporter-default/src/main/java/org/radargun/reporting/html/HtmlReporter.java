@@ -24,12 +24,14 @@ import freemarker.template.DefaultObjectWrapperBuilder;
 import freemarker.template.Template;
 import freemarker.template.TemplateModelException;
 import org.radargun.config.Configuration;
+import org.radargun.config.MasterConfig;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyDelegate;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.Reporter;
+import org.radargun.reporting.Timeline;
 import org.radargun.reporting.commons.TestAggregations;
 
 /**
@@ -58,7 +60,7 @@ public class HtmlReporter implements Reporter {
    private Collection<Report> reports;
 
    @Override
-   public void run(Collection<Report> reports) {
+   public void run(MasterConfig masterConfig, Collection<Report> reports) {
       this.reports = reports;
       Set<String> allTests = new LinkedHashSet<>();
       Set<String> combinedTests = new LinkedHashSet<>();
@@ -69,8 +71,9 @@ public class HtmlReporter implements Reporter {
 
       this.allTests = allTests;
 
-      writeIndexDocument(reports);
-      writeTimelineDocuments(reports);
+      writeIndexDocument(masterConfig, reports);
+      writeTimelineDocuments(reports, Timeline.Category.Type.CUSTOM);
+      writeTimelineDocuments(reports, Timeline.Category.Type.SYSMONITOR);
       writeTestReportDocuments(combinedTests, testsByName);
       writeCombinedReportDocuments(testsByName);
       writeNormalizedConfigDocuments(reports);
@@ -184,26 +187,28 @@ public class HtmlReporter implements Reporter {
       }
    }
 
-   private void writeTimelineDocuments(Collection<Report> reports) {
+   private void writeTimelineDocuments(Collection<Report> reports, Timeline.Category.Type categoryType) {
       for (Report report : reports) {
          String configName = report.getConfiguration().name;
          TimelineDocument timelineDocument = new TimelineDocument(timelineConfig, targetDir,
-            configName + "_" + report.getCluster().getClusterIndex(), configName + " on " + report.getCluster(), report.getTimelines(), report.getCluster());
+            configName + "_" + report.getCluster().getClusterIndex(), configName + " on " + report.getCluster(), report.getTimelines(), categoryType, report.getCluster());
 
          timelineDocument.createReportDirectory();
          timelineDocument.createTestCharts();
 
          Map root = new HashMap();
          root.put("timelineDocument", timelineDocument);
+         root.put("categoryType", categoryType.toString());
 
          exposeStaticMethods(root, "java.lang.String", "String");
          processTemplate(root, targetDir, timelineDocument.getFileName(), "timelineReport.ftl");
       }
    }
 
-   private void writeIndexDocument(Collection<Report> reports) {
+   private void writeIndexDocument(MasterConfig masterConfig, Collection<Report> reports) {
       IndexDocument index = new IndexDocument(targetDir);
       index.createReportDirectory();
+      index.writeMasterConfig(masterConfig);
       index.prepareServiceConfigs(reports);
 
       try {
@@ -310,5 +315,9 @@ public class HtmlReporter implements Reporter {
 
    public Collection<Report> getReports() {
       return reports;
+   }
+
+   public boolean hasReportsWithValuesOfType(Timeline.Category.Type type) {
+      return reports.stream().anyMatch(r -> r.hasTimelineWithValuesOfType(type));
    }
 }

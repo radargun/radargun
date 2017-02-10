@@ -123,11 +123,11 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
          Timeline timeline = backgroundOpsManager.getSlaveState().getTimeline();
          long now = TimeService.currentTimeMillis();
          long cacheSize = sizeThread.getAndResetSize();
-         timeline.addValue(CACHE_SIZE, new Timeline.Value(now, cacheSize));
+         timeline.addValue(Timeline.Category.customCategory(CACHE_SIZE), new Timeline.Value(now, cacheSize));
          if (stats.isEmpty()) {
             // add zero for all operations we've already reported
-            for (String valueCategory : timeline.getValueCategories()) {
-               if (valueCategory.endsWith(" Throughput")) {
+            for (Timeline.Category valueCategory : timeline.getValueCategories()) {
+               if (valueCategory.getName().endsWith(" Throughput")) {
                   timeline.addValue(valueCategory, new Timeline.Value(now, 0));
                }
             }
@@ -135,8 +135,9 @@ public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
             Statistics aggregated = stats.stream().reduce(Statistics.MERGE).orElseThrow(() -> new IllegalStateException("No statistics!"));
             for (String operation : aggregated.getOperations()) {
                OperationThroughput throughput = aggregated.getRepresentation(operation, OperationThroughput.class);
-               if (throughput != null && (throughput.gross != 0 || timeline.getValues(operation + " Throughput") != null)) {
-                  timeline.addValue(operation + " Throughput", new Timeline.Value(now, throughput.gross));
+               Timeline.Category category = Timeline.Category.customCategory(operation + " Throughput");
+               if (throughput != null && (throughput.gross != 0 || timeline.getValues(category) != null)) {
+                  timeline.addValue(category, new Timeline.Value(now, throughput.gross));
                }
             }
          }

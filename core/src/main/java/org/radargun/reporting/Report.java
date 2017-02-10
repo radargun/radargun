@@ -71,6 +71,10 @@ public class Report implements Comparable<Report>, Serializable {
       return Collections.unmodifiableList(timelines);
    }
 
+   public boolean hasTimelineWithValuesOfType(Timeline.Category.Type type) {
+      return timelines.stream().anyMatch(t -> t.containsValuesOfType(type));
+   }
+
    /**
     * @param testName
     * @return Existing test or null.

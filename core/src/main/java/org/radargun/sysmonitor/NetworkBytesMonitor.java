@@ -78,8 +78,8 @@ public class NetworkBytesMonitor implements Monitor {
       }
    }
 
-   private String getCategory() {
-      return String.format("Network %s on %s [bytes per second]", valueIndex == TRANSMIT_BYTES_INDEX ? "TX" : "RX", iface);
+   private Timeline.Category getCategory() {
+      return Timeline.Category.sysCategory(String.format("Network %s on %s [bytes per second]", valueIndex == TRANSMIT_BYTES_INDEX ? "TX" : "RX", iface));
    }
 
    @Override

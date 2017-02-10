@@ -55,7 +55,7 @@ public class GcMonitor extends JmxMonitor implements Serializable {
 
          double gcUsage = Math.min(1d, Math.max(0, (double) processGcTimeDiff / (double) upTimeDiff));
 
-         timeline.addValue(GC_USAGE, new Timeline.Value(gcUsage));
+         timeline.addValue(Timeline.Category.sysCategory(GC_USAGE), new Timeline.Value(gcUsage));
          log.tracef("Current GC CPU usage: %.2f%%", 100 * gcUsage);
          prevUpTime = upTime;
          prevGcTime = gcTime;
@@ -85,12 +85,12 @@ public class GcMonitor extends JmxMonitor implements Serializable {
    @Override
    public synchronized void start() {
       super.start();
-      timeline.addValue(GC_USAGE, new Timeline.Value(0));
+      timeline.addValue(Timeline.Category.sysCategory(GC_USAGE), new Timeline.Value(0));
    }
 
    @Override
    public synchronized void stop() {
       super.stop();
-      timeline.addValue(GC_USAGE, new Timeline.Value(0));
+      timeline.addValue(Timeline.Category.sysCategory(GC_USAGE), new Timeline.Value(0));
    }
 }

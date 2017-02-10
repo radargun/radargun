@@ -135,7 +135,7 @@ public class Master {
          for (Reporter reporter : reporters) {
             try {
                log.info("Running reporter " + reporter);
-               reporter.run(Collections.unmodifiableList(reports));
+               reporter.run(masterConfig, Collections.unmodifiableList(reports));
             } catch (Exception e) {
                log.error("Error in reporter " + reporter, e);
                returnCode = 127;

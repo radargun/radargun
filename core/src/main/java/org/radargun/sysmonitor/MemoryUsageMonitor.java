@@ -38,7 +38,7 @@ public class MemoryUsageMonitor extends JmxMonitor {
             MemoryMXBean.class);
          MemoryUsage mem = memMbean.getHeapMemoryUsage();
 
-         timeline.addValue(MEMORY_USAGE, new Timeline.Value(mem.getUsed() / 1048576));
+         timeline.addValue(Timeline.Category.sysCategory(MEMORY_USAGE), new Timeline.Value(mem.getUsed() / 1048576));
 
          log.trace("Memory usage: used=" + formatDecimal(mem.getUsed()) + " B, size=" + formatDecimal(mem.getCommitted())
             + " B, max=" + formatDecimal(mem.getMax()));
@@ -54,12 +54,12 @@ public class MemoryUsageMonitor extends JmxMonitor {
    @Override
    public synchronized void start() {
       super.start();
-      timeline.addValue(MEMORY_USAGE, new Timeline.Value(0));
+      timeline.addValue(Timeline.Category.sysCategory(MEMORY_USAGE), new Timeline.Value(0));
    }
 
    @Override
    public synchronized void stop() {
       super.stop();
-      timeline.addValue(MEMORY_USAGE, new Timeline.Value(0));
+      timeline.addValue(Timeline.Category.sysCategory(MEMORY_USAGE), new Timeline.Value(0));
    }
 }

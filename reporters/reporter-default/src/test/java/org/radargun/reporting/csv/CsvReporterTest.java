@@ -48,20 +48,20 @@ public class CsvReporterTest {
          cluster2.setSize(3);
 
          Timeline timeline1 = new Timeline(0);
-         timeline1.addValue("event1", new Timeline.Value(0, 1));
-         timeline1.addValue("event1", new Timeline.Value(1000, 2));
-         timeline1.addValue("event2", new Timeline.Value(0, 1));
-         timeline1.addValue("event2", new Timeline.Value(1000, 2));
+         timeline1.addValue(Timeline.Category.sysCategory("event1"), new Timeline.Value(0, 1));
+         timeline1.addValue(Timeline.Category.sysCategory("event1"), new Timeline.Value(1000, 2));
+         timeline1.addValue(Timeline.Category.sysCategory("event2"), new Timeline.Value(0, 1));
+         timeline1.addValue(Timeline.Category.sysCategory("event2"), new Timeline.Value(1000, 2));
          Timeline timeline2 = new Timeline(1);
-         timeline2.addValue("event1", new Timeline.Value(0, 1));
-         timeline2.addValue("event1", new Timeline.Value(1000, 2));
-         timeline2.addValue("event2", new Timeline.Value(0, 1));
-         timeline2.addValue("event2", new Timeline.Value(1000, 2));
+         timeline2.addValue(Timeline.Category.sysCategory("event1"), new Timeline.Value(0, 1));
+         timeline2.addValue(Timeline.Category.sysCategory("event1"), new Timeline.Value(1000, 2));
+         timeline2.addValue(Timeline.Category.sysCategory("event2"), new Timeline.Value(0, 1));
+         timeline2.addValue(Timeline.Category.sysCategory("event2"), new Timeline.Value(1000, 2));
          Timeline timeline3 = new Timeline(2);
-         timeline3.addValue("event1", new Timeline.Value(0, 1));
-         timeline3.addValue("event1", new Timeline.Value(1000, 2));
-         timeline3.addValue("event2", new Timeline.Value(0, 1));
-         timeline3.addValue("event2", new Timeline.Value(1000, 2));
+         timeline3.addValue(Timeline.Category.sysCategory("event1"), new Timeline.Value(0, 1));
+         timeline3.addValue(Timeline.Category.sysCategory("event1"), new Timeline.Value(1000, 2));
+         timeline3.addValue(Timeline.Category.sysCategory("event2"), new Timeline.Value(0, 1));
+         timeline3.addValue(Timeline.Category.sysCategory("event2"), new Timeline.Value(1000, 2));
 
 
          Operation operation1 = Operation.register("op1");
@@ -123,7 +123,7 @@ public class CsvReporterTest {
          CsvReporter csvReporter = new CsvReporter();
          Utils.setField(CsvReporter.class, "targetDir", csvReporter, tempDirectory.toString());
 
-         csvReporter.run(Arrays.asList(report1, report2));
+         csvReporter.run(null, Arrays.asList(report1, report2));
 
          List<String> lines = Files.readAllLines(Paths.get(tempDirectory.toString(), "test1_conf1_default_2.csv"));
          // header (1 line) + 2 iterations (4 lines) + summary (2 lines)

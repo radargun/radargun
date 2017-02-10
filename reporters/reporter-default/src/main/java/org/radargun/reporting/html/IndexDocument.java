@@ -14,6 +14,7 @@ import java.util.Set;
 
 import org.radargun.config.Cluster;
 import org.radargun.config.Configuration;
+import org.radargun.config.MasterConfig;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
@@ -28,9 +29,36 @@ public class IndexDocument extends HtmlDocument {
    private static final Log log = LogFactory.getLog(IndexDocument.class);
    private Map<Report, Map<String, Set<OriginalConfig>>> configs = new HashMap<>();
    private Set<String> normalized = new HashSet<>();
+   private MasterConfig masterConfig;
 
    public IndexDocument(String directory) {
       super(directory, "index.html", "RadarGun benchmark");
+   }
+
+   public void writeMasterConfig(MasterConfig masterConfig) {
+      this.masterConfig = masterConfig;
+      String configFile = "master-config.xml";
+      String scenarioFile = "scenario-file.xml";
+      try (FileOutputStream mainFileWriter = new FileOutputStream(directory + File.separator + configFile);
+           FileOutputStream scenarioWriter = new FileOutputStream(directory + File.separator + scenarioFile)
+      ) {
+         mainFileWriter.write(masterConfig.getMasterConfigBytes());
+         if (masterConfig.getScenarioBytes() != null) {
+            scenarioWriter.write(masterConfig.getScenarioBytes());
+         }
+      } catch (FileNotFoundException e) {
+         log.error("Failed to open " + configFile, e);
+      } catch (IOException e) {
+         log.error("Failed to write " + configFile, e);
+      }
+   }
+
+   /**
+    * Used from freemarker template to decide whether to provide a link to an external scenario file.
+    * @return true if there's an external scenario file imported into the main RG benchmark
+    */
+   public boolean isExternalScenario() {
+      return masterConfig.getScenarioBytes() != null;
    }
 
    private void writeConfig(Cluster cluster, Configuration.Setup setup, OriginalConfig config) {
