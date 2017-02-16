@@ -6,25 +6,16 @@ package org.radargun.state;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public interface MasterListener {
-   void beforeConfiguration();
+   default void beforeConfiguration() {
+   };
 
-   void afterConfiguration();
+   default void afterConfiguration() {
+   };
 
-   void beforeCluster();
+   default void beforeCluster() {
+   };
 
-   void afterCluster();
+   default void afterCluster() {
+   };
 
-   class Adapter implements MasterListener {
-      @Override
-      public void beforeConfiguration() {}
-
-      @Override
-      public void afterConfiguration() {}
-
-      @Override
-      public void beforeCluster() {}
-
-      @Override
-      public void afterCluster() {}
-   }
 }
