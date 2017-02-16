@@ -94,6 +94,8 @@ public class Master {
                }
                long clusterStart = TimeService.currentTimeMillis();
                int stageCount = masterConfig.getScenario().getStageCount();
+               // These two stages are inserted to the end of the scenario in
+               // this order during parsing
                int scenarioDestroyId = stageCount - 2;
                int scenarioCleanupId = stageCount - 1;
                try {
