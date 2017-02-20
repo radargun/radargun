@@ -2,10 +2,7 @@ package org.radargun.state;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.radargun.RemoteSlaveConnection;
 import org.radargun.config.Cluster;
@@ -13,11 +10,12 @@ import org.radargun.reporting.Timeline;
 import org.radargun.utils.SlaveConnectionInfo;
 
 /**
- * State residing on slave, passed to each's {@link org.radargun.DistStage#initOnSlave(SlaveState)}
+ * State residing on slave, passed to each's
+ * {@link org.radargun.DistStage#initOnSlave(SlaveState)}
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-public class SlaveState extends StateBase {
+public class SlaveState extends StateBase<ServiceListener> {
 
    private InetAddress localAddress;
    private int slaveIndex = -1;
@@ -31,7 +29,6 @@ public class SlaveState extends StateBase {
 
    private Map<Class<?>, Object> traits;
    private Timeline timeline;
-   private List<ServiceListener> serviceListeners = new CopyOnWriteArrayList<ServiceListener>();
 
    public void setLocalAddress(InetAddress localAddress) {
       this.localAddress = localAddress;
@@ -68,7 +65,6 @@ public class SlaveState extends StateBase {
    public void reset() {
       super.reset();
       traits = null;
-      serviceListeners.clear();
    }
 
    public String getPlugin() {
@@ -105,18 +101,6 @@ public class SlaveState extends StateBase {
 
    public void setTimeline(Timeline timeline) {
       this.timeline = timeline;
-   }
-
-   public void addServiceListener(ServiceListener listener) {
-      serviceListeners.add(listener);
-   }
-
-   public void removeServiceListener(ServiceListener listener) {
-      serviceListeners.remove(listener);
-   }
-
-   public Iterable<ServiceListener> getServiceListeners() {
-      return Collections.unmodifiableCollection(serviceListeners);
    }
 
    public void setSlaveAddresses(RemoteSlaveConnection.SlaveAddresses slaveAddresses) {

@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Timeline;
-import org.radargun.state.ServiceListenerAdapter;
+import org.radargun.state.ServiceListener;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.OperationThroughput;
@@ -23,7 +23,7 @@ import org.radargun.utils.TimeService;
  * @author Matej Cimbora &lt;mcimbora@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public final class BackgroundStatisticsManager extends ServiceListenerAdapter {
+public final class BackgroundStatisticsManager implements ServiceListener {
 
    public static final String CACHE_SIZE = "Cache size";
    private static final String PREFIX = "BackgroundStatistics.";

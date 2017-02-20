@@ -11,7 +11,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.AbstractDistStage;
-import org.radargun.state.ServiceListenerAdapter;
+import org.radargun.state.ServiceListener;
 import org.radargun.utils.TimeConverter;
 import org.radargun.utils.Utils;
 
@@ -52,7 +52,7 @@ public class PeriodicHeapDumpStage extends AbstractDistStage {
             return errorResponse("Cleanup procedure was not found!");
          }
          cleanup.serviceDestroyed();
-         slaveState.removeServiceListener(cleanup);
+         slaveState.removeListener(cleanup);
          slaveState.remove(CLEANUP);
       } else {
          if (future != null) {
@@ -86,13 +86,13 @@ public class PeriodicHeapDumpStage extends AbstractDistStage {
          slaveState.put(FUTURE, future);
 
          Cleanup cleanup = new Cleanup(executor);
-         slaveState.addServiceListener(cleanup);
+         slaveState.addListener(cleanup);
          slaveState.put(CLEANUP, cleanup);
       }
       return successfulResponse();
    }
 
-   protected static class Cleanup extends ServiceListenerAdapter {
+   protected static class Cleanup implements ServiceListener{
       private final ScheduledThreadPoolExecutor executor;
 
       public Cleanup(ScheduledThreadPoolExecutor executor) {

@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.state.ServiceListenerAdapter;
+import org.radargun.state.ServiceListener;
 import org.radargun.stats.Statistics;
 import org.radargun.utils.TimeService;
 import org.radargun.utils.Utils;
@@ -24,7 +24,7 @@ import org.radargun.utils.Utils;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class RunningTest extends ServiceListenerAdapter {
+public class RunningTest implements ServiceListener{
    private final Log log = LogFactory.getLog(RunningTest.class);
    // Queue used by Stressors to report theirs statistics
    private final ConcurrentLinkedQueue<Statistics> statisticsQueue = new ConcurrentLinkedQueue<>();

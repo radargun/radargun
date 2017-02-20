@@ -67,7 +67,7 @@ public class TestStage extends BaseTestStage {
       if (finish || failed) {
          runningTest.stopStressors();
          slaveState.remove(RunningTest.nameFor(testName));
-         slaveState.removeServiceListener(runningTest);
+         slaveState.removeListener(runningTest);
       }
       destroy();
 

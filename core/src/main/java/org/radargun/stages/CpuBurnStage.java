@@ -4,7 +4,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.test.Blackhole;
-import org.radargun.state.ServiceListenerAdapter;
+import org.radargun.state.ServiceListener;
 
 /**
  * @author Radim Vansa &ltrvansa@redhat.com&gt;
@@ -40,7 +40,7 @@ public class CpuBurnStage extends AbstractDistStage {
       return successfulResponse();
    }
 
-   private class State extends ServiceListenerAdapter {
+   private class State implements ServiceListener{
       final Thread[] threads;
       volatile boolean terminate = false;
 
@@ -54,7 +54,7 @@ public class CpuBurnStage extends AbstractDistStage {
             }, "CpuBurner-" + i);
             threads[i].start();
          }
-         slaveState.addServiceListener(this);
+         slaveState.addListener(this);
       }
 
       public void stop() {
@@ -67,7 +67,7 @@ public class CpuBurnStage extends AbstractDistStage {
                Thread.currentThread().interrupt();
             }
          }
-         slaveState.removeServiceListener(this);
+         slaveState.removeListener(this);
       }
 
       @Override

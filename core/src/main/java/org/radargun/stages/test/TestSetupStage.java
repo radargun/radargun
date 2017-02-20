@@ -58,7 +58,7 @@ public abstract class TestSetupStage extends AbstractDistStage {
       if (runningTest == null) {
          runningTest = new RunningTest();
          slaveState.put(RunningTest.nameFor(testName), runningTest);
-         slaveState.addServiceListener(runningTest);
+         slaveState.addListener(runningTest);
       } else if (runningTest.isTerminated()) {
          return errorResponse("The test was terminated in previous iteration");
       }

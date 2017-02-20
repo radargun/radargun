@@ -44,7 +44,7 @@ public class ScenarioDestroyStage extends InternalDistStage {
          return errorResponse("Problems shutting down the slave", e);
       } finally {
          log.trace("Calling destroy hooks");
-         for (ServiceListener listener : slaveState.getServiceListeners()) {
+         for (ServiceListener listener : slaveState.getListeners()) {
             listener.serviceDestroyed();
          }
       }

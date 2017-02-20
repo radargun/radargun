@@ -9,7 +9,7 @@ import org.radargun.logging.LogFactory;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.helpers.Range;
-import org.radargun.state.ServiceListenerAdapter;
+import org.radargun.state.ServiceListener;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.CacheInformation;
@@ -28,7 +28,7 @@ import org.radargun.utils.TimeService;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class BackgroundOpsManager extends ServiceListenerAdapter {
+public class BackgroundOpsManager implements ServiceListener {
    /**
     * Key to SlaveState to retrieve BackgroundOpsManager instance and to MasterState to retrieve results.
     */
@@ -73,7 +73,7 @@ public class BackgroundOpsManager extends ServiceListenerAdapter {
          instance.failureManager = new FailureManager(instance);
          instance.threadManager = new ThreadManager(instance);
          slaveState.put(PREFIX + name, instance);
-         slaveState.addServiceListener(instance);
+         slaveState.addListener(instance);
          List<BackgroundOpsManager> list = (List<BackgroundOpsManager>) slaveState.get(ALL);
          if (list == null) {
             slaveState.put(ALL, list = new ArrayList<>());

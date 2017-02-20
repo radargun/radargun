@@ -3,8 +3,10 @@ package org.radargun.stages.monitor;
 import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
+import org.radargun.reporting.Timeline;
 import org.radargun.stages.AbstractDistStage;
 import org.radargun.state.MasterState;
+import org.radargun.sysmonitor.AbstractMonitors;
 import org.radargun.sysmonitor.CpuUsageMonitor;
 import org.radargun.sysmonitor.GcMonitor;
 import org.radargun.sysmonitor.InternalsMonitor;
@@ -20,7 +22,8 @@ import org.radargun.utils.TimeConverter;
 
 /**
  *
- * Starts collecting JVM statistics locally on master and each slave node. {@link SlaveMonitors}
+ * Starts collecting JVM statistics locally on master and each slave node.
+ * {@link SlaveMonitors}
  *
  * @author Alan Field &lt;afield@redhat.com&gt;
  */
@@ -29,7 +32,7 @@ import org.radargun.utils.TimeConverter;
 public class MonitorStartStage extends AbstractDistStage {
 
    @Property(doc = "Specifies the network interface where statistics are gathered. "
-      + "If not specified, then statistics are not collected.")
+         + "If not specified, then statistics are not collected.")
    private String interfaceName;
 
    @Property(doc = "Period of statistics collection. The default is 1 second.", converter = TimeConverter.class)
@@ -44,39 +47,38 @@ public class MonitorStartStage extends AbstractDistStage {
    @Override
    public void initOnMaster(MasterState masterState) {
       super.initOnMaster(masterState);
-      MasterMonitors masterMonitors = (MasterMonitors) masterState.get(MasterMonitors.MONITORS);
-      if (masterMonitors == null) {
-         masterMonitors = new MasterMonitors(masterState, period);
-      }
-      masterMonitors.addMonitor(new CpuUsageMonitor(jmxConnectionProvider, masterState.getTimeline()));
-      masterMonitors.addMonitor(new MemoryUsageMonitor(jmxConnectionProvider, masterState.getTimeline()));
-      masterMonitors.addMonitor(new GcMonitor(jmxConnectionProvider, masterState.getTimeline()));
-      masterMonitors.addMonitor(new OpenFilesMonitor(jmxConnectionProvider, masterState.getTimeline()));
-      if (interfaceName != null) {
-         masterMonitors.addMonitor(NetworkBytesMonitor.createReceiveMonitor(interfaceName, masterState.getTimeline()));
-         masterMonitors.addMonitor(NetworkBytesMonitor.createTransmitMonitor(interfaceName, masterState.getTimeline()));
-      }
+      MasterMonitors masterMonitors = masterState.get(MasterMonitors.MONITORS) == null ? new MasterMonitors(masterState, period)
+            : (MasterMonitors) masterState.get(MasterMonitors.MONITORS);
+
+      addMonitors(masterMonitors, masterState.getTimeline());
+      
       masterMonitors.start();
    }
 
    @Override
    public DistStageAck executeOnSlave() {
-      SlaveMonitors slaveMonitors = (SlaveMonitors) slaveState.get(SlaveMonitors.MONITORS);
-      if (slaveMonitors == null) {
-         slaveMonitors = new SlaveMonitors(slaveState, period);
-      }
-      slaveMonitors.addMonitor(new CpuUsageMonitor(jmxConnectionProvider, slaveState.getTimeline()));
-      slaveMonitors.addMonitor(new MemoryUsageMonitor(jmxConnectionProvider, slaveState.getTimeline()));
-      slaveMonitors.addMonitor(new GcMonitor(jmxConnectionProvider, slaveState.getTimeline()));
-      slaveMonitors.addMonitor(new OpenFilesMonitor(jmxConnectionProvider, slaveState.getTimeline()));
-      if (interfaceName != null) {
-         slaveMonitors.addMonitor(NetworkBytesMonitor.createReceiveMonitor(interfaceName, slaveState.getTimeline()));
-         slaveMonitors.addMonitor(NetworkBytesMonitor.createTransmitMonitor(interfaceName, slaveState.getTimeline()));
-      }
+      SlaveMonitors slaveMonitors = slaveState.get(SlaveMonitors.MONITORS) == null ? new SlaveMonitors(slaveState, period)
+            : (SlaveMonitors) slaveState.get(SlaveMonitors.MONITORS);
+
+      addMonitors(slaveMonitors, slaveState.getTimeline());
+
       if (internalsExposition != null) {
          slaveMonitors.addMonitor(new InternalsMonitor(internalsExposition, slaveState.getTimeline()));
       }
+
       slaveMonitors.start();
       return successfulResponse();
+   }
+
+   private void addMonitors(AbstractMonitors monitors, Timeline timeline) {
+      monitors.addMonitor(new CpuUsageMonitor(jmxConnectionProvider, timeline));
+      monitors.addMonitor(new MemoryUsageMonitor(jmxConnectionProvider, timeline));
+      monitors.addMonitor(new GcMonitor(jmxConnectionProvider, timeline));
+      monitors.addMonitor(new OpenFilesMonitor(jmxConnectionProvider, timeline));
+      if (interfaceName != null) {
+         monitors.addMonitor(NetworkBytesMonitor.createReceiveMonitor(interfaceName, timeline));
+         monitors.addMonitor(NetworkBytesMonitor.createTransmitMonitor(interfaceName, timeline));
+      }
+
    }
 }

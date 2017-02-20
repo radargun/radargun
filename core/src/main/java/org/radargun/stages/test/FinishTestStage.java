@@ -20,7 +20,7 @@ public class FinishTestStage extends AbstractDistStage {
       if (runningTest != null) {
          runningTest.stopStressors();
          slaveState.remove(key);
-         slaveState.removeServiceListener(runningTest);
+         slaveState.removeListener(runningTest);
          return successfulResponse();
       } else {
          log.info("Slave state: " + slaveState.asStringMap());

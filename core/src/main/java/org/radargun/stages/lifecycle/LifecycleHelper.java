@@ -52,7 +52,7 @@ public class LifecycleHelper {
          if (partitionable != null) {
             partitionable.setStartWithReachable(slaveState.getSlaveIndex(), reachable);
          }
-         for (ServiceListener listener : slaveState.getServiceListeners()) {
+         for (ServiceListener listener : slaveState.getListeners()) {
             listener.beforeServiceStart();
          }
          long startingTime = TimeService.currentTimeMillis();
@@ -88,7 +88,7 @@ public class LifecycleHelper {
                }
             }
          }
-         for (ServiceListener listener : slaveState.getServiceListeners()) {
+         for (ServiceListener listener : slaveState.getListeners()) {
             try {
                listener.afterServiceStart();
             } catch (Exception e) {
@@ -126,7 +126,7 @@ public class LifecycleHelper {
       if (lifecycle == null) throw new IllegalArgumentException();
       Killable killable = slaveState.getTrait(Killable.class);
       if (lifecycle.isRunning()) {
-         for (ServiceListener listener : slaveState.getServiceListeners()) {
+         for (ServiceListener listener : slaveState.getListeners()) {
             listener.beforeServiceStop(graceful);
          }
          try {
@@ -174,7 +174,7 @@ public class LifecycleHelper {
             long stoppedTime = TimeService.currentTimeMillis();
             slaveState.getTimeline().addEvent(LIFECYCLE, new Timeline.IntervalEvent(stoppingTime, "Stop", stoppedTime - stoppingTime));
          } finally {
-            for (ServiceListener listener : slaveState.getServiceListeners()) {
+            for (ServiceListener listener : slaveState.getListeners()) {
                listener.afterServiceStop(graceful);
             }
          }
