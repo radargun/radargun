@@ -5,17 +5,30 @@ package org.radargun.state;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public interface MasterListener {
+public interface MasterListener extends StateListener {
+
+   /**
+    * Fired before each configuration is executed on clusters
+    */
    default void beforeConfiguration() {
    };
 
-   default void afterConfiguration() {
-   };
-
+   /**
+    * Fired before scenario run on each cluster
+    */
    default void beforeCluster() {
    };
 
+   /**
+    * Fired after scenario run on each cluster
+    */
    default void afterCluster() {
+   };
+
+   /**
+    * Fired after whole configuration is executed for all clusters
+    */
+   default void afterConfiguration() {
    };
 
 }

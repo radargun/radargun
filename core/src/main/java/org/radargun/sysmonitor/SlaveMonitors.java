@@ -7,32 +7,21 @@ import org.radargun.traits.Lifecycle;
 /**
  * Retrieves JMX statistics from slave nodes.
  */
-public class SlaveMonitors extends AbstractMonitors implements ServiceListener {
+public class SlaveMonitors extends AbstractMonitors<SlaveState, ServiceListener> implements ServiceListener {
    public static final String MONITORS = SlaveMonitors.class.getName();
-   private final SlaveState slaveState;
 
-   public SlaveMonitors(SlaveState slaveState, long period) {
-      super(period);
-      this.slaveState = slaveState;
-   }
-
-   public synchronized void start() {
-      slaveState.put(MONITORS, this);
-      slaveState.addServiceListener(this);
-      Lifecycle lifecycle = slaveState.getTrait(Lifecycle.class);
-      if (lifecycle != null && lifecycle.isRunning()) {
-         startInternal();
-      }
-   }
-
-   public synchronized void stop() {
-      slaveState.removeServiceListener(this);
-      slaveState.remove(MONITORS);
-      stopInternal();
+   public SlaveMonitors(SlaveState state, long period) {
+      super(state, period);
    }
 
    @Override
-   public void beforeServiceStart() {
+   public synchronized void start() {
+      state.addListener(this);
+      state.put(MONITORS, this);
+      Lifecycle lifecycle = state.getTrait(Lifecycle.class);
+      if (lifecycle != null && lifecycle.isRunning()) {
+         startInternal();
+      }
    }
 
    @Override
@@ -46,11 +35,11 @@ public class SlaveMonitors extends AbstractMonitors implements ServiceListener {
    }
 
    @Override
-   public void afterServiceStop(boolean graceful) {
-   }
-
-   @Override
    public void serviceDestroyed() {
       stop();
+   }
+
+   public String getName() {
+      return MONITORS;
    }
 }

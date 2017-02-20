@@ -1,7 +1,10 @@
 package org.radargun.state;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.radargun.config.Cluster;
 
@@ -10,13 +13,15 @@ import org.radargun.config.Cluster;
  *
  * @author Mircea Markus &lt;Mircea.Markus@jboss.com&gt;
  */
-public class StateBase {
+public class StateBase<L extends StateListener> {
 
    private Map<String, Object> stateMap = new HashMap<>();
    private String configName;
    private Cluster cluster;
    private int clusterSize;
    private int maxClusterSize;
+   
+   private List<L> listeners = new CopyOnWriteArrayList<L>();
 
    public String getConfigName() {
       return configName;
@@ -109,5 +114,18 @@ public class StateBase {
 
    public void reset() {
       stateMap.clear();
+      listeners.clear();
+   }
+   
+   public void addListener(L listener) {
+      listeners.add(listener);
+   }
+
+   public void removeListener(L listener) {
+      listeners.remove(listener);
+   }
+
+   public List<L> getListeners() {
+      return Collections.unmodifiableList(listeners);
    }
 }
