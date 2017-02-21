@@ -39,6 +39,8 @@
             <exclude>**/*.bat</exclude>
             <exclude>**/*.cmd</exclude>
             <exclude>**/*.py</exclude>
+            <exclude>**/*.xcf</exclude>
+            <exclude>**/*.png</exclude>
          </excludes>
       </fileSet>
 
