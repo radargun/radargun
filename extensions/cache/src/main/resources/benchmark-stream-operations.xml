@@ -1,0 +1,108 @@
+<!-- RadarGun 3.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+   <!-- Specifies where should the master open socket -->
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+
+   <!-- List of cluster configurations where the benchmark should run -->
+   <clusters>
+      <cluster size="4">
+         <group name="server" size="2" />
+         <group name="client" size="2" />
+      </cluster>
+   </clusters>
+
+   <!-- List of configurations of the services -->
+   <configurations>
+      <!-- Server setup -->
+      <config name="ISPN9 - hotrod">
+         <setup group="server" plugin="infinispan90">
+            <server xmlns="urn:radargun:plugins:infinispan90:3.0" file="streaming.xml"
+               jmx-domain="jboss.datagrid-infinispan" start-timeout="120000" cache-manager-name="clustered">
+               <!-- Arguments making sure node names and binding ports do not overlap -->
+               <args>
+                  -Djava.net.preferIPv4Stack=true
+                  -Djboss.node.name=node${slave.index}
+                  -Djboss.socket.binding.port-offset=${slave.index}00
+               </args>
+               <!-- Working directory for slave -->
+               <home>${env.RG_WORK}/slave${slave.index}</home>
+               <!-- Path to server ZIP file -->
+               <server-zip>${env.ISPN_ZIP_PATH}/infinispan-server-9.0.0-SNAPSHOT.zip</server-zip>
+               <env>JAVA_OPTS=-server -Xms2g -Xmx4g
+                  -XX:MaxPermSize=4G
+                  -verbose:gc
+               </env>
+            </server>
+         </setup>
+         <!-- Client setup -->
+         <setup group="client" plugin="infinispan90">
+            <hotrod xmlns="urn:radargun:plugins:infinispan90:3.0">
+               <servers>127.0.0.1:11222,127.0.0.1:11322</servers>
+            </hotrod>
+            <vm-args>
+               <memory max="1G" />
+            </vm-args>
+         </setup>
+      </config>
+   </configurations>
+
+   <!-- Sequence of stages executed on the cluster -->
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0"
+      xmlns:cache="urn:radargun:stages:cache:3.0" xmlns:l="urn:radargun:stages:legacy:3.0">
+      <!-- Start services on all nodes -->
+      <service-start />
+      <!-- Begin monitoring of CPU, memory usage and GC -->
+      <jvm-monitor-start />
+
+      <!--Preload the cache with data -->
+      <cache:load num-entries="100" groups="client" load-all-keys="true">
+         <cache:cache-selector>
+            <cache:use-cache cache="streamed"></cache:use-cache>
+         </cache:cache-selector>
+      </cache:load>
+
+      <!-- Warmup the server first Note: name "warmup" signifies that the test will not be included in 
+         results -->
+      <l:streaming-operations-test test-name="warmup"
+         num-threads-per-node="10" duration="30s" groups="client" entry-size="100000">
+         <!-- RandomStream generator is specific for the Streaming operations test -->
+         <l:value-generator>
+            <l:randomStream />
+         </l:value-generator>
+         <!-- Test is memory-intensive so number of keys is deliberately limited -->
+         <l:key-selector>
+            <l:concurrent-keys>
+               <l:total-entries>100</l:total-entries>
+            </l:concurrent-keys>
+         </l:key-selector>
+      </l:streaming-operations-test>
+
+      <!-- Cycle steadily increases size of the values inserted -->
+      <rg:repeat name="StreamOperationsTestCounter" from="1" to="11" inc="1">
+         <l:streaming-operations-test test-name="Streaming_Operations_test"
+            num-threads-per-node="10" duration="15s" groups="client"
+            entry-size="#{${repeat.StreamOperationsTestCounter.counter} * 100000}" amend-test="true"
+            iteration-property="entry-size">
+            <l:key-selector>
+               <l:concurrent-keys>
+                  <l:total-entries>100</l:total-entries>
+               </l:concurrent-keys>
+            </l:key-selector>
+         </l:streaming-operations-test>
+      </rg:repeat>
+
+      <!-- Stop JVM monitoring -->
+      <jvm-monitor-stop />
+   </rg:scenario>
+
+   <!-- How the statistics are reported -->
+   <reports>
+      <!-- Produce CSV statistics report -->
+      <reporter type="csv" />
+      <!-- Produce HTML statistics report -->
+      <reporter type="html" />
+      <!-- Store Java-serialized version of the results that can be used to re-run the report -->
+      <reporter type="serialized" />
+   </reports>
+</benchmark>

@@ -1,5 +1,8 @@
 package org.radargun.stages.cache.test;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Map;
 import java.util.Set;
 
@@ -8,12 +11,14 @@ import org.radargun.stages.test.Invocation;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.BulkOperations;
 import org.radargun.traits.ConditionalOperations;
+import org.radargun.traits.StreamingOperations;
 import org.radargun.traits.TemporalOperations;
 
 /**
- * Provides {@link org.radargun.stages.test.Invocation} implementations for operations from traits
- * {@link org.radargun.traits.BasicOperations}, {@link org.radargun.traits.ConditionalOperations},
- * and {@link org.radargun.traits.BulkOperations}.
+ * Provides {@link org.radargun.stages.test.Invocation} implementations for
+ * operations from traits {@link org.radargun.traits.BasicOperations},
+ * {@link org.radargun.traits.ConditionalOperations}, and
+ * {@link org.radargun.traits.BulkOperations}.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -599,4 +604,83 @@ public class CacheInvocations {
          return async ? ASYNC_TX : NATIVE_TX;
       }
    }
+
+   public static final class GetViaStream<K, V extends Number> implements Invocation<Integer> {
+      public static final Operation GET_NULL = StreamingOperations.GET.derive("Null");
+      public static final Operation TX = StreamingOperations.GET.derive("TX");
+      private final StreamingOperations.StreamingCache<K> cache;
+      private final K key;
+      private Integer value;
+      private byte[] buffer;
+
+      public GetViaStream(StreamingOperations.StreamingCache<K> cache, K key, byte[] buffer) {
+         this.cache = cache;
+         this.key = key;
+         this.buffer = buffer;
+      }
+
+      @Override
+      public Integer invoke() {
+         Integer result = 0;
+         try (InputStream in = cache.getViaStream(key)) {
+            if (in == null)
+               return null;
+            int read = 0;
+            while ((read = in.read(buffer)) != -1)
+               result = result + read;
+            return value = result;
+         } catch (IOException e) {
+            throw new RuntimeException(e);
+         }
+      }
+
+      @Override
+      public Operation operation() {
+         return value == null ? GET_NULL : BasicOperations.GET;
+      }
+
+      @Override
+      public Operation txOperation() {
+         return TX;
+      }
+   }
+
+   public static final class PutViaStream<K, V extends InputStream> implements Invocation<Void> {
+      public static final Operation TX = StreamingOperations.PUT.derive("TX");
+      private final StreamingOperations.StreamingCache<K> cache;
+      private final K key;
+      private final InputStream value;
+      private byte[] buffer;
+
+      public PutViaStream(StreamingOperations.StreamingCache<K> cache, K key, V value, byte[] buffer) {
+         this.cache = cache;
+         this.key = key;
+         this.value = value;
+         this.buffer = buffer;
+      }
+
+      @Override
+      public Void invoke() {
+         try (OutputStream out = cache.putViaStream(key)) {
+            int read = 0;
+            while ((read = value.read(buffer)) != -1) {
+               out.write(buffer, 0, read);
+            }
+         } catch (IOException e) {
+            throw new RuntimeException(e);
+         }
+         return null;
+      }
+
+      @Override
+      public Operation operation() {
+         return StreamingOperations.PUT;
+      }
+
+      @Override
+      public Operation txOperation() {
+         return TX;
+      }
+   }
+
 }
