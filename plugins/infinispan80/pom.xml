@@ -27,6 +27,12 @@
       </dependency>
       <dependency>
          <groupId>org.radargun</groupId>
+         <artifactId>radargun-mapreduce</artifactId>
+         <version>${project.version}</version>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
          <artifactId>radargun-query</artifactId>
          <version>${project.version}</version>
          <scope>provided</scope>
@@ -55,7 +61,7 @@
          </exclusions>
       </dependency>
 
-       <dependency>
+      <dependency>
          <groupId>org.jboss.jbossts</groupId>
          <artifactId>jbossjta</artifactId>
          <version>${version.jbossts}</version>
@@ -147,7 +153,7 @@
    </build>
 
 
-    <profiles>
+   <profiles>
       <profile>
          <id>infinispan80-infinispan-version-default</id>
          <activation>

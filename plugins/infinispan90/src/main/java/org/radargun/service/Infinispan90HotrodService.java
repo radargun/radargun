@@ -17,6 +17,11 @@ public class Infinispan90HotrodService extends Infinispan81HotrodService {
    protected String marshaller;
 
    @ProvidesTrait
+   public HotRodOperations createOperations() {
+      return new Infinispan90HotRodOperations(this);
+   }
+
+   @ProvidesTrait
    public ContinuousQuery createContinuousQuery() {
       return new Infinispan90HotrodContinuousQuery(this);
    }

@@ -31,6 +31,12 @@
          <version>${project.version}</version>
          <scope>provided</scope>
       </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
+         <artifactId>radargun-mapreduce</artifactId>
+         <version>${project.version}</version>
+         <scope>provided</scope>
+      </dependency>
 
       <dependency>
          <groupId>org.radargun</groupId>
@@ -55,7 +61,7 @@
          </exclusions>
       </dependency>
 
-       <dependency>
+      <dependency>
          <groupId>org.jboss.narayana.jta</groupId>
          <artifactId>narayana-jta</artifactId>
          <version>${version.narayanajta}</version>
