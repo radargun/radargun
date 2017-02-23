@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.protocols.TP;
 import org.radargun.Service;
+import org.radargun.traits.ProvidesTrait;
 
 /**
  * @author Roman Macor (rmacor@redhat.com)
@@ -14,6 +15,12 @@ public class Infinispan90EmbeddedService extends Infinispan82EmbeddedService {
    @Override
    protected Infinispan90Lifecycle createLifecycle() {
       return new Infinispan90Lifecycle(this);
+   }
+
+   @Override
+   @ProvidesTrait
+   public InfinispanCacheInfo createCacheInformation() {
+      return new Infinispan90CacheInfo(this);
    }
 
    @Override
