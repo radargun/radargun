@@ -1,0 +1,86 @@
+---
+---
+
+Using scripts
+-------------
+
+### Scripts
+
+RadarGun ships with a number of scripts to help you deploy the framework across a cluster of nodes.  The scripts currently require:
+
+* UNIX or UNIX-like environment to run
+    * Tested on Fedora and RHEL Linux
+
+* SSH with passphraseless keys installed such that the master node can connect to slaves transparently
+    * Java, Maven and git installed and on the user's path on all of the nodes<
+
+*Important*
+
+* the scripts that start master/slaves must be run from the distribution directory (i.e. one level up from `bin`). This is because the resulting processes will look up classed from `plugin` directory, and they depend on the relative location of it.
+* for all the scripts, when run `-h` argument will print a help message.
+
+### slave.sh
+
+Designed to be run on each slave, to start up the local slave process. Slaves need to be aware of the IP[:port] of the master. Master must be running before starting a slave.
+
+### master.sh
+
+Designed to be run on the master node, in order to start the master. Default config used is `conf/benchmark.xml`
+
+### local.sh
+
+Used for running local benchmarks. Default config used is `conf/benchamrk-local.xml`
+
+### benchmark.sh (dist.sh)
+
+Starts the master and then it starts all the slaves. For starting the master it relies on `master.sh`, for slaves it relies on `slave.sh`. In order to be able to start the slaves, it ssh on slaves's machine and runs `slave.sh` there. Addresses of slaves can be specified in `environment.sh`.
+
+#### Using the dist.sh script on a single machine (Fedora 22) 
+
+1. Create virtual interfaces (eth0 is some physical interface) 
+
+        sudo ifconfig eth0:1 192.168.11.101 netmask 255.255.255.0
+        sudo ifconfig eth0:2 192.168.11.102 netmask 255.255.255.0
+        sudo ifconfig eth0:3 192.168.11.103 netmask 255.255.255.0
+
+2. Make sshd listen on the new interfaces - add the following to /etc/ssh/sshd_config
+
+        ListenAddress 192.168.11.101
+        ListenAddress 192.168.11.102
+        ListenAddress 192.168.11.103
+
+3. Create aliases - add the following to /etc/hosts
+
+        192.168.11.101 test1
+        192.168.11.102 test2
+        192.168.11.103 test3
+
+4. Restart everything
+
+        sudo systemctl restart network
+        sudo systemctl restart sshd
+
+5. If you don't have a passwordless ssh key, you will need to create one. Make sure you set an output file other than ~/.ssh/id_rsa, so as not to override your old key. Other than that, just hit enter.
+
+        ssh-keygen -t rsa
+
+6. Test it
+
+        ssh -i --path to the passwordless key-- test1 echo "Interfaces set up"
+
+7. Finally, run Radargun with the dist.sh script
+
+        sh bin/dist.sh test1 test2 test3
+
+### environment.sh
+
+Used by other scripts to set environment variables (JVM options, binding addresses of slaves , etc.).
+
+### detect_slave_ips.sh
+
+This script helps detect slave IPs if slaves are assigned IPs using DHCP and no proper domain is set.  Assumes that the script is run on the master node, and the master node runs the DHCP server which the slaves use to obtain IPs.  Slave names are added to `/etc/hosts` so that slaves can easily be reached after running this script. This script shall be run manually, i.e. it is not called implicitly by `master.sh` or `slave.sh`.
+
+### ssh_key_acceptor.sh
+
+Useful when slaves are reprovisioned each time, e.g., using PXE boot and kickstart.  This adds each slave's SSH keys/fingerprints to the local user's SSH `known_hosts` file so that the user isn't prompted to accept the fingerprint the first time an SSH connection is made.
+
