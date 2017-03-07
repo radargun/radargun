@@ -38,7 +38,8 @@
    <!-- Sequence of stages executed on the cluster -->
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
-                xmlns:cache="urn:radargun:stages:cache:3.0">
+                xmlns:cache="urn:radargun:stages:cache:3.0"
+                xmlns:l="urn:radargun:stages:legacy:3.0">
       <!-- Start services on all nodes -->
       <service-start />
       <!-- Begin monitoring of CPU, memory usage and GC -->
@@ -46,22 +47,24 @@
 
       <!--Preload the cache with data -->
       <cache:load num-entries="10000"/>
-
-      <!-- We will scale the load up here, from 1000 gets/s to 3000 gets/s and from 250 puts/s to 750 puts/s -->
-      <rg:repeat from="1" to="3">
-         <!-- In this stage we'll set goals for test execution -->
-         <cache:basic-operations-test-setup test-name="stress-test"
-                                      num-entries="10000">
-            <cache:get interval="2" invocations="${repeat.counter}"/>
-            <cache:put interval="10" invocations="${repeat.counter}"/>
-         </cache:basic-operations-test-setup>
-         <!-- Here we run the test according to previous setting, in so-called steady state.
-              We set finish="false" because the test will continue in next loop. -->
-         <test test-name="stress-test" amend-test="true" finish="false"
-               duration="${test.duration:1m}" />
-      </rg:repeat>
-      <!-- Finally, we'll terminate the test -->
-      <finish-test test-name="stress-test" />
+      
+      <l:basic-operations-test test-name="warmup" num-operations="100000" num-threads-per-node="5">
+         <l:key-selector>
+            <l:concurrent-keys total-entries="5000" />
+         </l:key-selector>
+      </l:basic-operations-test>
+      
+      <repeat from="10" to="30" inc="10">
+         <l:basic-operations-test test-name="stress-test" amend-test="true"
+                                duration="1m" num-threads-per-node="${repeat.counter}">
+            <l:key-selector>
+               <l:concurrent-keys total-entries="10000"/>
+            </l:key-selector>
+            <statistics>
+               <common/>
+            </statistics>
+         </l:basic-operations-test>
+      </repeat>
 
       <!-- Stop JVM monitoring -->
       <jvm-monitor-stop />
