@@ -39,7 +39,7 @@ public class BackgroundOpsManager implements ServiceListener {
    private static Log log = LogFactory.getLog(BackgroundOpsManager.class);
 
    private GeneralConfiguration generalConfiguration;
-   private LegacyLogicConfiguration legacyLogicConfiguration;
+   private BackgroundStressorLogicConfiguration backgroundStressorLogicConfiguration;
    private LogLogicConfiguration logLogicConfiguration;
 
    private String name;
@@ -85,11 +85,11 @@ public class BackgroundOpsManager implements ServiceListener {
 
    public static BackgroundOpsManager getOrCreateInstance(SlaveState slaveState, String name,
                                                           GeneralConfiguration generalConfiguration,
-                                                          LegacyLogicConfiguration legacyLogicConfiguration,
+                                                          BackgroundStressorLogicConfiguration backgroundStressorLogicConfiguration,
                                                           LogLogicConfiguration logLogicConfiguration) {
       BackgroundOpsManager instance = getOrCreateInstance(slaveState, name);
       instance.generalConfiguration = generalConfiguration;
-      instance.legacyLogicConfiguration = legacyLogicConfiguration;
+      instance.backgroundStressorLogicConfiguration = backgroundStressorLogicConfiguration;
       instance.logLogicConfiguration = logLogicConfiguration;
       instance.threadManager.initConfiguration();
 
@@ -139,10 +139,10 @@ public class BackgroundOpsManager implements ServiceListener {
          if (logLogicConfiguration.enabled) {
             return new SharedLogLogic(this, new Range(generalConfiguration.keyIdOffset, generalConfiguration.keyIdOffset + generalConfiguration.numEntries));
          } else {
-            throw new IllegalArgumentException("Legacy logic cannot use shared keys");
+            throw new IllegalArgumentException("The logic cannot use shared keys");
          }
       } else {
-         // TODO: we may have broken totalThreads for legacy logic with dead slaves preloading
+         // TODO: we may have broken totalThreads for logic with dead slaves preloading
          int totalThreads = numThreads * slaveState.getGroupSize();
          Range range = Range.divideRange(generalConfiguration.numEntries, totalThreads, numThreads * slaveState.getIndexInGroup() + index).shift(generalConfiguration.keyIdOffset);
 
@@ -152,7 +152,7 @@ public class BackgroundOpsManager implements ServiceListener {
             return new PrivateLogLogic(this, range);
          } else {
             // TODO: remove preloading from background stressors at all, use load-data instead
-            List<Integer> deadSlaves = legacyLogicConfiguration.loadDataForDeadSlaves;
+            List<Integer> deadSlaves = backgroundStressorLogicConfiguration.loadDataForDeadSlaves;
             List<List<Range>> rangesForThreads = null;
             int liveId = slaveState.getSlaveIndex();
             if (!loaded && deadSlaves != null && !deadSlaves.isEmpty()) {
@@ -167,7 +167,7 @@ public class BackgroundOpsManager implements ServiceListener {
                rangesForThreads = Range.balance(deadSlavesKeyRanges, (slaveState.getClusterSize() - deadSlaves.size()) * numThreads);
             }
             List<Range> deadRanges = rangesForThreads == null ? null : rangesForThreads.get(index + numThreads * liveId);
-            return new LegacyLogic(this, range, deadRanges, loaded);
+            return new BackgroundStressorLogic(this, range, deadRanges, loaded);
          }
       }
    }
@@ -237,7 +237,7 @@ public class BackgroundOpsManager implements ServiceListener {
       threadManager.stopBackgroundThreads();
    }
 
-   // Waits until all stressor threads load data. Applies to LegacyLogic only.
+   // Waits until all stressor threads load data. Applies to BackgroundStressorLogic only.
    public synchronized void waitUntilLoaded() throws InterruptedException {
       threadManager.waitUntilLoaded();
    }
@@ -311,8 +311,8 @@ public class BackgroundOpsManager implements ServiceListener {
       return generalConfiguration;
    }
 
-   public LegacyLogicConfiguration getLegacyLogicConfiguration() {
-      return legacyLogicConfiguration;
+   public BackgroundStressorLogicConfiguration getBackgroundStressorLogicConfiguration() {
+      return backgroundStressorLogicConfiguration;
    }
 
    public LogLogicConfiguration getLogLogicConfiguration() {

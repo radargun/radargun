@@ -5,16 +5,16 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.config.Namespace;
 import org.radargun.config.Stage;
-import org.radargun.stages.test.legacy.Completion;
-import org.radargun.stages.test.legacy.LegacyTestStage;
-import org.radargun.stages.test.legacy.TimeStressorCompletion;
+import org.radargun.stages.test.Completion;
+import org.radargun.stages.test.TestStage;
+import org.radargun.stages.test.TimeStressorCompletion;
 
 /**
  * A stage for REST operations running in background.
  *
  * @author Martin Gencur
  */
-@Namespace(LegacyTestStage.NAMESPACE)
+@Namespace(TestStage.NAMESPACE)
 @Stage(doc = "Stage for starting REST operations in the background")
 public class BackgroundRESTOperationsStartStage extends RESTOperationsTestStage {
 

@@ -15,9 +15,9 @@ import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
 import org.radargun.stages.test.Invocation;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.LegacyTestStage;
-import org.radargun.stages.test.legacy.OperationLogic;
+import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.TestStage;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Request;
 import org.radargun.stats.Statistics;
@@ -30,7 +30,7 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 @Stage(doc = "Iterates through all entries.")
-public class IterateStage extends LegacyTestStage {
+public class IterateStage extends TestStage {
    @Property(doc = "Full class name of the filter used to iterate through entries. Default is none (accept all).")
    public String filterClass;
 
@@ -71,7 +71,7 @@ public class IterateStage extends LegacyTestStage {
    }
 
    @Override
-   protected DistStageAck newStatisticsAck(List<LegacyStressor> stressors) {
+   protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
       List<IterationResult> results = gatherResults(stressors, new IterationResultRetriever());
       return new IterationAck(slaveState, results,
          info != null ? info.getCache(containerName).getTotalSize() : -1);
@@ -165,7 +165,7 @@ public class IterateStage extends LegacyTestStage {
       private long maxElements = -1;
 
       @Override
-      public void init(LegacyStressor stressor) {
+      public void init(Stressor stressor) {
          super.init(stressor);
          if (filterClass != null) {
             filter = Utils.instantiateAndInit(filterClass, filterParam);
@@ -331,7 +331,7 @@ public class IterateStage extends LegacyTestStage {
 
    private class IterationResultRetriever implements ResultRetriever<IterationResult> {
       @Override
-      public IterationResult getResult(LegacyStressor stressor) {
+      public IterationResult getResult(Stressor stressor) {
          Logic logic = (Logic) stressor.getLogic();
          return new IterationResult(stressor.getStats(), logic.minElements, logic.maxElements, logic.failed);
       }

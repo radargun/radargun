@@ -7,11 +7,11 @@ import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 
 /**
- * Configuration specific to {@link LegacyLogic}
+ * Configuration specific to {@link BackgroundStressorLogic}
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class LegacyLogicConfiguration {
+public class BackgroundStressorLogicConfiguration {
    @Property(doc = "Size of value used in the entry. Default is 1024 bytes.")
    protected int entrySize = 1024;
 

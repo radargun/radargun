@@ -9,10 +9,10 @@ import org.radargun.StageResult;
 import org.radargun.config.PropertyDelegate;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
+import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.TestStage;
 import org.radargun.stages.test.TransactionMode;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.LegacyTestStage;
-import org.radargun.stages.test.legacy.OperationLogic;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
@@ -24,7 +24,7 @@ import org.radargun.traits.Queryable;
  * to make that code reusable with different threading models.
  */
 @Stage(doc = "Stage which executes a query.")
-public class QueryStage extends LegacyTestStage {
+public class QueryStage extends TestStage {
    @PropertyDelegate
    public QueryConfiguration query = new QueryConfiguration();
 
@@ -49,7 +49,7 @@ public class QueryStage extends LegacyTestStage {
    }
 
    @Override
-   protected DistStageAck newStatisticsAck(List<LegacyStressor> stressors) {
+   protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
       QueryBase.Data data = base.createQueryData(internalsExposition);
       return new QueryAck(slaveState, gatherResults(stressors, new StatisticsResultRetriever()), data);
    }

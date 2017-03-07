@@ -1,4 +1,4 @@
-package org.radargun.stages.test.legacy;
+package org.radargun.stages.test;
 
 import org.radargun.Operation;
 
@@ -9,13 +9,13 @@ import org.radargun.Operation;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
 public abstract class OperationLogic {
-   protected LegacyStressor stressor;
+   protected Stressor stressor;
 
    /**
     * Initialize this logic. No {@link org.radargun.Operation operations}
     * should be executed here.
     */
-   public void init(LegacyStressor stressor) {
+   public void init(Stressor stressor) {
       this.stressor = stressor;
    }
 
@@ -26,7 +26,7 @@ public abstract class OperationLogic {
 
    /**
     * Execute operation on the stressor using its
-    * {@link LegacyStressor#makeRequest(Invocation)} makeRequest} method.
+    * {@link Stressor#makeRequest(Invocation)} makeRequest} method.
     * This operation accounts to the statistics.
     * Note: logic may actually execute more operations
     *
@@ -36,7 +36,7 @@ public abstract class OperationLogic {
    public abstract void run(Operation operation) throws RequestException;
 
    /**
-    * Handle started transaction - the logic should call {@link LegacyStressor#wrap(Object)} on all resources
+    * Handle started transaction - the logic should call {@link Stressor#wrap(Object)} on all resources
     * used in the further invocation
     */
    public void transactionStarted() {

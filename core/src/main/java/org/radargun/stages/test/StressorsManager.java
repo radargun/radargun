@@ -1,4 +1,4 @@
-package org.radargun.stages.test.legacy;
+package org.radargun.stages.test;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -14,9 +14,9 @@ public class StressorsManager {
 
    private CountDownLatch finishCountDown;
    private long startTime;
-   private List<LegacyStressor> stressors;
+   private List<Stressor> stressors;
 
-   public StressorsManager(List<LegacyStressor> stressors, long startTime, CountDownLatch finishCountDown) {
+   public StressorsManager(List<Stressor> stressors, long startTime, CountDownLatch finishCountDown) {
       this.stressors = stressors;
       this.startTime = startTime;
       this.finishCountDown = finishCountDown;
@@ -26,7 +26,7 @@ public class StressorsManager {
       return startTime;
    }
 
-   public List<LegacyStressor> getStressors() {
+   public List<Stressor> getStressors() {
       return stressors;
    }
 

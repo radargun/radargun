@@ -1,4 +1,4 @@
-package org.radargun.stages.test.legacy;
+package org.radargun.stages.test;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,8 +15,6 @@ import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
-import org.radargun.stages.test.BaseTestStage;
-import org.radargun.stages.test.TransactionMode;
 import org.radargun.state.SlaveState;
 import org.radargun.stats.Statistics;
 import org.radargun.traits.InjectTrait;
@@ -28,9 +26,9 @@ import org.radargun.utils.Utils;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(LegacyTestStage.NAMESPACE)
+@Namespace(TestStage.NAMESPACE)
 @Stage(doc = "Base for test spawning several threads and benchmark of operations executed in those.")
-public abstract class LegacyTestStage extends BaseTestStage {
+public abstract class TestStage extends BaseTestStage {
    public static final String NAMESPACE = "urn:radargun:stages:legacy:" + Version.SCHEMA_VERSION;
 
    @Property(doc = "The number of threads executing on each node. You have to set either this or 'total-threads'. No default.")
@@ -173,7 +171,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
       });
       operationSelector = wrapOperationSelector(createOperationSelector());
 
-      List<LegacyStressor> stressors = startStressors();
+      List<Stressor> stressors = startStressors();
       started = true;
 
       if (rampUp > 0) {
@@ -242,14 +240,14 @@ public abstract class LegacyTestStage extends BaseTestStage {
       return operationSelector;
    }
 
-   protected List<LegacyStressor> startStressors() {
+   protected List<Stressor> startStressors() {
       int myFirstThread = getFirstThreadOn(slaveState.getSlaveIndex());
       int myNumThreads = getNumThreadsOn(slaveState.getSlaveIndex());
       CountDownLatch threadCountDown = new CountDownLatch(myNumThreads);
 
-      List<LegacyStressor> stressors = new ArrayList<>();
+      List<Stressor> stressors = new ArrayList<>();
       for (int threadIndex = stressors.size(); threadIndex < myNumThreads; threadIndex++) {
-         LegacyStressor stressor = new LegacyStressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, logTransactionExceptions, threadCountDown, delayBetweenRequests);
+         Stressor stressor = new Stressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, logTransactionExceptions, threadCountDown, delayBetweenRequests);
          stressors.add(stressor);
          stressor.start();
       }
@@ -262,12 +260,12 @@ public abstract class LegacyTestStage extends BaseTestStage {
       return stressors;
    }
 
-   protected DistStageAck newStatisticsAck(List<LegacyStressor> stressors) {
+   protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
       List<Statistics> results = gatherResults(stressors, new StatisticsResultRetriever());
       return new StatisticsAck(slaveState, results);
    }
 
-   protected <T> List<T> gatherResults(List<LegacyStressor> stressors, ResultRetriever<T> retriever) {
+   protected <T> List<T> gatherResults(List<Stressor> stressors, ResultRetriever<T> retriever) {
       if (mergeThreadStats) {
          return stressors.stream()
             .map(retriever::getResult)
@@ -357,7 +355,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
    }
 
    protected interface ResultRetriever<T> {
-      T getResult(LegacyStressor stressor);
+      T getResult(Stressor stressor);
 
       T merge(T stats1, T stats2);
    }
@@ -366,7 +364,7 @@ public abstract class LegacyTestStage extends BaseTestStage {
       public StatisticsResultRetriever() {}
 
       @Override
-      public Statistics getResult(LegacyStressor stressor) {
+      public Statistics getResult(Stressor stressor) {
          return stressor.getStats();
       }
 

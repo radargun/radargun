@@ -1,4 +1,4 @@
-<rg:scenario xmlns:rg="urn:radargun:scenario:3.0" xmlns="urn:radargun:stages:core:3.0" xmlns:l="urn:radargun:stages:legacy:3.0">
+<rg:scenario xmlns:rg="urn:radargun:scenario:3.0" xmlns="urn:radargun:stages:core:3.0">
     <service-start/>
 
     <jvm-monitor-start />

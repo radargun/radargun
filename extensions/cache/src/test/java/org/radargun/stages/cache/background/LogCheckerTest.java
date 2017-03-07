@@ -23,7 +23,7 @@ public class LogCheckerTest {
 
    public void testRunContainsOp() throws Exception {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
-      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
       doReturn(false).doReturn(true).when(logChecker).isInterrupted();
@@ -52,7 +52,7 @@ public class LogCheckerTest {
 
    public void testRunContainsOpLogCheckerKey() throws Exception {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
-      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
       doReturn(false).doReturn(true).when(logChecker).isInterrupted();
@@ -68,7 +68,7 @@ public class LogCheckerTest {
 
    public void testRunDoesntContainOp() throws Exception {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
-      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
       doReturn(false).doReturn(true).when(logChecker).isInterrupted();
@@ -96,7 +96,7 @@ public class LogCheckerTest {
 
    public void testRunDoesntContainOpConfirmationHigher() throws Exception {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
-      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
       doReturn(false).doReturn(true).when(logChecker).isInterrupted();
@@ -127,7 +127,7 @@ public class LogCheckerTest {
 
    public void testRunDoesntContainOpConfirmationLower() throws Exception {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
-      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
       doReturn(false).doReturn(true).when(logChecker).isInterrupted();
@@ -157,7 +157,7 @@ public class LogCheckerTest {
 
    public void testRunDoesntContainOpConfirmationUnsuccessful() throws Exception {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
-      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       assertEquals(logChecker.stressorRecordPool.getAvailableRecords().size(), 1);
       doReturn(false).doReturn(true).when(logChecker).isInterrupted();
@@ -192,7 +192,7 @@ public class LogCheckerTest {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       LogLogicConfiguration llc = new LogLogicConfiguration();
       llc.ignoreDeadCheckers = true;
-      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new LegacyLogicConfiguration(), llc, cache);
+      LogChecker logChecker = createLogChecker(new GeneralConfiguration(), new BackgroundStressorLogicConfiguration(), llc, cache);
 
       StressorRecord stressorRecord = spy(new StressorRecord(0, new Range(0, 1)));
       assertEquals(stressorRecord.currentOp, 0);
@@ -203,7 +203,7 @@ public class LogCheckerTest {
       assertEquals(stressorRecord.currentOp, 3l);
    }
 
-   private LogChecker createLogChecker(GeneralConfiguration gc, LegacyLogicConfiguration lc, LogLogicConfiguration llc, BasicOperations.Cache cache) throws NoSuchFieldException, IllegalAccessException {
+   private LogChecker createLogChecker(GeneralConfiguration gc, BackgroundStressorLogicConfiguration lc, LogLogicConfiguration llc, BasicOperations.Cache cache) throws NoSuchFieldException, IllegalAccessException {
       if (gc == null || lc == null || llc == null || cache == null) {
          throw new IllegalArgumentException("All configuration parameters need to be specified");
       }
@@ -211,7 +211,7 @@ public class LogCheckerTest {
       SlaveState slaveState = new SlaveState();
       BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(slaveState, "test");
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "generalConfiguration", gc);
-      ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "legacyLogicConfiguration", lc);
+      ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "backgroundStressorLogicConfiguration", lc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "logLogicConfiguration", llc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "basicCache", cache);
       List<StressorRecord> stressorRecords = new ArrayList<>(1);

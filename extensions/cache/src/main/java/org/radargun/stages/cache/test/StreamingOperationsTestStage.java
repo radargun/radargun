@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test.legacy;
+package org.radargun.stages.cache.test;
 
 import java.io.InputStream;
 import java.util.Random;
@@ -7,17 +7,16 @@ import org.radargun.Operation;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.cache.test.CacheInvocations;
 import org.radargun.stages.test.Invocation;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.LegacyTestStage;
-import org.radargun.stages.test.legacy.OperationLogic;
-import org.radargun.stages.test.legacy.OperationSelector;
-import org.radargun.stages.test.legacy.RatioOperationSelector;
+import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.OperationSelector;
+import org.radargun.stages.test.RatioOperationSelector;
+import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.TestStage;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.StreamingOperations;
 
-@Namespace(LegacyTestStage.NAMESPACE)
+@Namespace(TestStage.NAMESPACE)
 @Stage(doc = "Streaming operations test stage")
 public class StreamingOperationsTestStage extends CacheOperationsTestStage {
 
@@ -52,7 +51,7 @@ public class StreamingOperationsTestStage extends CacheOperationsTestStage {
       protected byte[] buffer = new byte[bufferSize];
 
       @Override
-      public void init(LegacyStressor stressor) {
+      public void init(Stressor stressor) {
          super.init(stressor);
 
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());

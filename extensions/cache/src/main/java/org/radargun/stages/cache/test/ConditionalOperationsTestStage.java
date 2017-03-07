@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test.legacy;
+package org.radargun.stages.cache.test;
 
 import java.util.Random;
 
@@ -6,12 +6,11 @@ import org.radargun.Operation;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.cache.test.CacheInvocations;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.LegacyTestStage;
-import org.radargun.stages.test.legacy.OperationLogic;
-import org.radargun.stages.test.legacy.OperationSelector;
-import org.radargun.stages.test.legacy.RatioOperationSelector;
+import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.OperationSelector;
+import org.radargun.stages.test.RatioOperationSelector;
+import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.TestStage;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;
@@ -19,7 +18,7 @@ import org.radargun.traits.InjectTrait;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(LegacyTestStage.NAMESPACE)
+@Namespace(TestStage.NAMESPACE)
 @Stage(doc = "Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio" +
    "- this operation is executed anytime the selected key does not have value.")
 public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
@@ -81,7 +80,7 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
       protected KeySelector keySelector;
 
       @Override
-      public void init(LegacyStressor stressor) {
+      public void init(Stressor stressor) {
          super.init(stressor);
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
          nonTxBasicCache = basicOperations.getCache(cacheName);
