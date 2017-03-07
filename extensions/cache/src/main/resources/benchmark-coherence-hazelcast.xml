@@ -27,25 +27,24 @@
 
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
-                xmlns:cache="urn:radargun:stages:cache:3.0"
-                xmlns:l="urn:radargun:stages:legacy:3.0">
+                xmlns:cache="urn:radargun:stages:cache:3.0">
       <service-start />
       <jvm-monitor-start />
 
       <cache:load num-entries="5000"/>
-      <l:basic-operations-test test-name="warmup" num-requests="100000" num-threads-per-node="5">
-         <l:key-selector>
-            <l:concurrent-keys total-entries="5000" />
-         </l:key-selector>
-      </l:basic-operations-test>
+      <cache:basic-operations-test test-name="warmup" num-requests="100000" num-threads-per-node="5">
+         <cache:key-selector>
+            <cache:concurrent-keys total-entries="5000" />
+         </cache:key-selector>
+      </cache:basic-operations-test>
 
       <cache:load num-entries="10000"/>
-      <l:basic-operations-test test-name="stress-test"
+      <cache:basic-operations-test test-name="stress-test"
                              duration="1m" num-threads-per-node="20">
-         <l:key-selector>
-            <l:concurrent-keys total-entries="10000"/>
-         </l:key-selector>
-      </l:basic-operations-test>
+         <cache:key-selector>
+            <cache:concurrent-keys total-entries="10000"/>
+         </cache:key-selector>
+      </cache:basic-operations-test>
    </rg:scenario>
    <!-- Ignore leaked threads as Coherence leaks quite often -->
    <cleanup check-threads="false" />

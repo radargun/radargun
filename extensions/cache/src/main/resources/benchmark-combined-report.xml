@@ -25,39 +25,38 @@
 
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
-                xmlns:cache="urn:radargun:stages:cache:3.0"
-                xmlns:l="urn:radargun:stages:legacy:3.0">
+                xmlns:cache="urn:radargun:stages:cache:3.0">
       <service-start />
 
       <!-- Preload the cache with data -->
       <cache:load num-entries="5000"/>
 
-      <l:basic-operations-test test-name="warmup" duration="${warmup.duration:10s}" num-threads-per-node="10">
-         <l:key-selector>
-            <l:colliding-keys num-entries="5000" />
-         </l:key-selector>
-      </l:basic-operations-test>
+      <cache:basic-operations-test test-name="warmup" duration="${warmup.duration:10s}" num-threads-per-node="10">
+         <cache:key-selector>
+            <cache:colliding-keys num-entries="5000" />
+         </cache:key-selector>
+      </cache:basic-operations-test>
 
-      <l:basic-operations-test test-name="concurrent" duration="${test.long.duration:10s}" num-threads-per-node="10">
-         <l:key-selector>
-            <l:concurrent-keys total-entries="5000" />
-         </l:key-selector>
-      </l:basic-operations-test>
+      <cache:basic-operations-test test-name="concurrent" duration="${test.long.duration:10s}" num-threads-per-node="10">
+         <cache:key-selector>
+            <cache:concurrent-keys total-entries="5000" />
+         </cache:key-selector>
+      </cache:basic-operations-test>
 
-      <l:basic-operations-test test-name="colliding" duration="${test.long.duration:10s}" num-threads-per-node="10">
-         <l:key-selector>
-            <l:colliding-keys num-entries="5000" />
-         </l:key-selector>
-      </l:basic-operations-test>
+      <cache:basic-operations-test test-name="colliding" duration="${test.long.duration:10s}" num-threads-per-node="10">
+         <cache:key-selector>
+            <cache:colliding-keys num-entries="5000" />
+         </cache:key-selector>
+      </cache:basic-operations-test>
 
       <rg:repeat from="1" to="${repeat.times:10}">
-         <l:basic-operations-test test-name="iterating" amend-test="true"
+         <cache:basic-operations-test test-name="iterating" amend-test="true"
                                 iteration-property="num-threads-per-node"
                                 duration="${test.short.duration:5s}" num-threads-per-node="#{2 ^ ${repeat.counter}}">
-            <l:key-selector>
-               <l:colliding-keys num-entries="5000"/>
-            </l:key-selector>
-         </l:basic-operations-test>
+            <cache:key-selector>
+               <cache:colliding-keys num-entries="5000"/>
+            </cache:key-selector>
+         </cache:basic-operations-test>
       </rg:repeat>
    </rg:scenario>
 

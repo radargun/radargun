@@ -34,20 +34,20 @@
 
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
-                xmlns:l="urn:radargun:stages:legacy:3.0">
+                xmlns:rest="urn:radargun:stages:rest:3.0">
 
       <service-start groups="servers"/>
       <service-start groups="clients" validate-cluster="false" />
 
       <jvm-monitor-start />
      
-      <l:rest-operations-test groups="clients"
+      <rest:rest-operations-test groups="clients"
                               test-name="clusterbench"
                               duration="10s"
                               num-threads-per-node="1"
                               delay-between-requests="200"
                               context-path="/clusterbench/session">
-      </l:rest-operations-test>
+      </rest:rest-operations-test>
       
       <jvm-monitor-stop /> 
       

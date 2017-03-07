@@ -38,8 +38,7 @@
    <!-- Sequence of stages executed on the cluster -->
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
-                xmlns:cache="urn:radargun:stages:cache:3.0"
-                xmlns:l="urn:radargun:stages:legacy:3.0">
+                xmlns:cache="urn:radargun:stages:cache:3.0">
       <!-- Start services on all nodes -->
       <service-start />
       <!-- Begin monitoring of CPU, memory usage and GC -->
@@ -49,11 +48,11 @@
       <cache:load num-entries="5000"/>
       <!-- 5 threads will execute random requests against the default cache ('testCache') for 1 minute-->
       <!-- As the test is called 'warmup', performance statistics won't be reported -->
-      <l:basic-operations-test test-name="warmup" duration="${warmup.duration:1m}" num-threads-per-node="5">
-         <l:key-selector>
-            <l:concurrent-keys total-entries="5000" />
-         </l:key-selector>
-      </l:basic-operations-test>
+      <cache:basic-operations-test test-name="warmup" duration="${warmup.duration:1m}" num-threads-per-node="5">
+         <cache:key-selector>
+            <cache:concurrent-keys total-entries="5000" />
+         </cache:key-selector>
+      </cache:basic-operations-test>
 
       <!-- Remove all data from the default cache -->
       <cache:clear />
@@ -66,15 +65,15 @@
       <define value="1000, 2000, 10000" var="entries"/>
 
       <rg:repeat from="0" to="#{${threads}.size - 1}" inc="1">
-         <l:basic-operations-test test-name="stress-test" amend-test="true"
+         <cache:basic-operations-test test-name="stress-test" amend-test="true"
                                 duration="${test.duration:1m}" num-threads-per-node="#{${threads}.get(${repeat.counter})}">
             <statistics>
                <common period="1s"/>
             </statistics>
-            <l:key-selector>
-               <l:concurrent-keys total-entries="#{${entries}.get(${repeat.counter})}"/>
-            </l:key-selector>
-         </l:basic-operations-test>
+            <cache:key-selector>
+               <cache:concurrent-keys total-entries="#{${entries}.get(${repeat.counter})}"/>
+            </cache:key-selector>
+         </cache:basic-operations-test>
       </rg:repeat>
 
       <!-- Stop JVM monitoring -->

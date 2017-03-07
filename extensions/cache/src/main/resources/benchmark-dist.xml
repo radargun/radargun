@@ -38,8 +38,7 @@
    <!-- Sequence of stages executed on the cluster -->
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
-                xmlns:cache="urn:radargun:stages:cache:3.0"
-                xmlns:l="urn:radargun:stages:legacy:3.0">
+                xmlns:cache="urn:radargun:stages:cache:3.0">
       <!-- Start services on all nodes -->
       <service-start />
       <!-- Begin monitoring of CPU, memory usage and GC -->
@@ -48,22 +47,22 @@
       <!--Preload the cache with data -->
       <cache:load num-entries="10000"/>
       
-      <l:basic-operations-test test-name="warmup" num-operations="100000" num-threads-per-node="5">
-         <l:key-selector>
-            <l:concurrent-keys total-entries="5000" />
-         </l:key-selector>
-      </l:basic-operations-test>
+      <cache:basic-operations-test test-name="warmup" num-operations="100000" num-threads-per-node="5">
+         <cache:key-selector>
+            <cache:concurrent-keys total-entries="5000" />
+         </cache:key-selector>
+      </cache:basic-operations-test>
       
       <repeat from="10" to="30" inc="10">
-         <l:basic-operations-test test-name="stress-test" amend-test="true"
+         <cache:basic-operations-test test-name="stress-test" amend-test="true"
                                 duration="1m" num-threads-per-node="${repeat.counter}">
-            <l:key-selector>
-               <l:concurrent-keys total-entries="10000"/>
-            </l:key-selector>
+            <cache:key-selector>
+               <cache:concurrent-keys total-entries="10000"/>
+            </cache:key-selector>
             <statistics>
                <common/>
             </statistics>
-         </l:basic-operations-test>
+         </cache:basic-operations-test>
       </repeat>
 
       <!-- Stop JVM monitoring -->

@@ -7,6 +7,7 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import org.radargun.Operation;
 import org.radargun.RESTOperationInvocations;
+import org.radargun.Version;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
@@ -25,9 +26,11 @@ import org.radargun.traits.RESTOperations;
  *
  * @author Martin Gencur
  */
-@Namespace(TestStage.NAMESPACE)
+@Namespace(RESTOperationsTestStage.NAMESPACE)
 @Stage(doc = "Test using RESTOperations with specific URL")
 public class RESTOperationsTestStage extends TestStage {
+
+   public static final String NAMESPACE = "urn:radargun:stages:rest:" + Version.SCHEMA_VERSION;
 
    @Property(doc = "Ratio of GET requests. Default is 1 (100%).")
    protected int getRatio = 1;

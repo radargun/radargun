@@ -21,8 +21,7 @@
 
    <rg:scenario xmlns="urn:radargun:stages:core:3.0"
                 xmlns:rg="urn:radargun:benchmark:3.0"
-                xmlns:cache="urn:radargun:stages:cache:3.0"
-                xmlns:l="urn:radargun:stages:legacy:3.0">
+                xmlns:cache="urn:radargun:stages:cache:3.0">
       <service-start />
       <jvm-monitor-start />
 
@@ -32,14 +31,14 @@
       <cache:load num-entries="10000"/>
       <!-- Generate statistics for 10, 20, 30 .. 100 threads -->
       <rg:repeat times="${repeat.times:10}">
-         <l:basic-operations-test test-name="increase-thread-count" amend-test="true"
+         <cache:basic-operations-test test-name="increase-thread-count" amend-test="true"
                                 duration="${test.short.duration:10s}"
                                 total-threads="#{ 10 * ${repeat.counter} + 10 }"
                                 iteration-property="total-threads">
-            <l:key-selector>
-               <l:colliding-keys num-entries="10000"/>
-            </l:key-selector>
-         </l:basic-operations-test>
+            <cache:key-selector>
+               <cache:colliding-keys num-entries="10000"/>
+            </cache:key-selector>
+         </cache:basic-operations-test>
       </rg:repeat>
 
       <!-- Find which iteration had maximum TX throughput -->
@@ -53,15 +52,15 @@
       </analyze-test>
 
       <!-- Run a longer test to get reliable results -->
-      <l:basic-operations-test test-name="on-max-throughput"
+      <cache:basic-operations-test test-name="on-max-throughput"
                              duration="${test.long.duration:1m}" total-threads="#{ 10 * ${top.iteration} + 10 }">
          <statistics>
             <common/>
          </statistics>
-         <l:key-selector>
-            <l:colliding-keys num-entries="10000"/>
-         </l:key-selector>
-      </l:basic-operations-test>
+         <cache:key-selector>
+            <cache:colliding-keys num-entries="10000"/>
+         </cache:key-selector>
+      </cache:basic-operations-test>
 
       <!-- Put the number of threads as a result to the test
            so we can easily see the number of threads used for the test -->
