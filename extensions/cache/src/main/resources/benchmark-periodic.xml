@@ -15,7 +15,7 @@
       </config>
    </configurations>
 
-   <!-- This benchmark shows how to configure statistics in a legacy test -->
+   <!-- This benchmark shows how to configure statistics -->
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
                 xmlns:cache="urn:radargun:stages:cache:3.0"

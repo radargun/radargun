@@ -37,7 +37,7 @@ public class ThreadManager {
 
    // Configuration fields
    private GeneralConfiguration generalConfiguration;
-   private LegacyLogicConfiguration legacyLogicConfiguration;
+   private BackgroundStressorLogicConfiguration backgroundStressorLogicConfiguration;
    private LogLogicConfiguration logLogicConfiguration;
 
 
@@ -47,17 +47,17 @@ public class ThreadManager {
 
    public void initConfiguration() {
       this.generalConfiguration = manager.getGeneralConfiguration();
-      this.legacyLogicConfiguration = manager.getLegacyLogicConfiguration();
+      this.backgroundStressorLogicConfiguration = manager.getBackgroundStressorLogicConfiguration();
       this.logLogicConfiguration = manager.getLogLogicConfiguration();
    }
 
    public synchronized void startBackgroundThreads() {
-      if (legacyLogicConfiguration.isNoLoading()) {
+      if (backgroundStressorLogicConfiguration.isNoLoading()) {
          manager.setLoaded(true);
       }
-      if (legacyLogicConfiguration.loadDataOnSlaves != null
-         && !legacyLogicConfiguration.loadDataOnSlaves.isEmpty()
-         && !legacyLogicConfiguration.loadDataOnSlaves.contains(manager.getSlaveState().getSlaveIndex())) {
+      if (backgroundStressorLogicConfiguration.loadDataOnSlaves != null
+         && !backgroundStressorLogicConfiguration.loadDataOnSlaves.isEmpty()
+         && !backgroundStressorLogicConfiguration.loadDataOnSlaves.contains(manager.getSlaveState().getSlaveIndex())) {
          log.info("This slave is not loading any data");
          return;
       }
@@ -76,7 +76,7 @@ public class ThreadManager {
             keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(new KeepAliveTask(), 0, 1000, TimeUnit.MILLISECONDS);
          }
       }
-      if (legacyLogicConfiguration.waitUntilLoaded) {
+      if (backgroundStressorLogicConfiguration.waitUntilLoaded) {
          log.info("Waiting until all stressor threads load data");
          try {
             waitUntilLoaded();
@@ -202,8 +202,8 @@ public class ThreadManager {
       while (!loaded) {
          loaded = true;
          for (Stressor st : stressorThreads) {
-            if ((st.getLogic() instanceof LegacyLogic)) {
-               boolean isLoaded = ((LegacyLogic) st.getLogic()).isLoaded();
+            if ((st.getLogic() instanceof BackgroundStressorLogic)) {
+               boolean isLoaded = ((BackgroundStressorLogic) st.getLogic()).isLoaded();
                loaded = loaded && isLoaded;
             } else {
                log.warnf("Thread %s has logic %s", st.getName(), st.getLogic());

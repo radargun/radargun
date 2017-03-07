@@ -19,7 +19,7 @@ import org.radargun.utils.Utils;
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  * @author Michal Linhard &lt;mlinhard@redhat.com&gt;
  */
-class LegacyLogic extends AbstractLogic {
+class BackgroundStressorLogic extends AbstractLogic {
    // these two caches can be transactional internally (with autocommit)
    // but must not be used between begin() and commit() | rollback()
    private final BasicOperations.Cache nonTxBasicCache;
@@ -38,7 +38,7 @@ class LegacyLogic extends AbstractLogic {
    private RequestSet transactionalRequests;
    private ValueGenerator valueGenerator;
 
-   LegacyLogic(BackgroundOpsManager manager, Range range, List<Range> deadSlavesRanges, boolean loaded) {
+   BackgroundStressorLogic(BackgroundOpsManager manager, Range range, List<Range> deadSlavesRanges, boolean loaded) {
       super(manager);
       this.manager = manager;
       this.nonTxBasicCache = manager.getBasicCache();
@@ -50,9 +50,9 @@ class LegacyLogic extends AbstractLogic {
       this.keyRangeStart = range.getStart();
       this.keyRangeEnd = range.getEnd();
       this.deadSlavesRanges = deadSlavesRanges;
-      this.loadOnly = manager.getLegacyLogicConfiguration().isLoadOnly();
-      this.putWithReplace = manager.getLegacyLogicConfiguration().isPutWithReplace();
-      this.valueGenerator = manager.getLegacyLogicConfiguration().getValueGenerator();
+      this.loadOnly = manager.getBackgroundStressorLogicConfiguration().isLoadOnly();
+      this.putWithReplace = manager.getBackgroundStressorLogicConfiguration().isPutWithReplace();
+      this.valueGenerator = manager.getBackgroundStressorLogicConfiguration().getValueGenerator();
       this.loaded = loaded;
       this.currentKey = range.getStart();
       this.remainingTxOps = transactionSize;
@@ -71,8 +71,8 @@ class LegacyLogic extends AbstractLogic {
 
    private void loadKeyRange(long from, long to) {
       int loadedKeys = 0;
-      boolean loadWithPutIfAbsent = manager.getLegacyLogicConfiguration().isLoadWithPutIfAbsent();
-      int entrySize = manager.getLegacyLogicConfiguration().getEntrySize();
+      boolean loadWithPutIfAbsent = manager.getBackgroundStressorLogicConfiguration().isLoadWithPutIfAbsent();
+      int entrySize = manager.getBackgroundStressorLogicConfiguration().getEntrySize();
       for (long keyId = from; keyId < to && !stressor.isTerminated(); keyId++, loadedKeys++) {
          while (!stressor.isTerminated()) {
             try {
@@ -133,7 +133,7 @@ class LegacyLogic extends AbstractLogic {
                result = basicCache.get(key);
                if (result == null) operation = GET_NULL;
             } else if (operation == BasicOperations.PUT) {
-               int entrySize = manager.getLegacyLogicConfiguration().getEntrySize();
+               int entrySize = manager.getBackgroundStressorLogicConfiguration().getEntrySize();
                Object value = valueGenerator.generateValue(key, entrySize, rand);
                if (putWithReplace) {
                   conditionalCache.replace(key, value);

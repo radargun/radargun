@@ -3,7 +3,7 @@ package org.radargun.stages.test;
 import org.radargun.Operation;
 
 /**
- * Represent an operation that the {@link LegacyStressor}
+ * Represent an operation that the {@link Stressor}
  * should execute and record its duration.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;

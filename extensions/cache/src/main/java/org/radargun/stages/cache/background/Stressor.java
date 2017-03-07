@@ -9,7 +9,7 @@ import org.radargun.stats.SynchronizedStatistics;
  * Stressor thread running in parallel to many stages. Its behavior is specified by plugging in specific
  * {@link org.radargun.stages.cache.background.Logic} implementation.
  *
- * @See org.radargun.stages.cache.background.LegacyLogic
+ * @See org.radargun.stages.cache.background.BackgroundStressorLogic
  * @See org.radargun.stages.cache.background.PrivateLogLogic
  * @See org.radargun.stages.cache.background.SharedLogLogic
  *

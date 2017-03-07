@@ -23,8 +23,8 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
    @PropertyDelegate
    protected GeneralConfiguration generalConfiguration = new GeneralConfiguration();
 
-   @PropertyDelegate(prefix = "legacy.")
-   protected LegacyLogicConfiguration legacyLogicConfiguration = new LegacyLogicConfiguration();
+   @PropertyDelegate
+   protected BackgroundStressorLogicConfiguration backgroundStressorLogicConfiguration = new BackgroundStressorLogicConfiguration();
 
    @PropertyDelegate(prefix = "logLogic.")
    protected LogLogicConfiguration logLogicConfiguration = new LogLogicConfiguration();
@@ -35,7 +35,7 @@ public class BackgroundStressorsStartStage extends AbstractDistStage {
       slaveState.put(CacheSelector.CACHE_SELECTOR, new CacheSelector.UseCache(generalConfiguration.cacheName));
       try {
          BackgroundOpsManager instance = BackgroundOpsManager.getOrCreateInstance(slaveState, name,
-            generalConfiguration, legacyLogicConfiguration, logLogicConfiguration);
+            generalConfiguration, backgroundStressorLogicConfiguration, logLogicConfiguration);
 
          log.info("Starting stressor threads " + name);
          if (isServiceRunning()) {

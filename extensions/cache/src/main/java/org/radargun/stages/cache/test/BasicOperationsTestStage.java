@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test.legacy;
+package org.radargun.stages.cache.test;
 
 import java.util.Random;
 
@@ -6,20 +6,19 @@ import org.radargun.Operation;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.cache.test.CacheInvocations;
 import org.radargun.stages.test.Invocation;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.LegacyTestStage;
-import org.radargun.stages.test.legacy.OperationLogic;
-import org.radargun.stages.test.legacy.OperationSelector;
-import org.radargun.stages.test.legacy.RatioOperationSelector;
+import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.OperationSelector;
+import org.radargun.stages.test.RatioOperationSelector;
+import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.TestStage;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(LegacyTestStage.NAMESPACE)
+@Namespace(TestStage.NAMESPACE)
 @Stage(doc = "Test using BasicOperations")
 public class BasicOperationsTestStage extends CacheOperationsTestStage {
    @Property(doc = "Ratio of GET requests. Default is 4.")
@@ -66,7 +65,7 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
       protected KeySelector keySelector;
 
       @Override
-      public void init(LegacyStressor stressor) {
+      public void init(Stressor stressor) {
          super.init(stressor);
          String cacheName = cacheSelector.getCacheName(stressor.getGlobalThreadIndex());
          this.nonTxCache = basicOperations.getCache(cacheName);

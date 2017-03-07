@@ -1,4 +1,4 @@
-package org.radargun.stages.test.legacy;
+package org.radargun.stages.test;
 
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
@@ -7,8 +7,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.radargun.Operation;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
-import org.radargun.stages.test.Blackhole;
-import org.radargun.stages.test.Invocation;
 import org.radargun.stats.Request;
 import org.radargun.stats.RequestSet;
 import org.radargun.stats.Statistics;
@@ -16,16 +14,16 @@ import org.radargun.traits.Transactional;
 
 /**
  * Each stressor operates according to its {@link OperationLogic logic} - the instance is private to each thread.
- * After finishing the {@linkplain OperationLogic#init(LegacyStressor) init phase}, all stressors synchronously
+ * After finishing the {@linkplain OperationLogic#init(Stressor) init phase}, all stressors synchronously
  * execute logic's {@link OperationLogic#run(org.radargun.Operation) run} method until
  * the {@link Completion#moreToRun()} returns false.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class LegacyStressor extends Thread {
-   private static Log log = LogFactory.getLog(LegacyStressor.class);
+public class Stressor extends Thread {
+   private static Log log = LogFactory.getLog(Stressor.class);
 
-   private final LegacyTestStage stage;
+   private final TestStage stage;
    private final int threadIndex;
    private final int globalThreadIndex;
    private final OperationLogic logic;
@@ -43,7 +41,7 @@ public class LegacyStressor extends Thread {
    private boolean started = false;
    private CountDownLatch threadCountDown;
 
-   public LegacyStressor(LegacyTestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, boolean logTransactionExceptions, CountDownLatch threadCountDown, long delayBetweenRequests) {
+   public Stressor(TestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, boolean logTransactionExceptions, CountDownLatch threadCountDown, long delayBetweenRequests) {
       super("Stressor-" + threadIndex);
       this.stage = stage;
       this.threadIndex = threadIndex;

@@ -30,7 +30,7 @@ public class PrivateLogLogicTest {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
-      PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      PrivateLogLogic logic = createLogic(gc, new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       // operationId 0, PUT
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
@@ -108,7 +108,7 @@ public class PrivateLogLogicTest {
 
    public void testMixedOperationsNonTx() throws Exception {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
-      PrivateLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      PrivateLogLogic logic = createLogic(new GeneralConfiguration(), new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
       Map<Long, PrivateLogLogic.OperationTimestampPair> timestamps = ReflectionUtils.getClassProperty(PrivateLogLogic.class, logic, "timestamps", Map.class);
 
       // operationId 0, PUT
@@ -172,7 +172,7 @@ public class PrivateLogLogicTest {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
-      PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      PrivateLogLogic logic = createLogic(gc, new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       // operationId 0, REMOVE
       doReturn(BasicOperations.REMOVE).when(logic).getOperation(any(Random.class));
@@ -216,7 +216,7 @@ public class PrivateLogLogicTest {
    @Test(expectedExceptions = UnsupportedOperationException.class)
    public void testGetFails() throws Exception {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
-      PrivateLogLogic logic = createLogic(new GeneralConfiguration(), new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      PrivateLogLogic logic = createLogic(new GeneralConfiguration(), new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       // operationId 0, GET
       doReturn(BasicOperations.GET).when(logic).getOperation(any(Random.class));
@@ -230,7 +230,7 @@ public class PrivateLogLogicTest {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
-      PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      PrivateLogLogic logic = createLogic(gc, new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
 
@@ -251,7 +251,7 @@ public class PrivateLogLogicTest {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
-      PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      PrivateLogLogic logic = createLogic(gc, new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
 
@@ -272,7 +272,7 @@ public class PrivateLogLogicTest {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
-      PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      PrivateLogLogic logic = createLogic(gc, new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
 
@@ -293,7 +293,7 @@ public class PrivateLogLogicTest {
       BasicOperations.Cache cache = new CacheTraitRepository.BasicOperationsCache<>();
       GeneralConfiguration gc = new GeneralConfiguration();
       gc.transactionSize = 10;
-      PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), new LogLogicConfiguration(), cache);
+      PrivateLogLogic logic = createLogic(gc, new BackgroundStressorLogicConfiguration(), new LogLogicConfiguration(), cache);
 
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
 
@@ -315,7 +315,7 @@ public class PrivateLogLogicTest {
       gc.transactionSize = 10;
       LogLogicConfiguration llc = new LogLogicConfiguration();
       llc.writeApplyMaxDelay = 100;
-      PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), llc, cache);
+      PrivateLogLogic logic = createLogic(gc, new BackgroundStressorLogicConfiguration(), llc, cache);
 
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
 
@@ -340,7 +340,7 @@ public class PrivateLogLogicTest {
       gc.transactionSize = 10;
       LogLogicConfiguration llc = new LogLogicConfiguration();
       llc.valueMaxSize = 5;
-      PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), llc, txCache);
+      PrivateLogLogic logic = createLogic(gc, new BackgroundStressorLogicConfiguration(), llc, txCache);
 
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
       doReturn(4l).when(logic).getCheckedOperation(anyInt(), anyLong());
@@ -368,7 +368,7 @@ public class PrivateLogLogicTest {
       gc.transactionSize = 10;
       LogLogicConfiguration llc = new LogLogicConfiguration();
       llc.valueMaxSize = 5;
-      PrivateLogLogic logic = createLogic(gc, new LegacyLogicConfiguration(), llc, cache);
+      PrivateLogLogic logic = createLogic(gc, new BackgroundStressorLogicConfiguration(), llc, cache);
 
       doReturn(BasicOperations.PUT).when(logic).getOperation(any(Random.class));
       doReturn(4l).when(logic).getCheckedOperation(anyInt(), anyLong());
@@ -385,7 +385,7 @@ public class PrivateLogLogicTest {
       assertEquals(getFailureManager(logic).getStaleReads(), 0);
    }
 
-   private PrivateLogLogic createLogic(GeneralConfiguration gc, LegacyLogicConfiguration lc, LogLogicConfiguration llc, BasicOperations.Cache cache) throws NoSuchFieldException, IllegalAccessException {
+   private PrivateLogLogic createLogic(GeneralConfiguration gc, BackgroundStressorLogicConfiguration lc, LogLogicConfiguration llc, BasicOperations.Cache cache) throws NoSuchFieldException, IllegalAccessException {
       if (gc == null || lc == null || llc == null || cache == null) {
          throw new IllegalArgumentException("All configuration parameters need to be specified");
       }
@@ -394,7 +394,7 @@ public class PrivateLogLogicTest {
       slaveState.put(KeyGenerator.KEY_GENERATOR, new CacheTestUtils.SimpleStringKeyGenerator());
       BackgroundOpsManager manager = BackgroundOpsManager.getOrCreateInstance(slaveState, "test");
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "generalConfiguration", gc);
-      ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "legacyLogicConfiguration", lc);
+      ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "backgroundStressorLogicConfiguration", lc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "logLogicConfiguration", llc);
       ReflectionUtils.setClassProperty(BackgroundOpsManager.class, manager, "basicCache", cache);
       Range range = new Range(0, 1);

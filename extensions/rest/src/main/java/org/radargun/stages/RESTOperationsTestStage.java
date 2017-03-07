@@ -11,11 +11,11 @@ import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.stages.test.Invocation;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.LegacyTestStage;
-import org.radargun.stages.test.legacy.OperationLogic;
-import org.radargun.stages.test.legacy.OperationSelector;
-import org.radargun.stages.test.legacy.RatioOperationSelector;
+import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.OperationSelector;
+import org.radargun.stages.test.RatioOperationSelector;
+import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.TestStage;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.RESTOperations;
 
@@ -25,9 +25,9 @@ import org.radargun.traits.RESTOperations;
  *
  * @author Martin Gencur
  */
-@Namespace(LegacyTestStage.NAMESPACE)
+@Namespace(TestStage.NAMESPACE)
 @Stage(doc = "Test using RESTOperations with specific URL")
-public class RESTOperationsTestStage extends LegacyTestStage {
+public class RESTOperationsTestStage extends TestStage {
 
    @Property(doc = "Ratio of GET requests. Default is 1 (100%).")
    protected int getRatio = 1;
@@ -69,7 +69,7 @@ public class RESTOperationsTestStage extends LegacyTestStage {
       private Cookie jsessionid;
 
       @Override
-      public void init(LegacyStressor stressor) {
+      public void init(Stressor stressor) {
          super.init(stressor);
          this.restInvoker = restOperations.getRESTInvoker(contextPath);
          stressor.setUseTransactions(false);//transactions for HTTP ops do not make sense

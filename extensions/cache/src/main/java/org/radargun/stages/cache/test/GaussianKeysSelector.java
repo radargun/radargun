@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test.legacy;
+package org.radargun.stages.cache.test;
 
 import java.util.Random;
 
@@ -6,7 +6,7 @@ import org.radargun.config.DefinitionElement;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.PropertyHelper;
-import org.radargun.stages.test.legacy.LegacyTestStage;
+import org.radargun.stages.test.TestStage;
 
 /**
  * @author Jakub Markos &lt;jmarkos@redhat.com&gt;
@@ -33,7 +33,7 @@ public class GaussianKeysSelector implements KeySelector {
       return result;
    }
 
-   @Namespace(LegacyTestStage.NAMESPACE)
+   @Namespace(TestStage.NAMESPACE)
    @DefinitionElement(name = "gaussian-keys", doc = "In the test fixed set of entries is used and this is shared among all stressor threads. Additionally, the keys" +
       "are selected using a normal (gaussian) distribution.")
    public static class Factory implements KeySelectorFactory {

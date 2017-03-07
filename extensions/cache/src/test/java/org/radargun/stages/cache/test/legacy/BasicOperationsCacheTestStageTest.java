@@ -9,6 +9,9 @@ import org.radargun.stages.cache.generators.ByteArrayValueGenerator;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.StringKeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
+import org.radargun.stages.cache.test.BasicOperationsTestStage;
+import org.radargun.stages.cache.test.ConcurrentKeysSelector;
+import org.radargun.stages.cache.test.KeySelectorFactory;
 import org.radargun.stages.helpers.CacheSelector;
 import org.radargun.state.SlaveState;
 import org.radargun.traits.BasicOperations;
@@ -23,7 +26,7 @@ import org.testng.annotations.Test;
  * @author Matej Cimbora
  */
 @Test(timeOut = 30000)
-public class BasicOperationsCacheLegacyTestStageTest {
+public class BasicOperationsCacheTestStageTest {
 
    public void smokeTest() throws Exception {
       CacheStageRunner stageRunner = new CacheStageRunner(1);

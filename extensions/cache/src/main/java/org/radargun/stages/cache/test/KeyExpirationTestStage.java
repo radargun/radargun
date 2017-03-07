@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test.legacy;
+package org.radargun.stages.cache.test;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -10,12 +10,11 @@ import org.radargun.Operation;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
-import org.radargun.stages.cache.test.CacheInvocations;
-import org.radargun.stages.test.legacy.LegacyStressor;
-import org.radargun.stages.test.legacy.LegacyTestStage;
-import org.radargun.stages.test.legacy.OperationLogic;
-import org.radargun.stages.test.legacy.OperationSelector;
-import org.radargun.stages.test.legacy.RatioOperationSelector;
+import org.radargun.stages.test.OperationLogic;
+import org.radargun.stages.test.OperationSelector;
+import org.radargun.stages.test.RatioOperationSelector;
+import org.radargun.stages.test.Stressor;
+import org.radargun.stages.test.TestStage;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.SizeConverter;
@@ -25,7 +24,7 @@ import org.radargun.utils.TimeService;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(LegacyTestStage.NAMESPACE)
+@Namespace(TestStage.NAMESPACE)
 @Stage(doc = "During execution, keys expire (entries are removed from the cache) and new keys are used.")
 public class KeyExpirationTestStage extends CacheTestStage {
 
@@ -79,7 +78,7 @@ public class KeyExpirationTestStage extends CacheTestStage {
       private BasicOperations.Cache cache;
 
       @Override
-      public void init(LegacyStressor stressor) {
+      public void init(Stressor stressor) {
          super.init(stressor);
          nextKeyIndex = stressor.getGlobalThreadIndex();
          double averageSize = 0;

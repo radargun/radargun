@@ -1,4 +1,4 @@
-package org.radargun.stages.test.legacy;
+package org.radargun.stages.test;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;

@@ -1,4 +1,4 @@
-package org.radargun.stages.cache.test.legacy;
+package org.radargun.stages.cache.test;
 
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
@@ -7,7 +7,7 @@ import org.radargun.config.Stage;
 import org.radargun.stages.cache.generators.KeyGenerator;
 import org.radargun.stages.cache.generators.ValueGenerator;
 import org.radargun.stages.helpers.CacheSelector;
-import org.radargun.stages.test.legacy.LegacyTestStage;
+import org.radargun.stages.test.TestStage;
 import org.radargun.traits.ConditionalOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.utils.Fuzzy;
@@ -15,9 +15,9 @@ import org.radargun.utils.Fuzzy;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(LegacyTestStage.NAMESPACE)
+@Namespace(TestStage.NAMESPACE)
 @Stage(doc = "Benchmark where several client threads access cache limited by time or number of requests.")
-public abstract class CacheTestStage extends LegacyTestStage {
+public abstract class CacheTestStage extends TestStage {
 
    @Property(doc = "Size of the value in bytes. Default is 1000.", converter = Fuzzy.IntegerConverter.class)
    protected Fuzzy<Integer> entrySize = Fuzzy.uniform(1000);
