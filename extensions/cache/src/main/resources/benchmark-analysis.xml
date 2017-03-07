@@ -56,12 +56,7 @@
       <l:basic-operations-test test-name="on-max-throughput"
                              duration="${test.long.duration:1m}" total-threads="#{ 10 * ${top.iteration} + 10 }">
          <statistics>
-            <basic>
-               <operation-stats>
-                  <basic/>
-                  <histogram />
-               </operation-stats>
-            </basic>
+            <common/>
          </statistics>
          <l:key-selector>
             <l:colliding-keys num-entries="10000"/>

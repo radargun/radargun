@@ -58,12 +58,7 @@
         </basic-operations-test-setup>
         <test test-name="stress-test" amend-test="true" finish="false" duration="1m">
             <statistics>
-                <default>
-                    <operation-stats>
-                        <default/>
-                        <histogram/>
-                    </operation-stats>
-                </default>
+               <common/>
             </statistics>
         </test>
 
