@@ -6,7 +6,6 @@ import org.radargun.StageResult;
 import org.radargun.config.Namespace;
 import org.radargun.config.Stage;
 import org.radargun.stages.test.Completion;
-import org.radargun.stages.test.TestStage;
 import org.radargun.stages.test.TimeStressorCompletion;
 
 /**
@@ -14,7 +13,7 @@ import org.radargun.stages.test.TimeStressorCompletion;
  *
  * @author Martin Gencur
  */
-@Namespace(TestStage.NAMESPACE)
+@Namespace(RESTOperationsTestStage.NAMESPACE)
 @Stage(doc = "Stage for starting REST operations in the background")
 public class BackgroundRESTOperationsStartStage extends RESTOperationsTestStage {
 

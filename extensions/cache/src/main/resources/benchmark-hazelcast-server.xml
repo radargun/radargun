@@ -28,29 +28,28 @@
 
     <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                  xmlns="urn:radargun:stages:core:3.0"
-                 xmlns:cache="urn:radargun:stages:cache:3.0"
-                 xmlns:l="urn:radargun:stages:legacy:3.0">
+                 xmlns:cache="urn:radargun:stages:cache:3.0">
         <jvm-monitor-start/>
         <service-start groups="server"/>
         <service-start groups="client"/>
 
         <cache:load groups="client" num-entries="1000"/>
 
-        <l:basic-operations-test groups="client" test-name="warmup" num-threads-per-node="10"
+        <cache:basic-operations-test groups="client" test-name="warmup" num-threads-per-node="10"
                                  duration="${warmup.duration:12s}">
-            <l:key-selector>
-                <l:concurrent-keys total-entries="1000"/>
-            </l:key-selector>
-        </l:basic-operations-test>
+            <cache:key-selector>
+                <cache:concurrent-keys total-entries="1000"/>
+            </cache:key-selector>
+        </cache:basic-operations-test>
 
-        <l:basic-operations-test groups="client" test-name="stress-test" duration="${test.duration:18s}" num-threads-per-node="5">
-            <l:key-selector>
-                <l:concurrent-keys total-entries="1000"/>
-            </l:key-selector>
+        <cache:basic-operations-test groups="client" test-name="stress-test" duration="${test.duration:18s}" num-threads-per-node="5">
+            <cache:key-selector>
+                <cache:concurrent-keys total-entries="1000"/>
+            </cache:key-selector>
             <statistics>
                 <common/>
             </statistics>
-        </l:basic-operations-test>
+        </cache:basic-operations-test>
 
         <service-stop/>
     </rg:scenario>

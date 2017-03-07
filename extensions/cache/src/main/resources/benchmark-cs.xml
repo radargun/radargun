@@ -79,8 +79,7 @@
    <!-- Sequence of stages executed on the cluster -->
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
-                xmlns:cache="urn:radargun:stages:cache:3.0"
-                xmlns:l="urn:radargun:stages:legacy:3.0">
+                xmlns:cache="urn:radargun:stages:cache:3.0">
       <jvm-monitor-start />
       <!-- First start server, then client and let it connect to server -->
       <service-start groups="server"/>
@@ -90,18 +89,18 @@
 
       <!-- Warmup executed only on the slave 1 = client -->
 
-      <l:basic-operations-test groups="client" test-name="warmup" num-threads-per-node="10" duration="${warmup.duration:60s}">
-         <l:key-selector>
-            <l:concurrent-keys num-entries-per-thread="100" />
-         </l:key-selector>
-      </l:basic-operations-test>
+      <cache:basic-operations-test groups="client" test-name="warmup" num-threads-per-node="10" duration="${warmup.duration:60s}">
+         <cache:key-selector>
+            <cache:concurrent-keys num-entries-per-thread="100" />
+         </cache:key-selector>
+      </cache:basic-operations-test>
 
       <!-- Stress test executed only on the slave 1 = client -->
-      <l:basic-operations-test slaves="1" duration="${test.duration:60s}" num-threads-per-node="10">
-         <l:key-selector>
-            <l:concurrent-keys num-entries-per-thread="1000" />
-         </l:key-selector>
-      </l:basic-operations-test>
+      <cache:basic-operations-test slaves="1" duration="${test.duration:60s}" num-threads-per-node="10">
+         <cache:key-selector>
+            <cache:concurrent-keys num-entries-per-thread="1000" />
+         </cache:key-selector>
+      </cache:basic-operations-test>
 
       <!-- Stop services on all nodes: in cleanup this would happen anyway -->
       <service-stop />

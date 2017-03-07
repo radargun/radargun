@@ -49,7 +49,7 @@
 
    <!-- Sequence of stages executed on the cluster -->
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0" xmlns="urn:radargun:stages:core:3.0"
-      xmlns:cache="urn:radargun:stages:cache:3.0" xmlns:l="urn:radargun:stages:legacy:3.0">
+      xmlns:cache="urn:radargun:stages:cache:3.0">
       <!-- Start services on all nodes -->
       <service-start />
       <!-- Begin monitoring of CPU, memory usage and GC -->
@@ -64,32 +64,32 @@
 
       <!-- Warmup the server first Note: name "warmup" signifies that the test will not be included in 
          results -->
-      <l:streaming-operations-test test-name="warmup"
+      <cache:streaming-operations-test test-name="warmup"
          num-threads-per-node="10" duration="30s" groups="client" entry-size="100000">
          <!-- RandomStream generator is specific for the Streaming operations test -->
-         <l:value-generator>
-            <l:randomStream />
-         </l:value-generator>
+         <cache:value-generator>
+            <cache:randomStream />
+         </cache:value-generator>
          <!-- Test is memory-intensive so number of keys is deliberately limited -->
-         <l:key-selector>
-            <l:concurrent-keys>
-               <l:total-entries>100</l:total-entries>
-            </l:concurrent-keys>
-         </l:key-selector>
-      </l:streaming-operations-test>
+         <cache:key-selector>
+            <cache:concurrent-keys>
+               <cache:total-entries>100</cache:total-entries>
+            </cache:concurrent-keys>
+         </cache:key-selector>
+      </cache:streaming-operations-test>
 
       <!-- Cycle steadily increases size of the values inserted -->
       <rg:repeat name="StreamOperationsTestCounter" from="1" to="11" inc="1">
-         <l:streaming-operations-test test-name="Streaming_Operations_test"
+         <cache:streaming-operations-test test-name="Streaming_Operations_test"
             num-threads-per-node="10" duration="15s" groups="client"
             entry-size="#{${repeat.StreamOperationsTestCounter.counter} * 100000}" amend-test="true"
             iteration-property="entry-size">
-            <l:key-selector>
-               <l:concurrent-keys>
-                  <l:total-entries>100</l:total-entries>
-               </l:concurrent-keys>
-            </l:key-selector>
-         </l:streaming-operations-test>
+            <cache:key-selector>
+               <cache:concurrent-keys>
+                  <cache:total-entries>100</cache:total-entries>
+               </cache:concurrent-keys>
+            </cache:key-selector>
+         </cache:streaming-operations-test>
       </rg:repeat>
 
       <!-- Stop JVM monitoring -->

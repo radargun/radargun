@@ -18,21 +18,20 @@
    <!-- This benchmark shows how to configure statistics -->
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
-                xmlns:cache="urn:radargun:stages:cache:3.0"
-                xmlns:l="urn:radargun:stages:legacy:3.0">
+                xmlns:cache="urn:radargun:stages:cache:3.0">
       <service-start />
 
       <cache:load num-entries="2000"/>
 
-      <l:basic-operations-test test-name="common-stats" num-threads-per-node="10" duration="${warmup.duration:60s}">
+      <cache:basic-operations-test test-name="common-stats" num-threads-per-node="10" duration="${warmup.duration:60s}">
          <statistics>
             <!-- This is a template that combines basic, periodic and histogram stats -->
             <common />
          </statistics>
-         <l:key-selector>
-            <l:concurrent-keys num-entries-per-thread="100" />
-         </l:key-selector>
-      </l:basic-operations-test>
+         <cache:key-selector>
+            <cache:concurrent-keys num-entries-per-thread="100" />
+         </cache:key-selector>
+      </cache:basic-operations-test>
    </rg:scenario>
 
    <reports>
