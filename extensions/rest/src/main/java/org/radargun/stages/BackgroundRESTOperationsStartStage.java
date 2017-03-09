@@ -13,7 +13,7 @@ import org.radargun.stages.test.TimeStressorCompletion;
  *
  * @author Martin Gencur
  */
-@Namespace(RESTOperationsTestStage.NAMESPACE)
+@Namespace(name = RESTOperationsTestStage.NAMESPACE)
 @Stage(doc = "Stage for starting REST operations in the background")
 public class BackgroundRESTOperationsStartStage extends RESTOperationsTestStage {
 

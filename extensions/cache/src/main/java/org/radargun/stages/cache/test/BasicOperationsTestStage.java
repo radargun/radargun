@@ -18,7 +18,7 @@ import org.radargun.traits.InjectTrait;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(TestStage.NAMESPACE)
+@Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
 @Stage(doc = "Test using BasicOperations")
 public class BasicOperationsTestStage extends CacheOperationsTestStage {
    @Property(doc = "Ratio of GET requests. Default is 4.")

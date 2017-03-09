@@ -10,7 +10,7 @@ import org.radargun.utils.ReflexiveConverters;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(TestStage.NAMESPACE)
+@Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
 @Stage(doc = "Common ancestor for all xOperationsTestStages")
 public abstract class CacheOperationsTestStage extends CacheTestStage {
    @Property(name = "keySelector", doc = "Selects which key IDs are used in the test.", optional = false,

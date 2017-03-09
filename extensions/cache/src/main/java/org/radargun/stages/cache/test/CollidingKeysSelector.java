@@ -25,7 +25,7 @@ public class CollidingKeysSelector implements KeySelector {
       return (random.nextLong() & Long.MAX_VALUE) % numEntries;
    }
 
-   @Namespace(TestStage.NAMESPACE)
+   @Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
    @DefinitionElement(name = "colliding-keys", doc = "In the test fixed set of entries is used and this is shared among all stressor threads.")
    public static class Factory implements KeySelectorFactory {
       @Property(doc = "Total number of key-value entries.", optional = false)

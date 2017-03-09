@@ -18,7 +18,7 @@ import org.radargun.traits.InjectTrait;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(TestStage.NAMESPACE)
+@Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
 @Stage(doc = "Tests (atomic) conditional operations. Note that there is no put-if-absent-ratio" +
    "- this operation is executed anytime the selected key does not have value.")
 public class ConditionalOperationsTestStage extends CacheOperationsTestStage {

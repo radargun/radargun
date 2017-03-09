@@ -24,7 +24,7 @@ import org.radargun.utils.TimeService;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(TestStage.NAMESPACE)
+@Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
 @Stage(doc = "During execution, keys expire (entries are removed from the cache) and new keys are used.")
 public class KeyExpirationTestStage extends CacheTestStage {
 

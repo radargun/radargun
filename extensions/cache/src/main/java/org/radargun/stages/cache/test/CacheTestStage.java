@@ -15,7 +15,7 @@ import org.radargun.utils.Fuzzy;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(TestStage.NAMESPACE)
+@Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
 @Stage(doc = "Benchmark where several client threads access cache limited by time or number of requests.")
 public abstract class CacheTestStage extends TestStage {
 
