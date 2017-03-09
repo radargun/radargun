@@ -16,7 +16,7 @@ import org.radargun.stages.test.TestStage;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.StreamingOperations;
 
-@Namespace(TestStage.NAMESPACE)
+@Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
 @Stage(doc = "Streaming operations test stage")
 public class StreamingOperationsTestStage extends CacheOperationsTestStage {
 

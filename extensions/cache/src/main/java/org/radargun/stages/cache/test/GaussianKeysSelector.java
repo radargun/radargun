@@ -33,7 +33,7 @@ public class GaussianKeysSelector implements KeySelector {
       return result;
    }
 
-   @Namespace(TestStage.NAMESPACE)
+   @Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
    @DefinitionElement(name = "gaussian-keys", doc = "In the test fixed set of entries is used and this is shared among all stressor threads. Additionally, the keys" +
       "are selected using a normal (gaussian) distribution.")
    public static class Factory implements KeySelectorFactory {

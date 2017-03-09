@@ -27,7 +27,7 @@ public class ConcurrentKeysSelector implements KeySelector {
       return offset + (random.nextLong() & Long.MAX_VALUE) % size;
    }
 
-   @Namespace(TestStage.NAMESPACE)
+   @Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
    @DefinitionElement(name = "concurrent-keys", doc = "Each thread works with its own private set of keys, fixed for the whole duration of the test.")
    public static class Factory implements KeySelectorFactory {
       @Property(doc = "Number of key-value entries per each thread. You have to set either this or total-entries.")

@@ -26,7 +26,7 @@ import org.radargun.traits.RESTOperations;
  *
  * @author Martin Gencur
  */
-@Namespace(RESTOperationsTestStage.NAMESPACE)
+@Namespace(name = RESTOperationsTestStage.NAMESPACE)
 @Stage(doc = "Test using RESTOperations with specific URL")
 public class RESTOperationsTestStage extends TestStage {
 

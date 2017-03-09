@@ -14,7 +14,7 @@ import org.radargun.utils.Utils;
  *
  * @author Martin Gencur
  */
-@Namespace(RESTOperationsTestStage.NAMESPACE)
+@Namespace(name = RESTOperationsTestStage.NAMESPACE)
 @Stage(doc = "Stage for stopping REST operations running in the background")
 public class BackgroundRESTOperationsStopStage extends RESTOperationsTestStage {
 

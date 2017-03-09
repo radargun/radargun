@@ -28,11 +28,19 @@ public final class StageHelper {
 
    private static void addStage(String stageName, Class<? extends org.radargun.Stage> stageClazz) {
       NamespaceHelper.Coords coords = NamespaceHelper.suggestCoordinates(NAMESPACE_ROOT, stageClazz, "radargun-");
-      File[] codepaths = coords.explicit ? null : new File[] {new File(Utils.getCodePath(stageClazz))};
+      File[] codepaths = new File[] {new File(Utils.getCodePath(stageClazz))};
       NamespaceHelper.registerNamespace(coords.namespace, codepaths, coords.jarMajorMinor);
-      SortedMap<String, Class<? extends org.radargun.Stage>> stages = stagesByNamespace.get(coords.namespace);
+      addStageToNamespace(coords.namespace, stageName, stageClazz);
+      if (!coords.deprecatedNamespace.equals(Namespace.NO_DEPRECATED_NAME)) {
+         NamespaceHelper.registerNamespace(coords.deprecatedNamespace, codepaths, coords.jarMajorMinor);
+         addStageToNamespace(coords.deprecatedNamespace, stageName, stageClazz);
+      }
+   }
+
+   private static void addStageToNamespace(String namespace, String stageName, Class<? extends org.radargun.Stage> stageClazz) {
+      SortedMap<String, Class<? extends org.radargun.Stage>> stages = stagesByNamespace.get(namespace);
       if (stages == null) {
-         stagesByNamespace.put(coords.namespace, stages = new TreeMap<>());
+         stagesByNamespace.put(namespace, stages = new TreeMap<>());
       }
       stages.put(stageName, stageClazz);
    }

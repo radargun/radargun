@@ -11,7 +11,6 @@ import org.radargun.DistStageAck;
 import org.radargun.StageResult;
 import org.radargun.Version;
 import org.radargun.config.Init;
-import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.reporting.Report;
@@ -26,10 +25,10 @@ import org.radargun.utils.Utils;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(TestStage.NAMESPACE)
 @Stage(doc = "Base for test spawning several threads and benchmark of operations executed in those.")
 public abstract class TestStage extends BaseTestStage {
-   public static final String NAMESPACE = "urn:radargun:stages:legacy:" + Version.SCHEMA_VERSION;
+   public static final String NAMESPACE = "urn:radargun:stages:cache:" + Version.SCHEMA_VERSION;
+   public static final String DEPRECATED_NAMESPACE = "urn:radargun:stages:legacy:" + Version.SCHEMA_VERSION;
 
    @Property(doc = "The number of threads executing on each node. You have to set either this or 'total-threads'. No default.")
    public int numThreadsPerNode = 0;

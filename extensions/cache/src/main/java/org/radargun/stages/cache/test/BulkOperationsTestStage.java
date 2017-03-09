@@ -22,7 +22,7 @@ import org.radargun.traits.InjectTrait;
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-@Namespace(TestStage.NAMESPACE)
+@Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
 @Stage(doc = "Executes operations from BulkOperations trait.")
 public class BulkOperationsTestStage extends CacheOperationsTestStage {
    @Property(doc = "Number of keys inserted/retrieved within one operation. Applicable only when the cache wrapper" +

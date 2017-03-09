@@ -93,7 +93,7 @@ public class StagesSchemaGenerator extends SchemaGenerator {
 
    protected static void indexClass(Map<String, List<Class<?>>> definitions, Class<?> clazz) {
       NamespaceHelper.Coords coords = NamespaceHelper.suggestCoordinates(StageHelper.NAMESPACE_ROOT, clazz, "radargun-");
-      File[] codepaths = coords.explicit ? null : new File[] {new File(Utils.getCodePath(clazz))};
+      File[] codepaths = new File[] {new File(Utils.getCodePath(clazz))};
       NamespaceHelper.registerNamespace(coords.namespace, codepaths, coords.jarMajorMinor);
       List<Class<?>> byNamespace = definitions.get(coords.namespace);
       if (byNamespace == null) {

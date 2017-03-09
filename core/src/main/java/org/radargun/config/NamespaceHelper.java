@@ -34,38 +34,40 @@ public final class NamespaceHelper {
       }
    }
 
-   private static Coords getCoords(String namespaceRoot, Namespace ns) {
-      if (!ns.value().startsWith(namespaceRoot)) {
-         throw new IllegalStateException("Namespace should start with '" + namespaceRoot + "', malformed namespace '" + ns.value() + "'");
+   private static Coords getCoords(String namespaceRoot, Namespace ns, String jarMajorMinor) {
+      if (!ns.name().startsWith(namespaceRoot)) {
+         throw new IllegalStateException("Namespace should start with '" + namespaceRoot + "', malformed namespace '" + ns.name() + "'");
       }
-      return new Coords(ns.value(), ns.value().substring(namespaceRoot.length()).replaceAll(":", "-"), true);
+      return new Coords(ns.name(), ns.deprecatedName(), jarMajorMinor);
    }
 
    public static Coords getCoords(String namespaceRoot, Class<?> clazz, String omitPrefix) {
+      String jarMajorMinor = codepathToToJarMajorMinor.get(new File(Utils.getCodePath(clazz)));
       Namespace ns = clazz.getAnnotation(Namespace.class);
-      if (ns != null) {
-         return getCoords(namespaceRoot, ns);
+      if (jarMajorMinor != null) {
+         if (ns != null) {
+            return getCoords(namespaceRoot, ns, jarMajorMinor);
+         } else {
+            return new Coords(getNamespace(namespaceRoot, jarMajorMinor, omitPrefix), Namespace.NO_DEPRECATED_NAME, jarMajorMinor);
+         }
       } else {
-         String jarMajorMinor = codepathToToJarMajorMinor.get(new File(Utils.getCodePath(clazz)));
-         return jarMajorMinor == null ? null : new Coords(getNamespace(namespaceRoot, jarMajorMinor, omitPrefix), jarMajorMinor, false);
+         return null;
       }
    }
 
    public static Coords suggestCoordinates(String namespaceRoot, Class<?> clazz, String omitPrefix) {
+      File jar = new File(Utils.getCodePath(clazz));
+      String filename = jar.toPath().getFileName().toString();
+      Matcher matcher = Pattern.compile("(.*[0-9]+\\.[0-9]+)\\.[0-9]+.*").matcher(filename);
+      if (!matcher.matches()) {
+         throw new IllegalStateException("Filename does not match to the expected pattern: " + filename);
+      }
+      String jarMajorMinor = matcher.group(1);
       Namespace ns = clazz.getAnnotation(Namespace.class);
       if (ns != null) {
-         return getCoords(namespaceRoot, ns);
+         return getCoords(namespaceRoot, ns, jarMajorMinor);
       } else {
-         File jar = new File(Utils.getCodePath(clazz));
-         String filename = jar.toPath().getFileName().toString();
-         Matcher matcher = Pattern.compile("(.*[0-9]+\\.[0-9]+)\\.[0-9]+.*").matcher(filename);
-         if (!matcher.matches()) {
-            throw new IllegalStateException("Filename does not match to the expected pattern: " + filename);
-         }
-         String jarMajorMinor = matcher.group(1);
-
-         String namespace = getNamespace(namespaceRoot, jarMajorMinor, omitPrefix);
-         return new Coords(namespace, jarMajorMinor, false);
+         return new Coords(getNamespace(namespaceRoot, jarMajorMinor, omitPrefix), Namespace.NO_DEPRECATED_NAME, jarMajorMinor);
       }
    }
 
@@ -87,13 +89,13 @@ public final class NamespaceHelper {
 
    public static class Coords {
       public final String namespace;
+      public final String deprecatedNamespace;
       public final String jarMajorMinor;
-      public final boolean explicit;
 
-      public Coords(String namespace, String jarMajorMinor, boolean explicit) {
+      public Coords(String namespace, String deprecatedNamespace, String jarMajorMinor) {
          this.namespace = namespace;
+         this.deprecatedNamespace = deprecatedNamespace;
          this.jarMajorMinor = jarMajorMinor;
-         this.explicit = explicit;
       }
    }
 }

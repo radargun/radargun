@@ -13,5 +13,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE) // TODO: allow package level annotation?
 public @interface Namespace {
-   String value();
+   static final String NO_DEPRECATED_NAME = "__no_deprecated_name__";
+
+   String name();
+   String deprecatedName() default NO_DEPRECATED_NAME;
 }

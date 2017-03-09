@@ -22,7 +22,7 @@ import org.radargun.traits.TemporalOperations;
  * This stage allows for testing operations that have lifespan or maxIdle attributes set.
  *
  */
-@Namespace(TestStage.NAMESPACE)
+@Namespace(name = TestStage.NAMESPACE, deprecatedName = TestStage.DEPRECATED_NAMESPACE)
 @Stage(doc = "Test using TemporalOperations")
 public class TemporalOperationsTestStage extends CacheOperationsTestStage {
 
