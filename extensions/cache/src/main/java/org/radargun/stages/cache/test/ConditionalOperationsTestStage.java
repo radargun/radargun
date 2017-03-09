@@ -1,5 +1,7 @@
 package org.radargun.stages.cache.test;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
 
 import org.radargun.Operation;
@@ -46,6 +48,13 @@ public class ConditionalOperationsTestStage extends CacheOperationsTestStage {
 
    @Override
    protected OperationSelector createOperationSelector() {
+      statisticsPrototype.registerOperationsGroup(BasicOperations.class.getSimpleName() + ".Total",
+         new HashSet<>(Arrays.asList(
+            ConditionalOperations.REMOVE,
+            ConditionalOperations.REPLACE,
+            ConditionalOperations.REPLACE_ANY,
+            ConditionalOperations.GET_AND_REPLACE)));
+
       return new RatioOperationSelector.Builder()
          .add(ConditionalOperations.REMOVE, removeRatio)
          .add(ConditionalOperations.REPLACE, replaceRatio)

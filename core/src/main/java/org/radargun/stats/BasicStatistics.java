@@ -17,7 +17,10 @@ import org.radargun.config.Property;
 public class BasicStatistics extends IntervalStatistics {
    private static final OperationStats[] EMPTY_ARRAY = new OperationStats[0];
    private transient OperationStats[] operationStats = EMPTY_ARRAY;
-   private Map<String, OperationStats> operationStatsMap = new HashMap<String, OperationStats>();
+   private Map<String, OperationStats> operationStatsMap = new HashMap<>();
+
+   private Map<String, Set<Operation>> groupOperationsMap = new HashMap<>();
+   private Map<Operation, String> operationGroupMap = new HashMap<>();
 
    @Property(name = "operationStats", doc = "Operation statistics prototype.", complexConverter = OperationStats.Converter.class)
    protected OperationStats prototype = new BasicOperationStats();
@@ -30,11 +33,30 @@ public class BasicStatistics extends IntervalStatistics {
    }
 
    protected OperationStats createOperationStats(int operationId) {
-      return prototype.newInstance();
+      return prototype.copy();
    }
 
    public Statistics newInstance() {
       return new BasicStatistics(prototype);
+   }
+
+   @Override
+   public void registerOperationsGroup(String name, Set<Operation> operations) {
+      if (groupOperationsMap.containsKey(name)) {
+         throw new IllegalArgumentException("Group with name " + name + " already exists");
+      }
+      for (Map.Entry<String, Set<Operation>> entry : groupOperationsMap.entrySet()) {
+         for (Operation operation : operations) {
+            if (entry.getValue().contains(operation)) {
+               throw new IllegalArgumentException("Operation " + operation + " is already included in group " + entry.getKey());
+            }
+         }
+      }
+      groupOperationsMap.put(name, operations);
+      for (Operation operation : operations) {
+         ensure(operation.id);
+         operationGroupMap.put(operation, name);
+      }
    }
 
    @Override
@@ -69,15 +91,22 @@ public class BasicStatistics extends IntervalStatistics {
    }
 
    private void ensure(int operationId) {
+      if (operationStats == null) {
+         operationStats = EMPTY_ARRAY;
+      }
       if (operationId >= operationStats.length) {
          OperationStats[] temp = new OperationStats[operationId + 1];
          System.arraycopy(operationStats, 0, temp, 0, operationStats.length);
          operationStats = temp;
       }
       if (operationStats[operationId] == null) {
-         OperationStats operationStats = createOperationStats(operationId);
-         this.operationStats[operationId] = operationStats;
-         operationStatsMap.put(Operation.getById(operationId).name, operationStats);
+         if (operationStatsMap.get(Operation.getById(operationId).name) == null) {
+            OperationStats operationStats = createOperationStats(operationId);
+            this.operationStats[operationId] = operationStats;
+            operationStatsMap.put(Operation.getById(operationId).name, operationStats);
+         } else {
+            operationStats[operationId] = operationStatsMap.get(Operation.getById(operationId).name);
+         }
       }
    }
 
@@ -89,11 +118,9 @@ public class BasicStatistics extends IntervalStatistics {
    }
 
    /**
-    *
     * Merge otherStats to this. leaves otherStats unchanged.
     *
     * @param otherStats
-    *
     */
    @Override
    public void merge(Statistics otherStats) {
@@ -132,6 +159,41 @@ public class BasicStatistics extends IntervalStatistics {
    }
 
    @Override
+   public Map<String, OperationStats> getOperationStatsForGroups() {
+      Map<String, OperationStats> result = new HashMap<>(groupOperationsMap.size());
+      for (Map.Entry<String, Set<Operation>> entry : groupOperationsMap.entrySet()) {
+         OperationStats mergedOperationStats = null;
+         for (Operation operation : entry.getValue()) {
+            OperationStats os = operationStats[operation.id];
+            if (mergedOperationStats == null) {
+               mergedOperationStats = os.copy();
+            } else {
+               mergedOperationStats.merge(os);
+            }
+         }
+         if (!mergedOperationStats.isEmpty()) {
+            result.put(entry.getKey(), mergedOperationStats);
+         }
+      }
+      return result;
+   }
+
+   @Override
+   public Map<String, OperationStats> getOperationsStats() {
+      return operationStatsMap;
+   }
+
+   @Override
+   public String getOperationsGroup(Operation operation) {
+      return operationGroupMap.get(operation);
+   }
+
+   @Override
+   public Map<String, Set<Operation>> getGroupOperationsMap() {
+      return groupOperationsMap;
+   }
+
+   @Override
    public Set<String> getOperations() {
       return operationStatsMap.keySet();
    }
@@ -144,11 +206,13 @@ public class BasicStatistics extends IntervalStatistics {
    @Override
    public <T> T getRepresentation(String operationName, Class<T> clazz, Object... args) {
       OperationStats operationStats = operationStatsMap.get(operationName);
-      if (operationStats != null) {
-         return operationStats.getRepresentation(clazz, this, args);
-      } else {
+      if (operationStats == null) {
+         operationStats = getOperationStatsForGroups().get(operationName);
+      }
+      if (operationStats == null) {
          return prototype.getRepresentation(clazz, this, args);
       }
+      return operationStats.getRepresentation(clazz, this, args);
    }
 
    @Override

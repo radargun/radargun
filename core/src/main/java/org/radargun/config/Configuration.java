@@ -16,11 +16,15 @@ public class Configuration implements Serializable {
 
    public final String name;
 
-   private List<Setup> setups = new ArrayList<Setup>();
+   private List<Setup> setups = new ArrayList<>();
 
    public Configuration(String name) {
       if (name == null) throw new NullPointerException("Configuration name cannot be null");
       this.name = name;
+   }
+
+   public String getName() {
+      return name;
    }
 
    public Setup addSetup(String group, String plugin, String service, Map<String, Definition> propertyDefinitions, Map<String, Definition> vmArgs, Map<String, Definition> envs) {

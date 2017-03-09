@@ -64,7 +64,7 @@ public class HtmlReporter implements Reporter {
       this.reports = reports;
       Set<String> allTests = new LinkedHashSet<>();
       Set<String> combinedTests = new LinkedHashSet<>();
-      Map<String, List<Report.Test>> testsByName = new HashMap<String, List<Report.Test>>();
+      Map<String, List<Report.Test>> testsByName = new HashMap<>();
 
       resolveCombinedTests(allTests, combinedTests);
       resolveTestsByName(reports, allTests, combinedTests, testsByName);

@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -69,6 +70,11 @@ public class PeriodicStatistics extends IntervalStatistics {
          buckets.add(bucketStats);
       }
       return buckets.get(bucket);
+   }
+
+   @Override
+   public void registerOperationsGroup(String name, Set<Operation> operations) {
+      prototype.registerOperationsGroup(name, operations);
    }
 
    @Override
@@ -172,7 +178,27 @@ public class PeriodicStatistics extends IntervalStatistics {
    }
 
    @Override
+   public Map<String, OperationStats> getOperationsStats() {
+      return prototype.getOperationsStats();
+   }
+
+   @Override
    public OperationStats getOperationStats(String operation) {
+      return prototype.getOperationStats(operation);
+   }
+
+   @Override
+   public String getOperationsGroup(Operation operation) {
+      return prototype.getOperationsGroup(operation);
+   }
+
+   @Override
+   public Map<String, Set<Operation>> getGroupOperationsMap() {
+      return prototype.getGroupOperationsMap();
+   }
+
+   @Override
+   public Map<String, OperationStats> getOperationStatsForGroups() {
       throw new UnsupportedOperationException();
    }
 

@@ -1,12 +1,10 @@
 package org.radargun.reporting.html;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
 import org.radargun.reporting.Report;
 import org.radargun.reporting.commons.Aggregation;
 import org.radargun.reporting.commons.TestAggregations;
@@ -21,25 +19,27 @@ import org.radargun.reporting.commons.TestAggregations;
 public class CombinedReportDocument extends ReportDocument {
 
    private List<TestAggregations> testAggregations;
-   private Set<String> operations = new HashSet<>();
+   private Set<String> operations = new TreeSet<>();
+   private Set<String> operationGroups = new TreeSet<>();
    private List<String> combined;
    private Set<Integer> clusterSizes = new TreeSet<>();
 
    public CombinedReportDocument(List<TestAggregations> testAggregations, String testName, List<String> combined, String targetDir, Configuration configuration) {
       super(targetDir, testName,
-            testAggregations.stream().map(ta -> ta.byReports().size()).max(Integer::max).get(),
-            testAggregations.stream().map(ta -> ta.getAllClusters().size()).max(Integer::max).get(),
-            testAggregations.stream().map(ta -> ta.getMaxIterations()).max(Integer::max).get(),
-            configuration);
+         testAggregations.stream().map(ta -> ta.byReports().size()).max(Integer::max).get(),
+         testAggregations.stream().map(ta -> ta.getAllClusters().size()).max(Integer::max).get(),
+         testAggregations.stream().map(ta -> ta.getMaxIterations()).max(Integer::max).get(),
+         configuration);
       this.testAggregations = testAggregations;
       this.combined = combined;
       for (TestAggregations h : testAggregations) {
          operations.addAll(h.getAllOperations());
+         operationGroups.addAll(h.getOperationGroups());
       }
    }
 
    @Override
-   protected ComparisonChart generateChart(int clusterSize, String operation, String rangeAxisLabel, ChartType chartType) {
+   protected ComparisonChart generateChart(int clusterSize, String target, String rangeAxisLabel, ChartType chartType) {
       String iterationsName = testAggregations.stream().map(ta -> ta.iterationsName).collect(concatOrDefault(null));
       ComparisonChart chart = createComparisonChart(iterationsName, rangeAxisLabel, chartType);
       for (TestAggregations ta : testAggregations) {
@@ -52,7 +52,9 @@ public class CombinedReportDocument extends ReportDocument {
             reportAggregationMap = ta.byReports();
             subCategory = ta.testName;
          }
-         addToChart(chart, subCategory, operation, chartType, reportAggregationMap);
+         if (!addToChart(chart, subCategory, target, chartType, reportAggregationMap)) {
+            chart = null;
+         }
       }
       return chart;
    }
@@ -64,28 +66,33 @@ public class CombinedReportDocument extends ReportDocument {
    }
 
    public void createTestCharts() {
-      for (String operation : operations) {
+      createTestCharts(operationGroups);
+      createTestCharts(operations);
+      waitForChartsGeneration();
+   }
+
+   private void createTestCharts(Set<String> targets) {
+      for (String target : targets) {
          if (maxClusters > 1 && configuration.separateClusterCharts) {
             for (Integer clusterSize : clusterSizes) {
                try {
-                  createCharts(operation, clusterSize);
+                  createCharts(target, clusterSize);
                } catch (IOException e) {
                   log.error("Exception while creating test charts", e);
                }
             }
          } else {
             try {
-               createCharts(operation, 0);
+               createCharts(target, 0);
             } catch (IOException e) {
                log.error("Exception while creating test charts", e);
             }
          }
          int i = 0;
          for (TestAggregations ta : testAggregations) {
-            createHistogramAndPercentileCharts(operation, ta.byReports(), combined.get(i++));
+            createHistogramAndPercentileCharts(target, ta.byReports(), combined.get(i++));
          }
       }
-      waitForChartsGeneration();
    }
 
    /**
@@ -111,6 +118,10 @@ public class CombinedReportDocument extends ReportDocument {
 
    public List<String> getCombined() {
       return combined;
+   }
+
+   public Set<String> getOperationGroups() {
+      return operationGroups;
    }
 
 }

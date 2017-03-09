@@ -23,7 +23,7 @@ public class CommonStatistics extends MultiStatistics {
    private int digits = 2;
 
    public CommonStatistics() {
-      super(new Statistics[] { new BasicStatistics(), new PeriodicStatistics(), new BasicStatistics(new HistogramOperationStats())});
+      super(new Statistics[] {new BasicStatistics(), new PeriodicStatistics(), new BasicStatistics(new HistogramOperationStats())});
    }
 
    private CommonStatistics(Statistics[] internal) {

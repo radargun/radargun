@@ -1,6 +1,8 @@
 package org.radargun.stages.cache.test;
 
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
 
 import org.radargun.Operation;
@@ -13,6 +15,7 @@ import org.radargun.stages.test.OperationSelector;
 import org.radargun.stages.test.RatioOperationSelector;
 import org.radargun.stages.test.Stressor;
 import org.radargun.stages.test.TestStage;
+import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
 import org.radargun.traits.StreamingOperations;
 
@@ -34,6 +37,10 @@ public class StreamingOperationsTestStage extends CacheOperationsTestStage {
 
    @Override
    protected OperationSelector createOperationSelector() {
+      statisticsPrototype.registerOperationsGroup(BasicOperations.class.getSimpleName() + ".Total",
+         new HashSet<>(Arrays.asList(
+            StreamingOperations.GET,
+            StreamingOperations.PUT)));
       return new RatioOperationSelector.Builder().add(StreamingOperations.GET, getRatio).add(StreamingOperations.PUT, putRatio)
             .build();
    }

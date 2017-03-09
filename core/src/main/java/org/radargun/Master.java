@@ -37,7 +37,7 @@ public class Master {
 
    private final MasterConfig masterConfig;
    private final MasterState state;
-   private final ArrayList<Report> reports = new ArrayList<Report>();
+   private final ArrayList<Report> reports = new ArrayList<>();
    private int returnCode;
    private boolean exitFlag = false;
    private RemoteSlaveConnection connection;

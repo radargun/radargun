@@ -25,7 +25,7 @@ import org.radargun.traits.TemporalOperations;
 public class CacheInvocations {
    public static final class Get<K, V> implements Invocation<V> {
       public static final Operation GET_NULL = BasicOperations.GET.derive("Null");
-      public static final Operation TX = BasicOperations.GET.derive("TX");
+      public static final Operation TX = BasicOperations.GET.derive("tx");
       private final BasicOperations.Cache<K, V> cache;
       private final K key;
       private V value;
@@ -52,7 +52,7 @@ public class CacheInvocations {
    }
 
    public static final class Put<K, V> implements Invocation<Void> {
-      public static final Operation TX = BasicOperations.PUT.derive("TX");
+      public static final Operation TX = BasicOperations.PUT.derive("tx");
       private final BasicOperations.Cache<K, V> cache;
       private final K key;
       private final V value;
@@ -81,7 +81,7 @@ public class CacheInvocations {
    }
 
    public static final class PutWithLifespan<K, V> implements Invocation<V> {
-      private static final Operation TX = TemporalOperations.PUT_WITH_LIFESPAN.derive("TX");
+      private final Operation tx = TemporalOperations.PUT_WITH_LIFESPAN.derive("tx");
       private final TemporalOperations.Cache<K, V> cache;
       private final K key;
       private final V value;
@@ -107,12 +107,12 @@ public class CacheInvocations {
 
       @Override
       public Operation txOperation() {
-         return TX;
+         return tx;
       }
    }
 
    public static final class PutWithLifespanAndMaxIdle<K, V> implements Invocation<Void> {
-      private static final Operation TX = TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
+      public static final Operation TX = TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("tx");
       private final TemporalOperations.Cache<K, V> cache;
       private final K key;
       private final V value;
@@ -145,7 +145,7 @@ public class CacheInvocations {
    }
 
    public static final class Remove<K, V> implements Invocation<Boolean> {
-      public static final Operation TX = BasicOperations.REMOVE.derive("TX");
+      public static final Operation TX = BasicOperations.REMOVE.derive("tx");
       private final BasicOperations.Cache<K, V> cache;
       private final K key;
 
@@ -171,7 +171,7 @@ public class CacheInvocations {
    }
 
    public static final class ContainsKey<K> implements Invocation<Boolean> {
-      public static final Operation TX = BasicOperations.CONTAINS_KEY.derive("TX");
+      public static final Operation TX = BasicOperations.CONTAINS_KEY.derive("tx");
       private final BasicOperations.Cache<K, ?> cache;
       private final K key;
 
@@ -197,7 +197,7 @@ public class CacheInvocations {
    }
 
    public static final class GetAndPut<K, V> implements Invocation<V> {
-      public static final Operation TX = BasicOperations.GET_AND_PUT.derive("TX");
+      public static final Operation TX = BasicOperations.GET_AND_PUT.derive("tx");
       private final BasicOperations.Cache<K, V> cache;
       private final K key;
       private final V value;
@@ -225,7 +225,7 @@ public class CacheInvocations {
    }
 
    public static final class GetAndPutWithLifespan<K, V> implements Invocation<V> {
-      private static final Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN.derive("TX");
+      public static final Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN.derive("tx");
       private final TemporalOperations.Cache<K, V> cache;
       private final K key;
       private final V value;
@@ -255,7 +255,7 @@ public class CacheInvocations {
    }
 
    public static final class GetAndPutWithLifespanAndMaxIdle<K, V> implements Invocation<V> {
-      private static final Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
+      public static final Operation TX = TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE.derive("tx");
       private final TemporalOperations.Cache<K, V> cache;
       private final K key;
       private final V value;
@@ -287,7 +287,7 @@ public class CacheInvocations {
    }
 
    public static final class GetAndRemove<K, V> implements Invocation<V> {
-      public static final Operation TX = BasicOperations.GET_AND_REMOVE.derive("TX");
+      public static final Operation TX = BasicOperations.GET_AND_REMOVE.derive("tx");
       private final BasicOperations.Cache<K, V> cache;
       private final K key;
 
@@ -313,7 +313,7 @@ public class CacheInvocations {
    }
 
    public static final class PutIfAbsent<K, V> implements Invocation<Boolean> {
-      private static final Operation TX = ConditionalOperations.PUT_IF_ABSENT.derive("TX");
+      private static final Operation TX = ConditionalOperations.PUT_IF_ABSENT.derive("tx");
       private final ConditionalOperations.Cache<K, V> cache;
       private final K key;
       private final V value;
@@ -341,7 +341,7 @@ public class CacheInvocations {
    }
 
    public static final class PutIfAbsentWithLifespan<K, V> implements Invocation<Boolean> {
-      private static final Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN.derive("TX");
+      public static final Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN.derive("tx");
       private final TemporalOperations.Cache<K, V> cache;
       private final K key;
       private final V value;
@@ -371,7 +371,7 @@ public class CacheInvocations {
    }
 
    public static final class PutIfAbsentWithLifespanAndMaxIdle<K, V> implements Invocation<Boolean> {
-      private static final Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE.derive("TX");
+      public static final Operation TX = TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE.derive("tx");
       private final TemporalOperations.Cache<K, V> cache;
       private final K key;
       private final V value;
@@ -403,7 +403,7 @@ public class CacheInvocations {
    }
 
    public static final class RemoveConditionally<K, V> implements Invocation<Boolean> {
-      private static final Operation TX = ConditionalOperations.REMOVE.derive("TX");
+      private static final Operation TX = ConditionalOperations.REMOVE.derive("tx");
       private final ConditionalOperations.Cache<K, V> cache;
       private final K key;
       private final V value;
@@ -431,7 +431,7 @@ public class CacheInvocations {
    }
 
    public static final class Replace<K, V> implements Invocation<Boolean> {
-      private static final Operation TX = ConditionalOperations.REPLACE.derive("TX");
+      private static final Operation TX = ConditionalOperations.REPLACE.derive("tx");
       private final ConditionalOperations.Cache<K, V> cache;
       private final K key;
       private final V oldValue;
@@ -461,7 +461,7 @@ public class CacheInvocations {
    }
 
    public static final class ReplaceAny<K, V> implements Invocation<Boolean> {
-      private static final Operation TX = ConditionalOperations.REPLACE_ANY.derive("TX");
+      private static final Operation TX = ConditionalOperations.REPLACE_ANY.derive("tx");
       private final ConditionalOperations.Cache<K, V> cache;
       private final K key;
       private final V newValue;
@@ -489,7 +489,7 @@ public class CacheInvocations {
    }
 
    public static final class GetAndReplace<K, V> implements Invocation<V> {
-      private static final Operation TX = ConditionalOperations.GET_AND_REPLACE.derive("TX");
+      private static final Operation TX = ConditionalOperations.GET_AND_REPLACE.derive("tx");
       private final ConditionalOperations.Cache<K, V> cache;
       private final K key;
       private final V newValue;
@@ -517,8 +517,8 @@ public class CacheInvocations {
    }
 
    public static final class GetAll<K, V> implements Invocation<Map<K, V>> {
-      private static final Operation NATIVE_TX = BulkOperations.GET_ALL_NATIVE.derive("TX");
-      private static final Operation ASYNC_TX = BulkOperations.GET_ALL_ASYNC.derive("TX");
+      private static final Operation NATIVE_TX = BulkOperations.GET_ALL_NATIVE.derive("tx");
+      private static final Operation ASYNC_TX = BulkOperations.GET_ALL_ASYNC.derive("tx");
       private final BulkOperations.Cache<K, V> cache;
       private final Set<K> keys;
       private final boolean async;
@@ -546,8 +546,8 @@ public class CacheInvocations {
    }
 
    public static final class PutAll<K, V> implements Invocation<Void> {
-      private static final Operation NATIVE_TX = BulkOperations.PUT_ALL_NATIVE.derive("TX");
-      private static final Operation ASYNC_TX = BulkOperations.PUT_ALL_ASYNC.derive("TX");
+      private static final Operation NATIVE_TX = BulkOperations.PUT_ALL_NATIVE.derive("tx");
+      private static final Operation ASYNC_TX = BulkOperations.PUT_ALL_ASYNC.derive("tx");
       private final BulkOperations.Cache<K, V> cache;
       private final Map<K, V> entries;
       private final boolean async;
@@ -576,8 +576,8 @@ public class CacheInvocations {
    }
 
    public static final class RemoveAll<K, V> implements Invocation<Void> {
-      private static final Operation NATIVE_TX = BulkOperations.REMOVE_ALL_NATIVE.derive("TX");
-      private static final Operation ASYNC_TX = BulkOperations.REMOVE_ALL_ASYNC.derive("TX");
+      private static final Operation NATIVE_TX = BulkOperations.REMOVE_ALL_NATIVE.derive("tx");
+      private static final Operation ASYNC_TX = BulkOperations.REMOVE_ALL_ASYNC.derive("tx");
       private final BulkOperations.Cache<K, V> cache;
       private final Set<K> keys;
       private final boolean async;
@@ -607,7 +607,7 @@ public class CacheInvocations {
 
    public static final class GetViaStream<K, V extends Number> implements Invocation<Integer> {
       public static final Operation GET_NULL = StreamingOperations.GET.derive("Null");
-      public static final Operation TX = StreamingOperations.GET.derive("TX");
+      public static final Operation TX = StreamingOperations.GET.derive("tx");
       private final StreamingOperations.StreamingCache<K> cache;
       private final K key;
       private Integer value;
@@ -646,7 +646,7 @@ public class CacheInvocations {
    }
 
    public static final class PutViaStream<K, V extends InputStream> implements Invocation<Void> {
-      public static final Operation TX = StreamingOperations.PUT.derive("TX");
+      public static final Operation TX = StreamingOperations.PUT.derive("tx");
       private final StreamingOperations.StreamingCache<K> cache;
       private final K key;
       private final InputStream value;

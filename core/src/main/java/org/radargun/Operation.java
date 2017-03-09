@@ -1,5 +1,6 @@
 package org.radargun;
 
+import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -8,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public final class Operation {
+public final class Operation implements Serializable {
    private static int nextId = 1;
    private static ConcurrentHashMap<Integer, Operation> byId = new ConcurrentHashMap<Integer, Operation>();
    private static ConcurrentHashMap<String, Operation> byName = new ConcurrentHashMap<String, Operation>();
@@ -25,6 +26,15 @@ public final class Operation {
    private Operation(int id, String name) {
       this.id = id;
       this.name = name;
+   }
+
+   /**
+    * Remove all registered operations. WARNING: Should only be used when no clients access Operations class any longer (e.g. testing purposes)
+    */
+   public static synchronized void clear() {
+      nextId = 1;
+      byId.clear();
+      byName.clear();
    }
 
    /**
@@ -48,6 +58,7 @@ public final class Operation {
 
    /**
     * Retrieve operation with given ID.
+    *
     * @param id
     * @return
     * @throws IllegalArgumentException if the operation ID was not registered
@@ -62,6 +73,7 @@ public final class Operation {
 
    /**
     * Retrieve operation with given name. If this operation was not registered, register it.
+    *
     * @param name
     * @return
     */
@@ -76,6 +88,7 @@ public final class Operation {
    /**
     * Register a new operation with name derived from this operation
     * by appending '.' and the variant to the name.
+    *
     * @param variant
     * @return
     */
@@ -95,8 +108,11 @@ public final class Operation {
 
    @Override
    public boolean equals(Object o) {
-      // there should be only one instance of each operation
-      return this == o;
+      if (o instanceof Operation) {
+         Operation op = (Operation) o;
+         return this.id == op.id;
+      }
+      return false;
    }
 
    @Override
