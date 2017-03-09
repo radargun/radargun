@@ -2,7 +2,6 @@ package org.radargun.stages.query;
 
 import org.radargun.Operation;
 import org.radargun.stages.test.Invocation;
-import org.radargun.traits.Query;
 import org.radargun.traits.Queryable;
 
 /**

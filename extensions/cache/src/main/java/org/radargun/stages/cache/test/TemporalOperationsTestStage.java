@@ -1,5 +1,7 @@
 package org.radargun.stages.cache.test;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
 
 import org.radargun.Operation;
@@ -61,6 +63,16 @@ public class TemporalOperationsTestStage extends CacheOperationsTestStage {
 
    @Override
    protected OperationSelector createOperationSelector() {
+      statisticsPrototype.registerOperationsGroup(TemporalOperations.class.getSimpleName() + ".Total",
+         new HashSet<>(Arrays.asList(
+            BasicOperations.GET,
+            TemporalOperations.PUT_WITH_LIFESPAN,
+            TemporalOperations.GET_AND_PUT_WITH_LIFESPAN,
+            TemporalOperations.PUT_WITH_LIFESPAN_AND_MAXIDLE,
+            TemporalOperations.GET_AND_PUT_WITH_LIFESPAN_AND_MAXIDLE,
+            TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN,
+            TemporalOperations.PUT_IF_ABSENT_WITH_LIFESPAN_AND_MAXIDLE)));
+
       return new RatioOperationSelector.Builder()
          .add(BasicOperations.GET, getRatio)
          .add(TemporalOperations.PUT_WITH_LIFESPAN, putWithLifespanRatio)

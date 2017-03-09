@@ -17,11 +17,13 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
+import org.radargun.Operation;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.commons.Aggregation;
+import org.radargun.stats.OperationStats;
 import org.radargun.stats.Statistics;
 import org.radargun.stats.representation.DataThroughput;
 import org.radargun.stats.representation.DefaultOutcome;
@@ -39,7 +41,7 @@ import org.radargun.utils.Utils;
  */
 // TODO: reduce max report size in order to not overload browser with huge tables
 public abstract class ReportDocument extends HtmlDocument {
-   protected final Log log = LogFactory.getLog(getClass());
+   protected static final Log log = LogFactory.getLog(ReportDocument.class);
 
    private int elementCounter = 0;
    private List<Future> chartTaskFutures = new ArrayList<>();
@@ -63,7 +65,7 @@ public abstract class ReportDocument extends HtmlDocument {
    }
 
    public void createHistogramAndPercentileChart(Statistics statistics, final String operation, final String configurationName, int cluster, int iteration,
-                                                   String node, Collection<StatisticType> presentedStatistics) {
+                                                 String node, Collection<StatisticType> presentedStatistics) {
 
       if (statistics == null || !presentedStatistics.contains(StatisticType.HISTOGRAM)) {
          return;
@@ -101,9 +103,9 @@ public abstract class ReportDocument extends HtmlDocument {
       }));
    }
 
-   protected boolean createChart(String filename, int clusterSize, String operation, String rangeAxisLabel,
+   protected boolean createChart(String filename, int clusterSize, String target, String rangeAxisLabel,
                                  ChartType chartType) throws IOException {
-      ComparisonChart chart = generateChart(clusterSize, operation, rangeAxisLabel, chartType);
+      ComparisonChart chart = generateChart(clusterSize, target, rangeAxisLabel, chartType);
       if (chart != null) {
          chart.setWidth(Math.min(Math.max(maxConfigurations, maxIterations) * 100 + 200, 1800));
          chart.setHeight(Math.min(maxConfigurations * 100 + 200, 800));
@@ -126,11 +128,28 @@ public abstract class ReportDocument extends HtmlDocument {
       return chart;
    }
 
-   protected boolean addToChart(ComparisonChart chart, String subCategory, String operation, ChartType chartType,
+   protected boolean addToChart(ComparisonChart chart, String subCategory, String target, ChartType chartType,
                                 Map<Report, List<Aggregation>> reportAggregationMap) {
       Map<String, List<Report>> byConfiguration = reportAggregationMap.keySet().stream().collect(Collectors.groupingBy(report -> report.getConfiguration().name));
       for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
          for (Aggregation aggregation : entry.getValue()) {
+            OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(target);
+            if (operationStats == null) {
+               // For throughput charts, check whether target is a group of operations
+               OperationStats groupOperationStats = aggregation.totalStats.getOperationStatsForGroups().get(target);
+               if (groupOperationStats != null && (chartType == ChartType.OPERATION_THROUGHPUT_NET)) {
+                  operationStats = groupOperationStats;
+               } else {
+                  return false;
+               }
+            } else {
+               // Check whether operation belongs to any group. If so, skip throughput chart generation
+               String operationsGroup = aggregation.totalStats.getOperationsGroup(Operation.getByName(target));
+               if (operationsGroup != null && (chartType == ChartType.OPERATION_THROUGHPUT_NET)) {
+                  return false;
+               }
+            }
+
             String categoryName = entry.getKey().getConfiguration().name;
             if (subCategory != null) {
                categoryName = String.format("%s, %s", categoryName, subCategory);
@@ -154,27 +173,27 @@ public abstract class ReportDocument extends HtmlDocument {
             }
             switch (chartType) {
                case MEAN_AND_DEV: {
-                  MeanAndDev meanAndDev = aggregation.totalStats.getRepresentation(operation, MeanAndDev.class);
+                  MeanAndDev meanAndDev = aggregation.totalStats.getRepresentation(target, MeanAndDev.class);
                   if (meanAndDev == null) return false;
                   chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), categoryName, subCategoryNumeric,
                      subCategoryValue);
                   break;
                }
                case OPERATION_THROUGHPUT_NET: {
-                  OperationThroughput throughput = aggregation.totalStats.getRepresentation(operation, OperationThroughput.class);
+                  OperationThroughput throughput = aggregation.totalStats.getRepresentation(target, OperationThroughput.class);
                   if (throughput == null) return false;
                   chart.addValue(throughput.net, 0, categoryName, subCategoryNumeric, subCategoryValue);
                   break;
                }
                case DATA_THROUGHPUT: {
-                  DataThroughput dataThroughput = aggregation.totalStats.getRepresentation(operation, DataThroughput.class);
+                  DataThroughput dataThroughput = aggregation.totalStats.getRepresentation(target, DataThroughput.class);
                   if (dataThroughput == null) return false;
                   chart.addValue(dataThroughput.meanThroughput / (1024.0 * 1024.0), dataThroughput.deviation
                      / (1024.0 * 1024.0), categoryName, subCategoryNumeric, subCategoryValue);
                   break;
                }
                case MEAN_AND_DEV_SERIES: {
-                  MeanAndDev.Series series = aggregation.totalStats.getRepresentation(operation, MeanAndDev.Series.class);
+                  MeanAndDev.Series series = aggregation.totalStats.getRepresentation(target, MeanAndDev.Series.class);
                   if (series == null) return false;
                   int sample = 0;
                   for (MeanAndDev meanAndDev : series.samples) {
@@ -184,7 +203,7 @@ public abstract class ReportDocument extends HtmlDocument {
                   break;
                }
                case REQUESTS_SERIES: {
-                  DefaultOutcome.Series series = aggregation.totalStats.getRepresentation(operation, DefaultOutcome.Series.class);
+                  DefaultOutcome.Series series = aggregation.totalStats.getRepresentation(target, DefaultOutcome.Series.class);
                   if (series == null) return false;
                   int sample = 0;
                   for (DefaultOutcome defaultOutcome : series.samples) {
@@ -194,7 +213,7 @@ public abstract class ReportDocument extends HtmlDocument {
                   break;
                }
                case OPERATION_THROUGHPUT_GROSS_SERIES: {
-                  OperationThroughput.Series series = aggregation.totalStats.getRepresentation(operation, OperationThroughput.Series.class);
+                  OperationThroughput.Series series = aggregation.totalStats.getRepresentation(target, OperationThroughput.Series.class);
                   if (series == null) return false;
                   int sample = 0;
                   for (OperationThroughput defaultOutcome : series.samples) {
@@ -204,7 +223,7 @@ public abstract class ReportDocument extends HtmlDocument {
                   break;
                }
                case OPERATION_THROUGHPUT_NET_SERIES: {
-                  OperationThroughput.Series series = aggregation.totalStats.getRepresentation(operation, OperationThroughput.Series.class);
+                  OperationThroughput.Series series = aggregation.totalStats.getRepresentation(target, OperationThroughput.Series.class);
                   if (series == null) return false;
                   int sample = 0;
                   for (OperationThroughput defaultOutcome : series.samples) {
@@ -242,29 +261,45 @@ public abstract class ReportDocument extends HtmlDocument {
    }
 
    protected static boolean hasRepresentation(final String operation, Map<Report, List<Aggregation>> reportAggregationMap, final Class<?> representationClass, final Object... representationArgs) {
-      return reportAggregationMap.values().stream().anyMatch(as -> as != null && as.stream().anyMatch(aggregation ->
-         aggregation != null && aggregation.totalStats.getRepresentation(operation, representationClass, representationArgs) != null
-      ));
+      List<Aggregation> aggregations = reportAggregationMap.values().stream().filter(as -> as != null && as.stream().anyMatch(aggregation ->
+         aggregation != null)).flatMap(List::stream).collect(Collectors.toList());
+
+      for (Aggregation aggregation : aggregations) {
+         OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
+         if (operationStats == null) {
+            operationStats = aggregation.totalStats.getOperationStatsForGroups().get(operation);
+         } else if (OperationThroughput.class.equals(representationClass)) { // Both op stats present -> operation group defined, skip throughput
+            String operationsGroup = aggregation.totalStats.getOperationsGroup(Operation.getByName(operation));
+            if (operationsGroup != null) {
+               // result is false
+               break;
+            }
+         }
+         if (operationStats != null && operationStats.getRepresentation(representationClass, aggregation.totalStats, representationArgs) != null)
+            return true;
+      }
+
+      return false;
    }
 
-   public void createCharts(String operation, int clusterSize) throws IOException {
+   public void createCharts(String target, int clusterSize) throws IOException {
       String suffix = clusterSize > 0 ? "_" + clusterSize : "";
       String directory = this.directory.endsWith(File.separator) ? this.directory : this.directory + File.separator;
 
-      List<ChartDescription> charts = generatedCharts.get(operation);
+      List<ChartDescription> charts = generatedCharts.get(target);
       if (charts == null) {
-         generatedCharts.put(operation, charts = new ArrayList<>());
+         generatedCharts.put(target, charts = new ArrayList<>());
       }
       for (ChartDescription cd : new ChartDescription[] {
-         new ChartDescription(ChartType.MEAN_AND_DEV, "mean_dev", "Response time mean", "Response time (ms)"),
-         new ChartDescription(ChartType.OPERATION_THROUGHPUT_NET, "throughput_net", "Operation throughput", "Operations/sec"),
-         new ChartDescription(ChartType.DATA_THROUGHPUT, "data_throughput", "Data throughput mean", "MB/sec"),
-         new ChartDescription(ChartType.MEAN_AND_DEV_SERIES, "mean_dev_series", "Response time over time", "Response time (ms)"),
-         new ChartDescription(ChartType.REQUESTS_SERIES, "requests_series", "Requests progression", "Number of requests"),
-         new ChartDescription(ChartType.OPERATION_THROUGHPUT_NET_SERIES, "throughput_net_series", "Operation throughput over time", "Operations/sec"),
+         new ChartDescription(ChartType.MEAN_AND_DEV, "mean_dev" + "_" + target, "Response time mean", "Response time (ms)"),
+         new ChartDescription(ChartType.OPERATION_THROUGHPUT_NET, "throughput_net" + "_" + target, "Operation throughput", "Operations/sec"),
+         new ChartDescription(ChartType.DATA_THROUGHPUT, "data_throughput" + "_" + target, "Data throughput mean", "MB/sec"),
+         new ChartDescription(ChartType.MEAN_AND_DEV_SERIES, "mean_dev_series" + "_" + target, "Response time over time", "Response time (ms)"),
+         new ChartDescription(ChartType.REQUESTS_SERIES, "requests_series" + "_" + target, "Requests progression", "Number of requests"),
+         new ChartDescription(ChartType.OPERATION_THROUGHPUT_NET_SERIES, "throughput_net_series" + "_" + target, "Operation throughput over time", "Operations/sec"),
       }) {
-         if (createChart(String.format("%s%s%s_%s%s_%s.png", directory, File.separator, testName, operation, suffix, cd.name),
-            clusterSize, operation, cd.yLabel, cd.type)) {
+         if (createChart(String.format("%s%s%s_%s%s_%s.png", directory, File.separator, testName, target, suffix, cd.name),
+            clusterSize, target, cd.yLabel, cd.type)) {
             charts.add(cd);
          }
       }

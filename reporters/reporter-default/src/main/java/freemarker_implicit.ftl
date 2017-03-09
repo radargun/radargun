@@ -1,0 +1,5 @@
+[#ftl]
+[#-- @implicitly included --]
+[#-- @ftlvariable name="testReport" type="org.radargun.reporting.html.TestReportDocument" --]
+[#-- @ftlvariable name="reporter" type="org.radargun.reporting.html.HtmlReporter" --]
+[#-- @ftlvariable name="indexDocument" type="org.radargun.reporting.html.IndexDocument" --]

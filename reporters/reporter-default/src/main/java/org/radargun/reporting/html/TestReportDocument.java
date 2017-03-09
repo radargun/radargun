@@ -45,25 +45,30 @@ public class TestReportDocument extends ReportDocument {
    }
 
    public void createTestCharts() {
-      for (String operation : testAggregations.getAllOperations()) {
+      createTestCharts(testAggregations.getOperationGroups());
+      createTestCharts(testAggregations.getAllOperations());
+      waitForChartsGeneration();
+   }
+
+   private void createTestCharts(Set<String> targets) {
+      for (String target : targets) {
          if (maxClusters > 1 && configuration.separateClusterCharts) {
             for (Integer clusterSize : testAggregations.byClusterSize().keySet()) {
                try {
-                  createCharts(operation, clusterSize);
+                  createCharts(target, clusterSize);
                } catch (IOException e) {
                   log.error("Exception while creating test charts", e);
                }
             }
          } else {
             try {
-               createCharts(operation, 0);
+               createCharts(target, 0);
             } catch (IOException e) {
                log.error("Exception while creating test charts", e);
             }
          }
-         createHistogramAndPercentileCharts(operation, testAggregations.byReports(), testName);
+         createHistogramAndPercentileCharts(target, testAggregations.byReports(), testName);
       }
-      waitForChartsGeneration();
    }
 
    /**
@@ -86,5 +91,8 @@ public class TestReportDocument extends ReportDocument {
 
    public Set<String> getOperations() {
       return testAggregations.getAllOperations();
+   }
+   public Set<String> getOperationGroups() {
+      return testAggregations.getOperationGroups();
    }
 }

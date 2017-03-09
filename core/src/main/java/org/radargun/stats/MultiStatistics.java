@@ -1,6 +1,7 @@
 package org.radargun.stats;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -107,12 +108,37 @@ public abstract class MultiStatistics implements Statistics {
    }
 
    @Override
-   public OperationStats getOperationStats(String operation) {
-      throw new UnsupportedOperationException();
+   public <T> T getRepresentation(String operation, Class<T> clazz, Object... args) {
+      return Stream.of(internal).map(s -> s.getRepresentation(operation, clazz, args)).filter(r -> r != null).findFirst().orElse(null);
    }
 
    @Override
-   public <T> T getRepresentation(String operation, Class<T> clazz, Object... args) {
-      return Stream.of(internal).map(s -> s.getRepresentation(operation, clazz, args)).filter(r -> r != null).findFirst().orElse(null);
+   public void registerOperationsGroup(String name, Set<Operation> operations) {
+      internal[0].registerOperationsGroup(name, operations);
+   }
+
+   @Override
+   public String getOperationsGroup(Operation operation) {
+      return Stream.of(internal).map(s -> s.getOperationsGroup(operation)).filter(r -> r != null).findFirst().orElse(null);
+   }
+
+   @Override
+   public Map<String, OperationStats> getOperationStatsForGroups() {
+      return Stream.of(internal).map(s -> s.getOperationStatsForGroups()).filter(r -> r != null).findFirst().orElse(null);
+   }
+
+   @Override
+   public OperationStats getOperationStats(String operation) {
+      return Stream.of(internal).map(s -> s.getOperationStats(operation)).filter(r -> r != null).findFirst().orElse(null);
+   }
+
+   @Override
+   public Map<String, OperationStats> getOperationsStats() {
+      return Stream.of(internal).map(s -> s.getOperationsStats()).filter(r -> r != null).findFirst().orElse(null);
+   }
+
+   @Override
+   public Map<String, Set<Operation>> getGroupOperationsMap() {
+      return Stream.of(internal).map(s -> s.getGroupOperationsMap()).filter(r -> r != null).findFirst().orElse(null);
    }
 }

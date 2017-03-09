@@ -71,7 +71,7 @@ public class QueryStage extends TestStage {
       private final QueryBase.Data data;
 
       public QueryAck(SlaveState slaveState, List<Statistics> statistics, QueryBase.Data data) {
-         super(slaveState, statistics);
+         super(slaveState, statistics, null);
          this.data = data;
       }
    }

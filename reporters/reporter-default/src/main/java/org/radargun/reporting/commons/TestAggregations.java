@@ -10,6 +10,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.radargun.Operation;
 import org.radargun.config.Cluster;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -35,6 +36,7 @@ public class TestAggregations {
 
    private int maxIterations = 0;
    private Set<String> operations = new TreeSet<>();
+   private Set<String> operationGroups = new TreeSet<>();
    private Set<Cluster> clusters = new TreeSet<>();
 
    public TestAggregations(String testName, List<Report.Test> tests) {
@@ -45,7 +47,7 @@ public class TestAggregations {
          if (test.iterationsName != null) {
             iterationsNames.add(test.iterationsName);
          }
-         List<Aggregation> iterations = new ArrayList<Aggregation>();
+         List<Aggregation> iterations = new ArrayList<>();
          for (Report.TestIteration it : test.getIterations()) {
             addIteration(test, iterations, it);
          }
@@ -97,23 +99,42 @@ public class TestAggregations {
       if (!totalStats.isPresent()) {
          log.warn("There are no stats for this iteration");
       } else {
+         if (test.getGroupOperationsMap() != null) {
+            for (Map.Entry<String, Set<Operation>> op : test.getGroupOperationsMap().entrySet()) {
+               //register groups for thread statistics
+               totalStats.get().registerOperationsGroup(op.getKey(), op.getValue());
+               //register groups for node statistics
+               nodeStats.stream().forEach(ns -> ns.registerOperationsGroup(op.getKey(), op.getValue()));
+               //register groups for thread statistics
+               for (Map.Entry<Integer, List<Statistics>> mapEntry : it.getStatistics()) {
+                  for (Statistics ts : mapEntry.getValue()) {
+                     ts.registerOperationsGroup(op.getKey(), op.getValue());
+                  }
+               }
+            }
+         }
+
          iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats.get(), totalThreads.get(), it));
          for (String operation : totalStats.get().getOperations()) {
             DefaultOutcome defaultOutcome = totalStats.get().getRepresentation(operation, DefaultOutcome.class);
-            if (defaultOutcome == null || defaultOutcome.requests > 0) operations.add(operation);
+            if (defaultOutcome == null || defaultOutcome.requests > 0) {
+               operations.add(operation);
+            }
          }
+         operationGroups.addAll(totalStats.get().getOperationStatsForGroups().keySet());
+
       }
 
       if (it != null && it.getResults() != null) {
          for (Map.Entry<String, Report.TestResult> entry : it.getResults().entrySet()) {
             Map<Report, List<Report.TestResult>> resultsByType = results.get(entry.getKey());
             if (resultsByType == null) {
-               resultsByType = new TreeMap<Report, List<Report.TestResult>>();
+               resultsByType = new TreeMap<>();
                results.put(entry.getKey(), resultsByType);
             }
             List<Report.TestResult> resultsList = resultsByType.get(test.getReport());
             if (resultsList == null) {
-               resultsList = new ArrayList<Report.TestResult>();
+               resultsList = new ArrayList<>();
                resultsByType.put(test.getReport(), resultsList);
             }
             resultsList.add(entry.getValue());
@@ -143,6 +164,10 @@ public class TestAggregations {
 
    public int getMaxIterations() {
       return maxIterations;
+   }
+
+   public Set<String> getOperationGroups() {
+      return Collections.unmodifiableSet(operationGroups);
    }
 }
 

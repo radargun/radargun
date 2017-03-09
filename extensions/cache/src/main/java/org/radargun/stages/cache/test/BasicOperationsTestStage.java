@@ -1,8 +1,11 @@
 package org.radargun.stages.cache.test;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
 
 import org.radargun.Operation;
+import org.radargun.config.Init;
 import org.radargun.config.Namespace;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
@@ -42,9 +45,33 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
    @InjectTrait
    protected BasicOperations basicOperations;
 
+   @Init
+   @Override
+   public void init() {
+      super.init();
+      statisticsPrototype.registerOperationsGroup(BasicOperations.class.getSimpleName() + ".Total",
+         new HashSet<>(Arrays.asList(
+            BasicOperations.GET,
+            CacheInvocations.Get.GET_NULL,
+            BasicOperations.CONTAINS_KEY,
+            BasicOperations.PUT,
+            BasicOperations.GET_AND_PUT,
+            BasicOperations.REMOVE,
+            BasicOperations.GET_AND_REMOVE)));
+      statisticsPrototype.registerOperationsGroup(BasicOperations.class.getSimpleName() + ".Total.TX",
+         new HashSet<>(Arrays.asList(
+            CacheInvocations.Get.TX,
+            CacheInvocations.ContainsKey.TX,
+            CacheInvocations.Put.TX,
+            CacheInvocations.GetAndPut.TX,
+            CacheInvocations.Remove.TX,
+            CacheInvocations.GetAndRemove.TX
+         )));
+   }
+
    @Override
    protected OperationSelector createOperationSelector() {
-      return new RatioOperationSelector.Builder()
+      RatioOperationSelector operationSelector = new RatioOperationSelector.Builder()
          .add(BasicOperations.GET, getRatio)
          .add(BasicOperations.CONTAINS_KEY, containsRatio)
          .add(BasicOperations.PUT, putRatio)
@@ -52,6 +79,8 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
          .add(BasicOperations.REMOVE, removeRatio)
          .add(BasicOperations.GET_AND_REMOVE, getAndRemoveRatio)
          .build();
+
+      return operationSelector;
    }
 
    @Override

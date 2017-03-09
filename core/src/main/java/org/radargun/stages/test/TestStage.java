@@ -3,11 +3,14 @@ package org.radargun.stages.test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.radargun.DistStageAck;
+import org.radargun.Operation;
 import org.radargun.StageResult;
 import org.radargun.Version;
 import org.radargun.config.Init;
@@ -141,6 +144,9 @@ public abstract class TestStage extends BaseTestStage {
                if (iterationValue != null) {
                   test.setIterationValue(testIteration, iterationValue);
                }
+               if (test.getGroupOperationsMap() == null) {
+                  test.setGroupOperationsMap(ack.getGroupOperationsMap());
+               }
                test.addStatistics(testIteration, ack.getSlaveIndex(), ack.statistics);
             }
          } else {
@@ -261,7 +267,7 @@ public abstract class TestStage extends BaseTestStage {
 
    protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
       List<Statistics> results = gatherResults(stressors, new StatisticsResultRetriever());
-      return new StatisticsAck(slaveState, results);
+      return new StatisticsAck(slaveState, results, statisticsPrototype.getGroupOperationsMap());
    }
 
    protected <T> List<T> gatherResults(List<Stressor> stressors, ResultRetriever<T> retriever) {
@@ -384,10 +390,15 @@ public abstract class TestStage extends BaseTestStage {
 
    protected static class StatisticsAck extends DistStageAck {
       public final List<Statistics> statistics;
+      private final Map<String, Set<Operation>> groupOperationsMap;
 
-      public StatisticsAck(SlaveState slaveState, List<Statistics> statistics) {
+      public StatisticsAck(SlaveState slaveState, List<Statistics> statistics, Map<String, Set<Operation>> groupOperationsMap) {
          super(slaveState);
          this.statistics = statistics;
+         this.groupOperationsMap = groupOperationsMap;
+      }
+      public Map<String, Set<Operation>> getGroupOperationsMap() {
+         return groupOperationsMap;
       }
    }
 }

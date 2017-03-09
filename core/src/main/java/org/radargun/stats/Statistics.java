@@ -1,6 +1,7 @@
 package org.radargun.stats;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BinaryOperator;
 
@@ -14,6 +15,36 @@ import org.radargun.utils.ReflexiveConverters;
  */
 public interface Statistics extends Serializable {
    BinaryOperator<Statistics> MERGE = (s1, s2) -> s1 == null ? s2 : (s2 == null ? s1 : s1.with(s2));
+
+   /**
+    * Creates a logical group of operations identified by given group name. Should be used on per-stage basis.
+    *
+    * @param name Name of the group
+    * @param operations Operations to include in logical group
+    */
+   void registerOperationsGroup(String name, Set<Operation> operations);
+
+   /**
+    * @return Group name for supplied operation. Returns null if group with given operation is not registered.
+    */
+   String getOperationsGroup(Operation operation);
+
+   /**
+    * @return Map all registered groups and their corresponding operations
+    */
+   Map<String, Set<Operation>> getGroupOperationsMap();
+
+   /**
+    * @return Merged operation stats for registered groups. Calculation should be based on operations registered with this group.
+    */
+   Map<String, OperationStats> getOperationStatsForGroups();
+
+   /**
+    * Operation names should be identical on all nodes, as oposed to operations IDs which can differ.
+    *
+    * @return Map of operations stats keyed by operations names.
+    */
+   Map<String, OperationStats> getOperationsStats();
 
    /**
     * Mark this moment as start of the measurement.
@@ -76,7 +107,9 @@ public interface Statistics extends Serializable {
    void record(RequestSet requestSet, Operation operation);
 
    default void discard(Request request) {}
+
    default void discard(Message request) {}
+
    default void discard(RequestSet request) {}
 
    /**
