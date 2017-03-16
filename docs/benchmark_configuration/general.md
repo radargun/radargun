@@ -14,9 +14,9 @@ One of the most important purposes of RadarGun is to support benchmarking of dis
 * after the warm up is finished the actual benchmark is executed. Same benchmark code will be executed against each node within the cluster. Each benchmark stresses each node and records performance data, e.g. average write/read duration
 * optionally, the same benchmark might be run again on greater number of nodes. This is useful for observing how performance is affected by the cluster size (i.e. how does the distributed cache scales out)
 * optionally, same benchmark might be run on a different cache product, for comparative benchmarks
-* at the end, a report is generated comparing the performance of different products, on different cluster sizes. Bellow is an example of such a generated report, comparing write performance between [Infinispan](http://www.jboss.org/infinispan) and [JBossCache](http://www.jboss.org/jbosscache/)
+* at the end, a report is generated comparing the performance on different products/cluster sizes/configurations/anything else. Bellow is an example of such a generated report, comparing write performance of [Infinispan](http://www.jboss.org/infinispan) Streaming operations API for increasing entry sizes
 
-![Graph](https://github.com/downloads/radargun/radargun/Replicated_PUT_for_5minsstartup.png)
+![Graph]({{page.path_to_root}}/images/Streaming_Operations_test_StreamingOperations.Put_mean_dev.png)
 
 ### Architecture
 
