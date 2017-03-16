@@ -15,14 +15,14 @@ The `slave nodes` may be (and usually are) divided into groups fulfilling differ
 Provided you use one of the released versions [RadarGun 2.1.0](https://github.com/radargun/radargun/releases/download/RadarGun-2.1.0.Final/RadarGun-2.1.0.Final.zip) or [RadarGun 1.1.0](https://github.com/radargun/radargun/releases/download/RadarGun-1.1.0.Final/RadarGun-1.1.0.Final.zip), just download the file and unzip it.
 
     $ unzip radargun-x.y.z.zip
-      $ cd radargun-x.y.z
+    $ cd radargun-x.y.z
 
 
 Radargun 3.0 is still under development, but you can check out sources from git and build, using:
 
     $ git clone https://github.com/radargun/radargun.git
-      $ cd radargun
-      $ mvn clean install -DskipTests
+    $ cd radargun
+    $ mvn clean install -DskipTests
 
 
 The installation will create `distribution` folder in `target`. For more details you mmay reffer to [Building binaries]({{page.path_to_root}}getting_started/building_binaries.html).
