@@ -4,14 +4,11 @@
 Five minute tutorial
 --------------------
 
-### What is RadarGun?
+### RadarGun basics?
 
-Radargun 1.x was a tool for comparing the performance of different caching/data grid products (e.g. Infinispan, EHCache, Coherence). Since version 2.0 it has become a general distributed system testing tool, although the primary focus on implementation is still on clustered caches. Version 3 (development in progress) will bring support for testing other areas as well (e.g. JPA).
+RadarGun is based on the master-slave pattern and the concept of **stages**. The execution is controlled from the `master node`, which sequentially signalizes the `slave nodes` that a stage should be ran, all slaves run this stage in parallel and send results to the master to process them. After all slaves have finished execution another stage is executed.
 
-RadarGun is based on the master-slave pattern and the concept of **stages**. The execution is controlled from the master node, which sequentially signalizes the slave nodes that a stage should be ran, all slaves run this stage in parallel and send results to the master to process them. After that, another stage can be executed.
-
-**There used to be a picture here, no more...**
-
+The `slave nodes` may be (and usually are) divided into groups fulfilling different roles in the cluster (cliens/servers), acording to configuration, `master node` does not participate in the actual benchmarking.
 
 ### Install
 
@@ -28,18 +25,23 @@ Radargun 3.0 is still under development, but you can check out sources from git 
       $ mvn clean install -DskipTests
 
 
-The installation will create `distribution` folder in `target`.
+The installation will create `distribution` folder in `target`. For more details you mmay reffer to [Building binaries]({{page.path_to_root}}getting_started/building_binaries.html).
 
 ### Edit your configuration
 
-Configurations reside in the `conf` folder. Please see `conf/benchmark-dist.xml` config file for basic  distributed benchmark example, `conf/benchmark-local.xml` for non-distributed, single-node tests. There are several examples covering MapReduce, querying, JCache integration etc. Please see these files for more details on how to configure RadarGun.
+Configurations reside in the `conf` folder. Please see `conf/benchmark-dist.xml` config file for basic distributed benchmark example. There are several examples covering MapReduce, querying, JCache integration etc. Please see these files for more details on how to configure RadarGun.
 
 Some notes about the configuration file:
 
-* the `master` element defines where the master process listens for connections from slaves. The master process is the one that coordinates multiple slaves for running a distributed benchmark.
-* element `configurations` specifies which product/configs are benchmarked. For each such (product,config) combo, the benchmark (described by `scenario` element) is run.
-* the `scenario` element configures what stages are performed during benchmark. The master coordinates all the slaves, so that each stage starts on all slaves at the same time.
-* last section `reports` configures what reports are generated. More on this later, after we run the benchmark.
+* the **master** element defines where the master process listens for connections from slaves. The master process is the one that coordinates multiple slaves for running a distributed benchmark.
+
+* the [**clusters**]({{page.path_to_root}}benchmark_configuration/clusters.html) element specifies the size (and optionally group distribution) of cluster(s) the benchmark will be ran on.
+* the [**configurations**]({{page.path_to_root}}benchmark_configuration/configurations.html) element specifies which products are benchmarked and their configurations (optionally specific to individual groups). 
+
+        For each configuration-cluster combo, one benchmark (described by `scenario` element) is ran.
+
+* the [**scenario**]({{page.path_to_root}}benchmark_configuration/scenario.html) element configures what stages are performed during benchmark. The master coordinates all the slaves, so that each stage starts on all slaves at the same time.
+* the [**reports**]({{page.path_to_root}}benchmark_configuration/reports.html) element configures what reports are generated from data gathered during scenarios.
 
 ### Start the master node
 
@@ -47,6 +49,7 @@ Some notes about the configuration file:
       === Cache Benchmark Framework: master.sh ===
       This script is used to launch the master process, which coordinates tests run
       on slaves.
+      
       Master's PID is 37133 running on spark.local
 
 You can also specify which benchmark configuration file will be used by running `./bin/master.sh -c /path/to/benchmark`. If `-c` option is not provided, default value is `./conf/benchmark-dist.xml`.
@@ -60,34 +63,35 @@ See all available options by showing help with `./bin/master.sh -h`.
 
 ### Start the slaves
 
-The number of slaves that need to be started is defined by settings in `clusters` element (or if `local` element is present than it is necessary to start only 1 slave). In our example it is 3.
+The number of slaves that need to be started is defined by highest settings in `clusters` element, in our example it is 3.
 
     $ ./bin/slave.sh
       === Radargun: slave.sh ===
       This script is used to launch the local slave process.
-      ... done! Slave process started on host spark.local!
+      
+      ... done! Slave process started on host spark.local! Slave PID is 19320
 
-      $ ./bin/slave.sh
+    $ ./bin/slave.sh
       === Radargun: slave.sh ===
       This script is used to launch the local slave process.
-      ... done! Slave process started on host spark.local!
+      ... done! Slave process started on host spark.local! Slave PID is 19357
 
-      $ ./bin/slave.sh
+    $ ./bin/slave.sh
       === Radargun: slave.sh ===
       This script is used to launch the local slave process.
-      ... done! Slave process started on host spark.local!
+      ... done! Slave process started on host spark.local! Slave PID is 19386
 
 
-*Note* in this example we use `slave.sh` that starts a process on the same machine.  In real-world, you would most likely have multiple nodes running on multiple machines. For easily starting remote slave processes on remote machines, refer to `dist.sh`: this knows how to ssh on remote nodes and run `slave.sh` there. It can be configured via `environment.sh`, where addresses of individual slaves need to be specified (SLAVE_ADDRESS). Optionally, addresses to which the slaves bind can be included (BIND_ADDRESS).</p>
+*Note* in this example we use `slave.sh` that starts a process on the same machine.  In real-world, you would most likely have multiple nodes running on multiple machines. For easily starting remote slave processes on remote machines, refer to `dist.sh`: this knows how to ssh on remote nodes and run `slave.sh` there. It can be configured via `environment.sh`, where addresses of individual slaves need to be specified (SLAVE_ADDRESS). Optionally, addresses to which the slaves bind can be included (BIND_ADDRESS).
 
     slave1_SLAVE_ADDRESS=127.0.0.1
-      slave1_BIND_ADDRESS=127.0.0.2
+    slave1_BIND_ADDRESS=127.0.0.2
 
-      slave2_SLAVE_ADDRESS=127.0.0.1
-      slave2_BIND_ADDRESS=127.0.0.3
+    slave2_SLAVE_ADDRESS=127.0.0.1
+    slave2_BIND_ADDRESS=127.0.0.3
 
-      slave3_SLAVE_ADDRESS=127.0.0.1
-      slave3_BIND_ADDRESS=127.0.0.4
+    slave3_SLAVE_ADDRESS=127.0.0.1
+    slave3_BIND_ADDRESS=127.0.0.4
 
 Running the master and slaves is then straightforward.
 
@@ -104,9 +108,9 @@ At this point the benchmark is running, and it will take a while until all the b
 When the benchmark is finished you should see something line this:
 
     13:38:02,017 INFO  [org.radargun.Master] (main) Executed all benchmarks in 4 mins 35 secs, reporting...
-      ...
-      13:38:13,906 INFO  [org.radargun.Master] (main) All reporters have been executed, exiting.
-      13:38:13,914 INFO  [org.radargun.ShutDownHook] (Thread-0) Master process is being shutdown
+    ...
+    13:38:13,906 INFO  [org.radargun.Master] (main) All reporters have been executed, exiting.
+    13:38:13,914 INFO  [org.radargun.ShutDownHook] (Thread-0) Master process is being shutdown
 
 ### See reports
 
@@ -114,8 +118,6 @@ All the reports are generated in the `results` directory. Depending on the setti
 
 ### Where do we go from here
 
-For more details on how to configure and run the benchmarks go to [Benchmark configuration]({{page.path_to_root}}architecture/benchmark_configuration.html) and [Stress test]({{page.path_to_root}}measuring_performance/stress_test.html).
-
-RadarGun supports by default a number of products (including JBossCache, Infinispan, Oracle's Coherence) but if you want to benchmark against a new product refer to [Writing custom plugins]({{page.path_to_root}}getting_started/writing_custom_plugins.html).
+For more details on how to configure and run the benchmarks go to [Benchmark configuration]({{page.path_to_root}}benchmark_configuration/general.html).
 
 For more details on how the scripts should be used refer to [Using scripts]({{page.path_to_root}}getting_started/using_the_scripts.html)

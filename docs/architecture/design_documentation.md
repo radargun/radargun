@@ -4,10 +4,6 @@
 Design documentation
 --------------------
 
-### Introduction
-
-This document should describe the architecture of RadarGun 2.0+. The architecture of previous versions won't be described.
-
 ### Master and Slaves
 
 RadarGun has two types of nodes:
@@ -18,16 +14,9 @@ There is always only one master. This loads the configuration, controls executio
 
 **Slave**
 
-Slaves are nodes which execute the benchmark, gather statistics and other info. The slaves start a Service - this is the tested system (such as Infinispan, EHCache, Memcached client etc.). Naturally, there can be many slaves.
+Slaves are nodes which execute the benchmark, gather statistics and other info. The slaves start a Service - this is the tested system (such as Infinispan, EHCache, Memcached client etc.), there can be many slaves.
 
-**Local mode**
-
-Local mode has been removed in RadarGun 3.0 which restarts slaves in order to isolate services, rather than using separate class loader.
-
-RadarGun 2.x:
-
->In clustered scenario, there are separate JVMs for each Master and Slave. If you need only single Slave, you can start both Master and Slave in the same JVM - this is called the local mode and is triggered using <local /> instead of <clusters>...</clusters> in the configuration.
-
+>Naturally nothing prevents execution of multiple slaves on one machine, even localhost. This is absolutelly useless for benchmarking, but perfectly fine (and often used) for benchmark development.
 
 ### Stages
 
@@ -35,7 +24,7 @@ This is the core concept of RadarGun since its first days. After all Slaves conn
 
 There are two types of stages: MasterStage (executed only on Master), and DistStage (distributed to the slaves). 
 
-MasterStage has only two methods: init() and execute(), the meaning is obvious.
+MasterStage has only two methods: init() and execute(), dividing the initialization of class and actual execution of the stage.
 
 In DistStage, after the stage is initialized by initOnMaster() or initOnSlave(), the slaves run executeOnSlave(). The return value is either DistStageAck - simple acknowledgement that stage ran successfully or failed - or any serializable object extending it, usually carrying payload such as test statistics. Master collects these from all slaves and then runs processAcksOnMaster() on the master node.
 
@@ -49,26 +38,30 @@ RadarGun can benchmark many distributed systems (such as Infinispan or Oracle Co
 
 In order to interface the vendor-specific API with RadarGun, we need an adaptation layer. As there are usually multiple features that each Plugin provides (such as lifecycle, information about cluster, transactions, java.util.Map-like interface etc.), RadarGun defines interfaces called Traits (annotated with @Trait, see org.radargun.traits package).
 
-RadarGun retrieves the Traits from a Service - this is a class (annotated with @Service) in the Plugin which binds the Trait implementation (as functionality) to the instance of the distributed system. The Service is created before each scenario and persists until the scenario ends. It can have several no-arg methods annotated with @ProvidesTrait - these are called after the service is created and the runtime objects returned are analyzed: this way RadarGun detects which Traits the Service provides. Checkout [the list of provided Traits]({{page.path_to_root}}architecture/trait_list.html).
+RadarGun retrieves the Traits from a Service - this is a class (annotated with @Service) in the Plugin which binds the Trait implementation (as functionality) to the instance of the distributed system. The Service is created before each scenario and persists until the scenario ends. It can have several no-arg methods annotated with @ProvidesTrait - these are called after the service is created and the runtime objects returned are analyzed: this way RadarGun detects which Traits the Service provides.{::comment} Checkout [the list of provided Traits]({{page.path_to_root}}architecture/trait_list.html).{:/comment}
 
 Each plugin may provide multiple Services (in order to spare resources). For example, plugin infinispan60 provides service with Infinispan in embedded mode, service with Infinispan HotRod client, and service that can run standalone Infinispan Server. The plugin and service is selected in configuration using: 
 
     <setup plugin="my_plugin" service="my_service" />
     
-The service name here is only symbolic; each plugin contains the file conf/plugin.properties which binds these names to the implementing class:
+The service name here is only symbolic; each plugin contains the file `conf/plugin.properties` which binds these names to the implementing class:
 
     service.my_service=com.my.Service
 
-Note that each plugin is loaded in its own classloader, which has all JARs from the plugins' lib/ directory and RadarGun's main classloader as its parent. When some stage has a property that accepts class name, the class is usually loaded from this classloader in order to allow plugin-specific classes to be used.
+**Note:** Each plugin is loaded in its own classloader, which has all JARs from the plugins `lib/` directory and RadarGun's main classloader as its parent. When some stage has a property that accepts class name, the class is usually loaded from this classloader in order to allow plugin-specific classes to be used.
 
 ### Statistics and Reporters
 
-The statistics of tests executed and events detected throughout the benchmark are stored on the Master node in-memory until all configurations (cluster sizes x configurations) are executed. Then these are passed to each of the configured reporters in order to create the desired output.
+The statistics (values measured and events detected) obtained throughout the benchmark processing are stored in-memory on the Master node until all configurations (cluster sizes x configurations) are executed. Then these are passed to each of the configured reporters in order to create the desired output.
 
-Those methods on Traits that should be benchmarked are called Operations. The Trait provides a constant Operation (uniquely identified with some name in form TraitName.MethodName) that is passed to the statistics to identify this operation. In some scenarios, we need to denote a special version of this operation (to be distinguished in the statistics) - you can use the derive() method on the operation to create a suffixed version of this operation.
+Methods on Traits that should be benchmarked are called Operations. The Trait provides a constants `Operation` (uniquely identified with a name in form TraitName.MethodName) passed to the statistics to identify these methods. 
 
-Usually, on thread operates on private instance of statistics. The statistics from multiple threads/slaves can be later merged. The list of statistics from stage form a Test - in one test, the results of one Operation should be approximately same, e.g. you should provide the same size of an argument. The results of a Test from different service configurations can be later compared against each other in the reporter.
-If the results are expected to change during the Test execution (e.g. because we increase the number of testing threads, or the amount of data stored in the service grows), we can split the test into Iterations - this is more convenient and allows better presentation than using distinct Tests. 
+> In some scenarios, we need to denote a special version of this operation (to be distinguished in the statistics) - Operation.derive() method can be used to create a suffixed version of this operation.
+
+Usually each thread on slave operates on private instance of statistics, the statistics from multiple threads and subsequently slaves can be merged. The list of statistics from stage form a Test - in one test, the results of one Operation should be approximately same, provided that parameters of the stage execution ar the same. The results of a Test from different service configurations can be later compared against each other in the reporter.
+If the results are expected to change during the Test execution (e.g. because we increase the number of testing threads, or the amount of data stored in the service grows), we can split the test into Iterations - this is more convenient and allows better presentation than using distinct Tests (chack `repeat` stage).
+
+> Many tests provide option to apend test results to previous iteration of the same stage, check `amend-test` parameter
 
 The Reporters are pluggable and implemented in a similar fashion as the plugins: each reporter module contains file plugin.properties with the reporter classes it provides. Currently implemented reporters can create HTML report or CSV files convenient for further processing, but storing the results in a database is one of expected contributions to the reporter system.
 
@@ -82,15 +75,4 @@ RadarGun is extensible in plugins, reporters and also in stages. If you don't wa
 
     mvn clean install -Pextension-example
 
-You can also build your JAR separately and copy it into the lib/ directory afterwards - all JARs in this directory are scanned for the stages, although the XSD will not reflect it.
-
-### Specific modules
-
-This feature has been removed in RadarGun 3.0 as there's only single classpath (including both core libraries, stages and plugins). Specification-style dependencies use <code>provided</code> Maven dependency.
-
-RadarGun 2.x:
-
->In directory specific/ you can find few modules that differ in the way that how these are built and used. These are classloaded in plugin's classloader, though they are not compiled against plugin-specific dependencies.
-One example is JPA module which has entities that are annotated with JPA annotations. During compilation, we use JPA specification dependency, but this is omitted in run time and plugin is expected to provide its own JPA dependencies. This allows us to reuse the entity classes for multiple plugins.
-
-
+You can also build your JAR separately and copy it into the `lib/` directory afterwards - all JARs in this directory are scanned for the stages, although the XSD will not reflect it.

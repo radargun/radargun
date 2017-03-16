@@ -4,8 +4,6 @@
 Namespaces
 ----------
 
-This document describes the stage namespaces introduced in RadarGun 3.0.
-
 With more traits and different services, as well as with the number of stages growing the need to organize stages has come. Traditionally the whole benchmark was covered with one XML schema, stages using prefixes or postfixes to describe their target traits without any strict concept.
 
 Plugins and reporters already use their XML schemas for configuration of services, and using XML namespaces is the XML-natural way to organize stages, too.
