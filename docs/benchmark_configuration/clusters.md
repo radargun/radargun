@@ -52,8 +52,7 @@ The `size` property of the `cluster` element has to be the sum of `size` propert
       </scale>
     </clusters>
 
-This configuration defines three clusters of sizes 3, 9 and 15, each having three groups with equal numbers of slaves. `Scale` element sets a `cluster.size` property for each increment, which can be used for group naming (**discouraged**) and size definition.  
-`Octothorpe` sign (**#**) instructs the parsing engine to evaluate the expression enclosed in adjacent parentheses, while `dollar` sign (**$**) instucts the engine to lookup property name enclosed in adjacent parentheses. 
+This configuration defines three clusters of sizes 3, 9 and 15, each having three groups with equal numbers of slaves. `Scale` element sets a `cluster.size` [property](./properties.html) for each increment, which can be used for group naming (**discouraged**) and size definition.
 
 #### A bit more complex example
 
