@@ -1,6 +1,5 @@
 package org.radargun.service;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,19 +8,13 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.PosixFileAttributeView;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
 
@@ -92,22 +85,9 @@ public class InfinispanServerService extends JavaProcessService {
 
       try {
          if (serverZip != null) {
+            Utils.unzip(serverZip, home);
+
             Path homePath = FileSystems.getDefault().getPath(home);
-            Utils.deleteDirectory(homePath.toFile());
-            Files.createDirectories(homePath);
-
-            ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(serverZip));
-            ZipEntry nextEntry;
-            while ((nextEntry = zipInputStream.getNextEntry()) != null) {
-               Path entryOutput = homePath.resolve(nextEntry.getName());
-               if (nextEntry.isDirectory()) {
-                  Files.createDirectory(entryOutput);
-               } else {
-                  Files.copy(zipInputStream, entryOutput);
-               }
-               zipInputStream.closeEntry();
-            }
-
             List<Path> homeContents = Files.list(homePath).collect(Collectors.toList());
             // move the server files 1 directory up (remove the extra directory)
             if (homeContents.size() == 1) {
@@ -118,11 +98,7 @@ public class InfinispanServerService extends JavaProcessService {
                Files.delete(fromDir);
             }
             // the extraction erases the executable bits
-            Path scriptPath = FileSystems.getDefault().getPath(home, "bin", getStartScriptPrefix() + (windows ? "bat" : "sh"));
-            Set<PosixFilePermission> permissions = PosixFilePermissions.fromString("rwxr-xr-x");
-            if (Files.getFileAttributeView(scriptPath, PosixFileAttributeView.class) != null) {
-               Files.setPosixFilePermissions(scriptPath, permissions);
-            }
+            Utils.setPermissions(FileSystems.getDefault().getPath(home, "bin", getStartScriptPrefix() + (windows ? "bat" : "sh")).toString(), "rwxr-xr-x");
          }
          URL resource = getClass().getResource("/" + file);
          Path filesystemFile = FileSystems.getDefault().getPath(file);
