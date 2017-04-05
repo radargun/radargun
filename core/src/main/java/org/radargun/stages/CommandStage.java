@@ -22,6 +22,9 @@ public class CommandStage extends AbstractDistStage {
    @Property(doc = "Arguments to this command. Default are none", converter = ArgsConverter.class)
    private List<String> args;
 
+   @Property(doc = "Argument which won't be parsed. Useful to run piped commands, like sh -c \"echo yes | some interactive script\"")
+   private String nonParsedArgs;
+
    @Property(doc = "List of exit values that are allowed from the command. Default is {0}.")
    private List<Integer> exitValues = Collections.singletonList(0);
 
@@ -89,6 +92,9 @@ public class CommandStage extends AbstractDistStage {
       command.add(cmd);
       if (args != null) {
          command.addAll(args);
+      }
+      if (nonParsedArgs != null) {
+         command.add(nonParsedArgs);
       }
       log.info("Running: " + command);
       ProcessBuilder pb = new ProcessBuilder().command(command);

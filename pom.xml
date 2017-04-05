@@ -36,6 +36,8 @@
       <plugins.ehcache-latest/>
       <plugins.hazelcast/>
       <plugins.hazelcast-latest/>
+      <plugins.redis/>
+      <plugins.redis-latest/>
       <plugins.jbosscache/>
       <plugins.jbosscache-latest/>
       <plugins.jgroups/>
@@ -244,6 +246,21 @@
          <properties>
             <plugins.hazelcast-latest>hazelcast38</plugins.hazelcast-latest>
             <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,${plugins.hazelcast-latest}</plugins.hazelcast>
+         </properties>
+      </profile>
+      <profile>
+         <id>redis</id>
+         <activation>
+            <property>
+               <name>!no-redis</name>
+            </property>
+         </activation>
+         <modules>
+            <module>plugins/redis32</module>
+         </modules>
+         <properties>
+            <plugins.redis-latest>redis32</plugins.redis-latest>
+            <plugins.redis>${plugins.redis-latest}</plugins.redis>
          </properties>
       </profile>
       <profile>
@@ -653,10 +670,10 @@
                         <ac:if xmlns:ac="antlib:net.sf.antcontrib">
                            <isset property="package-latest"/>
                            <ac:then>
-                                <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache-latest},${plugins.hazelcast-latest},${plugins.jbosscache-latest},${plugins.jgroups-latest},${plugins.infinispan-latest},${plugins.jdg-latest},${plugins.coherence-latest},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker}" />
+                                <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache-latest},${plugins.hazelcast-latest},${plugins.redis-latest},${plugins.jbosscache-latest},${plugins.jgroups-latest},${plugins.infinispan-latest},${plugins.jdg-latest},${plugins.coherence-latest},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker}" />
                            </ac:then>
                            <ac:else>
-                              <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg-early},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker}"/>
+                              <property name="plugin.list" value="${plugins.chm},${plugins.jcache},${plugins.ehcache},${plugins.hazelcast},${plugins.redis},${plugins.jbosscache},${plugins.jgroups},${plugins.infinispan},${plugins.jdg-early},${plugins.jdg},${plugins.coherence},${plugins.process},${plugins.resteasy-http},${plugins.spymemcached},${plugins.tomcat},${plugins.docker}"/>
                            </ac:else>
                         </ac:if>
                         <echo message="Plugin list: ${plugin.list}" />
