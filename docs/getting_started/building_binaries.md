@@ -54,7 +54,7 @@ This operation might take a few minutes, as it will download the dependencies ne
 
 * The `bin` directory contains scripts for launching the master, the slaves and some other utility scripts.  This directory also contains scripts to run RadarGun in local mode. For details on how to run a distributed benchmark see [Benchmark configuration]({{page.path_to_root}}benchmark_configuration/general.html) and [Using scripts]({{page.path_to_root}}getting_started/using_the_scripts.html).
 
-* The `conf` directory contains example configuration files for various benchmarks, log4j configuration and test-data folder with various benchmark-specific data sets
+* The `conf` directory contains example [configuration files](./example_configurations.html) for various benchmarks, log4j configuration and test-data folder with various benchmark-specific data sets
 
 * The `plugins` directory contains a directory for each (product,version) combo that can be benchmarked. `conf` folder contains configuration files used by the product, which can be referenced in benchmark configuration. `lib` folder contains all libraries and other resources needed to run selected product.
 

@@ -28,7 +28,7 @@ Following examples fully apply only to their respective plugins.
     <configurations>
       <config name="Infinispan 5.2 - distributed">
         <setup plugin="infinispan52" >
-<!--           <embedded xmlns="urn:radargun:plugins:infinispan52:3.0" file="dist-sync.xml"/> -->
+          <embedded xmlns="urn:radargun:plugins:infinispan52:3.0" file="dist-sync.xml"/>
         </setup>
       </config>
     </configurations>
