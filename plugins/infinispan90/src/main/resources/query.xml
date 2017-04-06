@@ -27,7 +27,7 @@
       <stack-file name="jgroupsStack" path="${infinispan.jgroups.config:default-configs/default-jgroups-udp.xml}"/>
    </jgroups>
 
-   <cache-container name="default" default-cache="default">
+   <cache-container name="default" default-cache="testCache">
       <transport stack="jgroupsStack" lock-timeout="600000" cluster="default" />
       <serialization></serialization>
       <jmx>
