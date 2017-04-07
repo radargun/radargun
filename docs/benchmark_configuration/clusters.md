@@ -8,24 +8,29 @@ Clusters is the elemement of benchmark configuration file which defines all clus
 
 #### Basic cluster
 
+{% highlight xml %}
     <clusters>
       <cluster size="2" />
     </clusters>
+{% endhighlight %}
 
 This configuration defines one cluster of 2 machines.
 
 #### Scaled clusters
 
+{% highlight xml %}
     <clusters>
       <scale from="4" to="12" inc="4">
         <cluster />
       </scale>
     </clusters>
+{% endhighlight %}
 
 This configuration defines three clusters of sizes 4, 8 and 12. `Size` property for cluster is set by `scale` element for each incerement.
 
 #### Grouped clusters
 
+{% highlight xml %}
     <clusters>
       <cluster size="4">
         <group name="clients" size="2"/>
@@ -36,12 +41,14 @@ This configuration defines three clusters of sizes 4, 8 and 12. `Size` property 
         <group name="servers" size="3"/>
       </cluster>
     </clusters>
+{% endhighlight %}
 
 This configuration defines two clusters, each contaning two groups. `Name` and `size` properties are required for `group` elements. `Name` property is reqired to be unique withing the cluster. 
 The `size` property of the `cluster` element has to be the sum of `size` properties of all groups within that cluster (after evaluation - more below), otherwise an error will occur during configuration parsing.
 
 #### Scaled grouped clusters
 
+{% highlight xml %}
     <clusters>
       <scale from="3" to="15" inc="6">
         <cluster>
@@ -51,11 +58,13 @@ The `size` property of the `cluster` element has to be the sum of `size` propert
         </cluster> 
       </scale>
     </clusters>
+{% endhighlight %}
 
 This configuration defines three clusters of sizes 3, 9 and 15, each having three groups with equal numbers of slaves. `Scale` element sets a `cluster.size` [property](./properties.html) for each increment, which can be used for group naming (**discouraged**) and size definition.
 
 #### A bit more complex example
 
+{% highlight xml %}
     <clusters>
       <cluster size="2">
         <group name="clients" size="1"/>
@@ -72,6 +81,7 @@ This configuration defines three clusters of sizes 3, 9 and 15, each having thre
         </cluster> 
       </scale>
     </clusters>
+{% endhighlight %}
 
 This configuration defines a total of 7 clusters with 2 groups each, one of size 2 and two for each scale increment - 3, 5 and 7. Each scale-generated cluster will have one of the groups size set to 2 and other size set to remainder after subtraction 2 from cluster size.
 

@@ -112,25 +112,3 @@ All properties have to be provided separatelly preceeded by "-D" -> property "sk
     * **coherence**	(parameter `-Dcoherence` to enable)
     * **jdg-early**	(parameter `-Djdg-early` to enable)
     * **jdg**		(parameter `-Djdg` to enable)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    

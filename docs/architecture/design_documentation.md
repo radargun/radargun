@@ -42,8 +42,10 @@ RadarGun retrieves the Traits from a Service - this is a class (annotated with @
 
 Each plugin may provide multiple Services (in order to spare resources). For example, plugin infinispan60 provides service with Infinispan in embedded mode, service with Infinispan HotRod client, and service that can run standalone Infinispan Server. The plugin and service is selected in configuration using: 
 
+{% highlight xml %}
     <setup plugin="my_plugin" service="my_service" />
-    
+{% endhighlight %}
+
 The service name here is only symbolic; each plugin contains the file `conf/plugin.properties` which binds these names to the implementing class:
 
     service.my_service=com.my.Service

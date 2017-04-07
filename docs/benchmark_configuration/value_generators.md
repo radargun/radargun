@@ -8,9 +8,11 @@ Value generators generate random values of specific format that are to be later 
   
 Where applicable default value generator can be overriden by placing following element into stages core element:
 
+{% highlight xml %}
     <value-generator>
       <GENERATOR_ELEMENT_NAME />
     </value-generator>
+{% endhighlight %}
 
 #### Generators
 

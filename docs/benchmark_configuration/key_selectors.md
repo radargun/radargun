@@ -8,9 +8,11 @@ Key selectors are used by [key generators](./key_generators.html) as source of i
   
 Where applicable default key selector can be overriden by placing following element into stages core element:
 
+{% highlight xml %}
     <key-selector>
       <SELECTOR_ELEMENT_NAME />
     </key_selector>
+{% endhighlight %}
 
 #### Selectors
 

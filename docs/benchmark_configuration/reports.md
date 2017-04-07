@@ -13,14 +13,17 @@ Default reporters (csv, html and serialized) generally work ok out of the box, b
 
 #### Basic CSV reporter
 
+{% highlight xml %}
     <reports xmlns="urn:radargun:reporters:reporter-default:3.0">
       <reporter type="serialized"/>
     </reports>
+{% endhighlight %}
 
 For this benchmark the data will be processed by default serialized reporter.
 
 #### Parametrized reporter
 
+{% highlight xml %}
     <reports xmlns="urn:radargun:reporters:reporter-default:3.0">
       <reporter type="csv">
         <csv>
@@ -28,11 +31,13 @@ For this benchmark the data will be processed by default serialized reporter.
         </csv>
       </reporter>
     </reports>
+{% endhighlight %}
 
 For this benchmark the data will be processed by CSV reporter with no totals computed.
 
 #### Parametrized reporter with multiple reports
 
+{% highlight xml %}
     <reports xmlns="urn:radargun:reporters:reporter-default:3.0">
       <reporter type="html">
         <html>
@@ -55,6 +60,7 @@ For this benchmark the data will be processed by CSV reporter with no totals com
         </report>
       </reporter>
     </reports>
+{% endhighlight %}
 
 For this benchmark HTML reporter will produce two reports, one with charts of width 1000, stored into longer_timelines folder, other with charts of width 200, stored into reports folder.
 

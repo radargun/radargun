@@ -1,3 +1,6 @@
+markdown: kramdown
+highlighter: rouge
+
 defaults:
   -
     scope:
