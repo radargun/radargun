@@ -25,6 +25,7 @@ Following examples fully apply only to their respective plugins.
 
 #### Basic configuration
 
+{% highlight xml %}
     <configurations>
       <config name="Infinispan 5.2 - distributed">
         <setup plugin="infinispan52" >
@@ -32,6 +33,7 @@ Following examples fully apply only to their respective plugins.
         </setup>
       </config>
     </configurations>
+{% endhighlight %}
 
 This configurations element contains single config which will initialize `infinispan52` plugin on all slaves (as there are no group definitions) and have it run in embedded mode (node inside slave VM) using "dist-sync.xml" file as configuration source.
 
@@ -40,6 +42,7 @@ This configurations element contains single config which will initialize `infini
 
 #### Not entirely basic configuration
 
+{% highlight xml %}
     <configurations>
       <config name="Infinispan 7.0 - distributed">
         <setup plugin="infinispan70" group="g1">
@@ -62,11 +65,13 @@ This configurations element contains single config which will initialize `infini
         </setup>
       </config>
     </configurations>
+{% endhighlight %}
 
 This configuration element contains two configs, each with two setups for different groups (groups have to be defined in [clusters](./clusters.html) element). The first config will run `infinispan70` plugin, the second config will run `infinispan90` plugin, with groups having distinct configuration files and cache configuration.
 
 #### Complex configuration
 
+{% highlight xml %}
     <configurations>
       <config name="ISPN9 - hotrod">
         <setup group="server" plugin="infinispan90">
@@ -95,6 +100,7 @@ This configuration element contains two configs, each with two setups for differ
         </setup>
       </config>
     </configurations>
+{% endhighlight %}
 
 This configuration element has only one config with two defined groups, `server` and `client`. This configuration takes advantage of [properties](./properties.html).
 

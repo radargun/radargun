@@ -40,28 +40,35 @@ Here is where you can find the complete example (see `conf/benchmark-dist.xml`).
 
 *Root element*
 
+{% highlight xml %}
     <benchmark xmlns="urn:radargun:benchmark:3.0">
+{% endhighlight %}
 
 During compilation RadarGun generates schema (XSD) with documented properties for all stages in the distributed benchmark. With this you can be sure that the properties in schema are always in sync with source code. Schema files can be located in `schema` directory of RadarGun distribution.
 
 *Master element*
 
+{% highlight xml %}
     <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+{% endhighlight %}
 
 Master will open its sever socket at that address (host/port) and wait for connections from slaves. "${master.address:127.0.0.1}" syntax can be read: if there is a system property named "master.address" then use that one; otherwise default to "127.0.0.1". This way of specifying values can be used for all XML attributes.
 
 [**Clusters element**](./clusters.html)
 
+{% highlight xml %}
     <clusters>
         <scale from="2" to="3" inc="1">
             <cluster />
         </scale>
     </clusters>
+{% endhighlight %}
 
 This section contains definition of clusters, which specify number nodes that the benchmark will run on. In this example, the benchmark will initially run on 2 nodes (from - initial size), and then 3 nodes (to - final size). After each run, the cluster size is incremented with "inc", until the "to" is reached. If scaling is not required we omit `scale` element and use `cluster` element directly.
 
 [**Configurations element**](./configurations.html)
 
+{% highlight xml %}
     <configurations>
         <config name="Infinispan 5.2 - distributed">
             <setup plugin="infinispan52">
@@ -74,6 +81,7 @@ This section contains definition of clusters, which specify number nodes that th
             </setup>
         </config>
     </configurations>
+{% endhighlight %}
 
 In this section we specify configurations we want to benchmark - our example uses two products: infinispan52 and infinispan60. The scenario will be run against every (config, cluster size) combo: infinispan52 configured with "dist-sync.xml" file will be run on a cluster of 2, then 3 nodes. Once this is finished, RadarGun will run the next infinispan60 configuration (dist-sync.xml) on 2 and 3 nodes. There's no restriction on the number of configured products or configurations.
 
@@ -81,6 +89,7 @@ In this section we specify configurations we want to benchmark - our example use
 
 [**Scenario element**](./scenario.html)
 
+{% highlight xml %}
     <scenario>
         <service-start />
         <jvm-monitor-start />
@@ -114,6 +123,7 @@ In this section we specify configurations we want to benchmark - our example use
 
         <jvm-monitor-stop />
     </scenario>
+{% endhighlight %}
 
 In this section we define sequence of stages:
 
@@ -128,11 +138,13 @@ In this section we define sequence of stages:
 
 [**Reports element**](./reports.html)
 
+{% highlight xml %}
     <reports>
         <reporter type="csv" />
         <reporter type="html" />
         <reporter type="serialized" />
     </reports>
+{% endhighlight %}
 
 In this last section report generation is configured. Use `csv` reporter if you want to process the results outside of RadarGun. `html` reporter generates graphical output and includes JVM monitoring output, histograms, configuration properties and many more. It is a good practice to define `serialized` reporter in your `reports` section, as this enables you to rerun all the reporters without the need to run the benchmark again (e.g. if something goes wrong during reporting). Recently `perfrepo` reporter has been added, which enables you to store performance results into an external repository for further analysis. Please see README file located in `reporter-perfrepo` folder for configuration example.   
 

@@ -13,6 +13,7 @@ Scenario
 
 #### Example scenario
 
+{% highlight xml %}
     <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
       xmlns="urn:radargun:stages:core:3.0"
       xmlns:cache="urn:radargun:stages:cache:3.0">
@@ -44,6 +45,7 @@ Scenario
       <jvm-monitor-stop />
 
     </rg:scenario>
+{% endhighlight %}
 
 This is a rather basic scenario example rigged to test basic operations performance of cache.  
 

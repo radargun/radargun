@@ -14,11 +14,13 @@ Custom properties can also be specified trough the `define` stage in the [scenar
 
 #### Properties example
 
+{% highlight xml %}
     <setup group="server" plugin="infinispan80" >
       <server xmlns="urn:radargun:plugins:infinispan80:3.0" file="${env.ISPN_CONFIG:server.xml}" jmx-domain="jboss.datagrid-infinispan">
         <home>${ISPN_HOME}</home>
       </server>
     </setup>
+{% endhighlight %}
 
 This [configuration](./configurations.html) setup element will use `ISPN_CONFIG` environment variable as path to config file or default to "server.xml" if not available. It will also use `ISPN_HOME` system property as path to Infinispan home folder with no default value.
   

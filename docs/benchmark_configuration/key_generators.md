@@ -8,9 +8,11 @@ Key generators generate key in the specified form based on input from [key selec
   
 Where applicable default key generator can be overriden by placing following element into stages core element:
 
+{% highlight xml %}
     <key-generator>
       <GENERATOR_ELEMENT_NAME />
     </key-generator>
+{% endhighlight %}
 
 #### Generators 
 
