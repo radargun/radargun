@@ -30,6 +30,12 @@ public class Infinispan90EmbeddedService extends Infinispan82EmbeddedService {
    }
 
    @Override
+   @ProvidesTrait
+   public InfinispanEmbeddedQueryable createQueryable() {
+      return new Infinispan90EmbeddedQueryable(this);
+   }
+
+   @Override
    protected void startJGroupsDumper(Runnable thread) {
       JGroupsTransport transport = (JGroupsTransport) cacheManager.getTransport();
       if (transport == null || transport.getChannel() == null || !transport.getChannel().isOpen()) {
