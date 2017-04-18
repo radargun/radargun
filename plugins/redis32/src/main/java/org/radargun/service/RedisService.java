@@ -38,7 +38,7 @@ public class RedisService implements Lifecycle {
    protected String config;
 
    @Property(doc = "Redis port")
-   protected Integer port = 6379;
+   protected int port = 6379;
 
    @Property(doc = "Directory of the redis distribution.", optional = false)
    protected String distributionDir;
