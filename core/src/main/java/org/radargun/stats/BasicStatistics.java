@@ -43,13 +43,14 @@ public class BasicStatistics extends IntervalStatistics {
    @Override
    public void registerOperationsGroup(String name, Set<Operation> operations) {
       if (groupOperationsMap.containsKey(name)) {
-         throw new IllegalArgumentException("Group with name " + name + " already exists");
+         return;
       }
       for (Map.Entry<String, Set<Operation>> entry : groupOperationsMap.entrySet()) {
          for (Operation operation : operations) {
             if (entry.getValue().contains(operation)) {
-               throw new IllegalArgumentException("Operation " + operation + " is already included in group " + entry.getKey());
+               return;
             }
+
          }
       }
       groupOperationsMap.put(name, operations);
