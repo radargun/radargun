@@ -99,16 +99,18 @@ public class TestAggregations {
       if (!totalStats.isPresent()) {
          log.warn("There are no stats for this iteration");
       } else {
-         if (test.getGroupOperationsMap() != null) {
+         if (test.getGroupOperationsMap() != null && nodeStats != null && totalStats != null) {
             for (Map.Entry<String, Set<Operation>> op : test.getGroupOperationsMap().entrySet()) {
                //register groups for thread statistics
                totalStats.get().registerOperationsGroup(op.getKey(), op.getValue());
                //register groups for node statistics
-               nodeStats.stream().forEach(ns -> ns.registerOperationsGroup(op.getKey(), op.getValue()));
+               nodeStats.stream().filter(stats -> stats != null).forEach(ns -> ns.registerOperationsGroup(op.getKey(), op.getValue()));
                //register groups for thread statistics
                for (Map.Entry<Integer, List<Statistics>> mapEntry : it.getStatistics()) {
                   for (Statistics ts : mapEntry.getValue()) {
-                     ts.registerOperationsGroup(op.getKey(), op.getValue());
+                     if (ts != null) {
+                        ts.registerOperationsGroup(op.getKey(), op.getValue());
+                     }
                   }
                }
             }
