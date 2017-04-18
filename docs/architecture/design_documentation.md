@@ -16,7 +16,7 @@ There is always only one master. This loads the configuration, controls executio
 
 Slaves are nodes which execute the benchmark, gather statistics and other info. The slaves start a Service - this is the tested system (such as Infinispan, EHCache, Memcached client etc.), there can be many slaves.
 
->Naturally nothing prevents execution of multiple slaves on one machine, even localhost. This is absolutelly useless for benchmarking, but perfectly fine (and often used) for benchmark development.
+>Nothing prevents execution of multiple slaves on one machine. This is convenient for benchmark development, but usually undesirable for benchmarking. Exceptions may apply, e.g. in a case when the service is single-threaded and you want to host multiple services on multi-core machine to fully utilize it.
 
 ### Stages
 
@@ -50,7 +50,9 @@ The service name here is only symbolic; each plugin contains the file `conf/plug
 
     service.my_service=com.my.Service
 
-**Note:** Each plugin is loaded in its own classloader, which has all JARs from the plugins `lib/` directory and RadarGun's main classloader as its parent. When some stage has a property that accepts class name, the class is usually loaded from this classloader in order to allow plugin-specific classes to be used.
+Subsequent executions of a benchmark scenario with different configuration is achieved by restarting the slave process, setting classpath anew. This guarantees that there won't be any leaked threads or memory leaks from the previous run, code is JITed again, and allows to change JVM arguments. Slaves are restarted when the cluster size is changing, too.
+
+>Previous versions of RadarGun used classloader isolation and were aggresively shutting down leaked threads, but this was found too unreliable and the practice was discontinued.
 
 ### Statistics and Reporters
 
@@ -63,9 +65,9 @@ Methods on Traits that should be benchmarked are called Operations. The Trait pr
 Usually each thread on slave operates on private instance of statistics, the statistics from multiple threads and subsequently slaves can be merged. The list of statistics from stage form a Test - in one test, the results of one Operation should be approximately same, provided that parameters of the stage execution ar the same. The results of a Test from different service configurations can be later compared against each other in the reporter.
 If the results are expected to change during the Test execution (e.g. because we increase the number of testing threads, or the amount of data stored in the service grows), we can split the test into Iterations - this is more convenient and allows better presentation than using distinct Tests (chack `repeat` stage).
 
-> Many tests provide option to apend test results to previous iteration of the same stage, check `amend-test` parameter
+> Many tests provide an option to append test results to previous iteration of the same stage, check `amend-test` parameter
 
-The Reporters are pluggable and implemented in a similar fashion as the plugins: each reporter module contains file plugin.properties with the reporter classes it provides. Currently implemented reporters can create HTML report or CSV files convenient for further processing, but storing the results in a database is one of expected contributions to the reporter system.
+The Reporters are pluggable and implemented in a similar fashion as the plugins: each reporter module contains file plugin.properties with the reporter classes it provides. Current implemenations can create HTML report, CSV files convenient for further processing or upload the results into a [PerfRepo](https://github.com/perfcake/perfrepo) database.
 
 Statistics implementation and the stages where these statistics are loosely coupled - Stage only needs to report the duration of each operation (either successful or nor) to statistics. On the other hand, Reporter needs to present the results in a way that fits the collected data, and therefore, it is quite tightly coupled with the concrete Statistics - e.g. if you want to draw a histogram in the report, you have to collect more than a sum of durations of requests and request count.
 
@@ -73,7 +75,7 @@ RadarGun user is responsible for using appropriate configuration of statistics a
 
 ### Extensions
 
-RadarGun is extensible in plugins, reporters and also in stages. If you don't want to include your stages in the core JAR, you can put your module into the extensions/ directory. Try
+RadarGun is extensible in plugins, reporters and also in stages. We try to keep only the most common Traits and Stages in core (e.g. those managing service lifecycle) while Traits specific to cache-like API, querying and the tests using these are in their respective modules in the extensions/ directory. You can start adapting your own API, and there's a Hello-World example of a module defining an extension; try
 
     mvn clean install -Pextension-example
 
