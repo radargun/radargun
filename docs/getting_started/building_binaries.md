@@ -42,6 +42,7 @@ This operation might take a few minutes, as it will download the dependencies ne
         jcache
         jgroups30/32/33/34/35/36
         process
+        redis32
         resteasy-http
         spymemcached
         tomcat8
@@ -100,6 +101,7 @@ All properties have to be provided separatelly preceeded by "-D" -> property "sk
     * **jgroups**		(parameter `-Dno-jgroups` to disable)
     * **infinispan**		(parameter `-Dno-infinispan` to disable)
     * **process**		(parameter `-Dno-process` to disable)
+    * **redis**		(parameter `-Dno-redis` to disable)
     * **resteasy-http**		(parameter `-Dno-resteasy-http` to disable)
     * **spark**			(parameter `-Dno-spark` to disable)
     * **spymemcached**		(parameter `-Dno-spymemcached` to disable)

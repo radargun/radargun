@@ -9,6 +9,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -18,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import javax.management.MBeanServer;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
@@ -661,6 +669,40 @@ public class Utils {
          } finally {
             Utils.close(is);
          }
+      }
+   }
+
+   /**
+    * Unzip the zip file located at zipPath to directory targetDirectory.
+    * Note that the extraction removes executable bits from files, so you need to set them afterwards,
+    * for example using the {@link Utils#setPermissions(String, String)} method.
+    */
+   public static void unzip(String zipPath, String targetDirectory) throws IOException {
+      Path targetPath = FileSystems.getDefault().getPath(targetDirectory);
+      Utils.deleteDirectory(targetPath.toFile());
+      Files.createDirectories(targetPath);
+
+      ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipPath));
+      ZipEntry nextEntry;
+      while ((nextEntry = zipInputStream.getNextEntry()) != null) {
+         Path entryOutput = targetPath.resolve(nextEntry.getName());
+         if (nextEntry.isDirectory()) {
+            Files.createDirectory(entryOutput);
+         } else {
+            Files.copy(zipInputStream, entryOutput);
+         }
+         zipInputStream.closeEntry();
+      }
+   }
+
+   /**
+    * Sets the permissions (for example "rwxr-xr-x") on the file.
+    */
+   public static void setPermissions(String file, String permissions) throws IOException {
+      Path serverExecutable = FileSystems.getDefault().getPath(file);
+      Set<PosixFilePermission> perms = PosixFilePermissions.fromString(permissions);
+      if (Files.getFileAttributeView(serverExecutable, PosixFileAttributeView.class) != null) {
+         Files.setPosixFilePermissions(serverExecutable, perms);
       }
    }
 }

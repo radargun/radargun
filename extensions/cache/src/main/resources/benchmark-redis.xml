@@ -1,0 +1,68 @@
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <clusters>
+      <cluster size="8">
+         <group name="server" size="6" />
+         <group name="client" size="2" />
+      </cluster>
+   </clusters>
+
+   <configurations>
+      <config name="redis">
+         <setup group="server" plugin="redis32">
+            <server xmlns="urn:radargun:plugins:redis32:3.0" file="redis.conf"
+                    distribution-dir="/tmp/redisserver${slave.index}/" distribution-zip="${env.REDIS_DISTRO_ZIP_PATH}/redisdistro.zip" port="#{7000 + ${slave.index}}">
+            </server>
+         </setup>
+         <setup group="client" plugin="redis32">
+            <jedis xmlns="urn:radargun:plugins:redis32:3.0" >
+               <servers>127.0.0.1:7000</servers>
+            </jedis>
+         </setup>
+      </config>
+   </configurations>
+
+   <init/>
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0">
+      <service-start groups="server" />
+
+      <!--cluster redis-->
+      <command slaves="0" cmd="sh" args="-c" non-parsed-args="echo yes | /tmp/redisserver0/src/redis-trib.rb create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005"/>
+
+      <service-start groups="client" />
+
+      <cache:load groups="client" num-entries="100000" num-threads="10" entry-size="10000">
+         <cache:key-generator>
+            <cache:byte-array-key/>
+         </cache:key-generator>
+      </cache:load>
+
+      <cache:basic-operations-test groups="client" test-name="reads"
+                               duration="30s"
+                               num-threads-per-node="10" put-ratio="0"
+                               get-ratio="1" entry-size="10000">
+         <cache:key-selector>
+            <cache:concurrent-keys total-entries="100000"/>
+         </cache:key-selector>
+         <cache:key-generator>
+            <cache:byte-array-key/>
+         </cache:key-generator>
+         <statistics>
+            <common/>
+         </statistics>
+      </cache:basic-operations-test>
+
+      <service-stop />
+   </rg:scenario>
+   <cleanup check-memory="false" check-memory-released="false" check-threads="false"/>
+
+   <reports>
+      <reporter type="html" />
+      <reporter type="serialized" />
+   </reports>
+
+</benchmark>

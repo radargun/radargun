@@ -42,6 +42,11 @@ Following benchmark [configuration]({{page.path_to_root}}benchmark_configuration
 
 **[benchmark-query.xml](https://github.com/radargun/radargun/blob/master/extensions/query/src/main/resources/benchmark-query.xml)** - Shows how to load values from dictionary and then query them using `query` extension
 
+**[benchmark-redis.xml](https://github.com/radargun/radargun/blob/master/extensions/cache/src/main/resources/benchmark-redis.xml)** - Shows how to setup a performance test for Redis
+
+Environment variables:
+* *REDIS_DISTRO_ZIP_PATH*  - pointing to zip containing built Redis
+
 **[benchmark-rest-cs-tomcat.xml](https://github.com/radargun/radargun/blob/master/extensions/rest/src/main/resources/benchmark-rest-cs-tomcat.xml)** - Shows how to call REST operation on web server using `rest-operations-test` stage
 
 **[benchmark-stream.xml](https://github.com/radargun/radargun/blob/master/extensions/cache/src/main/resources/benchmark-stream.xml)** - Shows how to execute distributed stream tasks via `stream` stage
