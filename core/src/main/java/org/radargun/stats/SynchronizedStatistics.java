@@ -80,6 +80,26 @@ public class SynchronizedStatistics extends BasicStatistics {
    }
 
    @Override
+   public synchronized void begin() {
+      super.begin();
+   }
+
+   @Override
+   public synchronized void end() {
+      super.end();
+   }
+
+   @Override
+   public synchronized void setBegin(long beginTime) {
+      super.setBegin(beginTime);
+   }
+
+   @Override
+   public synchronized void setEnd(long endTime) {
+      super.setEnd(endTime);
+   }
+
+   @Override
    public synchronized long getBegin() {
       return super.getBegin();
    }
@@ -87,5 +107,10 @@ public class SynchronizedStatistics extends BasicStatistics {
    @Override
    public synchronized long getEnd() {
       return super.getEnd();
+   }
+
+   @Override
+   public boolean isThreadSafe() {
+      return true;
    }
 }

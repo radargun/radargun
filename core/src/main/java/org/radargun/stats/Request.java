@@ -67,9 +67,11 @@ public final class Request {
       return value;
    }
 
-//   This is for async:
-//   public void requestCompleted() {}
-//   public void requestFailed() {}
+   // At this moment we're not recording how long did it take to start the request, just total duration
+   public void requestCompleted() {}
+   public void requestFailed() {}
+   // Since in current async traits we use CompletableFuture, we can't tell when have we started to process
+   // the response.
 //   public void responseStarted() {}
 
    public void succeeded(Operation operation) {
