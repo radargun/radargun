@@ -1,6 +1,9 @@
 package org.radargun.service;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
 
 import org.apache.commons.io.IOUtils;
 import org.radargun.Service;
@@ -63,6 +66,16 @@ public class RedisService implements Lifecycle {
          }
       } catch (IOException e) {
          throw new RuntimeException("Failed to prepare redis distribution!", e);
+      }
+
+      // if the config file path is relative, resolve the absolute path
+      URL configResource = getClass().getClassLoader().getResource(config);
+      if (configResource != null) {
+         try {
+            config = Paths.get(configResource.toURI()).toString();
+         } catch (URISyntaxException e) {
+            throw new RuntimeException("The path of the configuration file cannot be resolved.", e);
+         }
       }
 
       RedisExecProvider provider = RedisExecProvider.build().override(OS.UNIX, distributionDir + "/src/redis-server");

@@ -12,7 +12,7 @@
    <configurations>
       <config name="redis">
          <setup group="server" plugin="redis32">
-            <server xmlns="urn:radargun:plugins:redis32:3.0" file="${env.RADARGUN_DISTRO_PATH}/plugins/redis32/conf/redis.conf"
+            <server xmlns="urn:radargun:plugins:redis32:3.0" file="redis.conf"
                     distribution-dir="/tmp/redisserver${slave.index}/" distribution-zip="${env.REDIS_DISTRO_ZIP_PATH}/redisdistro.zip" port="#{7000 + ${slave.index}}">
             </server>
          </setup>
@@ -27,12 +27,11 @@
    <init/>
    <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
                 xmlns="urn:radargun:stages:core:3.0"
-                xmlns:cache="urn:radargun:stages:cache:3.0"
-                xmlns:l="urn:radargun:stages:legacy:3.0">
+                xmlns:cache="urn:radargun:stages:cache:3.0">
       <service-start groups="server" />
 
       <!--cluster redis-->
-      <command slaves="0" cmd="sh" args="-c" non-parsed-args="echo yes | /tmp/redisserver0/src/redis-trib.rb create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005 " exit-values="0"/>
+      <command slaves="0" cmd="sh" args="-c" non-parsed-args="echo yes | /tmp/redisserver0/src/redis-trib.rb create --replicas 1 127.0.0.1:7000 127.0.0.1:7001 127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005"/>
 
       <service-start groups="client" />
 
@@ -42,20 +41,20 @@
          </cache:key-generator>
       </cache:load>
 
-      <l:basic-operations-test groups="client" test-name="reads"
+      <cache:basic-operations-test groups="client" test-name="reads"
                                duration="30s"
                                num-threads-per-node="10" put-ratio="0"
                                get-ratio="1" entry-size="10000">
-         <l:key-selector>
-            <l:concurrent-keys total-entries="100000"/>
-         </l:key-selector>
-         <l:key-generator>
-            <l:byte-array-key/>
-         </l:key-generator>
+         <cache:key-selector>
+            <cache:concurrent-keys total-entries="100000"/>
+         </cache:key-selector>
+         <cache:key-generator>
+            <cache:byte-array-key/>
+         </cache:key-generator>
          <statistics>
             <common/>
          </statistics>
-      </l:basic-operations-test>
+      </cache:basic-operations-test>
 
       <service-stop />
    </rg:scenario>

@@ -45,7 +45,6 @@ Following benchmark [configuration]({{page.path_to_root}}benchmark_configuration
 **[benchmark-redis.xml](https://github.com/radargun/radargun/blob/master/extensions/cache/src/main/resources/benchmark-redis.xml)** - Shows how to setup a performance test for Redis
 
 Environment variables:
-* *RADARGUN_DISTRO_PATH*   - pointing to Radargun distribution
 * *REDIS_DISTRO_ZIP_PATH*  - pointing to zip containing built Redis
 
 **[benchmark-rest-cs-tomcat.xml](https://github.com/radargun/radargun/blob/master/extensions/rest/src/main/resources/benchmark-rest-cs-tomcat.xml)** - Shows how to call REST operation on web server using `rest-operations-test` stage

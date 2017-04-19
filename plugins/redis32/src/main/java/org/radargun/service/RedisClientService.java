@@ -26,6 +26,15 @@ public class RedisClientService implements Lifecycle {
    @Property(doc = "List of server addresses (in host:port format) the clients should connect to, separated by semicolons (;).", converter = RedisAddressListConverter.class)
    protected List<InetSocketAddress> servers;
 
+   @Property(doc = "Redis port")
+   protected int connectionPoolMaxTotal = 100;
+
+   @Property(doc = "Redis port")
+   protected int connectionPoolMaxIdle = 100;
+
+   @Property(doc = "Redis port")
+   protected int connectionPoolMinIdle = 10;
+
    @Override
    public void start() {
       Set<HostAndPort> jedisClusterNodes = new HashSet<>();
@@ -33,9 +42,9 @@ public class RedisClientService implements Lifecycle {
          jedisClusterNodes.add(new HostAndPort(server.getHostName(), server.getPort()));
       }
       JedisPoolConfig poolConfig = new JedisPoolConfig();
-      poolConfig.setMaxTotal(100);
-      poolConfig.setMaxIdle(100);
-      poolConfig.setMinIdle(16);
+      poolConfig.setMaxTotal(connectionPoolMaxTotal);
+      poolConfig.setMaxIdle(connectionPoolMaxIdle);
+      poolConfig.setMinIdle(connectionPoolMinIdle);
       jedisCluster = new JedisCluster(jedisClusterNodes, poolConfig);
    }
 

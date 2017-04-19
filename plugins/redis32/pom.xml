@@ -12,6 +12,11 @@
    <artifactId>plugin-redis32</artifactId>
    <name>Redis 3.2.x plugin for RadarGun</name>
 
+   <properties>
+      <version.embedded.redis>1.4.0</version.embedded.redis>
+      <version.jedis>2.9.0</version.jedis>
+   </properties>
+
    <dependencies>
       <dependency>
          <groupId>org.radargun</groupId>
@@ -22,12 +27,14 @@
       <dependency>
          <groupId>eu.monniot.redis</groupId>
          <artifactId>embedded-redis</artifactId>
-         <version>1.4.0</version>
+         <optional>true</optional>
+         <version>${version.embedded.redis}</version>
       </dependency>
       <dependency>
          <groupId>redis.clients</groupId>
          <artifactId>jedis</artifactId>
-         <version>2.9.0</version>
+         <optional>true</optional>
+         <version>${version.jedis}</version>
       </dependency>
    </dependencies>
 
