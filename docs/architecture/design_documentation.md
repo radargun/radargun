@@ -77,6 +77,6 @@ RadarGun user is responsible for using appropriate configuration of statistics a
 
 RadarGun is extensible in plugins, reporters and also in stages. We try to keep only the most common Traits and Stages in core (e.g. those managing service lifecycle) while Traits specific to cache-like API, querying and the tests using these are in their respective modules in the extensions/ directory. You can start adapting your own API, and there's a Hello-World example of a module defining an extension; try
 
-    mvn clean install -Pextension-example
+    mvn clean install -Pexample-extension
 
 You can also build your JAR separately and copy it into the `lib/` directory afterwards - all JARs in this directory are scanned for the stages, although the XSD will not reflect it.
