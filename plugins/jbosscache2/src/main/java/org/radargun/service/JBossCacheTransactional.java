@@ -18,7 +18,8 @@ public class JBossCacheTransactional implements Transactional {
    }
 
    private class Tx implements Transaction {
-      final DummyTransactionManager tm;
+      private final DummyTransactionManager tm;
+      private javax.transaction.Transaction transaction;
 
       private Tx() {
          this.tm = DummyTransactionManager.getInstance();
@@ -33,6 +34,7 @@ public class JBossCacheTransactional implements Transactional {
       public void begin() {
          try {
             tm.begin();
+            transaction = tm.getTransaction();
          } catch (Exception e) {
             throw new RuntimeException(e);
          }
@@ -41,7 +43,7 @@ public class JBossCacheTransactional implements Transactional {
       @Override
       public void commit() {
          try {
-            tm.commit();
+            transaction.commit();
          } catch (Exception e) {
             throw new RuntimeException(e);
          }
@@ -50,7 +52,25 @@ public class JBossCacheTransactional implements Transactional {
       @Override
       public void rollback() {
          try {
-            tm.rollback();
+            transaction.rollback();
+         } catch (Exception e) {
+            throw new RuntimeException(e);
+         }
+      }
+
+      @Override
+      public void suspend() {
+         try {
+            tm.suspend();
+         } catch (Exception e) {
+            throw new RuntimeException(e);
+         }
+      }
+
+      @Override
+      public void resume() {
+         try {
+            tm.resume(transaction);
          } catch (Exception e) {
             throw new RuntimeException(e);
          }

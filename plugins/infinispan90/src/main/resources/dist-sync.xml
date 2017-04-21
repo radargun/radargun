@@ -14,9 +14,14 @@
         <jmx>
             <property name="enabled">true</property>
         </jmx>
-        <distributed-cache name="testCache" mode="SYNC" remote-timeout="60000" statistics="true" l1-lifespan="-1" owners="2" segments="512" >
+        <distributed-cache name="testCache" remote-timeout="60000" statistics="true" segments="512" >
             <locking acquire-timeout="3000" concurrency-level="1000" />
             <state-transfer timeout="60000" />
+        </distributed-cache>
+        <distributed-cache name="txCache" remote-timeout="60000" statistics="true" segments="512" >
+            <locking acquire-timeout="3000" concurrency-level="1000" />
+            <state-transfer timeout="60000" />
+            <transaction mode="NON_DURABLE_XA" />
         </distributed-cache>
     </cache-container>
 

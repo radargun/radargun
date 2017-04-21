@@ -64,11 +64,11 @@ public abstract class CacheAsyncTestStage extends AsyncTestStage {
       log.info("Using cache selector " + cacheSelector);
    }
 
-   protected Object getRandomKey(ThreadLocalRandom random) {
+   public Object getRandomKey(ThreadLocalRandom random) {
       return keyGenerator.generateKey(random.nextLong(numEntries));
    }
 
-   protected Object getRandomValue(ThreadLocalRandom random, Object key) {
+   public Object getRandomValue(ThreadLocalRandom random, Object key) {
       return valueGenerator.generateValue(key, entrySize.next(random), random);
    }
 }

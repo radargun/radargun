@@ -45,6 +45,7 @@ public class InfinispanTransactional implements Transactional {
 
    protected class Tx implements Transaction {
       protected TransactionManager tm;
+      protected javax.transaction.Transaction transaction;
 
       @Override
       public <T> T wrap(T resource) {
@@ -64,7 +65,7 @@ public class InfinispanTransactional implements Transactional {
       public void begin() {
          try {
             tm.begin();
-            javax.transaction.Transaction transaction = tm.getTransaction();
+            transaction = tm.getTransaction();
             if (trace) log.trace("Transaction begin " + transaction);
             if (enlistExtraXAResource) {
                transaction.enlistResource(new DummyXAResource());
@@ -77,8 +78,8 @@ public class InfinispanTransactional implements Transactional {
       @Override
       public void commit() {
          try {
-            if (trace) log.trace("Transaction commit " + tm.getTransaction());
-            tm.commit();
+            if (trace) log.trace("Transaction commit " + transaction);
+            transaction.commit();
          } catch (Exception e) {
             throw new RuntimeException(e);
          }
@@ -87,8 +88,26 @@ public class InfinispanTransactional implements Transactional {
       @Override
       public void rollback() {
          try {
-            if (trace) log.trace("Transaction rollback " + tm.getTransaction());
-            tm.rollback();
+            if (trace) log.trace("Transaction rollback " + transaction);
+            transaction.rollback();
+         } catch (Exception e) {
+            throw new RuntimeException(e);
+         }
+      }
+
+      @Override
+      public void suspend() {
+         try {
+            tm.suspend();
+         } catch (Exception e) {
+            throw new RuntimeException(e);
+         }
+      }
+
+      @Override
+      public void resume() {
+         try {
+            tm.resume(transaction);
          } catch (Exception e) {
             throw new RuntimeException(e);
          }

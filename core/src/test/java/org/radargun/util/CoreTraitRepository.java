@@ -109,6 +109,16 @@ public class CoreTraitRepository {
          }
          txResource.rollback();
       }
+
+      @Override
+      public void suspend() {
+         // noop
+      }
+
+      @Override
+      public void resume() {
+         // noop
+      }
    }
 
    public static class Lifecycle implements org.radargun.traits.Lifecycle {

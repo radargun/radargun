@@ -4,7 +4,6 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 import org.infinispan.AdvancedCache;
-import org.infinispan.commons.api.AsyncCache;
 import org.infinispan.context.Flag;
 import org.radargun.traits.BasicAsyncOperations;
 import org.radargun.traits.ConditionalAsyncOperations;
@@ -22,11 +21,11 @@ public class Infinispan90AsyncOperations implements BasicAsyncOperations, Condit
       return new Cache(cache, cache.withFlags(Flag.IGNORE_RETURN_VALUES));
    }
 
-   protected static class Cache<K, V> implements BasicAsyncOperations.Cache<K, V>, ConditionalAsyncOperations.Cache<K, V> {
-      private final AsyncCache<K, V> cache;
-      private final AsyncCache<K, V> noReturnCache;
+   protected static class Cache<K, V> implements BasicAsyncOperations.Cache<K, V>, ConditionalAsyncOperations.Cache<K, V>, AdvancedCacheHolder {
+      private final AdvancedCache<K, V> cache;
+      private final AdvancedCache<K, V> noReturnCache;
 
-      public Cache(AsyncCache<K, V> cache, AsyncCache<K, V> noReturnCache) {
+      public Cache(AdvancedCache<K, V> cache, AdvancedCache<K, V> noReturnCache) {
          this.cache = cache;
          this.noReturnCache = noReturnCache;
       }
@@ -89,6 +88,11 @@ public class Infinispan90AsyncOperations implements BasicAsyncOperations, Condit
       @Override
       public CompletableFuture<V> getAndReplace(K key, V value) {
          return cache.replaceAsync(key, value);
+      }
+
+      @Override
+      public AdvancedCache getAdvancedCache() {
+         return cache;
       }
    }
 }

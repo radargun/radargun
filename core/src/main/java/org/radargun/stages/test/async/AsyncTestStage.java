@@ -27,6 +27,7 @@ public abstract class AsyncTestStage extends BaseTestStage {
    @Property(doc = "Timeout to wait for the threads to join. Default is 1 second.", converter = TimeConverter.class)
    protected long threadJoinTimeout = 1000;
 
+   private ThreadGroup stressorGroup = new ThreadGroup("stressors");
    private Thread[] threads;
    private Statistics[] stats;
    private volatile SchedulingSelector<Conversation> selector;
@@ -47,7 +48,7 @@ public abstract class AsyncTestStage extends BaseTestStage {
          Statistics recorded = stats[i] = statisticsPrototype.newInstance();
          Statistics rampUp = statisticsPrototype.newInstance();
          rampUp.begin(); // it is illegal to record into not started Statistics
-         threads[i] = new Thread(() -> {
+         threads[i] = new Thread(stressorGroup, () -> {
             while (running) {
                try {
                   Conversation conversation = selector.next();
@@ -85,10 +86,16 @@ public abstract class AsyncTestStage extends BaseTestStage {
       } catch (InterruptedException e) {
          running = false;
          return errorResponse("Interrupted", e);
+      } finally {
+         destroy();
       }
    }
 
    protected abstract SchedulingSelector<Conversation> createSelector();
+
+   public ThreadGroup stressorGroup() {
+      return stressorGroup;
+   }
 
    @EnsureInSchema
    public static class InvocationSetting {

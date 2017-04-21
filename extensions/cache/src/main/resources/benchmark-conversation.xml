@@ -1,0 +1,63 @@
+<!-- RadarGun 3.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}"/>
+
+   <clusters>
+      <cluster size="4"/>
+   </clusters>
+
+   <configurations>
+      <config name="Infinispan 9.0">
+         <setup plugin="infinispan90">
+            <embedded xmlns="urn:radargun:plugins:infinispan90:3.0" file="dist-sync.xml"/>
+         </setup>
+      </config>
+   </configurations>
+
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:cache="urn:radargun:stages:cache:3.0">
+      <service-start />
+      <jvm-monitor-start />
+      <define var="num.entries" value="10000"/>
+
+      <cache:load num-entries="${num.entries}"/>
+
+      <cache:conversation-test test-name="non-tx" num-entries="${num.entries}" duration="15s">
+         <cache:conversations>
+            <cache:conversation name="get-pause-put" invocations="1">
+               <cache:steps>
+                  <cache:get/>
+                  <cache:pause delay="2"/>
+                  <cache:put/>
+               </cache:steps>
+            </cache:conversation>
+         </cache:conversations>
+      </cache:conversation-test>
+
+      <cache:conversation-test test-name="tx" num-entries="${num.entries}" duration="15s">
+         <cache:cache-selector>
+            <cache:use-cache cache="txCache" />
+         </cache:cache-selector>
+         <cache:conversations>
+            <cache:conversation name="get-pause-put" invocations="1" transactional="true">
+               <cache:steps>
+                  <cache:get/>
+                  <cache:pause delay="2"/>
+                  <cache:put/>
+               </cache:steps>
+            </cache:conversation>
+         </cache:conversations>
+      </cache:conversation-test>
+
+      <jvm-monitor-stop />
+   </rg:scenario>
+
+   <reports>
+      <reporter type="csv" />
+      <reporter type="html" />
+      <reporter type="serialized" />
+   </reports>
+
+</benchmark>
