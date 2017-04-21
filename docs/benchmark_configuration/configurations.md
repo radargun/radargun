@@ -120,3 +120,46 @@ Arguments will have following effect:
 * *servers* - HotRod client will connect to ISPN servers on specified addresses/ports. This configuration assumes only two servers.
 
 *Notes*: Notice the difference between *args* and *vm-args* elements, former is used as configuration for the server, while the latter is used as configuration for the slave instance.
+
+#### Configuration templates
+
+Sometimes when comparing very similar configurations with complex setup these configurations differ by only few details.
+Such repetition is error-prone, and therefore RadarGun supports configuration templates:
+
+{% highlight xml %}
+    <configurations>
+      <template name="common">
+        <vm-args>
+           <!-- long list of JVM arguments -->
+        </vm-args>
+        <default xmlns="urn:radargun:plugins:infinispan80:3.0">
+          <!-- another complex configuration -->
+        </default>
+      </template>
+      <template name="a" base="common">
+        <default xmlns="urn:radargun:plugins:infinispan80:3.0">
+          <!-- change something in here -->
+        </default>
+      </template>
+      <template name="b" base="common">
+        <default xmlns="urn:radargun:plugins:infinispan80:3.0">
+          <!-- change something else -->
+        </default>
+      </template>
+      <config name="8.0 A">
+        <setup plugin="infinispan80" base="a" />
+      </config>
+      <config name="8.0 B">
+        <setup plugin="infinispan80" base="b" />
+      </config>
+      <config name="9.0 A">
+        <setup plugin="infinispan90" base="a" />
+      </config>
+      <config name="9.0 B">
+        <setup plugin="infinispan90" base="b" />
+      </config>
+    </configurations>
+{% endhighlight %}
+
+`template` here works as a standalone template for the `setup` element. You can see that it is possible to chain templates to form a hierarchy, too.
+The configuration that's later in the hierarchy can override any configuration from the parent template; this has some limitations, though, such as not being able to append one element to a list (e.g. the `vm-args`) - you need to override the whole list.

@@ -28,6 +28,11 @@ public class SimpleDefinition implements Definition {
    }
 
    @Override
+   public Definition apply(Definition other) {
+      return other;
+   }
+
+   @Override
    public String toString() {
       return value;
    }

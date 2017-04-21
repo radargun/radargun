@@ -30,6 +30,8 @@ public class BenchmarkSchemaGenerator extends SchemaGenerator implements ConfigS
    private static final String TYPE_INIT = "init";
    private static final String TYPE_DESTROY = "destroy";
    private static final String TYPE_CLEANUP = "cleanup";
+   private static final String TYPE_SETUP_BASE = "setup_base";
+   private static final String TYPE_ENVIRONMENT = "environment";
 
    public BenchmarkSchemaGenerator() {
       super(null, NAMESPACE, "radargun-");
@@ -77,18 +79,25 @@ public class BenchmarkSchemaGenerator extends SchemaGenerator implements ConfigS
       addAttribute(propertyType, ATTR_NAME, true);
 
       Element configurationsComplex = createComplexElement(benchmarkSequence, ELEMENT_CONFIGURATIONS, 1, 1, null);
-      Element configComplex = createComplexElement(createSequence(configurationsComplex), ELEMENT_CONFIG, 1, -1, null);
-      Element setupComplex = createComplexElement(createSequence(configComplex), ELEMENT_SETUP, 1, -1, null);
-      Element setupSequence = createSequence(setupComplex);
-      Element env = createComplexElement(setupSequence, ELEMENT_ENVIRONMENT, 0, 1, "Environment variables.");
+      Element configSequence = createSequence(configurationsComplex);
+      Element setupBase = createComplexType(TYPE_SETUP_BASE, null, true, true, "Common base for setup and setup template");
+      Element setupBaseSequence = createSequence(setupBase);
+      addAttribute(setupBase, ATTR_BASE, false);
+
+      Element templateComplex = createComplexElement(configSequence, ELEMENT_TEMPLATE, 0, -1, THIS_PREFIX + TYPE_SETUP_BASE, "Setup template");
+      addAttribute(templateComplex, ATTR_NAME, true);
+      Element configComplex = createComplexElement(configSequence, ELEMENT_CONFIG, 1, -1, null);
+      Element setupComplex = createComplexElement(createSequence(configComplex), ELEMENT_SETUP, 1, -1, THIS_PREFIX + TYPE_SETUP_BASE, null);
+
+      Element env = createComplexElement(setupBaseSequence, ELEMENT_ENVIRONMENT, 0, 1, "Environment variables.");
       Element envSequence = createSequence(env);
       Element var = createComplexElement(envSequence, ELEMENT_VAR, 1, 1, "Environment variable definition.");
       addAttribute(var, ATTR_NAME, true);
       addAttribute(var, ATTR_VALUE, true);
 
       XmlType vmArgsType = generateClass(VmArgs.class);
-      createReference(setupSequence, ELEMENT_VM_ARGS, vmArgsType.toString(), 0, 1);
-      createAny(setupSequence);
+      createReference(setupBase, ELEMENT_VM_ARGS, vmArgsType.toString(), 0, 1);
+      createAny(setupBase);
       addAttribute(configComplex, ATTR_NAME, true);
       addAttribute(setupComplex, ATTR_PLUGIN, true);
       addAttribute(setupComplex, ATTR_GROUP, false);
@@ -140,4 +149,3 @@ public class BenchmarkSchemaGenerator extends SchemaGenerator implements ConfigS
       new BenchmarkSchemaGenerator().generate(args[0], String.format("radargun-benchmark-%s.xsd", Version.SCHEMA_VERSION));
    }
 }
-
