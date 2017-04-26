@@ -123,7 +123,8 @@ public class TestAggregations {
                operations.add(operation);
             }
          }
-         operationGroups.addAll(totalStats.get().getOperationStatsForGroups().keySet());
+
+         operationGroups.addAll(totalStats.get().getOperationStatsForGroups().get(0).keySet());
 
       }
 

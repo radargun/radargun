@@ -2,12 +2,15 @@ package org.radargun.stats;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.radargun.Operation;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertNull;
 
 /**
  * @author Matej Cimbora
@@ -25,8 +28,8 @@ public class BasicStatisticsTest {
       BasicStatistics statistics = new BasicStatistics(new BasicOperationStats());
       Operation operation1 = Operation.register("testOp1");
       Operation operation2 = Operation.register("testOp2");
-      Assert.assertNull(statistics.getOperationsGroup(operation1));
-      Assert.assertNull(statistics.getOperationsGroup(operation2));
+      assertNull(statistics.getOperationsGroup(operation1));
+      assertNull(statistics.getOperationsGroup(operation2));
 
       statistics.registerOperationsGroup("testGroup1", new HashSet<>(Arrays.asList(operation1)));
       statistics.record(new Request(statistics), operation1);
@@ -34,7 +37,7 @@ public class BasicStatisticsTest {
 
       String operationsGroup1 = statistics.getOperationsGroup(operation1);
       Assert.assertEquals("testGroup1", operationsGroup1);
-      Assert.assertNull(statistics.getOperationsGroup(operation2));
+      assertNull(statistics.getOperationsGroup(operation2));
 
       statistics.registerOperationsGroup("testGroup2", new HashSet<>(Arrays.asList(operation2)));
 
@@ -49,9 +52,9 @@ public class BasicStatisticsTest {
       Operation operation1 = Operation.register("testOp1");
       Operation operation2 = Operation.register("testOp2");
 
-      Map<String, OperationStats> operationStatsForGroups = statistics.getOperationStatsForGroups();
+      List<Map<String, OperationStats>> operationStatsForGroups = statistics.getOperationStatsForGroups();
       Assert.assertNotNull(operationStatsForGroups);
-      Assert.assertEquals(operationStatsForGroups.size(), 0);
+      Assert.assertEquals(operationStatsForGroups.get(0).size(), 0);
 
       statistics.registerOperationsGroup("testGroup1", new HashSet<>(Arrays.asList(operation1)));
       statistics.record(new Request(statistics), operation1);
@@ -60,14 +63,14 @@ public class BasicStatisticsTest {
       operationStatsForGroups = statistics.getOperationStatsForGroups();
       Assert.assertNotNull(operationStatsForGroups);
       Assert.assertEquals(operationStatsForGroups.size(), 1);
-      Assert.assertTrue(operationStatsForGroups.containsKey("testGroup1"));
+      Assert.assertTrue(operationStatsForGroups.stream().anyMatch(m -> m.containsKey("testGroup1")));
 
       statistics.registerOperationsGroup("testGroup2", new HashSet<>(Arrays.asList(operation2)));
 
       operationStatsForGroups = statistics.getOperationStatsForGroups();
       Assert.assertNotNull(operationStatsForGroups);
-      Assert.assertEquals(operationStatsForGroups.size(), 2);
-      Assert.assertTrue(operationStatsForGroups.containsKey("testGroup1"));
-      Assert.assertTrue(operationStatsForGroups.containsKey("testGroup2"));
+      Assert.assertEquals(operationStatsForGroups.get(0).size(), 2);
+      Assert.assertTrue(operationStatsForGroups.stream().anyMatch(m -> m.containsKey("testGroup1")));
+      Assert.assertTrue(operationStatsForGroups.stream().anyMatch(m -> m.containsKey("testGroup2")));
    }
 }
