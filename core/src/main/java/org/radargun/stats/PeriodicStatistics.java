@@ -178,7 +178,7 @@ public class PeriodicStatistics extends IntervalStatistics {
    }
 
    @Override
-   public Map<String, OperationStats> getOperationsStats() {
+   public List<Map<String, OperationStats>> getOperationsStats() {
       return prototype.getOperationsStats();
    }
 
@@ -198,8 +198,8 @@ public class PeriodicStatistics extends IntervalStatistics {
    }
 
    @Override
-   public Map<String, OperationStats> getOperationStatsForGroups() {
-      throw new UnsupportedOperationException();
+   public List<Map<String, OperationStats>> getOperationStatsForGroups() {
+      return prototype.getOperationStatsForGroups();
    }
 
    @Override

@@ -1,6 +1,7 @@
 package org.radargun.stats;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BinaryOperator;
@@ -37,14 +38,14 @@ public interface Statistics extends Serializable {
    /**
     * @return Merged operation stats for registered groups. Calculation should be based on operations registered with this group.
     */
-   Map<String, OperationStats> getOperationStatsForGroups();
+   List<Map<String, OperationStats>> getOperationStatsForGroups();
 
    /**
     * Operation names should be identical on all nodes, as oposed to operations IDs which can differ.
     *
     * @return Map of operations stats keyed by operations names.
     */
-   Map<String, OperationStats> getOperationsStats();
+   List<Map<String, OperationStats>> getOperationsStats();
 
    /**
     * Mark this moment as start of the measurement.

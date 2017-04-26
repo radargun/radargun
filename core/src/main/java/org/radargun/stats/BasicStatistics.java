@@ -1,6 +1,8 @@
 package org.radargun.stats;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -160,7 +162,7 @@ public class BasicStatistics extends IntervalStatistics {
    }
 
    @Override
-   public Map<String, OperationStats> getOperationStatsForGroups() {
+   public List<Map<String, OperationStats>> getOperationStatsForGroups() {
       Map<String, OperationStats> result = new HashMap<>(groupOperationsMap.size());
       for (Map.Entry<String, Set<Operation>> entry : groupOperationsMap.entrySet()) {
          OperationStats mergedOperationStats = null;
@@ -176,12 +178,16 @@ public class BasicStatistics extends IntervalStatistics {
             result.put(entry.getKey(), mergedOperationStats);
          }
       }
-      return result;
+      List<Map<String, OperationStats>> list = new ArrayList<>();
+      list.add(result);
+      return list;
    }
 
    @Override
-   public Map<String, OperationStats> getOperationsStats() {
-      return operationStatsMap;
+   public List<Map<String, OperationStats>> getOperationsStats() {
+      List<Map<String, OperationStats>> list = new ArrayList<>();
+      list.add(operationStatsMap);
+      return list;
    }
 
    @Override
@@ -208,7 +214,8 @@ public class BasicStatistics extends IntervalStatistics {
    public <T> T getRepresentation(String operationName, Class<T> clazz, Object... args) {
       OperationStats operationStats = operationStatsMap.get(operationName);
       if (operationStats == null) {
-         operationStats = getOperationStatsForGroups().get(operationName);
+         // it's always going to be the first element in Basic Statistics
+         operationStats = getOperationStatsForGroups().get(0).get(operationName);
       }
       if (operationStats == null) {
          return prototype.getRepresentation(clazz, this, args);

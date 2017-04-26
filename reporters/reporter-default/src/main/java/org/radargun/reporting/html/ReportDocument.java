@@ -133,108 +133,118 @@ public abstract class ReportDocument extends HtmlDocument {
       Map<String, List<Report>> byConfiguration = reportAggregationMap.keySet().stream().collect(Collectors.groupingBy(report -> report.getConfiguration().name));
       for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
          for (Aggregation aggregation : entry.getValue()) {
-            OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(target);
-            if (operationStats == null) {
-               // For throughput charts, check whether target is a group of operations
-               OperationStats groupOperationStats = aggregation.totalStats.getOperationStatsForGroups().get(target);
-               if (groupOperationStats != null && (chartType == ChartType.OPERATION_THROUGHPUT_NET)) {
-                  operationStats = groupOperationStats;
+
+            for (Map<String, OperationStats> operationStatsMap : aggregation.totalStats.getOperationsStats()) {
+               OperationStats operationStats = operationStatsMap.get(target);
+
+               if (operationStats == null) {
+
+                  // For throughput charts, check whether target is a group of operations
+                  OperationStats groupOperationStats = null;
+                  for (Map<String, OperationStats> operationStatsForGroups : aggregation.totalStats.getOperationStatsForGroups()) {
+                     groupOperationStats = operationStatsForGroups.get(target);
+                     if (groupOperationStats != null)
+                        break;
+                  }
+                  // Generate only throughput chart for group statistics
+                  if (groupOperationStats != null && (chartType != ChartType.OPERATION_THROUGHPUT_NET)) {
+                     return false;
+                  }
                } else {
-                  return false;
+                  // Check whether operation belongs to any group. If so, skip throughput chart generation
+                  String operationsGroup = aggregation.totalStats.getOperationsGroup(Operation.getByName(target));
+                  if (operationsGroup != null && (chartType == ChartType.OPERATION_THROUGHPUT_NET)) {
+                     return false;
+                  }
                }
-            } else {
-               // Check whether operation belongs to any group. If so, skip throughput chart generation
-               String operationsGroup = aggregation.totalStats.getOperationsGroup(Operation.getByName(target));
-               if (operationsGroup != null && (chartType == ChartType.OPERATION_THROUGHPUT_NET)) {
-                  return false;
-               }
-            }
 
-            String categoryName = entry.getKey().getConfiguration().name;
-            if (subCategory != null) {
-               categoryName = String.format("%s, %s", categoryName, subCategory);
-            }
-            // if there are multiple reports for the same configuration (multiple clusters), use cluster size in category
-            if (byConfiguration.get(entry.getKey().getConfiguration().name).size() > 1) {
-               categoryName = String.format("%s, size %d", categoryName, entry.getKey().getCluster().getSize());
-            }
+               String categoryName = entry.getKey().getConfiguration().name;
+               if (subCategory != null) {
+                  categoryName = String.format("%s, %s", categoryName, subCategory);
+               }
+               // if there are multiple reports for the same configuration (multiple clusters), use cluster size in category
+               if (byConfiguration.get(entry.getKey().getConfiguration().name).size() > 1) {
+                  categoryName = String.format("%s, size %d", categoryName, entry.getKey().getCluster().getSize());
+               }
 
-            double subCategoryNumeric;
-            String subCategoryValue;
-            String seriesCategoryName;
-            if (maxIterations > 1) {
-               subCategoryNumeric = aggregation.iteration.id;
-               subCategoryValue = aggregation.iteration.getValue() != null ? aggregation.iteration.getValue() : String.valueOf(aggregation.iteration.id);
-               seriesCategoryName = categoryName + ", Iteration " + subCategoryValue;
-            } else {
-               subCategoryNumeric = entry.getKey().getCluster().getSize();
-               subCategoryValue = String.format("Size %.0f", subCategoryNumeric);
-               seriesCategoryName = categoryName;
-            }
-            switch (chartType) {
-               case MEAN_AND_DEV: {
-                  MeanAndDev meanAndDev = aggregation.totalStats.getRepresentation(target, MeanAndDev.class);
-                  if (meanAndDev == null) return false;
-                  chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), categoryName, subCategoryNumeric,
-                     subCategoryValue);
-                  break;
+               double subCategoryNumeric;
+               String subCategoryValue;
+               String seriesCategoryName;
+               if (maxIterations > 1) {
+                  subCategoryNumeric = aggregation.iteration.id;
+                  subCategoryValue = aggregation.iteration.getValue() != null ? aggregation.iteration.getValue() : String.valueOf(aggregation.iteration.id);
+                  seriesCategoryName = categoryName + ", Iteration " + subCategoryValue;
+               } else {
+                  subCategoryNumeric = entry.getKey().getCluster().getSize();
+                  subCategoryValue = String.format("Size %.0f", subCategoryNumeric);
+                  seriesCategoryName = categoryName;
                }
-               case OPERATION_THROUGHPUT_NET: {
-                  OperationThroughput throughput = aggregation.totalStats.getRepresentation(target, OperationThroughput.class);
-                  if (throughput == null) return false;
-                  chart.addValue(throughput.net, 0, categoryName, subCategoryNumeric, subCategoryValue);
-                  break;
-               }
-               case DATA_THROUGHPUT: {
-                  DataThroughput dataThroughput = aggregation.totalStats.getRepresentation(target, DataThroughput.class);
-                  if (dataThroughput == null) return false;
-                  chart.addValue(dataThroughput.meanThroughput / (1024.0 * 1024.0), dataThroughput.deviation
-                     / (1024.0 * 1024.0), categoryName, subCategoryNumeric, subCategoryValue);
-                  break;
-               }
-               case MEAN_AND_DEV_SERIES: {
-                  MeanAndDev.Series series = aggregation.totalStats.getRepresentation(target, MeanAndDev.Series.class);
-                  if (series == null) return false;
-                  int sample = 0;
-                  for (MeanAndDev meanAndDev : series.samples) {
-                     chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), seriesCategoryName, sample++,
-                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+               switch (chartType) {
+                  case MEAN_AND_DEV: {
+                     MeanAndDev meanAndDev = aggregation.totalStats.getRepresentation(target, MeanAndDev.class);
+                     if (meanAndDev == null) return false;
+                     chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), categoryName, subCategoryNumeric,
+                        subCategoryValue);
+                     break;
                   }
-                  break;
-               }
-               case REQUESTS_SERIES: {
-                  DefaultOutcome.Series series = aggregation.totalStats.getRepresentation(target, DefaultOutcome.Series.class);
-                  if (series == null) return false;
-                  int sample = 0;
-                  for (DefaultOutcome defaultOutcome : series.samples) {
-                     chart.addValue(defaultOutcome.requests, 0, seriesCategoryName, sample++,
-                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                  case OPERATION_THROUGHPUT_NET: {
+                     OperationThroughput throughput = aggregation.totalStats.getRepresentation(target, OperationThroughput.class);
+                     if (throughput == null) return false;
+                     chart.addValue(throughput.net, 0, categoryName, subCategoryNumeric, subCategoryValue);
+                     break;
                   }
-                  break;
-               }
-               case OPERATION_THROUGHPUT_GROSS_SERIES: {
-                  OperationThroughput.Series series = aggregation.totalStats.getRepresentation(target, OperationThroughput.Series.class);
-                  if (series == null) return false;
-                  int sample = 0;
-                  for (OperationThroughput defaultOutcome : series.samples) {
-                     chart.addValue(defaultOutcome.gross, 0, seriesCategoryName, sample++,
-                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                  case DATA_THROUGHPUT: {
+                     DataThroughput dataThroughput = aggregation.totalStats.getRepresentation(target, DataThroughput.class);
+                     if (dataThroughput == null) return false;
+                     chart.addValue(dataThroughput.meanThroughput / (1024.0 * 1024.0), dataThroughput.deviation
+                        / (1024.0 * 1024.0), categoryName, subCategoryNumeric, subCategoryValue);
+                     break;
                   }
-                  break;
-               }
-               case OPERATION_THROUGHPUT_NET_SERIES: {
-                  OperationThroughput.Series series = aggregation.totalStats.getRepresentation(target, OperationThroughput.Series.class);
-                  if (series == null) return false;
-                  int sample = 0;
-                  for (OperationThroughput defaultOutcome : series.samples) {
-                     chart.addValue(defaultOutcome.net, 0, seriesCategoryName, sample++,
-                        String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                  case MEAN_AND_DEV_SERIES: {
+                     MeanAndDev.Series series = aggregation.totalStats.getRepresentation(target, MeanAndDev.Series.class);
+                     if (series == null) return false;
+                     int sample = 0;
+                     for (MeanAndDev meanAndDev : series.samples) {
+                        chart.addValue(toMillis(meanAndDev.mean), toMillis(meanAndDev.dev), seriesCategoryName, sample++,
+                           String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                     }
+                     break;
                   }
-                  break;
+                  case REQUESTS_SERIES: {
+                     DefaultOutcome.Series series = aggregation.totalStats.getRepresentation(target, DefaultOutcome.Series.class);
+                     if (series == null) return false;
+                     int sample = 0;
+                     for (DefaultOutcome defaultOutcome : series.samples) {
+                        chart.addValue(defaultOutcome.requests, 0, seriesCategoryName, sample++,
+                           String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                     }
+                     break;
+                  }
+                  case OPERATION_THROUGHPUT_GROSS_SERIES: {
+                     OperationThroughput.Series series = aggregation.totalStats.getRepresentation(target, OperationThroughput.Series.class);
+                     if (series == null) return false;
+                     int sample = 0;
+                     for (OperationThroughput defaultOutcome : series.samples) {
+                        chart.addValue(defaultOutcome.gross, 0, seriesCategoryName, sample++,
+                           String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                     }
+                     break;
+                  }
+                  case OPERATION_THROUGHPUT_NET_SERIES: {
+                     OperationThroughput.Series series = aggregation.totalStats.getRepresentation(target, OperationThroughput.Series.class);
+                     if (series == null) return false;
+                     int sample = 0;
+                     for (OperationThroughput defaultOutcome : series.samples) {
+                        chart.addValue(defaultOutcome.net, 0, seriesCategoryName, sample++,
+                           String.valueOf(TimeUnit.MILLISECONDS.toSeconds(sample * series.period)));
+                     }
+                     break;
+                  }
                }
             }
          }
       }
+
       return true;
    }
 
@@ -265,18 +275,28 @@ public abstract class ReportDocument extends HtmlDocument {
          aggregation != null)).flatMap(List::stream).collect(Collectors.toList());
 
       for (Aggregation aggregation : aggregations) {
-         OperationStats operationStats = aggregation.totalStats.getOperationsStats().get(operation);
-         if (operationStats == null) {
-            operationStats = aggregation.totalStats.getOperationStatsForGroups().get(operation);
-         } else if (OperationThroughput.class.equals(representationClass)) { // Both op stats present -> operation group defined, skip throughput
-            String operationsGroup = aggregation.totalStats.getOperationsGroup(Operation.getByName(operation));
-            if (operationsGroup != null) {
-               // result is false
-               break;
+         for (Map<String, OperationStats> operationStatsMap : aggregation.totalStats.getOperationsStats()) {
+            OperationStats operationStats = operationStatsMap.get(operation);
+
+            if (operationStats == null) {
+               for (Map<String, OperationStats> operationStatsForGroups : aggregation.totalStats.getOperationStatsForGroups()) {
+                  operationStats = operationStatsForGroups.get(operation);
+                  if (operationStats != null) {
+                     if (operationStats != null && operationStats.getRepresentation(representationClass, aggregation.totalStats, representationArgs) != null)
+                        return true;
+                  }
+               }
+            } else if (OperationThroughput.class.equals(representationClass)) { // Both op stats present -> operation group defined, skip throughput
+               String operationsGroup = aggregation.totalStats.getOperationsGroup(Operation.getByName(operation));
+               if (operationsGroup != null) {
+                  // result is false
+                  break;
+               }
             }
+
+            if (operationStats != null && operationStats.getRepresentation(representationClass, aggregation.totalStats, representationArgs) != null)
+               return true;
          }
-         if (operationStats != null && operationStats.getRepresentation(representationClass, aggregation.totalStats, representationArgs) != null)
-            return true;
       }
 
       return false;

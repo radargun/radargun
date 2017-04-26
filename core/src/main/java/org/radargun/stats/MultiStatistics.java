@@ -1,6 +1,7 @@
 package org.radargun.stats;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -123,18 +124,18 @@ public abstract class MultiStatistics implements Statistics {
    }
 
    @Override
-   public Map<String, OperationStats> getOperationStatsForGroups() {
-      return Stream.of(internal).map(s -> s.getOperationStatsForGroups()).filter(r -> r != null).findFirst().orElse(null);
+   public List<Map<String, OperationStats>> getOperationStatsForGroups() {
+      return Stream.of(internal).map(s -> s.getOperationStatsForGroups()).filter(r -> r != null).flatMap(List::stream).collect(Collectors.toList());
+   }
+
+   @Override
+   public List<Map<String, OperationStats>> getOperationsStats() {
+      return Stream.of(internal).map(s -> s.getOperationsStats()).filter(r -> r != null).flatMap(List::stream).collect(Collectors.toList());
    }
 
    @Override
    public OperationStats getOperationStats(String operation) {
       return Stream.of(internal).map(s -> s.getOperationStats(operation)).filter(r -> r != null).findFirst().orElse(null);
-   }
-
-   @Override
-   public Map<String, OperationStats> getOperationsStats() {
-      return Stream.of(internal).map(s -> s.getOperationsStats()).filter(r -> r != null).findFirst().orElse(null);
    }
 
    @Override
