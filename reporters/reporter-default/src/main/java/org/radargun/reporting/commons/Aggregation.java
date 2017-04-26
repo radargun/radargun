@@ -18,14 +18,16 @@ public class Aggregation {
    public final Statistics totalStats;
    public final List<Integer> nodeThreads;
    public final int totalThreads;
+   public final Report report;
    public final Report.TestIteration iteration;
 
    public Aggregation(List<Statistics> nodeStats, List<Integer> nodeThreads, Statistics totalStats,
-                      int totalThreads, Report.TestIteration iteration) {
+                      int totalThreads, Report report, Report.TestIteration iteration) {
       this.nodeStats = nodeStats;
       this.nodeThreads = nodeThreads;
       this.totalStats = totalStats;
       this.totalThreads = totalThreads;
+      this.report = report;
       this.iteration = iteration;
    }
 

@@ -213,7 +213,10 @@ public class HtmlReporter implements Reporter {
 
       try {
          copyResources("html/templates/", "style.css");
+         copyResources("html/templates/", "c3.css");
          copyResources("html/templates/", "script.js");
+         copyResources("html/templates/", "c3.min.js");
+         copyResources("html/templates/", "d3.v3.min.js");
          copyResources("html/icons/", "ic_arrow_drop_down_black_24dp.png");
          copyResources("html/icons/", "ic_arrow_drop_up_black_24dp.png");
       } catch (IOException e) {

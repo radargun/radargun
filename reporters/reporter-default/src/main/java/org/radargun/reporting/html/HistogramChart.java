@@ -1,12 +1,11 @@
 package org.radargun.reporting.html;
 
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+
 import org.radargun.stats.representation.Histogram;
 
 /**
@@ -14,40 +13,96 @@ import org.radargun.stats.representation.Histogram;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class HistogramChart extends Chart {
-   private double left;
-   private double right;
-   private XYDataset dataset;
+public class HistogramChart {
+   private List<String> names = new ArrayList<>();
+   private List<Histogram> histograms = new ArrayList<>();
+   private List<double[]> percents = new ArrayList<>();
+   private double[] times;
+   private double quotient;
 
-   /**
-    * @param operation Name of the plotted operation
-    * @param histogram Histogram that should be plotted
-    */
-   public HistogramChart setData(String operation, Histogram histogram) {
-      XYSeries series = new XYSeries(operation + " response times");
-      long totalCount = 0;
-      for (long count : histogram.counts) {
-         totalCount += count;
-      }
-      left = histogram.ranges[0];
-      right = histogram.ranges[histogram.ranges.length - 1];
-
-      for (int i = 0; i < histogram.counts.length; i++) {
-         series.add(histogram.ranges[i], (double) histogram.counts[i] / totalCount);
-      }
-      series.add(right, 0d);
-      dataset = new XYSeriesCollection(series);
-      return this;
+   public int size() {
+      return names.size();
    }
 
-   protected JFreeChart createChart() {
-      JFreeChart chart = ChartFactory.createXYStepAreaChart(null, "Response time", "Percentage", dataset,
-         PlotOrientation.VERTICAL, false, false, false);
-      XYPlot plot = (XYPlot) chart.getPlot();
-      LogTimeAxis xAxis = new LogTimeAxis("Response time");
-      xAxis.setRange(left, right);
-      plot.setDomainAxis(xAxis);
-      return chart;
+   public String quotient() {
+      return String.valueOf(quotient);
    }
 
+   private static String join(double[] a) {
+      StringBuilder sb = new StringBuilder(a.length * 8);
+      DecimalFormat format = new DecimalFormat();
+      format.setMaximumFractionDigits(4);
+      if (a.length != 0) sb.append(format.format(a[0]));
+      for (int i = 1; i < a.length; ++i) sb.append(", ").append(format.format(a[i]));
+      return sb.toString();
+   }
+
+   public String name(int index) {
+      return names.get(index);
+   }
+
+   public String times() {
+      return join(times);
+   }
+
+   public String percents(int index) {
+      return join(percents.get(index));
+   }
+
+   public void addHistogram(String name, Histogram histogram) {
+      names.add(name);
+      histograms.add(histogram);
+   }
+
+   public void process(int buckets, double percentile) {
+      long min = histograms.stream().mapToLong(h -> h.ranges[0]).min().orElse(1);
+      long max = histograms.stream().mapToLong(h -> findMaxRange(h, percentile)) .max().orElse(min + 1);
+
+      double exponent = Math.pow((double) max / (double) min, 1d / buckets);
+      times = new double[buckets];
+      double minLog = Math.log10(min);
+      double exponentLog = Math.log10(exponent);
+      times = IntStream.range(1, buckets + 2).mapToDouble(i -> minLog + (i - 0.5) * exponentLog).toArray();
+      quotient = Math.log10(Math.sqrt(exponent));
+
+      for (Histogram h : histograms) {
+         long totalCount = LongStream.of(h.counts).sum();
+         if (totalCount == 0) {
+            percents.add(new double[0]);
+         }
+         double[] percents = new double[buckets];
+
+         long accCount = 0;
+         double current = min * exponent;
+         int j = 0;
+         for (int i = 1; i < h.ranges.length; ++i) {
+            if (h.ranges[i] >= current) {
+               percents[j] = (double) accCount / (double) totalCount;
+               if (++j >= buckets) {
+                  break;
+               }
+               current *= exponent;
+               accCount = h.counts[i - 1];
+            } else {
+               accCount += h.counts[i - 1];
+            }
+         }
+         if (j < buckets) {
+            percents[j] = (double) accCount / (double) totalCount;
+         }
+         this.percents.add(percents);
+      }
+   }
+
+   private static long findMaxRange(Histogram h, double percentile) {
+      long threshold = (long) Math.ceil(percentile * LongStream.of(h.counts).sum());
+      long acc = 0;
+      for (int i = 0; i < h.counts.length; ++i) {
+         acc += h.counts[i];
+         if (acc >= threshold) {
+            return h.ranges[i + 1];
+         }
+      }
+      return h.ranges[h.ranges.length - 1];
+   }
 }

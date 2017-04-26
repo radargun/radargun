@@ -10,14 +10,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import org.radargun.Operation;
+import org.radargun.config.Cluster;
 import org.radargun.config.Property;
 import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
@@ -64,43 +65,29 @@ public abstract class ReportDocument extends HtmlDocument {
       this.configuration = configuration;
    }
 
-   public void createHistogramAndPercentileChart(Statistics statistics, final String operation, final String configurationName, int cluster, int iteration,
-                                                 String node, Collection<StatisticType> presentedStatistics) {
+   public abstract HistogramChart getHistogramChart(String operation, Cluster cluster, int iteration, int node);
 
-      if (statistics == null || !presentedStatistics.contains(StatisticType.HISTOGRAM)) {
-         return;
-      }
-      final Histogram histogram = statistics.getRepresentation(operation, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile);
-      if (histogram == null) {
-         return;
-      }
-      if (!LongStream.of(histogram.counts).anyMatch(count -> count > 0)) {
-         return;
-      }
-      final String histogramFilename = getHistogramName(statistics, operation, configurationName, cluster, iteration, node, presentedStatistics);
-      chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            log.debug("Generating histogram " + histogramFilename);
-            HistogramChart chart = new HistogramChart().setData(operation, histogram);
-            chart.setWidth(configuration.histogramWidth).setHeight(configuration.histogramHeight);
-            chart.save(directory + File.separator + histogramFilename);
-            return null;
-         }
-      }));
+   public abstract PercentilesChart getPercentilesChart(String operation, Cluster cluster, int iteration, int node);
 
-      final Histogram fullHistogram = statistics.getRepresentation(operation, Histogram.class);
-      final String percentilesFilename = getPercentileChartName(statistics, operation, configurationName, cluster, iteration, node, presentedStatistics);
-      chartTaskFutures.add(HtmlReporter.executor.submit(new Callable<Void>() {
-         @Override
-         public Void call() throws Exception {
-            log.debug("Generating percentiles " + percentilesFilename);
-            PercentilesChart chart = new PercentilesChart().addSeries(configurationName, fullHistogram);
-            chart.setWidth(configuration.histogramWidth).setHeight(configuration.histogramHeight);
-            chart.save(directory + File.separator + percentilesFilename);
-            return null;
-         }
-      }));
+   protected void collectHistograms(Stream<Aggregation> aggregations, String operation, Cluster cluster, int iteration, int node, BiConsumer<String, Histogram> collector) {
+      aggregations.filter(a -> a.report.getCluster().getClusterIndex() == cluster.getClusterIndex()
+            && a.iteration.id == iteration)
+            .forEach(aggregation -> {
+               Statistics statistics;
+               if (node >= 0) {
+                  if (node < aggregation.nodeStats.size()) {
+                     statistics = aggregation.nodeStats.get(node);
+                  } else {
+                     return;
+                  }
+               } else {
+                  statistics = aggregation.totalStats;
+               }
+               Histogram histogram = statistics.getRepresentation(operation, Histogram.class);
+               if (histogram != null) {
+                  collector.accept(aggregation.report.getConfiguration().getName(), histogram);
+               }
+            });
    }
 
    protected boolean createChart(String filename, int clusterSize, String target, String rangeAxisLabel,
@@ -325,51 +312,6 @@ public abstract class ReportDocument extends HtmlDocument {
       }
    }
 
-   // generating Histogram and Percentile Graphs
-   protected void createHistogramAndPercentileCharts(final String operation, Map<Report, List<Aggregation>> reportAggregationMap, String singleTestName) {
-      Collection<StatisticType> presentedStatistics = new ArrayList<>();
-
-      if (hasRepresentation(operation, reportAggregationMap, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile)) {
-         presentedStatistics.add(StatisticType.HISTOGRAM);
-      }
-
-      for (Map.Entry<Report, List<Aggregation>> entry : reportAggregationMap.entrySet()) {
-         createSingleHistogramAndPercentileCharts(operation, presentedStatistics, entry.getKey(), entry.getValue());
-      }
-   }
-
-   private void createSingleHistogramAndPercentileCharts(String operation, Collection<StatisticType> presentedStatistics, Report report, List<Aggregation> aggregations) {
-      int nodeCount = aggregations.isEmpty() ? 0 : aggregations.get(0).nodeStats.size();
-
-      for (Aggregation aggregation : aggregations) {
-         createHistogramAndPercentileChart(aggregation.totalStats, operation, report.getConfiguration().name, report.getCluster().getClusterIndex(),
-            aggregation.iteration.id, "total", presentedStatistics);
-      }
-
-      if (configuration.generateNodeStats) {
-         for (int node = 0; node < nodeCount; ++node) {
-            for (Aggregation aggregation : aggregations) {
-               Statistics statistics = node >= aggregation.nodeStats.size() ? null : aggregation.nodeStats.get(node);
-
-               createHistogramAndPercentileChart(statistics, operation, report.getConfiguration().name, report.getCluster().getClusterIndex(),
-                  aggregation.iteration.id, "node" + node, presentedStatistics);
-            }
-            if (configuration.generateThreadStats) {
-               int maxThreads = getMaxThreads(aggregations, node);
-               for (int thread = 0; thread < maxThreads; ++thread) {
-                  for (Aggregation aggregation : aggregations) {
-                     List<Statistics> nodeStats = aggregation.iteration.getStatistics(node);
-                     Statistics threadStats = nodeStats == null || nodeStats.size() <= thread ? null : nodeStats.get(thread);
-
-                     createHistogramAndPercentileChart(threadStats, operation, report.getConfiguration().name, report.getCluster().getClusterIndex(),
-                        aggregation.iteration.id, "thread" + node + "_" + thread, presentedStatistics);
-                  }
-               }
-            }
-         }
-      }
-   }
-
    protected void waitForChartsGeneration() {
       for (Future f : chartTaskFutures) {
          try {
@@ -546,7 +488,7 @@ public abstract class ReportDocument extends HtmlDocument {
       if (configuration.percentiles.length > 0 && hasRepresentation(operation, reportAggregationMap, Percentile.class, configuration.percentiles[0])) {
          presentedStatistics.add(StatisticType.PERCENTILES);
       }
-      if (hasRepresentation(operation, reportAggregationMap, Histogram.class, configuration.histogramBuckets, configuration.histogramPercentile)) {
+      if (hasRepresentation(operation, reportAggregationMap, Histogram.class)) {
          presentedStatistics.add(StatisticType.HISTOGRAM);
       }
       if (hasRepresentation(operation, reportAggregationMap, OperationThroughput.class)) {
