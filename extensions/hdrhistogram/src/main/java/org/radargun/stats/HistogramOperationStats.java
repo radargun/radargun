@@ -158,6 +158,7 @@ public final class HistogramOperationStats implements OperationStats {
       double exponent = Math.pow((double) max / (double) min, 1d / buckets);
       double current = min * exponent;
       long accCount = 0, lastCount = 0;
+      ranges.add(min);
       for (HistogramIterationValue value : values) {
          accCount += value.getCountAddedInThisIterationStep();
          if (value.getValueIteratedTo() >= current) {

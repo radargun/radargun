@@ -114,7 +114,7 @@ public class TestAggregations {
             }
          }
 
-         iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats.get(), totalThreads.get(), it));
+         iterations.add(new Aggregation(nodeStats, nodeThreads, totalStats.get(), totalThreads.get(), test.getReport(), it));
          for (String operation : totalStats.get().getOperations()) {
             DefaultOutcome defaultOutcome = totalStats.get().getRepresentation(operation, DefaultOutcome.class);
             if (defaultOutcome == null || defaultOutcome.requests > 0) {
@@ -170,4 +170,3 @@ public class TestAggregations {
       return Collections.unmodifiableSet(operationGroups);
    }
 }
-

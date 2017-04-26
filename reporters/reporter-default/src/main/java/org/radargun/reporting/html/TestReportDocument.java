@@ -5,10 +5,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
+import org.radargun.config.Cluster;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.commons.Aggregation;
 import org.radargun.reporting.commons.TestAggregations;
+import org.radargun.stats.representation.Histogram;
 
 /**
  * Shows results of the tests executed in the benchmark.
@@ -50,6 +54,26 @@ public class TestReportDocument extends ReportDocument {
       waitForChartsGeneration();
    }
 
+   @Override
+   public HistogramChart getHistogramChart(String operation, Cluster cluster, int iteration, int node) {
+      HistogramChart chart = new HistogramChart();
+      collectHistograms(operation, cluster, iteration, node, chart::addHistogram);
+      chart.process(configuration.getHistogramBuckets(), configuration.getHistogramPercentile() / 100d);
+      return chart;
+   }
+
+   @Override
+   public PercentilesChart getPercentilesChart(String operation, Cluster cluster, int iteration, int node) {
+      PercentilesChart chart = new PercentilesChart();
+      collectHistograms(operation, cluster, iteration, node, chart::addHistogram);
+      return chart;
+   }
+
+   private void collectHistograms(String operation, Cluster cluster, int iteration, int node, BiConsumer<String, Histogram> collector) {
+      Stream<Aggregation> aggregations = testAggregations.byReports().values().stream().flatMap(List::stream);
+      collectHistograms(aggregations, operation, cluster, iteration, node, collector);
+   }
+
    private void createTestCharts(Set<String> targets) {
       for (String target : targets) {
          if (maxClusters > 1 && configuration.separateClusterCharts) {
@@ -67,7 +91,6 @@ public class TestReportDocument extends ReportDocument {
                log.error("Exception while creating test charts", e);
             }
          }
-         createHistogramAndPercentileCharts(target, testAggregations.byReports(), testName);
       }
    }
 

@@ -1,9 +1,12 @@
 <html xmlns="http://www.w3.org/1999/html">
 <head>
     <title>${testReport.getTitle()}</title>
-    <script></script>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="c3.css">
     <#import "lib/library.ftl" as library />
+    <script src="script.js"></script>
+    <script src="d3.v3.min.js"></script>
+    <script src="c3.min.js"></script>
 </head>
 <body>
   <h1>Test ${testReport.getTestName()}</h1>
@@ -83,7 +86,6 @@
 
                 <#assign dataCount = 0>
 
-                ${testReport.incElementCounter()}
                 <#list results?api.get(report) as result>
                   <#assign slaveResult = (result.slaveResults?api.get(node))! />
                   <#if slaveResult?? && slaveResult.value??>
@@ -239,7 +241,7 @@
               <#-- write iteration totals -->
               <#if aggregation?? && aggregation != "">
                 <@writeRepresentations statistics=aggregation.totalStats report=report aggregation=aggregation
-                 node="total" operation=operation/>
+                 node=-1 operation=operation/>
               <#else>
                 <#-- Fill cells because CSS -->
                 <#list 1..numberOfColumns as colNum>
@@ -255,7 +257,7 @@
                   <#if aggregation?? && aggregation != "">
                     <#assign statistics = testReport.getStatistics(aggregation, node)! />
                     <@writeRepresentations statistics=statistics report=report aggregation=aggregation
-                                           node= "node${node}" operation=operation/>
+                                           node=node operation=operation/>
                   <#else>
                     <#-- Fill cells because CSS -->
                     <#list 1..numberOfColumns as colNum>
@@ -269,11 +271,10 @@
                     <#list 0..(maxThreads -1) as thread>
                       <tr class="h_${hiddenCounter} collapsed">
                         <th>thread ${node}_${thread}</th>
-                        ${testReport.incElementCounter()}
                         <#if aggregation?? && aggregation != "">
                           <#assign threadStats = (testReport.getThreadStatistics(aggregation, node, thread))! />
                           <@writeRepresentations statistics=threadStats report=report aggregation=aggregation
-                                                 node="thread${node}_${thread}" operation=operation/>
+                                                 node=thread operation=operation/>
                         <#else>
                           <#-- Fill cells because CSS -->
                           <#list 1..numberOfColumns as colNum>
@@ -424,7 +425,7 @@
               <#-- write iteration totals -->
               <#if aggregation?? && aggregation != "">
                 <@writeRepresentations statistics=aggregation.totalStats report=report aggregation=aggregation
-                                       node="total" operation=operation/>
+                                       node=-1 operation=operation/>
               <#else>
                 <#-- Fill cells because CSS -->
                 <#list 1..numberOfColumns as colNum>
@@ -441,7 +442,7 @@
                     <#if aggregation?? && aggregation != "">
                       <#assign statistics = testReport.getStatistics(aggregation, node)! />
                       <@writeRepresentations statistics=statistics report=report aggregation=aggregation
-                                             node= "node${node}" operation=operation/>
+                                             node=node operation=operation/>
                     <#else>
                       <#-- Fill cells because CSS -->
                       <#list 1..numberOfColumns as colNum>
@@ -455,11 +456,10 @@
                       <#list 0..(maxThreads -1) as thread>
                         </tr><tr class="h_${hiddenCounter} collapsed">
                           <th>thread ${node}_${thread}</th>
-                            ${testReport.incElementCounter()}
                             <#if aggregation?? && aggregation != "">
                               <#assign threadStats = (testReport.getThreadStatistics(aggregation, node, thread))! />
                               <@writeRepresentations statistics=threadStats report=report aggregation=aggregation
-                                                     node="thread${node}_${thread}" operation=operation/>
+                                                     node=thread operation=operation/>
                             <#else>
                               <#-- Fill cells because CSS -->
                               <#list 1..numberOfColumns as colNum>
@@ -596,22 +596,149 @@
     </#list>
   </#if>
 
+  <!-- TODO: currently the charts for each configuration are generated multiple times;
+             it would be nicer to have them only once, but that would require another loop
+             through all clusters/iterations/nodes/threads. On the other hand the chart
+             is created when opened and destroyed when closed, so it doesn't waste
+             all the resources in runtime. -->
   <#if operationData.getPresentedStatistics()?seq_contains(StatisticType.HISTOGRAM)>
-    <#local histogram = testReport.getHistogramName(statistics, operation, report.getConfiguration().name,
-         report.getCluster().getClusterIndex(), aggregation.iteration.id, node, operationData.getPresentedStatistics()) />
+    <td class="${rowClass} rowStyle" title="${tooltip}">
+      ${testReport.incElementCounter()}
+      <div id="gh${testReport.getElementCounter()}" class="glasspanel" style="display: none">
+        <a href="javascript: void(0);" class="popup_close" onclick="parentElement.style.display='none'; chartInPanel = chartInPanel.destroy();">Close X</a>
+        <@histogram_chart operation=operation cluster=report.getCluster() iteration=aggregation.iteration.id node=node />
+      </div>
+      <div id="gp${testReport.getElementCounter()}" class="glasspanel" style="display: none">
+        <a href="javascript: void(0);" class="popup_close" onclick="parentElement.style.display='none'; chartInPanel = chartInPanel.destroy();">Close X</a>
+        <@percentiles_chart operation=operation cluster=report.getCluster() iteration=aggregation.iteration.id node=node/>
+      </div>
 
-    <#local percentileGraph = testReport.getPercentileChartName(statistics, operation, report.getConfiguration().name,
-         report.getCluster().getClusterIndex(), aggregation.iteration.id, node, operationData.getPresentedStatistics()) />
-
-    <#if histogram?has_content && percentileGraph?has_content>
-      <td class="${rowClass} rowStyle" title="${tooltip}">
-        <a href="${histogram}">histogram</a> <br>
-        <a href="${percentileGraph}">percentiles</a>
-      </td>
-    <#else >
-      <td class="${rowClass} rowStyle" title="${tooltip}">none</td>
-    </#if>
+      <a href="javascript: void(0);" onClick="javascript: chartInPanel = ch${testReport.getElementCounter()}(); show_panel('gh${testReport.getElementCounter()}', chartInPanel.destroy);">histogram</a> <br>
+      <a href="javascript: void(0);" onClick="javascript: chartInPanel = cp${testReport.getElementCounter()}(); show_panel('gp${testReport.getElementCounter()}', chartInPanel.destroy);">percentiles</a>
+    </td>
   </#if>
+</#macro>
+
+<#macro histogram_chart operation cluster iteration node>
+  <#local chart = testReport.getHistogramChart(operation, cluster, iteration, node)>
+  <div id="h${testReport.getElementCounter()}" class="popup_block"></div>
+  <script type="text/javascript">
+     function ch${testReport.getElementCounter()}() {
+       return c3.generate({
+         bindto: "#h${testReport.getElementCounter()}",
+         size: {
+           width: ${testReport.getConfiguration().getHistogramWidth()},
+           height: ${testReport.getConfiguration().getHistogramHeight()}
+         },
+         padding: {
+           right: 35, top: 20
+         },
+         data: {
+           type: 'step',
+           names: {
+             <#list 0..chart.size() - 1 as line>
+               line${line}: '${chart.name(line)}',
+             </#list>
+           },
+           x: 'x',
+           columns: [
+               [ 'x', ${chart.times()}],
+             <#list 0..chart.size() - 1 as line>
+               [ 'line${line}', ${chart.percents(line)}],
+             </#list>
+           ],
+         },
+         axis: {
+           x: {
+             tick: {
+               format: format_exp_ns,
+               values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+             }
+           },
+           y: {
+             tick: {
+               format: function(value) { return (value * 100).toPrecision(3) + "%"},
+               values: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+             }
+           }
+         },
+         tooltip: {
+           format: {
+             title: function(value) {
+               var quotient = ${chart.quotient()};
+               return format_exp_ns(value - quotient) + " - " + format_exp_ns(value + quotient);
+             }
+           }
+         }
+       });
+     }
+   </script>
+</#macro>
+
+<#macro percentiles_chart operation cluster iteration node>
+  <#local chart = testReport.getPercentilesChart(operation, cluster, iteration, node)>
+  <div id="p${testReport.getElementCounter()}" class="popup_block"></div>
+  <script type="text/javascript">
+    function cp${testReport.getElementCounter()}() {
+      return c3.generate({
+        bindto: "#p${testReport.getElementCounter()}",
+        size: {
+          width: ${testReport.getConfiguration().getHistogramWidth()},
+          height: ${testReport.getConfiguration().getHistogramHeight()}
+        },
+        padding: {
+          right: 35, top: 20
+        },
+        data: {
+          names: {
+            <#list 0..chart.size() - 1 as line>
+              line${2 * line}: '${chart.name(line)} (max)',
+              line${2 * line + 1}: '${chart.name(line)} (avg)',
+            </#list>
+          },
+          xs: {
+            <#list 0..chart.size() - 1 as line>
+              line${2 * line}: 'x${2 * line}',
+              line${2 * line + 1}: 'x${2 * line + 1}',
+            </#list>
+          },
+          columns: [
+            <#list 0..chart.size() - 1 as line>
+              [ 'x${2 * line}',     ${chart.percentiles(line)}],
+              [ 'x${2 * line + 1}', ${chart.percentiles(line)}],
+            </#list>
+            <#list 0..chart.size() - 1 as line>
+              [ 'line${2 * line}',     ${chart.max(line)}],
+              [ 'line${2 * line + 1}', ${chart.avg(line)}],
+            </#list>
+          ],
+        },
+        color: {
+          pattern: series_colors_dup()
+        },
+        axis: {
+          x: {
+            tick: {
+              format: format_percentile,
+              values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+            }
+          },
+          y: {
+            tick: {
+              format: format_exp_ns,
+              values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+            }
+          }
+        },
+        point: {
+          show: false
+        },
+        zoom: {
+          enabled: true
+        }
+      });
+    }
+  </script>
 </#macro>
 
 <#macro writeTotalRepresentations statistics report aggregation node operation>
@@ -655,5 +782,3 @@
     </#if>
   </#if>
 </#macro>
-
-<script src="script.js"></script>

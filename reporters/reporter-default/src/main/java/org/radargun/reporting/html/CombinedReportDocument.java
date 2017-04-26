@@ -5,9 +5,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
+
+import org.radargun.config.Cluster;
 import org.radargun.reporting.Report;
 import org.radargun.reporting.commons.Aggregation;
 import org.radargun.reporting.commons.TestAggregations;
+import org.radargun.stats.representation.Histogram;
 
 /**
  * This reporter is used for combining multiple test results into 1 html document Thats specially if you want to compare
@@ -59,6 +64,26 @@ public class CombinedReportDocument extends ReportDocument {
       return chart;
    }
 
+   @Override
+   public HistogramChart getHistogramChart(String operation, Cluster cluster, int iteration, int node) {
+      HistogramChart chart = new HistogramChart();
+      collectHistograms(operation, cluster, iteration, node, chart::addHistogram);
+      chart.process(configuration.getHistogramBuckets(), configuration.getHistogramPercentile() / 100d);
+      return chart;
+   }
+
+   @Override
+   public PercentilesChart getPercentilesChart(String operation, Cluster cluster, int iteration, int node) {
+      PercentilesChart chart = new PercentilesChart();
+      collectHistograms(operation, cluster, iteration, node, chart::addHistogram);
+      return chart;
+   }
+
+   private void collectHistograms(String operation, Cluster cluster, int iteration, int node, BiConsumer<String, Histogram> collector) {
+      Stream<Aggregation> aggregations = testAggregations.stream().flatMap(ta -> ta.byReports().values().stream().flatMap(List::stream));
+      collectHistograms(aggregations, operation, cluster, iteration, node, collector);
+   }
+
    public void calculateClusterSizes() {
       for (TestAggregations ta : testAggregations) {
          clusterSizes.addAll(ta.byClusterSize().keySet());
@@ -87,10 +112,6 @@ public class CombinedReportDocument extends ReportDocument {
             } catch (IOException e) {
                log.error("Exception while creating test charts", e);
             }
-         }
-         int i = 0;
-         for (TestAggregations ta : testAggregations) {
-            createHistogramAndPercentileCharts(target, ta.byReports(), combined.get(i++));
          }
       }
    }
@@ -125,5 +146,3 @@ public class CombinedReportDocument extends ReportDocument {
    }
 
 }
-
-
