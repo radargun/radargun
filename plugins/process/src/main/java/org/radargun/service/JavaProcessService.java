@@ -112,9 +112,9 @@ public class JavaProcessService extends ProcessService {
    }
 
    public String getJavaPIDs() {
-      if (getPid() != null) {
+      if (lifecycle.getPid() != null) {
          ProcessBuilder pb = new ProcessBuilder()
-               .command(Arrays.asList(getCommandPrefix() + "jvms" + getCommandSuffix(), getPid()));
+               .command(Arrays.asList(getCommandPrefix() + "jvms" + getCommandSuffix(), lifecycle.getPid()));
          pb.redirectError(ProcessBuilder.Redirect.INHERIT);
          pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
          try {

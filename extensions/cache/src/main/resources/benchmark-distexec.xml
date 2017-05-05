@@ -36,8 +36,11 @@
 
 		<!-- Execute a distributed executor that searches the cache values for a string -->
 		<cache:distributed-task
-			callable="org.infinispan.demo.distexec.CacheValueRegEx"
-			callable-params="setPattern: tJêÇvJrTÇëälJú" />
+			callable="org.infinispan.demo.distexec.CacheValueRegEx">
+          <cache:callable-params>
+            <cache:property key="setPattern" value="tJêÇvJrTÇëälJú"/>
+          </cache:callable-params>
+        </cache:distributed-task>
 
 		<!-- Stop services on all nodes -->
 		<service-stop />

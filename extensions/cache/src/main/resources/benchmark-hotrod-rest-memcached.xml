@@ -23,7 +23,7 @@
                <!-- Additional arguments passed to ${env.ISPN_HOME}/bin/standalone.sh -->
                <args>-DudpGroup=224.0.0.1</args>
                <!-- Home directory for the Infinispan Server -->
-               <home>${env.ISPN_HOME}</home>
+               <home>${env.ISPN_8_HOME}</home>
             </server>
          </setup>
          <!-- Configuration for the HotRod client -->
@@ -39,7 +39,7 @@
          <setup group="server" plugin="infinispan80" >
             <server xmlns="urn:radargun:plugins:infinispan80:3.0" file="server.xml" jmx-domain="jboss.datagrid-infinispan">
                <args>-DudpGroup=224.0.0.1</args>
-               <home>${env.ISPN_HOME}</home>
+               <home>${env.ISPN_8_HOME}</home>
             </server>
          </setup>
          <!-- Configuration for the HotRod client -->
@@ -57,7 +57,7 @@
          <!-- Configuration for the server group - this is identical to HotRod -->
             <server xmlns="urn:radargun:plugins:infinispan80:3.0" file="server.xml" jmx-domain="jboss.datagrid-infinispan">
                <args>-DudpGroup=224.0.0.1</args>
-               <home>${env.ISPN_HOME}</home>
+               <home>${env.ISPN_8_HOME}</home>
             </server>
          </setup>
          <!-- Configuration for the REST client -->

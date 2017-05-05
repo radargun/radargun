@@ -3,12 +3,15 @@ package org.radargun.service;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.tangosol.io.pof.PofReader;
 import com.tangosol.io.pof.PofWriter;
@@ -24,11 +27,24 @@ import com.tangosol.util.comparator.InverseComparator;
 import com.tangosol.util.extractor.ChainedExtractor;
 import com.tangosol.util.extractor.MultiExtractor;
 import com.tangosol.util.extractor.ReflectionExtractor;
-import com.tangosol.util.filter.*;
+import com.tangosol.util.filter.AllFilter;
+import com.tangosol.util.filter.AnyFilter;
+import com.tangosol.util.filter.BetweenFilter;
+import com.tangosol.util.filter.ContainsFilter;
+import com.tangosol.util.filter.EqualsFilter;
+import com.tangosol.util.filter.GreaterEqualsFilter;
+import com.tangosol.util.filter.GreaterFilter;
+import com.tangosol.util.filter.IsNullFilter;
+import com.tangosol.util.filter.LessEqualsFilter;
+import com.tangosol.util.filter.LessFilter;
+import com.tangosol.util.filter.LikeFilter;
+import com.tangosol.util.filter.LimitFilter;
+import com.tangosol.util.filter.NotFilter;
+
 import org.radargun.aggregators.LimitAggregator;
 import org.radargun.traits.Query;
+import org.radargun.traits.Query.Builder;
 import org.radargun.traits.Queryable;
-import org.radargun.utils.Projections;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -66,7 +82,7 @@ public class CoherenceQueryable implements Queryable {
 
    private static class QueryBuilderImpl implements Query.Builder {
       private final ArrayList<Filter> filters = new ArrayList<Filter>();
-      private LinkedHashMap<String, Query.SortOrder> orderBy;
+      private LinkedHashMap<String, Boolean> orderBy;
       private long offset = 0, limit = -1;
       private String[] projection;
 
@@ -76,56 +92,57 @@ public class CoherenceQueryable implements Queryable {
       }
 
       @Override
-      public Query.Builder eq(String attribute, Object value) {
-         filters.add(new EqualsFilter(attribute, value));
+      public Query.Builder eq(Query.SelectExpression expression, Object value) {
+         filters.add(new EqualsFilter(expression.attribute, value));
          return this;
       }
 
       @Override
-      public Query.Builder lt(String attribute, Object value) {
-         filters.add(new LessFilter(attribute, (Comparable) value));
+      public Query.Builder lt(Query.SelectExpression expression, Object value) {
+         filters.add(new LessFilter(expression.attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public Query.Builder le(String attribute, Object value) {
-         filters.add(new LessEqualsFilter(attribute, (Comparable) value));
+      public Query.Builder le(Query.SelectExpression expression, Object value) {
+         filters.add(new LessEqualsFilter(expression.attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public Query.Builder gt(String attribute, Object value) {
-         filters.add(new GreaterFilter(attribute, (Comparable) value));
+      public Query.Builder gt(Query.SelectExpression expression, Object value) {
+         filters.add(new GreaterFilter(expression.attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public Query.Builder ge(String attribute, Object value) {
-         filters.add(new GreaterEqualsFilter(attribute, (Comparable) value));
+      public Query.Builder ge(Query.SelectExpression expression, Object value) {
+         filters.add(new GreaterEqualsFilter(expression.attribute, (Comparable) value));
          return this;
       }
 
       @Override
-      public Query.Builder between(String attribute, Object lowerBound, boolean lowerInclusive, Object upperBound, boolean upperInclusive) {
-         filters.add(new BetweenFilter(attribute, (Comparable) lowerBound, (Comparable) upperBound));
+      public Query.Builder between(Query.SelectExpression expression, Object lowerBound, boolean lowerInclusive, Object upperBound,
+            boolean upperInclusive) {
+         filters.add(new BetweenFilter(expression.attribute, (Comparable) lowerBound, (Comparable) upperBound));
          return this;
       }
 
       @Override
-      public Query.Builder isNull(String attribute) {
-         filters.add(new IsNullFilter(attribute));
+      public Query.Builder isNull(Query.SelectExpression expression) {
+         filters.add(new IsNullFilter(expression.attribute));
          return this;
       }
 
       @Override
-      public Query.Builder like(String attribute, String pattern) {
-         filters.add(new LikeFilter(attribute, pattern));
+      public Query.Builder like(Query.SelectExpression expression, String pattern) {
+         filters.add(new LikeFilter(expression.attribute, pattern));
          return this;
       }
 
       @Override
-      public Query.Builder contains(String attribute, Object value) {
-         filters.add(new ContainsFilter(attribute, value));
+      public Query.Builder contains(Query.SelectExpression expression, Object value) {
+         filters.add(new ContainsFilter(expression.attribute, value));
          return this;
       }
 
@@ -146,37 +163,37 @@ public class CoherenceQueryable implements Queryable {
       }
 
       @Override
-      public Query.Builder orderBy(String attribute, Query.SortOrder order) {
-         if (orderBy == null) orderBy = new LinkedHashMap<String, Query.SortOrder>();
-         if (orderBy.put(attribute, order) != null) {
-            throw new IllegalArgumentException("Order by " + attribute + " already set");
+      public Query.Builder orderBy(Query.SelectExpression expression) {
+         if (orderBy == null)
+            orderBy = new LinkedHashMap<String, Boolean>();
+         if (orderBy.put(expression.attribute, expression.asc) != null) {
+            throw new IllegalArgumentException("Order by " + expression.attribute + " already set");
          }
-         /*if (comparator == null) {
-            comparator = new ReflexiveComparator(attribute, order);
-         } else {
-            comparator = new ChainedComparator(comparator, new ReflexiveComparator(attribute, order));
-         }*/
          return this;
       }
 
       @Override
-      public Query.Builder projection(String... attribute) {
-         if (attribute == null || attribute.length == 0) throw new IllegalArgumentException();
-         if (projection != null) throw new IllegalStateException("Projection already set");
-         this.projection = attribute;
+      public Query.Builder projection(Query.SelectExpression... expression) {
+         if (expression == null || expression.length == 0)
+            throw new IllegalArgumentException();
+         if (projection != null)
+            throw new IllegalStateException("Projection already set");
+         this.projection = Arrays.stream(expression).map(Query.SelectExpression::attribute).toArray(String[]::new);
          return this;
       }
 
       @Override
       public Query.Builder offset(long offset) {
-         if (this.offset < 0) throw new IllegalArgumentException("Offset " + offset + " < 0 not allowed");
+         if (this.offset < 0)
+            throw new IllegalArgumentException("Offset " + offset + " < 0 not allowed");
          this.offset = offset;
          return this;
       }
 
       @Override
       public Query.Builder limit(long limit) {
-         if (limit < 1) throw new IllegalArgumentException("Limit " + limit + " < 1 not allowed");
+         if (limit < 1)
+            throw new IllegalArgumentException("Limit " + limit + " < 1 not allowed");
          this.limit = limit;
          return this;
       }
@@ -193,6 +210,11 @@ public class CoherenceQueryable implements Queryable {
             return new AllFilter(filters.toArray(new Filter[filters.size()]));
          }
       }
+
+      public Builder groupBy(String[] attribute) {
+         throw new UnsupportedOperationException();
+         // TODO Needs implementing
+      }
    }
 
    private static class QueryImpl implements Query {
@@ -202,7 +224,7 @@ public class CoherenceQueryable implements Queryable {
       private final int limit;
       private final String[] projection;
 
-      public QueryImpl(Filter filter, String[] projection, LinkedHashMap<String, SortOrder> orderBy, long offset, long limit) {
+      public QueryImpl(Filter filter, String[] projection, LinkedHashMap<String, Boolean> orderBy, long offset, long limit) {
          this.projection = projection;
          if (projection != null) {
             // we delay this to LimitAggregator
@@ -212,7 +234,8 @@ public class CoherenceQueryable implements Queryable {
             if (orderBy == null) {
                comparator = null;
             } else {
-               // TODO: we can project composite object and sort by its inner attributes
+               // TODO: we can project composite object and sort by its inner
+               // attributes
                ArrayList<Comparator> comparators = new ArrayList<Comparator>(orderBy.size());
                for (String attribute : orderBy.keySet()) {
                   int index = -1;
@@ -238,14 +261,14 @@ public class CoherenceQueryable implements Queryable {
             if (orderBy == null) {
                comparator = null;
             } else if (orderBy.size() == 1) {
-               Map.Entry<String, SortOrder> entry = orderBy.entrySet().iterator().next();
+               Map.Entry<String, Boolean> entry = orderBy.entrySet().iterator().next();
                Comparator comp = new ReflectionExtractor(entry.getKey());
-               comparator = entry.getValue() == SortOrder.ASCENDING ? comp : new InverseComparator(comp);
+               comparator = entry.getValue() ? comp : new InverseComparator(comp);
             } else {
                ArrayList<Comparator> comparators = new ArrayList<Comparator>(orderBy.size());
-               for (Map.Entry<String, SortOrder> entry : orderBy.entrySet()) {
+               for (Map.Entry<String, Boolean> entry : orderBy.entrySet()) {
                   Comparator comp = new ReflectionExtractor(entry.getKey());
-                  comparators.add(entry.getValue() == SortOrder.ASCENDING ? comp : new InverseComparator(comp));
+                  comparators.add(entry.getValue() ? comp : new InverseComparator(comp));
                }
                comparator = new ChainedComparator(comparators.toArray(new Comparator[comparators.size()]));
             }
@@ -253,14 +276,17 @@ public class CoherenceQueryable implements Queryable {
                long bestSize = -1;
                int bestExtra = Integer.MAX_VALUE;
                for (long pageSize = limit; pageSize < 2 * limit || bestSize < 0; ++pageSize) {
-                  // if the pageSize does not cover our range properly, we cannot use it
-                  if (pageSize * (offset / pageSize + 1) < offset + limit) continue;
+                  // if the pageSize does not cover our range properly, we
+                  // cannot use it
+                  if (pageSize * (offset / pageSize + 1) < offset + limit)
+                     continue;
                   int extra = (int) (pageSize - limit);
                   if (extra < bestExtra) {
                      bestExtra = extra;
                      bestSize = pageSize;
                   }
-                  if (extra == 0) break;
+                  if (extra == 0)
+                     break;
                }
                this.skip = (int) (offset % bestSize);
                this.limit = (int) limit;
@@ -299,14 +325,16 @@ public class CoherenceQueryable implements Queryable {
             } else {
                ValueExtractor[] extractors = new ValueExtractor[projection.length];
                for (int i = 0; i < projection.length; ++i) {
-                  extractors[i] = projection[i].indexOf('.') < 0 ? new ReflectionExtractor(projection[i]) : new ChainedExtractor(projection[i]);
+                  extractors[i] = projection[i].indexOf('.') < 0 ? new ReflectionExtractor(projection[i])
+                        : new ChainedExtractor(projection[i]);
                }
                aggregator = new ReducerAggregator(new MultiExtractor(extractors));
             }
             Map map;
             if (comparator != null || skip > 0 || limit >= 0) {
                int laLimit = limit < 0 ? Integer.MAX_VALUE : limit + skip;
-               map = (Map) cache.aggregate(filter, new LimitAggregator(aggregator, laLimit, comparator != null, comparator, EntryComparator.CMP_VALUE));
+               map = (Map) cache.aggregate(filter,
+                     new LimitAggregator(aggregator, laLimit, comparator != null, comparator, EntryComparator.CMP_VALUE));
             } else {
                map = (Map) cache.aggregate(filter, aggregator);
             }
@@ -348,32 +376,10 @@ public class CoherenceQueryable implements Queryable {
       @Override
       public Collection values() {
          if (entrySet != null) {
-            Collection<Map.Entry> values = entrySet;
-            if (skip > 0 || limit >= 0) {
-               values = Projections.subset(values, skip, limit());
-            }
-            return Projections.project(values, new Projections.Func<Map.Entry, Object>() {
-               @Override
-               public Object project(Map.Entry entry) {
-                  return entry.getValue();
-               }
-            });
+            return entrySet.stream().skip(skip).limit(limit()).map(e -> e.getValue()).collect(Collectors.toCollection(HashSet::new));
          } else {
-            Collection values = valueSet;
-            if (skip > 0 || limit >= 0) {
-               values = Projections.subset(values, skip, limit());
-            }
-            // data from projection come as list
-            return Projections.project(values, new Projections.Func<Object, Object>() {
-               @Override
-               public Object project(Object o) {
-                  if (o instanceof List) {
-                     return ((List) o).toArray();
-                  } else {
-                     return o;
-                  }
-               }
-            });
+            return (Collection) valueSet.stream().skip(skip).limit(limit()).map(e -> (e instanceof List ? ((List) e).toArray() : e))
+                  .collect(Collectors.toCollection(HashSet::new));
          }
       }
 
@@ -396,20 +402,20 @@ public class CoherenceQueryable implements Queryable {
 
    public static class ProjectionComparator implements Comparator, Serializable, PortableObject {
       private int index;
-      private Query.SortOrder order;
+      private boolean asc;
 
       public ProjectionComparator() {
          // for POF deserialization only
       }
 
-      private ProjectionComparator(int index, Query.SortOrder order) {
+      private ProjectionComparator(int index, boolean asc) {
          this.index = index;
-         this.order = order;
+         this.asc = asc;
       }
 
       @Override
       public int compare(Object o1, Object o2) {
-         return order == Query.SortOrder.ASCENDING ? compareAsc(o1, o2) : compareAsc(o2, o1);
+         return asc ? compareAsc(o1, o2) : compareAsc(o2, o1);
       }
 
       private final int compareAsc(Object o1, Object o2) {
@@ -427,13 +433,13 @@ public class CoherenceQueryable implements Queryable {
       @Override
       public void readExternal(PofReader pofReader) throws IOException {
          index = pofReader.readInt(0);
-         order = Query.SortOrder.values()[pofReader.readInt(1)];
+         asc = pofReader.readBoolean(1);
       }
 
       @Override
       public void writeExternal(PofWriter pofWriter) throws IOException {
          pofWriter.writeInt(0, index);
-         pofWriter.writeObject(1, order.ordinal());
+         pofWriter.writeBoolean(1, asc);
       }
    }
 }

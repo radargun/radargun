@@ -168,10 +168,10 @@ public class ReflexiveConverters {
       public List convert(ComplexDefinition definition, Type type) {
          if (type instanceof Class<?>) {
             Class<?> clazz = (Class<?>) type;
-            if (!List.class.isAssignableFrom(clazz)) throw new IllegalArgumentException(type.toString());
+            if (!Collection.class.isAssignableFrom(clazz)) throw new IllegalArgumentException(type.toString());
          } else if (type instanceof ParameterizedType) {
             ParameterizedType ptype = (ParameterizedType) type;
-            if (!List.class.isAssignableFrom((Class<?>) ptype.getRawType()))
+            if (!Collection.class.isAssignableFrom((Class<?>) ptype.getRawType()))
                throw new IllegalArgumentException(type.toString());
          }
          List list = new ArrayList();

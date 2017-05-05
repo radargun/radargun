@@ -71,8 +71,6 @@ public class InfinispanServerService extends JavaProcessService {
    protected int executorPoolSize = 2;
 
    protected ScheduledExecutorService executor;
-
-   protected InfinispanServerLifecycle lifecycle;
    protected InfinispanServerClustered clustered;
 
    protected volatile MBeanServerConnection connection;
@@ -160,12 +158,6 @@ public class InfinispanServerService extends JavaProcessService {
    @Destroy
    public void destroy() {
       Utils.shutdownAndWait(executor);
-   }
-
-   @ProvidesTrait
-   @Override
-   public InfinispanServerLifecycle createLifecycle() {
-      return lifecycle;
    }
 
    @ProvidesTrait

@@ -1,8 +1,12 @@
 package org.radargun.service;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
@@ -21,7 +25,6 @@ public abstract class AbstractSparkLifecycle extends ProcessLifecycle<AbstractSp
    }
 
    protected void startInternal() {
-      super.startInternal();
       service.registerAction(getStartPattern(), m -> {
          long end = TimeService.currentTimeMillis() + service.logCreationTimeout;
          while (TimeService.currentTimeMillis() <= end) {
@@ -39,6 +42,44 @@ public abstract class AbstractSparkLifecycle extends ProcessLifecycle<AbstractSp
          }
          throw new IllegalStateException("Failed to attach reader to log file");
       });
+      super.startInternal();
+   }
+
+   @Override
+   public String getProcessId(Process process) {
+      long end = TimeService.currentTimeMillis() + service.startupProcessTimeout;
+      while (process.isAlive() && TimeService.currentTimeMillis() <= end) {
+         try {
+            Thread.sleep(500);
+         } catch (InterruptedException e) {
+            log.error("Interrupted while waiting for start process to finish ", e);
+            Thread.currentThread().interrupt();
+         }
+
+      }
+
+      File[] pidFiles = FileSystems.getDefault().getPath(service.home, "pids").toFile().listFiles(new PidFileNameFilter());
+      if (pidFiles.length != 1) {
+         log.error("Multiple or no PID files containing " + service.getPidFileIdent() + " found, something has gone wrong");
+         return super.getProcessId(process);
+      }
+
+      byte[] buffer;
+      try {
+         buffer = Files.readAllBytes(pidFiles[0].toPath());
+      } catch (IOException e) {
+         log.error("Error reading PID file" + pidFiles[0].getName(), e);
+         return super.getProcessId(process);
+      }
+
+      return new String(buffer).trim();
+   }
+
+   private class PidFileNameFilter implements FilenameFilter {
+      public boolean accept(File dir, String name) {
+         return name.contains(service.getPidFileIdent());
+      }
+
    }
 
    @Override

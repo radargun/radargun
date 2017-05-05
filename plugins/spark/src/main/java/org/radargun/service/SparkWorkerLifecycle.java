@@ -21,10 +21,10 @@ public class SparkWorkerLifecycle extends AbstractSparkLifecycle {
 
    @Override
    protected void startInternal() {
-      super.startInternal();
       service.registerAction(CONNECTED_TO_MASTER_PATTERN, m -> {
          setConnectedToMaster();
       });
+      super.startInternal();
       long startTime = TimeService.currentTimeMillis();
       synchronized (this) {
          while (!connectedToMaster) {

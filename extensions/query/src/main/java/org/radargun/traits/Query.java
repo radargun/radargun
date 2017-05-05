@@ -87,9 +87,9 @@ public interface Query {
     * Used to represent aggregated attributes and also order by expressions
     */
    class SelectExpression {
-      public String attribute;
-      public AggregationFunction function;
-      public boolean asc;
+      public final String attribute;
+      public final AggregationFunction function;
+      public final Boolean asc;
 
       public SelectExpression(String attribute) {
          this(attribute, AggregationFunction.NONE, true);
@@ -107,6 +107,10 @@ public interface Query {
          this.attribute = attribute;
          this.function = function;
          this.asc = asc;
+      }
+      
+      public String attribute(){
+         return attribute;
       }
    }
 }
