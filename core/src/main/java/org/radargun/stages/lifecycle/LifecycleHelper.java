@@ -15,9 +15,8 @@ import org.radargun.traits.Partitionable;
 import org.radargun.utils.TimeService;
 
 /**
- * Helper class for controlling the lifecycle of a service.
- * Assumes that the service has the {@link Lifecycle} trait,
- * other traits are optional.
+ * Helper class for controlling the lifecycle of a service. Assumes that the service has the
+ * {@link Lifecycle} trait, other traits are optional.
  */
 public class LifecycleHelper {
 
@@ -28,14 +27,13 @@ public class LifecycleHelper {
    }
 
    /**
-    * Starts the service.
-    * If the service supports {@link Clustered} trait and {@code validate} is set to true,
-    * the method waits until {@link org.radargun.traits.Clustered#getMembers() clustered trait}
-    * reports {@code expectedSlaves} slaves or for {@code clusterFormationTimeout} milliseconds.
-    * If the service supports {@link Partitionable} trait, the set of {@code reachable} slaves
-    * is set up before the service is started.
-    * Also, this method calls the {@link ServiceListener service listeners} on {@link SlaveState}.
-    * If the start fails, attempt to stop the service is executed.
+    * Starts the service. If the service supports {@link Clustered} trait and {@code validate} is
+    * set to true, the method waits until {@link org.radargun.traits.Clustered#getMembers()
+    * clustered trait} reports {@code expectedSlaves} slaves or for {@code clusterFormationTimeout}
+    * milliseconds. If the service supports {@link Partitionable} trait, the set of
+    * {@code reachable} slaves is set up before the service is started. Also, this method calls the
+    * {@link ServiceListener service listeners} on {@link SlaveState}. If the start fails, attempt
+    * to stop the service is executed.
     *
     * @param slaveState
     * @param validate
@@ -43,8 +41,8 @@ public class LifecycleHelper {
     * @param clusterFormationTimeout
     * @param reachable
     */
-   public static void start(SlaveState slaveState, boolean validate, Integer expectedSlaves, long clusterFormationTimeout,
-                            Set<Integer> reachable) {
+   public static void start(SlaveState slaveState, boolean validate, Integer expectedSlaves,
+                            long clusterFormationTimeout, Set<Integer> reachable) {
       Lifecycle lifecycle = slaveState.getTrait(Lifecycle.class);
       Clustered clustered = slaveState.getTrait(Clustered.class);
       Partitionable partitionable = slaveState.getTrait(Partitionable.class);
@@ -58,16 +56,21 @@ public class LifecycleHelper {
          long startingTime = TimeService.currentTimeMillis();
          lifecycle.start();
          long startedTime = TimeService.currentTimeMillis();
-         slaveState.getTimeline().addEvent(LifecycleHelper.LIFECYCLE, new Timeline.IntervalEvent(startingTime, "Start", startedTime - startingTime));
+         slaveState.getTimeline().addEvent(LifecycleHelper.LIFECYCLE,
+               new Timeline.IntervalEvent(startingTime, "Start", startedTime - startingTime));
          if (validate && clustered != null) {
 
             int expectedNumberOfSlaves = expectedSlaves != null ? expectedSlaves : slaveState.getGroupSize();
 
             long clusterFormationDeadline = TimeService.currentTimeMillis() + clusterFormationTimeout;
-            for (; ; ) {
+            for (;;) {
                Collection<Clustered.Member> members = clustered.getMembers();
+               String msg = "No members found in the cluster. Expected: " + expectedNumberOfSlaves;
                if (members == null || members.size() != expectedNumberOfSlaves) {
-                  String msg = "Number of members=" + members + " is not the one expected: " + expectedNumberOfSlaves;
+                  if (members != null) {
+                     msg = "(" + members + ") Number of members=" + members.size() + " is not the one expected: "
+                           + expectedNumberOfSlaves;
+                  }
                   log.info(msg);
                   try {
                      Thread.sleep(1000);
@@ -107,11 +110,11 @@ public class LifecycleHelper {
    }
 
    /**
-    * Stops the service.
-    * If the service supports the {@link Killable} trait and {@code graceful} is set to false,
-    * this trait is used to kill the service instead of stopping it. Also, non-graceful stop
-    * can be executed asynchronously using {@link org.radargun.traits.Killable#killAsync()}.
-    * This method calls the {@link ServiceListener service listeners} on {@link SlaveState}.
+    * Stops the service. If the service supports the {@link Killable} trait and {@code graceful} is
+    * set to false, this trait is used to kill the service instead of stopping it. Also,
+    * non-graceful stop can be executed asynchronously using
+    * {@link org.radargun.traits.Killable#killAsync()}. This method calls the {@link ServiceListener
+    * service listeners} on {@link SlaveState}.
     *
     * @param slaveState
     * @param graceful
@@ -123,7 +126,8 @@ public class LifecycleHelper {
 
    public static void stop(SlaveState slaveState, boolean graceful, boolean async, long gracefulStopTimeout) {
       final Lifecycle lifecycle = slaveState.getTrait(Lifecycle.class);
-      if (lifecycle == null) throw new IllegalArgumentException();
+      if (lifecycle == null)
+         throw new IllegalArgumentException();
       Killable killable = slaveState.getTrait(Killable.class);
       if (lifecycle.isRunning()) {
          for (ServiceListener listener : slaveState.getListeners()) {
@@ -172,7 +176,8 @@ public class LifecycleHelper {
                }
             }
             long stoppedTime = TimeService.currentTimeMillis();
-            slaveState.getTimeline().addEvent(LIFECYCLE, new Timeline.IntervalEvent(stoppingTime, "Stop", stoppedTime - stoppingTime));
+            slaveState.getTimeline().addEvent(LIFECYCLE,
+                  new Timeline.IntervalEvent(stoppingTime, "Stop", stoppedTime - stoppingTime));
          } finally {
             for (ServiceListener listener : slaveState.getListeners()) {
                listener.afterServiceStop(graceful);
@@ -182,7 +187,6 @@ public class LifecycleHelper {
          log.info("No cache wrapper deployed on this slave, nothing to do.");
       }
    }
-
 
    private static class ClusterFormationTimeoutException extends RuntimeException {
       public ClusterFormationTimeoutException(String msg) {
