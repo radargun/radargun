@@ -15,7 +15,7 @@
          <setup group="servers" plugin="${productName:tomcat8}">
             <tomcat xmlns="urn:radargun:plugins:tomcat8:3.0" file="${server.config:server.xml}">
                 <!-- path to tomcat server -->
-               <catalina-home>$CATALINA_HOME</catalina-home>
+               <catalina-home>${env.CATALINA_HOME}</catalina-home>
                <!-- user and password for the user with manager-script role defined in tomcat-users.xml -->
                <user>tomcat</user>
                <pass>tomcat</pass>

@@ -48,12 +48,14 @@ public class ProcessService {
    public boolean stderrToStdout = false;
 
    private CopyOnWriteArrayList<Action> actions = new CopyOnWriteArrayList<Action>();
-   protected String pid;
 
+   protected ProcessLifecycle<?> lifecycle;
+   
    @ProvidesTrait
-   public ProcessLifecycle createLifecycle() {
-      return new ProcessLifecycle(this);
+   public ProcessLifecycle<?> createLifecycle() {
+      return lifecycle;
    }
+
 
    protected List<String> getCommand() {
       ArrayList<String> command = new ArrayList<String>(args.size() + 2);
@@ -76,14 +78,6 @@ public class ProcessService {
 
    public Map<String, String> getEnvironment() {
       return env;
-   }
-
-   public String getPid() {
-      return pid;
-   }
-
-   public void setPid(String pid) {
-      this.pid = pid;
    }
 
    public void registerAction(Pattern pattern, OutputListener action) {

@@ -7,12 +7,11 @@ import java.util.List;
 import org.radargun.Service;
 import org.radargun.config.Init;
 import org.radargun.config.Property;
-import org.radargun.traits.ProvidesTrait;
 
 /**
  * @author Matej Cimbora
  */
-@Service(doc = "Service encapsulating Apache Spark (worker node).")
+@Service(doc = "Service encapsulating Apache Spark (worker node). Current implementation is limited to one slave per host.")
 public class SparkWorkerService extends AbstractSparkService {
 
    @Property(doc = "Name of the host where master node is deployed. Default is localhost.")
@@ -21,17 +20,9 @@ public class SparkWorkerService extends AbstractSparkService {
    @Property(doc = "Port under which master node is accessible. Default is 7077.")
    protected int port = 7077;
 
-   private SparkWorkerLifecycle lifecycle;
-
    @Init
    public void init() {
-      this.lifecycle = new SparkWorkerLifecycle(this);
-   }
-
-   @Override
-   @ProvidesTrait
-   public ProcessLifecycle createLifecycle() {
-      return lifecycle;
+      lifecycle = new SparkWorkerLifecycle(this);
    }
 
    @Override
@@ -40,5 +31,10 @@ public class SparkWorkerService extends AbstractSparkService {
       command.add(FileSystems.getDefault().getPath(home, "sbin", "start-slave.sh").toString());
       command.add("spark://" + host + ":" + port);
       return command;
+   }
+   
+   
+   protected String getPidFileIdent() {
+      return "radargun_worker_1";
    }
 }

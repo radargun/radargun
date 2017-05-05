@@ -49,7 +49,7 @@
          </cache:key-selector>
       </cache:basic-operations-test>
 
-      <rg:repeat from="1" to="${repeat.times:10}">
+      <rg:repeat from="1" to="${repeat.times:3}">
          <cache:basic-operations-test test-name="iterating" amend-test="true"
                                 iteration-property="num-threads-per-node"
                                 duration="${test.short.duration:5s}" num-threads-per-node="#{2 ^ ${repeat.counter}}">

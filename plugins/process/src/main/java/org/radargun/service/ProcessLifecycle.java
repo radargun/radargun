@@ -20,10 +20,9 @@ import org.radargun.traits.Lifecycle;
 import org.radargun.utils.TimeService;
 
 /**
- * Java runtime does not provide API that would allow us to manage
- * full process tree, that's why we delegate the start/stop/kill
- * handling to OS-specific scripts.
- * So far, only Unix scripts are implemented.
+ * Java runtime does not provide API that would allow us to manage full process
+ * tree, that's why we delegate the start/stop/kill handling to OS-specific
+ * scripts. So far, only Unix scripts are implemented.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
@@ -38,6 +37,8 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
    private String extension;
    private Process process;
 
+   private String pid;
+
    public ProcessLifecycle(T service) {
       this.service = service;
       prefix = service.getCommandPrefix();
@@ -49,7 +50,8 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
       fireBeforeStop(false);
       try {
          Runnable waiting = killAsyncInternal();
-         if (waiting == null) return;
+         if (waiting == null)
+            return;
          waiting.run();
       } finally {
          fireAfterStop(false);
@@ -86,7 +88,7 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
       try {
          fireBeforeStop(false);
          final Process process = new ProcessBuilder().inheritIO()
-               .command(Arrays.asList(prefix + "kill" + extension, service.getPid())).start();
+               .command(Arrays.asList(prefix + "kill" + extension, getPid())).start();
          return new Runnable() {
             @Override
             public void run() {
@@ -144,16 +146,16 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
       }
       try {
          process = pb.start();
-         service.setPid(getProcessId(process));
          if (inputWriter != null) inputWriter.setStream(process.getOutputStream());
          if (outputReader != null) outputReader.setStream(process.getInputStream());
          if (errorReader != null) errorReader.setStream(process.getErrorStream());
+         setPid(getProcessId(process));
       } catch (IOException e) {
          log.error("Failed to start", e);
       }
    }
 
-   private static String getProcessId(Process process) {
+   protected String getProcessId(Process process) {
       Class<?> clazz = process.getClass();
       try {
          if (clazz.getName().equals("java.lang.UNIXProcess")) {
@@ -199,7 +201,7 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
          long startTime = TimeService.currentTimeMillis();
          for (; ; ) {
             String command = service.stopTimeout < 0 || TimeService.currentTimeMillis() < startTime + service.stopTimeout ? "stop" : "kill";
-            Process process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + command + extension, service.getPid())).start();
+            Process process = new ProcessBuilder().inheritIO().command(Arrays.asList(prefix + command + extension, getPid())).start();
             try {
                process.waitFor(service.stopTimeout, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
@@ -214,12 +216,7 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
 
    @Override
    public boolean isRunning() {
-      boolean result = getServiceChildPIDs().length() != 0;
-      if (process != null) {
-         // Service is running until the service and child PIDs don't exist
-         result = result || process.isAlive();
-      }
-      return result;
+      return getChildPIDs().length() != 0 || isPIDAlive(pid);
    }
 
    protected synchronized StreamReader getOutputReader() {
@@ -377,13 +374,13 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
       public void beforeStop(boolean graceful) {}
       public void afterStop(boolean graceful) {}
    }
-   
+
    /*
     * Return a list of the children PIDs for the service
     */
-   private String getServiceChildPIDs() {
-      if (service.getPid() != null) {
-         ProcessBuilder pb = new ProcessBuilder().command("pgrep", "-P", service.getPid());
+   private String getChildPIDs() {
+      if (getPid() != null) {
+         ProcessBuilder pb = new ProcessBuilder().command("pgrep", "-P", getPid());
          pb.redirectError(ProcessBuilder.Redirect.INHERIT);
          pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
          try {
@@ -401,5 +398,36 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
          }
       }
       return "";
+   }
+
+   private boolean isPIDAlive(String pid) {
+      if (pid != null) {
+         ProcessBuilder pb = new ProcessBuilder().command(prefix + "is_alive" + extension, pid);
+         pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+         pb.redirectInput(ProcessBuilder.Redirect.INHERIT);
+         try {
+            Process process = pb.start();
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+               String line = reader.readLine();
+               if (line != null && !line.isEmpty()) {
+                  return true;
+               }
+            }
+            return false;
+         } catch (IOException e) {
+            log.error("Failed to test if service " + pid + " is running", e);
+            return false;
+         }
+      }
+      return false;
+   }
+
+   public String getPid() {
+      return pid;
+   }
+
+   public void setPid(String pid) {
+      this.pid = pid;
    }
 }

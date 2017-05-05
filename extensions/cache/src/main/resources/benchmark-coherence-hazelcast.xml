@@ -32,7 +32,7 @@
       <jvm-monitor-start />
 
       <cache:load num-entries="5000"/>
-      <cache:basic-operations-test test-name="warmup" num-requests="100000" num-threads-per-node="5">
+      <cache:basic-operations-test test-name="warmup" duration="${warmup.duration:30s}" num-threads-per-node="5">
          <cache:key-selector>
             <cache:concurrent-keys total-entries="5000" />
          </cache:key-selector>

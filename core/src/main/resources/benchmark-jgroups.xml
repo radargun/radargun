@@ -35,7 +35,7 @@
             <query value="remove-protocol=MERGE3"/>
             <query value="insert-protocol=MERGE2=above=PING"/>
             <!-- insert custom protocol (just for illustration -->
-            <query value="insert-protocol=org.radargun.protocols.SLAVE_PARTITION=above=UDP"/>
+            <query value="insert-protocol=org.radargun.protocols.SLAVE_PARTITION_36=above=UDP"/>
             <!-- Print information per protocol -->
             <query value="jmx=NAKACK2"/>
             <!-- Print information for the whole stack -->

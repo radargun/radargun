@@ -20,21 +20,15 @@
       <config name="Spark">
          <!-- Configuration for the Spark master group -->
          <setup group="master" plugin="spark">
-            <master xmlns="urn:radargun:plugins:spark:3.0" home="${env.SPARK_HOME}">
-            </master>
+            <master xmlns="urn:radargun:plugins:spark:3.0" home="${env.SPARK_161_HOME}"/>
          </setup>
          <!-- Configuration for the Spark worker group -->
          <setup group="worker" plugin="spark">
-            <worker xmlns="urn:radargun:plugins:spark:3.0" home="${env.SPARK_HOME}">
-               <host>localhost.localdomain</host>
-               <port>7077</port>
-            </worker>
+            <worker xmlns="urn:radargun:plugins:spark:3.0" home="${env.SPARK_161_HOME}"/>
          </setup>
          <!-- Configuration for the Spark driver group -->
          <setup group="driver" plugin="spark">
             <driver xmlns="urn:radargun:plugins:spark:3.0">
-               <host>localhost.localdomain</host>
-               <port>7077</port>
                <properties>
                   <property key="spark.serializer" value="org.apache.spark.serializer.KryoSerializer"/>
                </properties>
@@ -46,10 +40,10 @@
          </setup>
          <!-- Configuration for the ISPN server group-->
          <setup group="ispn-server" plugin="infinispan82">
-            <server xmlns="urn:radargun:plugins:infinispan82:3.0" file="server.xml" jmx-domain="jboss.datagrid-infinispan" cache-manager-name="clustered">
+            <server xmlns="urn:radargun:plugins:infinispan82:3.0" file="standalone.xml" jmx-domain="jboss.datagrid-infinispan" cache-manager-name="local">
                <!-- Avoid port collisions with Spark nodes -->
                <args>-Djboss.socket.binding.port-offset=100</args>
-               <home>${env.ISPN_HOME}</home>
+               <home>${env.ISPN_82_HOME}</home>
             </server>
          </setup>
          <!-- Configuration for the ISPN client group -->
@@ -89,7 +83,6 @@
                   source-name="org.radargun.service.demo.ispn.WordCountSource"
                   mapper-fqn="org.radargun.service.demo.ispn.WordCountMapper"
                   reducer-fqn="org.radargun.service.demo.ispn.WordCountReducer"
-                  print-result="true"
       />
 
       <!-- Stop services on all nodes -->

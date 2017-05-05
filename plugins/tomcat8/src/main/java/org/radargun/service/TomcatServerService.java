@@ -72,8 +72,6 @@ public class TomcatServerService extends JavaProcessService {
    @Property(doc = "Logging properties file. Default is ${CATALINA_HOME}/conf/logging.properties")
    private String loggingProperties = "logging.properties";
 
-   protected TomcatServerLifecycle lifecycle;
-
    @ProvidesTrait
    public TomcatConfigurationProvider createTomcatConfigurationProvider() {
       return new TomcatConfigurationProvider(this);
@@ -112,12 +110,6 @@ public class TomcatServerService extends JavaProcessService {
          log.error("Failed to copy file", e);
          throw new RuntimeException(e);
       }
-   }
-
-   @ProvidesTrait
-   @Override
-   public TomcatServerLifecycle createLifecycle() {
-      return lifecycle;
    }
 
    @Override
