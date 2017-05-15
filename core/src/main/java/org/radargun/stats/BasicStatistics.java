@@ -2,6 +2,7 @@ package org.radargun.stats;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,11 +56,16 @@ public class BasicStatistics extends IntervalStatistics {
 
          }
       }
-      groupOperationsMap.put(name, operations);
+      Set<Operation> updatedIdOperation = new HashSet<>();
       for (Operation operation : operations) {
+         // This ensures the IDs match
+         operation = Operation.getByName(operation.name);
+         updatedIdOperation.add(operation);
+
          ensure(operation.id);
          operationGroupMap.put(operation, name);
       }
+      groupOperationsMap.put(name, updatedIdOperation);
    }
 
    @Override
@@ -93,6 +99,11 @@ public class BasicStatistics extends IntervalStatistics {
       stats.record(requestSet);
    }
 
+   /**
+    * Ensures that there is entry in operationStats with this ID
+    * If there isn't create it
+    * @param operationId
+    */
    private void ensure(int operationId) {
       if (operationStats == null) {
          operationStats = EMPTY_ARRAY;
