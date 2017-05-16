@@ -175,9 +175,14 @@ public class BasicStatistics extends IntervalStatistics {
    @Override
    public List<Map<String, OperationStats>> getOperationStatsForGroups() {
       Map<String, OperationStats> result = new HashMap<>(groupOperationsMap.size());
+      List<Map<String, OperationStats>> list = new ArrayList<>();
       for (Map.Entry<String, Set<Operation>> entry : groupOperationsMap.entrySet()) {
          OperationStats mergedOperationStats = null;
          for (Operation operation : entry.getValue()) {
+            if (operationStats == null) {
+               list.add(result);
+               return list;
+            }
             OperationStats os = operationStats[operation.id];
             if (mergedOperationStats == null) {
                mergedOperationStats = os.copy();
@@ -189,7 +194,6 @@ public class BasicStatistics extends IntervalStatistics {
             result.put(entry.getKey(), mergedOperationStats);
          }
       }
-      List<Map<String, OperationStats>> list = new ArrayList<>();
       list.add(result);
       return list;
    }
