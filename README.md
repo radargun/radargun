@@ -1,5 +1,5 @@
 # RadarGun
-RadarGun is a data grid and distributed cache benchmarking framework built to test [Infinispan](http://www.infinispan.org) and other distributed data grid platforms.
+RadarGun is a data grid and distributed cache benchmarking framework built to test [Infinispan](http://www.infinispan.org) and other distributed data grid platforms. Hello.
 
 ## Documentation
 Refer to RadarGun's [wiki page](https://github.com/radargun/radargun/wiki) for documentation.
