@@ -43,12 +43,11 @@
       <cache:load num-entries="10000"/>
 
         <!-- The loop will increase number of threads but at most 10 times -->
-      <repeat times="10">
+      <rg:repeat times="10">
          <!-- Each threads should execute 1000 requests/s; 200 writes and 800 reads -->
          <cache:basic-operations-test test-name="stress-test" amend-test="true"
                                 duration="10s"
-                                total-threads="#{ 5 * ${repeat.counter} + 5 }"
-                                request-period="1">
+                                total-threads="#{ 5 * ${repeat.counter} + 5 }">
             <!-- Terminate the test when we can't achieve 95% of expected throughput,
                  or if the mean time is 1 ms or more  -->
             <repeat-condition>
