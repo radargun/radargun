@@ -105,6 +105,7 @@ public class BasicStatistics extends IntervalStatistics {
     * @param operationId
     */
    private void ensure(int operationId) {
+
       if (operationStats == null) {
          operationStats = EMPTY_ARRAY;
       }
