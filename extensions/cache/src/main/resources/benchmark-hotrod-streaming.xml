@@ -28,7 +28,7 @@
                <!-- Working directory for slave -->
                <home>${env.RG_WORK}/slave${slave.index}</home>
                <!-- Path to server ZIP file -->
-               <server-zip>${env.ISPN_9_ZIP_PATH}/infinispan-server-9.0.0-SNAPSHOT.zip</server-zip>
+               <server-zip>${env.ISPN_9_ZIP_PATH}/infinispan-server-9.0.0.Final.zip</server-zip>
                <env>JAVA_OPTS=-server -Xms2g -Xmx4g
                   -XX:MaxPermSize=4G
                   -verbose:gc

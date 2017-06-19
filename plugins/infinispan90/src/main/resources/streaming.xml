@@ -179,7 +179,7 @@
                 <topology-state-transfer lazy-retrieval="false" lock-timeout="1000" replication-timeout="5000"/>
             </hotrod-connector>
             <memcached-connector socket-binding="memcached" cache-container="clustered"/>
-            <rest-connector socket-binding="rest" cache-container="clustered" security-domain="other" auth-method="BASIC"/>
+            <rest-connector socket-binding="rest" cache-container="clustered" />
             <websocket-connector socket-binding="websocket" cache-container="clustered"/>
         </subsystem>
         <subsystem xmlns="urn:infinispan:server:jgroups:9.0">
