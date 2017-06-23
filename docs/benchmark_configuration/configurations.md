@@ -9,7 +9,7 @@ Each configuration has its own `config` element containing as many `setup` eleme
 
 **Setup** element attributes
 > plugin (**required**) -	specifies which plugin will be ran on the group (or cluster if no groups are used)  
-> group (**optional**) -	specifies which group the setup is for, required if the groups are used in clusters configuration
+> group (**optional**) -	specifies which group the setup is for, required if the groups are used in clusters configuration  
 
 
 The plugins themselves define their own configuration format in their separate namespaces, but there are two elements defined by core RadarGun. These values apply only to slave VM, if plugin spawns another VM the handling of arguments and varibles for that VM depends on plugin implementation (they are usually defined in separate element).
@@ -17,8 +17,8 @@ The plugins themselves define their own configuration format in their separate n
 * **Note:** These values are not applied to slave instances you start, slaves get automatically restarted after the configuration is distributed to them by master.
 
 **Setup** core elements
-> vm-args (**optional**) -	defines VM arguments (there is a number of child elements, please refer to the schema file)
-> environment (**optional**) -	defines VM environment variables in key-value pairs
+> vm-args (**optional**) -	defines VM arguments (there is a number of child elements, please refer to the schema file)  
+> environment (**optional**) -	defines VM environment variables in key-value pairs  
   
 
 Following examples fully apply only to their respective plugins. 

@@ -509,7 +509,7 @@
                   <groupId>org.codehaus.mojo</groupId>
                   <executions>
                      <execution>
-                        <phase>generate-resources</phase>
+                        <phase>package</phase>
                         <goals>
                            <goal>exec</goal>
                         </goals>
@@ -839,6 +839,27 @@
                            </ac:then>
                         </ac:if>
                      </tasks>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>generate_documentation</id>
+                  <phase>prepare-package</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                     <target>
+                        <echo message="Generating XSD schema" />
+                        <path id="core_and_extensions">
+                           <fileset dir="${distribution.artifact}/lib" includes="*.jar" />
+                        </path>
+                        <java classname="org.radargun.config.PhaseDocumentationGenerator"
+                           failonerror="true" classpathref="core_and_extensions">
+                           <sysproperty key="log4j.configuration"
+                              value="file:///${basedir}/core/target/distribution/radargun-core-bin/radargun-core/conf/log4j.xml" />
+                           <arg value="${basedir}/docs/stages/" />
+                        </java>
+                     </target>
                   </configuration>
                </execution>
             </executions>

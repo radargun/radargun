@@ -85,7 +85,7 @@ This section contains definition of clusters, which specify number nodes that th
 
 In this section we specify configurations we want to benchmark - our example uses two products: infinispan52 and infinispan60. The scenario will be run against every (config, cluster size) combo: infinispan52 configured with "dist-sync.xml" file will be run on a cluster of 2, then 3 nodes. Once this is finished, RadarGun will run the next infinispan60 configuration (dist-sync.xml) on 2 and 3 nodes. There's no restriction on the number of configured products or configurations.
 
-> There is however memory limit on the amount of data gathered during benchmarking, some demanding benchmarks might require adjusting JVM memory parameters for Master node
+> There is however memory limit on the amount of data gathered during benchmarking, some demanding benchmarks might require adjusting JVM memory parameters for Master node  
 
 [**Scenario element**](./scenario.html)
 

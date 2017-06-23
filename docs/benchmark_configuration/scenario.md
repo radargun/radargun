@@ -7,8 +7,8 @@ Scenario
 `Scenario` element contains the series of `stages` that will be executed on each [cluster](./clusters.html)-[configuration](./configurations.html) pair. Several base stages are defined on RadarGun core project, most stages are defined by RadarGun extensions they belong to and all are described on their respective pages.  
 
 **Stage** element attributes (shared)
-> slaves (**optional**) - specifies slaves the stage should be ran on by index (slave.index property)
-> groups (**optional**) - specifies which groups the stage will be ran on by name
+> slaves (**optional**) - specifies slaves the stage should be ran on by index (slave.index property)  
+> groups (**optional**) - specifies which groups the stage will be ran on by name  
 
 
 #### Example scenario

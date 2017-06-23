@@ -9,7 +9,7 @@ Reports
 Default reporters (csv, html and serialized) generally work ok out of the box, but arguments can be, somewhat ambiguously for historic reasons, passed inside `reporter` element in tags named after them (see examples). Reporters can also be instructed to produce multiple reports using `report` tag.
 
 **Reporter element attributes**
-> type (**required**) - specifies reporter used
+> type (**required**) - specifies reporter used  
 
 #### Basic CSV reporter
 
