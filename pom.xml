@@ -63,6 +63,7 @@
       <extension.jpa />
       <extension.mapreduce />
       <extension.rest />
+      <extensions.counter/>
    </properties>
 
    <profiles>
@@ -168,6 +169,21 @@
          </modules>
          <properties>
             <extension.rest>rest</extension.rest>
+         </properties>
+      </profile>
+      <profile>
+         <id>counter</id>
+         <activation>
+            <activeByDefault>true</activeByDefault>
+            <property>
+               <name>!no-counter</name>
+            </property>
+         </activation>
+         <modules>
+            <module>extensions/counter</module>
+         </modules>
+         <properties>
+            <extension.counter>counter</extension.counter>
          </properties>
       </profile>
       <!-- Reporters -->
@@ -617,7 +633,7 @@
                            </sequential>
                         </macrodef>
 
-                        <ac:for list="${extension.cache},${extension.query},${extension.example-extension},${extension.hdrhistogram},${extension.jpa},${extension.mapreduce},${extension.rest}" param="extension">
+                        <ac:for list="${extension.cache},${extension.query},${extension.example-extension},${extension.hdrhistogram},${extension.jpa},${extension.mapreduce},${extension.rest},${extension.counter}" param="extension">
                            <sequential>
                               <package-extension extension="@{extension}" build-dir="extensions/@{extension}/target/distribution/radargun-@{extension}-bin/radargun-@{extension}"/>
                            </sequential>

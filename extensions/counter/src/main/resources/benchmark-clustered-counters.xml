@@ -1,0 +1,56 @@
+<!-- RadarGun 3.0 benchmark -->
+<benchmark xmlns="urn:radargun:benchmark:3.0">
+
+   <master bindAddress="${master.address:127.0.0.1}" port="${master.port:2103}" />
+
+   <clusters>
+      <cluster size="2" />
+   </clusters>
+
+   <configurations>
+      <config name="Infinispan 9.0 - Strong Clustered Counter">
+         <setup plugin="infinispan90">
+            <!-- You can set JVM arguments for slaves here. -->
+            <vm-args>
+               <memory max="4G" />
+            </vm-args>
+            <embedded xmlns="urn:radargun:plugins:infinispan90:3.0" file="clustered-counters.xml"/>
+         </setup>
+      </config>
+     
+   </configurations>
+
+   <rg:scenario xmlns:rg="urn:radargun:benchmark:3.0"
+                xmlns="urn:radargun:stages:core:3.0"
+                xmlns:counter="urn:radargun:stages:counter:3.0">
+
+      <service-start/>
+
+      <jvm-monitor-start />
+
+      <!-- other options for operation name: DECREMENT_AND_GET, ADD_AND_GET, COMPARE_AND_SET -->
+      <counter:strong-counter-test test-name="incrementAndGetTest"
+                              duration="10s"
+                              num-threads-per-node="1"
+                              operation-name="INCREMENT_AND_GET"
+                              counter-name="c1"
+                              initial-value="0">
+      </counter:strong-counter-test>
+      
+      <jvm-monitor-stop /> 
+      
+   </rg:scenario>
+
+   <reports>
+     <reporter type="serialized">
+       <serialized xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/serialized" />
+     </reporter>
+     <reporter type="csv">
+       <csv xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/csv" />
+     </reporter>
+     <reporter type="html">
+       <html xmlns="urn:radargun:reporters:reporter-default:3.0" target-dir="${env.PWD}/results/html" />
+     </reporter>
+   </reports>
+
+</benchmark>
