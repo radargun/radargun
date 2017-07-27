@@ -27,6 +27,12 @@
       </dependency>
       <dependency>
          <groupId>org.radargun</groupId>
+         <artifactId>radargun-counter</artifactId>
+         <version>${project.version}</version>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.radargun</groupId>
          <artifactId>radargun-query</artifactId>
          <version>${project.version}</version>
          <scope>provided</scope>
@@ -59,6 +65,12 @@
                <artifactId>jboss-logging</artifactId>
             </exclusion>
          </exclusions>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-clustered-counter</artifactId>
+         <version>${version.infinispan}</version>
       </dependency>
 
       <dependency>
@@ -152,7 +164,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>9.0.0.Final</version.infinispan>
+            <version.infinispan>9.0.2.Final</version.infinispan>
          </properties>
       </profile>
       <profile>

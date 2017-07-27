@@ -20,6 +20,7 @@ import org.infinispan.distribution.DataLocality;
 import org.infinispan.distribution.DistributionManager;
 import org.infinispan.distribution.ch.ConsistentHash;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.remoting.transport.Address;
 import org.radargun.Service;
 import org.radargun.config.Property;
@@ -228,6 +229,10 @@ public class InfinispanEmbeddedService {
 
    public Cache<Object, Object> getCache(String cacheName) {
       return caches.get(cacheName);
+   }
+
+   public EmbeddedCacheManager getCacheManager() {
+      return cacheManager;
    }
 
    /* API that adapts to Infinispan version */
