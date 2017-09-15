@@ -171,7 +171,14 @@
            <artifactId>radargun-query</artifactId>
            <version>${project.version}</version>
            <scope>provided</scope>
-       </dependency>    
+       </dependency>
+       
+       <dependency>
+           <groupId>org.radargun</groupId>
+           <artifactId>radargun-mapreduce</artifactId>
+           <version>${project.version}</version>
+           <scope>provided</scope>
+       </dependency>     
        
    </dependencies>
 
