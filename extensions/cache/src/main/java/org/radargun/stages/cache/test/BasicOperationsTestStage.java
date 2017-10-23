@@ -17,6 +17,7 @@ import org.radargun.stages.test.Stressor;
 import org.radargun.stages.test.TestStage;
 import org.radargun.traits.BasicOperations;
 import org.radargun.traits.InjectTrait;
+import org.radargun.traits.Transactional;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -65,7 +66,11 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
             CacheInvocations.Put.TX,
             CacheInvocations.GetAndPut.TX,
             CacheInvocations.Remove.TX,
-            CacheInvocations.GetAndRemove.TX
+            CacheInvocations.GetAndRemove.TX,
+            Transactional.BEGIN,
+            Transactional.COMMIT,
+            Transactional.DURATION,
+            Transactional.ROLLBACK
          )));
    }
 
