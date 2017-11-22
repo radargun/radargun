@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class Operation implements Serializable {
    private static int nextId = 1;
-   private static ConcurrentHashMap<Integer, Operation> byId = new ConcurrentHashMap<Integer, Operation>();
-   private static ConcurrentHashMap<String, Operation> byName = new ConcurrentHashMap<String, Operation>();
+   private static ConcurrentHashMap<Integer, Operation> byId = new ConcurrentHashMap<>();
+   private static ConcurrentHashMap<String, Operation> byName = new ConcurrentHashMap<>();
    public static final Operation UNKNOWN = new Operation(0, "UNKNOWN");
 
    public final int id;
