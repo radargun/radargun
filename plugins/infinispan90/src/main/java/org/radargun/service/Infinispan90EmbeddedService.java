@@ -5,7 +5,7 @@ import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.protocols.TP;
 import org.radargun.Service;
 import org.radargun.traits.ProvidesTrait;
-import org.radargun.traits.StrongCounterOperations;
+import org.radargun.traits.CounterOperations;
 
 /**
  * @author Roman Macor (rmacor@redhat.com)
@@ -37,8 +37,8 @@ public class Infinispan90EmbeddedService extends Infinispan82EmbeddedService {
    }
 
    @ProvidesTrait
-   public StrongCounterOperations createStrongCounterOperations() {
-      return new Infinispan90StrongCounterOperations(this);
+   public CounterOperations createCounterOperations() {
+      return new Infinispan90CounterOperations(this);
    }
 
    @Override
