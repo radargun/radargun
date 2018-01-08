@@ -388,10 +388,11 @@
             <module>plugins/jdg66</module>
             <module>plugins/jdg70</module>
             <module>plugins/jdg71</module>
+            <module>plugins/jdg72</module>
          </modules>
          <properties>
-            <plugins.jdg-latest>jdg71</plugins.jdg-latest>
-            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,${plugins.jdg-latest}</plugins.jdg>
+            <plugins.jdg-latest>jdg72</plugins.jdg-latest>
+            <plugins.jdg>jdg63,jdg64,jdg65,jdg66,jdg70,jdg71,${plugins.jdg-latest}</plugins.jdg>
          </properties>
       </profile>
 
