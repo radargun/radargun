@@ -16,7 +16,7 @@ import org.radargun.utils.ReflexiveConverters;
  * An implementation of CacheWrapper that uses Hazelcast instance as an underlying implementation.
  * @author Maido Kaara
  */
-@Service(doc = "Hazelcast")
+@Service(doc = HazelcastService.SERVICE_DESCRIPTION)
 public class Hazelcast36Service extends HazelcastService {
    @Property(doc = "Indices that should be build.", complexConverter = IndexConverter.class)
    protected List<Index> indices = Collections.EMPTY_LIST;

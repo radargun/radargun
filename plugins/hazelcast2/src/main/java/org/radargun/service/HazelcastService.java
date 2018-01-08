@@ -33,8 +33,10 @@ import org.radargun.traits.Transactional;
  * @author Martin Gencur
  *
  */
-@Service(doc = "Hazelcast")
+@Service(doc = HazelcastService.SERVICE_DESCRIPTION)
 public class HazelcastService implements Lifecycle, Clustered {
+
+   protected static final String SERVICE_DESCRIPTION = "Hazelcast";
 
    protected final Log log = LogFactory.getLog(getClass());
    private final boolean trace = log.isTraceEnabled();

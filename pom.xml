@@ -258,10 +258,11 @@
             <module>plugins/hazelcast36</module>
             <module>plugins/hazelcast37</module>
             <module>plugins/hazelcast38</module>
+            <module>plugins/hazelcast39</module>
          </modules>
          <properties>
-            <plugins.hazelcast-latest>hazelcast38</plugins.hazelcast-latest>
-            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,${plugins.hazelcast-latest}</plugins.hazelcast>
+            <plugins.hazelcast-latest>hazelcast39</plugins.hazelcast-latest>
+            <plugins.hazelcast>hazelcast2,hazelcast36,hazelcast37,hazelcast38,${plugins.hazelcast-latest}</plugins.hazelcast>
          </properties>
       </profile>
       <profile>
