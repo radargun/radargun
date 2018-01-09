@@ -37,10 +37,7 @@
                               initial-value="0">
       </counter:counter-test>
 
-      <!-- Due to a bug in RG we need to add num-threads-per-node * cluster size -->
-      <counter:check-counter counter-name="c1" expected-value="1002"/>
-      
-      <jvm-monitor-stop /> 
+      <jvm-monitor-stop />
       
    </rg:scenario>
 
