@@ -9,6 +9,7 @@ import org.radargun.Operation;
 public interface CounterOperations {
    String TRAIT = CounterOperations.class.getSimpleName();
 
+   Operation GET_VALUE = Operation.register(TRAIT + ".GetValue");
    Operation INCREMENT_AND_GET = Operation.register(TRAIT + ".IncrementAndGet");
    Operation DECREMENT_AND_GET = Operation.register(TRAIT + ".DecrementAndGet");
    Operation ADD_AND_GET = Operation.register(TRAIT + ".AddAndGet");
@@ -17,6 +18,8 @@ public interface CounterOperations {
    Counter getCounter(String name);
 
    interface Counter {
+      long getValue() throws Exception;
+
       long incrementAndGet() throws Exception;
 
       long decrementAndGet() throws Exception;

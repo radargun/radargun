@@ -90,37 +90,35 @@ public class CounterTestStage extends TestStage {
       public void run(Operation operation) throws RequestException {
          if (operation == CounterOperations.INCREMENT_AND_GET) {
             Invocation<Long> invocation = new CounterInvocations.IncrementAndGet(counter);
-            long expectedValue = previousValue + 1;
             long currentValue = stressor.makeRequest(invocation);
-            if (currentValue != expectedValue) {
-               throw new IllegalStateException("Inconsistent counter! Expected value: "
-                  + expectedValue + ", actual: " + currentValue);
+            if (currentValue == previousValue) {
+               throw new IllegalStateException("Inconsistent counter! Expected greater than " + previousValue);
             } else {
                previousValue = currentValue;
             }
          } else if (operation == CounterOperations.DECREMENT_AND_GET) {
             Invocation<Long> invocation = new CounterInvocations.DecrementAndGet(counter);
-            long expectedValue = previousValue - 1;
             long currentValue = stressor.makeRequest(invocation);
-            if (currentValue != expectedValue) {
-               throw new IllegalStateException("Inconsistent counter! Expected value: "
-                  + expectedValue + ", actual: " + currentValue);
+            if (currentValue == previousValue) {
+               throw new IllegalStateException("Inconsistent counter! Expected lesser than " + previousValue);
             } else {
                previousValue = currentValue;
             }
          } else if (operation == CounterOperations.ADD_AND_GET) {
             Invocation<Long> invocation = new CounterInvocations.AddAndGet(counter, delta);
-            long expectedValue = previousValue + delta;
             long currentValue = stressor.makeRequest(invocation);
-            if (currentValue != expectedValue) {
-               throw new IllegalStateException("Inconsistent counter! Expected value: "
-                  + expectedValue + ", actual: " + currentValue);
+            if (currentValue == previousValue) {
+               throw new IllegalStateException("Inconsistent counter! Expected value different from previous.");
             } else {
                previousValue = currentValue;
             }
          } else if (operation == CounterOperations.COMPARE_AND_SET) {
+            //This operation is testable only with a single thread. Running with multiple threads would cause
+            //one thread to always succeed (because it would match its previous values) and other threads
+            //to always fail (the counter is modified by other threads and it wouldn't match its own previous
+            //values).
             long expectedValue = previousValue;
-            long update = previousValue + 1; //the update will be just previous value plus 1
+            long update = previousValue + 1;
             Invocation<Boolean> invocation = new CounterInvocations.CompareAndSet(counter, expectedValue, update);
             boolean success = stressor.makeRequest(invocation);
             if (!success) {

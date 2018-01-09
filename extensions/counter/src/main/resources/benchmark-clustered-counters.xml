@@ -30,12 +30,15 @@
 
       <!-- other options for operation name: DECREMENT_AND_GET, ADD_AND_GET, COMPARE_AND_SET -->
       <counter:counter-test test-name="incrementAndGetTest"
-                              duration="10s"
+                              num-operations="1000"
                               num-threads-per-node="1"
                               operation-name="INCREMENT_AND_GET"
                               counter-name="c1"
                               initial-value="0">
       </counter:counter-test>
+
+      <!-- Due to a bug in RG we need to add num-threads-per-node * cluster size -->
+      <counter:check-counter counter-name="c1" expected-value="1002"/>
       
       <jvm-monitor-stop /> 
       

@@ -4,8 +4,8 @@ import java.util.concurrent.TimeUnit;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.protocols.TP;
 import org.radargun.Service;
-import org.radargun.traits.ProvidesTrait;
 import org.radargun.traits.CounterOperations;
+import org.radargun.traits.ProvidesTrait;
 
 /**
  * @author Roman Macor (rmacor@redhat.com)

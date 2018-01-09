@@ -1,7 +1,5 @@
 package org.radargun.service;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import org.infinispan.counter.EmbeddedCounterManagerFactory;
 import org.infinispan.counter.api.CounterManager;
 import org.radargun.traits.CounterOperations;
@@ -29,6 +27,11 @@ public class Infinispan90CounterOperations implements CounterOperations {
 
       public CounterImpl(org.infinispan.counter.api.StrongCounter counter) {
          this.counter = counter;
+      }
+
+      @Override
+      public long getValue() throws Exception {
+         return counter.getValue().get();
       }
 
       @Override
