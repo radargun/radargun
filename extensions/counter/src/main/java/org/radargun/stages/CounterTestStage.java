@@ -31,13 +31,13 @@ public class CounterTestStage extends TestStage {
 
    @Property(doc = "Initial value of the counter expected by this stage. The test will start" +
       "counting from this value. Default is 0.")
-   protected int initialValue = 0;
+   protected long initialValue = 0;
 
    @Property(doc = "Operation to test. Default is INCREMENT_AND_GET.")
    protected OperationName operationName = OperationName.INCREMENT_AND_GET;
 
    @Property(doc = "Delta to add for addAndGet operation. Default is 1.")
-   protected int delta = 1;
+   protected long delta = 1;
 
    enum OperationName {
       INCREMENT_AND_GET, DECREMENT_AND_GET, ADD_AND_GET, COMPARE_AND_SET
@@ -48,17 +48,16 @@ public class CounterTestStage extends TestStage {
 
    @Override
    protected OperationSelector createOperationSelector() {
-      //TODO: replace this with direct selection
-      if (operationName.equals(OperationName.INCREMENT_AND_GET)) {
-         return new RatioOperationSelector.Builder().add(CounterOperations.INCREMENT_AND_GET, 1).build();
-      } else if (operationName.equals(OperationName.DECREMENT_AND_GET)) {
-         return new RatioOperationSelector.Builder().add(CounterOperations.DECREMENT_AND_GET, 1).build();
-      } else if (operationName.equals(OperationName.ADD_AND_GET)) {
-         return new RatioOperationSelector.Builder().add(CounterOperations.ADD_AND_GET, 1).build();
-      } else if (operationName.equals(OperationName.COMPARE_AND_SET)) {
-         return new RatioOperationSelector.Builder().add(CounterOperations.COMPARE_AND_SET, 1).build();
-      } else {
-         throw new IllegalArgumentException("Unknown operation!");
+      switch (operationName) {
+         case INCREMENT_AND_GET:
+            return new RatioOperationSelector.Builder().add(CounterOperations.INCREMENT_AND_GET, 1).build();
+         case DECREMENT_AND_GET:
+            return new RatioOperationSelector.Builder().add(CounterOperations.DECREMENT_AND_GET, 1).build();
+         case ADD_AND_GET:
+            return new RatioOperationSelector.Builder().add(CounterOperations.ADD_AND_GET, 1).build();
+         case COMPARE_AND_SET:
+            return new RatioOperationSelector.Builder().add(CounterOperations.COMPARE_AND_SET, 1).build();
+         default: throw new IllegalArgumentException("Unknown operation!");
       }
    }
 
@@ -67,9 +66,6 @@ public class CounterTestStage extends TestStage {
       return new CounterLogic();
    }
 
-   /**
-    *
-    */
    protected class CounterLogic extends OperationLogic {
       private CounterOperations.Counter counter;
       private long previousValue;
@@ -113,20 +109,14 @@ public class CounterTestStage extends TestStage {
                previousValue = currentValue;
             }
          } else if (operation == CounterOperations.COMPARE_AND_SET) {
-            //This operation is testable only with a single thread. Running with multiple threads would cause
-            //one thread to always succeed (because it would match its previous values) and other threads
-            //to always fail (the counter is modified by other threads and it wouldn't match its own previous
-            //values).
             long expectedValue = previousValue;
             long update = previousValue + 1;
             Invocation<Boolean> invocation = new CounterInvocations.CompareAndSet(counter, expectedValue, update);
-            boolean success = stressor.makeRequest(invocation);
-            if (!success) {
-               throw new IllegalStateException("Inconsistent counter! Expected value: " + expectedValue);
-            } else {
-               previousValue = update;
-            }
-         } else throw new IllegalArgumentException(operation.name);
+            stressor.makeRequest(invocation);
+            previousValue = update;
+         } else {
+            throw new IllegalArgumentException(operation.name);
+         }
       }
    }
 }
