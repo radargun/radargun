@@ -5,7 +5,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -78,10 +80,6 @@ public abstract class TestStage extends BaseTestStage {
    protected volatile boolean terminated = false;
 
    protected StressorsManager stressorsManager;
-
-   public StressorsManager getStressorsManager() {
-      return stressorsManager;
-   }
 
    @Init
    public void init() {
@@ -177,7 +175,6 @@ public abstract class TestStage extends BaseTestStage {
       operationSelector = wrapOperationSelector(createOperationSelector());
 
       List<Stressor> stressors = startStressors();
-      started = true;
 
       if (rampUp > 0) {
          try {
@@ -248,18 +245,21 @@ public abstract class TestStage extends BaseTestStage {
    protected List<Stressor> startStressors() {
       int myFirstThread = getFirstThreadOn(slaveState.getSlaveIndex());
       int myNumThreads = getNumThreadsOn(slaveState.getSlaveIndex());
-      CountDownLatch threadCountDown = new CountDownLatch(myNumThreads);
+      CyclicBarrier checkpoint = new CyclicBarrier(myNumThreads + 1); //+1 for the current thread
 
       List<Stressor> stressors = new ArrayList<>();
       for (int threadIndex = stressors.size(); threadIndex < myNumThreads; threadIndex++) {
-         Stressor stressor = new Stressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, logTransactionExceptions, threadCountDown, delayBetweenRequests);
+         Stressor stressor = new Stressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, logTransactionExceptions, checkpoint, delayBetweenRequests);
          stressors.add(stressor);
          stressor.start();
       }
       try {
-         threadCountDown.await();
+         checkpoint.await();
       } catch (InterruptedException e) {
-         //FIXME implement me
+         log.error("Interrupted waiting for stressors.", e);
+         Thread.currentThread().interrupt();
+      } catch (BrokenBarrierException e) {
+         throw new RuntimeException("BrokenBarrier", e);
       }
       log.info("Started " + stressors.size() + " stressor threads.");
       return stressors;

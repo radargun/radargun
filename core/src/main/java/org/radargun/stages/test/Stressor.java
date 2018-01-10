@@ -1,7 +1,8 @@
 package org.radargun.stages.test;
 
 import java.util.Random;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.radargun.Operation;
@@ -39,9 +40,9 @@ public class Stressor extends Thread {
    private Transactional.Transaction ongoingTx;
    private Statistics stats;
    private boolean started = false;
-   private CountDownLatch threadCountDown;
+   private CyclicBarrier checkpoint;
 
-   public Stressor(TestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, boolean logTransactionExceptions, CountDownLatch threadCountDown, long delayBetweenRequests) {
+   public Stressor(TestStage stage, OperationLogic logic, int globalThreadIndex, int threadIndex, boolean logTransactionExceptions, CyclicBarrier checkpoint, long delayBetweenRequests) {
       super("Stressor-" + threadIndex);
       this.stage = stage;
       this.threadIndex = threadIndex;
@@ -51,7 +52,7 @@ public class Stressor extends Thread {
       this.completion = stage.getCompletion();
       this.operationSelector = stage.getOperationSelector();
       this.logTransactionExceptions = logTransactionExceptions;
-      this.threadCountDown = threadCountDown;
+      this.checkpoint = checkpoint;
       this.delayBetweenRequests = delayBetweenRequests;
    }
 
@@ -79,36 +80,17 @@ public class Stressor extends Thread {
    }
 
    private void runInternal() {
-      boolean counted = false;
       try {
          // the operation selector needs to be started before any #next() call
          operationSelector.start();
-
-         while (!stage.isTerminated()) {
-            boolean started = stage.isStarted();
-            if (started) {
-               txRemainingOperations = 0;
-               if (ongoingTx != null) {
-                  endTransactionAndRegisterStats(null);
-               }
-               break;
-            } else {
-               if (!counted) {
-                  threadCountDown.countDown();
-                  counted = true;
-               }
-               Operation operation = operationSelector.next(random);
-               try {
-                  logic.run(operation);
-                  if (delayBetweenRequests > 0)
-                    sleep(delayBetweenRequests);
-               } catch (OperationLogic.RequestException e) {
-                  // the exception was already logged in makeRequest
-               } catch (InterruptedException e) {
-                  log.trace("Stressor interrupted.", e);
-                  interrupt();
-               }
-            }
+         try {
+            //wait for all other threads to start before sending any requests
+            checkpoint.await();
+         } catch (InterruptedException e) {
+            log.error("Stressor interrupted.", e);
+            interrupt();
+         } catch (BrokenBarrierException e) {
+            throw new RuntimeException("BrokenBarrier", e);
          }
 
          stats.begin();
