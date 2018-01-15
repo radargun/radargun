@@ -27,8 +27,8 @@ import org.radargun.reporting.Report;
  */
 public class IndexDocument extends HtmlDocument {
    private static final Log log = LogFactory.getLog(IndexDocument.class);
-   private Map<Report, Map<String, Set<OriginalConfig>>> configs = new HashMap<>();
-   private Set<String> normalized = new HashSet<>();
+   private Map<Report, Map<String/*group*/, Set<OriginalConfig>>> configs = new HashMap<>();
+   private Map<Report, Map<String/*group*/, Set<String>>> normalizedConfigs = new HashMap<>();
    private MasterConfig masterConfig;
 
    public IndexDocument(String directory) {
@@ -95,16 +95,21 @@ public class IndexDocument extends HtmlDocument {
    public void prepareServiceConfigs(Collection<Report> reports) {
       for (Report report : reports) {
          Map<String, Set<OriginalConfig>> configs = new HashMap<>();
+         Map<String, Set<String>> normalizedConfigs = new HashMap<>();
          for (Configuration.Setup setup : report.getConfiguration().getSetups()) {
             Set<Integer> slaves = report.getCluster().getSlaves(setup.group);
             if (configs.get(setup.group) == null) {
                configs.put(setup.group, new HashSet<>());
             }
+            if (normalizedConfigs.get(setup.group) == null) {
+               normalizedConfigs.put(setup.group, new HashSet<>());
+            }
             for (Map.Entry<Integer, Map<String, Properties>> entry : report.getNormalizedServiceConfigs().entrySet()) {
                if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
-                  normalized.addAll(entry.getValue().keySet());
+                  normalizedConfigs.get(setup.group).addAll(entry.getValue().keySet());
                }
             }
+            this.normalizedConfigs.put(report, normalizedConfigs);
 
             for (Map.Entry<Integer, Map<String, byte[]>> entry : report.getOriginalServiceConfig().entrySet()) {
                if (slaves.contains(entry.getKey()) && entry.getValue() != null) {
@@ -136,8 +141,8 @@ public class IndexDocument extends HtmlDocument {
          configName, groupName, cluster.getClusterIndex(), config);
    }
 
-   public Set<String> getNormalized() {
-      return normalized;
+   public Set<String> getNormalized(Report report, String groupName) {
+      return normalizedConfigs.get(report).get(groupName);
    }
 
    public String removeFileSeparator(String string) {

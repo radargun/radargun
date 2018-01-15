@@ -74,7 +74,7 @@
                            <li>
                               Normalized configurations:
                                <ul>
-                                  <#list indexDocument.getNormalized() as config>
+                                  <#list indexDocument.getNormalized(report, setup.group) as config>
                                     <li>
                                        <a href="${indexDocument.getFilename(report.getConfiguration().name, setup.group, report.getCluster(), config)}">
                                              ${config}
