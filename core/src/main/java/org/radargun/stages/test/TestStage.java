@@ -1,6 +1,7 @@
 package org.radargun.stages.test;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -101,7 +102,7 @@ public abstract class TestStage extends BaseTestStage {
       try {
          long startNanos = TimeService.nanoTime();
          log.info("Starting test " + testName);
-         stressorsManager = setUpAndStartStressors();
+         setUpAndStartStressors();
          waitForStressorsToFinish(stressorsManager);
          destroy();
          log.info("Finished test. Test duration is: " + Utils.getNanosDurationString(TimeService.nanoTime() - startNanos));
@@ -160,23 +161,23 @@ public abstract class TestStage extends BaseTestStage {
       }
    }
 
-   protected StressorsManager setUpAndStartStressors() {
+   protected void setUpAndStartStressors() {
       long startTime = TimeService.currentTimeMillis();
       completion = createCompletion();
       CountDownLatch finishCountDown = new CountDownLatch(1);
-      completion.setCompletionHandler(new Runnable() {
-         @Override
-         public void run() {
-            //Stop collecting statistics for duration-based tests
-            if (duration > 0) {
-               finished = true;
-            }
-            finishCountDown.countDown();
+      CountDownLatch startCountDown = new CountDownLatch(getNumThreadsOn(slaveState.getSlaveIndex()));
+      completion.setCompletionHandler(() -> {
+         //Stop collecting statistics for duration-based tests
+         if (duration > 0) {
+            finished = true;
          }
+         finishCountDown.countDown();
       });
       operationSelector = wrapOperationSelector(createOperationSelector());
 
-      List<Stressor> stressors = startStressors();
+      List<Stressor> stressors = createStressors(startCountDown);
+      stressorsManager = new StressorsManager(stressors, startTime, finishCountDown);
+      startStressors(stressors, startCountDown);
       started = true;
 
       if (rampUp > 0) {
@@ -186,7 +187,6 @@ public abstract class TestStage extends BaseTestStage {
             throw new IllegalStateException("Interrupted during ramp-up.", e);
          }
       }
-      return new StressorsManager(stressors, startTime, finishCountDown);
    }
 
    protected void waitForStressorsToFinish(StressorsManager manager) {
@@ -245,24 +245,26 @@ public abstract class TestStage extends BaseTestStage {
       return operationSelector;
    }
 
-   protected List<Stressor> startStressors() {
+   protected List<Stressor> createStressors(CountDownLatch startCountDown) {
       int myFirstThread = getFirstThreadOn(slaveState.getSlaveIndex());
       int myNumThreads = getNumThreadsOn(slaveState.getSlaveIndex());
-      CountDownLatch threadCountDown = new CountDownLatch(myNumThreads);
 
       List<Stressor> stressors = new ArrayList<>();
       for (int threadIndex = stressors.size(); threadIndex < myNumThreads; threadIndex++) {
-         Stressor stressor = new Stressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, logTransactionExceptions, threadCountDown, delayBetweenRequests);
+         Stressor stressor = new Stressor(this, getLogic(), myFirstThread + threadIndex, threadIndex, logTransactionExceptions, startCountDown, delayBetweenRequests);
          stressors.add(stressor);
-         stressor.start();
       }
+      return stressors;
+   }
+
+   protected void startStressors(Collection<Stressor> stressors, CountDownLatch startCountDown) {
+      stressors.forEach(Stressor::start);
       try {
-         threadCountDown.await();
+         startCountDown.await();
       } catch (InterruptedException e) {
          //FIXME implement me
       }
       log.info("Started " + stressors.size() + " stressor threads.");
-      return stressors;
    }
 
    protected DistStageAck newStatisticsAck(List<Stressor> stressors) {
