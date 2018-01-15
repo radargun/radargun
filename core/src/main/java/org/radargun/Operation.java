@@ -28,6 +28,13 @@ public final class Operation implements Serializable {
       this.name = name;
    }
 
+   // This is useful when running report.sh
+   private Object readResolve() {
+      if (!byId.containsKey(id)) byId.put(id, this);
+      if (!byName.containsKey(name)) byName.put(name, this);
+      return this;
+   }
+
    /**
     * Remove all registered operations. WARNING: Should only be used when no clients access Operations class any longer (e.g. testing purposes)
     */
