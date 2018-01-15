@@ -10,11 +10,11 @@
       <relativePath>../pom.xml</relativePath>
    </parent>
 
-   <artifactId>plugin-infinispan90</artifactId>
-   <name>Infinispan 9.0.x plugin for RadarGun</name>
+   <artifactId>plugin-infinispan91</artifactId>
+   <name>Infinispan 9.1.x plugin for RadarGun</name>
 
    <properties>
-      <version.infinispan>${infinispan90.infinispan.version}</version.infinispan>
+      <version.infinispan>${infinispan91.infinispan.version}</version.infinispan>
       <version.narayanajta>5.0.4.Final</version.narayanajta>
    </properties>
 
@@ -22,12 +22,6 @@
       <dependency>
          <groupId>org.radargun</groupId>
          <artifactId>radargun-cache</artifactId>
-         <version>${project.version}</version>
-         <scope>provided</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.radargun</groupId>
-         <artifactId>radargun-counter</artifactId>
          <version>${project.version}</version>
          <scope>provided</scope>
       </dependency>
@@ -46,7 +40,7 @@
 
       <dependency>
          <groupId>org.radargun</groupId>
-         <artifactId>plugin-infinispan82</artifactId>
+         <artifactId>plugin-infinispan90</artifactId>
          <version>${project.version}</version>
       </dependency>
 
@@ -65,12 +59,6 @@
                <artifactId>jboss-logging</artifactId>
             </exclusion>
          </exclusions>
-      </dependency>
-
-      <dependency>
-         <groupId>org.infinispan</groupId>
-         <artifactId>infinispan-clustered-counter</artifactId>
-         <version>${version.infinispan}</version>
       </dependency>
 
       <dependency>
@@ -157,14 +145,14 @@
 
    <profiles>
       <profile>
-         <id>infinispan90-infinispan-version-default</id>
+         <id>infinispan91-infinispan-version-default</id>
          <activation>
             <property>
-               <name>!infinispan90.infinispan.version</name>
+               <name>!infinispan91.infinispan.version</name>
             </property>
          </activation>
          <properties>
-            <version.infinispan>9.0.3.Final</version.infinispan>
+            <version.infinispan>9.1.4.Final</version.infinispan>
          </properties>
       </profile>
       <profile>

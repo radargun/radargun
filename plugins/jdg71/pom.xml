@@ -16,7 +16,7 @@
    <properties>
       <version.infinispan>${jdg71.infinispan.version}</version.infinispan>
       <version.infinispan.public>8.2.1.Final</version.infinispan.public>
-      <version.narayanajta>5.2.17.Final-redhat-1</version.narayanajta>
+      <version.narayanajta>5.2.21.Final-redhat-1</version.narayanajta>
       <version.jta-spec>1.0.1.Final-redhat-2</version.jta-spec>
    </properties>
 
@@ -29,7 +29,7 @@
             </property>
          </activation>
          <properties>
-            <version.infinispan>8.4.0.ER1-redhat-1</version.infinispan>
+            <version.infinispan>8.4.0.Final-redhat-2</version.infinispan>
          </properties>
       </profile>
       <profile>
