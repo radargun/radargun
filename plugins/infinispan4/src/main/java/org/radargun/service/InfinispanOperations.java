@@ -25,11 +25,17 @@ public class InfinispanOperations implements BasicOperations, ConditionalOperati
 
    @Override
    public <K, V> InfinispanCache<K, V> getCache(String cacheName) {
+      if (service.getCache(cacheName) == null) {
+         throw new IllegalStateException("Cache named '" + cacheName + "' does not exist");
+      }
       return new Cache<K, V>(service, (AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache());
    }
 
    @Override
    public <K, V> InfinispanCache<K, V> getLocalCache(String cacheName) {
+      if (service.getCache(cacheName) == null) {
+         throw new IllegalStateException("Cache named '" + cacheName + "' does not exist");
+      }
       return new Cache<K, V>(service, (AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL));
    }
 

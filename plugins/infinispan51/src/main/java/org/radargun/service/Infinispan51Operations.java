@@ -21,6 +21,9 @@ public class Infinispan51Operations extends InfinispanOperations implements InMe
 
    @Override
    public <K, V> InfinispanCache<K, V> getCache(String cacheName) {
+      if (service.getCache(cacheName) == null) {
+         throw new IllegalStateException("Cache named '" + cacheName + "' does not exist");
+      }
       AdvancedCache<K, V> cache = (AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache();
       if (service.isExplicitLocking(cache)) {
          return new ExplicitLockingCache<K, V>(service, cache);
@@ -31,6 +34,9 @@ public class Infinispan51Operations extends InfinispanOperations implements InMe
 
    @Override
    public <K, V> BasicOperations.Cache<K, V> getMemoryOnlyCache(String cacheName) {
+      if (service.getCache(cacheName) == null) {
+         throw new IllegalStateException("Cache named '" + cacheName + "' does not exist");
+      }
       AdvancedCache<K, V> cache = (AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD, Flag.SKIP_CACHE_STORE);
       return new Cache<K, V>(service, cache);
    }
