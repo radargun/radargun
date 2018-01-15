@@ -10,6 +10,7 @@ import org.radargun.DistStageAck;
 import org.radargun.config.Property;
 import org.radargun.config.Stage;
 import org.radargun.utils.ArgsConverter;
+import org.radargun.utils.Utils;
 
 /**
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
@@ -58,6 +59,10 @@ public class CommandStage extends AbstractDistStage {
             process = startProcess();
             if (var != null) {
                slaveState.put(var, process);
+               String pid = Utils.getProcessID(process);
+               if (pid != null) {
+                  System.setProperty("process." + var + ".id", pid);
+               }
             }
          } else if (var != null) {
             process = (Process) slaveState.get(var);

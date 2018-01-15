@@ -222,6 +222,25 @@ public class Utils {
       return connection;
    }
 
+   public static String getProcessID(Process process) {
+      Class<?> clazz = process.getClass();
+      try {
+         if (clazz.getName().equals("java.lang.UNIXProcess")) {
+            Field pidField = clazz.getDeclaredField("pid");
+            pidField.setAccessible(true);
+            Object value = pidField.get(process);
+            if (value instanceof Integer) {
+               return String.valueOf(value);
+            }
+         } else {
+            throw new IllegalArgumentException("Only unix is supported as OS.");
+         }
+      } catch (Exception ex) {
+         log.errorf(ex, "Failure retrieving PID");
+      }
+      return null;
+   }
+
    public static class JarFilenameFilter implements FilenameFilter {
       public boolean accept(File dir, String name) {
          String fileName = name.toUpperCase(Locale.ENGLISH);
