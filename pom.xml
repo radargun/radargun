@@ -243,7 +243,7 @@
          </modules>
          <properties>
             <plugins.ehcache-latest>ehcache26</plugins.ehcache-latest>
-            <plugins.ehcache>ehcache25,${plugins.hazelcast-latest}</plugins.ehcache>
+            <plugins.ehcache>ehcache25,${plugins.ehcache-latest}</plugins.ehcache>
          </properties>
       </profile>
       <profile>
@@ -351,10 +351,11 @@
             <module>plugins/infinispan81</module>
             <module>plugins/infinispan82</module>
             <module>plugins/infinispan90</module>
+            <module>plugins/infinispan91</module>
          </modules>
          <properties>
-            <plugins.infinispan-latest>infinispan90</plugins.infinispan-latest>
-            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81,infinispan82,${plugins.infinispan-latest}</plugins.infinispan>
+            <plugins.infinispan-latest>infinispan91</plugins.infinispan-latest>
+            <plugins.infinispan>infinispan4,infinispan50,infinispan51,infinispan52,infinispan53,infinispan60,infinispan70,infinispan71,infinispan72,infinispan80,infinispan81,infinispan82,infinispan90,${plugins.infinispan-latest}</plugins.infinispan>
          </properties>
       </profile>
       <profile>
