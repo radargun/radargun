@@ -45,7 +45,7 @@ public class HazelcastService implements Lifecycle, Clustered {
    protected List<Membership> membershipHistory = new ArrayList<>();
 
    @Property(name = Service.FILE, doc = "Configuration file.")
-   private String config;
+   protected String config;
 
    @Property(name = "cache", doc = "Name of the map ~ cache", deprecatedName = "map")
    protected String mapName = "default";
@@ -71,6 +71,11 @@ public class HazelcastService implements Lifecycle, Clustered {
    @ProvidesTrait
    public HazelcastOperations createOperations() {
       return new HazelcastOperations(this);
+   }
+
+   @ProvidesTrait
+   public HazelcastConfigurationProvider createConfigurationProvider() {
+      return new HazelcastConfigurationProvider(this);
    }
 
    @Override
