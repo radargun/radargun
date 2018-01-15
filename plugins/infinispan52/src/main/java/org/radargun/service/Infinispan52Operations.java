@@ -23,6 +23,9 @@ public final class Infinispan52Operations
 
    @Override
    public <K, V> Infinispan52Cache<K, V> getCache(String cacheName) {
+      if (service.getCache(cacheName) == null) {
+         throw new IllegalStateException("Cache named '" + cacheName + "' does not exist");
+      }
       AdvancedCache<K, V> impl = (AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache();
       Infinispan52Cache<K, V> cache = new Infinispan52CacheImpl<>(service, impl);
       return service52.isExplicitLocking(impl)
@@ -32,12 +35,18 @@ public final class Infinispan52Operations
 
    @Override
    public <K, V> Infinispan52Cache<K, V> getMemoryOnlyCache(String cacheName) {
+      if (service.getCache(cacheName) == null) {
+         throw new IllegalStateException("Cache named '" + cacheName + "' does not exist");
+      }
       AdvancedCache<K, V> cache = (AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache().withFlags(Flag.SKIP_CACHE_LOAD, Flag.SKIP_CACHE_STORE);
       return new Infinispan52CacheImpl<K, V>(service, cache);
    }
 
    @Override
    public <K, V> Infinispan52Cache<K, V> getLocalCache(String cacheName) {
+      if (service.getCache(cacheName) == null) {
+         throw new IllegalStateException("Cache named '" + cacheName + "' does not exist");
+      }
       return new Infinispan52CacheImpl<K, V>(service, (AdvancedCache<K, V>) service.getCache(cacheName).getAdvancedCache().withFlags(Flag.CACHE_MODE_LOCAL));
    }
 
