@@ -43,6 +43,19 @@ public abstract class ProcessLifecycle<T extends ProcessService> implements Life
       this.service = service;
       prefix = service.getCommandPrefix();
       extension = service.getCommandSuffix();
+      listeners.add(new Listener() {
+         @Override
+         public void afterStart() {
+            System.setProperty("service.pid", getPid());
+            System.setProperty("service.pids", getChildPIDs());
+         }
+
+         @Override
+         public void afterStop(boolean graceful) {
+            System.clearProperty("service.pid");
+            System.clearProperty("service.pids");
+         }
+      });
    }
 
    @Override
@@ -341,17 +354,10 @@ public abstract class ProcessLifecycle<T extends ProcessService> implements Life
    }
 
    public interface Listener {
-      void beforeStart();
-      void afterStart();
-      void beforeStop(boolean graceful);
-      void afterStop(boolean graceful);
-   }
-
-   public static class ListenerAdapter implements Listener {
-      public void beforeStart() {}
-      public void afterStart() {}
-      public void beforeStop(boolean graceful) {}
-      public void afterStop(boolean graceful) {}
+      default void beforeStart() {}
+      default void afterStart() {}
+      default void beforeStop(boolean graceful) {}
+      default void afterStop(boolean graceful) {}
    }
 
    /*
