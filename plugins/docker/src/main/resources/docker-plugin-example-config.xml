@@ -19,7 +19,8 @@
                             docker-registry="${docker.registry:registry.hub.docker.com}"
                             username="${docker.username}"
                             password="${docker.password}"
-                            image="${image.name:karm/mod_cluster-master-dockerhub}" 
+                            image="${image.name:karm/mod_cluster-master-dockerhub}"
+                            network="host"
                             container-name="mod_cluster">
                <!-- Ports exposed from the running container. Available for incoming requests. -->
                <exposed-ports>
