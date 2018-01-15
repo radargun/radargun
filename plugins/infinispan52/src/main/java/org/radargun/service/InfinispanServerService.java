@@ -52,10 +52,12 @@ public class InfinispanServerService extends JavaProcessService {
    @Property(doc = "Is this executed on Windows (should we use *.bat instead of *.sh)? Default is false.")
    private boolean windows = false;
 
-   @Property(doc = "JMX domain. Default is 'org.infinispan'.")
+   @Deprecated
+   @Property(doc = "JMX domain. Default is 'org.infinispan'. Deprecated: The CacheManager can be retrieved by type instead.")
    protected String jmxDomain = "org.infinispan";
 
-   @Property(doc = "Name of the cache manager/cache container. Default is 'default'.")
+   @Deprecated
+   @Property(doc = "Name of the cache manager/cache container. Default is 'default'. Deprecated: The CacheManager can be retrieved by type instead.")
    protected String cacheManagerName = "default";
 
    @Property(doc = "Start thread periodically dumping JGroups JMX data. Default is false.")
