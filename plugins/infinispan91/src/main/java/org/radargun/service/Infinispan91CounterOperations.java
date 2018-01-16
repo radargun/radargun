@@ -7,11 +7,11 @@ import org.radargun.traits.CounterOperations;
 /**
  * @author Martin Gencur
  */
-public class Infinispan90CounterOperations implements CounterOperations {
+public class Infinispan91CounterOperations implements CounterOperations {
 
    protected final InfinispanEmbeddedService service;
 
-   public Infinispan90CounterOperations(InfinispanEmbeddedService service) {
+   public Infinispan91CounterOperations(InfinispanEmbeddedService service) {
       this.service = service;
    }
 
