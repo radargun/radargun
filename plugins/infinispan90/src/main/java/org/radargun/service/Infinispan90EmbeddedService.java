@@ -4,7 +4,6 @@ import java.util.concurrent.TimeUnit;
 import org.infinispan.remoting.transport.jgroups.JGroupsTransport;
 import org.jgroups.protocols.TP;
 import org.radargun.Service;
-import org.radargun.traits.CounterOperations;
 import org.radargun.traits.ProvidesTrait;
 
 /**
@@ -34,11 +33,6 @@ public class Infinispan90EmbeddedService extends Infinispan82EmbeddedService {
    @ProvidesTrait
    public InfinispanEmbeddedQueryable createQueryable() {
       return new Infinispan90EmbeddedQueryable(this);
-   }
-
-   @ProvidesTrait
-   public CounterOperations createCounterOperations() {
-      return new Infinispan90CounterOperations(this);
    }
 
    @Override
