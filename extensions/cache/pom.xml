@@ -36,6 +36,11 @@
             </executions>
          </plugin>
       </plugins>
+         <resources>
+            <resource>
+               <directory>../../core/target/distribution/radargun-core-bin/radargun-core/conf/</directory>
+            </resource>
+         </resources>
    </build>
 
 </project>
