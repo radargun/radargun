@@ -14,7 +14,7 @@
 
    <properties>
       <version.log4j>1.2.16</version.log4j>
-      <version.log4j2>2.3</version.log4j2>
+      <version.log4j2>2.8.2</version.log4j2>
    </properties>
 
    <dependencies>
