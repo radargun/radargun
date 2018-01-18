@@ -410,12 +410,6 @@ public class RemoteSlaveConnection {
       }
       serverSocketChannel.socket().bind(address);
       log.info("Master started and listening for connection on: " + address);
-      log.info("Waiting 5 seconds for server socket to open completely");
-      try {
-         Thread.sleep(5000);
-      } catch (InterruptedException ex) {
-         // ignore
-      }
    }
 
    private int readInt(SocketChannel socketChannel) throws IOException {

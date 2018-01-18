@@ -1,11 +1,15 @@
 package org.radargun.service;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
@@ -26,6 +30,7 @@ import com.github.dockerjava.core.command.LogContainerResultCallback;
 import com.github.dockerjava.core.command.PullImageResultCallback;
 import com.github.dockerjava.netty.NettyDockerCmdExecFactory;
 import org.radargun.Service;
+import org.radargun.ServiceHelper;
 import org.radargun.config.Converter;
 import org.radargun.config.Destroy;
 import org.radargun.config.Property;
@@ -33,7 +38,9 @@ import org.radargun.logging.Log;
 import org.radargun.logging.LogFactory;
 import org.radargun.traits.Lifecycle;
 import org.radargun.traits.ProvidesTrait;
+import org.radargun.utils.ArgsConverter;
 import org.radargun.utils.EnvsConverter;
+import org.radargun.utils.TimeConverter;
 import org.radargun.utils.Utils;
 
 /**
@@ -51,7 +58,6 @@ public class DockerService implements Lifecycle {
 
    protected final Log log = LogFactory.getLog(getClass());
    protected static final String SERVICE_DESCRIPTION = "Docker Service";
-   protected static final String DOCKER_HOST_NETWORK_MODE = "host";
 
    private DockerCmdExecFactory dockerCmdExecFactory;
    private DockerClient dockerClient;
@@ -73,14 +79,29 @@ public class DockerService implements Lifecycle {
    @Property(doc = "Image that will be downloaded from Docker registry and used to start a container", optional = false)
    protected String image;
 
-   @Property(doc = "Name of the started Docker container. Empty by default.", optional = false)
+   @Property(doc = "Name of the started Docker container. Defaults to ${group.name}-${slave.id}.")
    protected String containerName;
 
    @Property(doc = "Environment variables that will be passed to Docker container during startup. This is equivalent to starting Docker container with -e parameters. Empty by default.", converter = EnvsConverter.class)
    protected Map<String, String> env = Collections.emptyMap();
 
+   @Property(doc = "Set alternative entrypoint. By default not set.", converter = ArgsConverter.class)
+   protected List<String> entrypoint = null;
+
+   @Property(doc = "Arguments passed to the container during startup. Empty by default.", converter = ArgsConverter.class)
+   protected List<String> cmd = Collections.emptyList();
+
    @Property(doc = "The list of ports exposed by the container. This list should mimic ports exposed from a Docker image through EXPOSE. Empty by default.", converter = PortsConverter.class)
    protected List<ExposedPort> exposedPorts = Collections.emptyList();
+
+   @Property(doc = "Network mode for the container. Common values are 'bridge', 'host', 'container:<name|id>' or network name/id. Not set by default.")
+   protected String network = null;
+
+   @Property(doc = "Block starting method until we read a message from the log matching regexp provided here. Not waiting by default")
+   protected String awaitLog;
+
+   @Property(doc = "Timeout for waiting for a log (see 'await-log'). By default 1 minute.", converter = TimeConverter.class)
+   protected long awaitLogTimeout = 60000;
 
    @ProvidesTrait
    public Lifecycle getLifecycle() {
@@ -97,12 +118,23 @@ public class DockerService implements Lifecycle {
       } else {
          imageName = dockerRegistry + "/" + image;
       }
+      String containerName = this.containerName;
+      if (containerName == null) {
+         int slaveIndex = ServiceHelper.getSlaveIndex();
+         containerName = ServiceHelper.getCluster().getGroup(slaveIndex).name + "-" + slaveIndex;
+      }
       CreateContainerCmd createCmd = dockerClient.createContainerCmd(imageName)
          .withName(containerName)
-         .withNetworkMode(DOCKER_HOST_NETWORK_MODE)
          .withExposedPorts(exposedPorts)
          .withPublishAllPorts(true)
-         .withEnv(env.entrySet().stream().map(e -> new String(e.getKey() + "=" + e.getValue())).collect(Collectors.toList()));
+         .withEnv(env.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).collect(Collectors.toList()))
+         .withCmd(cmd);
+      if (network != null) {
+         createCmd = createCmd.withNetworkMode(network);
+      }
+      if (entrypoint != null) {
+         createCmd = createCmd.withEntrypoint(entrypoint);
+      }
 
       try {
          dockerContainerId = createCmd.exec().getId();
@@ -175,7 +207,13 @@ public class DockerService implements Lifecycle {
    }
 
    private void printContainerLog(String containerId) {
-      LogCallback loggingCallback = new LogCallback();
+      CountDownLatch logLatch = null;
+      Pattern pattern = null;
+      if (awaitLog != null) {
+         logLatch = new CountDownLatch(1);
+         pattern = Pattern.compile(awaitLog);
+      }
+      LogCallback loggingCallback = new LogCallback(logLatch, pattern);
 
       dockerClient.logContainerCmd(containerId)
          .withStdErr(true)
@@ -185,23 +223,85 @@ public class DockerService implements Lifecycle {
          .exec(loggingCallback);
 
       try {
-         loggingCallback.awaitCompletion(3, TimeUnit.SECONDS);
+         if (!logLatch.await(awaitLogTimeout, TimeUnit.MILLISECONDS)) {
+            throw new RuntimeException("Timed out reading log");
+         }
       } catch (InterruptedException e) {
-         log.error(e.getMessage());
          Thread.currentThread().interrupt();
+         throw new RuntimeException("Interrupted reading log", e);
       }
    }
 
    private class LogCallback extends LogContainerResultCallback {
+      private CountDownLatch latch;
+      private final Pattern pattern;
+      private ByteBuffer buffer = ByteBuffer.allocate(1024);
+
+      public LogCallback(CountDownLatch latch, Pattern pattern) {
+         this.latch = latch;
+         this.pattern = pattern;
+      }
+
       @Override
       public void onNext(Frame frame) {
-         log.info(frame.toString());
+         byte[] payload = frame.getPayload();
+         // Remove color escape sequences
+         if (buffer.capacity() < payload.length) {
+            buffer = ByteBuffer.allocate(Math.max(payload.length, buffer.capacity() * 2));
+         } else {
+            buffer.rewind();
+         }
+         for (int i = 0; i < payload.length; i++) {
+            byte b = payload[i];
+            if (b == 27) { // ESCAPE
+               if (++i < payload.length && (b = payload[i]) == '[') {
+                  while (++i < payload.length) {
+                     b = payload[i];
+                     if (b >= '@' && b <= '~') break;
+                  }
+                  continue;
+               } else {
+                  buffer.put((byte) 27);
+               }
+            }
+            buffer.put(b);
+         }
+         int originalPosition = buffer.position();
+         // remove trailing newline
+         while (buffer.position() > 0) {
+            int pos = buffer.position() - 1;
+            byte b = buffer.get(pos);
+            if (b == '\n' || b == '\r') {
+               buffer.position(pos);
+            } else break;
+         }
+         if (latch != null) {
+            String message = new String(buffer.array(), 0, buffer.position());
+            if (pattern.matcher(message).matches()) {
+               latch.countDown();
+               latch = null;
+            }
+         }
+         switch (frame.getStreamType()) {
+            case STDOUT:
+            case RAW:
+               System.out.write(buffer.array(), 0, originalPosition);
+               break;
+            case STDERR:
+            default:
+               System.err.write(buffer.array(), 0, originalPosition);
+         }
       }
    }
 
    @Override
    public void stop() {
       dockerClient.stopContainerCmd(dockerContainerId).exec();
+      try {
+         dockerCmdExecFactory.close();
+      } catch (IOException e) {
+         log.error("Failed to close command exec factory", e);
+      }
       started = false;
       log.infof("Stopped container with id %s", dockerContainerId);
    }

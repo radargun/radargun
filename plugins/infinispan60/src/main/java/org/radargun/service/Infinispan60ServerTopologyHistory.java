@@ -42,7 +42,7 @@ public class Infinispan60ServerTopologyHistory extends AbstractTopologyHistory {
             }
          }
       }, service.viewCheckPeriod);
-      service.lifecycle.addListener(new ProcessLifecycle.ListenerAdapter() {
+      service.lifecycle.addListener(new ProcessLifecycle.Listener() {
          @Override
          public void afterStop(boolean graceful) {
             reset();

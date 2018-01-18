@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,6 +17,7 @@ import org.radargun.logging.LogFactory;
 import org.radargun.traits.Killable;
 import org.radargun.traits.Lifecycle;
 import org.radargun.utils.TimeService;
+import org.radargun.utils.Utils;
 
 /**
  * Java runtime does not provide API that would allow us to manage full process
@@ -26,7 +26,7 @@ import org.radargun.utils.TimeService;
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;
  */
-public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Killable {
+public abstract class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Killable {
 
    protected final Log log = LogFactory.getLog(getClass());
    protected final T service;
@@ -43,6 +43,19 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
       this.service = service;
       prefix = service.getCommandPrefix();
       extension = service.getCommandSuffix();
+      listeners.add(new Listener() {
+         @Override
+         public void afterStart() {
+            System.setProperty("service.pid", getPid());
+            System.setProperty("service.pids", getChildPIDs());
+         }
+
+         @Override
+         public void afterStop(boolean graceful) {
+            System.clearProperty("service.pid");
+            System.clearProperty("service.pids");
+         }
+      });
    }
 
    @Override
@@ -149,35 +162,10 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
          if (inputWriter != null) inputWriter.setStream(process.getOutputStream());
          if (outputReader != null) outputReader.setStream(process.getInputStream());
          if (errorReader != null) errorReader.setStream(process.getErrorStream());
-         setPid(getProcessId(process));
+         setPid(Utils.getProcessID(process));
       } catch (IOException e) {
          log.error("Failed to start", e);
       }
-   }
-
-   protected String getProcessId(Process process) {
-      Class<?> clazz = process.getClass();
-      try {
-         if (clazz.getName().equals("java.lang.UNIXProcess")) {
-            Field pidField = clazz.getDeclaredField("pid");
-            pidField.setAccessible(true);
-            Object value = pidField.get(process);
-            if (value instanceof Integer) {
-               return ((Integer) value).toString();
-            }
-         } else {
-            throw new IllegalArgumentException("Only unix is supported as OS.");
-         }
-      } catch (SecurityException sx) {
-         sx.printStackTrace();
-      } catch (NoSuchFieldException e) {
-         e.printStackTrace();
-      } catch (IllegalArgumentException e) {
-         e.printStackTrace();
-      } catch (IllegalAccessException e) {
-         e.printStackTrace();
-      }
-      return null;
    }
 
    @Override
@@ -217,6 +205,10 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
    @Override
    public boolean isRunning() {
       return getChildPIDs().length() != 0 || isPIDAlive(pid);
+   }
+
+   public String getProcessId(Process process) {
+      return Utils.getProcessID(process);
    }
 
    protected synchronized StreamReader getOutputReader() {
@@ -362,17 +354,10 @@ public class ProcessLifecycle<T extends ProcessService> implements Lifecycle, Ki
    }
 
    public interface Listener {
-      void beforeStart();
-      void afterStart();
-      void beforeStop(boolean graceful);
-      void afterStop(boolean graceful);
-   }
-
-   public static class ListenerAdapter implements Listener {
-      public void beforeStart() {}
-      public void afterStart() {}
-      public void beforeStop(boolean graceful) {}
-      public void afterStop(boolean graceful) {}
+      default void beforeStart() {}
+      default void afterStart() {}
+      default void beforeStop(boolean graceful) {}
+      default void afterStop(boolean graceful) {}
    }
 
    /*

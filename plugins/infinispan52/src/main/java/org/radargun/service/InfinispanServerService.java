@@ -125,7 +125,7 @@ public class InfinispanServerService extends JavaProcessService {
          log.error("Failed to prepare the server directory", e);
          throw new RuntimeException(e);
       }
-      lifecycle.addListener(new ProcessLifecycle.ListenerAdapter() {
+      lifecycle.addListener(new ProcessLifecycle.Listener() {
          private JMXConnector connector;
 
          @Override

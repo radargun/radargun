@@ -48,7 +48,7 @@ public class BackgroundRESTOperationsStartStage extends RESTOperationsTestStage 
       }
       try {
          log.info("Starting test " + testName + " in the background.");
-         stressorsManager = setUpAndStartStressors();
+         setUpAndStartStressors();
          slaveState.put(testName, this);
          return successfulResponse();
       } catch (Exception e) {

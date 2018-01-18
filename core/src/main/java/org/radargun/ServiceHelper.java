@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.radargun.config.Cluster;
 import org.radargun.config.Definition;
 import org.radargun.config.InitHelper;
 import org.radargun.config.PropertyHelper;
@@ -22,6 +23,7 @@ public final class ServiceHelper {
 
    private static String currentPlugin;
    private static String currentConfigName;
+   private static Cluster currentCluster;
    private static int currentSlaveIndex;
 
    private ServiceHelper() {}
@@ -34,23 +36,29 @@ public final class ServiceHelper {
       return currentConfigName;
    }
 
+   public static Cluster getCluster() {
+      return currentCluster;
+   }
+
    public static int getSlaveIndex() {
       return currentSlaveIndex;
    }
 
    /**
     * As we expect only one service at time to be running on one node, this sets current
-    * plugin, configuration name and slave index that can be later retrieved, e.g. in some
+    * plugin, configuration name, cluster info and slave index that can be later retrieved, e.g. in some
     * init method (annotated by {@link org.radargun.config.Init}) that would not be able
     * to retrieve this information in another way.
-    *
+    * 
     * @param plugin
     * @param configName
+    * @param cluster
     * @param slaveIndex
     */
-   public static void setServiceContext(String plugin, String configName, int slaveIndex) {
+   public static void setServiceContext(String plugin, String configName, Cluster cluster, int slaveIndex) {
       currentPlugin = plugin;
       currentConfigName = configName;
+      currentCluster = cluster;
       currentSlaveIndex = slaveIndex;
    }
 
@@ -61,7 +69,7 @@ public final class ServiceHelper {
     * Then, sets up all properties declared on the service (and its superclasses).
     * Finally calls any methods of the class annotated by {@link org.radargun.config.Init @Init}.
     *
-    * Don't forget to call {@link #setServiceContext(String, String, int)} before calling this method.
+    * Don't forget to call {@link #setServiceContext(String, String, Cluster, int)} before calling this method.
     */
    public static Object createService(String plugin, String service,
                                       Map<String, Definition> properties, Map<String, String> extras) {

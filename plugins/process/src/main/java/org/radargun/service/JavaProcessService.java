@@ -34,7 +34,7 @@ public class JavaProcessService extends ProcessService {
    protected static final String JAVA_HOME = "JAVA_HOME";
    protected static final String JAVA_OPTS = "JAVA_OPTS";
 
-   @Property(doc = "Java binary used to start the server. Default is ${env.JAVA_HOME}.")
+   @Property(doc = "Java home used to start the server. Default is ${env.JAVA_HOME}.")
    protected String java = System.getenv(JAVA_HOME);
 
    @Property(doc = "Extra Java options used. Default is none.")

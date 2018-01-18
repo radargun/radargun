@@ -43,7 +43,7 @@ public class BasicOperationsTestStage extends CacheOperationsTestStage {
    @Property(doc = "Ratio of GET_AND_REMOVE requests. Default is 0.")
    protected int getAndRemoveRatio = 0;
 
-   @InjectTrait
+   @InjectTrait(dependency = InjectTrait.Dependency.MANDATORY)
    protected BasicOperations basicOperations;
 
    @Init
