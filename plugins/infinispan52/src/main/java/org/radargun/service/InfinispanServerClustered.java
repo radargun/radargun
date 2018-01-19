@@ -9,8 +9,8 @@ import java.util.Set;
 
 import javax.management.InstanceNotFoundException;
 import javax.management.IntrospectionException;
+import javax.management.JMException;
 import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
@@ -75,26 +75,30 @@ public class InfinispanServerClustered implements Clustered {
             return null;
 
          ObjectName cacheManagerName = getCacheManagerObjectName(service.jmxDomain, service.cacheManagerName);
-         String membersString = (String) connection.getAttribute(cacheManagerName, getClusterMembersAttribute());
-         String nodeAddress = (String) connection.getAttribute(cacheManagerName, getNodeAddressAttribute());
-         synchronized (this) {
-            if (lastMembers != null && lastMembers.equals(membersString)) {
-               return membershipHistory.get(membershipHistory.size() - 1).members;
-            }
-            String[] nodes;
-            if (!membersString.startsWith("[") || !membersString.endsWith("]")) {
-               nodes = new String[] { membersString };
-            } else {
-               nodes = membersString.substring(1, membersString.length() - 1).split(",", 0);
-            }
-            lastMembers = membersString;
+         if (cacheManagerName != null) {
+            String membersString = (String) connection.getAttribute(cacheManagerName, getClusterMembersAttribute());
+            String nodeAddress = (String) connection.getAttribute(cacheManagerName, getNodeAddressAttribute());
+            synchronized (this) {
+               if (lastMembers != null && lastMembers.equals(membersString)) {
+                  return membershipHistory.get(membershipHistory.size() - 1).members;
+               }
+               String[] nodes;
+               if (!membersString.startsWith("[") || !membersString.endsWith("]")) {
+                  nodes = new String[] { membersString };
+               } else {
+                  nodes = membersString.substring(1, membersString.length() - 1).split(",", 0);
+               }
+               lastMembers = membersString;
 
-            ArrayList<Member> members = new ArrayList<>();
-            for (int i = 0; i < nodes.length; ++i) {
-               members.add(new Member(nodes[i].trim(), nodes[i].equals(nodeAddress), i == 0));
+               ArrayList<Member> members = new ArrayList<>();
+               for (int i = 0; i < nodes.length; ++i) {
+                  members.add(new Member(nodes[i].trim(), nodes[i].equals(nodeAddress), i == 0));
+               }
+               membershipHistory.add(Membership.create(members));
+               return members;
             }
-            membershipHistory.add(Membership.create(members));
-            return members;
+         } else {
+            return Collections.emptyList();
          }
       } catch (Exception e) {
          log.error("Failed to retrieve data from JMX", e);
@@ -124,20 +128,23 @@ public class InfinispanServerClustered implements Clustered {
       return "clusterSize";
    }
 
-   private ObjectName getCacheManagerObjectName(String jmxDomain, String managerName)
-         throws IOException, MalformedObjectNameException {
+   private ObjectName getCacheManagerObjectName(String jmxDomain, String managerName) throws IOException, JMException {
       // Find CacheManager MBean using parameters, if that fails use type 
       ObjectName cacheManagerName = new ObjectName(
             String.format("%s:type=CacheManager,name=\"%s\",component=CacheManager", jmxDomain, managerName));
       try {
          service.connection.getMBeanInfo(cacheManagerName);
       } catch (InstanceNotFoundException | IntrospectionException | ReflectionException e) {
+         cacheManagerName = null;
          log.error(String.format(
                "Failed to find CacheManager MBean using domain '%s' and name '%s'. Trying again using type.", jmxDomain,
                managerName));
-         Set<ObjectInstance> cacheManagers = service.connection.queryMBeans(null,
-               javax.management.Query.isInstanceOf(javax.management.Query.value(DefaultCacheManager.OBJECT_NAME)));
-         if (cacheManagers.size() == 1) {
+         Set<ObjectInstance> cacheManagers = service.connection.queryMBeans(null, javax.management.Query
+               .isInstanceOf(javax.management.Query.value(DefaultCacheManager.class.getTypeName())));
+         if (cacheManagers.size() == 0) {
+            log.error("Failed to find CacheManager MBean using domain, name, or type.", e);
+            throw e;
+         } else {
             cacheManagerName = cacheManagers.iterator().next().getObjectName();
          }
       }

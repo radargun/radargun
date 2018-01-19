@@ -68,6 +68,7 @@ public class JavaProcessService extends ProcessService {
          return null;
       }
       if (!jmxConnectionEnabled) {
+         log.info("Connecting to the service via JMX is disabled.");
          return null;
       }
       return new JmxConnectionProvider() {

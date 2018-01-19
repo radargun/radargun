@@ -408,8 +408,8 @@ public class RemoteSlaveConnection {
       } else {
          address = new InetSocketAddress(host, port);
       }
+      log.info("Attempting to start Master listening for connection on: " + address);
       serverSocketChannel.socket().bind(address);
-      log.info("Master started and listening for connection on: " + address);
       log.info("Waiting 5 seconds for server socket to open completely");
       try {
          Thread.sleep(5000);
